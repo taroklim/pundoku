@@ -113,6 +113,12 @@ export class SyncManager {
   private lastPullAt = 0;
   private debounceTimer: ReturnType<typeof setTimeout> | null = null;
   private retryTimer: ReturnType<typeof setTimeout> | null = null;
+  /** Ступень сжатия (`BUDGET_STEPS`), на которой сервер принял последний PUT; сбрасывается перезапуском. */
+  private compressStep = 0;
+  private bootDone!: () => void;
+  private readonly booted = new Promise<void>((resolve) => {
+    this.bootDone = resolve;
+  });
   private initialDone!: () => void;
   private readonly initial = new Promise<void>((resolve) => {
     this.initialDone = resolve;
@@ -149,6 +155,7 @@ export class SyncManager {
     } catch {
       /* хранилище недоступно — работаем без сохранённого состояния */
     }
+    this.bootDone();
     if (this.disposed) return;
     this.setStatus({ device: this.token ? "registered" : "none", version: this.state?.version ?? 0 });
     // Восстанавливать нечего: токена нет (новое устройство) или сети нет — игра стартует сразу.
@@ -233,6 +240,7 @@ export class SyncManager {
     }
     this.running = (async () => {
       try {
+        if (this.started) await this.booted; // токен и состояние загружены до первого цикла
         do {
           this.rerun = false;
           await this.cycle();
@@ -411,14 +419,15 @@ export class SyncManager {
 
   private needsPush(merged: SnapshotData): boolean {
     if (!this.state) return !isEmpty(merged);
-    return !sameSnapshotData(buildSnapshotData(merged), this.state.data);
+    const { budget, alwaysLast } = BUDGET_STEPS[this.compressStep]!;
+    return !sameSnapshotData(buildSnapshotData(merged, budget, alwaysLast), this.state.data);
   }
 
   // ---- отправка -----------------------------------------------------------------------------
 
   private async pushLoop(token: string, initial: SnapshotData, seq: number): Promise<void> {
     let merged = initial;
-    let step = 0;
+    let step = this.compressStep;
     for (let attempt = 0; attempt < MAX_PUSH_ATTEMPTS; attempt++) {
       const { budget, alwaysLast } = BUDGET_STEPS[step]!;
       const data = buildSnapshotData(merged, budget, alwaysLast);
@@ -430,6 +439,7 @@ export class SyncManager {
       switch (res.kind) {
         case "ok":
           this.freshToken = false;
+          this.compressStep = step; // липкая ступень: иначе каждый цикл заново упирался бы в 413
           this.state = { version: res.version, data };
           await this.deps.storage.setMeta(META_SYNC_STATE, this.state);
           return this.succeed(seq);
