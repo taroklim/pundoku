@@ -1,13 +1,18 @@
 // Порядок в `styles/year.css`: блок `@media (forced-colors: active)` обязан стоять ниже базовых правил, которые он
 // переопределяет (`.year-month`, `.ycell.today`, `.ycell`, `.ymark.is-today::after`…): при равной специфичности
 // побеждает более позднее, и стоящий выше блок молча не работал бы (замечание QA PD-38).
+import { readFileSync } from "node:fs";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
-import css from "../styles/year.css?raw";
+
+// Файл читается напрямую (в vitest `.css?raw` отдаёт пустую строку); .mjs — вне tsconfig без node-типов.
+const css = readFileSync(join(dirname(fileURLToPath(import.meta.url)), "..", "src", "styles", "year.css"), "utf8");
 
 const start = css.indexOf("@media (forced-colors: active)");
 
 /** Конец блока — по балансу фигурных скобок. */
-function blockEnd(from: number): number {
+function blockEnd(from) {
   let depth = 0;
   for (let i = css.indexOf("{", from); i < css.length; i++) {
     if (css[i] === "{") depth++;
