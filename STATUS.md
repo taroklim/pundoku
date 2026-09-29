@@ -213,10 +213,10 @@ Gates: build → typecheck, lint, тесты web/engine/api (api с TEST_DATABAS
 | PD-23 | QA-регресс PD-11 (8c4d3e6): PASS, блокеров и Medium нет, 5 уровней без сырых ключей, Worker не подвешивает UI | qa-tester | P1 | completed | PD-11 |
 | PD-25 | (смержен в main 66ec453; pd-25 @ bbf8b8f) UI: экран Year по решениям владельца (C Blocks, сургуч+срез угла, assisted светлый тон 62 %, late=пропуск, карточка дня по тапу); читает данные из хранилища PD-14; ветка `pd-25` от pd-14 @ c574f13, worktree pd-25; dev готов, pd-25 @ df1945d (gates: web 266, engine 105, api 77+2 skipped); на QA PD-34 | developer | P1 | completed | PD-14 |
 | PD-44 | QA PD-33 (pd-33 @ d94d1f0): PASS с оговорками, блокеров нет, gates зелёные (web 373, engine 127, api 80+2 skipped), мутации 6/7 убиты; находки → PD-45, Low → PD-46 | qa-tester | P2 | completed | PD-33 |
-| PD-45 | Фикс-проход pd-33 по QA PD-44 (ветка pd-33, worktree products/pundoku-worktrees/pd-33; без отдельного QA — gates + юнит/скриншот; бриф ниже) | developer | P2 | in_progress | PD-44 |
-| PD-46 | Low: `apps/api/src/config/env.test.ts` нестабилен — таймаут 5 с при spawn tsx (Info QA PD-44); поднять timeout/ужать тест | developer | P3 | pending | — |
-| PD-43 | Low (QA PD-39, до PD-37): локально решённый день, заменённый слиянием 409, на открытом экране остаётся проигравшей записью без `winRate` — `DayStore.applyRemote` при `gridChanged` вызывает `set()`→`persist()` и перезаписывает запись победителя в IDB; после reload исправляется. Реально при двух устройствах с одним токеном (после PD-27) | developer | P3 | pending | — |
-| PD-33 | (dev готов: pd-33 @ d94d1f0, gates web 373, engine 127, api 80+2 skipped; QA PD-44 PASS, фикс-проход PD-45 перед мержем; решения Coordinator: архивный день в Grid ∞ не попадает, играть можно только с первого дня пользования, правило «пропуски от firstUseDate» остаётся) Архив: играть прошлую дату (`GET /api/daily/:date`, DayStore на произвольную дату, `late=true`; кнопки «Play this day's puzzle»/«Finish this puzzle» в карточке дня Year) — решение владельца «пропущенный день можно доигрывать» | developer | P2 | in_progress | PD-25 |
+| PD-45 | Фикс-проход pd-33 по QA PD-44 (pd-33 @ 07362f2 → смержен вместе с PD-33; gates web 384, engine 127, api 127+3 skipped на main, интеграционные с TEST_DATABASE_URL) | developer | P2 | completed | PD-44 |
+| PD-46 | Low: `apps/api/src/config/env.test.ts` нестабилен — таймаут 5 с при spawn tsx (Info QA PD-44); поднять timeout/ужать тест | developer | P3 | in_progress | — |
+| PD-43 | Low (QA PD-39, до PD-37): локально решённый день, заменённый слиянием 409, на открытом экране остаётся проигравшей записью без `winRate` — `DayStore.applyRemote` при `gridChanged` вызывает `set()`→`persist()` и перезаписывает запись победителя в IDB; после reload исправляется. Реально при двух устройствах с одним токеном (после PD-27) | developer | P3 | in_progress | PD-33 |
+| PD-33 | (dev готов: pd-33 @ d94d1f0, gates web 373, engine 127, api 80+2 skipped; смержен в main 8b4e815 (с PD-45); QA PD-44 PASS; решения Coordinator: архивный день в Grid ∞ не попадает, играть можно только с первого дня пользования, правило «пропуски от firstUseDate» остаётся) Архив: играть прошлую дату (`GET /api/daily/:date`, DayStore на произвольную дату, `late=true`; кнопки «Play this day's puzzle»/«Finish this puzzle» в карточке дня Year) — решение владельца «пропущенный день можно доигрывать» | developer | P2 | completed | PD-25 |
 | PD-34 | QA PD-25 (pd-25 @ df1945d): PASS с оговорками, блокеров нет (36 комбинаций, 231 синтетический день без расхождений, мутационная проверка 19/22); находки → PD-35 | qa-tester | P1 | completed | PD-25 |
 | PD-35 | Фикс-проход pd-25 по QA PD-34 (pd-25 @ bbf8b8f; gates: web 282, engine 105, api 77+2 skipped, интеграционные выполнены) | developer | P1 | completed | PD-34 |
 | PD-36 | PASS с оговорками, 5 Low → PD-38, 17/17 мутаций убито. QA-регресс PD-35 (pd-25 @ bbf8b8f, worktree /tmp/pundoku-qa/qa-pd36, БД pundoku_qa7, порты 3400/5400): затронутое + Year/Today/Play + gates | qa-tester | P1 | completed | PD-35 |
@@ -279,5 +279,5 @@ Gates: build → typecheck, lint, тесты web/engine/api (api с `TEST_DATABA
 ## Агенты (текущий статус)
 | Имя | Роль | Статус | Тикет | Обновлено |
 |-----|------|--------|-------|-----------|
-| pm-pundoku-4 | product-manager | waiting | PD-45 | 2026-09-30 |
-| Dev-PD45 | developer | working | PD-45 | 2026-09-30 |
+| pm-pundoku-4 | product-manager | waiting | PD-43 | 2026-09-30 |
+| Dev-PD43 | developer | working | PD-43, PD-46 | 2026-09-30 |
