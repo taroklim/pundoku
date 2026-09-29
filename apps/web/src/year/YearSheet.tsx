@@ -32,6 +32,7 @@ interface YearSheetProps {
   onBack: () => void;
   onClose: () => void;
   onOpenToday: () => void;
+  onPlayDay: (date: string) => void;
   /** Что закрыть для ассистивных технологий, пока шит открыт (по умолчанию `#root`). */
   inertTarget?: () => HTMLElement | null;
 }
@@ -42,7 +43,7 @@ interface YearSheetProps {
  * поверх первого (modality.md). Модальный: фон `inert`, фокус в шите, Esc и «Done» закрывают.
  * Рисуется порталом в `body` (вне `.scroll`), поэтому таб-бар и прокрутка полотна не мешают.
  */
-export function YearSheet({ year, month, date, closing, ctx, progress, onOpenDay, onBack, onClose, onOpenToday, inertTarget }: YearSheetProps) {
+export function YearSheet({ year, month, date, closing, ctx, progress, onOpenDay, onBack, onClose, onOpenToday, onPlayDay, inertTarget }: YearSheetProps) {
   const { t, i18n } = useTranslation();
   const locale = i18n.resolvedLanguage ?? "en";
   const sheetRef = useRef<HTMLElement>(null);
@@ -120,7 +121,7 @@ export function YearSheet({ year, month, date, closing, ctx, progress, onOpenDay
         </header>
         <div className="ysheet-body">
           {mark ? (
-            <DayCard mark={mark} ctx={ctx} progress={progress.get(mark.date)} headRef={headRef} onOpenToday={onOpenToday} />
+            <DayCard mark={mark} ctx={ctx} progress={progress.get(mark.date)} headRef={headRef} onOpenToday={onOpenToday} onPlayDay={onPlayDay} />
           ) : (
             <MonthPage year={year} month={month} ctx={ctx} onOpenDay={onOpenDay} />
           )}
@@ -179,15 +180,19 @@ function DayCard({
   progress,
   headRef,
   onOpenToday,
+  onPlayDay,
 }: {
   mark: DayMark;
   ctx: YearContext;
   progress: DayProgress | undefined;
   headRef: RefObject<HTMLHeadingElement | null>;
   onOpenToday: () => void;
+  onPlayDay: (date: string) => void;
 }) {
   const { t, i18n } = useTranslation();
   const locale = i18n.resolvedLanguage ?? "en";
+  // Архив (PD-33): играть можно прошлый день, начиная с первого дня пользования (раньше — «до начала», пропусков там нет).
+  const archivable = mark.date < ctx.today && mark.date >= ctx.start;
   const solved = progress?.solved === true;
   const showSub = progress !== undefined;
   // «Сколько поставлено» считается только по клеткам, которые игрок заполняет сам: заданные клетки не в счёт.
@@ -262,6 +267,11 @@ function DayCard({
               {t("year.continueToday")}
             </button>
           )}
+          {!mark.today && archivable && (
+            <button type="button" className="ghost" data-testid="finish-day" onClick={() => onPlayDay(mark.date)}>
+              {t("year.card.finish")}
+            </button>
+          )}
         </>
       ) : mark.today ? (
         <>
@@ -271,9 +281,16 @@ function DayCard({
           </button>
         </>
       ) : (
-        <p className="emptyday">
-          {mark.date > ctx.today ? t("year.card.future") : mark.kind === "missed" ? t("year.card.notPlayed") : mark.date >= ctx.start ? t("year.card.noRecord") : t("year.card.before")}
-        </p>
+        <>
+          <p className="emptyday">
+            {mark.date > ctx.today ? t("year.card.future") : mark.kind === "missed" ? t("year.card.notPlayed") : mark.date >= ctx.start ? t("year.card.noRecord") : t("year.card.before")}
+          </p>
+          {archivable && (
+            <button type="button" className="ghost" data-testid="play-day" onClick={() => onPlayDay(mark.date)}>
+              {t("year.card.play")}
+            </button>
+          )}
+        </>
       )}
     </div>
   );

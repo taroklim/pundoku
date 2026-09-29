@@ -11,6 +11,7 @@ import {
 import { formatDay } from "../play/format";
 import { cellsLeft } from "../play/logic";
 import { ResultCard } from "../play/ResultCard";
+import type { DayStore } from "./dayStore";
 import { dayStore } from "./dayStore";
 import { MiniBoard } from "./MiniBoard";
 import { hiddenSolution } from "./permanent";
@@ -22,27 +23,59 @@ function dateOf(ymd: string): Date {
   return new Date(y as number, (m as number) - 1, d as number);
 }
 
+/** Существующая календарная дата (2026-02-30 «перекатывается» в март — такую подпись не показываем). */
+function isRealDate(ymd: string): boolean {
+  const [y, m, d] = ymd.split("-").map(Number);
+  const date = dateOf(ymd);
+  return date.getFullYear() === y && date.getMonth() + 1 === m && date.getDate() === d;
+}
+
 /**
  * Экран Today (PD-12): подпись дня «Wed 29 Sep · Medium · 4:12» → поле B → статус и источник →
  * панель 1–9. После решения — карточка дня («Your path»: heatmap, время, техника, win rate) и
  * Grid ∞ с посадкой последней клетки дня (M5). Источник сетки — `DayStore`: API либо фолбэк.
  */
 export function TodayScreen() {
+  return <DayView store={dayStore} />;
+}
+
+/** Архив (PD-33): режим экрана для прошлой даты — заголовок «Archive», кнопка «‹ Year», без Grid ∞. */
+export interface ArchiveProps {
+  /** Играемая прошлая дата `YYYY-MM-DD` (совпадает с `store.openArchive(date)`). */
+  readonly date: string;
+  readonly onBack: () => void;
+}
+
+/**
+ * Одно поле и одна карточка результата на два экрана: сегодняшний день (`dayStore`) и архивный (`archiveStore`,
+ * `archive` задан). Компонент поля/панели/карточки общие — различаются только шапка, тексты состояний и Grid ∞.
+ */
+export function DayView({ store, archive }: { store: DayStore; archive?: ArchiveProps }) {
   const { t, i18n } = useTranslation();
-  const snap = useSyncExternalStore(dayStore.subscribe, dayStore.getSnapshot);
-  const clock = useClock(dayStore);
+  const rawSnap = useSyncExternalStore(store.subscribe, store.getSnapshot);
+  // Архив: стор мог ещё держать другую дату (первый кадр до эффекта) — показываем «загрузку», а не чужую партию.
+  const stale = archive !== undefined && rawSnap.date !== archive.date;
+  const snap = stale ? { ...rawSnap, phase: "loading" as const, play: null, unavailable: false } : rawSnap;
+  const clock = useClock(store);
   const root = useRef<HTMLDivElement>(null);
   const { phase, play, difficulty } = snap;
+  const archiveDate = archive?.date;
+  // Недоступная дата (архив): ни пустого поля, ни цифровой панели — только сообщение.
+  const unavailable = phase === "error" && snap.unavailable;
 
   useEffect(() => {
-    dayStore.ensureStarted();
-    dayStore.setTabActive(true);
-    return () => dayStore.setTabActive(false);
-  }, []);
+    if (archiveDate !== undefined) store.openArchive(archiveDate);
+    else store.ensureStarted();
+    store.setTabActive(true);
+    return () => {
+      store.setTabActive(false);
+      if (archiveDate !== undefined) store.closeArchive();
+    };
+  }, [store, archiveDate]);
   // QA PD-23, Low 1: возврат на вкладку не проигрывает стухшие M1/M3.
-  useClearEffectsOnUnmount(dayStore);
+  useClearEffectsOnUnmount(store);
 
-  const { cardShown, flown } = useSolveSequence(phase, dayStore, root);
+  const { cardShown, flown } = useSolveSequence(phase, store, root);
 
   const cardRef = useRef<HTMLElement>(null);
   useEffect(() => {
@@ -54,9 +87,9 @@ export function TodayScreen() {
   const left = play ? cellsLeft(play) : 81;
   const announcement = useCellsLeftAnnouncement(left, interactive, snap.startedOn.getTime());
 
-  const dayLabel = formatDay(dateOf(snap.date), locale);
+  const dayLabel = isRealDate(snap.date) ? formatDay(dateOf(snap.date), locale) : "";
   const showClock = phase === "playing" || (phase === "solved" && !cardShown);
-  const diffLabel = snap.difficultyKnown && phase !== "loading" ? t(`difficulty.${difficulty}`) : null;
+  const diffLabel = snap.difficultyKnown && phase !== "loading" && !snap.unavailable ? t(`difficulty.${difficulty}`) : null;
 
   // Grid ∞: клетка дня, ещё не севшая на место (идёт M5), рисуется пустой — как до решения.
   const pending = snap.landing !== null;
@@ -74,12 +107,20 @@ export function TodayScreen() {
   const winRate = snap.serverVerified === false ? null : snap.winRate;
 
   return (
-    <div ref={root} className="play today" onKeyDown={(e) => handleGameKey(e, dayStore)}>
+    <div ref={root} className={`play today${archive ? " archive" : ""}`} onKeyDown={(e) => handleGameKey(e, store)} data-testid={archive ? "archive-screen" : undefined} data-date={archive ? archive.date : undefined}>
       <p className="sr-only" role="status" aria-live="polite" aria-atomic="true">
         {announcement}
       </p>
-      <header className="toolbar">
-        <h1 className="title">{t("tabs.today")}</h1>
+      <header className={`toolbar${archive ? " toolbar-archive" : ""}`}>
+        {archive && (
+          <button type="button" className="archive-back" onClick={archive.onBack} aria-label={t("archive.backLabel")} data-testid="archive-back">
+            <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <path d="m15 6-6 6 6 6" />
+            </svg>
+            <span>{t("tabs.year")}</span>
+          </button>
+        )}
+        <h1 className="title">{archive ? t("archive.title") : t("tabs.today")}</h1>
       </header>
       {/* TODO(PD-12 → дизайн): шестерёнка настроек из макета — экрана настроек нет, значок не рисуем. */}
       <p className="subline">
@@ -96,11 +137,16 @@ export function TodayScreen() {
       {phase === "solved" && cardShown ? (
         <>
           {play && (
-            <ResultCard play={play} cardRef={cardRef} title={t("today.cardTitle")} winRate={winRate}>
+            <ResultCard play={play} cardRef={cardRef} title={t("today.cardTitle")} winRate={winRate} winRateScope={archive ? "day" : "today"}>
               {sourceLabel && <p className="source">{sourceLabel}</p>}
+              {archive && snap.late && (
+                <p className="source" data-testid="late-note">
+                  {t("year.card.lateNote")}
+                </p>
+              )}
             </ResultCard>
           )}
-          {gridView && (
+          {!archive && gridView && (
             <section aria-labelledby="grid-inf-title" data-testid="grid-inf-section">
               <div className="section-head">
                 <h2 id="grid-inf-title">{t("today.gridTitle")}</h2>
@@ -130,19 +176,24 @@ export function TodayScreen() {
         </>
       ) : (
         <>
-          <Board snap={snap} store={dayStore} dim={phase === "solved"} />
+          {!unavailable && <Board snap={snap} store={store} dim={phase === "solved"} />}
 
           {/* Свободное место — МЕЖДУ полем и панелью (макет, находка 1); в зазоре — статус. */}
           <div className="gap">
             {phase === "loading" && (
               <p className="status" role="status">
-                {t("today.loading")}
+                {t(archive ? "archive.loading" : "today.loading")}
               </p>
             )}
-            {phase === "error" && (
+            {unavailable && (
+              <p className="status" role="alert" data-testid="archive-unavailable">
+                {t("archive.unavailable")}
+              </p>
+            )}
+            {phase === "error" && !unavailable && (
               <p className="status" role="alert">
-                {t("today.failed")}{" "}
-                <button type="button" className="link" onClick={() => void dayStore.load()}>
+                {t(archive ? "archive.failed" : "today.failed")}{" "}
+                <button type="button" className="link" onClick={() => void store.load()}>
                   {t("play.retry")}
                 </button>
               </p>
@@ -159,7 +210,7 @@ export function TodayScreen() {
             )}
           </div>
 
-          <GamePad snap={snap} store={dayStore} />
+          {!unavailable && <GamePad snap={snap} store={store} />}
         </>
       )}
     </div>

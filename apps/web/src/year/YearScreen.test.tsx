@@ -28,6 +28,7 @@ const DAYS: DayProgress[] = [
 let host: HTMLDivElement;
 let root: Root;
 let openToday: Mock<() => void>;
+let playDay: Mock<(date: string) => void>;
 
 beforeEach(async () => {
   await i18n.changeLanguage("en");
@@ -36,6 +37,7 @@ beforeEach(async () => {
   document.body.append(host);
   root = createRoot(host);
   openToday = vi.fn<() => void>();
+  playDay = vi.fn<(date: string) => void>();
 });
 afterEach(() => {
   act(() => root.unmount());
@@ -44,7 +46,7 @@ afterEach(() => {
 });
 
 const render = (days: DayProgress[] | null = DAYS, today = TODAY, firstUse: string | null = FIRST_USE) =>
-  act(() => root.render(<YearScreen days={days} firstUse={firstUse} today={today} onOpenToday={openToday} />));
+  act(() => root.render(<YearScreen days={days} firstUse={firstUse} today={today} onOpenToday={openToday} onPlayDay={playDay} />));
 
 const mark = (date: string) => host.querySelector(`.year-month .ymark[data-date="${date}"]`) as HTMLElement;
 const month = (i: number) => host.querySelector(`.year-month[data-month="${i}"]`) as HTMLButtonElement;
@@ -318,6 +320,68 @@ describe("шит месяца и карточка дня", () => {
     expect(openToday).toHaveBeenCalledTimes(1);
     expect(sheet()).toBeNull();
     expect(host.hasAttribute("inert")).toBe(false);
+  });
+
+  describe("архив (PD-33): кнопки карточки прошлого дня по состояниям", () => {
+    const btn = (id: string) => document.querySelector<HTMLButtonElement>(`[data-testid="${id}"]`);
+
+    it("нет записи, пропущенный день: «Play this day's puzzle» закрывает шит и передаёт дату", () => {
+      openDay(8, "2026-09-05");
+      expect(btn("play-day")!.textContent).toBe("Play this day’s puzzle");
+      expect(btn("finish-day")).toBeNull();
+      click(btn("play-day"));
+      expect(playDay).toHaveBeenCalledExactlyOnceWith("2026-09-05");
+      expect(sheet()).toBeNull();
+      expect(host.hasAttribute("inert")).toBe(false);
+    });
+
+    it("начат и брошен: «Finish this puzzle» вместо «Play», передаёт дату", () => {
+      openDay(8, "2026-09-13");
+      expect(btn("finish-day")!.textContent).toBe("Finish this puzzle");
+      expect(btn("play-day")).toBeNull();
+      click(btn("finish-day"));
+      expect(playDay).toHaveBeenCalledExactlyOnceWith("2026-09-13");
+    });
+
+    it("решён (чисто, с правками, late): карточка результата без кнопок", () => {
+      for (const date of ["2026-09-10", "2026-09-11", "2026-09-14"]) {
+        openDay(8, date);
+        expect(btn("play-day"), date).toBeNull();
+        expect(btn("finish-day"), date).toBeNull();
+        expect(document.querySelector(".daycard .ghost"), date).toBeNull();
+        act(() => void root.render(null));
+        render();
+      }
+      expect(playDay).not.toHaveBeenCalled();
+    });
+
+    it("сегодня и будущее — без кнопок архива; до начала пользования — тоже", () => {
+      openDay(8, TODAY);
+      expect(btn("play-day")).toBeNull();
+      expect(btn("finish-day")).toBeNull();
+      click(document.querySelector(".ysheet-head .back"));
+      click(document.querySelector('.ycell[data-date="2026-09-30"]'));
+      expect(btn("play-day")).toBeNull();
+      act(() => void root.render(null));
+      render(DAYS, TODAY, "2026-09-05");
+      openDay(8, "2026-09-03");
+      expect(btn("play-day")).toBeNull();
+      click(document.querySelector(".ysheet-head .back"));
+      click(document.querySelector('.ycell[data-date="2026-09-06"]'));
+      expect(btn("play-day")).not.toBeNull();
+    });
+
+    it("initialDate открывает шит сразу на карточке дня, один раз, и сообщает о применении", () => {
+      const consumed = vi.fn();
+      act(() =>
+        root.render(
+          <YearScreen days={DAYS} firstUse={FIRST_USE} today={TODAY} onOpenToday={openToday} onPlayDay={playDay} initialDate="2026-09-13" onInitialDateConsumed={consumed} />,
+        ),
+      );
+      expect(sheet()!.dataset["page"]).toBe("day");
+      expect(document.querySelector('[data-testid="day-card"] h3')!.textContent).toContain("13");
+      expect(consumed).toHaveBeenCalledTimes(1);
+    });
   });
 
   it("«Back» возвращает на страницу месяца, «Done» закрывает шит и возвращает фокус на месяц", () => {

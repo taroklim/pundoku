@@ -3,7 +3,7 @@ import { act, createRef } from "react";
 import { createRoot } from "react-dom/client";
 import type { Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import "../i18n";
+import i18n from "../i18n";
 import { enterDigit, createPlay, type PlayState } from "./logic";
 import { ResultCard } from "./ResultCard";
 
@@ -44,9 +44,9 @@ afterEach(() => {
   host.remove();
 });
 
-const render = (play: PlayState, winRate?: number | null) =>
+const render = (play: PlayState, winRate?: number | null, winRateScope?: "today" | "day") =>
   act(() =>
-    root.render(<ResultCard play={play} cardRef={createRef()} title="Your path" winRate={winRate} />),
+    root.render(<ResultCard play={play} cardRef={createRef()} title="Your path" winRate={winRate} winRateScope={winRateScope} />),
   );
 
 describe("карточка дня", () => {
@@ -89,6 +89,20 @@ describe("карточка дня", () => {
     expect(host.querySelector("[data-testid=winrate]")!.textContent).toBe("61 % solved today");
     render(solvedPlay(), 0);
     expect(host.querySelector("[data-testid=winrate]")!.textContent).toBe("0 % solved today");
+  });
+
+  it("win rate архивного дня: «solved that day» (en/uk/ru), не «today»", async () => {
+    render(solvedPlay(), 61.4, "day");
+    expect(host.querySelector("[data-testid=winrate]")!.textContent).toBe("61\u00a0% solved that day");
+    render(solvedPlay(), 61.4, "today");
+    expect(host.querySelector("[data-testid=winrate]")!.textContent).toBe("61\u00a0% solved today");
+    await act(() => i18n.changeLanguage("uk"));
+    render(solvedPlay(), 61.4, "day");
+    expect(host.querySelector("[data-testid=winrate]")!.textContent).toBe("61\u00a0% розв’язали в той день");
+    await act(() => i18n.changeLanguage("ru"));
+    render(solvedPlay(), 61.4, "day");
+    expect(host.querySelector("[data-testid=winrate]")!.textContent).toBe("61\u00a0% решили в тот день");
+    await act(() => i18n.changeLanguage("en"));
   });
 
   it("Share неактивна (PNG-шаринг — отдельный тикет)", () => {

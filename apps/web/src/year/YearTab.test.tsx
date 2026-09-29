@@ -38,7 +38,7 @@ let visibility: DocumentVisibilityState;
 
 const flush = () => act(async () => void (await Promise.resolve()));
 const mount = async () => {
-  await act(async () => root.render(<YearTab onOpenToday={() => {}} />));
+  await act(async () => root.render(<YearTab onOpenToday={() => {}} onPlayDay={() => {}} />));
   await flush();
 };
 const setVisibility = async (v: DocumentVisibilityState) => {

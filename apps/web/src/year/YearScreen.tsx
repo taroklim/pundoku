@@ -18,6 +18,12 @@ export interface YearScreenProps {
   today: string;
   /** «Open today's puzzle» / «Continue» — переключить вкладку на Today. */
   onOpenToday: () => void;
+  /** «Play this day's puzzle» / «Finish this puzzle» (PD-33): открыть игру прошлого дня. */
+  onPlayDay: (date: string) => void;
+  /** Открыть шит сразу на карточке этого дня (возврат из архива); применяется один раз, когда данные загружены. */
+  initialDate?: string | null;
+  /** Вызывается после применения `initialDate` — адрес возвращается к обычному `#/year`. */
+  onInitialDateConsumed?: () => void;
 }
 
 const MONTH_SLOTS = 35; // 7 × 5: дни месяца идут подряд, без привязки к дням недели (ритма недели в продукте нет)
@@ -27,7 +33,7 @@ const MONTH_SLOTS = 35; // 7 × 5: дни месяца идут подряд, б
  * тап по месяцу → шит месяца с клетками ~46 pt → тап по дню → карточка дня (вторая страница шита).
  * Формы и цвет меток — `year/model.ts` и `styles/year.css`. Никаких серий и процентов: только нейтральные итоги.
  */
-export function YearScreen({ days, firstUse, today, onOpenToday }: YearScreenProps) {
+export function YearScreen({ days, firstUse, today, onOpenToday, onPlayDay, initialDate = null, onInitialDateConsumed }: YearScreenProps) {
   const { t, i18n } = useTranslation();
   const locale = i18n.resolvedLanguage ?? "en";
   const root = useRef<HTMLDivElement>(null);
@@ -76,6 +82,20 @@ export function YearScreen({ days, firstUse, today, onOpenToday }: YearScreenPro
     restoreFocus.current = false;
     root.current?.querySelector<HTMLElement>(`[data-month="${trigger.current}"]`)?.focus({ preventScroll: true });
   }, [sheet]);
+  // Возврат из архива: шит открывается на карточке дня, откуда ушли (один раз, когда данные уже загружены).
+  const initialApplied = useRef(false);
+  useEffect(() => {
+    if (initialDate === null || initialApplied.current || days === null) return;
+    initialApplied.current = true;
+    const y = yearOfDate(initialDate);
+    const month = Number(initialDate.slice(5, 7)) - 1;
+    if (years.includes(y) && month >= 0 && month <= 11) {
+      trigger.current = String(month);
+      setPicked(y);
+      setSheet({ month, date: initialDate, closing: false });
+    }
+    onInitialDateConsumed?.();
+  }, [initialDate, days, years, onInitialDateConsumed]);
   // Смена года при открытом шите невозможна (фон inert), но данные могли обновиться — шит на месяц не переоткрываем.
 
   const title = (
@@ -177,6 +197,10 @@ export function YearScreen({ days, firstUse, today, onOpenToday }: YearScreenPro
           onOpenToday={() => {
             setSheet(null);
             onOpenToday();
+          }}
+          onPlayDay={(date) => {
+            setSheet(null);
+            onPlayDay(date);
           }}
         />
       )}

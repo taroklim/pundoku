@@ -10,7 +10,17 @@ import { YearScreen } from "./YearScreen";
  * горячего кэша ходов. Перечитывает данные при открытии и когда пришёл снапшот с сервера
  * (`subscribeRemote`: после чистки хранилища на устройстве год возвращается сам).
  */
-export function YearTab({ onOpenToday }: { onOpenToday: () => void }) {
+export function YearTab({
+  onOpenToday,
+  onPlayDay,
+  initialDate,
+  onInitialDateConsumed,
+}: {
+  onOpenToday: () => void;
+  onPlayDay: (date: string) => void;
+  initialDate?: string | null;
+  onInitialDateConsumed?: () => void;
+}) {
   const [days, setDays] = useState<DayProgress[] | null>(null);
   const [firstUse, setFirstUse] = useState<string | null>(null);
   const [today, setToday] = useState(() => localDate());
@@ -43,5 +53,15 @@ export function YearTab({ onOpenToday }: { onOpenToday: () => void }) {
     };
   }, []);
 
-  return <YearScreen days={days} firstUse={firstUse} today={today} onOpenToday={onOpenToday} />;
+  return (
+    <YearScreen
+      days={days}
+      firstUse={firstUse}
+      today={today}
+      onOpenToday={onOpenToday}
+      onPlayDay={onPlayDay}
+      initialDate={initialDate}
+      onInitialDateConsumed={onInitialDateConsumed}
+    />
+  );
 }
