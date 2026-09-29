@@ -124,9 +124,18 @@
 3. Low: смена дня только по `online`/`visibilitychange`, таймера на полночь нет — зафиксировать в README как осознанное решение (iOS даёт visibilitychange при возврате из фона).
 Gates: build → typecheck, lint, тесты. Закоммитить в pd-12. pd-14 не трогать (на нём идёт QA PD-20). Затем быстрый QA-регресс сценария полуночи + gates.
 
-- (для QA PD-20/перед PD-14) выяснить, почему `describe.skipIf` пропускает интеграционные api-тесты при заданном `TEST_DATABASE_URL` (на main: api 60 passed + 8 skipped); убедиться, что тесты миграции 0005 и живой БД реально выполняются.
+- (закрыто QA PD-20) `describe.skipIf` пропускает интеграционные api-тесты только без `TEST_DATABASE_URL`; с ним выполняются (api 77+2 skipped).
 - не проверено QA PD-30: офлайн в webkit через setOffline (ограничение Playwright), реальная смена суток/часовые пояса, iOS.
 - Ветка `pd-12` оставлена до перебазирования `pd-14` (worktree удалён).
+
+### Бриф PD-31 (developer, ветка `pd-14`, worktree pd-14 @ 6a79de4 поверх main 772dd90)
+Интеграционные api-тесты РЕАЛЬНО идут на живой БД, если задан `TEST_DATABASE_URL` (или `DATABASE_URL`); без него — skipped (закрытый вопрос skipIf). Зафиксировать в README api, как запускать.
+1. Low-2: при ≥1500 днях ступень сжатия «липкая» только внутри сессии — на старте два лишних PUT, растёт version. Хранить выбранную ступень в `meta:syncState` или не слать PUT, если данные не менялись.
+2. Low-3: README web утверждает «две вкладки не заведут два устройства», а на сервере остаётся сирота в `devices` при гонке двух вкладок на свежем профиле — уточнить README.
+3. Low-4: README противоречит себе: незавершённый день на сервере хранит только сводку, поставленные цифры/заметки после чистки IDB не восстанавливаются — поправить формулировку.
+4. Слияние 409 (решение Coordinator): при конфликте по одной дате запись с source `sudoku.com` (или серверная `generator`) предпочтительнее `device`; при равных источниках — более ранний `solvedAt`. Реализовать + тесты + README.
+5. Low-1 (шум 404 на первый GET /api/snapshot в консоли) — не менять контракт, отметить в README как известное.
+Gates: build → typecheck, lint, тесты web/engine/api (api с TEST_DATABASE_URL на отдельной БД, напр. `pundoku_dev`-копия или свежая `pundoku_pd31`). Коммит в pd-14.
 
 ## Backlog по QA PD-17 (не чиним сейчас)
 - 320×568 (iPhone SE 1-го поколения) скролл на 6–10 px — не целевое устройство.
@@ -171,7 +180,8 @@ Gates: build → typecheck, lint, тесты. Закоммитить в pd-12. p
 | PD-25 | UI: экран Year по решениям владельца (C Blocks, сургуч+срез угла, assisted светлый тон 62 %, late=пропуск, карточка дня по тапу); читает данные из хранилища PD-14 | developer | P1 | pending | PD-14 |
 | PD-26 | Полировка: `apple-touch-startup-image`/тёмный launch (QA PD-16), PD-22 low, Share PNG без цифр (если владелец подтвердит) | developer | P2 | pending | PD-25 |
 | PD-27 | Привязка e-mail/пароля к анонимному аккаунту (UI в настройках) | developer | P2 | pending | PD-26 |
-| PD-20 | QA PD-14 (pd-14 @ 0026b2a, worktree qa-pd14, БД pundoku_qa3) | qa-tester | P1 | in_progress | PD-14 |
+| PD-20 | QA PD-14 (pd-14 @ 0026b2a): PASS с оговорками, блокеров и Medium нет; 4 Low + решение по слиянию → PD-31 | qa-tester | P1 | completed | PD-14 |
+| PD-31 | Фикс-проход pd-14 по QA PD-20 (Low-2/3/4 + приоритет источника при слиянии, бриф ниже); pd-14 перебазирована на main (6a79de4), gates зелёные (web 205, engine 105, api 70+9 skipped без TEST_DATABASE_URL) | developer | P1 | in_progress | PD-20 |
 
 ### Бриф PD-8 (developer, P1 — пункт (a) блокирует UI-тикеты поля/Today)
 Движок: (a) зафиксировать и реализовать контракт `undo` в `MoveLog` — undo после `erase` не должен
@@ -215,4 +225,4 @@ hard 26/locked candidates, expert 24/pairs, master — beyond. `rateDifficulty` 
 |-----|------|--------|-------|-----------|
 | PM-Pundoku | product-manager | waiting | PD-18, PD-20 | 2026-09-29 14:00 |
 | QA-PD18 | qa-tester | working | PD-18 | 2026-09-29 13:10 |
-| QA-PD20 | qa-tester | working | PD-20 | 2026-09-29 14:00 |
+| Dev-PD31 | developer | working | PD-31 | 2026-09-29 15:00 |
