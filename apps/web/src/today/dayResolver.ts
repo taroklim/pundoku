@@ -46,6 +46,8 @@ export type FetchedDay =
   | {
       readonly ok: false;
       readonly reason: "network" | "http" | "invalid";
+      /** HTTP-статус при `reason: "http"` (архив различает 400/404: дата недоступна). */
+      readonly status?: number;
       /** Сложность из ответа, если он был, но mission оказалась негодной; только у `source: generator`. */
       readonly difficulty?: Difficulty | null;
     };

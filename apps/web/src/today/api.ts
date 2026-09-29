@@ -44,7 +44,7 @@ export async function fetchDaily(date: string, o: Options = {}): Promise<Fetched
     o,
   );
   if (res === null) return { ok: false, reason: "network" };
-  if (!res.ok) return { ok: false, reason: "http" }; // 404 not_available_yet, 429, 503 и т. п.
+  if (!res.ok) return { ok: false, reason: "http", status: res.status }; // 404 not_available_yet, 400 future_date, 429, 503 и т. п.
   try {
     return parseDaily(date, await res.json());
   } catch {

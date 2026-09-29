@@ -43,6 +43,10 @@ export interface DaySnapshot extends PlaySnapshot {
   readonly offline: boolean;
   readonly permanent: PermanentGridState | null;
   readonly permanentSolvable: boolean;
+  /** Архив: этой даты играть нельзя (сегодня/будущее, кривая дата, сервер ответил 400/404) — фаза `error` без повтора. */
+  readonly unavailable: boolean;
+  /** День решён после своей даты (дата дня < даты решения): в Year остаётся пропуском. Известно только у решённого. */
+  readonly late: boolean;
   /** Клетка, приземлившаяся в Grid ∞ при решении в ЭТОЙ сессии (id — новый на каждое решение). */
   readonly landing: { readonly cell: number; readonly digit: number; readonly id: number } | null;
 }
@@ -107,6 +111,8 @@ function initialDaySnapshot(date: string): DaySnapshot {
     offline: false,
     permanent: null,
     permanentSolvable: false,
+    unavailable: false,
+    late: false,
     landing: null,
   };
 }
@@ -117,6 +123,29 @@ const sleep = (ms: number) => new Promise<"slow">((resolve) => setTimeout(() => 
 export function lastMoveCell(play: PlayState): number | null {
   const last = play.log[play.log.length - 1];
   return last ? last.cell : null;
+}
+
+/**
+ * Дата, которую можно играть как архивную: существующая дата `YYYY-MM-DD` СТРОГО раньше сегодняшней.
+ * Сегодняшний день ведёт вкладка Today (свой стор), будущее сервер отдаёт как 400/404 — и то и другое
+ * в архиве недоступно.
+ */
+export function isArchiveDate(date: string, today: string): boolean {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(date);
+  if (!m) return false;
+  const [y, mo, d] = [Number(m[1]), Number(m[2]), Number(m[3])];
+  const probe = new Date(y, mo - 1, d);
+  if (probe.getFullYear() !== y || probe.getMonth() !== mo - 1 || probe.getDate() !== d) return false;
+  return date < today;
+}
+
+export interface DayStoreOptions {
+  /**
+   * Архивный стор (PD-33): играет ОДНУ прошлую дату, заданную `openArchive(date)`, а не «сегодня». Отдельный
+   * экземпляр — состояние сегодняшнего дня и Grid ∞ он не трогает: свой снапшот, своя запись дня по своей дате,
+   * без постоянной сетки (доигранный архивный день в Grid ∞ не «улетает»), без смены суток.
+   */
+  archive?: boolean;
 }
 
 export class DayStore extends GameStore<DaySnapshot> {
@@ -133,22 +162,50 @@ export class DayStore extends GameStore<DaySnapshot> {
   private solvedAt: string | null = null;
   private late = false;
   private assisted = false;
+  private readonly archive: boolean;
+  /** Архив: играемая дата (задаётся `openArchive`); у стора «сегодня» не используется. */
+  private targetDate: string | null = null;
 
-  constructor(deps: DayDeps = defaultDeps()) {
+  constructor(deps: DayDeps = defaultDeps(), options: DayStoreOptions = {}) {
     super(initialDaySnapshot(localDate(deps.now())));
     this.deps = deps;
+    this.archive = options.archive === true;
   }
 
-  /** Первый показ вкладки Today: слушатели, постоянная сетка, загрузка дня. Идемпотентно. */
-  ensureStarted(): void {
-    if (this.started) return;
+  private attach(): boolean {
+    if (this.started) return false;
     this.started = true;
     this.watchVisibility();
     window.addEventListener("online", this.refresh);
     document.addEventListener("visibilitychange", this.onVisible);
     this.unsubscribeRemote = this.deps.sync?.subscribeRemote(this.applyRemote) ?? null;
+    return true;
+  }
+
+  /** Первый показ вкладки Today: слушатели, постоянная сетка, загрузка дня. Идемпотентно. */
+  ensureStarted(): void {
+    if (this.archive || !this.attach()) return;
     void this.loadPermanent();
     void this.load();
+  }
+
+  /** Архив: открыть прошлую дату (слушатели, загрузка). Повторный вызов с другой датой — загрузка новой. */
+  openArchive(date: string): void {
+    if (!this.archive) throw new Error("openArchive: только для архивного DayStore");
+    this.targetDate = date;
+    this.attach();
+    void this.load();
+  }
+
+  /**
+   * Архив: экран закрыт — сохранить накопленное время, отписаться, сбросить снапшот в «загрузку»
+   * (следующее открытие не покажет чужую партию даже на кадр).
+   */
+  closeArchive(): void {
+    if (!this.archive) return;
+    this.persist();
+    this.dispose();
+    this.resetToLoading({ source: null, winRate: null, landing: null, serverVerified: null, offline: false, verification: "local", unavailable: false, late: false });
   }
 
   private onVisible = (): void => {
@@ -177,7 +234,7 @@ export class DayStore extends GameStore<DaySnapshot> {
   /** Сервер дописал в локальное хранилище решённые дни/Grid ∞ (восстановление, слияние после 409). */
   private applyRemote = (info: RemoteApplied): void => {
     if (!this.started) return;
-    if (info.gridChanged) {
+    if (info.gridChanged && !this.archive) {
       void this.deps.repo.getPermanent().then((state) => {
         if (state) this.set({ permanent: state, permanentSolvable: isSolvable(state) });
       });
@@ -197,6 +254,7 @@ export class DayStore extends GameStore<DaySnapshot> {
   }
 
   private landOnSolve(play: PlayState): Landing | null {
+    if (this.archive) return null; // архивный день в Grid ∞ не летит (и постоянную сетку стор не держит)
     const perm = this.snap.permanent ?? initialPermanent(newInstallSeed());
     const preferred = lastMoveCell(play) ?? 0;
     const landing = landDay(perm, this.snap.date, preferred);
@@ -210,14 +268,22 @@ export class DayStore extends GameStore<DaySnapshot> {
 
   // ---- загрузка дня ------------------------------------------------------------------------
 
-  /** Загрузить сегодняшний день: сохранённый прогресс → API (или фолбэк) → игра. */
+  /**
+   * Загрузить день (сегодняшний; в архиве — заданную дату): сохранённый прогресс → API (или фолбэк) → игра.
+   * Архив: дата не из прошлого/несуществующая — сразу `unavailable`, без сети и без записи в хранилище.
+   */
   async load(): Promise<void> {
     const token = ++this.token;
-    const date = localDate(this.deps.now());
+    const today = localDate(this.deps.now());
+    const date = this.archive ? (this.targetDate ?? today) : today;
     this.solvedAt = null;
     this.late = false;
     this.assisted = false;
-    this.resetToLoading({ date, source: null, winRate: null, landing: null, serverVerified: null, offline: false, verification: "local" });
+    this.resetToLoading({ date, source: null, winRate: null, landing: null, serverVerified: null, offline: false, verification: "local", unavailable: false, late: false });
+    if (this.archive && !isArchiveDate(date, today)) {
+      this.set({ phase: "error", unavailable: true });
+      return;
+    }
 
     await this.awaitRestore();
     if (token !== this.token) return;
@@ -259,6 +325,12 @@ export class DayStore extends GameStore<DaySnapshot> {
 
   private async start(token: number, date: string, saved: DayProgress | null, fetched: FetchedDay): Promise<void> {
     if (saved && !fetched.ok) return this.resumeSaved(saved, true); // сохранённое надёжнее фолбэка
+    // Архив: сервер сказал «такой даты нет» (400 future_date / 404 not_available_yet) — фолбэк-сетку НЕ строим:
+    // сетка ещё не существует, а сгенерированная заранее не совпала бы с настоящей.
+    if (this.archive && !fetched.ok && fetched.reason === "http" && (fetched.status === 400 || fetched.status === 404)) {
+      this.set({ phase: "error", unavailable: true });
+      return;
+    }
     const plan = planDay(date, fetched, this.lastKnownDifficulty);
 
     if (plan.kind === "server") {
@@ -329,6 +401,7 @@ export class DayStore extends GameStore<DaySnapshot> {
       verification,
       serverVerified: saved.serverVerified,
       offline,
+      late: saved.late,
       landing: null,
     });
   }
@@ -341,14 +414,17 @@ export class DayStore extends GameStore<DaySnapshot> {
     const today = localDate(this.deps.now());
     if (s.phase === "loading") return;
     if (s.phase === "error") {
-      void this.load();
+      if (!s.unavailable) void this.load(); // «даты нет» сетью не лечится
       return;
     }
-    if (s.date !== today && (s.phase === "solved" || !s.play || s.play.log.length === 0)) {
-      void this.load();
-      return;
+    if (!this.archive) {
+      if (s.date !== today && (s.phase === "solved" || !s.play || s.play.log.length === 0)) {
+        void this.load();
+        return;
+      }
+      if (s.date !== today) return;
     }
-    if (s.date !== today || !shouldRefetch(s.source)) return;
+    if (!shouldRefetch(s.source)) return;
     const token = this.token;
     void this.fetchDay(s.date).then((r) => (token === this.token ? this.applyLatest(r) : undefined));
   };
@@ -433,8 +509,9 @@ export class DayStore extends GameStore<DaySnapshot> {
             permanent: landing.state,
             permanentSolvable: isSolvable(landing.state),
             landing: { cell: landing.cell, digit: landing.digit, id: ++this.landingSeq },
+            late: this.late,
           }
-        : {},
+        : { late: this.late },
     );
     if (this.snap.verification === "server") void this.verifyOnServer(play);
     // Решён день (и улёт в Grid ∞): снапшот на сервер, когда запись в хранилище завершена.
@@ -477,3 +554,5 @@ function solveMission(mission: string): string | null {
 }
 
 export const dayStore = new DayStore();
+/** Архив (PD-33): отдельный экземпляр под прошлую дату; сегодняшний день и Grid ∞ не затрагивает. */
+export const archiveStore = new DayStore(defaultDeps(), { archive: true });

@@ -31,7 +31,13 @@ describe("fetchDaily", () => {
   });
   it("HTTP-ошибка (503/404) — http", async () => {
     const fetchFn = async () => json({ error: { code: "daily_unavailable" } }, 503);
-    expect(await fetchDaily("2026-09-29", { fetchFn: fetchFn as unknown as typeof fetch })).toEqual({ ok: false, reason: "http" });
+    expect(await fetchDaily("2026-09-29", { fetchFn: fetchFn as unknown as typeof fetch })).toEqual({ ok: false, reason: "http", status: 503 });
+  });
+  it("400 future_date / 404 not_available_yet — статус сохраняется (архив: дата недоступна)", async () => {
+    const f400 = async () => json({ error: { code: "future_date" } }, 400);
+    const f404 = async () => json({ error: { code: "not_available_yet" } }, 404);
+    expect(await fetchDaily("2026-12-31", { fetchFn: f400 as unknown as typeof fetch })).toEqual({ ok: false, reason: "http", status: 400 });
+    expect(await fetchDaily("2026-10-01", { fetchFn: f404 as unknown as typeof fetch })).toEqual({ ok: false, reason: "http", status: 404 });
   });
   it("не JSON — invalid", async () => {
     const fetchFn = async () => new Response("<html>", { status: 200 });

@@ -89,6 +89,13 @@
     "gridLabel_other": "Your permanent grid: {{count}} clues so far, {{state}}",
     "gridHint": "Today’s last cell lands here."
   },
+  "archive": {
+    "title": "Archive",
+    "backLabel": "Back to Year",
+    "loading": "Loading this day’s puzzle…",
+    "failed": "Couldn’t load this day’s puzzle.",
+    "unavailable": "This day’s puzzle isn’t available."
+  },
   "year": {
     "chooseYear": "{{year}}. Choose a year",
     "yearMenu": "Year",
@@ -137,6 +144,8 @@
       "noRecord": "Nothing recorded for this day.",
       "before": "Before you started using Pundoku.",
       "lateNote": "Played after the day, so the year keeps it as missed.",
+      "play": "Play this day’s puzzle",
+      "finish": "Finish this puzzle",
       "assistedRow": "Solved",
       "assistedValue": "with help"
     }
