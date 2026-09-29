@@ -107,6 +107,14 @@
 23. (PD-25, Year) Safe areas и стеклянный таб-бар на Year; VoiceOver по месяцам и дням (подписи словами); Dynamic Type (легенда, подписи месяцев); тап по месяцу и по дню в шите (эргономика); reduced-transparency / prefers-contrast.
 24. (PD-25, Year) Настройки → Экран и яркость → Размер текста (крупный) → Year: подписи месяцев и легенда масштабируются, перенос читаем, легенда не уходит под таб-бар.
 25. (PD-26) Экран запуска: удалить PWA с экрана Домой, поставить заново (iOS кэширует startup-image при установке); тёмная тема → закрыть смахиванием → открыть: чёрный экран сразу, без белой вспышки; светлая — серый #F2F2F7 без чёрной вспышки. Если вспышка осталась — сообщить (media-запрос по размеру или iOS не подхватил).
+26. (PD-33, архив) Установленная PWA: Year → тап по прошлому дню → «Play this day's puzzle» → сетка открывается, играется, решённый день остаётся пропуском в Year (late).
+27. (PD-33) Начатый архивный день: выйти, вернуться → «Finish this puzzle» продолжает с того же места.
+28. (PD-33) Кнопка «‹ Year» на архивном дне: достижима большим пальцем, не залезает под вырез/Dynamic Island.
+29. (PD-33) VoiceOver на архивном дне и на карточке результата («solved that day»).
+30. (PD-33) Архивный день: светлая/тёмная тема, Dynamic Type (крупный), Reduce Motion, Increase Contrast.
+31. (PD-33) Архивный день в режиме полёта: открывается и играется офлайн, прогресс уходит на сервер после включения сети.
+32. (PD-33) Язык uk/ru: тексты архива и «solved that day» без обрезки.
+33. (PD-33) Дата раньше первого дня пользования по прямой ссылке (#/day/…) — «недоступно», как будущая.
 Не проверено QA: реальное стекло iOS, `env(safe-area-inset-*)`, статус-бар в тёмной теме, установка, reduced-transparency/contrast в webkit.
 
 ## Решения владельца по Year (2026-09-29, PD-24 закрыт)
@@ -204,9 +212,11 @@ Gates: build → typecheck, lint, тесты web/engine/api (api с TEST_DATABAS
 | PD-22 | Low-полировка по QA PD-21 (engine/api, без спешки): (а) `generate({difficulty:'constructor'/'toString'})` → RangeError с неверным текстом — `Object.hasOwn`; (б) валидация `maxAttempts` (0, -1, NaN, 1.5) и `clues:null`; (в) README: clues ≈17 практически недостижимо; (г) допустимые `DAILY_FALLBACK_DIFFICULTY` в `apps/api/src/config/env.ts` из `DIFFICULTIES`, ошибка при старте без стека; (д) README engine: у v1 easy было ровно 38, не «≤38»; (е) heavy-тест ~160 с при таймауте 180 с — поднять/разнести | developer | P3 | pending | — |
 | PD-23 | QA-регресс PD-11 (8c4d3e6): PASS, блокеров и Medium нет, 5 уровней без сырых ключей, Worker не подвешивает UI | qa-tester | P1 | completed | PD-11 |
 | PD-25 | (смержен в main 66ec453; pd-25 @ bbf8b8f) UI: экран Year по решениям владельца (C Blocks, сургуч+срез угла, assisted светлый тон 62 %, late=пропуск, карточка дня по тапу); читает данные из хранилища PD-14; ветка `pd-25` от pd-14 @ c574f13, worktree pd-25; dev готов, pd-25 @ df1945d (gates: web 266, engine 105, api 77+2 skipped); на QA PD-34 | developer | P1 | completed | PD-14 |
-| PD-44 | QA PD-33 (pd-33 @ d94d1f0, worktree /tmp/pundoku-qa/qa-pd33, БД pundoku_qa10, порты 3520/5520) | qa-tester | P2 | in_progress | PD-33 |
+| PD-44 | QA PD-33 (pd-33 @ d94d1f0): PASS с оговорками, блокеров нет, gates зелёные (web 373, engine 127, api 80+2 skipped), мутации 6/7 убиты; находки → PD-45, Low → PD-46 | qa-tester | P2 | completed | PD-33 |
+| PD-45 | Фикс-проход pd-33 по QA PD-44 (ветка pd-33, worktree products/pundoku-worktrees/pd-33; без отдельного QA — gates + юнит/скриншот; бриф ниже) | developer | P2 | in_progress | PD-44 |
+| PD-46 | Low: `apps/api/src/config/env.test.ts` нестабилен — таймаут 5 с при spawn tsx (Info QA PD-44); поднять timeout/ужать тест | developer | P3 | pending | — |
 | PD-43 | Low (QA PD-39, до PD-37): локально решённый день, заменённый слиянием 409, на открытом экране остаётся проигравшей записью без `winRate` — `DayStore.applyRemote` при `gridChanged` вызывает `set()`→`persist()` и перезаписывает запись победителя в IDB; после reload исправляется. Реально при двух устройствах с одним токеном (после PD-27) | developer | P3 | pending | — |
-| PD-33 | (dev готов: pd-33 @ d94d1f0, gates web 373, engine 127, api 80+2 skipped; на QA PD-44; решения Coordinator: архивный день в Grid ∞ не попадает, играть можно только с первого дня пользования, правило «пропуски от firstUseDate» остаётся) Архив: играть прошлую дату (`GET /api/daily/:date`, DayStore на произвольную дату, `late=true`; кнопки «Play this day's puzzle»/«Finish this puzzle» в карточке дня Year) — решение владельца «пропущенный день можно доигрывать» | developer | P2 | in_progress | PD-25 |
+| PD-33 | (dev готов: pd-33 @ d94d1f0, gates web 373, engine 127, api 80+2 skipped; QA PD-44 PASS, фикс-проход PD-45 перед мержем; решения Coordinator: архивный день в Grid ∞ не попадает, играть можно только с первого дня пользования, правило «пропуски от firstUseDate» остаётся) Архив: играть прошлую дату (`GET /api/daily/:date`, DayStore на произвольную дату, `late=true`; кнопки «Play this day's puzzle»/«Finish this puzzle» в карточке дня Year) — решение владельца «пропущенный день можно доигрывать» | developer | P2 | in_progress | PD-25 |
 | PD-34 | QA PD-25 (pd-25 @ df1945d): PASS с оговорками, блокеров нет (36 комбинаций, 231 синтетический день без расхождений, мутационная проверка 19/22); находки → PD-35 | qa-tester | P1 | completed | PD-25 |
 | PD-35 | Фикс-проход pd-25 по QA PD-34 (pd-25 @ bbf8b8f; gates: web 282, engine 105, api 77+2 skipped, интеграционные выполнены) | developer | P1 | completed | PD-34 |
 | PD-36 | PASS с оговорками, 5 Low → PD-38, 17/17 мутаций убито. QA-регресс PD-35 (pd-25 @ bbf8b8f, worktree /tmp/pundoku-qa/qa-pd36, БД pundoku_qa7, порты 3400/5400): затронутое + Year/Today/Play + gates | qa-tester | P1 | completed | PD-35 |
@@ -258,8 +268,16 @@ hard 26/locked candidates, expert 24/pairs, master — beyond. `rateDifficulty` 
 - косметика: heavy-тесты движка ~75 с (README обещает 20–30); RFC3339 со строчными t/z → 400 — упомянуть в README API.
 - не проверено: живой Sudoku.com (`LIVE_SUDOKU_COM=1`), фолбэк 29.02.2028 через HTTP (даты дальше «завтра» → 400), тесты `apps/web`.
 
+### Бриф PD-45 (developer, ветка `pd-33`, worktree pd-33 @ d94d1f0) — по QA PD-44
+1. Low: выжила мутация M6 — нет теста круга `late:true` → `sanitizeDayRecord`/migrate (`apps/web/src/sync/schema.ts:144`) → `late:true`; добавить тест и проверить откатом мутации.
+2. Low-Med: прямой URL `#/day/<дата раньше firstUse>` открывается и играется, хотя Year такой день не предлагает. Должно быть «недоступно» (как для будущей даты), без фолбэка и без сдвига пропусков — закрыть в архивном сторе/маршруте + тест.
+3. Low: карточка результата архивного дня пишет «N % solved today» — для не-сегодняшнего дня текст «solved that day» (en/uk/ru).
+4. Info, в том же проходе: на экране недоступной даты не рисовать пустое поле и цифровую панель.
+По замыслу (не чиним): replaceState без истории, `#/year` применяется один раз, шум 404 snapshot, Share выключен.
+Gates: build → typecheck, lint, тесты web/engine/api (api с `TEST_DATABASE_URL`, свежая БД). Коммит в pd-33. После — я мержу pd-33 `--no-ff` и убираю стенд.
+
 ## Агенты (текущий статус)
 | Имя | Роль | Статус | Тикет | Обновлено |
 |-----|------|--------|-------|-----------|
-| pm-pundoku-4 | product-manager | waiting | PD-44 | 2026-09-30 |
-| QA-PD44 | qa-tester | working | PD-44 | 2026-09-30 |
+| pm-pundoku-4 | product-manager | waiting | PD-45 | 2026-09-30 |
+| Dev-PD45 | developer | working | PD-45 | 2026-09-30 |
