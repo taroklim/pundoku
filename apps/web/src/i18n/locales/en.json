@@ -70,5 +70,23 @@
     "naked_pair": "Naked Pair",
     "hidden_pair": "Hidden Pair",
     "beyond": "Advanced"
+  },
+  "today": {
+    "loading": "Loading today’s puzzle…",
+    "failed": "Couldn’t load today’s puzzle.",
+    "cardTitle": "Your path",
+    "source": {
+      "sudoku.com": "Puzzle from Sudoku.com",
+      "generator": "Puzzle from Pundoku’s generator",
+      "client": "Made on this device"
+    },
+    "gridTitle": "Grid ∞",
+    "gridCells_one": "{{count}} cell",
+    "gridCells_other": "{{count}} cells",
+    "gridNotSolvable": "not yet solvable",
+    "gridSolvable": "now solvable",
+    "gridLabel_one": "Your permanent grid: {{count}} clue so far, {{state}}",
+    "gridLabel_other": "Your permanent grid: {{count}} clues so far, {{state}}",
+    "gridHint": "Today’s last cell lands here."
   }
 }

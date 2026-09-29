@@ -1,0 +1,121 @@
+/*
+ * Экран Today (PD-12): подпись источника, секция Grid ∞, посадка клетки дня (M5).
+ * Значения — из утверждённого макета design/pd7-board-variants.html (секция Grid ∞, `.target`,
+ * `.landed`, `.flyer`, `landPulse`); всё общее с Play (поле, панель, карточка) — в play.css.
+ */
+
+/* Статус + источник сетки в зазоре между полем и панелью. */
+.today-status {
+  display: grid;
+  gap: 2px;
+  justify-items: center;
+}
+.source {
+  margin: 0;
+  color: var(--label-2);
+  font-size: 0.8rem;
+  text-align: center;
+}
+/* Ярлык источника в карточке дня — под кнопкой Share. */
+.card .source {
+  margin-top: 12px;
+}
+
+/* ---------- Grid ∞ ---------- */
+.section-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 22px max(16px, var(--sa-r)) 0 max(16px, var(--sa-l));
+}
+.section-head h2 {
+  font-size: 1rem;
+  font-weight: 600;
+  margin: 0;
+}
+.section-head .meta {
+  color: var(--label-2);
+  font-size: 0.8rem;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+.hint {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin: 0;
+  padding: 10px max(16px, var(--sa-r)) 0 max(16px, var(--sa-l));
+  color: var(--label-2);
+  font-size: 0.8rem;
+}
+.hint .chip {
+  width: 14px;
+  height: 14px;
+  border: 2px dashed var(--ink);
+  border-radius: 3px;
+  flex: none;
+}
+
+/* Клетка посадки: пунктирное кольцо чернил (статично), после посадки — сплошное. */
+.cell.target::after {
+  content: "";
+  position: absolute;
+  inset: 2px;
+  z-index: 3;
+  pointer-events: none;
+  border: 2px dashed var(--ink);
+  border-radius: 3px;
+}
+.cell.landed::after {
+  border-style: solid;
+}
+.cell.landed.pulse::after {
+  animation: landPulse 260ms ease-out;
+}
+@keyframes landPulse {
+  0% {
+    transform: scale(1.35);
+    opacity: 0.4;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+@media (prefers-contrast: more) {
+  .cell.target::after,
+  .hint .chip {
+    border-width: 3px;
+  }
+}
+
+/* Цифра, летящая с поля в Grid ∞ (создаётся скриптом; позиция — transform от левого верхнего угла). */
+.flyer {
+  position: fixed;
+  left: 0;
+  top: 0;
+  z-index: 60;
+  pointer-events: none;
+  font-family: var(--font-sans);
+  font-weight: 500;
+  color: var(--ink);
+  line-height: 1;
+  display: grid;
+  place-items: center;
+}
+
+/* Reduced motion: без полёта и масштаба — целевая клетка подсвечивается кольцом (кроссфейд). */
+@media (prefers-reduced-motion: reduce) {
+  .cell.landed.pulse::after {
+    animation: ringIn 140ms linear;
+  }
+}
+
+/* forced-colors: кольца остаются рамкой (цвет системный), пунктир различает «место» и «посадку». */
+@media (forced-colors: active) {
+  .cell.target::after,
+  .hint .chip {
+    border-color: CanvasText;
+  }
+}
