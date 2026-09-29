@@ -60,6 +60,8 @@ export class PlayStore {
   private requestId = 0;
   private started = false;
   private effectId = 0;
+  /** Счётчик волн M3: подряд идущие волны получают id разной чётности (см. Board, класс wave-a/b). */
+  private waveSeq = 0;
 
   // Таймер: накопленное + текущий отрезок. Идёт только пока партия играется, вкладка Play
   // показана и страница видима.
@@ -186,7 +188,7 @@ export class PlayStore {
       patch.pop = { cell: selected, id: ++this.effectId };
       if (next.solution[selected] === digit) {
         const unit = closedUnits(next, selected)[0];
-        if (unit) patch.wave = { cells: unit, id: ++this.effectId };
+        if (unit) patch.wave = { cells: unit, id: ++this.waveSeq };
       }
     }
     this.finishMove(next, patch);

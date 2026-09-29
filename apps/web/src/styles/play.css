@@ -83,12 +83,17 @@
   outline: none;
 }
 .cell > .fl,
-.cell > .wv {
+.cell.wave::before {
+  content: "";
   position: absolute;
   inset: 0;
   pointer-events: none;
   background: var(--ink);
   opacity: 0;
+}
+/* Волна M3 живёт в ::before клетки под цифрой; над заливкой .fl, но под .d (z-index 2). */
+.cell.wave::before {
+  z-index: 1;
 }
 .fl {
   transition: opacity 0.16s linear;
@@ -474,7 +479,31 @@
     opacity: 0;
   }
 }
+/* Копия unitWave под другим именем: чередование wave-a/wave-b перезапускает анимацию
+   у клетки, которая входит в две волны подряд. */
+@keyframes unitWave2 {
+  0% {
+    opacity: 0;
+  }
+  40% {
+    opacity: 0.15;
+  }
+  100% {
+    opacity: 0;
+  }
+}
 @keyframes unitTint {
+  0% {
+    opacity: 0;
+  }
+  45% {
+    opacity: 0.12;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+@keyframes unitTint2 {
   0% {
     opacity: 0;
   }
@@ -526,8 +555,12 @@
   animation: inkSet 180ms cubic-bezier(0.2, 0.7, 0.3, 1);
 }
 /* M3: одна волна заливки чернил 15 %→0 по юниту; 156 мс + 8 мс на клетку ≈ 220 мс суммарно. */
-.cell.wave > .wv {
+.cell.wave-a::before {
   animation: unitWave 156ms ease-out;
+  animation-delay: calc(var(--wi, 0) * 8ms);
+}
+.cell.wave-b::before {
+  animation: unitWave2 156ms ease-out;
   animation-delay: calc(var(--wi, 0) * 8ms);
 }
 
@@ -540,8 +573,12 @@
   .d.anim-in {
     animation: inkFade 120ms linear;
   }
-  .cell.wave > .wv {
+  .cell.wave-a::before {
     animation: unitTint 130ms linear;
+    animation-delay: 0ms;
+  }
+  .cell.wave-b::before {
+    animation: unitTint2 130ms linear;
     animation-delay: 0ms;
   }
   .card {

@@ -48,7 +48,10 @@ const Cell = memo(function Cell(p: CellProps) {
   if (p.selected) cls.push("sel");
   if (p.same) cls.push("same");
   if (p.wrong) cls.push("err");
-  if (p.waveIdx >= 0) cls.push("wave");
+  // M3: волна — класс клетки, а не отдельный элемент (раньше <i key=waveId> делил ключ «0» со
+  // span цифры и накапливался в DOM). Чётность id даёт два имени анимации подряд: смежные
+  // волны перезапускают анимацию, не создавая ни одного узла.
+  if (p.waveIdx >= 0) cls.push("wave", p.waveId % 2 ? "wave-a" : "wave-b");
   const style = p.waveIdx >= 0 ? ({ "--wi": p.waveIdx } as CSSProperties) : undefined;
   return (
     <button
@@ -63,7 +66,6 @@ const Cell = memo(function Cell(p: CellProps) {
       onClick={() => p.onPick(p.index)}
     >
       <i className="fl" aria-hidden="true" />
-      <i key={p.waveId} className="wv" aria-hidden="true" />
       {digit ? (
         <span
           key={p.popId}
