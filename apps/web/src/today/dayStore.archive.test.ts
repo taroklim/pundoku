@@ -327,6 +327,7 @@ describe("архив: изоляция от сегодняшнего дня", ()
     const { store, repo, hooks } = make();
     await opened(store);
     await repo.saveDay(progressOf(PAST, { late: true }));
+    await repo.savePermanent({ installSeed: "srv", index: 0, cells: [{ cell: 1, date: "2026-09-01" }] });
     for (const fn of hooks.listeners) fn({ dates: [PAST], gridChanged: true });
     await vi.waitFor(() => expect(store.getSnapshot().phase).toBe("solved"));
     expect(store.getSnapshot().permanent).toBeNull(); // gridChanged архивом игнорируется
