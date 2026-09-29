@@ -1,0 +1,726 @@
+<!DOCTYPE html>
+<html lang="en" data-appearance="auto" data-state="solving" data-tabs="3" data-ink="working">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>Pundoku — Today (PD-1 mockup)</title>
+<!--
+  PD-1 — HTML mockup of the Today screen, for owner approval.
+  Self-contained: no external resources, no CDN, no embedded fonts.
+  Typefaces come from CSS generics only (ui-serif -> New York, system-ui -> SF Pro on Apple platforms),
+  per typography.md > Developer note: "don't embed system fonts".
+  Target: iPhone 16, 393x852 pt, Safari / installed PWA. Opens on desktop too (centred 393pt frame).
+-->
+<style>
+/* ============================================================
+   1. TOKENS  (visual direction v2, 07-concept-draft.md)
+   Contrast figures are computed, not estimated. See report.
+   ============================================================ */
+:root{
+  /* type */
+  --font-sans: system-ui, -apple-system, "SF Pro Text", "Helvetica Neue", Arial, sans-serif;
+  --font-serif: ui-serif, "New York", Charter, Georgia, serif;
+
+  /* surfaces */
+  --bg:        #FFFFFF;   /* game screen background */
+  --card:      #F2F2F7;   /* cards / sheets */
+
+  /* content */
+  --label:     #1C1C1E;   /* givens (New York), primary text — 17.0:1 on #FFFFFF */
+  --label-2:   #6E6E73;   /* secondary text — 5.1:1 on #FFFFFF */
+  --notes:     #6E6E73;   /* pencil marks — 5.1:1 on #FFFFFF */
+  --notes-fill:#5A5A5F;   /* pencil marks inside a highlighted cell — 5.6:1 on #E3E6FF */
+
+  /* the one arbitrary accent */
+  --ink:       #3B48B0;   /* player digits, selection, primary action — 7.7:1 on #FFFFFF */
+  --on-ink:    #FFFFFF;   /* label on an ink-filled button — 7.7:1 */
+  --wax:       #B3261E;   /* error only — 6.5:1 on #FFFFFF */
+
+  /* cell fills */
+  --fill-sel:  #E3E6FF;   /* selected cell */
+  --fill-same: #E9ECFF;   /* same digit elsewhere */
+  --fill-peer: #EFF1FF;   /* same row / column / box */
+
+  /* grid rules */
+  --line-thin: #D1D1D6;
+  --line-thick:#8E8E93;   /* 3.3:1 on #FFFFFF — the block structure carries 3:1, not the hairline */
+
+  /* controls */
+  --key-bg:    #F2F2F7;
+  --hairline:  rgba(60,60,67,.29);
+  --ink-tint:  rgba(59,72,176,.12);
+
+  /* glass (functional layer only) */
+  --glass-fill: rgba(255,255,255,.72);
+  --glass-edge: rgba(255,255,255,.55);
+  --glass-solid:#F6F6F9;
+
+  /* mockup chrome — deliberately not part of the design language */
+  --mock-bg:   #ECECEE;
+  --mock-fg:   #4A4A4E;
+  --mock-line: #B9B9BE;
+  --mock-sel:  #6E6E73;   /* 5.1:1 with white on top */
+  --mock-sel-fg:#FFFFFF;
+  --page-bg:   #8A8A8E;   /* desktop only: the surface the phone sits on */
+}
+
+/* Dark appearance. Written twice on purpose: once for the system setting,
+   once for the mockup-only preview override. dark-mode.md > Mobile:
+   base #000000 for the screen, elevated #1C1C1E for cards. */
+@media (prefers-color-scheme: dark){
+  :root:not([data-appearance="light"]){
+    --bg:#000000; --card:#1C1C1E;
+    --label:#FFFFFF; --label-2:#98989D; --notes:#98989D; --notes-fill:#AEAEB2;
+    --ink:#8C96FF; --on-ink:#000000; --wax:#FF6B5E;
+    --fill-sel:#23264A; --fill-same:#1B1E3A; --fill-peer:#15172E;
+    --line-thin:#3A3A3C; --line-thick:#636366;
+    --key-bg:#1C1C1E; --hairline:rgba(235,235,245,.22); --ink-tint:rgba(140,150,255,.18);
+    --glass-fill:rgba(28,28,30,.72); --glass-edge:rgba(255,255,255,.14); --glass-solid:#141416;
+    --mock-bg:#1C1C1E; --mock-fg:#AEAEB2; --mock-line:#48484A; --page-bg:#2C2C2E;
+    --mock-sel:#EBEBF5; --mock-sel-fg:#1C1C1E;
+  }
+}
+:root[data-appearance="dark"]{
+  --bg:#000000; --card:#1C1C1E;
+  --label:#FFFFFF; --label-2:#98989D; --notes:#98989D; --notes-fill:#AEAEB2;
+  --ink:#8C96FF; --on-ink:#000000; --wax:#FF6B5E;
+  --fill-sel:#23264A; --fill-same:#1B1E3A; --fill-peer:#15172E;
+  --line-thin:#3A3A3C; --line-thick:#636366;
+  --key-bg:#1C1C1E; --hairline:rgba(235,235,245,.22); --ink-tint:rgba(140,150,255,.18);
+  --glass-fill:rgba(28,28,30,.72); --glass-edge:rgba(255,255,255,.14); --glass-solid:#141416;
+  --mock-bg:#1C1C1E; --mock-fg:#AEAEB2; --mock-line:#48484A; --page-bg:#2C2C2E;
+  --mock-sel:#EBEBF5; --mock-sel-fg:#1C1C1E;
+}
+
+/* Ink alternative — swapped live by the mockup controls so the owner can
+   compare #3B48B0 and #2F3E6E on the same grid. */
+:root[data-ink="alt"]{ --ink:#2F3E6E; --ink-tint:rgba(47,62,110,.12); }
+@media (prefers-color-scheme: dark){
+  :root[data-ink="alt"]:not([data-appearance="light"]){ --ink:#7A85F0; --on-ink:#000000; --ink-tint:rgba(122,133,240,.18); }
+}
+:root[data-ink="alt"][data-appearance="dark"]{ --ink:#7A85F0; --on-ink:#000000; --ink-tint:rgba(122,133,240,.18); }
+
+/* Increased contrast: darken secondary text and strengthen rules, per appearance.
+   color.md > Best practices: "supply light and dark variants, and an increased contrast
+   option for each variant that provides a significantly higher amount of visual differentiation." */
+@media (prefers-contrast: more){
+  :root{
+    --line-thin:#9E9EA3; --line-thick:#3C3C43;
+    --label-2:#3C3C43;   /* 10.4:1 on #FFFFFF */
+    --notes:#3C3C43; --notes-fill:#3C3C43;
+    --hairline:rgba(60,60,67,.6);
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-appearance="light"]){
+      --line-thin:#5A5A5E; --line-thick:#AEAEB2;
+      --label-2:#EBEBF5;  /* 18.0:1 on #000000 */
+      --notes:#EBEBF5; --notes-fill:#EBEBF5;
+      --hairline:rgba(235,235,245,.5);
+    }
+  }
+  :root[data-appearance="dark"]{
+    --line-thin:#5A5A5E; --line-thick:#AEAEB2;
+    --label-2:#EBEBF5; --notes:#EBEBF5; --notes-fill:#EBEBF5;
+    --hairline:rgba(235,235,245,.5);
+  }
+}
+
+/* ============================================================
+   2. FRAME + BASE
+   ============================================================ */
+*{ box-sizing:border-box; }
+html{
+  /* Dynamic Type: -apple-system-body makes 1rem follow the user's text size on iOS;
+     ignored elsewhere, where 1rem stays 16px. typography.md > Supporting Dynamic Type. */
+  font: -apple-system-body;
+  font-family: var(--font-sans);
+  line-height:1.3;
+  -webkit-text-size-adjust:100%;
+}
+body{
+  margin:0;
+  background:var(--bg);
+  color:var(--label);
+  font-family:var(--font-sans);
+  touch-action:manipulation;              /* suppresses double-tap zoom */
+  overscroll-behavior:none;
+  -webkit-tap-highlight-color:transparent;
+}
+button{ font:inherit; color:inherit; background:none; border:0; padding:0; cursor:pointer; touch-action:manipulation; }
+:focus-visible{ outline:2px solid var(--ink); outline-offset:2px; border-radius:6px; }
+
+.frame{
+  position:relative;
+  width:100%;
+  height:100dvh;
+  display:flex; flex-direction:column;
+  background:var(--bg);
+  overflow:hidden;
+}
+/* Desktop / wide windows: show the phone at its real size, centred. Mobile-first — on the
+   device the frame simply fills the screen. layout.md > Adaptability. */
+@media (min-width:440px){
+  body{ background:var(--page-bg); display:flex; align-items:center; justify-content:center; min-height:100vh; padding:24px 0 170px; }
+  .frame{ width:393px; height:852px; border-radius:46px; box-shadow:0 20px 60px rgba(0,0,0,.35); }
+}
+
+.scroll{
+  flex:1; min-height:0; overflow-y:auto; -webkit-overflow-scrolling:touch;
+  padding-bottom:calc(64px + env(safe-area-inset-bottom) + 12px);
+  display:flex; flex-direction:column;
+  /* Scroll edge effect: content fades as it passes under the bar instead of colliding
+     with it — and no opaque plate is painted beneath the glass.
+     layout.md > Visual hierarchy. Works over any surface colour, unlike a colour gradient. */
+  -webkit-mask-image:linear-gradient(to bottom,
+      #000 calc(100% - 90px - env(safe-area-inset-bottom)),
+      rgba(0,0,0,.35) calc(100% - 62px - env(safe-area-inset-bottom)),
+      rgba(0,0,0,.35) 100%);
+  mask-image:linear-gradient(to bottom,
+      #000 calc(100% - 90px - env(safe-area-inset-bottom)),
+      rgba(0,0,0,.35) calc(100% - 62px - env(safe-area-inset-bottom)),
+      rgba(0,0,0,.35) 100%);
+}
+
+/* ============================================================
+   3. TOOLBAR + DAY SUBTITLE
+   ============================================================ */
+.toolbar{
+  display:flex; align-items:flex-end; justify-content:space-between; gap:12px;
+  padding:max(10px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) 0 max(16px, env(safe-area-inset-left));
+  padding-top:calc(max(10px, env(safe-area-inset-top)) + 8px);
+}
+/* Title and all prose scale with Dynamic Type without a cap (to 200 % and beyond);
+   min-width:0 lets it shrink rather than push the action off the edge. */
+.title{ font-size:1.62rem; font-weight:700; letter-spacing:-.02em; margin:0; min-width:0; overflow-wrap:anywhere; }
+.icon-btn{
+  width:44px; height:44px; margin:-8px -10px -8px 0;   /* 44pt target, optically aligned */
+  display:grid; place-items:center; color:var(--label-2); border-radius:22px;
+}
+.icon-btn:active{ background:var(--ink-tint); }
+.daybar{
+  padding:2px max(16px, env(safe-area-inset-right)) 0 max(16px, env(safe-area-inset-left));
+  color:var(--label-2); font-size:.88rem;
+}
+
+/* ============================================================
+   4. BOARD  (the single hero)
+   Nested 3x3 of 3x3: block gaps 2px on --line-thick, cell gaps 1px on --line-thin.
+   ============================================================ */
+.board-wrap{ padding:0 16px; container-type:inline-size; }
+.board{
+  display:grid; grid-template-columns:repeat(3,1fr); gap:2px;
+  background:var(--line-thick); padding:2px; border-radius:5px; overflow:hidden;
+}
+.box{ display:grid; grid-template-columns:repeat(3,1fr); gap:1px; background:var(--line-thin); }
+.cell{
+  position:relative; aspect-ratio:1; background:var(--bg);
+  display:grid; place-items:center; overflow:hidden;
+}
+.cell .d{ line-height:1; font-size:6.55cqi; }                 /* ~23.7pt at 393pt width, tied to the cell */
+.cell .d.given { font-family:var(--font-serif); font-weight:500; color:var(--label); }
+.cell .d.player{ font-family:var(--font-sans);  font-weight:400; color:var(--ink); }
+.cell .d.err   { color:var(--wax); }
+
+.cell.peer{ background:var(--fill-peer); }
+.cell.same{ background:var(--fill-same); }
+.cell.sel { background:var(--fill-sel);  }
+/* Selection is not carried by fill alone: a 2pt ink ring is the high-contrast carrier
+   (7.7:1 light / 7.9:1 dark), the tint is only an assist. accessibility.md > Vision. */
+.cell.sel::after{ content:""; position:absolute; inset:0; box-shadow:inset 0 0 0 2px var(--ink); }
+.cell.error::after{ content:""; position:absolute; inset:0; box-shadow:inset 0 0 0 2px var(--wax); }
+
+.marks{
+  display:grid; grid-template-columns:repeat(3,1fr); grid-template-rows:repeat(3,1fr);
+  width:100%; height:100%; padding:7%;
+}
+/* Pencil marks: 11 pt at the target width of 393 pt (3.05 % of the 361 pt board).
+   Never lighter than Regular — typography.md > Ensuring legibility. The floor is 9.5 px
+   because at 320 pt (iPhone SE) a 30 pt cell physically cannot hold three 11 pt glyphs;
+   see the report, this is a flagged limit rather than a silent clip. */
+.marks span{
+  font-size:max(9.5px, 3.05cqi); line-height:1; font-weight:400; letter-spacing:-.02em;
+  color:var(--notes); display:grid; place-items:center;
+}
+.cell.peer .marks span, .cell.same .marks span, .cell.sel .marks span{ color:var(--notes-fill); }
+
+/* ============================================================
+   5. NUMBER PAD + ACTION ROW
+   ============================================================ */
+.pad{ display:grid; grid-template-columns:repeat(9,1fr); gap:4px; padding:14px 16px 0; }
+/* The pad is part of the board, not prose: like the digits in the grid its size is
+   bound to the layout, capped so nine keys still fit one row at the largest text sizes. */
+.key{
+  height:48px; border-radius:8px; background:var(--key-bg); color:var(--label);
+  font-size:clamp(17px, 1.18rem, 22px); font-weight:400; display:grid; place-items:center;
+}
+.key:active{ background:var(--ink-tint); color:var(--ink); }
+
+.actions{ display:grid; grid-template-columns:repeat(3,1fr); gap:8px; padding:8px 16px 0; }
+.act{
+  min-height:44px; border-radius:10px; display:flex; align-items:center; justify-content:center;
+  gap:6px; flex-wrap:wrap; padding:4px 6px;
+  color:var(--label-2); font-size:clamp(12px, .82rem, 15px);
+}
+.act svg{ width:19px; height:19px; flex:none; }
+.act[aria-pressed="true"]{ background:var(--ink-tint); color:var(--ink); font-weight:600; }
+.act:active{ background:var(--ink-tint); }
+
+/* ============================================================
+   6. DAY CARD (solved)
+   ============================================================ */
+.card{
+  background:var(--card); border-radius:18px; margin:14px 16px 0; padding:16px;
+}
+.card h2{ font-size:1.0rem; font-weight:600; margin:0 0 2px; }
+.card .sub{ color:var(--label-2); font-size:.8rem; margin:0 0 12px; }
+.heat{ display:grid; grid-template-columns:repeat(9,1fr); gap:2px; }
+.heat i{ aspect-ratio:1; border-radius:2px; display:block; background:var(--ink); }
+.heat i.g{ background:transparent; box-shadow:inset 0 0 0 1px var(--hairline); }  /* a given: not on your path */
+.legend{ display:flex; align-items:center; gap:8px; margin-top:10px; color:var(--label-2); font-size:.72rem; }
+.legend .bar{ flex:1; display:grid; grid-template-columns:repeat(9,1fr); gap:1px; }
+.legend .bar i{ height:6px; border-radius:1px; background:var(--ink); display:block; }
+.rows{ margin-top:14px; border-top:1px solid var(--hairline); }
+.row{ display:flex; justify-content:space-between; align-items:baseline; padding:9px 0; border-bottom:1px solid var(--hairline); font-size:.9rem; }
+.row dt{ color:var(--label-2); margin:0; font-size:.82rem; }
+.row dd{ margin:0; font-weight:600; }
+.row dd.mono{ font-variant-numeric:tabular-nums; }
+.winrate{ margin:12px 0 0; color:var(--label-2); font-size:.82rem; }
+.share{
+  margin-top:12px; width:100%; height:44px; border-radius:11px;
+  background:var(--ink); color:var(--on-ink); font-size:.95rem; font-weight:600;
+  display:flex; align-items:center; justify-content:center; gap:8px;
+}
+.share svg{ width:19px; height:19px; }
+
+/* ============================================================
+   7. GRID INFINITY (solved)
+   ============================================================ */
+.section-head{
+  display:flex; align-items:baseline; justify-content:space-between; gap:12px;
+  padding:22px 16px 8px;
+}
+.section-head h2{ font-size:1.0rem; font-weight:600; margin:0; }
+.section-head .meta{ color:var(--label-2); font-size:.8rem; }
+/* Where today's last cell lands. Static: a dashed ink ring, no animation —
+   the flight itself is a one-off ≤400 ms move at implementation time. */
+.cell.target::after{
+  content:""; position:absolute; inset:2px; border:2px dashed var(--ink); border-radius:3px;
+}
+.hint{ display:flex; gap:8px; align-items:center; padding:10px 16px 0; color:var(--label-2); font-size:.8rem; }
+.hint .chip{ width:14px; height:14px; border:2px dashed var(--ink); border-radius:3px; flex:none; }
+.linkrow{
+  display:flex; align-items:center; justify-content:space-between; gap:12px;
+  margin:14px 16px 0; padding:14px 16px; background:var(--card); border-radius:14px;
+}
+.linkrow .t{ font-size:.95rem; font-weight:600; }
+.linkrow .m{ color:var(--label-2); font-size:.8rem; }
+.linkrow svg{ width:16px; height:16px; color:var(--label-2); flex:none; }
+
+/* ============================================================
+   8. TAB BAR — the only glass in the design (functional layer)
+   liquid-glass.md > The two layers
+   ============================================================ */
+.tabbar{
+  position:absolute; left:0; right:0; bottom:0; z-index:20;
+  display:grid; gap:2px;
+  padding:6px max(10px, env(safe-area-inset-right)) calc(6px + env(safe-area-inset-bottom)) max(10px, env(safe-area-inset-left));
+  background:var(--glass-fill);
+  -webkit-backdrop-filter:blur(24px) saturate(1.4);
+  backdrop-filter:blur(24px) saturate(1.4);
+  border-top:1px solid var(--hairline);
+}
+:root[data-tabs="3"] .tabbar{ grid-template-columns:repeat(3,1fr); }
+:root[data-tabs="4"] .tabbar{ grid-template-columns:repeat(4,1fr); }
+.tab{
+  min-height:50px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px;
+  color:var(--label-2); border-radius:14px; padding:4px 2px;
+}
+.tab svg{ width:26px; height:26px; flex:none; }
+/* Tab titles are capped on purpose — typography.md > Prioritize important content:
+   "when people increase text size to read the content in a tabbed window, they don't
+   expect the tab titles to increase in size." */
+/* 11 px floor, not iOS's own 10 pt tab label: accessibility.md sets 11 pt as the
+   minimum text size and we stay on the right side of it. */
+.tab .lab{ font-size:clamp(11px, .65rem, 13px); letter-spacing:.01em; }
+/* Selected tab: ink + a capsule, so the state is not colour-only. */
+.tab[aria-selected="true"]{ color:var(--ink); background:var(--ink-tint); }
+.tab[aria-selected="true"] .lab{ font-weight:600; }
+.tab[aria-disabled="true"]{ opacity:1; }        /* never dim or hide a tab — tab-bars.md */
+
+/* Glass fallbacks — all three required paths. */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))){
+  .tabbar{ background:var(--glass-solid); }
+}
+@media (prefers-reduced-transparency: reduce){
+  .tabbar{ background:var(--glass-solid); -webkit-backdrop-filter:none; backdrop-filter:none; }
+}
+@media (prefers-contrast: more){
+  .tabbar{ background:var(--glass-solid); -webkit-backdrop-filter:none; backdrop-filter:none; border-top:1px solid var(--label-2); }
+  .cell.sel::after{ box-shadow:inset 0 0 0 3px var(--ink); }
+  .cell.error::after{ box-shadow:inset 0 0 0 3px var(--wax); }
+  .scroll{ -webkit-mask-image:none; mask-image:none; }   /* nothing shows through an opaque bar */
+}
+@media (prefers-reduced-transparency: reduce){
+  .scroll{ -webkit-mask-image:none; mask-image:none; }
+}
+
+/* ============================================================
+   9. STATE SWITCHING
+   ============================================================ */
+:root[data-state="solving"] .only-solved{ display:none !important; }
+:root[data-state="solved"]  .only-solving{ display:none !important; }
+/* The 4-tab variant moves Grid ∞ into its own tab, so Today only links to it. */
+:root[data-tabs="3"] .only-tabs4{ display:none !important; }
+:root[data-tabs="4"] .only-tabs3{ display:none !important; }
+.spacer{ flex:1 1 auto; min-height:8px; }
+
+/* ============================================================
+   10. MOCKUP CONTROLS — utility chrome, not the product
+   ============================================================ */
+.mock-pill{
+  position:fixed; right:10px; z-index:60;
+  bottom:calc(74px + env(safe-area-inset-bottom));
+  height:32px; padding:0 12px; border-radius:16px;
+  background:var(--mock-bg); color:var(--mock-fg);
+  border:1px dashed var(--mock-line);
+  font-size:11px; letter-spacing:.04em; text-transform:uppercase;
+  display:flex; align-items:center; gap:6px;
+}
+.mock-pill[aria-expanded="true"]{ display:none; }
+.mock{
+  position:fixed; left:0; right:0; bottom:0; z-index:61;
+  background:var(--mock-bg); color:var(--mock-fg);
+  border-top:1px dashed var(--mock-line);
+  padding:10px 12px calc(10px + env(safe-area-inset-bottom));
+  font-size:11px; display:none;
+}
+.mock[data-open="true"]{ display:block; }
+.mock .hdr{ display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; letter-spacing:.06em; text-transform:uppercase; }
+.mock .grp{ display:flex; align-items:center; gap:8px; margin:6px 0; flex-wrap:wrap; }
+.mock .grp > b{ font-weight:600; width:82px; flex:none; letter-spacing:.03em; }
+.mock .seg{ display:flex; border:1px solid var(--mock-line); border-radius:7px; overflow:hidden; }
+.mock .seg button{ padding:5px 10px; font-size:11px; color:var(--mock-fg); background:transparent; }
+.mock .seg button + button{ border-left:1px solid var(--mock-line); }
+.mock .seg button[aria-pressed="true"]{ background:var(--mock-sel); color:var(--mock-sel-fg); font-weight:600; }
+.mock .sw{ width:16px; height:16px; border-radius:4px; border:1px solid rgba(0,0,0,.25); display:inline-block; vertical-align:-3px; margin-right:5px; }
+.mock .note{ opacity:.85; margin-top:6px; line-height:1.45; }
+.mock .close{ font-size:11px; text-decoration:underline; }
+@media (min-width:440px){
+  .mock-pill{ bottom:14px; }
+}
+
+/* ============================================================
+   11. MOTION — the only transitions are control-state tints.
+   ============================================================ */
+.tab, .key, .act, .icon-btn{ transition: background-color .12s linear, color .12s linear; }
+@media (prefers-reduced-motion: reduce){
+  *, *::before, *::after{ transition:none !important; animation:none !important; }
+}
+</style>
+</head>
+<body>
+
+<div class="frame" id="frame">
+  <div class="scroll" id="scroll">
+
+    <!-- Toolbar: title + the one action on this view. Actions live in toolbars, not tabs.
+         tab-bars.md > Best practices -->
+    <header class="toolbar">
+      <h1 class="title">Today</h1>
+      <button class="icon-btn" aria-label="Settings">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+          <circle cx="12" cy="12" r="3.4"/>
+          <path d="M12 2.9v2.4M12 18.7v2.4M21.1 12h-2.4M5.3 12H2.9M18.4 5.6l-1.7 1.7M7.3 16.7l-1.7 1.7M18.4 18.4l-1.7-1.7M7.3 7.3 5.6 5.6"/>
+        </svg>
+      </button>
+    </header>
+    <!-- win_rate is deliberately absent before the solve: it spoils the day's difficulty.
+         It appears on the day card instead. -->
+    <p class="daybar">Wed 29 Sep · Medium</p>
+
+    <!-- ---------- STATE 1: SOLVING ---------- -->
+    <div class="spacer only-solving"></div>
+
+    <div class="board-wrap only-solving">
+      <div class="board" id="board-daily" role="group" aria-label="Sudoku grid for Wednesday 29 September"></div>
+    </div>
+
+    <div class="pad only-solving" id="pad"></div>
+
+    <div class="actions only-solving">
+      <button class="act" id="btn-notes" aria-pressed="false">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M4.5 19.5l4.2-1.1 9.6-9.6a1.9 1.9 0 0 0 0-2.7l-1.4-1.4a1.9 1.9 0 0 0-2.7 0l-9.6 9.6z"/><path d="M14.2 5.9l3.9 3.9"/>
+        </svg><span>Notes</span>
+      </button>
+      <button class="act">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M9.2 7.2H15a4.4 4.4 0 1 1 0 8.8H8.2"/><path d="M11.8 4.2 8.8 7.2l3 3"/>
+        </svg><span>Undo</span>
+      </button>
+      <button class="act">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M8.4 18.2 5 14.8a1.9 1.9 0 0 1 0-2.7l6.9-6.9a1.9 1.9 0 0 1 2.7 0l4 4a1.9 1.9 0 0 1 0 2.7l-6.3 6.3z"/><path d="M20 19.6H10"/>
+        </svg><span>Erase</span>
+      </button>
+    </div>
+
+    <!-- ---------- STATE 2: SOLVED ---------- -->
+    <section class="card only-solved" aria-label="Today's result">
+      <h2>Your path</h2>
+      <p class="sub">Every cell shaded by when you filled it.</p>
+      <div class="heat" id="heat" role="img" aria-label="Heat map of the order in which you filled the grid: the lower right block early, the centre last."></div>
+      <div class="legend">
+        <span>Early</span>
+        <span class="bar" id="legend-bar" aria-hidden="true"></span>
+        <span>Late</span>
+      </div>
+      <dl class="rows">
+        <div class="row"><dt>Time</dt><dd class="mono">8:14</dd></div>
+        <div class="row"><dt>Corrections</dt><dd>clean</dd></div>
+        <div class="row"><dt>Technique reached</dt><dd>Hidden Pair</dd></div>
+      </dl>
+      <p class="winrate">61&nbsp;% solved today</p>
+      <button class="share">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M12 3.4v10.2"/><path d="m8.6 6.8 3.4-3.4 3.4 3.4"/><path d="M5.6 12.6v5.2a2.2 2.2 0 0 0 2.2 2.2h8.4a2.2 2.2 0 0 0 2.2-2.2v-5.2"/>
+        </svg>
+        Share
+      </button>
+    </section>
+
+    <!-- 3-tab variant: Grid ∞ lives here, under the day it feeds from. -->
+    <div class="only-solved only-tabs3">
+      <div class="section-head">
+        <h2>Grid&nbsp;∞</h2>
+        <span class="meta">12 cells · not yet solvable</span>
+      </div>
+      <div class="board-wrap">
+        <div class="board" id="board-infinite" role="group" aria-label="Your permanent grid: 12 clues so far, not yet solvable"></div>
+      </div>
+      <p class="hint"><span class="chip" aria-hidden="true"></span>Today's last cell lands here.</p>
+    </div>
+
+    <!-- 4-tab variant: Grid ∞ is its own tab, so Today only points at it. -->
+    <div class="only-solved only-tabs4">
+      <div class="linkrow">
+        <div>
+          <div class="t">Grid&nbsp;∞</div>
+          <div class="m">12 cells · not yet solvable · +1 today</div>
+        </div>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 5 7 7-7 7"/></svg>
+      </div>
+    </div>
+
+    <div class="spacer only-solved" style="min-height:16px"></div>
+  </div>
+
+  <!-- Tab bar. Icons are custom monoline SVG: SF Symbols are unavailable on the web. -->
+  <nav class="tabbar" id="tabbar" role="tablist" aria-label="Sections">
+    <button class="tab" role="tab" aria-selected="true">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <rect x="3.5" y="4.8" width="17" height="15.4" rx="3.4"/><path d="M3.5 9.2h17M8 3.2v2.8M16 3.2v2.8"/><circle cx="12" cy="14.7" r="1.9" fill="currentColor" stroke="none"/>
+      </svg><span class="lab">Today</span>
+    </button>
+    <button class="tab" role="tab" aria-selected="false" aria-disabled="true" title="Not included in this mockup">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <rect x="3.5" y="3.5" width="17" height="17" rx="3.4"/><path d="M9.2 3.5v17M14.8 3.5v17M3.5 9.2h17M3.5 14.8h17"/>
+      </svg><span class="lab">Play</span>
+    </button>
+    <button class="tab only-tabs4" role="tab" aria-selected="false" aria-disabled="true" title="Not included in this mockup">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M12 12c-1.7-2.4-3.1-3.5-4.8-3.5a3.5 3.5 0 1 0 0 7c1.7 0 3.1-1.1 4.8-3.5z"/><path d="M12 12c1.7-2.4 3.1-3.5 4.8-3.5a3.5 3.5 0 1 1 0 7c-1.7 0-3.1-1.1-4.8-3.5z"/>
+      </svg><span class="lab">Grid</span>
+    </button>
+    <button class="tab" role="tab" aria-selected="false" aria-disabled="true" title="Not included in this mockup">
+      <svg viewBox="0 0 24 24" fill="currentColor" stroke="none" aria-hidden="true">
+        <rect x="3.2"  y="5.2"  width="3.6" height="3.6" rx="1"/><rect x="8.6"  y="5.2"  width="3.6" height="3.6" rx="1"/><rect x="14"   y="5.2"  width="3.6" height="3.6" rx="1"/><rect x="19.4" y="5.2"  width="1.4" height="3.6" rx=".7"/>
+        <rect x="3.2"  y="10.2" width="3.6" height="3.6" rx="1"/><rect x="8.6"  y="10.2" width="3.6" height="3.6" rx="1"/><rect x="14"   y="10.2" width="3.6" height="3.6" rx="1"/><rect x="19.4" y="10.2" width="1.4" height="3.6" rx=".7"/>
+        <rect x="3.2"  y="15.2" width="3.6" height="3.6" rx="1"/><rect x="8.6"  y="15.2" width="3.6" height="3.6" rx="1"/><rect x="14"   y="15.2" width="3.6" height="3.6" rx="1"/><rect x="19.4" y="15.2" width="1.4" height="3.6" rx=".7"/>
+      </svg><span class="lab">Year</span>
+    </button>
+  </nav>
+</div>
+
+<!-- ============ MOCKUP CONTROLS (not part of the design) ============ -->
+<button class="mock-pill" id="mock-pill" aria-expanded="false" aria-controls="mock">Mockup ▲</button>
+<div class="mock" id="mock" data-open="false">
+  <div class="hdr"><span>Mockup controls — not part of the design</span><button class="close" id="mock-close">Hide</button></div>
+
+  <div class="grp"><b>State</b>
+    <div class="seg" data-key="state">
+      <button data-val="solving" aria-pressed="true">Solving</button><button data-val="solved" aria-pressed="false">Solved</button>
+    </div>
+  </div>
+
+  <div class="grp"><b>Tab bar</b>
+    <div class="seg" data-key="tabs">
+      <button data-val="3" aria-pressed="true">A · 3 tabs</button><button data-val="4" aria-pressed="false">B · 4 tabs</button>
+    </div>
+  </div>
+
+  <div class="grp"><b>Ink</b>
+    <div class="seg" data-key="ink">
+      <button data-val="working" aria-pressed="true"><span class="sw" style="background:#3B48B0"></span>#3B48B0 working</button><button data-val="alt" aria-pressed="false"><span class="sw" style="background:#2F3E6E"></span>#2F3E6E alt</button>
+    </div>
+  </div>
+
+  <div class="grp"><b>Appearance</b>
+    <div class="seg" data-key="appearance">
+      <button data-val="auto" aria-pressed="true">Auto</button><button data-val="light" aria-pressed="false">Light</button><button data-val="dark" aria-pressed="false">Dark</button>
+    </div>
+  </div>
+
+  <p class="note">
+    Appearance is a preview switch for this review only — the product follows the system setting and ships no
+    appearance control (dark-mode.md). In dark appearance the alt ink previews as #7A85F0, its proposed dark twin.
+    Tabs other than Today are inert here: this mockup contains one screen.
+  </p>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ---------- puzzle data (Wed 29 Sep, "Medium") ---------- */
+  var GIVENS =
+    "53..7...." + "6..195..." + ".98....6." +
+    "8...6...3" + "4..8.3..1" + "7...2...6" +
+    ".6....28." + "...419..5" + "....8..79";
+
+  var PLAYER = {2:"4",5:"8",10:"7",11:"2",18:"1",23:"2",28:"5",37:"2",40:"5",46:"1",54:"9",56:"6",72:"3"};
+  var NOTES  = {6:[1,9], 29:[2,9], 30:[1,7], 38:[6,9], 64:[3,8]};
+  var SELECTED = 40;              // player's 5 in the centre
+  var ERROR    = 56;              // 6 duplicated in row 7 / box 7 — a real conflict
+
+  /* Grid ∞: 12 clues collected so far, all of them "given" to the player. */
+  var INF = {4:"7", 11:"3", 19:"9", 25:"1", 30:"6", 33:"8", 38:"2", 44:"5", 51:"4", 57:"7", 66:"1", 74:"9"};
+  var INF_TARGET = 40;
+
+  function rc(i){ return [Math.floor(i/9), i%9]; }
+  function idxOf(b,k){ return (3*Math.floor(b/3) + Math.floor(k/3))*9 + (3*(b%3) + k%3); }
+
+  function isPeer(a,b){
+    if(a===b) return false;
+    var A=rc(a), B=rc(b);
+    if(A[0]===B[0] || A[1]===B[1]) return true;
+    return Math.floor(A[0]/3)===Math.floor(B[0]/3) && Math.floor(A[1]/3)===Math.floor(B[1]/3);
+  }
+  function digitAt(i){ return PLAYER[i] || (GIVENS[i]!=="." ? GIVENS[i] : null); }
+
+  /* ---------- board builder ---------- */
+  function buildBoard(el, opts){
+    var selDigit = opts.selected != null ? digitAt(opts.selected) : null;
+    var html = "";
+    for(var b=0;b<9;b++){
+      html += '<div class="box">';
+      for(var k=0;k<9;k++){
+        var i = idxOf(b,k), cls = "cell", inner = "";
+
+        if(opts.selected != null){
+          if(i === opts.selected) cls += " sel";
+          else if(selDigit && digitAt(i) === selDigit) cls += " same";
+          else if(isPeer(i, opts.selected)) cls += " peer";
+        }
+        if(opts.target === i) cls += " target";
+        if(opts.error === i) cls += " error";
+
+        var g = opts.givens[i];
+        var p = opts.player ? opts.player[i] : null;
+        if(g && g !== "."){
+          inner = '<span class="d given">'+g+'</span>';
+        } else if(p){
+          inner = '<span class="d player'+(opts.error===i?' err':'')+'">'+p+'</span>';
+        } else if(opts.notes && opts.notes[i]){
+          var m = '<span class="marks">';
+          for(var n=1;n<=9;n++) m += "<span>" + (opts.notes[i].indexOf(n)>=0 ? n : "") + "</span>";
+          inner = m + "</span>";
+        }
+        html += '<div class="'+cls+'">'+inner+"</div>";
+      }
+      html += "</div>";
+    }
+    el.innerHTML = html;
+  }
+
+  buildBoard(document.getElementById("board-daily"), {
+    givens:GIVENS, player:PLAYER, notes:NOTES, selected:SELECTED, error:ERROR
+  });
+
+  var infGivens = "";
+  for(var i=0;i<81;i++) infGivens += (INF[i] || ".");
+  buildBoard(document.getElementById("board-infinite"), { givens:infGivens, target:INF_TARGET });
+
+  /* ---------- number pad ---------- */
+  var pad = document.getElementById("pad"), padHtml = "";
+  for(var d=1; d<=9; d++) padHtml += '<button class="key" aria-label="Enter '+d+'">'+d+"</button>";
+  pad.innerHTML = padHtml;
+
+  var notesBtn = document.getElementById("btn-notes");
+  notesBtn.addEventListener("click", function(){
+    var on = notesBtn.getAttribute("aria-pressed") === "true";
+    notesBtn.setAttribute("aria-pressed", on ? "false" : "true");
+  });
+
+  /* ---------- heat map of the solving path ---------- */
+  function rnd(i){ var s = Math.sin(i*12.9898)*43758.5453; return s - Math.floor(s); }
+  var heat = document.getElementById("heat");
+  var order = [];
+  for(var j=0;j<81;j++){
+    if(GIVENS[j] !== ".") continue;
+    var p = rc(j);
+    // plausible path: opened the lower-right block early, ground through the centre last
+    var dist = Math.hypot(p[0]-7.2, p[1]-7.2);
+    var centre = 3.2 - Math.hypot(p[0]-4, p[1]-4);
+    order.push({ i:j, score: dist*1.0 + Math.max(0,centre)*1.35 + rnd(j)*1.6 });
+  }
+  order.sort(function(a,b){ return a.score - b.score; });
+  var t = {};
+  order.forEach(function(o,n){ t[o.i] = n/(order.length-1); });
+
+  /* Opacity over var(--ink), not color-mix: the ramp then follows the ink token live
+     and needs no colour-function support. */
+  var hHtml = "";
+  for(var h=0;h<81;h++){
+    if(GIVENS[h] !== "."){ hHtml += '<i class="g"></i>'; }
+    else hHtml += '<i style="opacity:'+(0.12 + 0.86*t[h]).toFixed(3)+'"></i>';
+  }
+  heat.innerHTML = hHtml;
+
+  var lHtml = "";
+  for(var s=0;s<9;s++) lHtml += '<i style="opacity:'+(0.12 + 0.86*(s/8)).toFixed(3)+'"></i>';
+  document.getElementById("legend-bar").innerHTML = lHtml;
+
+  /* ---------- mockup controls ---------- */
+  var root = document.documentElement;
+  ["state","tabs","ink","appearance"].forEach(function(key){
+    var seg = document.querySelector('.seg[data-key="'+key+'"]');
+    seg.addEventListener("click", function(e){
+      var b = e.target.closest("button"); if(!b) return;
+      root.setAttribute("data-"+key, b.dataset.val);
+      Array.prototype.forEach.call(seg.querySelectorAll("button"), function(x){
+        x.setAttribute("aria-pressed", String(x === b));
+      });
+      document.getElementById("scroll").scrollTop = 0;
+    });
+  });
+
+  var mock = document.getElementById("mock"), pill = document.getElementById("mock-pill");
+  function setMock(open){
+    mock.dataset.open = String(open);
+    pill.setAttribute("aria-expanded", String(open));
+  }
+  pill.addEventListener("click", function(){ setMock(mock.dataset.open !== "true"); });
+  document.getElementById("mock-close").addEventListener("click", function(){ setMock(false); });
+
+  /* Inert tabs: a mockup with one screen must not pretend to navigate,
+     but a tab is never disabled or hidden in the product (tab-bars.md). */
+  Array.prototype.forEach.call(document.querySelectorAll('.tab[aria-disabled="true"]'), function(tb){
+    tb.addEventListener("click", function(e){ e.preventDefault(); });
+  });
+})();
+</script>
+</body>
+</html>
