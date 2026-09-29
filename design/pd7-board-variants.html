@@ -1,0 +1,1282 @@
+<!DOCTYPE html>
+<html lang="en"
+      data-board="A" data-pad="1" data-peers="none" data-tabs="3"
+      data-ink="working" data-state="solving" data-motion="system" data-safearea="sim">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>Pundoku — Today, board v2 (PD-7)</title>
+<!--
+  PD-7 — v2 of the Today board. Answers pd7-board-critique.md (pass 1, apple-design skill).
+  Self-contained: no external resources, no CDN, no embedded fonts. Typefaces come from CSS
+  generics only (ui-serif -> New York, system-ui -> SF Pro on Apple platforms), per
+  typography.md > Developer note: "don't embed system fonts".
+  Target: iPhone 16, 393x852 pt, Safari / installed PWA. Opens on desktop too (centred frame).
+
+  Three board variants, switchable, each in light + dark:
+    A  Ruled     hairline separators inside blocks, 2 px block rules, radius 0, no outer frame
+    B  Boxes     nine 3x3 cards on a grouped background, structure from space
+    C  Ink field no rules at all; blocks read as a checkerboard of two system backgrounds
+
+  Everything below the "MOCKUP CONTROLS" banner is review chrome and is not part of the product.
+-->
+<style>
+/* ==================================================================
+   1. TOKENS
+   Light is the base; dark is written twice on purpose (system setting
+   + the review-only Appearance override, which is a class on <html>).
+   Contrast figures are computed from these hex values, not estimated.
+   ================================================================== */
+:root{
+  /* type */
+  --font-sans: system-ui, -apple-system, "SF Pro Text", "Helvetica Neue", Arial, sans-serif;
+  --font-serif: ui-serif, "New York", Charter, Georgia, serif;
+
+  /* safe areas. Production uses env() alone; the sim values exist so the
+     review frame and the screenshots match iPhone 16 (59 / 34 pt). */
+  --sa-top: env(safe-area-inset-top, 0px);
+  --sa-bot: env(safe-area-inset-bottom, 0px);
+  --sa-l:   env(safe-area-inset-left, 0px);
+  --sa-r:   env(safe-area-inset-right, 0px);
+
+  /* surfaces */
+  --bg-plain:   #FFFFFF;   /* systemBackground */
+  --bg-grouped: #F2F2F7;   /* systemGroupedBackground (variant B) */
+  --elev:       #FFFFFF;   /* secondarySystemGroupedBackground (variant B boxes) */
+  --tint:       #F2F2F7;   /* the second checkerboard tone (variant C) */
+
+  /* content */
+  --label:      #1C1C1E;   /* givens (New York Semibold) — 17.0:1 on #FFFFFF */
+  --label-2:    #6E6E73;   /* secondary text — 5.1:1 on #FFFFFF */
+  --notes:      #6E6E73;   /* pencil marks — 5.1:1 on #FFFFFF */
+  --notes-fill: #5A5A5F;   /* pencil marks inside a tinted cell — 5.5:1 on the 16 % fill */
+
+  /* the one arbitrary accent */
+  --ink:        #3B48B0;   /* player digits, selection, primary action — 7.7:1 on #FFFFFF */
+  --on-ink:     #FFFFFF;
+  --wax:        #B3261E;   /* error only — 6.5:1 on #FFFFFF */
+
+  /* Grid rules — translucent, so they sit on any surface.
+     The critique asked for label @ 30 %; that computes to 2.11:1 against white, under the
+     3:1 floor accessibility.md sets for a meaningful graphic — and in variant A the block
+     rule is the ONLY carrier of block structure. Raised to 42 % = #949494 = 3.06:1.
+     Dark: 38 % white = #616161 on #000 = 3.38:1. One token to dial back if it reads heavy.
+     The thin rule stays the system separator value: it is an alignment aid, not the
+     structure, so it is not held to 3:1. */
+  --rule-thin:  rgba(60,60,67,.29);    /* separator — 1.6:1, decorative */
+  --rule-block: rgba(0,0,0,.42);       /* 3.06:1 on #FFFFFF */
+  --rule-thin-w: .5px;                 /* hairline: 1 px at @2x */
+  --rule-block-w: 2px;
+
+  /* Cell fills — one meaning each, and all three derived from the ink token itself,
+     so swapping the ink can never break the pair. Computed values (light, over #FFFFFF):
+       same  ink @ 10 % -> #EBEDF7   givens 14.5:1   player ink 6.6:1   notes 6.3:1
+       sel   ink @ 16 % -> #E0E2F2   givens 13.3:1   player ink 6.0:1   notes 5.5:1
+       peer  #787880 @ 8 % -> #F4F4F5  givens 15.6:1  player ink 6.9:1
+     Dark, over #000000 (variant B boxes over #1C1C1E in brackets):
+       same  ink @ 10 % -> #0E0F1A [#272832]  label 19.1:1 [14.6:1]  ink 7.1:1 [5.4:1]
+       sel   ink @ 16 % -> #16182A [#2E2F42]  label 17.6:1 [13.1:1]  ink 6.5:1 [4.9:1]
+     Alt ink #2F3E6E / #7A85F0 on its own 16 % fill: 8.2:1 light, 5.5:1 dark.
+     (PD-4 QA #3 and #4: the tints are now tokens with numbers, and the alt ink no longer
+     lands on a fixed #23264A plate — that was the 4.45:1 pair.) */
+  --fill-same: .10;                    /* same digit elsewhere: ink @ 10 % */
+  --fill-sel:  .16;                    /* selection: ink @ 16 % (plus a ring) */
+  --peer-fill: rgba(120,120,128,.08);  /* quaternarySystemFill, neutral on purpose */
+
+  /* controls */
+  --key-bg:   #F2F2F7;
+  --card:     #F2F2F7;
+  --hairline: rgba(60,60,67,.29);
+  --ink-tint: rgba(59,72,176,.12);
+  --box-shadow: 0 1px 2px rgba(0,0,0,.04);   /* variant B only, light only */
+
+  /* glass — functional layer only (the tab bar) */
+  --glass-fill: rgba(255,255,255,.72);
+  --glass-solid:#F6F6F9;
+
+  --page-bg:  #8A8A8E;   /* desktop only: the surface the phone sits on */
+}
+
+/* Dark appearance. dark-mode.md > Mobile: base #000000 for the screen,
+   elevated #1C1C1E for cards and raised surfaces. */
+@media (prefers-color-scheme: dark){
+  :root:not(.force-light){
+    --bg-plain:#000000; --bg-grouped:#000000; --elev:#1C1C1E; --tint:#1C1C1E;
+    --label:#FFFFFF; --label-2:#98989D; --notes:#98989D; --notes-fill:#AEAEB2;
+    --ink:#8C96FF; --on-ink:#000000; --wax:#FF6B5E;
+    --rule-thin:rgba(235,235,245,.22); --rule-block:rgba(255,255,255,.38);
+    --peer-fill:rgba(120,120,128,.18);
+    --key-bg:#1C1C1E; --card:#1C1C1E; --hairline:rgba(235,235,245,.22);
+    --ink-tint:rgba(140,150,255,.18);
+    --box-shadow:none;
+    --glass-fill:rgba(28,28,30,.72); --glass-solid:#141416;
+    --page-bg:#2C2C2E;
+  }
+}
+.force-dark{
+  --bg-plain:#000000; --bg-grouped:#000000; --elev:#1C1C1E; --tint:#1C1C1E;
+  --label:#FFFFFF; --label-2:#98989D; --notes:#98989D; --notes-fill:#AEAEB2;
+  --ink:#8C96FF; --on-ink:#000000; --wax:#FF6B5E;
+  --rule-thin:rgba(235,235,245,.22); --rule-block:rgba(255,255,255,.38);
+  --peer-fill:rgba(120,120,128,.18);
+  --key-bg:#1C1C1E; --card:#1C1C1E; --hairline:rgba(235,235,245,.22);
+  --ink-tint:rgba(140,150,255,.18);
+  --box-shadow:none;
+  --glass-fill:rgba(28,28,30,.72); --glass-solid:#141416;
+  --page-bg:#2C2C2E;
+}
+
+/* Ink alternative — swapped live so the owner can compare on the same grid. */
+:root[data-ink="alt"]{ --ink:#2F3E6E; --ink-tint:rgba(47,62,110,.12); }
+@media (prefers-color-scheme: dark){
+  :root[data-ink="alt"]:not(.force-light){ --ink:#7A85F0; --on-ink:#000000; --ink-tint:rgba(122,133,240,.18); }
+}
+:root[data-ink="alt"].force-dark{ --ink:#7A85F0; --on-ink:#000000; --ink-tint:rgba(122,133,240,.18); }
+
+/* Variant B moves the whole screen onto the grouped background so the nine
+   boxes can be the elevated surface — the same relationship a grouped list has. */
+:root{ --bg: var(--bg-plain); --surface: var(--bg-plain); }
+:root[data-board="B"]{ --bg: var(--bg-grouped); --surface: var(--elev); --key-bg: var(--elev); --card: var(--elev); }
+
+/* Safe-area simulation for the review frame / screenshots. */
+:root[data-safearea="sim"]{
+  --sa-top: max(env(safe-area-inset-top, 0px), 59px);
+  --sa-bot: max(env(safe-area-inset-bottom, 0px), 34px);
+}
+
+/* Increased contrast. color.md > Best practices: "supply light and dark variants, and an
+   increased contrast option for each variant that provides a significantly higher amount
+   of visual differentiation." */
+@media (prefers-contrast: more){
+  :root{
+    --label-2:#3C3C43; --notes:#3C3C43; --notes-fill:#3C3C43;
+    --rule-thin:rgba(60,60,67,.55); --rule-block:rgba(0,0,0,.60);
+    --rule-thin-w:1px;
+    --hairline:rgba(60,60,67,.6);
+    --fill-same:.14; --fill-sel:.22;
+    --peer-fill:rgba(120,120,128,.14);
+    --box-shadow:none;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not(.force-light){
+      --label-2:#EBEBF5; --notes:#EBEBF5; --notes-fill:#EBEBF5;
+      --rule-thin:rgba(235,235,245,.45); --rule-block:rgba(255,255,255,.60);
+      --hairline:rgba(235,235,245,.5);
+      --peer-fill:rgba(140,140,150,.26);
+    }
+  }
+  :root.force-dark{
+    --label-2:#EBEBF5; --notes:#EBEBF5; --notes-fill:#EBEBF5;
+    --rule-thin:rgba(235,235,245,.45); --rule-block:rgba(255,255,255,.60);
+    --hairline:rgba(235,235,245,.5);
+    --peer-fill:rgba(140,140,150,.26);
+  }
+}
+
+/* ==================================================================
+   2. FRAME + BASE
+   ================================================================== */
+*{ box-sizing:border-box; }
+html{
+  /* Dynamic Type: -apple-system-body makes 1rem follow the user's text size on iOS.
+     typography.md > Supporting Dynamic Type. */
+  font: -apple-system-body;
+  font-family: var(--font-sans);
+  line-height:1.3;
+  -webkit-text-size-adjust:100%;
+}
+body{
+  margin:0;
+  background:var(--bg);
+  color:var(--label);
+  font-family:var(--font-sans);
+  touch-action:manipulation;              /* suppresses double-tap zoom */
+  overscroll-behavior:none;
+  -webkit-tap-highlight-color:transparent;
+}
+button{ font:inherit; color:inherit; background:none; border:0; padding:0; cursor:pointer; touch-action:manipulation; -webkit-appearance:none; appearance:none; }
+:focus-visible{ outline:2px solid var(--ink); outline-offset:2px; border-radius:6px; }
+
+.frame{
+  position:relative; width:100%; height:100dvh;
+  display:flex; flex-direction:column;
+  background:var(--bg); overflow:hidden;
+}
+@media (min-width:440px){
+  body{ background:var(--page-bg); display:flex; align-items:center; justify-content:center; min-height:100vh; padding:24px 0 300px; }
+  .frame{ width:393px; height:852px; border-radius:46px; box-shadow:0 20px 60px rgba(0,0,0,.35); }
+}
+
+.scroll{
+  flex:1; min-height:0; overflow-y:auto; -webkit-overflow-scrolling:touch;
+  padding-bottom:calc(72px + var(--sa-bot));
+  display:flex; flex-direction:column;
+}
+/* Scroll edge effect only where content actually scrolls under the bar (solved state).
+   layout.md > Differentiate controls from content: "use a scroll edge effect to visually
+   elevate controls above content." */
+:root[data-state="solved"] .scroll{
+  -webkit-mask-image:linear-gradient(to bottom, #000 calc(100% - 86px - var(--sa-bot)), rgba(0,0,0,.35) calc(100% - 58px - var(--sa-bot)), rgba(0,0,0,.35) 100%);
+          mask-image:linear-gradient(to bottom, #000 calc(100% - 86px - var(--sa-bot)), rgba(0,0,0,.35) calc(100% - 58px - var(--sa-bot)), rgba(0,0,0,.35) 100%);
+}
+@media (prefers-reduced-transparency: reduce){ .scroll{ -webkit-mask-image:none !important; mask-image:none !important; } }
+@media (prefers-contrast: more){ .scroll{ -webkit-mask-image:none !important; mask-image:none !important; } }
+
+/* ==================================================================
+   3. TOOLBAR + DAY LINE
+   layout.md > Visual hierarchy: "place the most important items near the
+   top and leading side" — the board now starts right under the day line.
+   ================================================================== */
+.toolbar{
+  display:flex; align-items:flex-end; justify-content:space-between; gap:12px;
+  padding: calc(var(--sa-top) + 8px) max(16px, var(--sa-r)) 0 max(16px, var(--sa-l));
+}
+.title{ font-size:1.62rem; font-weight:700; letter-spacing:-.02em; margin:0; min-width:0; overflow-wrap:anywhere; }
+.icon-btn{
+  width:44px; height:44px; margin:-8px -10px -8px 0;
+  display:grid; place-items:center; color:var(--label-2); border-radius:22px;
+}
+.icon-btn:active{ background:var(--ink-tint); }
+.daybar{
+  margin:2px 0 0;
+  padding:0 max(16px, var(--sa-r)) 0 max(16px, var(--sa-l));
+  color:var(--label-2); font-size:.88rem;
+}
+
+/* ==================================================================
+   4. BOARD — the single hero
+   Structure is always 9 boxes x 9 cells; the three variants differ only in
+   how the block structure is expressed (rules / space / tone).
+   ================================================================== */
+.board-wrap{ padding:12px 16px 0; container-type:inline-size; }
+.board{
+  position:relative;
+  display:grid; grid-template-columns:repeat(3,1fr);
+  background:transparent;
+}
+.box{ display:grid; grid-template-columns:repeat(3,1fr); position:static; }
+.cell{
+  position:relative; aspect-ratio:1; min-width:0; min-height:0;
+  display:grid; place-items:center; overflow:hidden;
+  background:var(--cell-surface, transparent);
+}
+.cell:focus-visible{ z-index:5; }
+.cell > .fl, .cell > .wv{ position:absolute; inset:0; pointer-events:none; }
+.fl{ background:var(--ink); opacity:0; transition:opacity .16s linear; }
+.wv{ background:var(--ink); opacity:0; }
+
+.cell.same > .fl{ opacity:var(--fill-same); }
+:root[data-peers="neutral"] .cell.peer:not(.same):not(.sel) > .fl{ opacity:1; background:var(--peer-fill); }
+.cell.sel  > .fl{ opacity:var(--fill-sel); }
+
+.cell .d{ position:relative; z-index:2; line-height:1; font-size:6.5cqi; }
+.cell .d.given { font-family:var(--font-serif); font-weight:600; color:var(--label); }   /* NY Semibold */
+.cell .d.player{ font-family:var(--font-sans);  font-weight:500; color:var(--ink);   }   /* SF Medium */
+.cell .d.err   { color:var(--wax); }
+
+/* Error: a wax ring, no shake. motion.md > Providing feedback:
+   "feedback motion that doesn't make sense can make them feel disoriented." */
+.cell.err::after{
+  content:""; position:absolute; inset:0; z-index:3; pointer-events:none;
+  box-shadow: inset 0 0 0 2px var(--wax);
+  border-radius: var(--cell-r, 0px);
+  animation: ringIn 120ms linear;
+}
+
+.marks{
+  position:relative; z-index:2;
+  display:grid; grid-template-columns:repeat(3,1fr); grid-template-rows:repeat(3,1fr);
+  width:100%; height:100%; padding:7%;
+}
+/* Pencil marks: 11.0 px at the 393 pt target (3.05 % of the 361 pt board), never lighter
+   than Regular — typography.md > Ensuring legibility. PD-4 QA #2: below a ~356 pt width the
+   marks drop under accessibility.md's 11 pt minimum; the floor is 10 px and this is an
+   ACCEPTED DEVIATION for 320 pt devices (iPhone SE), not a silent clip — a 32 pt cell cannot
+   hold three 11 pt glyphs. The alternative of capping at two marks per row was rejected:
+   a mark's position in the 3x3 is what identifies the digit. */
+.marks span{
+  font-size:max(10px, 3.05cqi); line-height:1; font-weight:400; letter-spacing:-.02em;
+  color:var(--notes); display:grid; place-items:center;
+}
+.cell.same .marks span, .cell.sel .marks span, .cell.peer .marks span{ color:var(--notes-fill); }
+
+/* Rules overlay (variants A and B). Exact line widths via non-scaling-stroke. */
+.rules{ position:absolute; inset:0; width:100%; height:100%; z-index:3; pointer-events:none; }
+.rules .thin { stroke:var(--rule-thin);  stroke-width:var(--rule-thin-w);  vector-effect:non-scaling-stroke; }
+.rules .block{ stroke:var(--rule-block); stroke-width:var(--rule-block-w); vector-effect:non-scaling-stroke; }
+
+/* --- A. Ruled -------------------------------------------------- */
+:root[data-board="A"] .board{ --cell-r:0px; }
+:root[data-board="A"] .cell{ --cell-surface: transparent; }
+
+/* --- B. Boxes -------------------------------------------------- */
+:root[data-board="B"] .board{ gap:4px; --cell-r:3px; }
+:root[data-board="B"] .box{
+  position:relative; border-radius:10px; overflow:hidden;
+  background:var(--surface); box-shadow:var(--box-shadow);
+}
+:root[data-board="B"] .cell{ --cell-surface: var(--surface); }
+:root[data-board="B"] .box .rules .thin{ stroke:var(--rule-thin); opacity:.5; }
+
+/* --- C. Ink field ---------------------------------------------- */
+:root[data-board="C"] .board{ --cell-r:3px; }
+:root[data-board="C"] .cell{ --cell-surface: var(--bg-plain); }
+:root[data-board="C"] .box.alt .cell{ --cell-surface: var(--tint); }
+
+/* Selection ring — one element that travels (M2). Selection is never carried by
+   fill alone: the ring is the high-contrast carrier. accessibility.md > Vision. */
+.ring{
+  position:absolute; left:0; top:0; z-index:4; pointer-events:none;
+  border:2px solid var(--ink); border-radius:var(--cell-r, 0px);
+  opacity:0;
+  transition: transform .16s cubic-bezier(.32,.72,0,1), opacity .12s linear;
+}
+@media (prefers-contrast: more){ .ring{ border-width:3px; } }
+.ring.noanim{ transition:none !important; }
+
+/* Grid ∞ landing target — dashed ink ring, static. */
+.cell.target::after{
+  content:""; position:absolute; inset:2px; z-index:3; pointer-events:none;
+  border:2px dashed var(--ink); border-radius:3px;
+}
+.cell.landed::after{ border-style:solid; animation: landPulse 260ms ease-out; }
+
+/* ==================================================================
+   5. NUMBER PAD + ACTIONS — pinned to the thumb zone
+   ================================================================== */
+.gap{ flex:1 1 auto; min-height:20px; display:flex; align-items:center; justify-content:center; padding:0 16px; }
+.pad-wrap{ padding:0 16px; }
+
+.pad{ display:grid; gap:5px; }
+:root[data-pad="1"] .pad{ grid-template-columns:repeat(9,1fr); }
+:root[data-pad="2"] .pad{ grid-template-columns:repeat(10,1fr); }
+/* Two-row layout: 5 keys then 4, each spanning two of ten columns, the second row
+   inset by one column so it stays optically centred. */
+:root[data-pad="2"] .key{ grid-column:span 2; }
+:root[data-pad="2"] .key:nth-child(6){ grid-column: 2 / span 2; }
+
+.key{
+  min-width:0;
+  border-radius:9px; background:var(--key-bg); color:var(--label);
+  display:flex; flex-direction:column; align-items:center; justify-content:center; gap:1px;
+  transition: background-color .12s linear, color .12s linear, transform .22s cubic-bezier(.34,1.36,.52,1);
+}
+:root[data-pad="1"] .key{ min-height:56px; }
+:root[data-pad="2"] .key{ min-height:52px; }
+.key .kd{ font-size:clamp(18px, 1.24rem, 23px); font-weight:500; line-height:1.05; }
+.key .kr{ font-size:11px; line-height:1; color:var(--label-2); font-variant-numeric:tabular-nums; }
+:root[data-pad="2"] .key .kr{ display:none; }
+/* M6 — pressed. */
+.key:active{ background:var(--ink-tint); color:var(--ink); transform:scale(.96); transition-duration:.08s, .08s, .08s; }
+/* Finished digits are dimmed, never hidden; the count "0" carries it as text too. */
+.key.done{ opacity:.4; }
+/* PD-4 QA #5: nine keys in one row measured 28.4 pt at a 320 pt width — legal but at the
+   floor. Below 360 pt the one-row pad now folds into the same 5+4 layout (53.6 x 56 pt keys)
+   and keeps its remainder captions. accessibility.md > Mobility: 44x44 pt default,
+   28x28 pt minimum. At 393 pt the one-row keys are 35.7 x 56 pt. */
+@media (max-width: 359px){
+  :root[data-pad="1"] .pad{ grid-template-columns:repeat(10,1fr); }
+  :root[data-pad="1"] .key{ grid-column:span 2; }
+  :root[data-pad="1"] .key:nth-child(6){ grid-column: 2 / span 2; }
+}
+
+.actions{ display:grid; grid-template-columns:repeat(3,1fr); gap:8px; padding:10px 0 14px; }
+.act{
+  min-width:0; min-height:46px; border-radius:11px; display:flex; align-items:center; justify-content:center;
+  gap:6px; flex-wrap:wrap; padding:4px 6px;
+  color:var(--label-2); font-size:clamp(12px, .82rem, 15px);
+  transition: background-color .12s linear, color .12s linear, transform .22s cubic-bezier(.34,1.36,.52,1);
+}
+.act svg{ width:19px; height:19px; flex:none; }
+.act[aria-pressed="true"]{ background:var(--ink-tint); color:var(--ink); font-weight:600; }
+.act:active{ background:var(--ink-tint); transform:scale(.97); transition-duration:.08s; }
+
+/* ==================================================================
+   6. DAY CARD + GRID ∞ (solved)
+   ================================================================== */
+.card{ background:var(--card); border-radius:18px; margin:14px 16px 0; padding:16px; }
+:root[data-state="solved"] .card{ animation: cardUp 300ms cubic-bezier(.22,1,.36,1); }
+.card h2{ font-size:1.0rem; font-weight:600; margin:0 0 2px; }
+.card .sub{ color:var(--label-2); font-size:.8rem; margin:0 0 12px; }
+.heat{ display:grid; grid-template-columns:repeat(9,1fr); gap:2px; }
+.heat i{ aspect-ratio:1; border-radius:2px; display:block; background:var(--ink); }
+.heat i.g{ background:transparent; box-shadow:inset 0 0 0 1px var(--hairline); }
+.legend{ display:flex; align-items:center; gap:8px; margin-top:10px; color:var(--label-2); font-size:.72rem; }
+.legend .bar{ flex:1; display:grid; grid-template-columns:repeat(9,1fr); gap:1px; }
+.legend .bar i{ height:6px; border-radius:1px; background:var(--ink); display:block; }
+.rows{ margin:14px 0 0; border-top:1px solid var(--hairline); }
+.row{ display:flex; justify-content:space-between; align-items:baseline; padding:9px 0; border-bottom:1px solid var(--hairline); font-size:.9rem; }
+.row dt{ color:var(--label-2); margin:0; font-size:.82rem; }
+.row dd{ margin:0; font-weight:600; }
+.row dd.mono{ font-variant-numeric:tabular-nums; }
+.winrate{ margin:12px 0 0; color:var(--label-2); font-size:.82rem; }
+.share{
+  margin-top:12px; width:100%; min-height:46px; border-radius:11px;
+  background:var(--ink); color:var(--on-ink); font-size:.95rem; font-weight:600;
+  display:flex; align-items:center; justify-content:center; gap:8px;
+}
+.share svg{ width:19px; height:19px; }
+
+.section-head{ display:flex; align-items:baseline; justify-content:space-between; gap:12px; padding:22px 16px 0; }
+.section-head h2{ font-size:1.0rem; font-weight:600; margin:0; }
+.section-head .meta{ color:var(--label-2); font-size:.8rem; }
+.hint{ display:flex; gap:8px; align-items:center; padding:10px 16px 0; color:var(--label-2); font-size:.8rem; }
+.hint .chip{ width:14px; height:14px; border:2px dashed var(--ink); border-radius:3px; flex:none; }
+.linkrow{
+  display:flex; align-items:center; justify-content:space-between; gap:12px;
+  margin:14px 16px 0; padding:14px 16px; background:var(--card); border-radius:14px;
+}
+.linkrow .t{ font-size:.95rem; font-weight:600; }
+.linkrow .m{ color:var(--label-2); font-size:.8rem; }
+.linkrow svg{ width:16px; height:16px; color:var(--label-2); flex:none; }
+
+/* ==================================================================
+   7. TAB BAR — the only glass in the design (functional layer)
+   materials.md > Liquid Glass: "Don't use Liquid Glass in the content layer."
+   ================================================================== */
+.tabbar{
+  position:absolute; left:0; right:0; bottom:0; z-index:20;
+  display:grid; gap:2px;
+  padding:6px max(10px, var(--sa-r)) calc(6px + var(--sa-bot)) max(10px, var(--sa-l));
+  background:var(--glass-fill);
+  -webkit-backdrop-filter:blur(24px) saturate(1.4);
+          backdrop-filter:blur(24px) saturate(1.4);
+  border-top:1px solid var(--hairline);
+}
+:root[data-tabs="3"] .tabbar{ grid-template-columns:repeat(3,1fr); }
+:root[data-tabs="4"] .tabbar{ grid-template-columns:repeat(4,1fr); }
+.tab{
+  min-height:50px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px;
+  color:var(--label-2); border-radius:14px; padding:4px 2px;
+  transition: background-color .12s linear, color .12s linear;
+}
+.tab svg{ width:26px; height:26px; flex:none; }
+/* Tab titles are capped on purpose — typography.md > Prioritize important content:
+   "when people increase text size ... they don't expect the tab titles to increase in size."
+   The 11 px floor is accessibility.md's minimum text size. */
+.tab .lab{ font-size:clamp(11px, .65rem, 13px); letter-spacing:.01em; }
+.tab[aria-selected="true"]{ color:var(--ink); background:var(--ink-tint); }
+.tab[aria-selected="true"] .lab{ font-weight:600; }
+.tab[aria-disabled="true"]{ opacity:1; }
+
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))){
+  .tabbar{ background:var(--glass-solid); }
+}
+@media (prefers-reduced-transparency: reduce){
+  .tabbar{ background:var(--glass-solid); -webkit-backdrop-filter:none !important; backdrop-filter:none !important; }
+}
+@media (prefers-contrast: more){
+  .tabbar{ background:var(--glass-solid); -webkit-backdrop-filter:none !important; backdrop-filter:none !important; border-top:1px solid var(--label-2); }
+}
+
+/* ==================================================================
+   8. STATE SWITCHING
+   ================================================================== */
+:root[data-state="solving"] .only-solved  { display:none !important; }
+:root[data-state="solved"]  .only-solving { display:none !important; }
+:root[data-tabs="3"] .only-tabs4{ display:none !important; }
+:root[data-tabs="4"] .only-tabs3{ display:none !important; }
+
+/* The moment before the card: data recedes to 60 %. */
+.board.dim .d.given{ opacity:.6; transition:opacity 240ms linear; }
+
+/* ==================================================================
+   9. MOTION  (motion.md: "Add motion purposefully", "Make motion optional",
+      "Let people cancel motion")
+   M1 digit set · M2 selection travels · M3 unit closed · M4 error
+   M5 solved (the one orchestrated moment) · M6 key pressed
+   ================================================================== */
+@keyframes inkSet   { from{ transform:scale(1.25); opacity:0 } to{ transform:scale(1); opacity:1 } }
+@keyframes inkFade  { from{ opacity:0 } to{ opacity:1 } }
+@keyframes unitWave { 0%{ opacity:0 } 40%{ opacity:.15 } 100%{ opacity:0 } }
+@keyframes unitTint { 0%{ opacity:0 } 45%{ opacity:.12 } 100%{ opacity:0 } }
+@keyframes ringIn   { from{ opacity:0 } to{ opacity:1 } }
+@keyframes cardUp   { from{ transform:translateY(24px); opacity:0 } to{ transform:none; opacity:1 } }
+@keyframes cardFade { from{ opacity:0 } to{ opacity:1 } }
+@keyframes landPulse{ 0%{ transform:scale(1.35); opacity:.4 } 100%{ transform:scale(1); opacity:1 } }
+
+.d.anim-in{ animation: inkSet 180ms cubic-bezier(.2,.7,.3,1); }
+.cell.wave > .wv{ animation: unitWave 160ms ease-out; animation-delay: calc(var(--wi, 0) * 8ms); }
+.flyer{
+  position:fixed; left:0; top:0; z-index:60; pointer-events:none;
+  font-family:var(--font-sans); font-weight:500; color:var(--ink); line-height:1;
+  display:grid; place-items:center;
+}
+
+/* --- Reduced motion -------------------------------------------------
+   No transform, scale, travel or spring survives. What remains are short
+   opacity cross-fades, which accessibility.md > Cognitive prescribes as the
+   replacement: "Replacing transitions in x-, y-, and z-axes with fades to
+   avoid motion." Set Motion = Off in the review panel for literally nothing. */
+@media (prefers-reduced-motion: reduce){
+  :root:not([data-motion="full"]) .ring{ transition:none !important; }
+  :root:not([data-motion="full"]) .d.anim-in{ animation: inkFade 120ms linear !important; }
+  :root:not([data-motion="full"]) .cell.wave > .wv{ animation: unitTint 130ms linear !important; animation-delay:0ms !important; }
+  :root:not([data-motion="full"]) .card{ animation: cardFade 140ms linear !important; }
+  :root:not([data-motion="full"]) .cell.landed::after{ animation: ringIn 140ms linear !important; }
+  :root:not([data-motion="full"]) .key, :root:not([data-motion="full"]) .act,
+  :root:not([data-motion="full"]) .tab, :root:not([data-motion="full"]) .icon-btn{ transition: background-color .12s linear, color .12s linear !important; }
+  :root:not([data-motion="full"]) .key:active, :root:not([data-motion="full"]) .act:active{ transform:none !important; }
+  :root:not([data-motion="full"]) .board.dim .d.given{ transition:opacity 140ms linear; }
+}
+:root[data-motion="reduced"] .ring{ transition:none !important; }
+:root[data-motion="reduced"] .d.anim-in{ animation: inkFade 120ms linear !important; }
+:root[data-motion="reduced"] .cell.wave > .wv{ animation: unitTint 130ms linear !important; animation-delay:0ms !important; }
+:root[data-motion="reduced"] .card{ animation: cardFade 140ms linear !important; }
+:root[data-motion="reduced"] .cell.landed::after{ animation: ringIn 140ms linear !important; }
+:root[data-motion="reduced"] .key:active, :root[data-motion="reduced"] .act:active{ transform:none !important; }
+:root[data-motion="off"] *, :root[data-motion="off"] *::before, :root[data-motion="off"] *::after{
+  animation:none !important; transition:none !important;
+}
+
+/* ==================================================================
+   10. MOCKUP CONTROLS — review chrome, deliberately outside the design
+       language: fixed dark slate in both appearances, dashed edges.
+   ================================================================== */
+.mock-pill{
+  height:30px; padding:0 12px; border-radius:15px;
+  background:#26262B; color:#D6D6DC; border:1px dashed #6E6E78;
+  font-size:10px; letter-spacing:.09em; text-transform:uppercase;
+  display:inline-flex; align-items:center; gap:6px;
+}
+:root[data-mock="open"] .mock-pill{ display:none; }
+.pill-slot-solved{ display:flex; justify-content:center; padding:22px 16px 6px; }
+
+.mock{
+  position:fixed; left:0; right:0; bottom:0; z-index:61;
+  background:#26262B; color:#D6D6DC;
+  border-top:2px dashed #6E6E78;
+  padding:8px 12px calc(8px + var(--sa-bot));
+  font-size:11px; display:none;
+  max-height:62vh; overflow-y:auto;
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+}
+:root[data-mock="open"] .mock{ display:block; }
+.mock .hdr{ display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; letter-spacing:.08em; text-transform:uppercase; color:#9A9AA4; }
+.mock .grp{ display:flex; align-items:center; gap:8px; margin:5px 0; flex-wrap:wrap; }
+.mock .grp > b{ font-weight:600; width:76px; flex:none; letter-spacing:.02em; color:#9A9AA4; }
+.mock .seg{ display:flex; border:1px solid #6E6E78; border-radius:6px; overflow:hidden; }
+.mock .seg button{ padding:5px 9px; font:inherit; font-size:11px; color:#D6D6DC; background:transparent; }
+.mock .seg button + button{ border-left:1px solid #6E6E78; }
+.mock .seg button[aria-pressed="true"]{ background:#E6E6EA; color:#1B1B1F; font-weight:700; }
+.mock .sw{ width:12px; height:12px; border-radius:3px; border:1px solid rgba(255,255,255,.35); display:inline-block; vertical-align:-2px; margin-right:5px; }
+.mock .go{ padding:6px 14px; border:1px solid #D6D6DC; border-radius:6px; font:inherit; font-size:11px; color:#1B1B1F; background:#D6D6DC; font-weight:700; }
+.mock .note{ color:#9A9AA4; margin:8px 0 0; line-height:1.5; font-family:var(--font-sans); font-size:10.5px; }
+.mock .close{ font:inherit; font-size:11px; color:#D6D6DC; text-decoration:underline; }
+@media (min-width:440px){ .mock{ max-height:none; } }
+</style>
+</head>
+<body>
+
+<div class="frame" id="frame">
+  <div class="scroll" id="scroll">
+
+    <!-- Toolbar: title + the one action on this view. Actions live in toolbars, not tabs.
+         tab-bars.md > Best practices: "Use a tab bar to support navigation, not to provide actions." -->
+    <header class="toolbar">
+      <h1 class="title">Today</h1>
+      <button class="icon-btn" aria-label="Settings">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+          <circle cx="12" cy="12" r="3.4"/>
+          <path d="M12 2.9v2.4M12 18.7v2.4M21.1 12h-2.4M5.3 12H2.9M18.4 5.6l-1.7 1.7M7.3 16.7l-1.7 1.7M18.4 18.4l-1.7-1.7M7.3 7.3 5.6 5.6"/>
+        </svg>
+      </button>
+    </header>
+    <p class="daybar">Wed 29 Sep · Medium</p>
+
+    <!-- ---------- SOLVING ---------- -->
+    <div class="board-wrap only-solving">
+      <div class="board" id="board-daily" role="group" aria-label="Sudoku grid for Wednesday 29 September"></div>
+    </div>
+
+    <!-- Free space sits BETWEEN the board and the pad, never above the board. -->
+    <div class="gap only-solving">
+      <button class="mock-pill" id="pill-a" aria-expanded="false" aria-controls="mock">Mockup controls ▲</button>
+    </div>
+
+    <div class="pad-wrap only-solving">
+      <div class="pad" id="pad" role="group" aria-label="Number pad"></div>
+      <div class="actions">
+        <button class="act" id="btn-notes" aria-pressed="false">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M4.5 19.5l4.2-1.1 9.6-9.6a1.9 1.9 0 0 0 0-2.7l-1.4-1.4a1.9 1.9 0 0 0-2.7 0l-9.6 9.6z"/><path d="M14.2 5.9l3.9 3.9"/>
+          </svg><span>Notes</span>
+        </button>
+        <button class="act" id="btn-undo">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M9.2 7.2H15a4.4 4.4 0 1 1 0 8.8H8.2"/><path d="M11.8 4.2 8.8 7.2l3 3"/>
+          </svg><span>Undo</span>
+        </button>
+        <button class="act" id="btn-erase">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M8.4 18.2 5 14.8a1.9 1.9 0 0 1 0-2.7l6.9-6.9a1.9 1.9 0 0 1 2.7 0l4 4a1.9 1.9 0 0 1 0 2.7l-6.3 6.3z"/><path d="M20 19.6H10"/>
+          </svg><span>Erase</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- ---------- SOLVED ---------- -->
+    <section class="card only-solved" aria-label="Today's result">
+      <h2>Your path</h2>
+      <p class="sub">Every cell shaded by when you filled it.</p>
+      <div class="heat" id="heat" role="img" aria-label="Heat map of the order in which you filled the grid."></div>
+      <div class="legend"><span>Early</span><span class="bar" id="legend-bar" aria-hidden="true"></span><span>Late</span></div>
+      <dl class="rows">
+        <div class="row"><dt>Time</dt><dd class="mono">8:14</dd></div>
+        <div class="row"><dt>Corrections</dt><dd>clean</dd></div>
+        <div class="row"><dt>Technique reached</dt><dd>Hidden Pair</dd></div>
+      </dl>
+      <p class="winrate">61&nbsp;% solved today</p>
+      <button class="share">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M12 3.4v10.2"/><path d="m8.6 6.8 3.4-3.4 3.4 3.4"/><path d="M5.6 12.6v5.2a2.2 2.2 0 0 0 2.2 2.2h8.4a2.2 2.2 0 0 0 2.2-2.2v-5.2"/>
+        </svg>Share
+      </button>
+    </section>
+
+    <div class="only-solved only-tabs3">
+      <div class="section-head"><h2>Grid&nbsp;∞</h2><span class="meta" id="inf-meta">12 cells · not yet solvable</span></div>
+      <div class="board-wrap">
+        <div class="board" id="board-infinite" role="img" aria-label="Your permanent grid: 12 clues so far, not yet solvable"></div>
+      </div>
+      <p class="hint"><span class="chip" aria-hidden="true"></span>Today's last cell lands here.</p>
+    </div>
+
+    <div class="only-solved only-tabs4">
+      <div class="linkrow">
+        <div><div class="t">Grid&nbsp;∞</div><div class="m">12 cells · not yet solvable · +1 today</div></div>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 5 7 7-7 7"/></svg>
+      </div>
+    </div>
+
+    <div class="only-solved pill-slot-solved">
+      <button class="mock-pill" id="pill-b" aria-expanded="false" aria-controls="mock">Mockup controls ▲</button>
+    </div>
+  </div>
+
+  <nav class="tabbar" id="tabbar" role="tablist" aria-label="Sections">
+    <button class="tab" role="tab" aria-selected="true">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <rect x="3.5" y="4.8" width="17" height="15.4" rx="3.4"/><path d="M3.5 9.2h17M8 3.2v2.8M16 3.2v2.8"/><circle cx="12" cy="14.7" r="1.9" fill="currentColor" stroke="none"/>
+      </svg><span class="lab">Today</span>
+    </button>
+    <button class="tab" role="tab" aria-selected="false" aria-disabled="true" title="Not included in this mockup">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <rect x="3.5" y="3.5" width="17" height="17" rx="3.4"/><path d="M9.2 3.5v17M14.8 3.5v17M3.5 9.2h17M3.5 14.8h17"/>
+      </svg><span class="lab">Play</span>
+    </button>
+    <button class="tab only-tabs4" role="tab" aria-selected="false" aria-disabled="true" title="Not included in this mockup">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M12 12c-1.7-2.4-3.1-3.5-4.8-3.5a3.5 3.5 0 1 0 0 7c1.7 0 3.1-1.1 4.8-3.5z"/><path d="M12 12c1.7-2.4 3.1-3.5 4.8-3.5a3.5 3.5 0 1 1 0 7c-1.7 0-3.1-1.1-4.8-3.5z"/>
+      </svg><span class="lab">Grid</span>
+    </button>
+    <button class="tab" role="tab" aria-selected="false" aria-disabled="true" title="Not included in this mockup">
+      <svg viewBox="0 0 24 24" fill="currentColor" stroke="none" aria-hidden="true">
+        <rect x="3.2" y="5.2" width="3.6" height="3.6" rx="1"/><rect x="8.6" y="5.2" width="3.6" height="3.6" rx="1"/><rect x="14" y="5.2" width="3.6" height="3.6" rx="1"/><rect x="19.4" y="5.2" width="1.4" height="3.6" rx=".7"/>
+        <rect x="3.2" y="10.2" width="3.6" height="3.6" rx="1"/><rect x="8.6" y="10.2" width="3.6" height="3.6" rx="1"/><rect x="14" y="10.2" width="3.6" height="3.6" rx="1"/><rect x="19.4" y="10.2" width="1.4" height="3.6" rx=".7"/>
+        <rect x="3.2" y="15.2" width="3.6" height="3.6" rx="1"/><rect x="8.6" y="15.2" width="3.6" height="3.6" rx="1"/><rect x="14" y="15.2" width="3.6" height="3.6" rx="1"/><rect x="19.4" y="15.2" width="1.4" height="3.6" rx=".7"/>
+      </svg><span class="lab">Year</span>
+    </button>
+  </nav>
+</div>
+
+<!-- ================= MOCKUP CONTROLS (not part of the design) ================= -->
+<div class="mock" id="mock">
+  <div class="hdr"><span>Mockup controls — not part of the design</span><button class="close" id="mock-close">Hide</button></div>
+
+  <div class="grp"><b>Appearance</b>
+    <div class="seg" data-key="appearance">
+      <button data-val="system" aria-pressed="true">System</button><button data-val="light" aria-pressed="false">Light</button><button data-val="dark" aria-pressed="false">Dark</button>
+    </div>
+  </div>
+
+  <div class="grp"><b>Board</b>
+    <div class="seg" data-key="board">
+      <button data-val="A" aria-pressed="true">A Ruled</button><button data-val="B" aria-pressed="false">B Boxes</button><button data-val="C" aria-pressed="false">C Ink field</button>
+    </div>
+  </div>
+
+  <div class="grp"><b>Pad</b>
+    <div class="seg" data-key="pad">
+      <button data-val="1" aria-pressed="true">1 row + left</button><button data-val="2" aria-pressed="false">2 rows 5+4</button>
+    </div>
+  </div>
+
+  <div class="grp"><b>Peers</b>
+    <div class="seg" data-key="peers">
+      <button data-val="none" aria-pressed="true">No fill</button><button data-val="neutral" aria-pressed="false">Neutral 8/18 %</button>
+    </div>
+  </div>
+
+  <div class="grp"><b>Tab bar</b>
+    <div class="seg" data-key="tabs">
+      <button data-val="3" aria-pressed="true">3 tabs</button><button data-val="4" aria-pressed="false">4 tabs</button>
+    </div>
+  </div>
+
+  <div class="grp"><b>Ink</b>
+    <div class="seg" data-key="ink">
+      <button data-val="working" aria-pressed="true"><span class="sw" style="background:#3B48B0"></span>#3B48B0</button><button data-val="alt" aria-pressed="false"><span class="sw" style="background:#2F3E6E"></span>#2F3E6E</button>
+    </div>
+  </div>
+
+  <div class="grp"><b>State</b>
+    <div class="seg" data-key="state">
+      <button data-val="solving" aria-pressed="true">Solving</button><button data-val="solved" aria-pressed="false">Solved</button>
+    </div>
+  </div>
+
+  <div class="grp"><b>Motion</b>
+    <div class="seg" data-key="motion">
+      <button data-val="system" aria-pressed="true">System</button><button data-val="reduced" aria-pressed="false">Reduced</button><button data-val="off" aria-pressed="false">Off</button>
+    </div>
+  </div>
+
+  <div class="grp"><b>Safe area</b>
+    <div class="seg" data-key="safearea">
+      <button data-val="sim" aria-pressed="true">iPhone 16</button><button data-val="env" aria-pressed="false">Real env()</button>
+    </div>
+  </div>
+
+  <div class="grp"><b>Play</b>
+    <button class="go" id="btn-demo">Demo — unit closed, then solved</button>
+    <button class="close" id="btn-reset">Reset</button>
+  </div>
+
+  <p class="note">
+    Tap a cell to move the selection (M2). Tap a key to place a digit (M1); tap the same key again to
+    remove it; a digit that contradicts the solution gets the wax ring (M4). Closing a row, column or
+    block runs the ink wave (M3). Demo plays M3 and then the one orchestrated moment, M5.
+    Appearance and Motion are review switches only — the product follows the system setting and ships
+    no appearance control (dark-mode.md &gt; Best practices). Tabs other than Today are inert here.
+  </p>
+</div>
+
+<script>
+(function(){
+  "use strict";
+  var root = document.documentElement;
+
+  /* ---------- puzzle data ---------------------------------------------------
+     SOL is a valid solved grid; GIVEN is the classic 30-clue mask on it, so
+     every digit shown is consistent and "unit closed" / "wrong digit" are real. */
+  var SOL =
+    "534678912" + "672195348" + "198342567" +
+    "859761423" + "426853791" + "713924856" +
+    "961537284" + "287419635" + "345286179";
+  var GIVEN =
+    "53..7...." + "6..195..." + ".98....6." +
+    "8...6...3" + "4..8.3..1" + "7...2...6" +
+    ".6....28." + "...419..5" + "....8..79";
+
+  /* The cells still open at rest. 40 is the only hole in the centre block, so
+     filling it genuinely closes that block (M3). 33 is kept for last (M5). */
+  var EMPTY_AT_REST = [2,6,16,22,28,33,40,43,46,51,58,63,74,78];
+  var DEMO_UNIT = 40, DEMO_LAST = 33;
+
+  /* Illustrative pencil marks: a grid this full really has single candidates,
+     so these are here to show the 3x3 mark layout, not to be solvable. */
+  var BASE_NOTES = { 2:[4,9], 22:[2,4,7], 63:[2,5], 74:[1,5,8] };
+
+  /* Grid ∞: 12 clues collected so far; today's cell lands on INF_TARGET. */
+  var INF = {4:"7", 11:"3", 19:"9", 25:"1", 30:"6", 33:"8", 38:"2", 44:"5", 51:"4", 57:"7", 66:"1", 74:"9"};
+  var INF_TARGET = 40, INF_TARGET_VALUE = "6";
+
+  var player, notes, sel, notesMode, undoStack;
+  function reset(){
+    player = {}; notes = {}; undoStack = []; notesMode = false; sel = 50;
+    var open = {}; EMPTY_AT_REST.forEach(function(i){ open[i] = true; });
+    for(var i=0;i<81;i++){
+      if(GIVEN[i] !== "." ) continue;
+      if(open[i]) continue;
+      player[i] = SOL[i];
+    }
+    Object.keys(BASE_NOTES).forEach(function(k){ notes[k] = BASE_NOTES[k].slice(); });
+    document.getElementById("btn-notes").setAttribute("aria-pressed","false");
+  }
+
+  function rc(i){ return [Math.floor(i/9), i%9]; }
+  function idxOf(b,k){ return (3*Math.floor(b/3) + Math.floor(k/3))*9 + (3*(b%3) + k%3); }
+  function isPeer(a,b){
+    if(a===b) return false;
+    var A=rc(a), B=rc(b);
+    if(A[0]===B[0] || A[1]===B[1]) return true;
+    return Math.floor(A[0]/3)===Math.floor(B[0]/3) && Math.floor(A[1]/3)===Math.floor(B[1]/3);
+  }
+  function digitAt(i){ return player[i] || (GIVEN[i] !== "." ? GIVEN[i] : null); }
+
+  /* ---------- board shell ---------------------------------------------------
+     Always nine boxes of nine cells; the variant decides how block structure
+     is expressed. Rules are an SVG overlay so widths are exact. */
+  function rulesSvg(n, full){
+    var s = '<svg class="rules" viewBox="0 0 '+n+' '+n+'" preserveAspectRatio="none" aria-hidden="true">';
+    for(var k=1;k<n;k++){
+      var block = full && (k%3===0);
+      var cls = block ? "block" : "thin";
+      s += '<line class="'+cls+'" x1="'+k+'" y1="0" x2="'+k+'" y2="'+n+'"/>';
+      s += '<line class="'+cls+'" x1="0" y1="'+k+'" x2="'+n+'" y2="'+k+'"/>';
+    }
+    return s + "</svg>";
+  }
+
+  function buildShell(el, variant, interactive){
+    var html = "", b, k, i, br, bc;
+    for(b=0;b<9;b++){
+      br = Math.floor(b/3); bc = b%3;
+      var boxCls = "box" + (variant === "C" && ((br+bc)%2 === 1) ? " alt" : "");
+      html += '<div class="'+boxCls+'">';
+      for(k=0;k<9;k++){
+        i = idxOf(b,k);
+        /* Interactive boards use real buttons: focusable, labelled, 40x40 pt targets.
+           accessibility.md > Mobility + Speech. Production should add roving tabindex so
+           the grid is one tab stop with arrow-key movement, not 81 stops. */
+        html += interactive
+          ? '<button type="button" class="cell" data-i="'+i+'"><i class="fl"></i><i class="wv"></i></button>'
+          : '<div class="cell" data-i="'+i+'"><i class="fl"></i><i class="wv"></i></div>';
+      }
+      if(variant === "B") html += rulesSvg(3, false);
+      html += "</div>";
+    }
+    if(variant === "A") html += rulesSvg(9, true);
+    if(interactive) html += '<div class="ring" id="ring"></div>';
+    el.innerHTML = html;
+    var cells = [];
+    Array.prototype.forEach.call(el.querySelectorAll(".cell"), function(c){ cells[+c.dataset.i] = c; });
+    return cells;
+  }
+
+  var boardEl = document.getElementById("board-daily");
+  var infEl   = document.getElementById("board-infinite");
+  var cells = [], infCells = [], ring = null;
+
+  function setCell(c, kind, text, markList){
+    var d = c.querySelector(".d"), m = c.querySelector(".marks");
+    if(text){
+      if(m) m.remove();
+      if(!d){ d = document.createElement("span"); d.className = "d"; c.appendChild(d); }
+      d.className = "d " + kind;
+      if(d.textContent !== text) d.textContent = text;
+    } else if(markList && markList.length){
+      if(d) d.remove();
+      if(!m){ m = document.createElement("span"); m.className = "marks"; c.appendChild(m); }
+      var want = "";
+      for(var n=1;n<=9;n++) want += "<span>" + (markList.indexOf(n)>=0 ? n : "") + "</span>";
+      if(m.innerHTML !== want) m.innerHTML = want;
+    } else {
+      if(d) d.remove();
+      if(m) m.remove();
+    }
+  }
+
+  function paint(animateIdx){
+    var selDigit = sel != null ? digitAt(sel) : null;
+    for(var i=0;i<81;i++){
+      var c = cells[i]; if(!c) continue;
+      var g = GIVEN[i] !== "." ? GIVEN[i] : null;
+      var p = player[i] || null;
+      var wrong = p && p !== SOL[i];
+
+      c.classList.toggle("sel",  sel === i);
+      c.classList.toggle("same", !!(selDigit && sel !== i && digitAt(i) === selDigit));
+      c.classList.toggle("peer", sel != null && isPeer(i, sel));
+      c.classList.toggle("err",  !!wrong);
+
+      if(g)      setCell(c, "given", g, null);
+      else if(p) setCell(c, "player" + (wrong ? " err" : ""), p, null);
+      else       setCell(c, "", null, notes[i]);
+
+      c.setAttribute("aria-label", labelFor(i, g, p, wrong));
+    }
+    if(animateIdx != null){
+      var d = cells[animateIdx] && cells[animateIdx].querySelector(".d");
+      if(d){ d.classList.remove("anim-in"); void d.offsetWidth; d.classList.add("anim-in"); }
+    }
+    moveRing(true);
+    paintPad();
+  }
+
+  function labelFor(i, g, p, wrong){
+    var a = rc(i), where = "row " + (a[0]+1) + ", column " + (a[1]+1);
+    if(g) return where + ", clue " + g;
+    if(p) return where + ", your " + p + (wrong ? ", conflicts" : "");
+    if(notes[i]) return where + ", notes " + notes[i].join(" ");
+    return where + ", empty";
+  }
+
+  function moveRing(anim){
+    if(!ring) return;
+    var c = sel != null ? cells[sel] : null;
+    if(!c){ ring.style.opacity = 0; return; }
+    var br = boardEl.getBoundingClientRect(), cr = c.getBoundingClientRect();
+    if(!anim) ring.classList.add("noanim");
+    ring.style.width  = cr.width + "px";
+    ring.style.height = cr.height + "px";
+    ring.style.transform = "translate(" + (cr.left - br.left) + "px," + (cr.top - br.top) + "px)";
+    ring.style.opacity = 1;
+    if(!anim) requestAnimationFrame(function(){ requestAnimationFrame(function(){ ring.classList.remove("noanim"); }); });
+  }
+
+  /* ---------- number pad ---------------------------------------------------- */
+  var padEl = document.getElementById("pad");
+  (function buildPad(){
+    var h = "";
+    for(var d=1; d<=9; d++){
+      h += '<button class="key" data-d="'+d+'"><span class="kd">'+d+'</span><span class="kr" data-r="'+d+'">0</span></button>';
+    }
+    padEl.innerHTML = h;
+  })();
+
+  function remaining(){
+    var left = {1:9,2:9,3:9,4:9,5:9,6:9,7:9,8:9,9:9};
+    for(var i=0;i<81;i++){
+      var v = digitAt(i);
+      if(v && +v >= 1 && +v <= 9) left[+v]--;
+    }
+    return left;
+  }
+  function paintPad(){
+    var left = remaining();
+    Array.prototype.forEach.call(padEl.querySelectorAll(".key"), function(k){
+      var d = +k.dataset.d, n = Math.max(0, left[d]);
+      k.querySelector(".kr").textContent = n;
+      k.classList.toggle("done", n === 0);
+      k.setAttribute("aria-label", "Enter " + d + ", " + n + " left");
+    });
+  }
+
+  /* ---------- units (M3) ----------------------------------------------------- */
+  function unitsOf(i){
+    var a = rc(i), r = a[0], c = a[1];
+    var row = [], col = [], box = [], k;
+    for(k=0;k<9;k++){ row.push(r*9+k); col.push(k*9+c); }
+    var r0 = 3*Math.floor(r/3), c0 = 3*Math.floor(c/3);
+    for(k=0;k<9;k++) box.push((r0 + Math.floor(k/3))*9 + (c0 + k%3));
+    return [row, col, box];
+  }
+  function unitClosed(u){
+    for(var k=0;k<9;k++){ var v = digitAt(u[k]); if(!v || v !== SOL[u[k]]) return false; }
+    return true;
+  }
+  function wave(u){
+    u.forEach(function(idx, n){
+      var c = cells[idx]; if(!c) return;
+      c.style.setProperty("--wi", n);
+      c.classList.remove("wave"); void c.offsetWidth; c.classList.add("wave");
+      setTimeout(function(){ c.classList.remove("wave"); }, 420);
+    });
+  }
+  function checkUnits(i){
+    var done = unitsOf(i).filter(unitClosed);
+    if(done.length) wave(done[0]);   /* one wave, even when several units close */
+  }
+
+  /* ---------- input ---------------------------------------------------------- */
+  function place(d){
+    if(sel == null || GIVEN[sel] !== ".") return;
+    if(notesMode){
+      var list = notes[sel] ? notes[sel].slice() : [];
+      var at = list.indexOf(+d);
+      if(at >= 0) list.splice(at,1); else list.push(+d);
+      undoStack.push({i:sel, kind:"notes", prev: notes[sel] ? notes[sel].slice() : null});
+      if(list.length) notes[sel] = list.sort(); else delete notes[sel];
+      paint();
+      return;
+    }
+    if(player[sel] === d){                       /* same key again removes it */
+      undoStack.push({i:sel, kind:"digit", prev:player[sel]});
+      delete player[sel];
+      paint();
+      return;
+    }
+    undoStack.push({i:sel, kind:"digit", prev:player[sel] || null});
+    player[sel] = d;
+    delete notes[sel];
+    var target = sel;
+    paint(target);
+    if(SOL[target] === d) checkUnits(target);    /* M3 only for a real close */
+  }
+  function erase(){
+    if(sel == null || GIVEN[sel] !== ".") return;
+    undoStack.push({i:sel, kind:"digit", prev:player[sel] || null});
+    delete player[sel]; delete notes[sel];
+    paint();
+  }
+  function undo(){
+    var s = undoStack.pop(); if(!s) return;
+    sel = s.i;
+    if(s.kind === "notes"){ if(s.prev) notes[s.i] = s.prev; else delete notes[s.i]; }
+    else { if(s.prev) player[s.i] = s.prev; else delete player[s.i]; }
+    paint();
+  }
+
+  boardEl.addEventListener("click", function(e){
+    var c = e.target.closest(".cell"); if(!c) return;
+    sel = +c.dataset.i;
+    paint();
+  });
+  padEl.addEventListener("click", function(e){
+    var k = e.target.closest(".key"); if(!k) return;
+    place(k.dataset.d);
+  });
+  document.getElementById("btn-erase").addEventListener("click", erase);
+  document.getElementById("btn-undo").addEventListener("click", undo);
+  var notesBtn = document.getElementById("btn-notes");
+  notesBtn.addEventListener("click", function(){
+    notesMode = notesBtn.getAttribute("aria-pressed") !== "true";
+    notesBtn.setAttribute("aria-pressed", String(notesMode));
+  });
+
+  /* ---------- heat map (solved card) ----------------------------------------- */
+  (function heatmap(){
+    function rnd(i){ var s = Math.sin(i*12.9898)*43758.5453; return s - Math.floor(s); }
+    var order = [];
+    for(var j=0;j<81;j++){
+      if(GIVEN[j] !== ".") continue;
+      var p = rc(j);
+      var dist = Math.hypot(p[0]-7.2, p[1]-7.2);
+      var centre = 3.2 - Math.hypot(p[0]-4, p[1]-4);
+      order.push({ i:j, score: dist + Math.max(0,centre)*1.35 + rnd(j)*1.6 });
+    }
+    order.sort(function(a,b){ return a.score - b.score; });
+    var t = {}; order.forEach(function(o,n){ t[o.i] = n/(order.length-1); });
+    var h = "";
+    for(var k=0;k<81;k++){
+      h += GIVEN[k] !== "." ? '<i class="g"></i>'
+                            : '<i style="opacity:'+(0.12 + 0.86*t[k]).toFixed(3)+'"></i>';
+    }
+    document.getElementById("heat").innerHTML = h;
+    var l = "";
+    for(var s=0;s<9;s++) l += '<i style="opacity:'+(0.12 + 0.86*(s/8)).toFixed(3)+'"></i>';
+    document.getElementById("legend-bar").innerHTML = l;
+  })();
+
+  /* ---------- M5: the one orchestrated moment -------------------------------- */
+  var running = null;
+  function reducedMotion(){
+    var m = root.getAttribute("data-motion");
+    if(m === "reduced" || m === "off") return true;
+    if(m === "full") return false;
+    return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  }
+  function cancelSequence(jump){
+    if(!running) return;
+    running.timers.forEach(clearTimeout);
+    running.anims.forEach(function(a){ try{ a.cancel(); }catch(e){} });
+    var f = document.querySelector(".flyer"); if(f) f.remove();
+    running = null;
+    document.removeEventListener("pointerdown", onInterrupt, true);
+    if(jump) finishSolved();
+  }
+  function onInterrupt(e){
+    if(e.target.closest(".mock")) return;      /* review chrome doesn't count as a tap */
+    cancelSequence(true);
+  }
+
+  function finishSolved(){
+    boardEl.classList.remove("dim");
+    setState("solved");
+    var t = infCells[INF_TARGET];
+    if(t){
+      setCell(t, "given", INF_TARGET_VALUE, null);
+      t.classList.add("landed");
+      document.getElementById("inf-meta").textContent = "13 cells · not yet solvable";
+    }
+  }
+
+  function solveSequence(){
+    var srcCell = cells[DEMO_LAST] || cells[sel] || cells[40];
+    var srcRect = srcCell.getBoundingClientRect();
+    var digit = digitAt(DEMO_LAST) || SOL[DEMO_LAST];
+    var timers = [], anims = [];
+    running = { timers: timers, anims: anims };
+    document.addEventListener("pointerdown", onInterrupt, true);
+
+    var reduce = reducedMotion();
+    boardEl.classList.add("dim");                                   /* data recedes, 240 ms */
+
+    timers.push(setTimeout(function(){
+      setState("solved");                                           /* card springs up */
+      var t = infCells[INF_TARGET];
+      if(!t){ finishSolved(); running = null; return; }
+      /* bring the landing site on screen before measuring it; the scroll itself is instant */
+      t.scrollIntoView({block:"center", behavior:"auto"});
+      var dst = t.getBoundingClientRect();
+
+      if(reduce){
+        finishSolved();
+        running = null;
+        document.removeEventListener("pointerdown", onInterrupt, true);
+        return;
+      }
+
+      var fly = document.createElement("span");
+      fly.className = "flyer";
+      fly.textContent = INF_TARGET_VALUE;
+      fly.style.width = srcRect.width + "px";
+      fly.style.height = srcRect.height + "px";
+      fly.style.fontSize = Math.round(srcRect.width*0.56) + "px";
+      document.body.appendChild(fly);
+      var a = fly.animate(
+        [ { transform:"translate("+srcRect.left+"px,"+srcRect.top+"px) scale(1)", opacity:1 },
+          { transform:"translate("+dst.left+"px,"+dst.top+"px) scale(.94)", opacity:1 } ],
+        { duration:340, easing:"cubic-bezier(.34,.9,.2,1)", fill:"forwards" });
+      anims.push(a);
+      a.onfinish = function(){
+        fly.remove();
+        finishSolved();
+        running = null;
+        document.removeEventListener("pointerdown", onInterrupt, true);
+      };
+    }, reduce ? 140 : 200));
+    void digit;
+  }
+
+  function demo(){
+    cancelSequence(false);
+    reset(); setState("solving");
+    var t = infCells[INF_TARGET];
+    if(t){ setCell(t, "", null, null); t.classList.remove("landed"); document.getElementById("inf-meta").textContent = "12 cells · not yet solvable"; }
+    paint();
+
+    var timers = [], anims = [];
+    running = { timers: timers, anims: anims };
+    document.addEventListener("pointerdown", onInterrupt, true);
+    var reduce = reducedMotion();
+    var step = reduce ? 40 : 70;
+
+    /* 1. close the centre block (M1 + M3) */
+    timers.push(setTimeout(function(){
+      sel = DEMO_UNIT; paint();
+      timers.push(setTimeout(function(){
+        player[DEMO_UNIT] = SOL[DEMO_UNIT];
+        paint(DEMO_UNIT);
+        checkUnits(DEMO_UNIT);
+      }, 260));
+    }, 120));
+
+    /* 2. fill the rest, last cell held back */
+    var rest = EMPTY_AT_REST.filter(function(i){ return i !== DEMO_UNIT && i !== DEMO_LAST; });
+    var t0 = 900;
+    rest.forEach(function(i, n){
+      timers.push(setTimeout(function(){
+        sel = i; player[i] = SOL[i]; paint(i);
+      }, t0 + n*step));
+    });
+
+    /* 3. the last cell, then M5 */
+    var tLast = t0 + rest.length*step + 160;
+    timers.push(setTimeout(function(){
+      sel = DEMO_LAST; player[DEMO_LAST] = SOL[DEMO_LAST]; paint(DEMO_LAST);
+    }, tLast));
+    timers.push(setTimeout(function(){
+      document.removeEventListener("pointerdown", onInterrupt, true);
+      running = null;
+      solveSequence();
+    }, tLast + (reduce ? 200 : 320)));
+  }
+
+  /* ---------- state + variant plumbing --------------------------------------- */
+  function setState(v){
+    root.setAttribute("data-state", v);
+    var seg = document.querySelector('.seg[data-key="state"]');
+    Array.prototype.forEach.call(seg.querySelectorAll("button"), function(b){
+      b.setAttribute("aria-pressed", String(b.dataset.val === v));
+    });
+    if(v === "solving") requestAnimationFrame(function(){ moveRing(false); });
+  }
+
+  function rebuild(){
+    var variant = root.getAttribute("data-board");
+    cells = buildShell(boardEl, variant, true);
+    ring = document.getElementById("ring");
+    infCells = buildShell(infEl, variant, false);
+    for(var i=0;i<81;i++){
+      if(INF[i]) setCell(infCells[i], "given", INF[i], null);
+    }
+    if(infCells[INF_TARGET]) infCells[INF_TARGET].classList.add("target");
+    paint();
+    requestAnimationFrame(function(){ moveRing(false); });
+  }
+
+  var handlers = {
+    appearance: function(v){
+      root.classList.remove("force-light","force-dark");
+      if(v === "light") root.classList.add("force-light");
+      if(v === "dark")  root.classList.add("force-dark");
+      root.style.colorScheme = (v === "system") ? "" : v;
+    },
+    board: function(v){ root.setAttribute("data-board", v); rebuild(); },
+    pad:   function(v){ root.setAttribute("data-pad", v); requestAnimationFrame(function(){ moveRing(false); }); },
+    peers: function(v){ root.setAttribute("data-peers", v); },
+    tabs:  function(v){ root.setAttribute("data-tabs", v); },
+    ink:   function(v){ root.setAttribute("data-ink", v); },
+    state: function(v){ cancelSequence(false); setState(v); },
+    motion:function(v){ root.setAttribute("data-motion", v); },
+    safearea: function(v){ root.setAttribute("data-safearea", v); requestAnimationFrame(function(){ moveRing(false); }); }
+  };
+
+  function setControl(key, val){
+    var seg = document.querySelector('.seg[data-key="'+key+'"]');
+    if(seg){
+      Array.prototype.forEach.call(seg.querySelectorAll("button"), function(b){
+        b.setAttribute("aria-pressed", String(b.dataset.val === val));
+      });
+    }
+    if(handlers[key]) handlers[key](val);
+  }
+
+  Object.keys(handlers).forEach(function(key){
+    var seg = document.querySelector('.seg[data-key="'+key+'"]');
+    if(!seg) return;
+    seg.addEventListener("click", function(e){
+      var b = e.target.closest("button"); if(!b) return;
+      setControl(key, b.dataset.val);
+    });
+  });
+
+  /* ---------- mockup panel open / closed -------------------------------------- */
+  function setMock(open){
+    root.setAttribute("data-mock", open ? "open" : "closed");
+    ["pill-a","pill-b"].forEach(function(id){
+      var p = document.getElementById(id); if(p) p.setAttribute("aria-expanded", String(open));
+    });
+    requestAnimationFrame(function(){ moveRing(false); });
+  }
+  ["pill-a","pill-b"].forEach(function(id){
+    document.getElementById(id).addEventListener("click", function(){ setMock(true); });
+  });
+  document.getElementById("mock-close").addEventListener("click", function(){ setMock(false); });
+  document.getElementById("btn-demo").addEventListener("click", function(e){ e.stopPropagation(); demo(); });
+  document.getElementById("btn-reset").addEventListener("click", function(){
+    cancelSequence(false); reset();
+    var t = infCells[INF_TARGET];
+    if(t){ setCell(t, "", null, null); t.classList.remove("landed"); document.getElementById("inf-meta").textContent = "12 cells · not yet solvable"; }
+    setState("solving"); paint();
+  });
+
+  /* inert tabs: a one-screen mockup must not pretend to navigate, but a tab is
+     never disabled or hidden in the product (tab-bars.md). */
+  Array.prototype.forEach.call(document.querySelectorAll('.tab[aria-disabled="true"]'), function(tb){
+    tb.addEventListener("click", function(e){ e.preventDefault(); });
+  });
+
+  window.addEventListener("resize", function(){ moveRing(false); });
+
+  /* review hook for the screenshot script */
+  window.__mock = {
+    set: setControl,
+    open: function(){ setMock(true); },
+    collapse: function(){ setMock(false); },
+    demo: demo,
+    reset: function(){ document.getElementById("btn-reset").click(); }
+  };
+
+  reset();
+  rebuild();
+  setMock(true);          /* expanded on first open — the owner must find Appearance */
+})();
+</script>
+</body>
+</html>
