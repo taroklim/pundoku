@@ -99,6 +99,10 @@
 15. Выбор неверной клетки: видны и индиго-кольцо, и сургучное (светлая/тёмная тема).
 16. Ввод пальцем: попадание по клеткам и клавишам панели (36–41 pt на 390–430 pt — вопрос владельцу (а)), заметки, undo, таймер при сворачивании PWA, ощущение движений M1/M2/M3/M6, размер текста.
 17. (PD-14) Данные сайта: решить день, «Настройки → Safari → Дополнительно → Данные сайтов» (или удаление PWA) — после стирания только IndexedDB прогресс должен восстановиться с сервера; проверить, что `navigator.storage.persist()` на iOS отдаёт true/false (в установленной PWA) и токен устройства переживает перезапуск; полная чистка = новое устройство, данные недоступны (ожидаемо).
+18. (PD-12) M5 в Grid ∞: «полёт» последней клетки, прерывание касанием, при «Уменьшить движение» — кольцо вместо полёта.
+19. (PD-12) Полночь / смена даты: оставить PWA открытой через полночь, вернуться из фона — день сменился на новый, старый не остаётся.
+20. (PD-12) Свернуть и вернуться во время игры на Today: таймер, ввод, заметки на месте.
+21. (PD-12) Ощущение Grid ∞ и карточки дня на iPhone 16.
 Не проверено QA: реальное стекло iOS, `env(safe-area-inset-*)`, статус-бар в тёмной теме, установка, reduced-transparency/contrast в webkit.
 
 ## Решения владельца по Year (2026-09-29, PD-24 закрыт)
@@ -108,6 +112,17 @@
 - Пропущенный день можно доигрывать (архив Sudoku.com), но в Year он остаётся «пропуском» (флаг `late` в записи дня); карточка дня при этом доступна.
 - Открытый вопрос PM к владельцу (не блокирует PD-14/PD-25): что считать «помощью» до появления функции подсказок — например, только будущая подсказка, или также решение с включённым режимом «показывать ошибки»/после «Проверить»? Рекомендация: только будущая подсказка (флаг всегда false до неё).
 - Очередь: QA PD-18 → мерж PD-12 → PD-14 → PD-25 (Year) → PD-26 (полировка: `apple-touch-startup-image` против светлой вспышки, PD-22) → привязка e-mail (PD-27; перед реализацией — вопрос владельцу о регистрации).
+
+## Backlog по QA PD-18 (не чиним сейчас, Low/Info)
+- forced-colors: MiniBoard (карточка дня).
+- единичный неподтверждённый scrollWidth в webkit 320 light.
+- замена сетки при медленном сервере (>2.5 с) — возможна смена сетки под руками игрока.
+
+### Бриф PD-29 (developer, ветка `pd-12`, worktree pd-12)
+1. MEDIUM: `dayStore.fetchDay()` пишет `lastKnownDifficulty = r.puzzle.difficulty` и для `source:"sudoku.com"`; запоминать сложность только у `source:"generator"`, иначе — DAILY_FALLBACK_DIFFICULTY (medium). Тест на сценарий: смена дня в офлайне после сетки Sudoku.com → фолбэк = `dailyPuzzle(date,"medium")`. README поправить.
+2. Low: README говорит «неединственная сетка → нет ответа», а `solveMission` использует `solve()`, принимающий неединственные; привести в соответствие (проще README, если на реальных сетках не проявляется).
+3. Low: смена дня только по `online`/`visibilitychange`, таймера на полночь нет — зафиксировать в README как осознанное решение (iOS даёт visibilitychange при возврате из фона).
+Gates: build → typecheck, lint, тесты. Закоммитить в pd-12. pd-14 не трогать (на нём идёт QA PD-20). Затем быстрый QA-регресс сценария полуночи + gates.
 
 ## Backlog по QA PD-17 (не чиним сейчас)
 - 320×568 (iPhone SE 1-го поколения) скролл на 6–10 px — не целевое устройство.
@@ -142,7 +157,8 @@
 | PD-15 | QA PD-8: PASS с оговорками (seed-сетки побайтово те же, undo, api live; 2 low → PD-9/п.0) | qa-tester | P1 | completed | PD-8 |
 | PD-16 | QA PD-10 (eae5fa2): Playwright chromium+webkit, реальная сборка, apple-design как ревьюер | qa-tester | P1 | completed | PD-10 |
 | PD-17 | QA PD-11 (0e87330): PASS с оговорками, блокеров нет; 6 находок чинятся до мержа (Medium — дубликаты `.wv` после M3), остальное в backlog ниже | qa-tester | P1 | completed | PD-11 |
-| PD-18 | QA PD-12 (e5418fc) | qa-tester | P1 | in_progress | PD-12 |
+| PD-18 | QA PD-12 (e5418fc): PASS с оговорками, блокеров нет; Medium (lastKnownDifficulty от sudoku.com) + 2 Low чинятся в PD-29 до мержа | qa-tester | P1 | completed | PD-12 |
+| PD-29 | Фикс-проход pd-12 по QA PD-18 (п.1–3, бриф ниже) | developer | P1 | in_progress | PD-18 |
 | PD-19 | QA PD-13 — слит в PD-18 (dayResolver) | qa-tester | P1 | completed | — |
 | PD-21 | QA PD-9 (b3643f0): PASS с оговорками, 400 новых сеток, easy побайтово равен cf788ce; low → PD-22 | qa-tester | P2 | completed | PD-9 |
 | PD-22 | Low-полировка по QA PD-21 (engine/api, без спешки): (а) `generate({difficulty:'constructor'/'toString'})` → RangeError с неверным текстом — `Object.hasOwn`; (б) валидация `maxAttempts` (0, -1, NaN, 1.5) и `clues:null`; (в) README: clues ≈17 практически недостижимо; (г) допустимые `DAILY_FALLBACK_DIFFICULTY` в `apps/api/src/config/env.ts` из `DIFFICULTIES`, ошибка при старте без стека; (д) README engine: у v1 easy было ровно 38, не «≤38»; (е) heavy-тест ~160 с при таймауте 180 с — поднять/разнести | developer | P3 | pending | — |
@@ -195,3 +211,4 @@ hard 26/locked candidates, expert 24/pairs, master — beyond. `rateDifficulty` 
 | PM-Pundoku | product-manager | waiting | PD-18, PD-20 | 2026-09-29 14:00 |
 | QA-PD18 | qa-tester | working | PD-18 | 2026-09-29 13:10 |
 | QA-PD20 | qa-tester | working | PD-20 | 2026-09-29 14:00 |
+| Dev-PD29 | developer | working | PD-29 | 2026-09-29 14:10 |
