@@ -392,6 +392,52 @@
   font-weight: 600;
   margin: 0 0 2px;
 }
+.card .sub {
+  color: var(--label-2);
+  font-size: 0.8rem;
+  margin: 0 0 12px;
+}
+/* Тепловая карта пути: непрозрачность чернил = порядок заполнения; подсказки — контур. */
+.heat {
+  display: grid;
+  grid-template-columns: repeat(9, 1fr);
+  gap: 2px;
+}
+.heat i {
+  aspect-ratio: 1;
+  border-radius: 2px;
+  display: block;
+  background: var(--ink);
+}
+.heat i.g {
+  background: transparent;
+  box-shadow: inset 0 0 0 1px var(--hairline);
+}
+.legend {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 10px;
+  color: var(--label-2);
+  font-size: 0.72rem;
+}
+.legend .bar {
+  flex: 1;
+  display: grid;
+  grid-template-columns: repeat(9, 1fr);
+  gap: 1px;
+}
+.legend .bar i {
+  height: 6px;
+  border-radius: 1px;
+  background: var(--ink);
+  display: block;
+}
+.winrate {
+  margin: 12px 0 0;
+  color: var(--label-2);
+  font-size: 0.82rem;
+}
 .rows {
   margin: 14px 0 0;
   border-top: 1px solid var(--hairline);
@@ -646,5 +692,14 @@
   }
   .act[aria-pressed="true"] {
     outline: 2px solid Highlight;
+  }
+  /* Фон не рисуется: клетки heat — полем с прозрачностью, подсказки — рамкой. */
+  .heat i {
+    background: CanvasText;
+  }
+  .heat i.g {
+    box-shadow: none;
+    outline: 1px solid GrayText;
+    outline-offset: -1px;
   }
 }

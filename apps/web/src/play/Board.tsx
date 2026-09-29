@@ -2,16 +2,16 @@ import type { CSSProperties, KeyboardEvent } from "react";
 import { memo, useCallback, useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { digitAt, isGiven, isWrong, notesOf } from "./logic";
-import type { PlaySnapshot, PlayStore } from "./store";
+import type { GameStore, PlaySnapshot } from "./gameStore";
 
 /** Индекс клетки по номеру блока и позиции в блоке (DOM идёт блок за блоком, как в макете). */
 const idxOf = (b: number, k: number): number =>
   (3 * Math.floor(b / 3) + Math.floor(k / 3)) * 9 + (3 * (b % 3) + (k % 3));
 
-const BOXES = Array.from({ length: 9 }, (_, b) => Array.from({ length: 9 }, (_, k) => idxOf(b, k)));
+export const BOXES = Array.from({ length: 9 }, (_, b) => Array.from({ length: 9 }, (_, k) => idxOf(b, k)));
 
 /** Волосяные линии внутри блока (вариант B): 2 вертикальные + 2 горизонтальные, ровно 1 px @2x. */
-function BoxRules() {
+export function BoxRules() {
   return (
     <svg className="rules" viewBox="0 0 3 3" preserveAspectRatio="none" aria-hidden="true">
       {[1, 2].map((k) => (
@@ -94,7 +94,7 @@ const ARROWS: Record<string, [number, number]> = {
 
 interface BoardProps {
   snap: PlaySnapshot;
-  store: PlayStore;
+  store: Pick<GameStore, "select" | "moveSelection">;
   /** Данные гаснут до 60 % перед карточкой «решено» (M5-прелюдия, 240 мс). */
   dim: boolean;
 }

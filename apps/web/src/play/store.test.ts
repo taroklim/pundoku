@@ -35,3 +35,21 @@ describe("M1: pop не переигрывается при стирании и u
     expect(s.getSnapshot().selected).toBe(2);
   });
 });
+
+describe("QA PD-23, Low 1: clearEffects", () => {
+  it("сбрасывает pop и wave, чтобы возврат на вкладку не проигрывал стухшие M1/M3", () => {
+    const s = playing();
+    s.input(4);
+    const inner = s as unknown as { snap: Record<string, unknown> };
+    inner.snap = { ...inner.snap, wave: { cells: [0, 1, 2], id: 1 } };
+    expect(s.getSnapshot().pop).not.toBeNull();
+    let notified = 0;
+    s.subscribe(() => notified++);
+    s.clearEffects();
+    expect(s.getSnapshot().pop).toBeNull();
+    expect(s.getSnapshot().wave).toBeNull();
+    expect(notified).toBe(1);
+    s.clearEffects(); // уже чисто — без лишних уведомлений
+    expect(notified).toBe(1);
+  });
+});

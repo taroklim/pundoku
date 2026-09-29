@@ -56,6 +56,13 @@
     "share": "Share",
     "newGame": "New game"
   },
+  "result": {
+    "pathSub": "Every cell shaded by when you filled it.",
+    "heatLabel": "Heat map of the order in which you filled the grid.",
+    "early": "Early",
+    "late": "Late",
+    "winRate": "{{percent}} % solved today"
+  },
   "technique": {
     "naked_single": "Naked Single",
     "hidden_single": "Hidden Single",
