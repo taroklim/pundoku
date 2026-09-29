@@ -70,6 +70,15 @@
 
   /* Запасной вариант C (не используется в B) */
   --tint: #f2f2f7;
+
+  /* Метки дней Year (PD-25, макет design/pd24-year-variants.html §1). Soft = чернила/сургуч @ 62 % поверх
+     #FFFFFF (3.11:1 / 3.17:1 — порог 3:1 для значимой графики). Ink и wax между собой различимы только
+     формой (сколотый угол), поэтому «были исправления» не держится на одном цвете. */
+  --mark-ink: #3b48b0;
+  --mark-ink-soft: #8589ce;
+  --mark-wax: #b3261e;
+  --mark-wax-soft: #d07874;
+  --scrim: rgba(0, 0, 0, 0.28);
 }
 
 /* Тёмная тема. dark-mode.md > Mobile: база #000, приподнятое #1C1C1E. */
@@ -94,6 +103,12 @@
     --box-shadow: none;
     --glass-fill: rgba(28, 28, 30, 0.72);
     --glass-solid: #141416;
+    /* Пересчитаны поверх #1C1C1E: ink 62 % = 3.30:1, wax 62 % = 3.11:1. */
+    --mark-ink: #8c96ff;
+    --mark-ink-soft: #6168aa;
+    --mark-wax: #ff6b5e;
+    --mark-wax-soft: #b14d46;
+    --scrim: rgba(0, 0, 0, 0.5);
   }
 }
 
@@ -111,9 +126,14 @@
     --fill-sel: 0.22;
     --peer-fill: rgba(120, 120, 128, 0.14);
     --box-shadow: none;
+    /* Мягкий тон Year уходит с 62 % на 78 % (light #6670C1 = 4.42:1). */
+    --mark-ink-soft: #6670c1;
+    --mark-wax-soft: #c1544c;
   }
   @media (prefers-color-scheme: dark) {
     :root {
+      --mark-ink-soft: #7b85d8;
+      --mark-wax-soft: #d05c52;
       --label-2: #ebebf5;
       --notes: #ebebf5;
       --notes-fill: #ebebf5;

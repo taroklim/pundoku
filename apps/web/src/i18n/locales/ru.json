@@ -94,5 +94,59 @@
     "gridLabel_many": "Ваша постоянная сетка: {{count}} подсказок, {{state}}",
     "gridLabel_other": "Ваша постоянная сетка: {{count}} подсказки, {{state}}",
     "gridHint": "Последняя клетка сегодня упадёт сюда."
+  },
+  "year": {
+    "chooseYear": "{{year}}. Выбрать год",
+    "yearMenu": "Год",
+    "totalsDays_one": "{{count}} день",
+    "totalsDays_few": "{{count}} дня",
+    "totalsDays_many": "{{count}} дней",
+    "totalsDays_other": "{{count}} дня",
+    "totalsClean": "{{n}} без правок",
+    "totalsCorrections": "{{n}} с правками",
+    "legendLabel": "Что означают отметки",
+    "legend": {
+      "solved": "Решено",
+      "help": "С подсказкой",
+      "corrections": "Правки",
+      "unfinished": "Не закончено",
+      "missed": "Пропущено"
+    },
+    "canvasLabel": "Год {{year}}, по месяцам",
+    "emptyLine": "Ваш год начинается сегодня. Каждый день игры оставляет здесь одну отметку.",
+    "openToday": "Открыть сегодняшнюю сетку",
+    "continueToday": "Продолжить сегодняшнюю сетку",
+    "monthNothing": "пока ничего",
+    "monthSummary_one": "решено {{solved}} из {{count}} дня, с правками — {{corrections}}",
+    "monthSummary_few": "решено {{solved}} из {{count}} дней, с правками — {{corrections}}",
+    "monthSummary_many": "решено {{solved}} из {{count}} дней, с правками — {{corrections}}",
+    "monthSummary_other": "решено {{solved}} из {{count}} дня, с правками — {{corrections}}",
+    "monthUnfinished": "не закончено — {{n}}",
+    "sheetDone": "Готово",
+    "sheetBack": "Назад к месяцу: {{month}}",
+    "state": {
+      "solved": "решено",
+      "solvedCorrections": "решено с правками",
+      "solvedHelp": "решено с подсказкой",
+      "solvedHelpCorrections": "решено с подсказкой и правками",
+      "unfinished": "начато, не закончено",
+      "unfinishedCorrections": "начато с правками, не закончено",
+      "missed": "не играли",
+      "late": "решено позже, считается пропуском",
+      "today": "сегодня, ещё не играли",
+      "future": "ещё не наступил",
+      "before": "до начала пользования"
+    },
+    "card": {
+      "dailyPuzzle": "сетка дня",
+      "unfinishedNote": "Вы начали эту сетку и остановились на {{n}} из 81 клетки.",
+      "notPlayed": "Не играли.",
+      "todayWaiting": "Сегодняшняя сетка ждёт.",
+      "future": "Этот день ещё не наступил.",
+      "before": "До того, как вы начали пользоваться Pundoku.",
+      "lateNote": "Решено после этого дня, поэтому в году он остаётся пропуском.",
+      "assistedRow": "Решено",
+      "assistedValue": "с подсказкой"
+    }
   }
 }
