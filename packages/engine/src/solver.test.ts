@@ -21,10 +21,10 @@ describe("solve", () => {
   });
 
   it("solves a solvable-but-empty grid quickly", () => {
-    const t0 = performance.now();
+    const t0 = Date.now();
     const s = solve(emptyGrid());
     expect(s).not.toBeNull();
-    expect(performance.now() - t0).toBeLessThan(200);
+    expect(Date.now() - t0).toBeLessThan(200);
   });
 });
 
@@ -52,8 +52,8 @@ describe("countSolutions", () => {
   });
 
   it("solves 100 random-ish grids in well under a second", () => {
-    const t0 = performance.now();
+    const t0 = Date.now();
     for (let i = 0; i < 100; i++) expect(countSolutions(PE96_1)).toBe(1);
-    expect(performance.now() - t0).toBeLessThan(1000);
+    expect(Date.now() - t0).toBeLessThan(1000);
   });
 });

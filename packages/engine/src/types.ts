@@ -36,6 +36,8 @@ export type TechniqueOrBeyond = Technique | "beyond";
 export interface Puzzle {
   /** Исходная сетка — 81 символ, `0` = пустая клетка. */
   readonly mission: string;
+  /** То же, что `mission`, массивом из 81 значения (контракт с `apps/api`, PD-3). */
+  readonly givens: Grid;
   /** Единственное решение — 81 цифра. */
   readonly solution: string;
   readonly difficulty: Difficulty;

@@ -113,15 +113,18 @@ describe("solvingStyle", () => {
     expect(solvingStyle(log)).toBe("scanner");
   });
 
-  it("blocker: closes boxes", () => {
-    const log = seq([0, 1, 10, 20, 3, 4, 13, 23], [1, 2, 3, 4, 5, 6, 7, 8]);
+  it("blocker: closes boxes (cells inside a box, not necessarily adjacent)", () => {
+    const log = seq([0, 11, 19, 2, 9, 5, 13, 21], [1, 3, 5, 7, 9, 2, 4, 6]);
     expect(solvingStyle(log)).toBe("blocker");
   });
 
   it("snake: moves geographically across boxes", () => {
-    // r1c3 → r1c4 → r1c5 → r1c6 → r1c7 → r1c8: соседи, но блоки меняются.
-    const log = seq([2, 3, 4, 5, 6, 7, 8], [1, 3, 5, 7, 9, 2, 4]);
-    expect(solvingStyle(log)).toBe("snake");
+    // r1c1 → r1c9 подряд: соседние клетки, блоки меняются.
+    const row = seq([0, 1, 2, 3, 4, 5, 6, 7, 8], [1, 3, 5, 7, 9, 2, 4, 6, 8]);
+    expect(solvingStyle(row)).toBe("snake");
+    // Вдоль границы блоков вниз: r1c3 → r1c4 → r2c4 → r3c4 → … → r7c4.
+    const column = seq([2, 3, 12, 21, 30, 39, 48, 57], [1, 3, 5, 7, 9, 2, 4, 6]);
+    expect(solvingStyle(column)).toBe("snake");
   });
 
   it("sniper: jumps around; too few moves default to sniper", () => {

@@ -111,8 +111,10 @@ export function summary(log: MoveLog): MoveLogSummary {
  * для каждой пары соседних постановок смотрим, что их связывает, и считаем доли.
  *
  * - `scanner` — та же цифра или следующая по кругу (1→2→…→9→1): игрок идёт по цифрам.
+ * - `snake` — следующая клетка примыкает к предыдущей (манхэттенское расстояние 1):
+ *   движется географически.
  * - `blocker` — тот же блок 3×3: закрывает блоки.
- * - `snake` — географически рядом (манхэттенское расстояние ≤ 2), но не «блочник».
+ * - `snake` (слабый признак) — рядом (расстояние ≤ 2), но без выраженного блока.
  * - `sniper` — иначе: прыжки по доске за самыми лёгкими клетками.
  *
  * Побеждает первая по этому порядку доля ≥ 0.5; при < 4 постановках стиль не
@@ -123,6 +125,7 @@ export function solvingStyle(log: MoveLog): SolvingStyle {
   if (places.length < 4) return "sniper";
   let sameDigit = 0;
   let sameBox = 0;
+  let adjacent = 0;
   let near = 0;
   const pairs = places.length - 1;
   for (let i = 1; i < places.length; i++) {
@@ -134,9 +137,11 @@ export function solvingStyle(log: MoveLog): SolvingStyle {
     if (BOX_OF[a.cell] === BOX_OF[b.cell]) sameBox++;
     const dist =
       Math.abs(ROW_OF[a.cell]! - ROW_OF[b.cell]!) + Math.abs(COL_OF[a.cell]! - COL_OF[b.cell]!);
+    if (dist === 1) adjacent++;
     if (dist <= 2) near++;
   }
   if (sameDigit / pairs >= 0.5) return "scanner";
+  if (adjacent / pairs >= 0.5) return "snake";
   if (sameBox / pairs >= 0.5) return "blocker";
   if (near / pairs >= 0.5) return "snake";
   return "sniper";

@@ -59,6 +59,7 @@ describe("generate — reproducibility", () => {
       expect(a.solution).toBe(snap.solution);
       expect(b).toEqual(a);
       expect(a.difficulty).toBe(snap.difficulty);
+      expect(a.givens.join("")).toBe(snap.mission);
       expect(a.seed).toBe(snap.seed);
     });
   }
@@ -118,14 +119,14 @@ describe("dailySeed / dailyPuzzle", () => {
 
 describe("generate — performance smoke", () => {
   it("expert generation stays under 3 s", () => {
-    const t0 = performance.now();
+    const t0 = Date.now();
     generate({ difficulty: "expert", seed: "perf-smoke" });
-    expect(performance.now() - t0).toBeLessThan(3000);
+    expect(Date.now() - t0).toBeLessThan(3000);
   });
 
   it("all four difficulties for one seed under 3 s total", () => {
-    const t0 = performance.now();
+    const t0 = Date.now();
     for (const difficulty of DIFFICULTIES) generate({ difficulty, seed: "perf-all" });
-    expect(performance.now() - t0).toBeLessThan(3000);
+    expect(Date.now() - t0).toBeLessThan(3000);
   });
 });

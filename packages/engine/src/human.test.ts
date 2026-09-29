@@ -43,7 +43,8 @@ describe("singles", () => {
   });
 
   it("hidden single: digit has one place in a unit even though the cell has more candidates", () => {
-    // 5 стоит в строках 2 и 3 (вне блока 1) и в столбцах 2 и 3 → в блоке 1 5 только в r1c1.
+    // 5 стоит в r2c5, r3c8, r4c2, r5c3 → в строке 1 (и в блоке 1) пятёрке остаётся только r1c1,
+    // хотя у самой r1c1 кандидатов много (naked single здесь нет).
     const g = [...Array<number>(81).fill(0)];
     g[9 + 4] = 5; // r2c5
     g[18 + 7] = 5; // r3c8
@@ -52,7 +53,7 @@ describe("singles", () => {
     const res = humanSolve(g as never, { maxTechnique: "hidden_single" });
     const first = res.steps[0]!;
     expect(first).toMatchObject({ technique: "hidden_single", cell: 0, digit: 5 });
-    expect(first.explanation).toContain("box 1");
+    expect(first.explanation).toBe("5 can only go in r1c1 within row 1");
   });
 
   it("PE96 #1 is solved with naked singles only", () => {
