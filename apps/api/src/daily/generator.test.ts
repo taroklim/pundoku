@@ -52,8 +52,8 @@ describe("EngineGenerator", () => {
 
 /**
  * Единая seed-конвенция сетки дня (PD-8 j): серверный фолбэк ОБЯЗАН совпадать с тем, что офлайн-клиент
- * получит из `dailyPuzzle(date, difficulty)` движка. Тест идёт по реальному собранному движку
- * (`pnpm build` перед `pnpm test`) — если dist не собран, падает громко, а не молча пропускается.
+ * получит из `dailyPuzzle(date, difficulty)` движка. Тест идёт по реальному движку (алиас vitest на
+ * исходники `packages/engine/src`, сборка не нужна) — ломается громко, а не молча пропускается.
  */
 describe("EngineGenerator × реальный @pundoku/engine: сетка дня === dailyPuzzle(date, difficulty)", () => {
   const cases: Array<[string, "easy" | "medium" | "hard" | "expert"]> = [
