@@ -88,8 +88,19 @@ _(пусто — макет v2 утверждён; открытые вопрос
 | PD-5 | QA PD-2: PASS с оговорками, 4 minor → PD-8 | qa-tester | P1 | completed | PD-2 |
 | PD-6 | QA PD-3: PASS с оговорками, 4 minor → PD-8 | qa-tester | P1 | completed | PD-3 |
 | PD-7 | Макет v2 поля A/B/C (15b5a24) — утверждён владельцем: B Boxes | designer | P1 | completed | — |
-| PD-8 | Полировка по QA PD-5/PD-6 (бриф ниже) | developer | P1 | pending | — |
-| PD-9 | Play: вторая ось сложности — число подсказок (бриф ниже) | developer | P2 | pending | PD-8 |
+| PD-8 | Полировка по QA PD-5/PD-6 (бриф ниже; ветка `pd-8`, worktree `pundoku-worktrees/pd-8`) | developer | P1 | in_progress | — |
+| PD-9 | Play: вторая ось сложности — число подсказок (бриф ниже) | developer | P2 | pending | PD-8, PD-15 |
+| PD-10 | UI 1: app shell + таб-бар 3 вкладки (стекло с фолбэками), токены v2 в CSS, тема по системе, safe areas, 100dvh, заглушки Today/Play/Year | developer | P1 | pending | — |
+| PD-11 | UI 2: компонент поля B + панель 1–9 с остатками + notes/undo/erase + «N cells left» + движение M1/M2/M3/M6 (Play-экран, локальная игра на движке) | developer | P1 | pending | PD-8, PD-10 |
+| PD-12 | UI 3: экран Today — `GET /api/daily`, подпись дня с таймером, карточка дня (heatmap/summary/technique, win_rate после решения), M5, постоянная сетка | developer | P1 | pending | PD-11, PD-15 |
+| PD-13 | UI 4: клиентское правило замены генераторной сетки (сравнение `mission`, доигрывание своей) | developer | P1 | pending | PD-12 |
+| PD-14 | UI 5: устройство/снапшот — `POST /api/devices`, `PUT/GET /api/snapshot`, IndexedDB, сервер — правда для постоянной сетки/года | developer | P1 | pending | PD-12 |
+| PD-15 | QA PD-8: живой прогон (Playwright не нужен — API/engine; живой Postgres `pundoku_qa`) | qa-tester | P1 | pending | PD-8 |
+| PD-16 | QA PD-10: Playwright chromium+webkit, реальная сборка, apple-design как ревьюер | qa-tester | P1 | pending | PD-10 |
+| PD-17 | QA PD-11 | qa-tester | P1 | pending | PD-11 |
+| PD-18 | QA PD-12 | qa-tester | P1 | pending | PD-12 |
+| PD-19 | QA PD-13 | qa-tester | P1 | pending | PD-13 |
+| PD-20 | QA PD-14 | qa-tester | P1 | pending | PD-14 |
 
 ### Бриф PD-8 (developer, P1 — пункт (a) блокирует UI-тикеты поля/Today)
 Движок: (a) зафиксировать и реализовать контракт `undo` в `MoveLog` — undo после `erase` не должен
@@ -114,4 +125,5 @@ hard 26/locked candidates, expert 24/pairs, master — beyond. `rateDifficulty` 
 ## Агенты (текущий статус)
 | Имя | Роль | Статус | Тикет | Обновлено |
 |-----|------|--------|-------|-----------|
-| PM-Pundoku | product-manager | done | чек-пойнт | 2026-09-29 05:10 |
+| PM-Pundoku | product-manager | working | PD-8, PD-10 | 2026-09-29 06:00 |
+| Dev-PD8 | developer | working | PD-8 | 2026-09-29 06:00 |
