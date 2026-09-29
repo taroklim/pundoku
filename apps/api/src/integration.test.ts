@@ -85,7 +85,7 @@ describe.skipIf(unavailable !== null)("integration (Postgres)", () => {
     source.result = { kind: "error", reason: "HTTP 503" };
     const res = await request(app).get(`/api/daily/${dates[2]}`);
     expect(res.status).toBe(200);
-    expect(res.body).toMatchObject({ date: dates[2], source: "generator", difficulty: "hard" });
+    expect(res.body).toMatchObject({ date: dates[2], source: "generator", difficulty: "medium" });
     expect(res.body.winRate).toBeUndefined();
     source.result = new FakeSource().result;
     const verify = await request(app).post(`/api/daily/${dates[2]}/verify`).send({ grid: SAMPLE.solution });

@@ -56,12 +56,14 @@ describe("EngineGenerator", () => {
  * исходники `packages/engine/src`, сборка не нужна) — ломается громко, а не молча пропускается.
  */
 describe("EngineGenerator × реальный @pundoku/engine: сетка дня === dailyPuzzle(date, difficulty)", () => {
-  const cases: Array<[string, "easy" | "medium" | "hard" | "expert"]> = [
-    ["2026-09-28", "hard"],
-    ["2026-09-29", "hard"],
-    ["2026-09-29", "easy"],
+  const cases: Array<[string, "easy" | "medium" | "hard" | "expert" | "master"]> = [
+    ["2026-09-28", "medium"], // дефолт фолбэка (DAILY_FALLBACK_DIFFICULTY)
     ["2026-09-29", "medium"],
-    ["2020-02-29", "hard"],
+    ["2026-09-29", "easy"],
+    ["2026-09-29", "hard"],
+    ["2026-09-29", "expert"],
+    ["2026-09-29", "master"],
+    ["2020-02-29", "medium"],
   ];
   for (const [date, difficulty] of cases) {
     it(`${date} / ${difficulty}`, async () => {
@@ -75,6 +77,14 @@ describe("EngineGenerator × реальный @pundoku/engine: сетка дня
       expect(expected.seed).toBe(engine.dailySeed(date, difficulty));
     });
   }
+
+  it("сетка дня по дефолтному фолбэку — профиль 30 подсказок/singles (≈ Sudoku.com hard)", async () => {
+    const engine = await import("@pundoku/engine");
+    const { mission } = await new EngineGenerator().generateDaily("2026-09-29", "medium");
+    expect(mission.split("").filter((c) => c !== "0")).toHaveLength(30);
+    expect(engine.rateDifficulty(mission)).toBe("medium");
+    expect(engine.techniquesUsed(mission).every((t) => t === "naked_single" || t === "hidden_single")).toBe(true);
+  });
 
   it("невалидная дата → ошибка движка, а не молчаливая сетка", async () => {
     await expect(new EngineGenerator().generateDaily("2026-02-30", "hard")).rejects.toThrow(RangeError);

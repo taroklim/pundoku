@@ -17,7 +17,7 @@ pnpm dev:api                                           # tsx watch, http://local
 `.env` ищется сначала в `apps/api/.env`, затем в корне репо (`.env.example` — там же).
 Переменные: `DATABASE_URL`, `PORT` (3000), `WEB_ORIGIN` (CORS, через запятую; по умолчанию
 `http://localhost:5173`), `SUDOKU_COM_BASE_URL`, `SUDOKU_COM_TIMEOUT_MS` (5000),
-`DAILY_FALLBACK_DIFFICULTY` (`hard`), `DAILY_UPSTREAM_RETRY_MS` (60000, см. «Замена фолбэка»), `LOG_LEVEL` (`info`), `TRUST_PROXY` (`1` за reverse proxy).
+`DAILY_FALLBACK_DIFFICULTY` (`medium` — профиль движка 30 подсказок/singles ≈ Sudoku.com «hard»; допустимо `easy|medium|hard|expert|master`, иное значение — ошибка при старте), `DAILY_UPSTREAM_RETRY_MS` (60000, см. «Замена фолбэка»), `LOG_LEVEL` (`info`), `TRUST_PROXY` (`1` за reverse proxy).
 
 С Docker: `docker compose up -d postgres` и дальше то же самое (см. корневой README).
 
@@ -95,7 +95,7 @@ GET https://sudoku.com/api/v2/dc/YYYY-MM-DD      X-Requested-With: XMLHttpReques
 ```
 
 Цепочка в `src/daily/service.ts`: кэш `daily_puzzles` → Sudoku.com → генератор `@pundoku/engine`
-(`dailyPuzzle(date, difficulty)`, seed = `dailySeed(date, difficulty)`, напр. `2026-09-29/hard`).
+(`dailyPuzzle(date, difficulty)`, seed = `dailySeed(date, difficulty)`, напр. `2026-09-29/medium`; сложность — `DAILY_FALLBACK_DIFFICULTY`, по умолчанию `medium`).
 **Seed-конвенция сетки дня едина для сервера и офлайн-клиента:** фолбэк — только `dailyPuzzle` движка,
 не `generate({ seed: date })` (это другая сетка). Закреплено тестом `src/daily/generator.test.ts`
 (api-фолбэк === `dailyPuzzle` движка). Что бы ни стало источником, строка сохраняется навсегда — у всех клиентов одна
@@ -126,7 +126,8 @@ mission+solution → фолбэк.
 - `devices(id uuid PK, token_hash unique, created_at, last_seen_at)`,
   `snapshots(device_id PK → devices, version, updated_at, data jsonb, size_bytes, saved_at)` — `0003`.
 
-Раннер — `src/db/migrate.ts` (см. `migrations/README.md`).
+Раннер — `src/db/migrate.ts` (см. `migrations/README.md`). Запуск как точка входа определяется по
+реальным путям (`realpath`), поэтому `node /путь/к/симлинку-на-migrate.js` работает так же, как прямой запуск.
 
 ## Тесты
 
@@ -134,6 +135,11 @@ mission+solution → фолбэк.
 pnpm --filter @pundoku/api test                 # unit (supertest + моки) и интеграционные
 LIVE_SUDOKU_COM=1 pnpm --filter @pundoku/api test -- sudoku-com-live   # живой запрос к Sudoku.com
 ```
+
+Typecheck и vitest видят `@pundoku/engine` по исходникам (`paths` в `tsconfig.json`, алиас в
+`vitest.config.ts`) — `pnpm typecheck`/`pnpm test` работают из чистого клона без `pnpm build`;
+`tsconfig.build.json` paths сбрасывает, сборка использует собранный движок (`pnpm -r build` собирает
+по порядку зависимостей).
 
 Интеграционные (`src/integration.test.ts`) идут против `TEST_DATABASE_URL ?? DATABASE_URL`,
 сами прогоняют миграции, создают свои строки (даты `1999-01-0x`, свои устройства) и убирают их.

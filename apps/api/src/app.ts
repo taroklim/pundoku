@@ -58,7 +58,7 @@ export function createApp(deps: AppDeps): express.Express {
     repo: deps.repos.dailyPuzzles,
     source: deps.dailySource,
     generator: deps.generator,
-    fallbackDifficulty: deps.fallbackDifficulty ?? "hard",
+    fallbackDifficulty: deps.fallbackDifficulty ?? "medium",
     logger: deps.logger,
     ...(deps.now ? { now: deps.now } : {}),
     ...(deps.upstreamRetryMs !== undefined ? { upstreamRetryMs: deps.upstreamRetryMs } : {}),

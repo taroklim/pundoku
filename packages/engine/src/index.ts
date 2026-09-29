@@ -9,13 +9,15 @@
  * - решатель на единственность (`solver.ts`): `solve`, `countSolutions`;
  * - human-style решатель с логом техник (`human.ts`): `humanSolve`, `techniqueForCell`,
  *   `rateDifficulty`;
- * - генератор (`generator.ts`): `generate`, `dailySeed`, `dailyPuzzle`;
+ * - генератор (`generator.ts`): `generate`, `dailySeed`, `dailyPuzzle`; сложность по двум осям
+ *   (подсказки × техника) — `difficulty.ts`: `DIFFICULTIES`, `DIFFICULTY_PROFILES`;
  * - лог ходов и метрики карточки дня (`movelog.ts`): `heatmap`, `summary`, `solvingStyle`.
  */
 export type {
   Cell,
   CellValue,
   Difficulty,
+  DifficultyProfile,
   Digit,
   Elimination,
   Grid,
@@ -62,12 +64,17 @@ export {
 } from "./human.js";
 export type { HumanSolveOptions } from "./human.js";
 
-export { DEFAULT_MAX_ATTEMPTS, GenerationError, dailyPuzzle, dailySeed, generate } from "./generator.js";
+export {
+  DEFAULT_MAX_ATTEMPTS,
+  GENERATOR_VERSION,
+  GenerationError,
+  dailyPuzzle,
+  dailySeed,
+  generate,
+} from "./generator.js";
+export { DIFFICULTIES, DIFFICULTY_PROFILES, EASY_MIN_CLUES } from "./difficulty.js";
 export type { GenerateOptions } from "./generator.js";
 
 export { Rng } from "./prng.js";
 
 export { appendMove, createMoveLog, heatmap, solvingStyle, summary } from "./movelog.js";
-
-import type { Difficulty } from "./types.js";
-export const DIFFICULTIES: readonly Difficulty[] = ["easy", "medium", "hard", "expert"];

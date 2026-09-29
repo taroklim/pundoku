@@ -22,6 +22,7 @@ import {
   popcount,
   toBytes,
 } from "./grid.js";
+import { EASY_MIN_CLUES } from "./difficulty.js";
 import type {
   Cell,
   Difficulty,
@@ -51,19 +52,23 @@ export function techniqueTier(t: TechniqueOrBeyond): number {
   return i;
 }
 
-/** Сложность по самой дорогой технике: singles → easy, locked → medium, pairs → hard, beyond → expert. */
+/**
+ * Сложность только по технической оси: singles → easy, locked → hard, pairs → expert,
+ * beyond → master. Класс `medium` этой осью недостижим (это singles-сетка с малым числом
+ * подсказок) — итоговая оценка по двум осям — `rateDifficulty`.
+ */
 export function difficultyForTechnique(t: TechniqueOrBeyond): Difficulty {
   switch (t) {
     case "naked_single":
     case "hidden_single":
       return "easy";
     case "locked_candidates":
-      return "medium";
+      return "hard";
     case "naked_pair":
     case "hidden_pair":
-      return "hard";
-    case "beyond":
       return "expert";
+    case "beyond":
+      return "master";
   }
 }
 
@@ -420,14 +425,16 @@ export function techniquesUsed(grid: GridInput): TechniqueOrBeyond[] {
 }
 
 /**
- * Сложность сетки по самой дорогой технике, потребовавшейся human-style решателю:
- * easy — только singles; medium — + locked candidates; hard — + naked/hidden pair;
- * expert — решатель застрял (нужно что-то сверх реализованных техник).
+ * Оценка сложности сетки по двум осям (см. `difficulty.ts`, README «Как определяется сложность»):
+ * техника решает всё, начиная с locked candidates — locked → hard, pairs → expert, решатель застрял
+ * (или сетка противоречива) → master; если хватает singles, решает число подсказок: ≥ 34 → easy,
+ * иначе medium.
  */
 export function rateDifficulty(mission: GridInput): Difficulty {
-  const res = humanSolve(mission);
-  if (!res.solved) return "expert";
-  const t = maxTechnique(res.steps.map((s) => s.technique));
-  return t === null ? "easy" : difficultyForTechnique(t);
+  const bytes = toBytes(mission);
+  const tier = ratingTierBytes(bytes);
+  if (tier > 1) return difficultyForTechnique(tier === TECHNIQUE_ORDER.length ? "beyond" : TECHNIQUE_ORDER[tier]!);
+  let clues = 0;
+  for (let i = 0; i < bytes.length; i++) if (bytes[i] !== 0) clues++;
+  return clues >= EASY_MIN_CLUES ? "easy" : "medium";
 }
-

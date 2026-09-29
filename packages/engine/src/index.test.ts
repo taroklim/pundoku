@@ -8,8 +8,8 @@ describe("@pundoku/engine smoke", () => {
     expect(grid.every((cell) => cell === 0)).toBe(true);
   });
 
-  it("exposes four difficulties and five techniques in cost order", () => {
-    expect(DIFFICULTIES).toEqual(["easy", "medium", "hard", "expert"]);
+  it("exposes five difficulties and five techniques in cost order", () => {
+    expect(DIFFICULTIES).toEqual(["easy", "medium", "hard", "expert", "master"]);
     expect(TECHNIQUE_ORDER).toEqual([
       "naked_single",
       "hidden_single",

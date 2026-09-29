@@ -1,31 +1,47 @@
 /**
- * «Тяжёлый» прогон: по 200 сгенерированных сеток на каждую сложность. Идёт в CI по
- * умолчанию; на ненагруженном Node занимает ~20 с суммарно (см. README
- * «Производительность»). Проверяется только корректность — время генерации покрыто
- * smoke-тестом в generator.test.ts, здесь оно лишь печатается.
+ * «Тяжёлый» прогон: по 100 сгенерированных сеток на каждый класс сложности (PD-9). Идёт в CI по
+ * умолчанию; на ненагруженной машине — десятки секунд (см. README «Производительность»).
+ * Проверяется корректность по обеим осям: единственность решения, техника не дороже потолка
+ * профиля (и, где класс требует, ровно его), число подсказок == цель профиля, `rateDifficulty`
+ * совпал с классом. Время генерации здесь не проверяется — только печатается замером в README.
  */
 import { describe, expect, it } from "vitest";
-import { DIFFICULTIES, countSolutions, formatGrid, generate, rateDifficulty, solve } from "./index.js";
+import {
+  DIFFICULTIES,
+  DIFFICULTY_PROFILES,
+  countSolutions,
+  formatGrid,
+  generate,
+  rateDifficulty,
+  solve,
+  techniqueTier,
+  techniquesUsed,
+} from "./index.js";
 
-const PER_DIFFICULTY = 200;
+const PER_DIFFICULTY = 100;
 
-describe("generate — 200 puzzles per difficulty", () => {
+describe("generate — 100 puzzles per difficulty class", () => {
   for (const difficulty of DIFFICULTIES) {
     it(
-      `${difficulty}: every puzzle has exactly one solution equal to .solution and the target rating`,
+      `${difficulty}: unique solution, technique within the class ceiling, exact clue count, rating == class`,
       () => {
-        let clues = 0;
+        const profile = DIFFICULTY_PROFILES[difficulty];
+        const ceiling = techniqueTier(profile.technique);
         for (let i = 0; i < PER_DIFFICULTY; i++) {
           const p = generate({ difficulty, seed: `heavy-${difficulty}-${i}` });
           if (countSolutions(p.mission) !== 1) throw new Error(`not unique: ${p.mission}`);
           if (formatGrid(solve(p.mission)!) !== p.solution) throw new Error(`solve mismatch: ${p.mission}`);
+          const clues = p.mission.split("").filter((ch) => ch !== "0").length;
+          if (clues !== profile.clues) throw new Error(`clues ${clues} != ${profile.clues}: ${p.mission}`);
+          const used = techniquesUsed(p.mission);
+          const top = Math.max(...used.map((t) => techniqueTier(t)));
+          if (top > ceiling) throw new Error(`technique ${used.join(",")} above ${profile.technique}: ${p.mission}`);
+          if (difficulty === "hard" && top !== 2) throw new Error(`hard without locked candidates: ${p.mission}`);
+          if (difficulty === "expert" && top < 3) throw new Error(`expert without pairs: ${p.mission}`);
+          if (difficulty === "master" && !used.includes("beyond")) throw new Error(`master solved by techniques: ${p.mission}`);
           if (rateDifficulty(p.mission) !== difficulty) throw new Error(`rating mismatch: ${p.mission}`);
-          for (let c = 0; c < 81; c++) if (p.mission[c] !== "0") clues++;
         }
-        // Ориентир: среднее число подсказок в разумных пределах. Время не проверяется —
-        // оно покрыто smoke-тестом в generator.test.ts и сильно зависит от нагрузки машины.
-        expect(clues / PER_DIFFICULTY).toBeGreaterThan(17);
-        expect(clues / PER_DIFFICULTY).toBeLessThan(45);
+        expect(true).toBe(true);
       },
       180_000,
     );

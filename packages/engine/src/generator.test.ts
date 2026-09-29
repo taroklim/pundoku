@@ -3,6 +3,8 @@ import { generateWithStats } from "./generator.js";
 import {
   DEFAULT_MAX_ATTEMPTS,
   DIFFICULTIES,
+  DIFFICULTY_PROFILES,
+  GENERATOR_VERSION,
   GenerationError,
   Rng,
   countSolutions,
@@ -12,12 +14,15 @@ import {
   generate,
   rateDifficulty,
   solve,
+  techniqueTier,
+  techniquesUsed,
 } from "./index.js";
 
 /**
  * Снапшоты: одна и та же seed-строка обязана давать байт-в-байт ту же сетку в любой сессии
- * и на любой платформе. Если генератор меняется намеренно — обновить строки осознанно
- * (это ломает «сетку дня» для всех, кто уже играл по фолбэку).
+ * и на любой платформе. Если генератор меняется намеренно — обновить строки осознанно, поднять
+ * `GENERATOR_VERSION` и дописать changelog в README (это ломает «сетку дня» для всех, кто уже
+ * играл по фолбэку). Строки — версия 2 (PD-9); easy совпадает с версией 1 (профиль easy не менялся).
  */
 const SNAPSHOTS = [
   {
@@ -29,26 +34,38 @@ const SNAPSHOTS = [
   {
     seed: "2026-09-29",
     difficulty: "medium",
-    mission: "400600370000010020200000054030900401891400532040100000054001007107050000000300000",
-    solution: "415628379973514826268793154732985461891476532546132798354261987127859643689347215",
+    mission: "000031000028060090003970050200000800870300016091000500000003100406007000019680007",
+    solution: "957231684128564793643978251264715839875329416391846572782493165436157928519682347",
   },
   {
     seed: "2026-09-29",
     difficulty: "hard",
-    mission: "000089100002100000000050370005043000090600002000008934720090003000000080006005090",
-    solution: "673489125952137648418256379285943716394671852167528934721894563539762481846315297",
+    mission: "200090451000000008080040000300870000600000040001000002049007003000180500860000710",
+    solution: "237698451914735628586241937352874196678912345491356872149567283723189564865423719",
   },
   {
     seed: "2026-09-29",
     difficulty: "expert",
-    mission: "830901020000850030001070000005300600000549070400000800602000080000000005190000300",
-    solution: "834961527967852431521473968215387694386549172479216853652134789743698215198725346",
+    mission: "600028000000506000170009000090010002080002100060300800000000756900000040004000200",
+    solution: "645128973839576421172439685493817562587962134261345897318294756926751348754683219",
+  },
+  {
+    seed: "2026-09-29",
+    difficulty: "master",
+    mission: "320600000050070000000000398190008500000060030200000000036900480700000000000800026",
+    solution: "329684175851379642647152398193248567478561239265793814536927481782416953914835726",
   },
   {
     seed: "pundoku",
     difficulty: "hard",
-    mission: "007908000000300205504000030000000090003502000000830007600000000720000400000040018",
-    solution: "237958164986314275514627839875461392493572681162839547641785923728193456359246718",
+    mission: "000058090890630000060000030130000000000000382700006001480905000007000040009800006",
+    solution: "273158694891634275564729138135482967946571382728396451482965713657213849319847526",
+  },
+  {
+    seed: "pundoku",
+    difficulty: "medium",
+    mission: "980020005500700910060500028000006100006040083005100090000001540009800670100000800",
+    solution: "981423765523768914467519328894236157716945283235187496678391542349852671152674839",
   },
 ] as const;
 
@@ -65,6 +82,10 @@ describe("generate — reproducibility", () => {
       expect(a.seed).toBe(snap.seed);
     });
   }
+
+  it("GENERATOR_VERSION is 2 (PD-9: two-axis difficulty)", () => {
+    expect(GENERATOR_VERSION).toBe(2);
+  });
 
   it("different seeds or difficulties give different puzzles", () => {
     const a = generate({ difficulty: "medium", seed: "a" });
@@ -84,22 +105,53 @@ describe("generate — reproducibility", () => {
   });
 });
 
+const CLUES_OF = (mission: string) => mission.split("").filter((ch) => ch !== "0").length;
+
 describe("generate — validity", () => {
   for (const difficulty of DIFFICULTIES) {
-    it(`${difficulty}: unique solution, solve() matches, rating matches, techniques listed`, () => {
+    it(`${difficulty}: unique solution, solve() matches, rating matches, exact clue count, techniques`, () => {
       const p = generate({ difficulty, seed: `validity-${difficulty}` });
+      const profile = DIFFICULTY_PROFILES[difficulty];
       expect(p.mission).toHaveLength(81);
       expect(p.solution).toHaveLength(81);
       expect(countSolutions(p.mission)).toBe(1);
       expect(formatGrid(solve(p.mission)!)).toBe(p.solution);
       expect(rateDifficulty(p.mission)).toBe(difficulty);
+      expect(CLUES_OF(p.mission)).toBe(profile.clues);
       expect(p.techniques.length).toBeGreaterThan(0);
-      if (difficulty === "expert") expect(p.techniques.at(-1)).toBe("beyond");
+      // Техника не дороже потолка профиля; beyond — только у master.
+      const top = Math.max(...p.techniques.map((t) => techniqueTier(t)));
+      expect(top).toBeLessThanOrEqual(techniqueTier(profile.technique));
+      if (difficulty === "master") expect(p.techniques.at(-1)).toBe("beyond");
       else expect(p.techniques).not.toContain("beyond");
       // Подсказки миссии совпадают с решением.
       for (let i = 0; i < 81; i++) if (p.mission[i] !== "0") expect(p.mission[i]).toBe(p.solution[i]);
     });
   }
+
+  it("profiles: the documented two-axis ladder", () => {
+    expect(DIFFICULTY_PROFILES).toEqual({
+      easy: { clues: 38, technique: "hidden_single" },
+      medium: { clues: 30, technique: "hidden_single" },
+      hard: { clues: 26, technique: "locked_candidates" },
+      expert: { clues: 24, technique: "hidden_pair" },
+      master: { clues: 24, technique: "beyond" },
+    });
+  });
+
+  it("clues option: the second axis is a parameter (exact count, own grid, validated)", () => {
+    const p = generate({ difficulty: "easy", seed: "clues-opt", clues: 34 });
+    expect(CLUES_OF(p.mission)).toBe(34);
+    expect(countSolutions(p.mission)).toBe(1);
+    expect(techniquesUsed(p.mission)).not.toContain("locked_candidates");
+    expect(p.mission).not.toBe(generate({ difficulty: "easy", seed: "clues-opt" }).mission);
+    // Явно заданное значение по умолчанию == отсутствие опции.
+    expect(generate({ difficulty: "hard", seed: "clues-opt", clues: 26 })).toEqual(generate({ difficulty: "hard", seed: "clues-opt" }));
+    for (const bad of [16, 81, 30.5, Number.NaN]) {
+      expect(() => generate({ difficulty: "easy", seed: "x", clues: bad }), String(bad)).toThrow(RangeError);
+    }
+    expect(() => generate({ difficulty: "nightmare" as never, seed: "x" })).toThrow(RangeError);
+  });
 
   it("throws GenerationError when attempts are exhausted", () => {
     expect(() => generate({ difficulty: "expert", seed: "x", maxAttempts: 0 })).toThrow(GenerationError);
@@ -107,10 +159,10 @@ describe("generate — validity", () => {
 });
 
 describe("generate — maxAttempts (PD-8 d)", () => {
-  // 'measure2-811' / hard по замеру требует 74 попытки — «хвост» распределения (медиана hard ≈ 6).
-  const TAIL = { difficulty: "hard", seed: "measure2-811", attempts: 74 } as const;
+  // 'measure-expert-812' / expert (v2) по замеру требует 138 попыток — хвост 1000 seed (медиана expert ≈ 14).
+  const TAIL = { difficulty: "expert", seed: "measure-expert-812", attempts: 138 } as const;
 
-  it("default ceiling is 300 (было 100 — на грани для хвоста hard)", () => {
+  it("default ceiling is 300 (≈ 2× максимума замера 1000 seed — expert, 138 попыток)", () => {
     expect(DEFAULT_MAX_ATTEMPTS).toBe(300);
   });
 
@@ -156,7 +208,7 @@ describe("dailySeed / dailyPuzzle", () => {
   it("dailyPuzzle is generate() with the daily seed", () => {
     const p = dailyPuzzle("2026-09-29", "expert");
     expect(p).toEqual(generate({ difficulty: "expert", seed: "2026-09-29/expert" }));
-    expect(p.mission).toBe("000050080048063000760009030104000000000326000005040820000000003406007000007200005");
+    expect(p.mission).toBe("000020000089000530000360100090700045560030000000002703000001000705000000008040010");
   });
 });
 
@@ -167,7 +219,7 @@ describe("generate — performance smoke", () => {
     expect(Date.now() - t0).toBeLessThan(3000);
   });
 
-  it("all four difficulties for one seed under 3 s total", () => {
+  it("all five difficulties for one seed under 3 s total", () => {
     const t0 = Date.now();
     for (const difficulty of DIFFICULTIES) generate({ difficulty, seed: "perf-all" });
     expect(Date.now() - t0).toBeLessThan(3000);
