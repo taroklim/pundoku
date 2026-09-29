@@ -93,6 +93,11 @@
 10. Уменьшение прозрачности / Увеличение контраста: бар непрозрачный, тексты темнее.
 11. Язык iPhone Українська / Русский: подписи переводятся, без обрезки.
 12. Режим полёта + перезапуск PWA: открывается офлайн.
+Дополнительно по QA PD-23/PD-17 (Play):
+13. VoiceOver: «N cells left» объявляется только на порогах (кратно 10 и последние 5), не на каждую цифру; после решения не остаётся «1 cell left».
+14. Ряд кнопок Notes/Undo/Erase на узком экране (SE / крупный текст) в uk и ru: одной высоты, подписи без обрезки.
+15. Выбор неверной клетки: видны и индиго-кольцо, и сургучное (светлая/тёмная тема).
+16. Ввод пальцем: попадание по клеткам и клавишам панели (36–41 pt на 390–430 pt — вопрос владельцу (а)), заметки, undo, таймер при сворачивании PWA, ощущение движений M1/M2/M3/M6, размер текста.
 Не проверено QA: реальное стекло iOS, `env(safe-area-inset-*)`, статус-бар в тёмной теме, установка, reduced-transparency/contrast в webkit.
 
 ## Backlog по QA PD-17 (не чиним сейчас)
@@ -120,8 +125,9 @@
 | PD-8 | Полировка по QA PD-5/PD-6 (бриф ниже; смержен в main, 3c02fab) | developer | P1 | completed | — |
 | PD-9 | Play: вторая ось сложности — число подсказок (бриф ниже) + п.0 low-замечания QA PD-15 (смержен в main, b3643f0) | developer | P2 | completed | — |
 | PD-10 | UI 1: app shell + таб-бар 3 вкладки (стекло с фолбэками), токены v2 в CSS, тема по системе, safe areas, 100dvh, заглушки Today/Play/Year (смержен в main, eae5fa2) | developer | P1 | completed | — |
-| PD-11 | UI 2: компонент поля B + панель 1–9 с остатками + notes/undo/erase + «N cells left» + движение M1/M2/M3/M6 (Play-экран, локальная игра на движке); ветка `pd-11` @ 8c4d3e6: фикс-проход по QA PD-17 сделан (c984411), main (PD-9) подтянут, `difficulty.master` добавлен, web 28 тестов зелёные; ждёт QA-регресс PD-23 | developer | P1 | in_progress | — |
-| PD-12 | UI 3: экран Today — `GET /api/daily/:date`, подпись дня с таймером, карточка дня (heatmap/summary/technique, win_rate после решения), M5, постоянная сетка. Из PD-8: клиентский фолбэк-грид ТОЛЬКО через `dailyPuzzle(date, difficulty)` с difficulty из ответа api; при возврате в сеть сверять сетку по `source`/`mission` (сетка могла смениться generator→sudoku.com, пока игрок не решил) | developer | P1 | pending | PD-11 |
+| PD-11 | UI 2: компонент поля B + панель 1–9 с остатками + notes/undo/erase + «N cells left» + движение M1/M2/M3/M6 (Play-экран, локальная игра на движке); смержен в main (QA PD-17 + регресс PD-23 PASS) | developer | P1 | completed | — |
+| PD-24 | Дизайн: варианты экрана Year (полотно года) + вопрос владельцу — HTML-макет в `design/`, скилл apple-design; НЕ реализация (ветка `pd-24`) | designer | P1 | in_progress | — |
+| PD-12 | UI 3: экран Today — `GET /api/daily/:date`, подпись дня с таймером, карточка дня (heatmap/summary/technique, win_rate после решения), M5, постоянная сетка. Из PD-8: клиентский фолбэк-грид ТОЛЬКО через `dailyPuzzle(date, difficulty)` с difficulty из ответа api; при возврате в сеть сверять сетку по `source`/`mission` (сетка могла смениться generator→sudoku.com, пока игрок не решил) + два Low из QA PD-23 (см. ниже); реализация по утверждённому макету (Today solved: карточка дня, Grid ∞); ветка `pd-12` | developer | P1 | in_progress | — |
 | PD-13 | UI 4: клиентское правило замены генераторной сетки (сравнение `mission`, доигрывание своей) | developer | P1 | pending | PD-12 |
 | PD-14 | UI 5: устройство/снапшот — `POST /api/devices`, `PUT/GET /api/snapshot`, IndexedDB, сервер — правда для постоянной сетки/года | developer | P1 | pending | PD-12 |
 | PD-15 | QA PD-8: PASS с оговорками (seed-сетки побайтово те же, undo, api live; 2 low → PD-9/п.0) | qa-tester | P1 | completed | PD-8 |
@@ -131,7 +137,7 @@
 | PD-19 | QA PD-13 | qa-tester | P1 | pending | PD-13 |
 | PD-21 | QA PD-9 (b3643f0): PASS с оговорками, 400 новых сеток, easy побайтово равен cf788ce; low → PD-22 | qa-tester | P2 | completed | PD-9 |
 | PD-22 | Low-полировка по QA PD-21 (engine/api, без спешки): (а) `generate({difficulty:'constructor'/'toString'})` → RangeError с неверным текстом — `Object.hasOwn`; (б) валидация `maxAttempts` (0, -1, NaN, 1.5) и `clues:null`; (в) README: clues ≈17 практически недостижимо; (г) допустимые `DAILY_FALLBACK_DIFFICULTY` в `apps/api/src/config/env.ts` из `DIFFICULTIES`, ошибка при старте без стека; (д) README engine: у v1 easy было ровно 38, не «≤38»; (е) heavy-тест ~160 с при таймауте 180 с — поднять/разнести | developer | P3 | pending | — |
-| PD-23 | QA-регресс PD-11 (8c4d3e6): пункты 1–6 QA PD-17 + 5 сложностей/`difficulty.master` + матрица | qa-tester | P1 | in_progress | PD-11 |
+| PD-23 | QA-регресс PD-11 (8c4d3e6): PASS, блокеров и Medium нет, 5 уровней без сырых ключей, Worker не подвешивает UI | qa-tester | P1 | completed | PD-11 |
 | PD-20 | QA PD-14 | qa-tester | P1 | pending | PD-14 |
 
 ### Бриф PD-8 (developer, P1 — пункт (a) блокирует UI-тикеты поля/Today)
@@ -161,6 +167,10 @@ hard 26/locked candidates, expert 24/pairs, master — beyond. `rateDifficulty` 
 Профили `DIFFICULTY_PROFILES`: easy 38/singles, medium 30/singles, hard 26/locked, expert 24/pairs, master 24/beyond; `GENERATOR_VERSION=2`; фолбэк Today по умолчанию medium (≈ Sudoku.com hard). Замеры QA под нагрузкой: p95 expert 773 мс, master 59 мс; хвост expert до 202 попыток из потолка 300. Пункт 0 (typecheck без build, realpath в migrate) закрыт там же.
 - **Стенд:** в `pundoku_qa` остались 144 строки `daily_puzzles` (138 generator, версия v1) — DELETE был заблокирован классификатором, не обходил. Лучше пересоздать: `dropdb pundoku_qa && createdb pundoku_qa` + миграции (`pnpm migrate`), либо владелец разрешит DELETE.
 
+## Low из QA PD-23 (берёт PD-12)
+1. При возврате на Play с Today заново проигрываются стухшие M1 (inkSet) и M3 (unitWave): `pop`/`wave` остаются в снапшоте стора, PlayScreen монтируется заново — сбрасывать при размонтировании/после проигрыша.
+2. В sr-only live-регионе после решения остаётся «1 cell left»; порог debounce 600 мс.
+
 ## Замечания QA PD-15 (PD-8, смержен)
 - low/medium: в чистом клоне `typecheck` до `build` падает (api-тест импортирует собранный `@pundoku/engine`) — порядок `build → typecheck` или references; в PD-9 п.0.
 - low: `migrate.ts` `isDirectRun` сравнивает `import.meta.url` с `argv[1]` без realpath — запуск через симлинк молча выходит с 0; в PD-9 п.0.
@@ -170,6 +180,7 @@ hard 26/locked candidates, expert 24/pairs, master — beyond. `rateDifficulty` 
 ## Агенты (текущий статус)
 | Имя | Роль | Статус | Тикет | Обновлено |
 |-----|------|--------|-------|-----------|
-| PM-Pundoku | product-manager | waiting | PD-23 | 2026-09-29 09:00 |
+| PM-Pundoku | product-manager | waiting | PD-12, PD-24 | 2026-09-29 09:00 |
 | Dev-PD9 | developer | working | PD-9 | 2026-09-29 09:25 |
-| QA-PD23 | qa-tester | working | PD-23 | 2026-09-29 11:30 |
+| Dev-PD12 | developer | working | PD-12 | 2026-09-29 12:10 |
+| Des-PD24 | designer | working | PD-24 | 2026-09-29 12:10 |
