@@ -25,12 +25,14 @@ export interface GenerateOptions {
   readonly difficulty: Difficulty;
   /** Любая строка; одна и та же строка → байт-в-байт та же сетка. */
   readonly seed: string;
-  /** Максимум попыток попасть в профиль (по умолчанию `DEFAULT_MAX_ATTEMPTS`). */
+  /** Максимум попыток попасть в профиль (по умолчанию `DEFAULT_MAX_ATTEMPTS`). Целое ≥ 1, иначе `RangeError`. */
   readonly maxAttempts?: number;
   /**
    * Целевое число подсказок — вторая ось сложности; по умолчанию из `DIFFICULTY_PROFILES`
    * (easy 38, medium 30, hard 26, expert 24, master 24). Сетка получает ровно столько подсказок.
-   * Целое число в 17..80, иначе `RangeError`. Значение не по умолчанию даёт другую сетку, чем
+   * Целое число в 17..80, иначе `RangeError` (в т. ч. `null`). Нижняя часть диапазона практически
+   * недостижима: при 300 попытках ≤ 20 подсказок не получается ни в одном классе, 21–22 — нестабильно
+   * (`GenerationError`), стабильно — от ~23 (README «Как определяется сложность»). Значение не по умолчанию даёт другую сетку, чем
    * дефолт, а `rateDifficulty` такой сетки может не совпасть с `difficulty` (техническая ось
    * гарантируется, ярлык singles-сетки medium/easy определяется числом подсказок).
    */
@@ -119,13 +121,20 @@ export const DEFAULT_MAX_ATTEMPTS = 300;
 /** Сетка + сколько попыток понадобилось (диагностика/замеры; в публичный `Puzzle` не входит). */
 export function generateWithStats(options: GenerateOptions): { puzzle: Puzzle; attempts: number } {
   const { difficulty, seed } = options;
+  // hasOwn, а не индексация: `constructor`/`toString`/`__proto__` — не сложности, а свойства прототипа.
+  if (typeof difficulty !== "string" || !Object.hasOwn(DIFFICULTY_PROFILES, difficulty)) {
+    throw new RangeError(`Unknown difficulty '${String(difficulty)}'`);
+  }
   const profile = DIFFICULTY_PROFILES[difficulty];
-  if (profile === undefined) throw new RangeError(`Unknown difficulty '${String(difficulty)}'`);
-  const clues = options.clues ?? profile.clues;
+  // `null` — не «не задано»: явный null/NaN/строка отвергаются, а не молча заменяются дефолтом.
+  const clues = options.clues === undefined ? profile.clues : options.clues;
   if (!Number.isInteger(clues) || clues < MIN_CLUES || clues >= GRID_SIZE) {
     throw new RangeError(`clues must be an integer in ${MIN_CLUES}..${GRID_SIZE - 1}, got ${String(clues)}`);
   }
-  const maxAttempts = options.maxAttempts ?? DEFAULT_MAX_ATTEMPTS;
+  const maxAttempts = options.maxAttempts === undefined ? DEFAULT_MAX_ATTEMPTS : options.maxAttempts;
+  if (!Number.isInteger(maxAttempts) || maxAttempts < 1) {
+    throw new RangeError(`maxAttempts must be an integer >= 1, got ${String(maxAttempts)}`);
+  }
   // Дефолтные подсказки → ключ `${seed}\0${difficulty}`; своё число подсказок — другая сетка (свой ключ).
   const rng = new Rng(clues === profile.clues ? `${seed}\0${difficulty}` : `${seed}\0${difficulty}\0${clues}`);
   const target = techniqueTier(profile.technique);

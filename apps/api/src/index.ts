@@ -1,41 +1,13 @@
-import { createApp } from "./app.js";
-import { env } from "./config/env.js";
-import { createPool } from "./db/pool.js";
-import { PgDailyPuzzleRepo } from "./db/daily-puzzles-repo.js";
-import { PgDeviceRepo } from "./db/devices-repo.js";
-import { PgSnapshotRepo } from "./db/snapshots-repo.js";
-import { SudokuComSource } from "./daily/sudoku-com-source.js";
-import { EngineGenerator } from "./daily/generator.js";
-import { createLogger } from "./lib/logger.js";
+import { ConfigError } from "./config/errors.js";
 
-const logger = createLogger();
-const pool = createPool(env.databaseUrl);
-pool.on("error", (err) => logger.error({ err }, "pg pool error"));
-
-const app = createApp({
-  repos: {
-    dailyPuzzles: new PgDailyPuzzleRepo(pool),
-    devices: new PgDeviceRepo(pool),
-    snapshots: new PgSnapshotRepo(pool),
-  },
-  dailySource: new SudokuComSource({ baseUrl: env.sudokuComBaseUrl, timeoutMs: env.sudokuComTimeoutMs }),
-  generator: new EngineGenerator(),
-  logger,
-  webOrigins: env.webOrigins,
-  fallbackDifficulty: env.dailyFallbackDifficulty,
-  upstreamRetryMs: env.dailyUpstreamRetryMs,
-  trustProxy: env.trustProxy,
-});
-
-const server = app.listen(env.port, () => {
-  logger.info(`[pundoku-api] listening on http://localhost:${env.port} (${env.nodeEnv})`);
-});
-
-for (const signal of ["SIGINT", "SIGTERM"] as const) {
-  process.on(signal, () => {
-    logger.info({ signal }, "shutting down");
-    server.close(() => {
-      pool.end().finally(() => process.exit(0));
-    });
-  });
+// Тонкая точка входа: неверная конфигурация окружения — не баг, а ошибка оператора, поэтому вместо
+// стека с внутренностями модулей печатается одно понятное сообщение. Остальные ошибки летят как есть.
+try {
+  await import("./main.js");
+} catch (error) {
+  if (error instanceof ConfigError) {
+    console.error(`[pundoku-api] Ошибка конфигурации: ${error.message}`);
+    process.exit(1);
+  }
+  throw error;
 }
