@@ -41,6 +41,36 @@ describe("политика 409: дни", () => {
     expect(pickDayRecord(late, early)).toBe(early);
   });
 
+  it("источник: sudoku.com побеждает device независимо от solvedAt (в обе стороны)", () => {
+    const real = solved("2026-09-03", "2026-09-03T21:00:00.000Z", { source: "sudoku.com", late: true });
+    const fallback = solved("2026-09-03", "2026-09-03T08:00:00.000Z", { source: "device" });
+    expect(pickDayRecord(real, fallback)).toBe(real);
+    expect(pickDayRecord(fallback, real)).toBe(real);
+  });
+
+  it("источник: серверный generator тоже побеждает device, даже при более позднем solvedAt", () => {
+    const gen = solved("2026-09-03", "2026-09-03T21:00:00.000Z", { source: "generator" });
+    const fallback = solved("2026-09-03", "2026-09-03T08:00:00.000Z", { source: "device" });
+    expect(pickDayRecord(gen, fallback)).toBe(gen);
+    expect(pickDayRecord(fallback, gen)).toBe(gen);
+  });
+
+  it("равные источники: побеждает более ранний solvedAt (sudoku.com/sudoku.com, device/device)", () => {
+    for (const source of ["sudoku.com", "generator", "device"] as const) {
+      const early = solved("2026-09-03", "2026-09-03T08:00:00.000Z", { source });
+      const late = solved("2026-09-03", "2026-09-03T21:00:00.000Z", { source });
+      expect(pickDayRecord(early, late)).toBe(early);
+      expect(pickDayRecord(late, early)).toBe(early);
+    }
+  });
+
+  it("«решено» по-прежнему сильнее «не решено» независимо от источника", () => {
+    const deviceSolved = solved("2026-09-03", "2026-09-03T08:00:00.000Z", { source: "device" });
+    const realUnfinished = { ...unfinished("2026-09-03", 5000), source: "sudoku.com" as const };
+    expect(pickDayRecord(deviceSolved, realUnfinished)).toBe(deviceSolved);
+    expect(pickDayRecord(realUnfinished, deviceSolved)).toBe(deviceSolved);
+  });
+
   it("равный solvedAt: запись с moveLog над записью без; иначе детерминированно", () => {
     const full = solved("2026-09-03", "2026-09-03T08:00:00.000Z");
     const lean = { ...full };
@@ -64,6 +94,8 @@ describe("политика 409: дни", () => {
       { d1: solved("2026-09-01", "2026-09-01T08:00:00.000Z"), d2: unfinished("2026-09-02", 100) },
       { d1: solved("2026-09-01", "2026-09-01T07:00:00.000Z"), d3: unfinished("2026-09-03", 50) },
       { d2: solved("2026-09-02", "2026-09-02T09:00:00.000Z"), d3: unfinished("2026-09-03", 70) },
+      { d1: solved("2026-09-01", "2026-09-01T06:00:00.000Z", { source: "device" }), d2: solved("2026-09-02", "2026-09-02T05:00:00.000Z", { source: "generator" }) },
+      { d1: solved("2026-09-01", "2026-09-01T09:30:00.000Z", { source: "generator" }), d3: { ...unfinished("2026-09-03", 90), source: "device" } },
     ];
     const eq = (x: Record<string, DayRecord>, y: Record<string, DayRecord>) => sameSnapshotData(snap(x), snap(y));
     for (const a of pool) {
@@ -73,6 +105,15 @@ describe("политика 409: дни", () => {
         for (const c of pool) expect(eq(mergeDays(mergeDays(a, b), c), mergeDays(a, mergeDays(b, c)))).toBe(true);
       }
     }
+  });
+});
+
+describe("сравнение записей не зависит от порядка ключей", () => {
+  it("та же запись с другим порядком ключей (после круга через сервер) — не изменение", () => {
+    const rec = solved("2026-09-03", "2026-09-03T08:00:00.000Z");
+    const shuffled = Object.fromEntries(Object.entries(rec).reverse()) as DayRecord;
+    expect(sameSnapshotData(snap({ d: rec }), snap({ d: shuffled }))).toBe(true);
+    expect(sameSnapshotData(snap({ d: pickDayRecord(rec, shuffled) }), snap({ d: pickDayRecord(shuffled, rec) }))).toBe(true);
   });
 });
 

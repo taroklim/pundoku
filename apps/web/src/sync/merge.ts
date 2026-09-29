@@ -3,9 +3,11 @@
  * Чистые функции; политика — то, что зафиксировано в README `apps/web` (§ «Политика слияния»):
  *
  * 1. **Дни — объединение по датам.** Дни, которых нет с одной стороны, берутся с другой.
- * 2. **Конфликт по одному дню:** «решён» сильнее «не решён»; оба решены — побеждает более ранний
- *    `solvedAt` (первое решение — «настоящее»); равенство — детерминированно (запись с `moveLog`, затем
- *    по сериализации); оба не решены — больше `timeMs` (дальше продвинулись).
+ * 2. **Конфликт по одному дню** (лексикографически): «решён» сильнее «не решён»; затем **источник сетки** —
+ *    `sudoku.com`/`generator` (серверная сетка дня) сильнее `device` (клиентский фолбэк: иначе он вытеснил бы
+ *    настоящую сетку и её `winRate`/`moveLog`/`heat`), независимо от `solvedAt`; при равных источниках оба
+ *    решены — побеждает более ранний `solvedAt` (первое решение — «настоящее»), равенство — детерминированно
+ *    (запись с `moveLog`, затем по сериализации); оба не решены — больше `timeMs` (дальше продвинулись).
  * 3. **Grid ∞ (`installSeed`, `index`, набор улётов):** «первичной» берётся серверная сторона, если
  *    сервер новее по `version` (на 409 — всегда: сервер ушёл вперёд от последней синхронизации клиента),
  *    иначе клиентская. Её `installSeed` и `index` остаются. Улёты второй стороны добавляются по датам
@@ -20,9 +22,27 @@ import type { PermanentGridState } from "../today/permanent";
 import type { DayRecord, SnapshotData } from "./schema";
 import { SNAPSHOT_SCHEMA_VERSION } from "./schema";
 
-/** Какая из двух записей одного дня побеждает. Возвращает «лучшую» (`a` при равенстве по всем признакам). */
+/**
+ * Сериализация с отсортированными ключами: запись после круга «сервер → санитайзер» имеет другой порядок ключей
+ * (jsonb на сервере его тоже не хранит), а сравнение записей и тай-брейк должны от него не зависеть.
+ */
+const canonical = (v: unknown): string =>
+  JSON.stringify(v, (_k, val: unknown) =>
+    val && typeof val === "object" && !Array.isArray(val)
+      ? Object.fromEntries(Object.entries(val as Record<string, unknown>).sort(([x], [y]) => (x < y ? -1 : x > y ? 1 : 0)))
+      : val,
+  );
+
+/** Приоритет источника сетки: серверная (`sudoku.com`, `generator`) над клиентским фолбэком (`device`). */
+const sourceRank = (r: DayRecord): number => (r.source === "device" ? 0 : 1);
+
+/**
+ * Какая из двух записей одного дня побеждает. Возвращает «лучшую» (`a` при равенстве по всем признакам).
+ * Порядок признаков строго лексикографический, поэтому выбор коммутативен, идемпотентен и ассоциативен.
+ */
 export function pickDayRecord(a: DayRecord, b: DayRecord): DayRecord {
   if (a.status !== b.status) return a.status === "solved" ? a : b;
+  if (sourceRank(a) !== sourceRank(b)) return sourceRank(a) > sourceRank(b) ? a : b;
   if (a.status === "solved") {
     const ta = Date.parse(a.solvedAt ?? "");
     const tb = Date.parse(b.solvedAt ?? "");
@@ -35,7 +55,7 @@ export function pickDayRecord(a: DayRecord, b: DayRecord): DayRecord {
     const tb = b.timeMs ?? 0;
     if (ta !== tb) return ta > tb ? a : b;
   }
-  return JSON.stringify(a) <= JSON.stringify(b) ? a : b;
+  return canonical(a) <= canonical(b) ? a : b;
 }
 
 export function mergeDays(a: Record<string, DayRecord>, b: Record<string, DayRecord>): Record<string, DayRecord> {
@@ -85,9 +105,8 @@ export function mergeSnapshots(local: SnapshotData, server: SnapshotData, o: Mer
   };
 }
 
-const stable = (v: unknown): string => JSON.stringify(v);
-
-export const sameDayRecord = (a: DayRecord | undefined, b: DayRecord | undefined): boolean => stable(a) === stable(b);
+/** Записи равны с точностью до порядка ключей. */
+export const sameDayRecord = (a: DayRecord | undefined, b: DayRecord | undefined): boolean => canonical(a) === canonical(b);
 
 export const sameGrid = (a: PermanentGridState | null, b: PermanentGridState | null): boolean => {
   if (a === null || b === null) return a === b;

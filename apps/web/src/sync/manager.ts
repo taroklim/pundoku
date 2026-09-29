@@ -8,7 +8,8 @@
  *     (`merge.ts`), недостающее (решённые дни, Grid ∞) записывается в локальное хранилище — так работает
  *     восстановление после чистки IndexedDB при сохранившемся токене;
  *  3. локальные данные ≠ последнему подтверждённому серверному снапшоту → `PUT` с `version + 1`;
- *     409 → слияние с присланным снапшотом и новая попытка; 413 → сжатие `moveLog` и новая попытка;
+ *     409 → слияние с присланным снапшотом и новая попытка; 413 → сжатие `moveLog` и новая попытка
+ *     (ступень сжатия сохраняется в `meta:syncState` и переживает перезапуск);
  *     401 → токен неизвестен серверу: регистрируем устройство заново (локальные данные не теряются);
  *  4. сетевая ошибка → повтор с экспоненциальной паузой; офлайн → ждём событие `online`.
  * Триггеры: `notify('solved')` — с debounce; `'progress'` — только пометка «не синхронизировано»;
@@ -17,7 +18,7 @@
  * Состояние (`subscribe/getSnapshot`, как у остальных хранилищ) содержит `unsynced` — хук под будущий
  * индикатор «не синхронизировано» (UI в PD-14 не добавляется).
  */
-import { mergeSnapshots, sameGrid, sameSnapshotData } from "./merge";
+import { mergeSnapshots, sameDayRecord, sameGrid, sameSnapshotData } from "./merge";
 import type { DayRecord, SnapshotData } from "./schema";
 import {
   buildSnapshotData,
@@ -38,6 +39,12 @@ export const META_SYNC_STATE = "syncState";
 interface SyncState {
   version: number;
   data: SnapshotData;
+}
+
+/** То, что лежит в `meta:syncState`: подтверждённый снапшот + ступень сжатия, на которой сервер его принял. */
+interface StoredSyncState extends SyncState {
+  /** Индекс в `BUDGET_STEPS`; нет (старая запись) — 0. Липкая между сессиями: иначе на каждом старте — лишние 413 и PUT. */
+  compressStep?: number;
 }
 
 export interface SyncStatus {
@@ -113,7 +120,7 @@ export class SyncManager {
   private lastPullAt = 0;
   private debounceTimer: ReturnType<typeof setTimeout> | null = null;
   private retryTimer: ReturnType<typeof setTimeout> | null = null;
-  /** Ступень сжатия (`BUDGET_STEPS`), на которой сервер принял последний PUT; сбрасывается перезапуском. */
+  /** Ступень сжатия (`BUDGET_STEPS`), на которой сервер принял последний PUT; хранится в `meta:syncState`. */
   private compressStep = 0;
   private bootDone!: () => void;
   private readonly booted = new Promise<void>((resolve) => {
@@ -150,8 +157,12 @@ export class SyncManager {
       const token = await this.deps.storage.getMeta(META_TOKEN);
       this.token = typeof token === "string" && token !== "" ? token : null;
       const st = await this.deps.storage.getMeta(META_SYNC_STATE);
-      const parsed = st && typeof st === "object" ? this.parseState(st as { version?: unknown; data?: unknown }) : null;
+      const parsed = st && typeof st === "object" ? this.parseState(st as { version?: unknown; data?: unknown; compressStep?: unknown }) : null;
       this.state = parsed;
+      if (parsed) {
+        const step = (st as { compressStep?: unknown }).compressStep;
+        if (typeof step === "number" && Number.isInteger(step) && step >= 0 && step < BUDGET_STEPS.length) this.compressStep = step;
+      }
     } catch {
       /* хранилище недоступно — работаем без сохранённого состояния */
     }
@@ -394,7 +405,7 @@ export class SyncManager {
     const merged = mergeSnapshots(base, remote.data, { serverNewer });
     await this.applyLocally(merged, local);
     this.state = { version: remote.version, data: remote.data };
-    await this.deps.storage.setMeta(META_SYNC_STATE, this.state);
+    await this.persistState();
     return merged;
   }
 
@@ -415,6 +426,12 @@ export class SyncManager {
       gridChanged = true;
     }
     if (dates.length > 0 || gridChanged) this.deps.onRemoteApplied?.({ dates, gridChanged });
+  }
+
+  private async persistState(): Promise<void> {
+    if (!this.state) return;
+    const stored: StoredSyncState = { ...this.state, compressStep: this.compressStep };
+    await this.deps.storage.setMeta(META_SYNC_STATE, stored);
   }
 
   private needsPush(merged: SnapshotData): boolean {
@@ -439,9 +456,9 @@ export class SyncManager {
       switch (res.kind) {
         case "ok":
           this.freshToken = false;
-          this.compressStep = step; // липкая ступень: иначе каждый цикл заново упирался бы в 413
+          this.compressStep = step; // липкая ступень (и между сессиями, см. persistState): иначе снова упрёмся в 413
           this.state = { version: res.version, data };
-          await this.deps.storage.setMeta(META_SYNC_STATE, this.state);
+          await this.persistState();
           return this.succeed(seq);
         case "conflict": {
           // Сервер ушёл вперёд (другое устройство с тем же токеном / потерянный ответ): слить и повторить.
@@ -474,4 +491,4 @@ export class SyncManager {
   }
 }
 
-const sameSnapshotRecord = (a: DayRecord, b: DayRecord): boolean => JSON.stringify(a) === JSON.stringify(b);
+const sameSnapshotRecord = (a: DayRecord, b: DayRecord): boolean => sameDayRecord(a, b);

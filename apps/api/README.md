@@ -157,9 +157,22 @@ Typecheck и vitest видят `@pundoku/engine` по исходникам (`pat
 `tsconfig.build.json` paths сбрасывает, сборка использует собранный движок (`pnpm -r build` собирает
 по порядку зависимостей).
 
-Интеграционные (`src/integration.test.ts`) идут против `TEST_DATABASE_URL ?? DATABASE_URL`,
-сами прогоняют миграции, создают свои строки (даты `1999-01-0x`, свои устройства) и убирают их.
-Если БД недоступна — файл скипается с предупреждением в консоли.
+Интеграционные (`src/integration.test.ts`) идут против живой БД **только если задан `TEST_DATABASE_URL`
+(или, как запасной вариант, `DATABASE_URL`)**; иначе весь файл помечается skipped (в консоли предупреждение), а
+`pnpm test` при этом остаётся зелёным — «тесты прошли» без URL не значит, что интеграционные выполнялись. Они сами
+прогоняют миграции, создают свои строки (даты `1999-01-0x`, свои устройства) и убирают их, но лучше давать
+отдельную БД. Точная команда (Homebrew Postgres 16, свежая БД):
+
+```sh
+dropdb --if-exists pundoku_test && createdb pundoku_test
+DATABASE_URL=postgres://localhost:5432/pundoku_test pnpm migrate      # из корня монорепо; можно и пропустить — тесты мигрируют сами
+TEST_DATABASE_URL=postgres://localhost:5432/pundoku_test pnpm --filter @pundoku/api test
+```
+
+Проверка: `pnpm --filter @pundoku/api exec vitest run --reporter=verbose | grep integration` — должны быть строки
+`✓ src/integration.test.ts > integration (Postgres) > …` (7 тестов), а не `↓` (skipped). Если БД недоступна при
+заданном URL — файл тоже скипается с предупреждением, проверяйте вывод. Отдельно от него `sudoku-com-live` всегда
+skipped без `LIVE_SUDOKU_COM=1` — это норма.
 
 ## Структура
 

@@ -444,6 +444,42 @@ describe("политика 409: два устройства с одним ток
     expect((await a.storage.getDay("2026-09-29"))!.solvedAt).toBe("2026-09-29T08:00:00.000Z");
   });
 
+  it("сетка Sudoku.com побеждает клиентский фолбэк независимо от solvedAt; winRate/moveLog/heat не теряются", async () => {
+    const { a, b, token } = await pair();
+    // A: фолбэк на устройстве, решён РАНЬШЕ
+    await a.storage.saveDay(progressOf("2026-09-29", { source: "client", solvedAt: "2026-09-29T08:00:00.000Z" }));
+    await a.m.syncNow();
+    expect(server.data(token)!.days["2026-09-29"]!.source).toBe("device");
+    // B: настоящая сетка Sudoku.com, решён позже → на 409 побеждает B
+    await b.storage.saveDay(progressOf("2026-09-29", { source: "sudoku.com", solvedAt: "2026-09-29T20:00:00.000Z" }));
+    b.m.notify("solved");
+    await b.m.syncNow();
+    const rec = server.data(token)!.days["2026-09-29"]!;
+    expect(rec).toMatchObject({ source: "sudoku.com", solvedAt: "2026-09-29T20:00:00.000Z" });
+    expect(rec.moveLog).toBeDefined();
+    expect(rec.heat).toBeDefined();
+    // A при следующем GET получает настоящую сетку (с winRate) вместо своего фолбэка
+    await a.m.syncNow(true);
+    const mine = (await a.storage.getDay("2026-09-29"))!;
+    expect(mine.source).toBe("sudoku.com");
+    expect(mine.solvedAt).toBe("2026-09-29T20:00:00.000Z");
+  });
+
+  it("обратный порядок отправки (device приходит вторым и раньше по solvedAt) — сервер остаётся при sudoku.com", async () => {
+    const { a, b, token } = await pair();
+    await a.storage.saveDay(progressOf("2026-09-29", { source: "sudoku.com", solvedAt: "2026-09-29T20:00:00.000Z" }));
+    await a.m.syncNow();
+    await b.storage.saveDay(progressOf("2026-09-29", { source: "client", solvedAt: "2026-09-29T08:00:00.000Z" }));
+    b.m.notify("solved");
+    await b.m.syncNow();
+    expect(server.data(token)!.days["2026-09-29"]).toMatchObject({ source: "sudoku.com", solvedAt: "2026-09-29T20:00:00.000Z" });
+    expect((await b.storage.getDay("2026-09-29"))!.source).toBe("sudoku.com");
+    const v = server.snaps.get(token)!.version;
+    await a.m.syncNow(true);
+    await b.m.syncNow(true);
+    expect(server.snaps.get(token)!.version).toBe(v); // сошлись, лишних отправок нет
+  });
+
   it("Grid ∞: installSeed берётся с сервера (он новее), улёты объединяются, один улёт на дату", async () => {
     const { a, b, token } = await pair();
     await a.storage.savePermanent({ installSeed: "seed-A", index: 0, cells: [{ cell: 10, date: "2026-09-01" }, { cell: 11, date: "2026-09-02" }] });
@@ -518,6 +554,50 @@ describe("413 и версии схемы", () => {
     expect(Object.values(low.days).some((r) => r.moveLog)).toBe(false);
     expect(JSON.stringify(low).length).toBeLessThanOrEqual(none + 1);
   });
+
+  it("≥1500 дней, ступень сжатия сохранена: перезапуск не шлёт лишних PUT, version не растёт", async () => {
+    const base = progressOf("2026-09-29");
+    const dateOf = (i: number) => new Date(Date.UTC(2022, 0, 1) + i * 86_400_000).toISOString().slice(0, 10);
+    const dates = Array.from({ length: 1500 }, (_, i) => dateOf(i));
+    const days: Record<string, DayRecord> = {};
+    const seedStorage = async (storage: InMemoryProgressRepository) => {
+      for (const d of dates) await storage.saveDay({ ...base, date: d, solvedAt: `${d}T10:00:00.000Z` });
+    };
+    for (const d of dates) days[d] = dayRecordFromProgress({ ...base, date: d, solvedAt: `${d}T10:00:00.000Z` }, NOW)!;
+    const size = (budget: number, last: number) => JSON.stringify(buildSnapshotData({ grid: null, days }, budget, last)).length;
+    const none = size(0, 0);
+    expect(none).toBeLessThan(size(0, 7)); // лимит режет и ступень 1, и ступень 0
+
+    server.devices.add("t");
+    server.maxBytes = none + 1;
+    const storage = new InMemoryProgressRepository();
+    await storage.setMeta(META_TOKEN, "t");
+    await seedStorage(storage);
+    const first = make(storage).m;
+    await run(first);
+    expect(server.calls.push).toBe(3); // 413 (полный) → 413 (7 дней) → 200 (без moveLog)
+    expect(server.snaps.get("t")!.version).toBe(1);
+    expect(await storage.getMeta(META_SYNC_STATE)).toMatchObject({ version: 1, compressStep: 2 });
+    first.dispose();
+
+    // «Перезапуск приложения»: новый менеджер поверх того же хранилища
+    const pushes = server.calls.push;
+    const second = make(storage).m;
+    await run(second);
+    await second.syncNow(true);
+    expect(server.calls.push).toBe(pushes);
+    expect(server.snaps.get("t")!.version).toBe(1);
+    expect(second.getSnapshot()).toMatchObject({ phase: "idle", unsynced: false, version: 1 });
+
+    // Новый решённый день после перезапуска уходит сразу на сохранённой ступени: один PUT, version + 1
+    server.maxBytes = none + 2000; // место под ещё один день без moveLog, но не под логи
+    await storage.saveDay({ ...base, date: dateOf(1500), solvedAt: `${dateOf(1500)}T10:00:00.000Z` });
+    second.notify("solved");
+    await second.syncNow();
+    expect(server.calls.push).toBe(pushes + 1);
+    expect(server.snaps.get("t")!.version).toBe(2);
+    expect(Object.values(server.data("t")!.days).some((r) => r.moveLog)).toBe(false);
+  }, 60_000);
 
   it("413 даже без moveLog: состояние blocked/too_large, игра не затронута", async () => {
     server.maxBytes = 10;
