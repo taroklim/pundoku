@@ -50,6 +50,8 @@ export const env = {
   sudokuComTimeoutMs: integer("SUDOKU_COM_TIMEOUT_MS", 5000),
   /** Сложность для сгенерированной сетки дня, когда Sudoku.com недоступен (у Sudoku.com daily — hard). */
   dailyFallbackDifficulty: process.env.DAILY_FALLBACK_DIFFICULTY ?? "hard",
+  /** Как часто (мс) перезапрашивать Sudoku.com за датой, у которой в кэше лежит фолбэк-сетка. */
+  dailyUpstreamRetryMs: integer("DAILY_UPSTREAM_RETRY_MS", 60_000),
   /** Разрешённые origin'ы для CORS (через запятую). */
   webOrigins: list("WEB_ORIGIN", ["http://localhost:5173"]),
   /** pino: trace|debug|info|warn|error|silent. */

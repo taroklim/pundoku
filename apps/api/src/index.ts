@@ -23,6 +23,7 @@ const app = createApp({
   logger,
   webOrigins: env.webOrigins,
   fallbackDifficulty: env.dailyFallbackDifficulty,
+  upstreamRetryMs: env.dailyUpstreamRetryMs,
   trustProxy: env.trustProxy,
 });
 

@@ -22,7 +22,15 @@ export class MemoryDailyPuzzleRepo implements DailyPuzzleRepo {
   async insertIfAbsent(p: NewDailyPuzzle): Promise<DailyPuzzle> {
     const existing = this.rows.get(p.date);
     if (existing) return existing;
-    const row = { ...p, fetchedAt: new Date() };
+    const row = { ...p, fetchedAt: new Date(), replacedAt: null };
+    this.rows.set(p.date, row);
+    return row;
+  }
+  async replaceGenerated(p: NewDailyPuzzle): Promise<DailyPuzzle> {
+    const existing = this.rows.get(p.date);
+    if (!existing) throw new Error(`нет строки за ${p.date}`);
+    if (existing.source !== "generator") return existing;
+    const row = { ...p, fetchedAt: new Date(), replacedAt: new Date() };
     this.rows.set(p.date, row);
     return row;
   }

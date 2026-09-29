@@ -10,14 +10,21 @@ export interface DailyPuzzle {
   source: DailySourceKind;
   sourceId: string | null;
   fetchedAt: Date;
+  /** Когда фолбэк-сетка была заменена сеткой Sudoku.com; null — не заменялась. */
+  replacedAt: Date | null;
 }
 
-export type NewDailyPuzzle = Omit<DailyPuzzle, "fetchedAt">;
+export type NewDailyPuzzle = Omit<DailyPuzzle, "fetchedAt" | "replacedAt">;
 
 export interface DailyPuzzleRepo {
   find(date: string): Promise<DailyPuzzle | null>;
   /** Вставляет, если даты ещё нет; при гонке возвращает уже сохранённую строку. */
   insertIfAbsent(puzzle: NewDailyPuzzle): Promise<DailyPuzzle>;
+  /**
+   * Заменяет строку с source='generator' сеткой Sudoku.com (source→'sudoku.com', replaced_at=now).
+   * Если строка уже не generator (гонка) — ничего не меняет и возвращает текущую.
+   */
+  replaceGenerated(puzzle: NewDailyPuzzle): Promise<DailyPuzzle>;
 }
 
 /** Результат обращения к внешнему источнику сетки дня. */

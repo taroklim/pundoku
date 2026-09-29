@@ -20,6 +20,8 @@ export interface AppDeps {
   logger: Logger;
   webOrigins: string[];
   fallbackDifficulty?: string;
+  /** Троттлинг перезапроса Sudoku.com за фолбэк-датой (мс), см. DailyServiceDeps.upstreamRetryMs. */
+  upstreamRetryMs?: number;
   trustProxy?: boolean;
   now?: () => Date;
   rateLimits?: { daily?: number; devices?: number };
@@ -59,6 +61,7 @@ export function createApp(deps: AppDeps): express.Express {
     fallbackDifficulty: deps.fallbackDifficulty ?? "hard",
     logger: deps.logger,
     ...(deps.now ? { now: deps.now } : {}),
+    ...(deps.upstreamRetryMs !== undefined ? { upstreamRetryMs: deps.upstreamRetryMs } : {}),
   });
 
   app.use("/api/daily", rateLimit({ windowMs: 60_000, max: deps.rateLimits?.daily ?? 60 }), dailyRouter(dailyService));

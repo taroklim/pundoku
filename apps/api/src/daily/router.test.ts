@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import request from "supertest";
+import pino from "pino";
 import { buildTestApp, FakeGenerator, FakeSource, SAMPLE } from "../test/fakes.js";
 
 // В тестах «сейчас» = 2026-09-29T12:00Z (см. buildTestApp).
@@ -60,11 +61,81 @@ describe("GET /api/daily/:date", () => {
     expect((generator as FakeGenerator).calls.map((c) => c.date)).toEqual(["2026-09-29"]);
   });
 
-  it("источник и генератор оба упали → 500 в JSON-формате", async () => {
-    const { app } = buildTestApp({ dailySource: new FakeSource({ kind: "error", reason: "x" }), generator: new FakeGenerator(true) });
+  it("источник и генератор оба упали → 503 daily_unavailable (не 500), в кэш ничего не пишется", async () => {
+    const { app, repos } = buildTestApp({ dailySource: new FakeSource({ kind: "error", reason: "x" }), generator: new FakeGenerator(true) });
     const res = await request(app).get("/api/daily/2026-09-28");
-    expect(res.status).toBe(500);
-    expect(res.body).toEqual({ error: { code: "internal", message: expect.any(String) } });
+    expect(res.status).toBe(503);
+    expect(res.body).toEqual({ error: { code: "daily_unavailable", message: expect.any(String) } });
+    expect(repos.dailyPuzzles.rows.size).toBe(0);
+  });
+
+  it("логирует факт обращения к Sudoku.com (info) и исход", async () => {
+    const records: Array<Record<string, unknown>> = [];
+    const stream = { write: (line: string) => records.push(JSON.parse(line) as Record<string, unknown>) };
+    const logger = pino({ level: "info" }, stream);
+    const { app } = buildTestApp({ logger, dailySource: new FakeSource({ kind: "error", reason: "HTTP 403" }) });
+    await request(app).get("/api/daily/2026-09-28");
+    const upstream = records.find((r) => r.upstream === "sudoku.com");
+    expect(upstream).toMatchObject({ level: 30, date: "2026-09-28", outcome: "error" });
+  });
+
+  describe("замена фолбэка настоящей сеткой Sudoku.com", () => {
+    it("следующий запрос на дату с source=generator перезапрашивает Sudoku.com и заменяет сетку", async () => {
+      const source = new FakeSource({ kind: "error", reason: "HTTP 503" });
+      const { app, repos } = buildTestApp({ dailySource: source, upstreamRetryMs: 0 });
+      const first = await request(app).get("/api/daily/2026-09-28");
+      expect(first.body.source).toBe("generator");
+      expect(first.headers["cache-control"]).toBe("public, max-age=60");
+      expect(repos.dailyPuzzles.rows.get("2026-09-28")?.replacedAt).toBeNull();
+
+      source.result = new FakeSource().result; // Sudoku.com ожил
+      const second = await request(app).get("/api/daily/2026-09-28");
+      expect(second.body).toEqual({ date: "2026-09-28", mission: SAMPLE.mission, difficulty: "hard", winRate: 52.1, source: "sudoku.com" });
+      expect(second.headers["cache-control"]).toBe("public, max-age=3600");
+      const row = repos.dailyPuzzles.rows.get("2026-09-28");
+      expect(row).toMatchObject({ source: "sudoku.com", sourceId: SAMPLE.id, mission: SAMPLE.mission });
+      expect(row?.replacedAt).toBeInstanceOf(Date);
+
+      const callsBefore = source.calls.length;
+      await request(app).get("/api/daily/2026-09-28"); // теперь sudoku.com — больше не перезапрашиваем
+      expect(source.calls.length).toBe(callsBefore);
+    });
+
+    it("Sudoku.com всё ещё недоступен → отдаётся фолбэк, строка не меняется", async () => {
+      const source = new FakeSource({ kind: "error", reason: "HTTP 503" });
+      const { app, repos } = buildTestApp({ dailySource: source, upstreamRetryMs: 0 });
+      const first = await request(app).get("/api/daily/2026-09-28");
+      const second = await request(app).get("/api/daily/2026-09-28");
+      expect(second.status).toBe(200);
+      expect(second.body).toEqual(first.body);
+      expect(source.calls).toEqual(["2026-09-28", "2026-09-28"]);
+      expect(repos.dailyPuzzles.rows.get("2026-09-28")?.source).toBe("generator");
+    });
+
+    it("перезапрос троттлится: чаще upstreamRetryMs в Sudoku.com не ходим", async () => {
+      let now = new Date("2026-09-29T12:00:00Z");
+      const source = new FakeSource({ kind: "error", reason: "HTTP 503" });
+      const { app } = buildTestApp({ dailySource: source, upstreamRetryMs: 60_000, now: () => now });
+      await request(app).get("/api/daily/2026-09-28");
+      await request(app).get("/api/daily/2026-09-28");
+      expect(source.calls).toHaveLength(1);
+      now = new Date("2026-09-29T12:01:01Z");
+      source.result = new FakeSource().result;
+      const res = await request(app).get("/api/daily/2026-09-28");
+      expect(source.calls).toHaveLength(2);
+      expect(res.body.source).toBe("sudoku.com");
+    });
+
+    it("verify после замены сверяет с новым решением", async () => {
+      const source = new FakeSource({ kind: "error", reason: "HTTP 503" });
+      const { app, repos } = buildTestApp({ dailySource: source, upstreamRetryMs: 0 });
+      await request(app).get("/api/daily/2026-09-28");
+      const row = repos.dailyPuzzles.rows.get("2026-09-28")!;
+      repos.dailyPuzzles.rows.set("2026-09-28", { ...row, solution: "1".repeat(81) }); // фолбэк с другим решением
+      source.result = new FakeSource().result;
+      const res = await request(app).post("/api/daily/2026-09-28/verify").send({ grid: SAMPLE.solution });
+      expect(res.body).toEqual({ correct: true });
+    });
   });
 
   it("rate-limit по IP: сверх лимита 429 с Retry-After", async () => {

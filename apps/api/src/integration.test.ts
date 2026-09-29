@@ -38,7 +38,7 @@ if (unavailable) {
 
 describe.skipIf(unavailable !== null)("integration (Postgres)", () => {
   const pool = new pg.Pool({ connectionString: databaseUrl, max: 2 });
-  const dates = ["1999-01-01", "1999-01-02", "1999-01-03"];
+  const dates = ["1999-01-01", "1999-01-02", "1999-01-03", "1999-01-04"];
   const createdDevices: string[] = [];
   const source = new FakeSource();
   const generator = new FakeGenerator();
@@ -49,6 +49,7 @@ describe.skipIf(unavailable !== null)("integration (Postgres)", () => {
     logger: silentLogger,
     webOrigins: [],
     rateLimits: { daily: 1000, devices: 1000 },
+    upstreamRetryMs: 0,
   });
   const cleanup = async () => {
     await pool.query("DELETE FROM daily_puzzles WHERE date = ANY($1::date[])", [dates]);
@@ -89,6 +90,22 @@ describe.skipIf(unavailable !== null)("integration (Postgres)", () => {
     source.result = new FakeSource().result;
     const verify = await request(app).post(`/api/daily/${dates[2]}/verify`).send({ grid: SAMPLE.solution });
     expect(verify.body).toEqual({ correct: true });
+  });
+
+  it("daily: фолбэк заменяется сеткой Sudoku.com при следующем запросе (source, replaced_at, mission)", async () => {
+    source.result = { kind: "error", reason: "HTTP 503" };
+    const first = await request(app).get(`/api/daily/${dates[3]}`);
+    expect(first.body.source).toBe("generator");
+    const before = await pool.query("SELECT source, replaced_at, mission FROM daily_puzzles WHERE date = $1", [dates[3]]);
+    expect(before.rows[0]).toMatchObject({ source: "generator", replaced_at: null });
+    expect(before.rows[0].mission).not.toBe(SAMPLE.mission);
+
+    source.result = new FakeSource().result;
+    const second = await request(app).get(`/api/daily/${dates[3]}`);
+    expect(second.body).toMatchObject({ source: "sudoku.com", mission: SAMPLE.mission, winRate: 52.1 });
+    const after = await pool.query("SELECT source, source_id, replaced_at, mission, win_rate FROM daily_puzzles WHERE date = $1", [dates[3]]);
+    expect(after.rows[0]).toMatchObject({ source: "sudoku.com", source_id: SAMPLE.id, mission: SAMPLE.mission, win_rate: "52.10" });
+    expect(after.rows[0].replaced_at).toBeInstanceOf(Date);
   });
 
   it("daily: гонка двух первых запросов не ломает PK и даёт одну сетку", async () => {
