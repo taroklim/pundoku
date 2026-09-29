@@ -60,6 +60,8 @@ export function DayView({ store, archive }: { store: DayStore; archive?: Archive
   const root = useRef<HTMLDivElement>(null);
   const { phase, play, difficulty } = snap;
   const archiveDate = archive?.date;
+  // Недоступная дата (архив): ни пустого поля, ни цифровой панели — только сообщение.
+  const unavailable = phase === "error" && snap.unavailable;
 
   useEffect(() => {
     if (archiveDate !== undefined) store.openArchive(archiveDate);
@@ -135,7 +137,7 @@ export function DayView({ store, archive }: { store: DayStore; archive?: Archive
       {phase === "solved" && cardShown ? (
         <>
           {play && (
-            <ResultCard play={play} cardRef={cardRef} title={t("today.cardTitle")} winRate={winRate}>
+            <ResultCard play={play} cardRef={cardRef} title={t("today.cardTitle")} winRate={winRate} winRateScope={archive ? "day" : "today"}>
               {sourceLabel && <p className="source">{sourceLabel}</p>}
               {archive && snap.late && (
                 <p className="source" data-testid="late-note">
@@ -174,7 +176,7 @@ export function DayView({ store, archive }: { store: DayStore; archive?: Archive
         </>
       ) : (
         <>
-          <Board snap={snap} store={store} dim={phase === "solved"} />
+          {!unavailable && <Board snap={snap} store={store} dim={phase === "solved"} />}
 
           {/* Свободное место — МЕЖДУ полем и панелью (макет, находка 1); в зазоре — статус. */}
           <div className="gap">
@@ -183,12 +185,12 @@ export function DayView({ store, archive }: { store: DayStore; archive?: Archive
                 {t(archive ? "archive.loading" : "today.loading")}
               </p>
             )}
-            {phase === "error" && snap.unavailable && (
+            {unavailable && (
               <p className="status" role="alert" data-testid="archive-unavailable">
                 {t("archive.unavailable")}
               </p>
             )}
-            {phase === "error" && !snap.unavailable && (
+            {phase === "error" && !unavailable && (
               <p className="status" role="alert">
                 {t(archive ? "archive.failed" : "today.failed")}{" "}
                 <button type="button" className="link" onClick={() => void store.load()}>
@@ -208,7 +210,7 @@ export function DayView({ store, archive }: { store: DayStore; archive?: Archive
             )}
           </div>
 
-          <GamePad snap={snap} store={store} />
+          {!unavailable && <GamePad snap={snap} store={store} />}
         </>
       )}
     </div>

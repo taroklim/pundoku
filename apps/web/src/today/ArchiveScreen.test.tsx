@@ -11,6 +11,7 @@ import type { FetchedDay } from "./dayResolver";
 import type { DayDeps } from "./dayStore";
 import { DayStore } from "./dayStore";
 import { InMemoryProgressRepository } from "./repository";
+import { META_FIRST_USE, readUseStart } from "../year/firstUse";
 import { DayView } from "./TodayScreen";
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
@@ -32,8 +33,10 @@ afterEach(() => {
 });
 
 function make(fetched: (d: string) => FetchedDay, repo = new InMemoryProgressRepository()) {
+  void repo.setMetaIfAbsent(META_FIRST_USE, "2026-09-01");
   const deps: DayDeps = {
     repo,
+    useStart: (t) => readUseStart(repo, t),
     fetchDay: vi.fn(async (d: string) => fetched(d)),
     verify: vi.fn(async () => true),
     generateFallback: vi.fn(async (d, diff) => dailyPuzzle(d, diff)),
@@ -85,6 +88,45 @@ describe("экран архивного дня", () => {
     expect(q('[data-testid="archive-unavailable"]')!.textContent).toBe("This day’s puzzle isn’t available.");
     expect(host.querySelector("button.link")).toBeNull();
     expect(q(".subline")!.textContent).not.toMatch(/Medium|Easy/);
+  });
+
+  it("недоступная дата: ни поля, ни цифровой панели — только сообщение (и «‹ Year»)", async () => {
+    const { store } = make(() => ({ ok: false, reason: "http", status: 404 }));
+    await render(store);
+    await settle();
+    expect(q('[data-testid="archive-unavailable"]')).not.toBeNull();
+    expect(q(".board-wrap")).toBeNull();
+    expect(q(".pad-wrap")).toBeNull();
+    expect(q('[data-testid="archive-back"]')).not.toBeNull();
+  });
+
+  it("контроль: у доступной даты поле и панель на месте", async () => {
+    const { store } = make(ok);
+    await render(store);
+    await settle();
+    expect(q(".board-wrap")).not.toBeNull();
+    expect(q(".pad-wrap")).not.toBeNull();
+  });
+
+  it("прямой URL раньше начала пользования: то же «недоступно», без поля и панели, сеть не тронута", async () => {
+    const { store, deps } = make(ok);
+    await render(store, "2026-08-15");
+    await settle();
+    expect(q('[data-testid="archive-unavailable"]')!.textContent).toBe("This day’s puzzle isn’t available.");
+    expect(q(".board-wrap")).toBeNull();
+    expect(q(".pad-wrap")).toBeNull();
+    expect(deps.fetchDay).not.toHaveBeenCalled();
+  });
+
+  it("карточка архивного дня: «N % solved that day», не «today»", async () => {
+    const repo = new InMemoryProgressRepository();
+    await repo.saveDay(progressOf(PAST));
+    const { store } = make(ok, repo);
+    await render(store);
+    await settle();
+    const wr = q('[data-testid="winrate"]')!.textContent!;
+    expect(wr).toBe("61\u00a0% solved that day");
+    expect(wr).not.toContain("today");
   });
 
   it("решённый позже день: карточка результата с пометкой «остаётся пропуском», без Grid ∞", async () => {

@@ -102,6 +102,24 @@ describe("запись дня (поля под Year)", () => {
     expect(progressFromRecord("2026-09-20", rec)!.source).toBe("client");
   });
 
+  it("круг late:true: прогресс → запись → JSON (сервер) → migrateSnapshot/sanitizeDayRecord → прогресс сохраняет late=true (и false не превращается в true)", () => {
+    const date = "2026-09-20";
+    for (const late of [true, false]) {
+      const rec = dayRecordFromProgress(progressOf(date, { late }), NOW)!;
+      const wire = JSON.parse(JSON.stringify({ schemaVersion: SNAPSHOT_SCHEMA_VERSION, grid: null, days: { [date]: rec } })) as unknown;
+      const parsed = migrateSnapshot(wire);
+      expect(parsed.ok).toBe(true);
+      const back = parsed.ok ? parsed.data.days[date] : undefined;
+      expect(back?.late).toBe(late);
+      expect(sanitizeDayRecord(JSON.parse(JSON.stringify(rec)))?.late).toBe(late);
+      expect(progressFromRecord(date, back!)!.late).toBe(late);
+    }
+    // не булево true (строка «true», 1) — не «поздно»
+    const rec = dayRecordFromProgress(progressOf(date, { late: true }), NOW)!;
+    expect(sanitizeDayRecord({ ...rec, late: "true" })?.late).toBe(false);
+    expect(sanitizeDayRecord({ ...rec, late: 1 })?.late).toBe(false);
+  });
+
   it("начатый день → unfinished без solvedAt/heat/moveLog; день без ходов в снапшот не идёт", () => {
     const rec = dayRecordFromProgress(progressOf("2026-09-29", { solved: false, moves: 10 }), NOW)!;
     expect(rec.status).toBe("unfinished");

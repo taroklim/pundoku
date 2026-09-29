@@ -63,7 +63,8 @@
     "heatLabel": "Тепловая карта порядка, в котором вы заполняли сетку.",
     "early": "Рано",
     "late": "Поздно",
-    "winRate": "{{percent}} % решили сегодня"
+    "winRate": "{{percent}} % решили сегодня",
+    "winRateDay": "{{percent}} % решили в тот день"
   },
   "technique": {
     "naked_single": "Открытая одиночка",

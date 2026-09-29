@@ -13,6 +13,8 @@ interface ResultCardProps {
   title: string;
   /** «N % solved today» — только если сервер отдал `winRate` для ЭТОЙ сетки. */
   winRate?: number | null;
+  /** О каком дне «N % solved»: `today` — сегодняшняя сетка, `day` — прошлый (архивный) день: «solved that day». */
+  winRateScope?: "today" | "day";
   /** Доп. кнопки под Share (Play: «New game»). */
   children?: ReactNode;
 }
@@ -22,7 +24,7 @@ interface ResultCardProps {
  * заполнения (`heatmap(moveLog)` движка), легенда Early/Late, время, «clean»/правки, достигнутая
  * техника (`summary`), «N % solved today» и Share. Общая для Today и Play.
  */
-export function ResultCard({ play, cardRef, title, winRate, children }: ResultCardProps) {
+export function ResultCard({ play, cardRef, title, winRate, winRateScope = "today", children }: ResultCardProps) {
   const { t } = useTranslation();
   const sum = useMemo(() => summary(play.log), [play.log]);
   const heat = useMemo(
@@ -64,7 +66,7 @@ export function ResultCard({ play, cardRef, title, winRate, children }: ResultCa
       </dl>
       {winRate != null && (
         <p className="winrate" data-testid="winrate">
-          {t("result.winRate", { percent: Math.round(winRate) })}
+          {t(winRateScope === "day" ? "result.winRateDay" : "result.winRate", { percent: Math.round(winRate) })}
         </p>
       )}
       {/* TODO(отдельный тикет): Share — PNG-карточка без цифр (spoiler-free); поведение не входит

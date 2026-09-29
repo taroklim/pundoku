@@ -15,10 +15,12 @@ import { archiveStore, DayStore, isArchiveDate } from "./dayStore";
 import type { DayPuzzle, FetchedDay } from "./dayResolver";
 import { DAILY_FALLBACK_DIFFICULTY } from "./dayResolver";
 import { InMemoryProgressRepository } from "./repository";
+import { META_FIRST_USE, readUseStart } from "../year/firstUse";
 
 const NOW = new Date(2026, 8, 29, 12, 0); // сегодня 2026-09-29
 const TODAY = "2026-09-29";
 const PAST = "2026-09-20";
+const FIRST_USE = "2026-09-01"; // дата первого запуска по умолчанию: PAST — после неё, день доступен
 
 const EASY = dailyPuzzle(PAST, "easy");
 const server = (date = PAST, over: Partial<DayPuzzle> = {}): FetchedDay => ({
@@ -45,8 +47,10 @@ class FakeHooks implements SyncHooks {
 
 function make(over: Partial<DayDeps> = {}, repo = new InMemoryProgressRepository()) {
   const hooks = new FakeHooks();
+  void repo.setMetaIfAbsent(META_FIRST_USE, FIRST_USE);
   const deps: DayDeps = {
     repo,
+    useStart: (t) => readUseStart(repo, t),
     sync: hooks,
     fetchDay: vi.fn(async (d: string) => server(d)),
     verify: vi.fn(async () => true),
@@ -159,6 +163,54 @@ describe("архив: дата, которой нет", () => {
       expect(deps.fetchDay).not.toHaveBeenCalled();
       expect(await repo.listDays()).toEqual([]);
     }
+  });
+
+  it("прямой URL на день раньше начала пользования: как будущее — unavailable, ни фолбэка, ни запроса сетки, ни записи", async () => {
+    const before = "2026-08-31"; // firstUse = 2026-09-01
+    const { store, deps, repo } = make();
+    await opened(store, before);
+    expect(store.getSnapshot()).toMatchObject({ date: before, phase: "error", unavailable: true, play: null });
+    expect(deps.fetchDay).not.toHaveBeenCalled();
+    expect(deps.generateFallback).not.toHaveBeenCalled();
+    expect(await repo.listDays()).toEqual([]);
+    // Начало пользования не сдвинулось (запись не появилась) — Year по-прежнему не считает пропуски раньше него
+    expect(await readUseStart(repo, TODAY)).toBe(FIRST_USE);
+  });
+
+  it("граница включительно: сам день первого запуска играется; раньше — нет (совпадает с правилом Year)", async () => {
+    const first = make();
+    await opened(first.store, FIRST_USE);
+    expect(first.store.getSnapshot()).toMatchObject({ phase: "playing", unavailable: false });
+    const dayBefore = make();
+    await opened(dayBefore.store, "2026-08-31");
+    expect(dayBefore.store.getSnapshot().unavailable).toBe(true);
+  });
+
+  it("начало пользования сдвигает самая ранняя запись (как в Year): день между ней и firstUse доступен", async () => {
+    const repo = new InMemoryProgressRepository();
+    await repo.setMeta(META_FIRST_USE, "2026-09-10");
+    await repo.saveDay(progressOf("2026-09-03")); // восстановленная запись раньше firstUse → start = 09-03
+    const ok = make({}, repo);
+    await opened(ok.store, "2026-09-05");
+    expect(ok.store.getSnapshot()).toMatchObject({ phase: "playing", unavailable: false });
+    const no = make({}, repo);
+    await opened(no.store, "2026-09-02");
+    expect(no.store.getSnapshot()).toMatchObject({ phase: "error", unavailable: true });
+  });
+
+  it("сохранённая запись этой даты не делает день недоступным", async () => {
+    const repo = new InMemoryProgressRepository();
+    await repo.setMeta(META_FIRST_USE, "2026-09-25");
+    await repo.saveDay(progressOf(PAST, { solved: false, moves: 5 })); // запись есть → start = PAST
+    const { store } = make({}, repo);
+    await opened(store);
+    expect(store.getSnapshot()).toMatchObject({ phase: "playing", unavailable: false });
+  });
+
+  it("хранилище не читается (граница неизвестна): день не отвергаем", async () => {
+    const { store } = make({ useStart: async () => null });
+    await opened(store, "2020-01-01");
+    expect(store.getSnapshot().unavailable).toBe(false);
   });
 
   it("refresh на unavailable не перезагружает (сетью «даты нет» не лечится)", async () => {

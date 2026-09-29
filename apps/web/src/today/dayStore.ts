@@ -27,6 +27,7 @@ import { initialPermanent, isSolvable, landDay, newInstallSeed } from "./permane
 import type { DayProgress, ProgressRepository } from "./repository";
 import { sync as syncRuntime } from "../sync/runtime";
 import type { RemoteApplied, SyncHooks } from "../sync/manager";
+import { readUseStart } from "../year/firstUse";
 
 export interface DaySnapshot extends PlaySnapshot {
   /** Локальная дата сетки, `YYYY-MM-DD`. */
@@ -43,7 +44,7 @@ export interface DaySnapshot extends PlaySnapshot {
   readonly offline: boolean;
   readonly permanent: PermanentGridState | null;
   readonly permanentSolvable: boolean;
-  /** Архив: этой даты играть нельзя (сегодня/будущее, кривая дата, сервер ответил 400/404) — фаза `error` без повтора. */
+  /** Архив: этой даты играть нельзя (сегодня/будущее, раньше начала пользования, кривая дата, сервер ответил 400/404) — фаза `error` без повтора. */
   readonly unavailable: boolean;
   /** День решён после своей даты (дата дня < даты решения): в Year остаётся пропуском. Известно только у решённого. */
   readonly late: boolean;
@@ -53,6 +54,11 @@ export interface DaySnapshot extends PlaySnapshot {
 
 export interface DayDeps {
   repo: ProgressRepository;
+  /**
+   * Архив: начало пользования (как в Year, `year/firstUse.ts › readUseStart`) — дни раньше него недоступны, как будущее.
+   * `null` — не определить (хранилище не читается) или не задано: границы нет.
+   */
+  useStart?: (today: string) => Promise<string | null>;
   sync?: SyncHooks;
   fetchDay: (date: string) => Promise<FetchedDay>;
   verify: (date: string, grid: string) => Promise<boolean | null>;
@@ -90,6 +96,7 @@ function workerFallback(date: string, difficulty: Difficulty): Promise<{ mission
 
 export const defaultDeps = (): DayDeps => ({
   repo: syncRuntime.repository,
+  useStart: (today) => readUseStart(syncRuntime.repository, today),
   sync: syncRuntime.hooks,
   fetchDay: (date) => fetchDaily(date),
   verify: (date, grid) => verifyDaily(date, grid),
@@ -288,6 +295,16 @@ export class DayStore extends GameStore<DaySnapshot> {
     await this.awaitRestore();
     if (token !== this.token) return;
     await this.writesSettled(); // не читать день, пока не дописан предыдущий
+    if (this.archive) {
+      // День раньше начала пользования Year не предлагает — прямой URL тоже не открывает: без фолбэка, без запроса
+      // сетки и без записи (запись сдвинула бы начало пользования и породила бы пропуски «до первого запуска»).
+      const start = (await this.deps.useStart?.(today)) ?? null;
+      if (token !== this.token) return;
+      if (start !== null && date < start) {
+        this.set({ phase: "error", unavailable: true });
+        return;
+      }
+    }
     const saved = await this.deps.repo.getDay(date);
     if (token !== this.token) return;
     if (saved?.solved) {
