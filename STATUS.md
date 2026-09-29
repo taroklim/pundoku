@@ -118,9 +118,9 @@
 | PD-6 | QA PD-3: PASS с оговорками, 4 minor → PD-8 | qa-tester | P1 | completed | PD-3 |
 | PD-7 | Макет v2 поля A/B/C (15b5a24) — утверждён владельцем: B Boxes | designer | P1 | completed | — |
 | PD-8 | Полировка по QA PD-5/PD-6 (бриф ниже; смержен в main, 3c02fab) | developer | P1 | completed | — |
-| PD-9 | Play: вторая ось сложности — число подсказок (бриф ниже) + п.0 low-замечания QA PD-15 (ветка `pd-9` @ b3643f0, dev готов, ждёт QA PD-21) | developer | P2 | in_progress | — |
+| PD-9 | Play: вторая ось сложности — число подсказок (бриф ниже) + п.0 low-замечания QA PD-15 (смержен в main, b3643f0) | developer | P2 | completed | — |
 | PD-10 | UI 1: app shell + таб-бар 3 вкладки (стекло с фолбэками), токены v2 в CSS, тема по системе, safe areas, 100dvh, заглушки Today/Play/Year (смержен в main, eae5fa2) | developer | P1 | completed | — |
-| PD-11 | UI 2: компонент поля B + панель 1–9 с остатками + notes/undo/erase + «N cells left» + движение M1/M2/M3/M6 (Play-экран, локальная игра на движке); ветка `pd-11` @ 0e87330; QA PD-17 PASS с оговорками → фикс-проход dev (6 пунктов), затем QA-регресс | developer | P1 | in_progress | — |
+| PD-11 | UI 2: компонент поля B + панель 1–9 с остатками + notes/undo/erase + «N cells left» + движение M1/M2/M3/M6 (Play-экран, локальная игра на движке); ветка `pd-11` @ 8c4d3e6: фикс-проход по QA PD-17 сделан (c984411), main (PD-9) подтянут, `difficulty.master` добавлен, web 28 тестов зелёные; ждёт QA-регресс PD-23 | developer | P1 | in_progress | — |
 | PD-12 | UI 3: экран Today — `GET /api/daily/:date`, подпись дня с таймером, карточка дня (heatmap/summary/technique, win_rate после решения), M5, постоянная сетка. Из PD-8: клиентский фолбэк-грид ТОЛЬКО через `dailyPuzzle(date, difficulty)` с difficulty из ответа api; при возврате в сеть сверять сетку по `source`/`mission` (сетка могла смениться generator→sudoku.com, пока игрок не решил) | developer | P1 | pending | PD-11 |
 | PD-13 | UI 4: клиентское правило замены генераторной сетки (сравнение `mission`, доигрывание своей) | developer | P1 | pending | PD-12 |
 | PD-14 | UI 5: устройство/снапшот — `POST /api/devices`, `PUT/GET /api/snapshot`, IndexedDB, сервер — правда для постоянной сетки/года | developer | P1 | pending | PD-12 |
@@ -129,7 +129,9 @@
 | PD-17 | QA PD-11 (0e87330): PASS с оговорками, блокеров нет; 6 находок чинятся до мержа (Medium — дубликаты `.wv` после M3), остальное в backlog ниже | qa-tester | P1 | completed | PD-11 |
 | PD-18 | QA PD-12 | qa-tester | P1 | pending | PD-12 |
 | PD-19 | QA PD-13 | qa-tester | P1 | pending | PD-13 |
-| PD-21 | QA PD-9 (b3643f0): живой, независимые выборки, замеры | qa-tester | P2 | in_progress | PD-9 |
+| PD-21 | QA PD-9 (b3643f0): PASS с оговорками, 400 новых сеток, easy побайтово равен cf788ce; low → PD-22 | qa-tester | P2 | completed | PD-9 |
+| PD-22 | Low-полировка по QA PD-21 (engine/api, без спешки): (а) `generate({difficulty:'constructor'/'toString'})` → RangeError с неверным текстом — `Object.hasOwn`; (б) валидация `maxAttempts` (0, -1, NaN, 1.5) и `clues:null`; (в) README: clues ≈17 практически недостижимо; (г) допустимые `DAILY_FALLBACK_DIFFICULTY` в `apps/api/src/config/env.ts` из `DIFFICULTIES`, ошибка при старте без стека; (д) README engine: у v1 easy было ровно 38, не «≤38»; (е) heavy-тест ~160 с при таймауте 180 с — поднять/разнести | developer | P3 | pending | — |
+| PD-23 | QA-регресс PD-11 (8c4d3e6): пункты 1–6 QA PD-17 + 5 сложностей/`difficulty.master` + матрица | qa-tester | P1 | in_progress | PD-11 |
 | PD-20 | QA PD-14 | qa-tester | P1 | pending | PD-14 |
 
 ### Бриф PD-8 (developer, P1 — пункт (a) блокирует UI-тикеты поля/Today)
@@ -155,6 +157,10 @@ hard 26/locked candidates, expert 24/pairs, master — beyond. `rateDifficulty` 
 ## Задача для тикета деплоя / PD-14 (находка developer PD-9)
 Строки `daily_puzzles` с `source='generator'` хранят фолбэк-сетку версии алгоритма, под которой они сгенерированы. При обновлении `GENERATOR_VERSION` (v1 → v2 в PD-9) такие строки на живых стендах устаревают: либо чистить `source='generator'` при обновлении версии, либо хранить версию алгоритма в строке (колонка `generator_version`) и игнорировать несовпадающие. Прода у Pundoku пока нет; на dev/qa стендах — `DELETE FROM daily_puzzles WHERE source='generator'`.
 
+## Калибровка сложности — закрыто (PD-9, b3643f0, смержен в main 52a0be8; QA PD-21 PASS с оговорками)
+Профили `DIFFICULTY_PROFILES`: easy 38/singles, medium 30/singles, hard 26/locked, expert 24/pairs, master 24/beyond; `GENERATOR_VERSION=2`; фолбэк Today по умолчанию medium (≈ Sudoku.com hard). Замеры QA под нагрузкой: p95 expert 773 мс, master 59 мс; хвост expert до 202 попыток из потолка 300. Пункт 0 (typecheck без build, realpath в migrate) закрыт там же.
+- **Стенд:** в `pundoku_qa` остались 144 строки `daily_puzzles` (138 generator, версия v1) — DELETE был заблокирован классификатором, не обходил. Лучше пересоздать: `dropdb pundoku_qa && createdb pundoku_qa` + миграции (`pnpm migrate`), либо владелец разрешит DELETE.
+
 ## Замечания QA PD-15 (PD-8, смержен)
 - low/medium: в чистом клоне `typecheck` до `build` падает (api-тест импортирует собранный `@pundoku/engine`) — порядок `build → typecheck` или references; в PD-9 п.0.
 - low: `migrate.ts` `isDirectRun` сравнивает `import.meta.url` с `argv[1]` без realpath — запуск через симлинк молча выходит с 0; в PD-9 п.0.
@@ -164,7 +170,6 @@ hard 26/locked candidates, expert 24/pairs, master — beyond. `rateDifficulty` 
 ## Агенты (текущий статус)
 | Имя | Роль | Статус | Тикет | Обновлено |
 |-----|------|--------|-------|-----------|
-| PM-Pundoku | product-manager | waiting | PD-17, PD-21 | 2026-09-29 09:00 |
+| PM-Pundoku | product-manager | waiting | PD-23 | 2026-09-29 09:00 |
 | Dev-PD9 | developer | working | PD-9 | 2026-09-29 09:25 |
-| Dev-PD11fix | developer | working | PD-11 (фикс-проход по QA PD-17) | 2026-09-29 11:10 |
-| QA-PD21 | qa-tester | working | PD-21 | 2026-09-29 10:40 |
+| QA-PD23 | qa-tester | working | PD-23 | 2026-09-29 11:30 |
