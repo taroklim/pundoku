@@ -1,0 +1,286 @@
+// @vitest-environment jsdom
+import { act } from "react";
+import { createRoot } from "react-dom/client";
+import type { Root } from "react-dom/client";
+import type { Mock } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import i18n from "../i18n";
+import { progressOf } from "../sync/fixtures";
+import type { DayProgress } from "../today/repository";
+import { YearScreen } from "./YearScreen";
+
+(globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
+
+const TODAY = "2026-09-29";
+const FIRST_USE = "2026-09-01";
+
+// Синтетические записи: все формы, которые умеет рисовать полотно (assisted в релизе 1 всегда false — проверяем на синтетике).
+const DAYS: DayProgress[] = [
+  progressOf("2026-09-10"), // решён чисто
+  progressOf("2026-09-11", { withFix: true }), // решён с исправлением
+  { ...progressOf("2026-09-12"), assisted: true }, // с подсказкой
+  { ...progressOf("2026-09-16", { withFix: true }), assisted: true }, // с подсказкой и исправлением
+  progressOf("2026-09-13", { solved: false, moves: 12 }), // начат и брошен
+  progressOf("2026-09-14", { late: true }), // решён позже своей даты
+];
+
+let host: HTMLDivElement;
+let root: Root;
+let openToday: Mock<() => void>;
+
+beforeEach(async () => {
+  await i18n.changeLanguage("en");
+  host = document.createElement("div");
+  host.id = "root";
+  document.body.append(host);
+  root = createRoot(host);
+  openToday = vi.fn<() => void>();
+});
+afterEach(() => {
+  act(() => root.unmount());
+  host.remove();
+  vi.useRealTimers();
+});
+
+const render = (days: DayProgress[] | null = DAYS, today = TODAY, firstUse: string | null = FIRST_USE) =>
+  act(() => root.render(<YearScreen days={days} firstUse={firstUse} today={today} onOpenToday={openToday} />));
+
+const mark = (date: string) => host.querySelector(`.year-month .ymark[data-date="${date}"]`) as HTMLElement;
+const month = (i: number) => host.querySelector(`.year-month[data-month="${i}"]`) as HTMLButtonElement;
+const sheet = () => document.querySelector('[data-testid="year-sheet"]') as HTMLElement | null;
+const click = (el: Element | null) => act(() => (el as HTMLElement).click());
+const openDay = (m: number, date: string) => {
+  click(month(m));
+  click(document.querySelector(`.ycell[data-date="${date}"]`));
+};
+
+describe("полотно года: формы и цвет меток", () => {
+  beforeEach(() => render());
+
+  it("12 месяцев по 3 в ряд, каждый — кнопка; клетки дней не кнопки и скрыты от VoiceOver", () => {
+    expect(host.querySelectorAll("button.year-month")).toHaveLength(12);
+    expect(host.querySelectorAll(".year-month .ymark[data-date]")).toHaveLength(365);
+    expect(host.querySelectorAll(".year-month .mgrid button, .year-month [role=button]")).toHaveLength(0);
+    for (const g of host.querySelectorAll(".mgrid")) expect(g.getAttribute("aria-hidden")).toBe("true");
+    expect(host.querySelectorAll(".year-month .mgrid > .ymark")).toHaveLength(12 * 35);
+  });
+
+  it("решён чисто — is-solved без has-corr/has-help", () => {
+    expect(mark("2026-09-10").className).toBe("ymark is-solved");
+  });
+
+  it("исправления — has-corr (сургуч + скол), помощь — has-help (мягкий тон), оба вместе", () => {
+    expect(mark("2026-09-11").className).toBe("ymark is-solved has-corr");
+    expect(mark("2026-09-12").className).toBe("ymark is-solved has-help");
+    expect(mark("2026-09-16").className).toBe("ymark is-solved has-corr has-help");
+  });
+
+  it("начат и брошен — is-unfinished (нижняя половина)", () => {
+    expect(mark("2026-09-13").className).toBe("ymark is-unfinished");
+  });
+
+  it("доигранный позже — контур is-missed (пропуск остаётся пропуском), даже решённый", () => {
+    expect(mark("2026-09-14").className).toBe("ymark is-missed");
+  });
+
+  it("пропуск после первого запуска — контур; до первого запуска и будущее — пусто", () => {
+    expect(mark("2026-09-02").className).toBe("ymark is-missed");
+    expect(mark("2026-09-28").className).toBe("ymark is-missed");
+    expect(mark("2026-08-31").className).toBe("ymark is-void");
+    expect(mark("2026-03-15").className).toBe("ymark is-void");
+    expect(mark("2026-10-01").className).toBe("ymark is-void");
+  });
+
+  it("сегодня без записи — кольцо на пустой клетке, не контур пропуска", () => {
+    expect(mark(TODAY).className).toBe("ymark is-void is-today");
+    expect(host.querySelectorAll(".is-today")).toHaveLength(1);
+  });
+
+  it("месяц назван словами: имя, решено из скольких, с исправлениями, брошенные", () => {
+    expect(month(8).getAttribute("aria-label")).toBe("September, 4 of 30 days solved, 2 with corrections, 1 unfinished");
+    expect(month(2).getAttribute("aria-label")).toBe("March, nothing yet");
+  });
+
+  it("итоги — нейтральный текст, без серий и процентов", () => {
+    const totals = host.querySelector('[data-testid="year-totals"]')!.textContent!;
+    expect(totals).toBe("4 days · 2 clean · 2 with corrections");
+    expect(totals).not.toMatch(/%|streak/i);
+  });
+
+  it("легенда всегда на экране: решено / с помощью / исправления / брошено / пропуск", () => {
+    const items = [...host.querySelectorAll(".year-legend li")].map((li) => li.textContent);
+    expect(items).toEqual(["Solved", "With help", "Corrections", "Unfinished", "Missed"]);
+  });
+
+  it("один год — без выбора года; заголовок — h1 с годом", () => {
+    expect(host.querySelector("h1")!.textContent).toContain("2026");
+    expect(host.querySelector(".year-picker")).toBeNull();
+  });
+});
+
+describe("пустой год", () => {
+  it("нет записей: приглашение и кнопка «Open today's puzzle», ни одного пропуска, легенды нет", () => {
+    render([], TODAY, TODAY);
+    expect(host.querySelector('[data-testid="year-empty"]')).not.toBeNull();
+    expect(host.querySelector(".year-legend")).toBeNull();
+    expect(host.querySelectorAll(".ymark.is-missed")).toHaveLength(0);
+    click(host.querySelector(".year-empty .cta"));
+    expect(openToday).toHaveBeenCalledTimes(1);
+  });
+
+  it("пока данные грузятся (null) — пустого состояния нет", () => {
+    render(null);
+    expect(host.querySelector('[data-testid="year-empty"]')).toBeNull();
+  });
+
+  it("дни без ходов не считаются записью", () => {
+    render([progressOf("2026-09-20", { solved: false, moves: 0 })], TODAY, TODAY);
+    expect(host.querySelector('[data-testid="year-empty"]')).not.toBeNull();
+  });
+});
+
+describe("выбор года", () => {
+  it("два года — заголовок-кнопка с меню, переключение перерисовывает полотно", () => {
+    render([progressOf("2025-12-30"), progressOf("2026-01-02")], "2026-01-03", "2025-12-30");
+    const btn = host.querySelector<HTMLButtonElement>(".titlebtn")!;
+    expect(btn.getAttribute("aria-expanded")).toBe("false");
+    click(btn);
+    const items = [...host.querySelectorAll<HTMLElement>('[role="menuitemradio"]')];
+    expect(items.map((i) => i.textContent)).toEqual(["2026", "2025"]);
+    click(items[1]!);
+    expect(host.querySelector(".titlebtn .title")!.textContent).toBe("2025");
+    expect(mark("2025-12-30").className).toBe("ymark is-solved");
+    expect(host.querySelector('[role="menu"]')).toBeNull();
+  });
+});
+
+describe("шит месяца и карточка дня", () => {
+  beforeEach(() => render());
+
+  it("тап по месяцу открывает шит с днями месяца (кнопки ≥ 44 pt по CSS), фон недоступен", () => {
+    click(month(8));
+    const s = sheet()!;
+    expect(s).not.toBeNull();
+    expect(s.getAttribute("role")).toBe("dialog");
+    expect(s.getAttribute("aria-modal")).toBe("true");
+    expect(s.dataset["page"]).toBe("month");
+    expect(s.querySelector("h2")!.textContent).toBe("September 2026");
+    expect(s.querySelectorAll(".ycell[data-date]")).toHaveLength(30);
+    expect(host.hasAttribute("inert")).toBe(true);
+  });
+
+  it("клетка дня в шите: подпись словами, форма — та же метка, что в полотне", () => {
+    click(month(8));
+    const cell = (d: string) => document.querySelector<HTMLElement>(`.ycell[data-date="${d}"]`)!;
+    expect(cell("2026-09-11").getAttribute("aria-label")).toBe("Fri 11 September, solved with corrections");
+    expect(cell("2026-09-12").getAttribute("aria-label")).toContain("solved with help");
+    expect(cell("2026-09-13").getAttribute("aria-label")).toContain("started, not finished");
+    expect(cell("2026-09-14").getAttribute("aria-label")).toContain("played late, counts as missed");
+    expect(cell("2026-09-05").getAttribute("aria-label")).toContain("not played");
+    expect(cell(TODAY).getAttribute("aria-label")).toContain("today, not played yet");
+    expect(cell("2026-09-30").getAttribute("aria-label")).toContain("not yet");
+    expect(cell("2026-09-11").querySelector(".ymark")!.className).toBe("ymark is-solved has-corr");
+    expect(cell(TODAY).classList.contains("today")).toBe(true);
+    expect(document.querySelector(".sheet-foot")!.textContent).toBe("4 of 30 days solved, 2 with corrections, 1 unfinished");
+  });
+
+  it("тап по дню — вторая страница ТОГО ЖЕ шита: карточка результата с тепловой картой, временем, «чисто»", () => {
+    openDay(8, "2026-09-10");
+    expect(document.querySelectorAll('[data-testid="year-sheet"]')).toHaveLength(1);
+    expect(sheet()!.dataset["page"]).toBe("day");
+    const card = document.querySelector('[data-testid="day-card"]')!;
+    expect(card.querySelector("h3")!.textContent).toBe("Thu 10 September");
+    expect(card.querySelector(".sub")!.textContent).toContain("daily puzzle");
+    expect(card.querySelectorAll(".heat i")).toHaveLength(81);
+    const rows = [...card.querySelectorAll(".row")].map((r) => r.textContent);
+    expect(rows).toHaveLength(3);
+    expect(rows[1]).toBe("Correctionsclean");
+    expect(card.querySelector('[data-testid="late-note"]')).toBeNull();
+    expect(card.querySelector('[data-testid="assisted-row"]')).toBeNull();
+  });
+
+  it("карточка дня с исправлением показывает число правок, а не «clean»", () => {
+    openDay(8, "2026-09-11");
+    const err = document.querySelector('[data-testid="day-card"] .row dd.err')!;
+    expect(err.textContent).toMatch(/^\d+$/);
+    expect(Number(err.textContent)).toBeGreaterThan(0);
+  });
+
+  it("assisted: в карточке строка «Solved — with help»", () => {
+    openDay(8, "2026-09-12");
+    expect(document.querySelector('[data-testid="assisted-row"]')!.textContent).toBe("Solvedwith help");
+  });
+
+  it("доигранный позже день: карточка доступна, результат показан, помечено «остаётся пропуском»", () => {
+    openDay(8, "2026-09-14");
+    const card = document.querySelector<HTMLElement>('[data-testid="day-card"]')!;
+    expect(card.dataset["kind"]).toBe("missed");
+    expect(card.dataset["late"]).toBe("true");
+    expect(card.querySelectorAll(".heat i")).toHaveLength(81);
+    expect(card.querySelector('[data-testid="late-note"]')!.textContent).toContain("missed");
+  });
+
+  it("брошенный день: сколько клеток стоит, без тепловой карты", () => {
+    openDay(8, "2026-09-13");
+    const card = document.querySelector('[data-testid="day-card"]')!;
+    expect(card.querySelector(".heat")).toBeNull();
+    expect(card.querySelector(".emptyday")!.textContent).toMatch(/left it at \d+ of 81 cells/);
+  });
+
+  it("пропущенный день: карточка есть, «Not played.»; будущее и «до начала» — своими словами", () => {
+    openDay(8, "2026-09-05");
+    expect(document.querySelector('[data-testid="day-card"] .emptyday')!.textContent).toBe("Not played.");
+    click(document.querySelector(".ysheet-head .back"));
+    click(document.querySelector('.ycell[data-date="2026-09-30"]'));
+    expect(document.querySelector('[data-testid="day-card"] .emptyday')!.textContent).toContain("hasn’t happened");
+  });
+
+  it("сегодня без записи: «ждёт» и кнопка «Open today's puzzle» закрывает шит и ведёт на Today", () => {
+    openDay(8, TODAY);
+    expect(document.querySelector('[data-testid="day-card"] .emptyday')!.textContent).toContain("waiting");
+    click(document.querySelector(".daycard .ghost"));
+    expect(openToday).toHaveBeenCalledTimes(1);
+    expect(sheet()).toBeNull();
+    expect(host.hasAttribute("inert")).toBe(false);
+  });
+
+  it("«Back» возвращает на страницу месяца, «Done» закрывает шит и возвращает фокус на месяц", () => {
+    vi.useFakeTimers();
+    openDay(8, "2026-09-10");
+    click(document.querySelector(".ysheet-head .back"));
+    expect(sheet()!.dataset["page"]).toBe("month");
+    click(document.querySelector(".ysheet-head .done"));
+    expect(document.querySelector(".ysheet-root")!.classList.contains("is-open")).toBe(false);
+    act(() => void vi.advanceTimersByTime(400));
+    expect(sheet()).toBeNull();
+    expect(host.hasAttribute("inert")).toBe(false);
+    expect(document.activeElement).toBe(month(8));
+  });
+
+  it("Escape и тап по фону закрывают шит", () => {
+    vi.useFakeTimers();
+    click(month(8));
+    act(() => void document.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true })));
+    act(() => void vi.advanceTimersByTime(400));
+    expect(sheet()).toBeNull();
+    click(month(8));
+    click(document.querySelector(".ysheet-scrim"));
+    act(() => void vi.advanceTimersByTime(400));
+    expect(sheet()).toBeNull();
+  });
+});
+
+describe("локали", () => {
+  for (const [lng, wantMonth] of [["uk", "Вересень"], ["ru", "Сентябрь"]] as const) {
+    it(`${lng}: месяц и итоги переведены, сырых ключей нет`, async () => {
+      await i18n.changeLanguage(lng);
+      render();
+      expect(month(8).getAttribute("aria-label")!.startsWith(wantMonth)).toBe(true);
+      openDay(8, "2026-09-12");
+      const text = document.body.textContent ?? "";
+      expect(text).not.toMatch(/\byear\.[a-zA-Z]+/);
+      expect(host.textContent).not.toMatch(/\byear\.[a-zA-Z]+/);
+      expect(document.querySelector('[data-testid="assisted-row"]')).not.toBeNull();
+    });
+  }
+});
