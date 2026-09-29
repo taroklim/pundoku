@@ -81,7 +81,11 @@ curl http://localhost:3000/api/snapshot -H "Authorization: Bearer $TOK"
   присланный `version` ≤ сохранённого — клиент сливает сам и шлёт новую версию.
 - `413 snapshot_too_large` — сериализованный `data` больше 1 МиБ.
 - `400 invalid_body | invalid_version | invalid_updated_at | invalid_data`.
-- Структура `data` не валидируется (jsonb, схема на клиенте) — только «объект».
+- Структура `data` не валидируется (jsonb, схема на клиенте) — только «объект»; лимиты PD-14 не менялись: 1 МиБ
+  `data` по UTF-8 байтам, JSON-парсер 1200 КиБ (`413 payload_too_large`), CORS разрешает `PUT`/`Authorization`.
+  Формат `data` (`schemaVersion`, `grid`, `days`), политика 409-слияния и бюджет размера — в README `apps/web`.
+- Клиент не должен полагаться на «мёртвые» устройства: токен без снапшота даёт `404 snapshot_not_found` на GET —
+  это нормальное состояние нового устройства.
 
 ## Источник сетки дня: Sudoku.com
 
@@ -114,6 +118,16 @@ mission+solution → фолбэк.
 Следствие для клиента: фолбэк-сетка дня может смениться на другую, пока игрок её не решил;
 клиент должен сверять сетку с ответом `GET /api/daily/:date` (поле `source`) при возврате в сеть.
 
+### Версия генератора у фолбэка (PD-14, миграция `0005`)
+
+`generator`-строка хранит `generator_version` — `GENERATOR_VERSION` движка на момент генерации. Когда версия строки
+не совпадает с текущей (или NULL — строки до миграции), строка **игнорируется и пересоздаётся** при запросе на
+дату: сначала пробуем Sudoku.com (с тем же троттлингом `DAILY_UPSTREAM_RETRY_MS`), иначе генерируем заново текущей
+версией (`replaceStale`, атомарная замена; гонка двух запросов не даёт двух разных сеток). Так офлайн-клиент новой
+версии движка и сервер снова считают одну и ту же фолбэк-сетку. Строки `sudoku.com` не трогаются никогда. Если движок
+не отдаёт версию (не собран) — устаревание не проверяется, строка отдаётся как есть. Тесты — `router.test.ts`,
+`generator.test.ts`, `integration.test.ts` (живой Postgres).
+
 **Точка подключения движка:** `src/daily/generator.ts`, `EngineGenerator.generateDaily(date, difficulty)` —
 вызывает `dailyPuzzle(date, difficulty)` → `{ givens, solution }` (81 число 0..9 / 1..9). Модуль
 грузится динамически, чтобы typecheck api не зависел от собранного движка (для тестов и запуска
@@ -122,7 +136,9 @@ mission+solution → фолбэк.
 ## Схема БД
 
 - `daily_puzzles(date PK, mission, solution, difficulty, win_rate, source, source_id, fetched_at)` — `0002`;
-  `replaced_at` (когда фолбэк заменён сеткой Sudoku.com, NULL — не заменялась) — `0004`.
+  `replaced_at` (когда фолбэк заменён сеткой Sudoku.com, NULL — не заменялась) — `0004`;
+  `generator_version` (версия `GENERATOR_VERSION` движка, которой создан фолбэк; NULL у `sudoku.com` и у
+  фолбэков до миграции) — `0005`.
 - `devices(id uuid PK, token_hash unique, created_at, last_seen_at)`,
   `snapshots(device_id PK → devices, version, updated_at, data jsonb, size_bytes, saved_at)` — `0003`.
 
@@ -141,9 +157,22 @@ Typecheck и vitest видят `@pundoku/engine` по исходникам (`pat
 `tsconfig.build.json` paths сбрасывает, сборка использует собранный движок (`pnpm -r build` собирает
 по порядку зависимостей).
 
-Интеграционные (`src/integration.test.ts`) идут против `TEST_DATABASE_URL ?? DATABASE_URL`,
-сами прогоняют миграции, создают свои строки (даты `1999-01-0x`, свои устройства) и убирают их.
-Если БД недоступна — файл скипается с предупреждением в консоли.
+Интеграционные (`src/integration.test.ts`) идут против живой БД **только если задан `TEST_DATABASE_URL`
+(или, как запасной вариант, `DATABASE_URL`)**; иначе весь файл помечается skipped (в консоли предупреждение), а
+`pnpm test` при этом остаётся зелёным — «тесты прошли» без URL не значит, что интеграционные выполнялись. Они сами
+прогоняют миграции, создают свои строки (даты `1999-01-0x`, свои устройства) и убирают их, но лучше давать
+отдельную БД. Точная команда (Homebrew Postgres 16, свежая БД):
+
+```sh
+dropdb --if-exists pundoku_test && createdb pundoku_test
+DATABASE_URL=postgres://localhost:5432/pundoku_test pnpm migrate      # из корня монорепо; можно и пропустить — тесты мигрируют сами
+TEST_DATABASE_URL=postgres://localhost:5432/pundoku_test pnpm --filter @pundoku/api test
+```
+
+Проверка: `pnpm --filter @pundoku/api exec vitest run --reporter=verbose | grep integration` — должны быть строки
+`✓ src/integration.test.ts > integration (Postgres) > …` (7 тестов), а не `↓` (skipped). Если БД недоступна при
+заданном URL — файл тоже скипается с предупреждением, проверяйте вывод. Отдельно от него `sudoku-com-live` всегда
+skipped без `LIVE_SUDOKU_COM=1` — это норма.
 
 ## Структура
 

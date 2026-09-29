@@ -31,6 +31,11 @@ const DEFAULT_UPSTREAM_RETRY_MS = 60_000;
  *    иначе «завтрашняя» сгенерированная сетка попала бы в кэш раньше настоящей.
  *  - date <= today и Sudoku.com недоступен/невалиден → генератор, сохраняем как source='generator'.
  *  - Sudoku.com недоступен И генератор упал → 503 daily_unavailable.
+ *
+ * Версионирование фолбэка (PD-14): строка `source='generator'` хранит `generator_version` — версию
+ * алгоритма движка (`GENERATOR_VERSION`), которой она создана. Строки с другой версией (и без версии —
+ * до миграции 0005) игнорируются и пересоздаются при запросе: сначала пробуем Sudoku.com, иначе
+ * генерируем заново текущей версией. Если движок версию не отдаёт — строка отдаётся как есть.
  */
 export class DailyService {
   /** Когда последний раз ходили в Sudoku.com за датой (мс epoch); для троттлинга перезапроса. */
@@ -73,14 +78,44 @@ export class DailyService {
     };
   }
 
+  /** Текущая версия генератора; `null` — движок её не отдаёт (не собран/старый dist): устаревание не определить. */
+  private async currentGeneratorVersion(): Promise<number | null> {
+    try {
+      return await this.deps.generator.version();
+    } catch (error) {
+      this.deps.logger.warn({ err: error }, "daily: версия генератора недоступна, устаревание фолбэк-строк не проверяется");
+      return null;
+    }
+  }
+
+  /** Можно ли сейчас идти в Sudoku.com за датой (троттлинг перезапросов, пока в кэше фолбэк). */
+  private upstreamDue(date: string): boolean {
+    const last = this.lastUpstreamAt.get(date);
+    const retryMs = this.deps.upstreamRetryMs ?? DEFAULT_UPSTREAM_RETRY_MS;
+    return last === undefined || this.nowDate().getTime() - last >= retryMs;
+  }
+
   async get(date: string): Promise<DailyPuzzle> {
     this.assertDateAllowed(date);
     const cached = await this.deps.repo.find(date);
-    if (cached) return cached.source === "generator" ? this.tryReplaceFallback(cached) : cached;
+    if (cached && cached.source !== "generator") return cached;
 
-    const { repo, generator, logger } = this.deps;
-    const result = await this.fetchUpstream(date);
-    if (result.kind === "ok") return repo.insertIfAbsent(this.toNew(date, result.puzzle));
+    // Фолбэк-строка версии алгоритма, отличной от текущей (или без версии), считается отсутствующей:
+    // ниже она пересоздаётся (настоящей сеткой Sudoku.com либо генератором текущей версии).
+    let stale = false;
+    let version: number | null = null;
+    if (cached) {
+      version = await this.currentGeneratorVersion();
+      if (version === null || cached.generatorVersion === version) return this.tryReplaceFallback(cached);
+      stale = true;
+      this.deps.logger.info({ date, rowVersion: cached.generatorVersion, currentVersion: version }, "daily: фолбэк-строка устарела (GENERATOR_VERSION), пересоздаём");
+    }
+    const store = (p: NewDailyPuzzle): Promise<DailyPuzzle> =>
+      stale ? this.deps.repo.replaceStale(p, version as number) : this.deps.repo.insertIfAbsent(p);
+
+    const { generator, logger } = this.deps;
+    const result: SourceResult = stale && !this.upstreamDue(date) ? { kind: "error", reason: "throttled" } : await this.fetchUpstream(date);
+    if (result.kind === "ok") return store(this.toNew(date, result.puzzle));
 
     if (date > this.today()) {
       logger.info({ date, result }, "daily: завтрашняя сетка у источника ещё не доступна");
@@ -90,12 +125,13 @@ export class DailyService {
     logger.warn({ date, result }, "daily: Sudoku.com недоступен, генерируем сетку по dailySeed(date, difficulty)");
     let generated: { mission: string; solution: string };
     try {
+      version ??= await this.currentGeneratorVersion();
       generated = await generator.generateDaily(date, this.deps.fallbackDifficulty);
     } catch (error) {
       logger.error({ date, err: error, upstream: result }, "daily: Sudoku.com недоступен и генератор не сработал");
       throw new HttpError(503, "daily_unavailable", `Сетка на ${date} сейчас недоступна: источник и фолбэк-генератор не ответили, попробуй позже`);
     }
-    return repo.insertIfAbsent({
+    return store({
       date,
       mission: generated.mission,
       solution: generated.solution,
@@ -103,15 +139,14 @@ export class DailyService {
       winRate: null,
       source: "generator",
       sourceId: null,
+      generatorVersion: version,
     });
   }
 
   /** Кэш держит фолбэк: пробуем получить настоящую сетку; любая неудача — отдаём то, что есть. */
   private async tryReplaceFallback(cached: DailyPuzzle): Promise<DailyPuzzle> {
     const { date } = cached;
-    const last = this.lastUpstreamAt.get(date);
-    const retryMs = this.deps.upstreamRetryMs ?? DEFAULT_UPSTREAM_RETRY_MS;
-    if (last !== undefined && this.nowDate().getTime() - last < retryMs) return cached;
+    if (!this.upstreamDue(date)) return cached;
 
     const result = await this.fetchUpstream(date);
     if (result.kind !== "ok") return cached;

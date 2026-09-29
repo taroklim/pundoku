@@ -21,6 +21,11 @@ describe("EngineGenerator", () => {
     expect(await gen.generateDaily("2026-09-28", "easy")).toEqual({ mission: SAMPLE.mission, solution: SAMPLE.solution });
   });
 
+  it("version() отдаёт GENERATOR_VERSION движка; без неё — понятная ошибка", async () => {
+    expect(await new EngineGenerator(async () => ({ GENERATOR_VERSION: 2 })).version()).toBe(2);
+    await expect(new EngineGenerator(async () => ({})).version()).rejects.toThrow(/GENERATOR_VERSION/);
+  });
+
   it("грузит модуль один раз", async () => {
     const loader = vi.fn(async () => ({ dailyPuzzle: samplePuzzle }));
     const gen = new EngineGenerator(loader);
@@ -84,6 +89,11 @@ describe("EngineGenerator × реальный @pundoku/engine: сетка дня
     expect(mission.split("").filter((c) => c !== "0")).toHaveLength(30);
     expect(engine.rateDifficulty(mission)).toBe("medium");
     expect(engine.techniquesUsed(mission).every((t) => t === "naked_single" || t === "hidden_single")).toBe(true);
+  });
+
+  it("version() === GENERATOR_VERSION реального движка", async () => {
+    const engine = await import("@pundoku/engine");
+    expect(await new EngineGenerator().version()).toBe(engine.GENERATOR_VERSION);
   });
 
   it("невалидная дата → ошибка движка, а не молчаливая сетка", async () => {

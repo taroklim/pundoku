@@ -22,7 +22,7 @@ export class MemoryDailyPuzzleRepo implements DailyPuzzleRepo {
   async insertIfAbsent(p: NewDailyPuzzle): Promise<DailyPuzzle> {
     const existing = this.rows.get(p.date);
     if (existing) return existing;
-    const row = { ...p, fetchedAt: new Date(), replacedAt: null };
+    const row = { ...p, generatorVersion: p.generatorVersion ?? null, fetchedAt: new Date(), replacedAt: null };
     this.rows.set(p.date, row);
     return row;
   }
@@ -30,7 +30,20 @@ export class MemoryDailyPuzzleRepo implements DailyPuzzleRepo {
     const existing = this.rows.get(p.date);
     if (!existing) throw new Error(`нет строки за ${p.date}`);
     if (existing.source !== "generator") return existing;
-    const row = { ...p, fetchedAt: new Date(), replacedAt: new Date() };
+    const row = { ...p, generatorVersion: null, fetchedAt: new Date(), replacedAt: new Date() };
+    this.rows.set(p.date, row);
+    return row;
+  }
+  async replaceStale(p: NewDailyPuzzle, currentVersion: number): Promise<DailyPuzzle> {
+    const existing = this.rows.get(p.date);
+    if (!existing) throw new Error(`нет строки за ${p.date}`);
+    if (existing.source !== "generator" || existing.generatorVersion === currentVersion) return existing;
+    const row = {
+      ...p,
+      generatorVersion: p.generatorVersion ?? null,
+      fetchedAt: new Date(),
+      replacedAt: p.source === "sudoku.com" ? new Date() : existing.replacedAt,
+    };
     this.rows.set(p.date, row);
     return row;
   }
@@ -77,7 +90,11 @@ export class FakeSource implements DailyPuzzleSource {
 
 export class FakeGenerator implements PuzzleGenerator {
   readonly calls: Array<{ date: string; difficulty: string }> = [];
-  constructor(public shouldFail = false) {}
+  constructor(public shouldFail = false, public engineVersion: number | null = 2) {}
+  async version(): Promise<number> {
+    if (this.engineVersion === null) throw new Error("no GENERATOR_VERSION");
+    return this.engineVersion;
+  }
   async generateDaily(date: string, difficulty: string) {
     this.calls.push({ date, difficulty });
     if (this.shouldFail) throw new Error("generator boom");

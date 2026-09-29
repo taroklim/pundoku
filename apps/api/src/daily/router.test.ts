@@ -138,6 +138,89 @@ describe("GET /api/daily/:date", () => {
     });
   });
 
+  describe("версионирование фолбэк-строк (generator_version, PD-14)", () => {
+    const OLD_MISSION = "1".repeat(81).replace(/1/g, "0");
+    const seedStale = (repos: ReturnType<typeof buildTestApp>["repos"], generatorVersion: number | null) =>
+      repos.dailyPuzzles.rows.set("2026-09-28", {
+        date: "2026-09-28",
+        mission: OLD_MISSION,
+        solution: SAMPLE.solution,
+        difficulty: "medium",
+        winRate: null,
+        source: "generator",
+        sourceId: null,
+        fetchedAt: new Date(),
+        replacedAt: null,
+        generatorVersion,
+      });
+
+    it("новая фолбэк-строка получает текущую версию генератора", async () => {
+      const { app, repos } = buildTestApp({ dailySource: new FakeSource({ kind: "error", reason: "x" }) });
+      await request(app).get("/api/daily/2026-09-28");
+      expect(repos.dailyPuzzles.rows.get("2026-09-28")).toMatchObject({ source: "generator", generatorVersion: 2 });
+    });
+
+    it.each([1, null])("строка версии %s при движке v2 игнорируется и пересоздаётся генератором", async (rowVersion) => {
+      const { app, repos, generator } = buildTestApp({ dailySource: new FakeSource({ kind: "error", reason: "x" }) });
+      seedStale(repos, rowVersion);
+      const res = await request(app).get("/api/daily/2026-09-28");
+      expect(res.status).toBe(200);
+      expect(res.body.source).toBe("generator");
+      expect(res.body.mission).not.toBe(OLD_MISSION);
+      expect((generator as FakeGenerator).calls).toHaveLength(1);
+      expect(repos.dailyPuzzles.rows.get("2026-09-28")).toMatchObject({ mission: res.body.mission, generatorVersion: 2 });
+      // Второй запрос — строка уже актуальная: генератор не вызывается.
+      await request(app).get("/api/daily/2026-09-28");
+      expect((generator as FakeGenerator).calls).toHaveLength(1);
+    });
+
+    it("строка текущей версии не трогается", async () => {
+      const { app, repos, generator } = buildTestApp({ dailySource: new FakeSource({ kind: "error", reason: "x" }) });
+      seedStale(repos, 2);
+      const res = await request(app).get("/api/daily/2026-09-28");
+      expect(res.body.mission).toBe(OLD_MISSION);
+      expect((generator as FakeGenerator).calls).toHaveLength(0);
+    });
+
+    it("устаревшая строка + Sudoku.com ответил → заменяется настоящей сеткой, версия сбрасывается", async () => {
+      const { app, repos, generator } = buildTestApp();
+      seedStale(repos, 1);
+      const res = await request(app).get("/api/daily/2026-09-28");
+      expect(res.body).toMatchObject({ source: "sudoku.com", mission: SAMPLE.mission });
+      expect((generator as FakeGenerator).calls).toHaveLength(0);
+      const row = repos.dailyPuzzles.rows.get("2026-09-28");
+      expect(row).toMatchObject({ source: "sudoku.com", generatorVersion: null });
+      expect(row?.replacedAt).toBeInstanceOf(Date);
+    });
+
+    it("устаревшая строка, источник мёртв, генератор упал → 503 (устаревшая сетка не отдаётся)", async () => {
+      const { app, repos } = buildTestApp({ dailySource: new FakeSource({ kind: "error", reason: "x" }), generator: new FakeGenerator(true) });
+      seedStale(repos, 1);
+      const res = await request(app).get("/api/daily/2026-09-28");
+      expect(res.status).toBe(503);
+      expect(res.body.error.code).toBe("daily_unavailable");
+      expect(repos.dailyPuzzles.rows.get("2026-09-28")?.generatorVersion).toBe(1); // строка не испорчена
+    });
+
+    it("движок не отдаёт версию → строка отдаётся как есть (устаревание не определить)", async () => {
+      const { app, repos } = buildTestApp({ dailySource: new FakeSource({ kind: "error", reason: "x" }), generator: new FakeGenerator(false, null) });
+      seedStale(repos, 1);
+      const res = await request(app).get("/api/daily/2026-09-28");
+      expect(res.body.mission).toBe(OLD_MISSION);
+    });
+
+    it("устаревшая строка + недавний запрос к источнику (троттлинг) → сразу перегенерация без похода в Sudoku.com", async () => {
+      const source = new FakeSource({ kind: "error", reason: "x" });
+      const { app, repos } = buildTestApp({ dailySource: source, upstreamRetryMs: 60_000 });
+      await request(app).get("/api/daily/2026-09-27"); // взводит троттлинг для другой даты — не влияет
+      seedStale(repos, 1);
+      await request(app).get("/api/daily/2026-09-28");
+      const calls = source.calls.filter((d) => d === "2026-09-28").length;
+      expect(calls).toBe(1);
+      expect(repos.dailyPuzzles.rows.get("2026-09-28")?.generatorVersion).toBe(2);
+    });
+  });
+
   it("rate-limit по IP: сверх лимита 429 с Retry-After", async () => {
     const { app } = buildTestApp({ rateLimits: { daily: 2 } });
     await request(app).get("/api/daily/2026-09-28");

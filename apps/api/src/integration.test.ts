@@ -38,7 +38,7 @@ if (unavailable) {
 
 describe.skipIf(unavailable !== null)("integration (Postgres)", () => {
   const pool = new pg.Pool({ connectionString: databaseUrl, max: 2 });
-  const dates = ["1999-01-01", "1999-01-02", "1999-01-03", "1999-01-04"];
+  const dates = ["1999-01-01", "1999-01-02", "1999-01-03", "1999-01-04", "1999-01-05", "1999-01-06", "1999-01-07"];
   const createdDevices: string[] = [];
   const source = new FakeSource();
   const generator = new FakeGenerator();
@@ -105,6 +105,41 @@ describe.skipIf(unavailable !== null)("integration (Postgres)", () => {
     expect(second.body).toMatchObject({ source: "sudoku.com", mission: SAMPLE.mission, winRate: 52.1 });
     const after = await pool.query("SELECT source, source_id, replaced_at, mission, win_rate FROM daily_puzzles WHERE date = $1", [dates[3]]);
     expect(after.rows[0]).toMatchObject({ source: "sudoku.com", source_id: SAMPLE.id, mission: SAMPLE.mission, win_rate: "52.10" });
+    expect(after.rows[0].replaced_at).toBeInstanceOf(Date);
+  });
+
+  it("daily: generator_version — новая фолбэк-строка получает версию; устаревшая (v1 и NULL) пересоздаётся, актуальная нет", async () => {
+    source.result = { kind: "error", reason: "HTTP 503" };
+    const fresh = await request(app).get(`/api/daily/${dates[6]}`);
+    expect(fresh.body.source).toBe("generator");
+    const v = await pool.query("SELECT generator_version FROM daily_puzzles WHERE date = $1", [dates[6]]);
+    expect(v.rows[0].generator_version).toBe(2);
+
+    const oldMission = "0".repeat(81);
+    for (const [date, ver] of [[dates[4], 1], [dates[5], null]] as const) {
+      await pool.query(
+        "INSERT INTO daily_puzzles (date, mission, solution, difficulty, source, generator_version) VALUES ($1, $2, $3, 'medium', 'generator', $4)",
+        [date, oldMission, SAMPLE.solution, ver],
+      );
+      const calls = generator.calls.length;
+      const res = await request(app).get(`/api/daily/${date}`);
+      expect(res.status).toBe(200);
+      expect(res.body.source).toBe("generator");
+      expect(res.body.mission).not.toBe(oldMission);
+      expect(generator.calls.length).toBe(calls + 1);
+      const row = await pool.query("SELECT mission, generator_version FROM daily_puzzles WHERE date = $1", [date]);
+      expect(row.rows[0]).toEqual({ mission: res.body.mission, generator_version: 2 });
+      await request(app).get(`/api/daily/${date}`); // теперь актуальна — второй раз не генерируем
+      expect(generator.calls.length).toBe(calls + 1);
+    }
+
+    // Устаревшая строка + источник ожил → настоящая сетка, версия NULL, replaced_at заполнен.
+    await pool.query("UPDATE daily_puzzles SET generator_version = 1, mission = $2 WHERE date = $1", [dates[4], oldMission]);
+    source.result = new FakeSource().result;
+    const replaced = await request(app).get(`/api/daily/${dates[4]}`);
+    expect(replaced.body).toMatchObject({ source: "sudoku.com", mission: SAMPLE.mission });
+    const after = await pool.query("SELECT source, generator_version, replaced_at FROM daily_puzzles WHERE date = $1", [dates[4]]);
+    expect(after.rows[0]).toMatchObject({ source: "sudoku.com", generator_version: null });
     expect(after.rows[0].replaced_at).toBeInstanceOf(Date);
   });
 

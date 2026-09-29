@@ -12,9 +12,16 @@ export interface DailyPuzzle {
   fetchedAt: Date;
   /** Когда фолбэк-сетка была заменена сеткой Sudoku.com; null — не заменялась. */
   replacedAt: Date | null;
+  /**
+   * Версия алгоритма генератора (`GENERATOR_VERSION` движка), которой создана сетка `source='generator'`;
+   * null — версия неизвестна (строки до миграции 0005) либо `source='sudoku.com'`.
+   */
+  generatorVersion: number | null;
 }
 
-export type NewDailyPuzzle = Omit<DailyPuzzle, "fetchedAt" | "replacedAt">;
+export type NewDailyPuzzle = Omit<DailyPuzzle, "fetchedAt" | "replacedAt" | "generatorVersion"> & {
+  generatorVersion?: number | null;
+};
 
 export interface DailyPuzzleRepo {
   find(date: string): Promise<DailyPuzzle | null>;
@@ -25,6 +32,12 @@ export interface DailyPuzzleRepo {
    * Если строка уже не generator (гонка) — ничего не меняет и возвращает текущую.
    */
   replaceGenerated(puzzle: NewDailyPuzzle): Promise<DailyPuzzle>;
+  /**
+   * Заменяет УСТАРЕВШУЮ фолбэк-строку (source='generator' и `generator_version` ≠ `currentVersion`,
+   * включая NULL) новой сеткой — свежесгенерированной (`generatorVersion` = текущая) либо настоящей от
+   * Sudoku.com. Если строка уже не устаревшая (гонка/другой процесс) — ничего не меняет, возвращает текущую.
+   */
+  replaceStale(puzzle: NewDailyPuzzle, currentVersion: number): Promise<DailyPuzzle>;
 }
 
 /** Результат обращения к внешнему источнику сетки дня. */
@@ -44,6 +57,8 @@ export interface DailyPuzzleSource {
  * офлайн-клиента была единая конвенция сетки дня.
  */
 export interface PuzzleGenerator {
+  /** Текущая версия алгоритма генератора (`GENERATOR_VERSION` движка); бросает, если движок её не отдаёт. */
+  version(): Promise<number>;
   generateDaily(date: string, difficulty: string): Promise<{ mission: string; solution: string }>;
 }
 
