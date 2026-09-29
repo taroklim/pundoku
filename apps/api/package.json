@@ -2,7 +2,7 @@
   "name": "@pundoku/api",
   "version": "0.1.0",
   "private": true,
-  "description": "Pundoku api — минимальный Node/TS бэкенд: прокси Sudoku.com (Today) + бэкап прогресса. PD-0: только /health и раннер миграций.",
+  "description": "Pundoku api — минимальный Node/TS бэкенд: прокси Sudoku.com (Today) с кэшем/фолбэком + анонимный аккаунт устройства и снапшот прогресса.",
   "type": "module",
   "engines": {
     "node": ">=20"
