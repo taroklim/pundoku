@@ -110,7 +110,7 @@ _(пусто — макет v2 утверждён; открытые вопрос
 | PD-6 | QA PD-3: PASS с оговорками, 4 minor → PD-8 | qa-tester | P1 | completed | PD-3 |
 | PD-7 | Макет v2 поля A/B/C (15b5a24) — утверждён владельцем: B Boxes | designer | P1 | completed | — |
 | PD-8 | Полировка по QA PD-5/PD-6 (бриф ниже; смержен в main, 3c02fab) | developer | P1 | completed | — |
-| PD-9 | Play: вторая ось сложности — число подсказок (бриф ниже) + п.0 low-замечания QA PD-15 (ветка `pd-9`) | developer | P2 | in_progress | — |
+| PD-9 | Play: вторая ось сложности — число подсказок (бриф ниже) + п.0 low-замечания QA PD-15 (ветка `pd-9` @ b3643f0, dev готов, ждёт QA PD-21) | developer | P2 | in_progress | — |
 | PD-10 | UI 1: app shell + таб-бар 3 вкладки (стекло с фолбэками), токены v2 в CSS, тема по системе, safe areas, 100dvh, заглушки Today/Play/Year (смержен в main, eae5fa2) | developer | P1 | completed | — |
 | PD-11 | UI 2: компонент поля B + панель 1–9 с остатками + notes/undo/erase + «N cells left» + движение M1/M2/M3/M6 (Play-экран, локальная игра на движке); ветка `pd-11` @ 0e87330, dev готов, ждёт QA PD-17 | developer | P1 | in_progress | — |
 | PD-12 | UI 3: экран Today — `GET /api/daily/:date`, подпись дня с таймером, карточка дня (heatmap/summary/technique, win_rate после решения), M5, постоянная сетка. Из PD-8: клиентский фолбэк-грид ТОЛЬКО через `dailyPuzzle(date, difficulty)` с difficulty из ответа api; при возврате в сеть сверять сетку по `source`/`mission` (сетка могла смениться generator→sudoku.com, пока игрок не решил) | developer | P1 | pending | PD-11 |
@@ -121,6 +121,7 @@ _(пусто — макет v2 утверждён; открытые вопрос
 | PD-17 | QA PD-11 (0e87330) | qa-tester | P1 | in_progress | PD-11 |
 | PD-18 | QA PD-12 | qa-tester | P1 | pending | PD-12 |
 | PD-19 | QA PD-13 | qa-tester | P1 | pending | PD-13 |
+| PD-21 | QA PD-9 (b3643f0): живой, независимые выборки, замеры | qa-tester | P2 | in_progress | PD-9 |
 | PD-20 | QA PD-14 | qa-tester | P1 | pending | PD-14 |
 
 ### Бриф PD-8 (developer, P1 — пункт (a) блокирует UI-тикеты поля/Today)
@@ -143,6 +144,9 @@ hard 26/locked candidates, expert 24/pairs, master — beyond. `rateDifficulty` 
 `DAILY_FALLBACK_DIFFICULTY` по умолчанию → профиль, близкий к Sudoku.com hard (30/singles).
 Обновить снапшоты seed (все сетки изменятся — версия алгоритма в README), heavy-тест по классам.
 
+## Задача для тикета деплоя / PD-14 (находка developer PD-9)
+Строки `daily_puzzles` с `source='generator'` хранят фолбэк-сетку версии алгоритма, под которой они сгенерированы. При обновлении `GENERATOR_VERSION` (v1 → v2 в PD-9) такие строки на живых стендах устаревают: либо чистить `source='generator'` при обновлении версии, либо хранить версию алгоритма в строке (колонка `generator_version`) и игнорировать несовпадающие. Прода у Pundoku пока нет; на dev/qa стендах — `DELETE FROM daily_puzzles WHERE source='generator'`.
+
 ## Замечания QA PD-15 (PD-8, смержен)
 - low/medium: в чистом клоне `typecheck` до `build` падает (api-тест импортирует собранный `@pundoku/engine`) — порядок `build → typecheck` или references; в PD-9 п.0.
 - low: `migrate.ts` `isDirectRun` сравнивает `import.meta.url` с `argv[1]` без realpath — запуск через симлинк молча выходит с 0; в PD-9 п.0.
@@ -152,6 +156,7 @@ hard 26/locked candidates, expert 24/pairs, master — beyond. `rateDifficulty` 
 ## Агенты (текущий статус)
 | Имя | Роль | Статус | Тикет | Обновлено |
 |-----|------|--------|-------|-----------|
-| PM-Pundoku | product-manager | waiting | PD-9, PD-11 | 2026-09-29 09:00 |
+| PM-Pundoku | product-manager | waiting | PD-17, PD-21 | 2026-09-29 09:00 |
 | Dev-PD9 | developer | working | PD-9 | 2026-09-29 09:25 |
 | QA-PD17 | qa-tester | working | PD-17 | 2026-09-29 10:10 |
+| QA-PD21 | qa-tester | working | PD-21 | 2026-09-29 10:40 |
