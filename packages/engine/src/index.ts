@@ -1,34 +1,73 @@
 /**
  * @pundoku/engine — публичный API движка.
  *
- * PD-0: только заглушки типов. Генератор, решатель и лог техник — PD-1/PD-2.
- * Пакет не зависит от DOM и Node — чистый ES2022, чтобы одинаково работать
- * в браузере (Play/фолбэк Today) и на сервере.
+ * Чистый ES2022 без DOM/Node-зависимостей: одинаково работает в браузере (Play, фолбэк
+ * Today) и на сервере. Все данные — сериализуемые в JSON структуры, все функции чистые.
+ *
+ * Разделы:
+ * - типы (`types.ts`), геометрия и валидация (`grid.ts`);
+ * - решатель на единственность (`solver.ts`): `solve`, `countSolutions`;
+ * - human-style решатель с логом техник (`human.ts`): `humanSolve`, `techniqueForCell`,
+ *   `rateDifficulty`;
+ * - генератор (`generator.ts`): `generate`, `dailySeed`, `dailyPuzzle`;
+ * - лог ходов и метрики карточки дня (`movelog.ts`): `heatmap`, `summary`, `solvingStyle`.
  */
+export type {
+  Cell,
+  CellValue,
+  Difficulty,
+  Digit,
+  Elimination,
+  Grid,
+  GridInput,
+  HumanSolveResult,
+  Move,
+  MoveKind,
+  MoveLog,
+  MoveLogSummary,
+  Puzzle,
+  SolvingStyle,
+  Step,
+  Technique,
+  TechniqueOrBeyond,
+} from "./types.js";
 
-/** Значение клетки: 0 — пусто, 1..9 — цифра. */
-export type CellValue = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9;
+export {
+  BOX_OF,
+  COL_OF,
+  GRID_SIZE,
+  PEERS,
+  ROW_OF,
+  UNITS,
+  candidates,
+  conflicts,
+  emptyGrid,
+  formatGrid,
+  isValidGrid,
+  parseGrid,
+  toGrid,
+} from "./grid.js";
 
-/** Сетка 9×9, 81 клетка в порядке строк (index = row * 9 + col). */
-export type Grid = readonly CellValue[];
+export { countSolutions, hasUniqueSolution, solve } from "./solver.js";
 
-export type Difficulty = "easy" | "medium" | "hard" | "expert";
+export {
+  TECHNIQUE_ORDER,
+  difficultyForTechnique,
+  humanSolve,
+  maxTechnique,
+  rateDifficulty,
+  techniqueForCell,
+  techniqueTier,
+  techniquesUsed,
+} from "./human.js";
+export type { HumanSolveOptions } from "./human.js";
 
-export interface Puzzle {
-  /** Исходные подсказки (0 — пустая клетка). */
-  readonly givens: Grid;
-  /** Единственное решение. */
-  readonly solution: Grid;
-  readonly difficulty: Difficulty;
-  /** Seed генератора (для Today: дата YYYY-MM-DD), если сетка сгенерирована. */
-  readonly seed?: string;
-}
+export { GenerationError, dailyPuzzle, dailySeed, generate } from "./generator.js";
+export type { GenerateOptions } from "./generator.js";
 
-export const GRID_SIZE = 81;
+export { Rng } from "./prng.js";
 
+export { appendMove, createMoveLog, heatmap, solvingStyle, summary } from "./movelog.js";
+
+import type { Difficulty } from "./types.js";
 export const DIFFICULTIES: readonly Difficulty[] = ["easy", "medium", "hard", "expert"];
-
-/** Пустая сетка — временная заглушка, чтобы у пакета был хотя бы один runtime-экспорт. */
-export function emptyGrid(): Grid {
-  return Array.from({ length: GRID_SIZE }, (): CellValue => 0);
-}
