@@ -154,6 +154,10 @@ Gates: build → typecheck, lint, тесты web/engine/api (api с TEST_DATABAS
 6. Тесты YearTab: reload при visibilitychange, подписка subscribeRemote, aria-hidden итогов в пустом состоянии, availableYears с записями из будущих лет (выжившие мутации).
 Без правок (бэклог): 404-шум (PD-14), unfinished с другого устройства не восстанавливаются, расхождения с макетом (центр заголовка, чеврон года, «With help» в легенде).
 
+## Backlog по QA PD-32 (Info)
+- На пустом устройстве первый цикл синхронизации уходит без Grid ∞, второй PUT ожидаем.
+- Main @ 55957e0: pnpm build/typecheck/lint зелёные; engine 105, web 213, api 77+2 skipped (интеграционные с `TEST_DATABASE_URL`, БД `pundoku_main`). Worktree и ветки pd-12/pd-14 удалены; pd-25 остаётся до мержа.
+
 ## Backlog по QA PD-17 (не чиним сейчас)
 - 320×568 (iPhone SE 1-го поколения) скролл на 6–10 px — не целевое устройство.
 - Заметки 7-8-9 касаются нижней линии клетки на 320pt — проверить на устройстве.
@@ -183,7 +187,7 @@ Gates: build → typecheck, lint, тесты web/engine/api (api с TEST_DATABAS
 | PD-24 | Дизайн: варианты экрана Year (полотно года) + вопрос владельцу — HTML-макет в `design/`, скилл apple-design; НЕ реализация — смержен в main (8aea006): варианты A Ruled-rows/B/C Blocks, 15 кадров, заметка; ждёт выбора владельца | designer | P1 | completed | — |
 | PD-12 | UI 3: экран Today — `GET /api/daily/:date`, подпись дня с таймером, карточка дня (heatmap/summary/technique, win_rate после решения), M5, постоянная сетка. Из PD-8: клиентский фолбэк-грид ТОЛЬКО через `dailyPuzzle(date, difficulty)` с difficulty из ответа api; при возврате в сеть сверять сетку по `source`/`mission` (сетка могла смениться generator→sudoku.com, пока игрок не решил) + два Low из QA PD-23 (см. ниже); реализация по утверждённому макету (Today solved: карточка дня, Grid ∞); смержен в main (772dd90, pd-12 @ 780a711); QA PD-18 + PD-30 PASS | developer | P1 | completed | — |
 | PD-13 | UI 4: клиентское правило замены генераторной сетки (сравнение `mission`, доигрывание своей) — ПОКРЫТ PD-12 (`dayResolver` + тесты в pd-12 @ e5418fc), отдельной реализации нет; проверяется в QA PD-18 | developer | P1 | completed | PD-12 |
-| PD-14 | UI 5 (dev завершил, на QA PD-20): устройство/снапшот — `POST /api/devices`, `PUT/GET /api/snapshot`, IndexedDB, сервер — правда для постоянной сетки/года + поля схемы снапшота для Year (`assisted`, `late`, `hadCorrections`), чистка `source='generator'` при смене GENERATOR_VERSION (ветка `pd-14` поверх `pd-12`) | developer | P1 | in_progress | PD-12 |
+| PD-14 | UI 5 (dev завершил, на QA PD-20): устройство/снапшот — `POST /api/devices`, `PUT/GET /api/snapshot`, IndexedDB, сервер — правда для постоянной сетки/года + поля схемы снапшота для Year (`assisted`, `late`, `hadCorrections`), чистка `source='generator'` при смене GENERATOR_VERSION (ветка `pd-14` поверх `pd-12`); смержен в main (55957e0, pd-14 @ c574f13); QA PD-20 и PD-32 PASS с оговорками | developer | P1 | completed | PD-12 |
 | PD-15 | QA PD-8: PASS с оговорками (seed-сетки побайтово те же, undo, api live; 2 low → PD-9/п.0) | qa-tester | P1 | completed | PD-8 |
 | PD-16 | QA PD-10 (eae5fa2): Playwright chromium+webkit, реальная сборка, apple-design как ревьюер | qa-tester | P1 | completed | PD-10 |
 | PD-17 | QA PD-11 (0e87330): PASS с оговорками, блокеров нет; 6 находок чинятся до мержа (Medium — дубликаты `.wv` после M3), остальное в backlog ниже | qa-tester | P1 | completed | PD-11 |
@@ -198,11 +202,12 @@ Gates: build → typecheck, lint, тесты web/engine/api (api с TEST_DATABAS
 | PD-33 | Архив: играть прошлую дату (`GET /api/daily/:date`, DayStore на произвольную дату, `late=true`; кнопки «Play this day's puzzle»/«Finish this puzzle» в карточке дня Year) — решение владельца «пропущенный день можно доигрывать» | developer | P2 | pending | PD-25 |
 | PD-34 | QA PD-25 (pd-25 @ df1945d): PASS с оговорками, блокеров нет (36 комбинаций, 231 синтетический день без расхождений, мутационная проверка 19/22); находки → PD-35 | qa-tester | P1 | completed | PD-25 |
 | PD-35 | Фикс-проход pd-25 по QA PD-34 (бриф ниже), затем короткий QA-регресс PD-36 | developer | P1 | in_progress | PD-34 |
+| PD-37 | Low из QA PD-32: у восстановленного решённого дня (после чистки IDB кроме токена / замены слиянием) пропадает «N % solved today»: `DayStore.resumeSaved` берёт verification из записи, а `progressFromRecord` ставит "local" → локальный winRate = null. Восстанавливать winRate/verification из записи (или честно поправить README); ветка от main после мержа pd-25 | developer | P2 | pending | PD-25 |
 | PD-26 | Полировка: `apple-touch-startup-image`/тёмный launch (QA PD-16), PD-22 low, Share PNG без цифр (если владелец подтвердит) | developer | P2 | pending | PD-25 |
 | PD-27 | Привязка e-mail/пароля к анонимному аккаунту (UI в настройках) | developer | P2 | pending | PD-26 |
 | PD-20 | QA PD-14 (pd-14 @ 0026b2a): PASS с оговорками, блокеров и Medium нет; 4 Low + решение по слиянию → PD-31 | qa-tester | P1 | completed | PD-14 |
 | PD-31 | Фикс-проход pd-14 по QA PD-20 (pd-14 @ c574f13; gates зелёные: web 213, engine 105, api 77+2 skipped, интеграционные 7/7 на живой БД) | developer | P1 | completed | PD-20 |
-| PD-32 | QA-регресс pd-14 @ c574f13 (перезапуск после сбоя контейнера; worktree /tmp/pundoku-qa/qa-pd32, БД pundoku_qa5, порты 3320/5320): слияние 409 по источникам, отсутствие лишних PUT при 1500 днях, сокращённый регресс PD-20, gates + интеграционные api-тесты | qa-tester | P1 | in_progress | PD-31 |
+| PD-32 | PASS с оговорками (слияние 409 по источникам, 1500 дней без лишних PUT, gates, интеграционные 7/7); Low → PD-37. QA-регресс pd-14 @ c574f13 (перезапуск после сбоя контейнера; worktree /tmp/pundoku-qa/qa-pd32, БД pundoku_qa5, порты 3320/5320): слияние 409 по источникам, отсутствие лишних PUT при 1500 днях, сокращённый регресс PD-20, gates + интеграционные api-тесты | qa-tester | P1 | completed | PD-31 |
 
 ### Бриф PD-8 (developer, P1 — пункт (a) блокирует UI-тикеты поля/Today)
 Движок: (a) зафиксировать и реализовать контракт `undo` в `MoveLog` — undo после `erase` не должен
@@ -246,5 +251,4 @@ hard 26/locked candidates, expert 24/pairs, master — beyond. `rateDifficulty` 
 |-----|------|--------|-------|-----------|
 | PM-Pundoku | product-manager | waiting | PD-18, PD-20 | 2026-09-29 14:00 |
 | QA-PD18 | qa-tester | working | PD-18 | 2026-09-29 13:10 |
-| QA-PD32b | qa-tester | working | PD-32 | 2026-09-29 17:30 |
 | Dev-PD35 | developer | working | PD-35 | 2026-09-29 18:00 |
