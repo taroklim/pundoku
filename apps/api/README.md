@@ -15,9 +15,11 @@ pnpm dev:api                                           # tsx watch, http://local
 ```
 
 `.env` ищется сначала в `apps/api/.env`, затем в корне репо (`.env.example` — там же).
-Переменные: `DATABASE_URL`, `PORT` (3000), `WEB_ORIGIN` (CORS, через запятую; по умолчанию
+Переменные: `DATABASE_URL`, `PORT` (3000; целое 1–65535 — порт 0 не поддерживается; не задан → 3000, пустой/нечисловой/дробной/вне диапазона → ошибка конфигурации), `WEB_ORIGIN` (CORS, через запятую; по умолчанию
 `http://localhost:5173`), `SUDOKU_COM_BASE_URL`, `SUDOKU_COM_TIMEOUT_MS` (5000),
-`DAILY_FALLBACK_DIFFICULTY` (`medium` — профиль движка 30 подсказок/singles ≈ Sudoku.com «hard»; допустимо — значения `DIFFICULTIES` движка (`easy|medium|hard|expert|master`), иное значение — ошибка конфигурации при старте: одна строка в stderr без стека, код выхода 1), `DAILY_UPSTREAM_RETRY_MS` (60000, см. «Замена фолбэка»), `LOG_LEVEL` (`info`), `TRUST_PROXY` (`1` за reverse proxy).
+`DAILY_FALLBACK_DIFFICULTY` (`medium` — профиль движка 30 подсказок/singles ≈ Sudoku.com «hard»; допустимо — значения `DIFFICULTIES` движка (`easy|medium|hard|expert|master`), иное значение — ошибка конфигурации при старте), `DAILY_UPSTREAM_RETRY_MS` (60000, см. «Замена фолбэка»; как и `SUDOKU_COM_TIMEOUT_MS` — только десятичные цифры), `LOG_LEVEL` (`info`; `trace|debug|info|warn|error|fatal|silent`), `TRUST_PROXY` (`1` за reverse proxy).
+
+Неверное значение `PORT`, `LOG_LEVEL`, `DAILY_FALLBACK_DIFFICULTY`, `SUDOKU_COM_TIMEOUT_MS`, `DAILY_UPSTREAM_RETRY_MS` — ошибка конфигурации при старте: одна строка в stderr без стека, код выхода 1.
 
 С Docker: `docker compose up -d postgres` и дальше то же самое (см. корневой README).
 

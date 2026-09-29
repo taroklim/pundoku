@@ -21,14 +21,45 @@ function required(name: string): string {
   return value;
 }
 
+/** Только десятичные цифры: `Number()` пропустил бы пробелы (" " → 0), `1e3`, `0x10`, `1.0`. */
+const DIGITS = /^\d+$/;
+
 function integer(name: string, fallback: number): number {
   const raw = process.env[name];
   if (raw === undefined || raw === "") return fallback;
-  const value = Number(raw);
-  if (!Number.isInteger(value) || value < 0) {
+  if (!DIGITS.test(raw) || !Number.isSafeInteger(Number(raw))) {
     throw new ConfigError(`Переменная окружения ${name} должна быть целым неотрицательным числом, получено: ${raw}`);
   }
+  return Number(raw);
+}
+
+/**
+ * TCP-порт для `listen`: целое 1..65535. Порт 0 («случайный») отвергаем сознательно — для сервера,
+ * за которым стоит прокси/compose с фиксированным адресом, он бессмыслен (реальный порт неизвестен
+ * оператору), а тесты api поднимают app через supertest без listen. Не задан → дефолт; заданный, но
+ * пустой (`PORT=`) → ошибка: это опечатка в конфиге, а не «возьми дефолт». Иначе `PORT=abc` дошло бы
+ * до `listen` сырым ERR_SOCKET_BAD_PORT со стеком.
+ */
+function port(name: string, fallback: number): number {
+  const raw = process.env[name];
+  if (raw === undefined) return fallback;
+  const value = Number(raw);
+  if (!DIGITS.test(raw) || value < 1 || value > 65535) {
+    throw new ConfigError(`Переменная окружения ${name} должна быть целым числом от 1 до 65535, получено: ${raw}`);
+  }
   return value;
+}
+
+/** Уровни pino. Неизвестный уровень pino бросает сырую ошибку со стеком при создании логгера в main.ts. */
+export const LOG_LEVELS = ["trace", "debug", "info", "warn", "error", "fatal", "silent"] as const;
+
+function logLevel(name: string, fallback: string): string {
+  const raw = process.env[name];
+  if (raw === undefined || raw === "") return fallback;
+  if (!(LOG_LEVELS as readonly string[]).includes(raw)) {
+    throw new ConfigError(`Переменная окружения ${name} должна быть одной из ${LOG_LEVELS.join("|")}, получено: ${raw}`);
+  }
+  return raw;
 }
 
 /** Классы движка берутся из `DIFFICULTIES` (@pundoku/engine) — свой список тут разошёлся бы с движком. Проверка — при старте, а не при первом фолбэке. */
@@ -52,7 +83,7 @@ function list(name: string, fallback: string[]): string[] {
 
 export const env = {
   nodeEnv: process.env.NODE_ENV ?? "development",
-  port: Number(process.env.PORT ?? 3000),
+  port: port("PORT", 3000),
   /** Читается лениво — /health и dev-запуск не должны падать без базы. */
   get databaseUrl(): string {
     return required("DATABASE_URL");
@@ -71,7 +102,7 @@ export const env = {
   /** Разрешённые origin'ы для CORS (через запятую). */
   webOrigins: list("WEB_ORIGIN", ["http://localhost:5173"]),
   /** pino: trace|debug|info|warn|error|silent. */
-  logLevel: process.env.LOG_LEVEL ?? (process.env.NODE_ENV === "test" ? "silent" : "info"),
+  logLevel: logLevel("LOG_LEVEL", process.env.NODE_ENV === "test" ? "silent" : "info"),
   /** Express `trust proxy` — включать за reverse proxy, чтобы rate-limit видел реальный IP. */
   trustProxy: process.env.TRUST_PROXY === "1" || process.env.TRUST_PROXY === "true",
 } as const;
