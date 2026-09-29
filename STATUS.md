@@ -98,6 +98,7 @@
 14. Ряд кнопок Notes/Undo/Erase на узком экране (SE / крупный текст) в uk и ru: одной высоты, подписи без обрезки.
 15. Выбор неверной клетки: видны и индиго-кольцо, и сургучное (светлая/тёмная тема).
 16. Ввод пальцем: попадание по клеткам и клавишам панели (36–41 pt на 390–430 pt — вопрос владельцу (а)), заметки, undo, таймер при сворачивании PWA, ощущение движений M1/M2/M3/M6, размер текста.
+17. (PD-14) Данные сайта: решить день, «Настройки → Safari → Дополнительно → Данные сайтов» (или удаление PWA) — после стирания только IndexedDB прогресс должен восстановиться с сервера; проверить, что `navigator.storage.persist()` на iOS отдаёт true/false (в установленной PWA) и токен устройства переживает перезапуск; полная чистка = новое устройство, данные недоступны (ожидаемо).
 Не проверено QA: реальное стекло iOS, `env(safe-area-inset-*)`, статус-бар в тёмной теме, установка, reduced-transparency/contrast в webkit.
 
 ## Решения владельца по Year (2026-09-29, PD-24 закрыт)
@@ -137,7 +138,7 @@
 | PD-24 | Дизайн: варианты экрана Year (полотно года) + вопрос владельцу — HTML-макет в `design/`, скилл apple-design; НЕ реализация — смержен в main (8aea006): варианты A Ruled-rows/B/C Blocks, 15 кадров, заметка; ждёт выбора владельца | designer | P1 | completed | — |
 | PD-12 | UI 3: экран Today — `GET /api/daily/:date`, подпись дня с таймером, карточка дня (heatmap/summary/technique, win_rate после решения), M5, постоянная сетка. Из PD-8: клиентский фолбэк-грид ТОЛЬКО через `dailyPuzzle(date, difficulty)` с difficulty из ответа api; при возврате в сеть сверять сетку по `source`/`mission` (сетка могла смениться generator→sudoku.com, пока игрок не решил) + два Low из QA PD-23 (см. ниже); реализация по утверждённому макету (Today solved: карточка дня, Grid ∞); ветка `pd-12` @ e5418fc, dev готов, ждёт QA PD-18 | developer | P1 | in_progress | — |
 | PD-13 | UI 4: клиентское правило замены генераторной сетки (сравнение `mission`, доигрывание своей) — ПОКРЫТ PD-12 (`dayResolver` + тесты в pd-12 @ e5418fc), отдельной реализации нет; проверяется в QA PD-18 | developer | P1 | completed | PD-12 |
-| PD-14 | UI 5: устройство/снапшот — `POST /api/devices`, `PUT/GET /api/snapshot`, IndexedDB, сервер — правда для постоянной сетки/года + поля схемы снапшота для Year (`assisted`, `late`, `hadCorrections`), чистка `source='generator'` при смене GENERATOR_VERSION (ветка `pd-14` поверх `pd-12`) | developer | P1 | in_progress | PD-12 |
+| PD-14 | UI 5 (dev завершил, на QA PD-20): устройство/снапшот — `POST /api/devices`, `PUT/GET /api/snapshot`, IndexedDB, сервер — правда для постоянной сетки/года + поля схемы снапшота для Year (`assisted`, `late`, `hadCorrections`), чистка `source='generator'` при смене GENERATOR_VERSION (ветка `pd-14` поверх `pd-12`) | developer | P1 | in_progress | PD-12 |
 | PD-15 | QA PD-8: PASS с оговорками (seed-сетки побайтово те же, undo, api live; 2 low → PD-9/п.0) | qa-tester | P1 | completed | PD-8 |
 | PD-16 | QA PD-10 (eae5fa2): Playwright chromium+webkit, реальная сборка, apple-design как ревьюер | qa-tester | P1 | completed | PD-10 |
 | PD-17 | QA PD-11 (0e87330): PASS с оговорками, блокеров нет; 6 находок чинятся до мержа (Medium — дубликаты `.wv` после M3), остальное в backlog ниже | qa-tester | P1 | completed | PD-11 |
@@ -149,7 +150,7 @@
 | PD-25 | UI: экран Year по решениям владельца (C Blocks, сургуч+срез угла, assisted светлый тон 62 %, late=пропуск, карточка дня по тапу); читает данные из хранилища PD-14 | developer | P1 | pending | PD-14 |
 | PD-26 | Полировка: `apple-touch-startup-image`/тёмный launch (QA PD-16), PD-22 low, Share PNG без цифр (если владелец подтвердит) | developer | P2 | pending | PD-25 |
 | PD-27 | Привязка e-mail/пароля к анонимному аккаунту (UI в настройках) | developer | P2 | pending | PD-26 |
-| PD-20 | QA PD-14 | qa-tester | P1 | pending | PD-14 |
+| PD-20 | QA PD-14 (pd-14 @ 0026b2a, worktree qa-pd14, БД pundoku_qa3) | qa-tester | P1 | in_progress | PD-14 |
 
 ### Бриф PD-8 (developer, P1 — пункт (a) блокирует UI-тикеты поля/Today)
 Движок: (a) зафиксировать и реализовать контракт `undo` в `MoveLog` — undo после `erase` не должен
@@ -191,7 +192,6 @@ hard 26/locked candidates, expert 24/pairs, master — beyond. `rateDifficulty` 
 ## Агенты (текущий статус)
 | Имя | Роль | Статус | Тикет | Обновлено |
 |-----|------|--------|-------|-----------|
-| PM-Pundoku | product-manager | waiting | PD-18, PD-14 | 2026-09-29 09:00 |
-| Dev-PD9 | developer | working | PD-9 | 2026-09-29 09:25 |
+| PM-Pundoku | product-manager | waiting | PD-18, PD-20 | 2026-09-29 14:00 |
 | QA-PD18 | qa-tester | working | PD-18 | 2026-09-29 13:10 |
-| Dev-PD14 | developer | working | PD-14 | 2026-09-29 13:10 |
+| QA-PD20 | qa-tester | working | PD-20 | 2026-09-29 14:00 |
