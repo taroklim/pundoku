@@ -125,14 +125,16 @@
       "late": "played late, counts as missed",
       "today": "today, not played yet",
       "future": "not yet",
+      "noRecord": "nothing recorded",
       "before": "before you started"
     },
     "card": {
       "dailyPuzzle": "daily puzzle",
-      "unfinishedNote": "You started this one and left it with {{n}} of {{total}} cells filled in.",
+      "unfinishedNote": "You started this one and left it with {{n}} of {{total}} cells filled in correctly.",
       "notPlayed": "Not played.",
       "todayWaiting": "Today’s puzzle is waiting.",
       "future": "This day hasn’t happened yet.",
+      "noRecord": "Nothing recorded for this day.",
       "before": "Before you started using Pundoku.",
       "lateNote": "Played after the day, so the year keeps it as missed.",
       "assistedRow": "Solved",

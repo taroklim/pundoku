@@ -5,6 +5,7 @@ import type { Root } from "react-dom/client";
 import type { Mock } from "vitest";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import i18n from "../i18n";
+import { enterDigit } from "../play/logic";
 import { progressOf } from "../sync/fixtures";
 import type { DayProgress } from "../today/repository";
 import { YearScreen } from "./YearScreen";
@@ -141,6 +142,22 @@ describe("пустой год", () => {
     expect(label("2026-09-29")).toContain("today");
   });
 
+  it("firstUse в прошлом, записей нет: дни с firstUse — «nothing recorded», а не «before you started»; раньше firstUse — «before»", () => {
+    render([], "2026-09-29", "2026-09-20");
+    click(month(8));
+    const label = (d: string) => document.querySelector<HTMLElement>(`.ycell[data-date="${d}"]`)!.getAttribute("aria-label")!;
+    expect(label("2026-09-25")).toMatch(/, nothing recorded$/);
+    expect(label("2026-09-20")).toMatch(/, nothing recorded$/); // сам день первого запуска: до начала он не был
+    expect(label("2026-09-19")).toMatch(/, before you started$/);
+    expect(label("2026-09-30")).toMatch(/, not yet$/);
+    // карточка: то же различие словами
+    click(document.querySelector('.ycell[data-date="2026-09-25"]'));
+    expect(document.querySelector('[data-testid="day-card"] .emptyday')!.textContent).toBe("Nothing recorded for this day.");
+    click(document.querySelector(".ysheet-head .back"));
+    click(document.querySelector('.ycell[data-date="2026-09-19"]'));
+    expect(document.querySelector('[data-testid="day-card"] .emptyday')!.textContent).toBe("Before you started using Pundoku.");
+  });
+
   it("как только появилась запись, пропуски с firstUse возвращаются", () => {
     render([progressOf("2026-09-27")], "2026-09-29", "2026-09-20");
     expect(host.querySelector('[data-testid="year-empty"]')).toBeNull();
@@ -267,7 +284,23 @@ describe("шит месяца и карточка дня", () => {
     // считаются только клетки, которые ставит игрок: заданные не входят ни в N, ни в M
     const toFill = DAYS[4]!.play.mission.filter((g) => g === 0).length;
     expect(toFill).toBeLessThan(81);
-    expect(card.querySelector('[data-testid="unfinished-note"]')!.textContent).toBe(`You started this one and left it with 12 of ${toFill} cells filled in.`);
+    expect(card.querySelector('[data-testid="unfinished-note"]')!.textContent).toBe(
+      `You started this one and left it with 12 of ${toFill} cells filled in correctly.`,
+    );
+  });
+
+  it("брошенный день с неверной цифрой: она не входит в N («correctly»), M не меняется", () => {
+    const base = progressOf("2026-09-13", { solved: false, moves: 12 });
+    const cell = base.play.mission.findIndex((g, i) => g === 0 && base.play.values[i] === 0);
+    const wrong = (base.play.solution[cell]! % 9) + 1;
+    const withWrong = { ...base, play: enterDigit(base.play, cell, wrong, 999_000) };
+    expect(withWrong.play.values.filter((v, i) => v !== 0 && base.play.mission[i] === 0)).toHaveLength(13); // поставлено 13, верных 12
+    render([...DAYS.filter((d) => d.date !== "2026-09-13"), withWrong]);
+    openDay(8, "2026-09-13");
+    const toFill = base.play.mission.filter((g) => g === 0).length;
+    expect(document.querySelector('[data-testid="unfinished-note"]')!.textContent).toBe(
+      `You started this one and left it with 12 of ${toFill} cells filled in correctly.`,
+    );
   });
 
   it("пропущенный день: карточка есть, «Not played.»; будущее и «до начала» — своими словами", () => {

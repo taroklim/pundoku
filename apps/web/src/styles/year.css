@@ -65,40 +65,6 @@
   box-shadow: 0 0 0 1.5px var(--ink);
 }
 
-/* forced-colors: специфичность селекторов должна быть не ниже авторских (`.ymark.has-corr` и т. п.),
-   иначе метки остаются в цветах автора. Заливки и тени система отбрасывает — границы карточек и кнопок
-   дней держит `border` системного цвета; смысл метки (скол угла, форма) от цвета не зависит. */
-@media (forced-colors: active) {
-  .ymark,
-  .ymark.has-corr,
-  .ymark.has-help,
-  .ymark.has-help.has-corr {
-    forced-color-adjust: none;
-    --m: CanvasText;
-  }
-  .ymark.is-missed::before {
-    box-shadow: none;
-    border: 1px solid GrayText;
-  }
-  .ymark.is-today::after {
-    box-shadow: none;
-    border: 1.5px solid Highlight;
-  }
-  .year-month,
-  .ycell:not(.blank),
-  .year-menu {
-    box-shadow: none;
-    border: 1px solid CanvasText;
-  }
-  .ycell.today {
-    box-shadow: none;
-    border: 2px solid Highlight;
-  }
-  .year-menu button[aria-checked="true"] {
-    text-decoration: underline;
-  }
-}
-
 /* ---------- Заголовок, итоги ---------- */
 .year {
   display: flex;
@@ -476,5 +442,41 @@
   }
   .ysheet-scrim {
     transition-duration: 0.16s;
+  }
+}
+
+/* forced-colors: специфичность селекторов должна быть не ниже авторских (`.ymark.has-corr` и т. п.),
+   иначе метки остаются в цветах автора. Заливки и тени система отбрасывает — границы карточек и кнопок
+   дней держит `border` системного цвета; смысл метки (скол угла, форма) от цвета не зависит.
+   Блок стоит в самом конце файла: при равной специфичности побеждает более поздний, а базовые
+   `.year-month`, `.ycell.today` и др. объявлены выше (`year/year-css.test.ts` следит за порядком). */
+@media (forced-colors: active) {
+  .ymark,
+  .ymark.has-corr,
+  .ymark.has-help,
+  .ymark.has-help.has-corr {
+    forced-color-adjust: none;
+    --m: CanvasText;
+  }
+  .ymark.is-missed::before {
+    box-shadow: none;
+    border: 1px solid GrayText;
+  }
+  .ymark.is-today::after {
+    box-shadow: none;
+    border: 1.5px solid Highlight;
+  }
+  .year-month,
+  .ycell:not(.blank),
+  .year-menu {
+    box-shadow: none;
+    border: 1px solid CanvasText;
+  }
+  .ycell.today {
+    box-shadow: none;
+    border: 2px solid Highlight;
+  }
+  .year-menu button[aria-checked="true"] {
+    text-decoration: underline;
   }
 }

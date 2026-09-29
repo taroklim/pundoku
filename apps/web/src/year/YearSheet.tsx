@@ -272,7 +272,7 @@ function DayCard({
         </>
       ) : (
         <p className="emptyday">
-          {mark.kind === "missed" ? t("year.card.notPlayed") : mark.date > ctx.today ? t("year.card.future") : t("year.card.before")}
+          {mark.date > ctx.today ? t("year.card.future") : mark.kind === "missed" ? t("year.card.notPlayed") : mark.date >= ctx.start ? t("year.card.noRecord") : t("year.card.before")}
         </p>
       )}
     </div>
