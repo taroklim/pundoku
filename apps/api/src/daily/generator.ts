@@ -24,6 +24,7 @@ export type EngineDailyPuzzleFn = (date: string, difficulty: string) => EnginePu
 
 export interface EngineModuleLike {
   dailyPuzzle?: unknown;
+  GENERATOR_VERSION?: unknown;
 }
 
 export type EngineLoader = () => Promise<EngineModuleLike>;
@@ -35,15 +36,27 @@ export class EngineGenerator implements PuzzleGenerator {
 
   constructor(private readonly loadEngine: EngineLoader = defaultLoader) {}
 
-  async generateDaily(date: string, difficulty: string): Promise<{ mission: string; solution: string }> {
+  private async engine(): Promise<EngineModuleLike> {
     this.modulePromise ??= this.loadEngine();
-    let mod: EngineModuleLike;
     try {
-      mod = await this.modulePromise;
+      return await this.modulePromise;
     } catch (error) {
       this.modulePromise = undefined;
       throw new Error(`@pundoku/engine не загрузился: ${(error as Error).message}`, { cause: error });
     }
+  }
+
+  /** `GENERATOR_VERSION` движка: по ней сервис отличает актуальные фолбэк-строки от устаревших. */
+  async version(): Promise<number> {
+    const v = (await this.engine()).GENERATOR_VERSION;
+    if (typeof v !== "number" || !Number.isInteger(v)) {
+      throw new Error("@pundoku/engine не экспортирует GENERATOR_VERSION — нужна версия движка с PD-9");
+    }
+    return v;
+  }
+
+  async generateDaily(date: string, difficulty: string): Promise<{ mission: string; solution: string }> {
+    const mod = await this.engine();
     if (typeof mod.dailyPuzzle !== "function") {
       throw new Error("@pundoku/engine не экспортирует dailyPuzzle() — нужна версия движка с PD-8");
     }
