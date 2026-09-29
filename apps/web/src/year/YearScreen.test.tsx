@@ -128,6 +128,32 @@ describe("пустой год", () => {
     expect(openToday).toHaveBeenCalledTimes(1);
   });
 
+  it("firstUse в прошлом и ни одной записи: приглашение есть, пропусков нет (одно правило), кольцо сегодня остаётся", () => {
+    render([], "2026-09-29", "2026-09-20");
+    expect(host.querySelector('[data-testid="year-empty"]')!.textContent).toContain("Your year starts today");
+    expect(host.querySelectorAll(".ymark.is-missed")).toHaveLength(0);
+    expect(mark("2026-09-25").className).toBe("ymark is-void");
+    expect(mark("2026-09-29").className).toBe("ymark is-void is-today");
+    // тот же признак в шите: «до начала» / «сегодня», не «not played»
+    click(month(8));
+    const label = (d: string) => document.querySelector<HTMLElement>(`.ycell[data-date="${d}"]`)!.getAttribute("aria-label")!;
+    expect(label("2026-09-25")).not.toContain("not played");
+    expect(label("2026-09-29")).toContain("today");
+  });
+
+  it("как только появилась запись, пропуски с firstUse возвращаются", () => {
+    render([progressOf("2026-09-27")], "2026-09-29", "2026-09-20");
+    expect(host.querySelector('[data-testid="year-empty"]')).toBeNull();
+    expect(mark("2026-09-25").className).toBe("ymark is-missed");
+  });
+
+  it("итоги в пустом состоянии скрыты от VoiceOver (aria-hidden), с записями — читаются", () => {
+    render([], TODAY, TODAY);
+    expect(host.querySelector('[data-testid="year-totals"]')!.getAttribute("aria-hidden")).toBe("true");
+    render();
+    expect(host.querySelector('[data-testid="year-totals"]')!.hasAttribute("aria-hidden")).toBe(false);
+  });
+
   it("пока данные грузятся (null) — пустого состояния нет", () => {
     render(null);
     expect(host.querySelector('[data-testid="year-empty"]')).toBeNull();
@@ -151,6 +177,20 @@ describe("выбор года", () => {
     expect(host.querySelector(".titlebtn .title")!.textContent).toBe("2025");
     expect(mark("2025-12-30").className).toBe("ymark is-solved");
     expect(host.querySelector('[role="menu"]')).toBeNull();
+  });
+});
+
+describe("выбор года: записи из будущих лет", () => {
+  it("запись из будущего года расширяет список лет и открывает этот год; по умолчанию — текущий", () => {
+    render([progressOf("2027-03-05")], TODAY, TODAY);
+    expect(host.querySelector(".titlebtn .title")!.textContent).toBe("2026");
+    click(host.querySelector(".titlebtn"));
+    const items = [...host.querySelectorAll<HTMLElement>('[role="menuitemradio"]')];
+    expect(items.map((i) => i.textContent)).toEqual(["2027", "2026"]);
+    click(items[0]!);
+    expect(host.querySelector(".titlebtn .title")!.textContent).toBe("2027");
+    expect(mark("2027-03-05").className).toBe("ymark is-solved");
+    expect(month(2).getAttribute("aria-label")).toContain("1 of 31 days solved");
   });
 });
 
@@ -224,7 +264,10 @@ describe("шит месяца и карточка дня", () => {
     openDay(8, "2026-09-13");
     const card = document.querySelector('[data-testid="day-card"]')!;
     expect(card.querySelector(".heat")).toBeNull();
-    expect(card.querySelector(".emptyday")!.textContent).toMatch(/left it at \d+ of 81 cells/);
+    // считаются только клетки, которые ставит игрок: заданные не входят ни в N, ни в M
+    const toFill = DAYS[4]!.play.mission.filter((g) => g === 0).length;
+    expect(toFill).toBeLessThan(81);
+    expect(card.querySelector('[data-testid="unfinished-note"]')!.textContent).toBe(`You started this one and left it with 12 of ${toFill} cells filled in.`);
   });
 
   it("пропущенный день: карточка есть, «Not played.»; будущее и «до начала» — своими словами", () => {

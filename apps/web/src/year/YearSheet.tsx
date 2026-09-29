@@ -190,6 +190,8 @@ function DayCard({
   const locale = i18n.resolvedLanguage ?? "en";
   const solved = progress?.solved === true;
   const showSub = progress !== undefined;
+  // «Сколько поставлено» считается только по клеткам, которые игрок заполняет сам: заданные клетки не в счёт.
+  const toFill = progress ? progress.play.mission.filter((g) => g === 0).length : 0;
 
   const sum = useMemo(() => (progress && solved ? summary(progress.play.log) : null), [progress, solved]);
   const heat = useMemo(
@@ -254,7 +256,7 @@ function DayCard({
         </>
       ) : progress ? (
         <>
-          <p className="emptyday">{t("year.card.unfinishedNote", { n: 81 - cellsLeft(progress.play) })}</p>
+          <p className="emptyday" data-testid="unfinished-note">{t("year.card.unfinishedNote", { n: toFill - cellsLeft(progress.play), total: toFill })}</p>
           {mark.today && (
             <button type="button" className="ghost" onClick={onOpenToday}>
               {t("year.continueToday")}

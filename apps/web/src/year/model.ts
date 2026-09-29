@@ -9,7 +9,8 @@
  *   (`assisted`) — более светлый тон постоянно;
  * - пропущенный день можно доиграть (архив), но в Year он остаётся пропуском: решённый день с
  *   `late = true` рисуется как `missed`;
- * - до начала пользования ни один прошедший день не помечен пропуском; «сегодня» без прогресса — пусто + кольцо.
+ * - до начала пользования ни один прошедший день не помечен пропуском; при нулевых записях пропусков нет вообще;
+ *   «сегодня» без прогресса — пусто + кольцо.
  */
 import { summary } from "@pundoku/engine";
 import type { DayProgress } from "../today/repository";
@@ -74,6 +75,11 @@ export interface YearContext {
   readonly today: string;
   /** Начало пользования (первый день): раньше него пропусков нет. */
   readonly start: string;
+  /**
+   * Есть ли хоть одна запись прогресса. Без записей пропуски не рисуются вовсе: пока игрок ничего не сыграл,
+   * ни один прошедший день не помечен пропуском (даже если `firstUseDate` в прошлом).
+   */
+  readonly hasRecords: boolean;
 }
 
 const pad = (n: number): string => String(n).padStart(2, "0");
@@ -101,8 +107,9 @@ export function markOf(date: string, entry: YearEntry | undefined, ctx: YearCont
     }
     return { ...base, kind: "unfinished", corrections: entry.hadCorrections, assisted: false, late: false, hasRecord: true };
   }
-  // Без записи: пропуск — только прошедший день, и только начиная с первого дня пользования.
-  const missed = date < ctx.today && date >= ctx.start;
+  // Без записи: пропуск — только прошедший день, только начиная с первого дня пользования и только если
+  // у игрока уже есть хоть одна запись (пустое состояние: пропусков нет вообще, кольцо сегодняшнего дня остаётся).
+  const missed = ctx.hasRecords && date < ctx.today && date >= ctx.start;
   return { ...base, kind: missed ? "missed" : "void", corrections: false, assisted: false, late: false, hasRecord: false };
 }
 
@@ -147,4 +154,9 @@ export function startDate(firstUse: string | null, entries: ReadonlyMap<string, 
   let start = firstUse ?? today;
   for (const date of entries.keys()) if (date < start) start = date;
   return start;
+}
+
+/** Контекст полотна: сегодня, начало пользования и признак «записи есть» — единое правило для полотна и шита. */
+export function yearContext(firstUse: string | null, entries: ReadonlyMap<string, YearEntry>, today: string): YearContext {
+  return { today, start: startDate(firstUse, entries, today), hasRecords: entries.size > 0 };
 }

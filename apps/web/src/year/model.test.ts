@@ -2,9 +2,9 @@ import { describe, expect, it } from "vitest";
 import { NOW, progressOf } from "../sync/fixtures";
 import { dayRecordFromProgress } from "../sync/schema";
 import type { YearContext, YearEntry } from "./model";
-import { availableYears, buildYear, daysInMonth, entryFromProgress, markOf, startDate } from "./model";
+import { availableYears, buildYear, daysInMonth, entryFromProgress, markOf, startDate, yearContext } from "./model";
 
-const ctx: YearContext = { today: "2026-09-29", start: "2026-09-10" };
+const ctx: YearContext = { today: "2026-09-29", start: "2026-09-10", hasRecords: true };
 const solved: YearEntry = { status: "solved", hadCorrections: false, assisted: false, late: false };
 
 describe("метка дня: форма и цвет (решения владельца по Year)", () => {
@@ -82,8 +82,26 @@ describe("сборка года", () => {
   });
 
   it("пустой год: ни одного пропуска до начала пользования", () => {
-    const v = buildYear(2026, new Map(), { today: "2026-09-29", start: "2026-09-29" });
+    const v = buildYear(2026, new Map(), { today: "2026-09-29", start: "2026-09-29", hasRecords: false });
     expect(v.months.flatMap((m) => m.days).filter((d) => d.kind !== "void")).toEqual([]);
+  });
+});
+
+describe("нулевые записи: пропусков нет, даже если первый запуск в прошлом", () => {
+  const empty: YearContext = { today: "2026-09-29", start: "2026-09-20", hasRecords: false };
+  it("markOf: прошедший день после firstUse без записей — void, сегодня — void с кольцом", () => {
+    expect(markOf("2026-09-25", undefined, empty).kind).toBe("void");
+    expect(markOf("2026-09-29", undefined, empty)).toMatchObject({ kind: "void", today: true });
+  });
+  it("buildYear: ни одной метки кроме void; как только появилась запись — пропуски возвращаются", () => {
+    const v = buildYear(2026, new Map(), empty);
+    expect(v.months.flatMap((m) => m.days).filter((d) => d.kind !== "void")).toEqual([]);
+    const withRecord = buildYear(2026, new Map([["2026-09-27", solved]]), { ...empty, hasRecords: true });
+    expect(withRecord.months[8]!.days.filter((d) => d.kind === "missed").map((d) => d.date)).toContain("2026-09-25");
+  });
+  it("yearContext: hasRecords по числу записей, start как в startDate", () => {
+    expect(yearContext("2026-09-20", new Map(), "2026-09-29")).toEqual(empty);
+    expect(yearContext("2026-09-20", new Map([["2026-09-27", solved]]), "2026-09-29")).toEqual({ ...empty, hasRecords: true });
   });
 });
 
@@ -97,9 +115,10 @@ describe("годы и начало пользования", () => {
   });
 
   it("availableYears: от начала до сегодня, запись из будущего расширяет диапазон", () => {
-    expect(availableYears(new Map(), { today: "2026-09-29", start: "2026-09-29" })).toEqual([2026]);
-    expect(availableYears(new Map(), { today: "2026-01-02", start: "2025-12-31" })).toEqual([2025, 2026]);
+    expect(availableYears(new Map(), { today: "2026-09-29", start: "2026-09-29", hasRecords: false })).toEqual([2026]);
+    expect(availableYears(new Map(), { today: "2026-01-02", start: "2025-12-31", hasRecords: false })).toEqual([2025, 2026]);
     expect(availableYears(new Map([["2024-05-05", solved]]), ctx)).toEqual([2024, 2025, 2026]);
+    expect(availableYears(new Map([["2028-05-05", solved]]), ctx)).toEqual([2026, 2027, 2028]);
   });
 });
 

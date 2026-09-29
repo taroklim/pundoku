@@ -5,7 +5,7 @@ import type { DayProgress } from "../today/repository";
 import { monthName } from "./format";
 import { markClass, monthAriaLabel } from "./labels";
 import type { YearEntry } from "./model";
-import { availableYears, buildYear, entryFromProgress, startDate, yearOfDate } from "./model";
+import { availableYears, buildYear, entryFromProgress, yearContext, yearOfDate } from "./model";
 import type { SheetState } from "./YearSheet";
 import { SHEET_MS, YearSheet } from "./YearSheet";
 
@@ -44,7 +44,7 @@ export function YearScreen({ days, firstUse, today, onOpenToday }: YearScreenPro
     return { entries, progress };
   }, [days]);
 
-  const ctx = useMemo(() => ({ today, start: startDate(firstUse, entries, today) }), [today, firstUse, entries]);
+  const ctx = useMemo(() => yearContext(firstUse, entries, today), [today, firstUse, entries]);
   const years = useMemo(() => availableYears(entries, ctx), [entries, ctx]);
   const [picked, setPicked] = useState<number | null>(null);
   const year = picked !== null && years.includes(picked) ? picked : yearOfDate(today);

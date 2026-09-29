@@ -129,7 +129,7 @@
     },
     "card": {
       "dailyPuzzle": "daily puzzle",
-      "unfinishedNote": "You started this one and left it at {{n}} of 81 cells.",
+      "unfinishedNote": "You started this one and left it with {{n}} of {{total}} cells filled in.",
       "notPlayed": "Not played.",
       "todayWaiting": "Today’s puzzle is waiting.",
       "future": "This day hasn’t happened yet.",
