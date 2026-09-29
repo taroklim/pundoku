@@ -2,14 +2,16 @@ import type { PuzzleGenerator } from "./types.js";
 import { MISSION_RE, SOLUTION_RE } from "./types.js";
 
 /**
- * Тонкий адаптер к генератору @pundoku/engine для фолбэка сетки дня (seed = дата).
+ * Тонкий адаптер к @pundoku/engine для фолбэка сетки дня.
  *
- * TODO(PD-2): движок пишется параллельно в ветке `pd-2`. Ожидаемый API движка:
- *   `generate({ difficulty, seed }) => Puzzle { givens: Grid; solution: Grid }` (Grid — 81 число 0..9).
- * Точка подключения — константа ENGINE_SPECIFIER + `loadEngine` ниже: модуль грузится динамически,
- * чтобы typecheck/тесты api не зависели от собранного dist движка. После мержа PD-2 в main можно
- * заменить на статический `import { generate } from "@pundoku/engine"` и убрать проверку типа `generate`.
- * Если в движке имя/сигнатура окажутся другими — править только `callGenerate`.
+ * ЕДИНАЯ seed-конвенция сетки дня: фолбэк = `dailyPuzzle(date, difficulty)` движка
+ * (seed = `dailySeed(date, difficulty)`, например `2026-09-29/hard`). Сервер и офлайн-клиент
+ * обязаны звать именно эти функции, а не собирать seed вручную (`seed: date` даёт другую сетку) —
+ * иначе клиент без сети покажет не ту сетку, что закэшировал сервер. Закреплено тестом
+ * `generator.test.ts` (api-фолбэк === `dailyPuzzle` движка).
+ *
+ * Модуль движка грузится динамически (`loadEngine`), чтобы typecheck/тесты api не зависели от
+ * собранного dist движка; в тестах подменяется фейком.
  */
 const ENGINE_SPECIFIER = "@pundoku/engine";
 
@@ -18,10 +20,10 @@ export interface EnginePuzzleLike {
   solution: ArrayLike<number>;
 }
 
-export type EngineGenerateFn = (options: { difficulty: string; seed: string }) => EnginePuzzleLike | Promise<EnginePuzzleLike>;
+export type EngineDailyPuzzleFn = (date: string, difficulty: string) => EnginePuzzleLike | Promise<EnginePuzzleLike>;
 
 export interface EngineModuleLike {
-  generate?: unknown;
+  dailyPuzzle?: unknown;
 }
 
 export type EngineLoader = () => Promise<EngineModuleLike>;
@@ -33,7 +35,7 @@ export class EngineGenerator implements PuzzleGenerator {
 
   constructor(private readonly loadEngine: EngineLoader = defaultLoader) {}
 
-  async generate(seed: string, difficulty: string): Promise<{ mission: string; solution: string }> {
+  async generateDaily(date: string, difficulty: string): Promise<{ mission: string; solution: string }> {
     this.modulePromise ??= this.loadEngine();
     let mod: EngineModuleLike;
     try {
@@ -42,10 +44,10 @@ export class EngineGenerator implements PuzzleGenerator {
       this.modulePromise = undefined;
       throw new Error(`@pundoku/engine не загрузился: ${(error as Error).message}`, { cause: error });
     }
-    if (typeof mod.generate !== "function") {
-      throw new Error("@pundoku/engine пока не экспортирует generate() — генератор появится с PD-2");
+    if (typeof mod.dailyPuzzle !== "function") {
+      throw new Error("@pundoku/engine не экспортирует dailyPuzzle() — нужна версия движка с PD-8");
     }
-    const puzzle = await callGenerate(mod.generate as EngineGenerateFn, seed, difficulty);
+    const puzzle = await (mod.dailyPuzzle as EngineDailyPuzzleFn)(date, difficulty);
     const mission = gridToString(puzzle.givens);
     const solution = gridToString(puzzle.solution);
     if (!MISSION_RE.test(mission) || !SOLUTION_RE.test(solution)) {
@@ -53,10 +55,6 @@ export class EngineGenerator implements PuzzleGenerator {
     }
     return { mission, solution };
   }
-}
-
-function callGenerate(generate: EngineGenerateFn, seed: string, difficulty: string): Promise<EnginePuzzleLike> {
-  return Promise.resolve(generate({ difficulty, seed }));
 }
 
 function gridToString(grid: ArrayLike<number>): string {

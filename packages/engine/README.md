@@ -63,7 +63,13 @@ pnpm --filter @pundoku/engine build       # dist/ (ESM + .d.ts)
 
 - `generate({ difficulty, seed, maxAttempts? }) → Puzzle` — детерминированно по seed.
 - `dailySeed(date, difficulty) → string` (`'2026-09-29/medium'`) и
-  `dailyPuzzle(date, difficulty)` — фолбэк сетки дня, seed = дата.
+  `dailyPuzzle(date, difficulty)` — фолбэк сетки дня.
+  **Единая seed-конвенция сетки дня:** и сервер (`apps/api`), и офлайн-клиент получают фолбэк
+  только через `dailyPuzzle(date, difficulty)` (или `generate({ seed: dailySeed(date, difficulty) })`).
+  Seed вручную не собирать: `generate({ seed: '2026-09-29' })` — это ДРУГАЯ сетка, и клиент без
+  сети разошёлся бы с закэшированной сервером. Дата валидируется (`RangeError` на `2026-02-30`).
+  Сложность фолбэка на сервере — `DAILY_FALLBACK_DIFFICULTY` (по умолчанию `hard`), клиент обязан
+  брать ту же (её отдаёт `GET /api/daily/:date` в поле `difficulty`).
 - `GenerationError` — класс сложности не достигнут за `maxAttempts` (по умолчанию 100; на
   практике хватает единиц попыток).
 - `Rng` — PRNG xoshiro128\*\* от строкового seed (экспортирован для тестов/отладки).

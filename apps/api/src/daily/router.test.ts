@@ -39,14 +39,14 @@ describe("GET /api/daily/:date", () => {
     expect(dailySource.calls).toEqual(["2026-09-30"]);
   });
 
-  it("источник 403/ошибка → фолбэк на генератор с seed = дата, сохраняется как generator", async () => {
+  it("источник 403/ошибка → фолбэк на генератор (передаётся дата, seed собирает движок), сохраняется как generator", async () => {
     const { app, generator, repos } = buildTestApp({ dailySource: new FakeSource({ kind: "error", reason: "HTTP 403" }) });
     const res = await request(app).get("/api/daily/2026-09-28");
     expect(res.status).toBe(200);
     expect(res.body.source).toBe("generator");
     expect(res.body.winRate).toBeUndefined();
     expect(res.body.difficulty).toBe("hard");
-    expect((generator as FakeGenerator).calls).toEqual([{ seed: "2026-09-28", difficulty: "hard" }]);
+    expect((generator as FakeGenerator).calls).toEqual([{ date: "2026-09-28", difficulty: "hard" }]);
     expect(repos.dailyPuzzles.rows.get("2026-09-28")?.source).toBe("generator");
   });
 
@@ -57,7 +57,7 @@ describe("GET /api/daily/:date", () => {
     expect(res.status).toBe(404);
     expect(res.body.error.code).toBe("not_available_yet");
     expect(repos.dailyPuzzles.rows.has("2026-09-30")).toBe(false);
-    expect((generator as FakeGenerator).calls.map((c) => c.seed)).toEqual(["2026-09-29"]);
+    expect((generator as FakeGenerator).calls.map((c) => c.date)).toEqual(["2026-09-29"]);
   });
 
   it("источник и генератор оба упали → 500 в JSON-формате", async () => {

@@ -13,7 +13,7 @@ export interface DailyServiceDeps {
 }
 
 /**
- * Сетка дня: кэш → Sudoku.com → генератор (seed = дата). Что бы ни стало источником —
+ * Сетка дня: кэш → Sudoku.com → генератор (`dailyPuzzle` движка: seed = `dailySeed(date, difficulty)`). Что бы ни стало источником —
  * результат сохраняется навсегда, чтобы у всех клиентов на эту дату была одна и та же сетка.
  *
  * Правила по датам (всё в UTC):
@@ -63,7 +63,7 @@ export class DailyService {
     }
 
     logger.warn({ date, result }, "daily: Sudoku.com недоступен, генерируем сетку по seed = дата");
-    const generated = await generator.generate(date, this.deps.fallbackDifficulty);
+    const generated = await generator.generateDaily(date, this.deps.fallbackDifficulty);
     return repo.insertIfAbsent({
       date,
       mission: generated.mission,

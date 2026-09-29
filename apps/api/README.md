@@ -88,14 +88,17 @@ GET https://sudoku.com/api/v2/dc/YYYY-MM-DD      X-Requested-With: XMLHttpReques
 ```
 
 Цепочка в `src/daily/service.ts`: кэш `daily_puzzles` → Sudoku.com → генератор `@pundoku/engine`
-с seed = дата. Что бы ни стало источником, строка сохраняется навсегда — у всех клиентов одна
+(`dailyPuzzle(date, difficulty)`, seed = `dailySeed(date, difficulty)`, напр. `2026-09-29/hard`).
+**Seed-конвенция сетки дня едина для сервера и офлайн-клиента:** фолбэк — только `dailyPuzzle` движка,
+не `generate({ seed: date })` (это другая сетка). Закреплено тестом `src/daily/generator.test.ts`
+(api-фолбэк === `dailyPuzzle` движка). Что бы ни стало источником, строка сохраняется навсегда — у всех клиентов одна
 сетка на дату. Таймаут запроса — `SUDOKU_COM_TIMEOUT_MS`; 403/таймаут/невалидный JSON/несогласованные
 mission+solution → фолбэк.
 
-**Точка подключения движка (PD-2):** `src/daily/generator.ts`, `EngineGenerator` — ожидает
-`generate({ difficulty, seed }) → { givens, solution }` (81 число 0..9 / 1..9). Модуль грузится
-динамически, чтобы typecheck/тесты api не зависели от собранного движка; пока в `main` заглушка,
-фолбэк отвечает `500 internal`.
+**Точка подключения движка:** `src/daily/generator.ts`, `EngineGenerator.generateDaily(date, difficulty)` —
+вызывает `dailyPuzzle(date, difficulty)` → `{ givens, solution }` (81 число 0..9 / 1..9). Модуль
+грузится динамически, чтобы typecheck api не зависел от собранного движка (для тестов и запуска
+движок должен быть собран: `pnpm build`).
 
 ## Схема БД
 

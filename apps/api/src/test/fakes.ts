@@ -68,13 +68,13 @@ export class FakeSource implements DailyPuzzleSource {
 }
 
 export class FakeGenerator implements PuzzleGenerator {
-  readonly calls: Array<{ seed: string; difficulty: string }> = [];
+  readonly calls: Array<{ date: string; difficulty: string }> = [];
   constructor(public shouldFail = false) {}
-  async generate(seed: string, difficulty: string) {
-    this.calls.push({ seed, difficulty });
+  async generateDaily(date: string, difficulty: string) {
+    this.calls.push({ date, difficulty });
     if (this.shouldFail) throw new Error("generator boom");
-    // Детерминированно по seed, но валидно по формату: берём решение SAMPLE и «прячем» клетки по seed.
-    const hide = seed.length % 9;
+    // Детерминированно по дате, но валидно по формату: берём решение SAMPLE и «прячем» клетки по дате.
+    const hide = Number(date.slice(-2)) % 9;
     const mission = SAMPLE.solution.split("").map((c, i) => (i % 9 === hide ? "0" : c)).join("");
     return { mission, solution: SAMPLE.solution };
   }

@@ -31,9 +31,13 @@ export interface DailyPuzzleSource {
   fetch(date: string): Promise<SourceResult>;
 }
 
-/** Генератор для фолбэка. Реализация — адаптер к @pundoku/engine (generator.ts). */
+/**
+ * Генератор для фолбэка. Реализация — адаптер к @pundoku/engine (generator.ts).
+ * Принимает именно ДАТУ, а не seed: seed собирает движок (`dailySeed`), чтобы у сервера и
+ * офлайн-клиента была единая конвенция сетки дня.
+ */
 export interface PuzzleGenerator {
-  generate(seed: string, difficulty: string): Promise<{ mission: string; solution: string }>;
+  generateDaily(date: string, difficulty: string): Promise<{ mission: string; solution: string }>;
 }
 
 /** Публичный ответ GET /api/daily/:date — без solution. */
