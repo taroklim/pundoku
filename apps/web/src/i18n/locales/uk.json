@@ -14,5 +14,56 @@
   },
   "screens": {
     "soon": "Скоро"
+  },
+  "board": {
+    "label": "Сітка судоку",
+    "cellClue": "Рядок {{row}}, стовпець {{col}}, підказка {{digit}}",
+    "cellYours": "Рядок {{row}}, стовпець {{col}}, ваша {{digit}}",
+    "cellWrong": "Рядок {{row}}, стовпець {{col}}, ваша {{digit}}, помилка",
+    "cellNotes": "Рядок {{row}}, стовпець {{col}}, нотатки {{notes}}",
+    "cellEmpty": "Рядок {{row}}, стовпець {{col}}, порожньо"
+  },
+  "difficulty": {
+    "easy": "Легко",
+    "medium": "Середньо",
+    "hard": "Складно",
+    "expert": "Експерт",
+    "master": "Майстер"
+  },
+  "play": {
+    "difficulty": "Складність",
+    "preparing": "Готуємо головоломку…",
+    "failed": "Не вдалося підготувати головоломку.",
+    "retry": "Спробувати ще",
+    "cellsLeft_one": "Залишилась {{count}} клітинка",
+    "cellsLeft_few": "Залишилось {{count}} клітинки",
+    "cellsLeft_many": "Залишилось {{count}} клітинок",
+    "cellsLeft_other": "Залишилось {{count}} клітинки"
+  },
+  "pad": {
+    "label": "Цифрова панель",
+    "key": "Ввести {{digit}}, залишилось: {{n}}"
+  },
+  "actions": {
+    "notes": "Нотатки",
+    "undo": "Скасувати",
+    "erase": "Стерти"
+  },
+  "solved": {
+    "title": "Розв’язано",
+    "time": "Час",
+    "corrections": "Виправлення",
+    "clean": "чисто",
+    "technique": "Досягнута техніка",
+    "share": "Поділитися",
+    "newGame": "Нова гра"
+  },
+  "technique": {
+    "naked_single": "Відкрита одиночка",
+    "hidden_single": "Прихована одиночка",
+    "locked_candidates": "Заблоковані кандидати",
+    "naked_pair": "Відкрита пара",
+    "hidden_pair": "Прихована пара",
+    "beyond": "Складна техніка"
   }
 }

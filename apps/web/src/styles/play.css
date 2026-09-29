@@ -1,0 +1,650 @@
+/*
+ * Экран Play (PD-11): поле B Boxes, панель 1–9, действия, карточка «решено», движение M1/M2/M3/M6.
+ * Значения — из утверждённого макета design/pd7-board-variants.html (разделы 4, 5, 6, 8, 9);
+ * цвета — только токены tokens.css. Отклонения от макета помечены «ОТКЛОНЕНИЕ».
+ */
+.play {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ---------- Выбор сложности — ПРОВИЗОРНЫЙ нативный контрол (нет в макете, не утверждён) ---------- */
+.difficulty {
+  /* Нативный вид select, только токены v2. 1rem = 16px: iOS не приближает страницу при фокусе. */
+  font: inherit;
+  font-size: 1rem;
+  color: var(--ink);
+  background: var(--ink-tint);
+  border: 0;
+  border-radius: 10px;
+  padding: 6px 10px;
+  min-height: 36px;
+  margin-bottom: 2px;
+  max-width: 45%;
+}
+
+.subline .clock {
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- Поле ---------- */
+.board-wrap {
+  padding: 12px max(16px, var(--sa-r)) 0 max(16px, var(--sa-l));
+  container-type: inline-size;
+}
+.board {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--box-gap);
+  /* Размер клетки: (ширина − 2 зазора) / 9. cqi — от .board-wrap. */
+  --s: calc((100cqi - 2 * var(--box-gap)) / 9);
+}
+.box {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  border-radius: var(--box-radius);
+  overflow: hidden;
+  background: var(--surface);
+  box-shadow: var(--box-shadow);
+}
+.cell {
+  position: relative;
+  aspect-ratio: 1;
+  min-width: 0;
+  min-height: 0;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  background: var(--surface);
+  /* Радиус кольца ошибки; углы боксов переопределяют его ниже. */
+  --r-tl: 4px;
+  --r-tr: 4px;
+  --r-br: 4px;
+  --r-bl: 4px;
+}
+/* Угловые клетки блока: кольцо ошибки повторяет скругление бокса (10), а не режется им. */
+.box > .cell:nth-child(1) {
+  --r-tl: var(--box-radius);
+}
+.box > .cell:nth-child(3) {
+  --r-tr: var(--box-radius);
+}
+.box > .cell:nth-child(7) {
+  --r-bl: var(--box-radius);
+}
+.box > .cell:nth-child(9) {
+  --r-br: var(--box-radius);
+}
+/* Фокус несёт кольцо выбора (оно всегда на сфокусированной клетке); своя обводка не нужна. */
+.cell:focus-visible {
+  outline: none;
+}
+.cell > .fl,
+.cell.wave::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: var(--ink);
+  opacity: 0;
+}
+/* Волна M3 живёт в ::before клетки под цифрой; над заливкой .fl, но под .d (z-index 2). */
+.cell.wave::before {
+  z-index: 1;
+}
+.fl {
+  transition: opacity 0.16s linear;
+}
+/* Соседи (ряд/колонка/блок) НЕ заливаются — решение по проходу 2. */
+.cell.same > .fl {
+  opacity: var(--fill-same);
+}
+.cell.sel > .fl {
+  opacity: var(--fill-sel);
+}
+
+.cell .d {
+  position: relative;
+  z-index: 2;
+  line-height: 1;
+  font-size: 6.5cqi;
+}
+.cell .d.given {
+  font-family: var(--font-serif);
+  font-weight: 600; /* New York Semibold */
+  color: var(--label);
+}
+.cell .d.player {
+  font-family: var(--font-sans);
+  font-weight: 500; /* SF Medium */
+  color: var(--ink);
+}
+.cell .d.err {
+  color: var(--wax);
+}
+
+/* Ошибка — кольцо «сургуч» 2 px + цифра сургучом, без тряски (M4, 120 мс).
+   Рамка, а не inset box-shadow: в forced-colors тени отключаются, рамка остаётся. */
+.cell.err::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  pointer-events: none;
+  border: 2px solid var(--wax);
+  border-radius: var(--r-tl) var(--r-tr) var(--r-br) var(--r-bl);
+  animation: ringIn 120ms linear;
+}
+
+/* Заметки 3×3.
+   Шрифт 11 px и на 393pt, и на 320pt (макет опускал до 10 px и фиксировал отклонение для
+   iPhone SE — здесь отклонения нет: 11 px = минимум accessibility.md). Слот заметки на 320pt —
+   ≈9.6 pt при высоте цифры ≈8 pt: глифы не касаются. Вес не легче Regular. */
+.marks {
+  position: absolute;
+  inset: 0;
+  box-sizing: border-box;
+  z-index: 2;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-rows: repeat(3, minmax(0, 1fr));
+  padding: 4%;
+}
+.marks span {
+  min-height: 0;
+  overflow: visible;
+  font-size: 11px;
+  line-height: 1;
+  font-weight: 400;
+  letter-spacing: -0.02em;
+  color: var(--notes);
+  display: grid;
+  place-items: center;
+}
+.cell.same .marks span,
+.cell.sel .marks span {
+  color: var(--notes-fill);
+}
+
+/* Hairline внутри блока (вариант B): 1 px @2x, при 50 % прозрачности. */
+.rules {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 3;
+  pointer-events: none;
+}
+.rules .thin {
+  stroke: var(--rule-thin);
+  stroke-width: var(--rule-thin-w);
+  vector-effect: non-scaling-stroke;
+  opacity: 0.5;
+}
+
+/* Кольцо выбора — один элемент, который переезжает (M2, 160 мс, spring-ease).
+   Радиус 4 (low-замечание прохода 2: прямой угол на скруглённом боксе). */
+.ring {
+  position: absolute;
+  left: 0;
+  top: 0;
+  z-index: 4;
+  pointer-events: none;
+  width: var(--s);
+  height: var(--s);
+  border: 2px solid var(--ink);
+  border-radius: 4px;
+  transform: translate(
+    calc(var(--c) * var(--s) + var(--bc) * var(--box-gap)),
+    calc(var(--r) * var(--s) + var(--br) * var(--box-gap))
+  );
+  transition: transform 0.16s cubic-bezier(0.32, 0.72, 0, 1);
+  animation: ringIn 120ms linear;
+}
+/* Выбрана неверная клетка: кольцо выбора закрывало бы сургучное, и ошибку было бы видно только
+   по цвету цифры. Двойное кольцо: сургуч снаружи (border), индиго внутри (inset-тень);
+   оба по 2 px, контраст каждого — как у одиночных колец. */
+.ring.err {
+  border-color: var(--wax);
+  box-shadow: inset 0 0 0 2px var(--ink);
+}
+@media (prefers-contrast: more) {
+  .ring {
+    border-width: 3px;
+  }
+  .ring.err {
+    box-shadow: inset 0 0 0 3px var(--ink);
+  }
+}
+
+/* Перед карточкой «решено» данные гаснут до 60 %. */
+.board.dim .d.given,
+.board.dim .d.player {
+  opacity: 0.6;
+  transition: opacity 240ms linear;
+}
+
+/* Загрузка: та же структура (9 блоков), спокойный пульс — без спиннера. */
+.board.idle {
+  opacity: 0.55;
+}
+.board[data-phase="loading"] {
+  animation: calm 1.6s ease-in-out infinite;
+}
+
+/* ---------- Зазор между полем и панелью: статус ---------- */
+.gap {
+  flex: 1 1 auto;
+  min-height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 16px;
+}
+.status {
+  margin: 0;
+  color: var(--label-2);
+  font-size: 0.88rem;
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+}
+.link {
+  color: var(--ink);
+  font-weight: 600;
+  text-decoration: underline;
+}
+
+/* ---------- Панель 1–9 ---------- */
+.pad-wrap {
+  padding: 0 max(16px, var(--sa-r)) 0 max(16px, var(--sa-l));
+}
+/* Один ряд с остатками. gap 4 (в макете 5): на 320pt клавиша = (288 − 8·4) / 9 = 28.4pt ≥ 28pt
+   минимума accessibility.md; на 393pt — 36.6pt. ОТКЛОНЕНИЕ: макет ниже 360pt сворачивает панель
+   в 5+4 — здесь всегда один ряд (решение владельца, ТЗ PD-11). */
+.pad {
+  display: grid;
+  grid-template-columns: repeat(9, 1fr);
+  gap: 4px;
+}
+.key {
+  min-width: 0;
+  min-height: 56px;
+  border-radius: 9px;
+  background: var(--key-bg);
+  color: var(--label);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1px;
+  transition:
+    background-color 0.12s linear,
+    color 0.12s linear,
+    transform 0.22s cubic-bezier(0.34, 1.36, 0.52, 1);
+}
+.key .kd {
+  font-size: clamp(18px, 1.24rem, 23px);
+  font-weight: 500;
+  line-height: 1.05;
+}
+.key .kr {
+  font-size: 11px;
+  line-height: 1;
+  color: var(--label-2);
+  font-variant-numeric: tabular-nums;
+}
+/* M6 — нажатие: фон, scale .96, 80 мс; отпустили — spring назад. */
+.key:active:not(:disabled) {
+  background: var(--ink-tint);
+  color: var(--ink);
+  transform: scale(0.96);
+  transition-duration: 0.08s, 0.08s, 0.08s;
+}
+/* Закрытые цифры приглушены, не спрятаны; «0» дублирует смысл текстом. */
+.key.done {
+  opacity: 0.4;
+}
+.key:disabled,
+.act:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+@media (max-height: 640px) {
+  .key {
+    min-height: 46px;
+  }
+}
+
+.actions {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  padding: 10px 0 14px;
+}
+.act {
+  min-width: 0;
+  min-height: 46px;
+  border-radius: 11px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 4px 6px;
+  color: var(--label-2);
+  font-size: clamp(12px, 0.82rem, 15px);
+  transition:
+    background-color 0.12s linear,
+    color 0.12s linear,
+    transform 0.22s cubic-bezier(0.34, 1.36, 0.52, 1);
+}
+/* Подпись никогда не переносится (иначе кнопка выше соседей): если не влезла — многоточие. */
+.act > span {
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+/* Узкие экраны (iPhone SE, 320pt): «Скасувати»/«Отменить» рядом с иконкой не помещаются в
+   ~91pt кнопки, поэтому иконка над подписью — у всех трёх кнопок ряда, высота одна. */
+@media (max-width: 359px) {
+  .act {
+    flex-direction: column;
+    gap: 2px;
+    padding: 4px 2px;
+  }
+}
+.act svg {
+  width: 19px;
+  height: 19px;
+  flex: none;
+}
+.act[aria-pressed="true"] {
+  background: var(--ink-tint);
+  color: var(--ink);
+  font-weight: 600;
+}
+.act[aria-disabled="true"] {
+  opacity: 0.4;
+  cursor: default;
+}
+.act:active:not(:disabled):not([aria-disabled="true"]) {
+  background: var(--ink-tint);
+  transform: scale(0.97);
+  transition-duration: 0.08s;
+}
+
+/* ---------- Карточка «решено» ---------- */
+.card {
+  background: var(--card);
+  border-radius: 18px;
+  margin: 14px max(16px, var(--sa-r)) 0 max(16px, var(--sa-l));
+  padding: 16px;
+  animation: cardUp 300ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+.card:focus-visible {
+  outline-offset: 2px;
+}
+.card h2 {
+  font-size: 1rem;
+  font-weight: 600;
+  margin: 0 0 2px;
+}
+.rows {
+  margin: 14px 0 0;
+  border-top: 1px solid var(--hairline);
+}
+.row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  padding: 9px 0;
+  border-bottom: 1px solid var(--hairline);
+  font-size: 0.9rem;
+}
+.row dt {
+  color: var(--label-2);
+  margin: 0;
+  font-size: 0.82rem;
+}
+.row dd {
+  margin: 0;
+  font-weight: 600;
+}
+.row dd.mono {
+  font-variant-numeric: tabular-nums;
+}
+.share {
+  margin-top: 12px;
+  width: 100%;
+  min-height: 46px;
+  border-radius: 11px;
+  background: var(--ink);
+  color: var(--on-ink);
+  font-size: 0.95rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+.share:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+.share svg {
+  width: 19px;
+  height: 19px;
+}
+.newgame {
+  margin-top: 8px;
+  width: 100%;
+  min-height: 46px;
+  border-radius: 11px;
+  color: var(--ink);
+  background: var(--ink-tint);
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+/* Low-замечание прохода 2: состояние «решено» — первый экран заканчивается на кнопках,
+   Share не режется маской таб-бара. Запас снизу + scroll-edge маска, как в макете. */
+.play:has(.card) {
+  padding-bottom: 28px;
+}
+.scroll:has(.card) {
+  -webkit-mask-image: linear-gradient(
+    to bottom,
+    #000 calc(100% - 86px - var(--sa-bot)),
+    rgba(0, 0, 0, 0.35) calc(100% - 58px - var(--sa-bot)),
+    rgba(0, 0, 0, 0.35) 100%
+  );
+  mask-image: linear-gradient(
+    to bottom,
+    #000 calc(100% - 86px - var(--sa-bot)),
+    rgba(0, 0, 0, 0.35) calc(100% - 58px - var(--sa-bot)),
+    rgba(0, 0, 0, 0.35) 100%
+  );
+}
+@media (prefers-reduced-transparency: reduce), (prefers-contrast: more) {
+  .scroll:has(.card) {
+    -webkit-mask-image: none;
+    mask-image: none;
+  }
+}
+
+/* ---------- Движение ---------- */
+@keyframes inkSet {
+  from {
+    transform: scale(1.25);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+@keyframes inkFade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes unitWave {
+  0% {
+    opacity: 0;
+  }
+  40% {
+    opacity: 0.15;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+/* Копия unitWave под другим именем: чередование wave-a/wave-b перезапускает анимацию
+   у клетки, которая входит в две волны подряд. */
+@keyframes unitWave2 {
+  0% {
+    opacity: 0;
+  }
+  40% {
+    opacity: 0.15;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+@keyframes unitTint {
+  0% {
+    opacity: 0;
+  }
+  45% {
+    opacity: 0.12;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+@keyframes unitTint2 {
+  0% {
+    opacity: 0;
+  }
+  45% {
+    opacity: 0.12;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+@keyframes ringIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes cardUp {
+  from {
+    transform: translateY(24px);
+    opacity: 0;
+  }
+  to {
+    transform: none;
+    opacity: 1;
+  }
+}
+@keyframes cardFade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes calm {
+  0%,
+  100% {
+    opacity: 0.55;
+  }
+  50% {
+    opacity: 0.8;
+  }
+}
+
+/* M1: цифра — scale 1.25→1 + opacity, 180 мс ease-out («чернила впитались»). */
+.d.anim-in {
+  animation: inkSet 180ms cubic-bezier(0.2, 0.7, 0.3, 1);
+}
+/* M3: одна волна заливки чернил 15 %→0 по юниту; 156 мс + 8 мс на клетку ≈ 220 мс суммарно. */
+.cell.wave-a::before {
+  animation: unitWave 156ms ease-out;
+  animation-delay: calc(var(--wi, 0) * 8ms);
+}
+.cell.wave-b::before {
+  animation: unitWave2 156ms ease-out;
+  animation-delay: calc(var(--wi, 0) * 8ms);
+}
+
+/* ---------- Reduced motion (таблица спеки PD-7): ни transform, ни scale, ни перемещений —
+   остаются короткие кроссфейды непрозрачности. ---------- */
+@media (prefers-reduced-motion: reduce) {
+  .ring {
+    transition: none;
+  }
+  .d.anim-in {
+    animation: inkFade 120ms linear;
+  }
+  .cell.wave-a::before {
+    animation: unitTint 130ms linear;
+    animation-delay: 0ms;
+  }
+  .cell.wave-b::before {
+    animation: unitTint2 130ms linear;
+    animation-delay: 0ms;
+  }
+  .card {
+    animation: cardFade 140ms linear;
+  }
+  .board[data-phase="loading"] {
+    animation: none;
+  }
+  .board.dim .d.given,
+  .board.dim .d.player {
+    transition: opacity 140ms linear;
+  }
+  .key,
+  .act {
+    transition:
+      background-color 0.12s linear,
+      color 0.12s linear;
+  }
+  .key:active:not(:disabled),
+  .act:active:not(:disabled):not([aria-disabled="true"]) {
+    transform: none;
+  }
+}
+
+/* Windows High Contrast / forced-colors: заливки не рисуются, поэтому выбор держит кольцо,
+   ошибка — рамка; «та же цифра» получает подчёркивание. */
+@media (forced-colors: active) {
+  .ring {
+    border-color: Highlight;
+  }
+  .ring.err {
+    border-color: Mark;
+    box-shadow: none;
+  }
+  .cell.err::after {
+    border-color: Mark;
+  }
+  .cell.same .d {
+    text-decoration: underline;
+  }
+  .act[aria-pressed="true"] {
+    outline: 2px solid Highlight;
+  }
+}
