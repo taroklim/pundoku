@@ -65,8 +65,14 @@
   box-shadow: 0 0 0 1.5px var(--ink);
 }
 
+/* forced-colors: специфичность селекторов должна быть не ниже авторских (`.ymark.has-corr` и т. п.),
+   иначе метки остаются в цветах автора. Заливки и тени система отбрасывает — границы карточек и кнопок
+   дней держит `border` системного цвета; смысл метки (скол угла, форма) от цвета не зависит. */
 @media (forced-colors: active) {
-  .ymark {
+  .ymark,
+  .ymark.has-corr,
+  .ymark.has-help,
+  .ymark.has-help.has-corr {
     forced-color-adjust: none;
     --m: CanvasText;
   }
@@ -77,6 +83,19 @@
   .ymark.is-today::after {
     box-shadow: none;
     border: 1.5px solid Highlight;
+  }
+  .year-month,
+  .ycell:not(.blank),
+  .year-menu {
+    box-shadow: none;
+    border: 1px solid CanvasText;
+  }
+  .ycell.today {
+    box-shadow: none;
+    border: 2px solid Highlight;
+  }
+  .year-menu button[aria-checked="true"] {
+    text-decoration: underline;
   }
 }
 
@@ -168,7 +187,7 @@
   display: block;
   margin: 0 0 6px 1px;
   color: var(--label-2);
-  font-size: 11px;
+  font-size: 0.6875rem; /* 11 px при базовом размере, дальше следует Dynamic Type */
   font-weight: 600;
   letter-spacing: 0.01em;
   white-space: nowrap;
@@ -181,21 +200,21 @@
   gap: 2px;
 }
 
-/* ---------- Легенда: кодировка не очевидна, поэтому она на экране (11 px — нижний предел) ---------- */
+/* ---------- Легенда: кодировка не очевидна, поэтому она на экране (0.6875rem = 11 px — нижний предел, масштабируется Dynamic Type) ---------- */
 .year-legend {
   list-style: none;
   margin: 0;
   display: flex;
   flex-wrap: wrap;
-  gap: 7px 14px;
+  gap: 6px 8px;
   padding: 14px max(16px, var(--sa-r)) 0 max(16px, var(--sa-l));
   color: var(--label-2);
-  font-size: 11px;
+  font-size: 0.6875rem;
 }
 .year-legend li {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 4px;
 }
 .year-legend .ymark {
   width: 12px;
@@ -329,7 +348,7 @@
 .ysheet .wk span {
   text-align: center;
   color: var(--label-2);
-  font-size: 11px;
+  font-size: 0.6875rem;
 }
 .ysheet .mcal {
   display: grid;
@@ -427,6 +446,21 @@
   .ysheet .mcal,
   .ysheet .wk {
     gap: 4px;
+  }
+}
+
+/* Низкие экраны (iPhone SE, 568 pt): легенда с переносом строки не должна оказаться под таб-баром
+   при первом показе — чуть плотнее вертикальные интервалы (ширина и размер текста не трогаются). */
+@media (max-height: 600px) {
+  .year-months {
+    padding-top: 6px;
+  }
+  .year-month .mlab {
+    margin-bottom: 4px;
+  }
+  .year-legend {
+    gap: 4px 8px;
+    padding-top: 8px;
   }
 }
 
