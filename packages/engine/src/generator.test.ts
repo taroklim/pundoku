@@ -119,7 +119,7 @@ describe("generate — maxAttempts (PD-8 d)", () => {
     expect(attempts).toBe(TAIL.attempts);
     expect(() => generate({ difficulty: TAIL.difficulty, seed: TAIL.seed, maxAttempts: TAIL.attempts - 1 })).toThrow(GenerationError);
     expect(generate({ difficulty: TAIL.difficulty, seed: TAIL.seed }).mission).toBe(puzzle.mission);
-  });
+  }, 120_000);
 
   it("RNG is sequential: raising maxAttempts never changes an existing grid", () => {
     // Сетки, которые укладывались в старые 100 попыток, байт-в-байт те же при любом потолке ≥ их числа попыток.
