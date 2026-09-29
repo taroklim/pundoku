@@ -6,15 +6,18 @@
  * - Откатов нет: исправление — новой миграцией вперёд.
  *
  * Запуск: `pnpm --filter @pundoku/api migrate` (dev, tsx) или `node dist/db/migrate.js`
- * (в Docker перед стартом сервера). Папка миграций — `./migrations` относительно
- * рабочей директории процесса (apps/api локально, /app в контейнере).
+ * (в Docker перед стартом сервера). Папка миграций — `migrations/` рядом с пакетом,
+ * независимо от cwd.
  */
 import { readdir, readFile } from "node:fs/promises";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 import pg from "pg";
 import { env } from "../config/env.js";
 
-const MIGRATIONS_DIR = path.resolve(process.cwd(), "migrations");
+// Папка миграций — рядом с пакетом (apps/api/migrations локально, /app/migrations в контейнере),
+// независимо от cwd: так раннер работает и из тестов, и из `node dist/db/migrate.js`.
+const MIGRATIONS_DIR = fileURLToPath(new URL("../../migrations", import.meta.url));
 
 async function listMigrationFiles(): Promise<string[]> {
   const entries = await readdir(MIGRATIONS_DIR);

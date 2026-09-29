@@ -37,6 +37,10 @@ services:
       PORT: 3000
       DATABASE_URL: postgres://${POSTGRES_USER:-pundoku}:${POSTGRES_PASSWORD:-pundoku}@postgres:5432/${POSTGRES_DB:-pundoku}
       SUDOKU_COM_BASE_URL: ${SUDOKU_COM_BASE_URL:-https://sudoku.com/api/v2}
+      SUDOKU_COM_TIMEOUT_MS: ${SUDOKU_COM_TIMEOUT_MS:-5000}
+      DAILY_FALLBACK_DIFFICULTY: ${DAILY_FALLBACK_DIFFICULTY:-hard}
+      WEB_ORIGIN: ${WEB_ORIGIN:-http://localhost:5173}
+      LOG_LEVEL: ${LOG_LEVEL:-info}
     ports:
       - "127.0.0.1:${PORT:-3000}:3000"
 

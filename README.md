@@ -8,7 +8,7 @@
 ```
 apps/
   web/        @pundoku/web   — React + Vite PWA (vite-plugin-pwa, i18n en/uk/ru). Клиент, офлайн-first.
-  api/        @pundoku/api   — Express 5 (Node/TS): прокси Sudoku.com для Today + бэкап прогресса. Postgres.
+  api/        @pundoku/api   — Express 5 (Node/TS): прокси Sudoku.com для Today + аккаунт устройства/снапшот. Postgres.
 packages/
   engine/     @pundoku/engine — генератор/решатель с логом техник. Чистый ES2022, без DOM/Node, MIT.
 docker-compose.yml           — postgres:16 + api (сборка из apps/api/Dockerfile, контекст — корень).
@@ -29,18 +29,22 @@ pnpm dev:web                # только web; с iPhone в той же сет�
 pnpm dev:api                # только api (tsx watch), GET http://localhost:3000/health
 
 pnpm typecheck              # tsc --noEmit во всех пакетах
-pnpm test                   # vitest (engine; api — когда появятся тесты)
+pnpm test                   # vitest (engine; api — unit + интеграционные против DATABASE_URL, скип без БД)
 pnpm lint                   # eslint
 pnpm build                  # engine → api → web (dist/)
 ```
 
-Postgres локально — через Docker, api при этом можно гонять без контейнера:
+Postgres локально — через Docker (или любой свой, напр. `brew install postgresql@16`,
+`createdb pundoku_dev`), api при этом гоняется без контейнера:
 
 ```sh
-docker compose up -d postgres
+docker compose up -d postgres   # либо свой Postgres + DATABASE_URL в .env
 pnpm migrate                # применить миграции к DATABASE_URL из .env
 pnpm dev:api
 ```
+
+`.env` ищется в `apps/api/.env`, затем в корне репо. Эндпоинты, curl-примеры и запуск без
+Docker — `apps/api/README.md`.
 
 Всё в контейнерах: `docker compose up --build` (api сам прогоняет миграции перед стартом).
 
@@ -57,7 +61,7 @@ pnpm dev:api
 - Переводы — `apps/web/src/i18n/locales/{en,uk,ru}.json`, язык определяется по `navigator.language`.
 - PWA-манифест и service worker — `apps/web/vite.config.ts` (`VitePWA`, autoUpdate).
 - Иконки — `apps/web/public/icons/` (плейсхолдеры; перегенерация `pnpm --filter @pundoku/web icons`).
-- HTTP-эндпоинты — `apps/api/src/app.ts` (сейчас только `GET /health`).
+- HTTP-эндпоинты — `apps/api/src/app.ts` (роуты по модулям `daily/`, `devices/`, `snapshot/`; описание — `apps/api/README.md`).
 - Логика судоку — `packages/engine/src/`. Никакого GPL-кода (HoDoKu, Sudoku Explainer) — только
   переписанная по описанию логика техник.
 
