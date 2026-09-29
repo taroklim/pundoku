@@ -28,8 +28,9 @@ export function dailyRouter(service: DailyService): Router {
   router.get("/:date", async (req, res) => {
     const date = parseDateParam(req.params.date);
     const puzzle = await service.get(date);
-    // Сетка дня неизменна — прошедшие даты и сегодня можно кэшировать спокойно.
-    res.setHeader("Cache-Control", "public, max-age=3600");
+    // Сетка Sudoku.com неизменна — кэшируем спокойно. Фолбэк-сетка временная (заменится настоящей
+    // при следующем ответе Sudoku.com), поэтому её держим в кэше клиентов/CDN недолго.
+    res.setHeader("Cache-Control", puzzle.source === "generator" ? "public, max-age=60" : "public, max-age=3600");
     res.json(toResponse(puzzle));
   });
 

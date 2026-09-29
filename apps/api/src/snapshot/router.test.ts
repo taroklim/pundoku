@@ -39,6 +39,13 @@ describe("PUT/GET /api/snapshot", () => {
     expect((await get()).body.data).toEqual({ a: 2 });
   });
 
+  it("updatedAt: строгий ISO 8601 — с миллисекундами и со смещением тоже принимается", async () => {
+    for (const [i, updatedAt] of ["2026-09-29T10:00:00.123Z", "2026-09-29T13:00:00+03:00", "2026-09-29T10:00:00Z"].entries()) {
+      const res = await put({ version: 100 + i, updatedAt, data: {} });
+      expect(res.status, updatedAt).toBe(200);
+    }
+  });
+
   it("невалидное тело → 400 с кодом поля", async () => {
     const base = { version: 1, updatedAt: "2026-09-29T10:00:00Z", data: {} };
     const cases: Array<[unknown, string]> = [
@@ -47,6 +54,14 @@ describe("PUT/GET /api/snapshot", () => {
       [{ ...base, version: "1" }, "invalid_version"],
       [{ ...base, updatedAt: "yesterday" }, "invalid_updated_at"],
       [{ ...base, updatedAt: undefined }, "invalid_updated_at"],
+      [{ ...base, updatedAt: "1" }, "invalid_updated_at"],
+      [{ ...base, updatedAt: "2026" }, "invalid_updated_at"],
+      [{ ...base, updatedAt: "March 7, 2026" }, "invalid_updated_at"],
+      [{ ...base, updatedAt: "2026-09-29" }, "invalid_updated_at"],
+      [{ ...base, updatedAt: "2026-09-29T10:00:00" }, "invalid_updated_at"],
+      [{ ...base, updatedAt: "2026-02-30T10:00:00Z" }, "invalid_updated_at"],
+      [{ ...base, updatedAt: "2026-09-29T25:00:00Z" }, "invalid_updated_at"],
+      [{ ...base, updatedAt: 1759140000000 }, "invalid_updated_at"],
       [{ ...base, data: [] }, "invalid_data"],
       [{ ...base, data: null }, "invalid_data"],
       [{ ...base, data: "str" }, "invalid_data"],

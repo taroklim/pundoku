@@ -62,7 +62,7 @@ export {
 } from "./human.js";
 export type { HumanSolveOptions } from "./human.js";
 
-export { GenerationError, dailyPuzzle, dailySeed, generate } from "./generator.js";
+export { DEFAULT_MAX_ATTEMPTS, GenerationError, dailyPuzzle, dailySeed, generate } from "./generator.js";
 export type { GenerateOptions } from "./generator.js";
 
 export { Rng } from "./prng.js";

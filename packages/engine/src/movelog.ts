@@ -21,66 +21,142 @@ export function appendMove(log: MoveLog, move: Move): MoveLog {
   return [...log, move];
 }
 
+interface CellEntry {
+  readonly t: number;
+  readonly ok: boolean;
+}
+
+interface Replayed {
+  readonly cells: (CellEntry | null)[];
+  readonly corrections: number;
+  readonly effective: Move[];
+}
+
+interface StackItem {
+  readonly index: number;
+  readonly move: Move;
+  /** Состояние клетки до действия. */
+  readonly prev: CellEntry | null;
+  /** Сколько правок действие добавило само по себе (перезапись / стирание). */
+  readonly ownCorrections: number;
+}
+
+/**
+ * Воспроизведение лога с учётом `undo` (контракт — README пакета, «Контракт undo»).
+ *
+ * `undo` отменяет **последнее ещё не отменённое** действие (place / erase / note_add /
+ * note_remove) — стек без redo; `cell`/`digit` самого undo-хода информационные и на результат
+ * не влияют. Undo при пустом стеке — no-op.
+ *
+ * Возвращает:
+ * - `cells` — итоговое состояние клеток: момент и правильность действующей постановки либо null;
+ * - `corrections` — правки по правилам контракта;
+ * - `effective` — ходы, оставшиеся в силе (без undo-ходов и без отменённых ходов).
+ */
+function replay(log: MoveLog, okOf: (m: Move) => boolean): Replayed {
+  const cells: (CellEntry | null)[] = new Array<CellEntry | null>(GRID_SIZE).fill(null);
+  const stack: StackItem[] = [];
+  const cancelled = new Set<number>();
+  let corrections = 0;
+
+  log.forEach((m, index) => {
+    switch (m.kind) {
+      case "place": {
+        const prev = cells[m.cell]!;
+        const own = prev === null ? 0 : 1;
+        corrections += own;
+        cells[m.cell] = { t: m.t, ok: okOf(m) };
+        stack.push({ index, move: m, prev, ownCorrections: own });
+        break;
+      }
+      case "erase": {
+        const prev = cells[m.cell]!;
+        const own = prev === null ? 0 : 1;
+        corrections += own;
+        cells[m.cell] = null;
+        stack.push({ index, move: m, prev, ownCorrections: own });
+        break;
+      }
+      case "note_add":
+      case "note_remove":
+        stack.push({ index, move: m, prev: cells[m.cell]!, ownCorrections: 0 });
+        break;
+      case "undo": {
+        const top = stack.pop();
+        if (top === undefined) break;
+        cancelled.add(top.index);
+        if (top.move.kind === "place") {
+          // Снятие постановки — правка (+1), а собственная правка «перезаписи» отменяется.
+          cells[top.move.cell] = top.prev;
+          corrections += 1 - top.ownCorrections;
+        } else if (top.move.kind === "erase") {
+          // Отмена стирания возвращает цифру и снимает правку стирания: итог 0.
+          cells[top.move.cell] = top.prev;
+          corrections -= top.ownCorrections;
+        }
+        break;
+      }
+    }
+  });
+
+  const effective = log.filter((m, i) => m.kind !== "undo" && !cancelled.has(i));
+  return { cells, corrections, effective };
+}
+
 /**
  * Тепловая карта пути: для каждой клетки — момент её финального правильного заполнения,
- * нормированный к длительности партии (0 — старт, 1 — последний ход). `null` — подсказка
- * (given) либо клетка так и не была заполнена правильно.
+ * нормированный к длительности партии (0 — старт, 1 — последний ход лога). `null` — подсказка
+ * (given) либо клетка так и не была заполнена правильно (в конце пуста или неверна).
  *
  * `correct` берётся из хода; если поле не проставлено — сверяется с `solution`
  * (если решение передано), иначе ход считается правильным.
+ *
+ * `undo` учитывается по контракту: отмена стирания возвращает исходный момент заполнения,
+ * отмена постановки возвращает предыдущее состояние клетки (перезаписанная цифра или пусто).
  */
 export function heatmap(log: MoveLog, puzzle: { mission: GridInput; solution?: GridInput }): (number | null)[] {
   const mission = toGrid(puzzle.mission);
   const solution = puzzle.solution === undefined ? null : toGrid(puzzle.solution);
-  const out: (number | null)[] = new Array<number | null>(GRID_SIZE).fill(null);
+  const okOf = (m: Move): boolean =>
+    m.correct ?? (solution !== null && m.digit !== undefined ? solution[m.cell] === m.digit : true);
+  const { cells } = replay(log, okOf);
   const duration = durationOf(log);
-  for (const m of log) {
-    if (mission[m.cell] !== 0) continue;
-    if (m.kind === "place") {
-      const ok =
-        m.correct ?? (solution !== null && m.digit !== undefined ? solution[m.cell] === m.digit : true);
-      out[m.cell] = ok ? (duration === 0 ? 0 : m.t / duration) : null;
-    } else if (m.kind === "erase" || m.kind === "undo") {
-      out[m.cell] = null;
-    }
-  }
-  return out;
+  return cells.map((e, cell) => {
+    if (mission[cell] !== 0 || e === null || !e.ok) return null;
+    return duration === 0 ? 0 : e.t / duration;
+  });
 }
 
 function durationOf(log: MoveLog): number {
   return log.length === 0 ? 0 : log[log.length - 1]!.t;
 }
 
-/** Сводка для карточки дня. */
+/**
+ * Сводка для карточки дня. Правила `undo` — README пакета, «Контракт undo».
+ *
+ * - `corrections`: стирание непустой клетки +1; перезапись поставленной цифры +1; undo
+ *   постановки = +1 (и снимает её собственную «перезапись»); undo стирания снимает его +1;
+ *   undo заметок и undo при пустом стеке — 0.
+ * - `mistakes` липкие: постановка с `correct === false` считается, даже если её потом отменили.
+ * - `placements`, `firstCell`, `maxTechnique`, `evenness` — только по действующим (не отменённым)
+ *   постановкам.
+ * - `durationMs` — `t` последнего хода лога, включая undo и заметки.
+ */
 export function summary(log: MoveLog): MoveLogSummary {
-  let corrections = 0;
+  const { corrections, effective } = replay(log, () => true);
   let mistakes = 0;
+  for (const m of log) if (m.kind === "place" && m.correct === false) mistakes++;
+
   let firstCell: Cell | null = null;
   let placements = 0;
   const techniques: NonNullable<Move["technique"]>[] = [];
-  const filled = new Uint8Array(GRID_SIZE);
   const times: number[] = [];
-
-  for (const m of log) {
-    switch (m.kind) {
-      case "place":
-        placements++;
-        times.push(m.t);
-        if (firstCell === null) firstCell = m.cell;
-        if (filled[m.cell]) corrections++;
-        filled[m.cell] = 1;
-        if (m.correct === false) mistakes++;
-        if (m.technique) techniques.push(m.technique);
-        break;
-      case "erase":
-      case "undo":
-        corrections++;
-        filled[m.cell] = 0;
-        break;
-      case "note_add":
-      case "note_remove":
-        break;
-    }
+  for (const m of effective) {
+    if (m.kind !== "place") continue;
+    placements++;
+    times.push(m.t);
+    if (firstCell === null) firstCell = m.cell;
+    if (m.technique) techniques.push(m.technique);
   }
 
   let intervalVariance = 0;
@@ -117,11 +193,12 @@ export function summary(log: MoveLog): MoveLogSummary {
  * - `snake` (слабый признак) — рядом (расстояние ≤ 2), но без выраженного блока.
  * - `sniper` — иначе: прыжки по доске за самыми лёгкими клетками.
  *
+ * Учитываются только действующие постановки (отменённые `undo` не в счёт).
  * Побеждает первая по этому порядку доля ≥ 0.5; при < 4 постановках стиль не
  * определён и возвращается `sniper`.
  */
 export function solvingStyle(log: MoveLog): SolvingStyle {
-  const places = log.filter((m) => m.kind === "place");
+  const places = replay(log, () => true).effective.filter((m) => m.kind === "place");
   if (places.length < 4) return "sniper";
   let sameDigit = 0;
   let sameBox = 0;

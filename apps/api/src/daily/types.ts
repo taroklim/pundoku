@@ -10,14 +10,21 @@ export interface DailyPuzzle {
   source: DailySourceKind;
   sourceId: string | null;
   fetchedAt: Date;
+  /** Когда фолбэк-сетка была заменена сеткой Sudoku.com; null — не заменялась. */
+  replacedAt: Date | null;
 }
 
-export type NewDailyPuzzle = Omit<DailyPuzzle, "fetchedAt">;
+export type NewDailyPuzzle = Omit<DailyPuzzle, "fetchedAt" | "replacedAt">;
 
 export interface DailyPuzzleRepo {
   find(date: string): Promise<DailyPuzzle | null>;
   /** Вставляет, если даты ещё нет; при гонке возвращает уже сохранённую строку. */
   insertIfAbsent(puzzle: NewDailyPuzzle): Promise<DailyPuzzle>;
+  /**
+   * Заменяет строку с source='generator' сеткой Sudoku.com (source→'sudoku.com', replaced_at=now).
+   * Если строка уже не generator (гонка) — ничего не меняет и возвращает текущую.
+   */
+  replaceGenerated(puzzle: NewDailyPuzzle): Promise<DailyPuzzle>;
 }
 
 /** Результат обращения к внешнему источнику сетки дня. */
@@ -31,9 +38,13 @@ export interface DailyPuzzleSource {
   fetch(date: string): Promise<SourceResult>;
 }
 
-/** Генератор для фолбэка. Реализация — адаптер к @pundoku/engine (generator.ts). */
+/**
+ * Генератор для фолбэка. Реализация — адаптер к @pundoku/engine (generator.ts).
+ * Принимает именно ДАТУ, а не seed: seed собирает движок (`dailySeed`), чтобы у сервера и
+ * офлайн-клиента была единая конвенция сетки дня.
+ */
 export interface PuzzleGenerator {
-  generate(seed: string, difficulty: string): Promise<{ mission: string; solution: string }>;
+  generateDaily(date: string, difficulty: string): Promise<{ mission: string; solution: string }>;
 }
 
 /** Публичный ответ GET /api/daily/:date — без solution. */

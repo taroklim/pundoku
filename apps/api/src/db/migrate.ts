@@ -11,7 +11,7 @@
  */
 import { readdir, readFile } from "node:fs/promises";
 import path from "node:path";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 import pg from "pg";
 import { env } from "../config/env.js";
 
@@ -59,7 +59,7 @@ export async function runMigrations(databaseUrl: string): Promise<string[]> {
   return applied;
 }
 
-const isDirectRun = process.argv[1] !== undefined && import.meta.url === new URL(`file://${process.argv[1]}`).href;
+const isDirectRun = process.argv[1] !== undefined && import.meta.url === pathToFileURL(process.argv[1]).href;
 if (isDirectRun) {
   runMigrations(env.databaseUrl)
     .then((applied) => {

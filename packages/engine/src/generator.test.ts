@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
+import { generateWithStats } from "./generator.js";
 import {
+  DEFAULT_MAX_ATTEMPTS,
   DIFFICULTIES,
   GenerationError,
   Rng,
@@ -104,10 +106,51 @@ describe("generate — validity", () => {
   });
 });
 
+describe("generate — maxAttempts (PD-8 d)", () => {
+  // 'measure2-811' / hard по замеру требует 74 попытки — «хвост» распределения (медиана hard ≈ 6).
+  const TAIL = { difficulty: "hard", seed: "measure2-811", attempts: 74 } as const;
+
+  it("default ceiling is 300 (было 100 — на грани для хвоста hard)", () => {
+    expect(DEFAULT_MAX_ATTEMPTS).toBe(300);
+  });
+
+  it("a tail seed needs many attempts; ceiling below that throws, default succeeds", () => {
+    const { puzzle, attempts } = generateWithStats({ difficulty: TAIL.difficulty, seed: TAIL.seed });
+    expect(attempts).toBe(TAIL.attempts);
+    expect(() => generate({ difficulty: TAIL.difficulty, seed: TAIL.seed, maxAttempts: TAIL.attempts - 1 })).toThrow(GenerationError);
+    expect(generate({ difficulty: TAIL.difficulty, seed: TAIL.seed }).mission).toBe(puzzle.mission);
+  }, 120_000);
+
+  it("RNG is sequential: raising maxAttempts never changes an existing grid", () => {
+    // Сетки, которые укладывались в старые 100 попыток, байт-в-байт те же при любом потолке ≥ их числа попыток.
+    for (const seed of ["2026-09-29", "pundoku", "measure-3"]) {
+      const { puzzle, attempts } = generateWithStats({ difficulty: "hard", seed });
+      expect(generate({ difficulty: "hard", seed, maxAttempts: attempts }).mission).toBe(puzzle.mission);
+      expect(generate({ difficulty: "hard", seed, maxAttempts: 100 }).mission).toBe(puzzle.mission);
+      expect(generate({ difficulty: "hard", seed, maxAttempts: 1000 }).mission).toBe(puzzle.mission);
+    }
+  });
+});
+
 describe("dailySeed / dailyPuzzle", () => {
   it("builds a seed from the date and difficulty", () => {
     expect(dailySeed("2026-09-29", "medium")).toBe("2026-09-29/medium");
     expect(() => dailySeed("29.09.2026", "medium")).toThrow(RangeError);
+  });
+
+  it("rejects dates that do not exist or are garbage", () => {
+    for (const bad of ["2026-13-45", "2026-02-30", "2026-00-10", "2026-04-31", "2026-01-00", "2025-02-29", "", "abc", "2026-9-29", "2026-09-29T00:00", " 2026-09-29"]) {
+      expect(() => dailySeed(bad, "easy"), bad).toThrow(RangeError);
+      expect(() => dailyPuzzle(bad, "easy"), bad).toThrow(/Date/);
+    }
+    expect(() => dailySeed(undefined as unknown as string, "easy")).toThrow(RangeError);
+  });
+
+  it("accepts real edge dates (leap day, month ends)", () => {
+    expect(dailySeed("2024-02-29", "easy")).toBe("2024-02-29/easy");
+    expect(dailySeed("2000-02-29", "easy")).toBe("2000-02-29/easy");
+    expect(dailySeed("2026-12-31", "hard")).toBe("2026-12-31/hard");
+    expect(() => dailySeed("1900-02-29", "easy")).toThrow(RangeError);
   });
 
   it("dailyPuzzle is generate() with the daily seed", () => {

@@ -22,7 +22,15 @@ export class MemoryDailyPuzzleRepo implements DailyPuzzleRepo {
   async insertIfAbsent(p: NewDailyPuzzle): Promise<DailyPuzzle> {
     const existing = this.rows.get(p.date);
     if (existing) return existing;
-    const row = { ...p, fetchedAt: new Date() };
+    const row = { ...p, fetchedAt: new Date(), replacedAt: null };
+    this.rows.set(p.date, row);
+    return row;
+  }
+  async replaceGenerated(p: NewDailyPuzzle): Promise<DailyPuzzle> {
+    const existing = this.rows.get(p.date);
+    if (!existing) throw new Error(`нет строки за ${p.date}`);
+    if (existing.source !== "generator") return existing;
+    const row = { ...p, fetchedAt: new Date(), replacedAt: new Date() };
     this.rows.set(p.date, row);
     return row;
   }
@@ -68,13 +76,13 @@ export class FakeSource implements DailyPuzzleSource {
 }
 
 export class FakeGenerator implements PuzzleGenerator {
-  readonly calls: Array<{ seed: string; difficulty: string }> = [];
+  readonly calls: Array<{ date: string; difficulty: string }> = [];
   constructor(public shouldFail = false) {}
-  async generate(seed: string, difficulty: string) {
-    this.calls.push({ seed, difficulty });
+  async generateDaily(date: string, difficulty: string) {
+    this.calls.push({ date, difficulty });
     if (this.shouldFail) throw new Error("generator boom");
-    // Детерминированно по seed, но валидно по формату: берём решение SAMPLE и «прячем» клетки по seed.
-    const hide = seed.length % 9;
+    // Детерминированно по дате, но валидно по формату: берём решение SAMPLE и «прячем» клетки по дате.
+    const hide = Number(date.slice(-2)) % 9;
     const mission = SAMPLE.solution.split("").map((c, i) => (i % 9 === hide ? "0" : c)).join("");
     return { mission, solution: SAMPLE.solution };
   }

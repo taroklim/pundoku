@@ -88,7 +88,7 @@ describe("summary", () => {
     const s = summary(log);
     expect(s.clean).toBe(false);
     expect(s.mistakes).toBe(2);
-    expect(s.corrections).toBe(3);
+    expect(s.corrections).toBe(3); // erase, перезапись, undo постановки
     expect(s.maxTechnique).toBeNull();
     expect(s.firstCell).toBe(0);
   });
@@ -132,4 +132,184 @@ describe("solvingStyle", () => {
     expect(solvingStyle(log)).toBe("sniper");
     expect(solvingStyle(seq([0, 1], [1, 2]))).toBe("sniper");
   });
+});
+
+describe("undo contract", () => {
+  const erase = (t: number, cell: number): Move => ({ t, cell, kind: "erase" });
+  const undo = (t: number, cell: number): Move => ({ t, cell, kind: "undo" });
+  const note = (t: number, cell: number, digit: Digit): Move => ({ t, cell, kind: "note_add", digit });
+
+  it("place → erase → undo: the digit is back in the heatmap with its original time, erase correction is cancelled", () => {
+    const log: MoveLog = [
+      place(0, 0, 1, { correct: true }),
+      place(4000, 1, 2, { correct: true }),
+      erase(6000, 1),
+      undo(8000, 1),
+    ];
+    const h = heatmap(log, { mission: MISSION });
+    expect(h[1]).toBe(0.5); // 4000 / 8000, а не null
+    const s = summary(log);
+    expect(s.corrections).toBe(0);
+    expect(s.clean).toBe(true);
+    expect(s.placements).toBe(2);
+    expect(s.durationMs).toBe(8000);
+  });
+
+  it("place → erase (no undo) still counts one correction and clears the heatmap", () => {
+    const log: MoveLog = [place(0, 0, 1, { correct: true }), erase(1000, 0)];
+    expect(heatmap(log, { mission: MISSION })[0]).toBeNull();
+    expect(summary(log).corrections).toBe(1);
+  });
+
+  it("erase of an empty cell is a no-op for corrections; its undo is a no-op too", () => {
+    const log: MoveLog = [erase(0, 0), undo(100, 0)];
+    expect(summary(log)).toMatchObject({ corrections: 0, clean: true });
+  });
+
+  it("note_add → undo does not break clean or anything else", () => {
+    const log: MoveLog = [place(0, 0, 1, { correct: true }), note(1000, 1, 5), undo(1500, 1), place(3000, 1, 2, { correct: true })];
+    const s = summary(log);
+    expect(s).toMatchObject({ clean: true, corrections: 0, mistakes: 0, placements: 2 });
+    expect(heatmap(log, { mission: MISSION }).slice(0, 2)).toEqual([0, 1]);
+  });
+
+  it("note_remove → undo and note_add spam are neutral", () => {
+    const log: MoveLog = [
+      note(0, 2, 4),
+      { t: 100, cell: 2, kind: "note_remove", digit: 4 },
+      undo(200, 2),
+      undo(300, 2),
+      place(400, 2, 3, { correct: true }),
+    ];
+    expect(summary(log)).toMatchObject({ clean: true, corrections: 0, placements: 1 });
+  });
+
+  it("undo of a place: cell returns to empty, +1 correction, placement is not counted", () => {
+    const log: MoveLog = [place(0, 0, 1, { correct: true }), place(2000, 1, 2, { correct: true }), undo(3000, 1)];
+    const h = heatmap(log, { mission: MISSION });
+    expect(h[0]).toBe(0);
+    expect(h[1]).toBeNull();
+    const s = summary(log);
+    expect(s).toMatchObject({ corrections: 1, clean: false, placements: 1, firstCell: 0 });
+  });
+
+  it("undo of an overwrite restores the previous digit (its time), correction stays 1", () => {
+    const log: MoveLog = [
+      place(1000, 0, 1, { correct: true }),
+      place(3000, 0, 4, { correct: false }),
+      undo(4000, 0),
+      place(5000, 2, 3, { correct: true }),
+    ];
+    expect(heatmap(log, { mission: MISSION })[0]).toBe(0.2); // 1000 / 5000
+    const s = summary(log);
+    expect(s.corrections).toBe(1);
+    expect(s.mistakes).toBe(1); // ошибка была допущена, отмена её не стирает
+    expect(s.placements).toBe(2);
+  });
+
+  it("place → erase → undo → undo: second undo takes the place back", () => {
+    const log: MoveLog = [place(0, 0, 1, { correct: true }), erase(1000, 0), undo(2000, 0), undo(3000, 0)];
+    expect(heatmap(log, { mission: MISSION })[0]).toBeNull();
+    expect(summary(log)).toMatchObject({ corrections: 1, placements: 0, firstCell: null });
+  });
+
+  it("multiple undo walks the stack back step by step; extra undo on an empty stack is a no-op", () => {
+    const moves: Move[] = [
+      place(0, 0, 1, { correct: true }),
+      note(500, 1, 3),
+      place(1000, 1, 2, { correct: true }),
+      erase(1500, 0),
+      place(2000, 2, 3, { correct: true }),
+    ];
+    let log: MoveLog = moves;
+    // откат: place(2), erase(0), place(1), note, place(0)
+    const expectedHeat: (number | null)[][] = [
+      [null, 0.5, null], // после undo place cell 2: erase(0) ещё действует
+      [0, 0.5, null], // undo erase → r1c1 вернулся
+      [0, null, null], // undo place cell 1
+      [0, null, null], // undo note
+      [null, null, null], // undo place cell 0
+      [null, null, null], // лишний undo — no-op
+    ];
+    let t = 3000;
+    for (const want of expectedHeat) {
+      log = [...log, undo(t, 0)];
+      t += 1000;
+      const h = heatmap(log, { mission: MISSION }).slice(0, 3);
+      // Нормировка к длительности лога меняется — сравниваем «заполнена/нет» и порядок.
+      expect(h.map((v) => v !== null)).toEqual(want.map((v) => v !== null));
+    }
+    const s = summary(log);
+    expect(s.placements).toBe(0);
+    expect(s.firstCell).toBeNull();
+  });
+
+  it("undo ignores its own cell/digit: what is reverted is decided by the stack", () => {
+    const a: MoveLog = [place(0, 0, 1, { correct: true }), place(1000, 1, 2, { correct: true }), undo(2000, 0)];
+    const b: MoveLog = [place(0, 0, 1, { correct: true }), place(1000, 1, 2, { correct: true }), undo(2000, 55)];
+    expect(heatmap(a, { mission: MISSION }).slice(0, 2)).toEqual(heatmap(b, { mission: MISSION }).slice(0, 2));
+    expect(heatmap(a, { mission: MISSION })[1]).toBeNull();
+    expect(summary(a)).toEqual(summary(b));
+  });
+
+  it("undo is deterministic and the log stays append-only/serialisable", () => {
+    const log: MoveLog = [place(0, 0, 1, { correct: true }), erase(500, 0), undo(900, 0)];
+    const before = JSON.stringify(log);
+    summary(log);
+    heatmap(log, { mission: MISSION });
+    expect(JSON.stringify(log)).toBe(before);
+    expect(appendMove(log, undo(1000, 0))).toHaveLength(4);
+  });
+
+  it("solvingStyle ignores placements taken back by undo", () => {
+    const seq: MoveLog = [];
+    let log: MoveLog = seq;
+    // 4 постановок «сканером», между ними отменённые прыжки в далёкие клетки
+    const cells = [0, 20, 40, 60];
+    let t = 0;
+    for (const c of cells) {
+      log = [...log, place(t, 80 - c, 5), undo(t + 10, 80 - c), place(t + 20, c, 1)];
+      t += 1000;
+    }
+    expect(solvingStyle(log)).toBe("scanner");
+  });
+
+  it("honest card: an undone mistake is still a mistake", () => {
+    const log: MoveLog = [place(0, 0, 5, { correct: false }), undo(500, 0), place(1000, 0, 1, { correct: true })];
+    expect(summary(log)).toMatchObject({ mistakes: 1, clean: false });
+  });
+});
+
+/** Таблица «цепочки» из README «Контракт undo» — держим её и код синхронными. */
+describe("undo contract — README chain table", () => {
+  const erase = (t: number, cell: number): Move => ({ t, cell, kind: "erase" });
+  const undo = (t: number, cell: number): Move => ({ t, cell, kind: "undo" });
+  const note = (t: number, cell: number, digit: Digit): Move => ({ t, cell, kind: "note_add", digit });
+  // Клетка 0 — цель; t = 1, 2, 3, ...; heatmap при t_last = длительности → t / duration.
+  const rows: Array<[string, Move[], { c: number; clean: boolean; placements: number; hm: number | null; mistakes?: number }]> = [
+    ["place, undo", [place(1, 0, 1), undo(2, 0)], { c: 1, clean: false, placements: 0, hm: null }],
+    ["place, erase", [place(1, 0, 1), erase(2, 0)], { c: 1, clean: false, placements: 1, hm: null }],
+    ["place, erase, undo", [place(1, 0, 1), erase(2, 0), undo(3, 0)], { c: 0, clean: true, placements: 1, hm: 1 / 3 }],
+    ["place, erase, undo, undo", [place(1, 0, 1), erase(2, 0), undo(3, 0), undo(4, 0)], { c: 1, clean: false, placements: 0, hm: null }],
+    ["overwrite", [place(1, 0, 5, { correct: true }), place(2, 0, 1)], { c: 1, clean: false, placements: 2, hm: 1 }],
+    ["overwrite, undo", [place(1, 0, 1), place(2, 0, 5, { correct: true }), undo(3, 0)], { c: 1, clean: false, placements: 1, hm: 1 / 3 }],
+    ["overwrite, undo, undo", [place(1, 0, 1), place(2, 0, 5), undo(3, 0), undo(4, 0)], { c: 2, clean: false, placements: 0, hm: null }],
+    ["note_add, undo", [note(1, 0, 1), undo(2, 0)], { c: 0, clean: true, placements: 0, hm: null }],
+    ["place elsewhere, note_add, undo", [place(1, 1, 1), note(2, 0, 1), undo(3, 0)], { c: 0, clean: true, placements: 1, hm: null }],
+    ["undo on empty log", [undo(1, 0)], { c: 0, clean: true, placements: 0, hm: null }],
+    ["place(wrong), undo", [place(1, 0, 5, { correct: false }), undo(2, 0)], { c: 1, clean: false, placements: 0, hm: null, mistakes: 1 }],
+    ["erase empty cell, undo", [erase(1, 0), undo(2, 0)], { c: 0, clean: true, placements: 0, hm: null }],
+  ];
+  for (const [name, log, want] of rows) {
+    it(name, () => {
+      const s = summary(log);
+      expect(s.corrections).toBe(want.c);
+      expect(s.clean).toBe(want.clean);
+      expect(s.placements).toBe(want.placements);
+      expect(s.mistakes).toBe(want.mistakes ?? 0);
+      const hm = heatmap(log, { mission: MISSION, solution: SOLUTION })[0]!;
+      if (want.hm === null) expect(hm).toBeNull();
+      else expect(hm).toBeCloseTo(want.hm, 10);
+    });
+  }
 });
