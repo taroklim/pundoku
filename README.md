@@ -28,10 +28,11 @@ pnpm dev                    # web + api параллельно (vite :5173, api 
 pnpm dev:web                # только web; с iPhone в той же сети: pnpm dev:web -- --host
 pnpm dev:api                # только api (tsx watch), GET http://localhost:3000/health
 
-pnpm typecheck              # tsc --noEmit во всех пакетах
+pnpm typecheck              # tsc --noEmit во всех пакетах (из чистого клона, без предварительного build)
 pnpm test                   # vitest (engine; api — unit + интеграционные против DATABASE_URL, скип без БД)
 pnpm lint                   # eslint
 pnpm build                  # engine → api → web (dist/)
+pnpm measure:engine 200     # замер попыток/времени генерации сетки по классам (см. README движка)
 ```
 
 Postgres локально — через Docker (или любой свой, напр. `brew install postgresql@16`,

@@ -6,9 +6,10 @@
 сериализуемые в JSON структуры, все функции чистые. Лицензия MIT.
 
 ```sh
-pnpm --filter @pundoku/engine test        # vitest, включая «тяжёлый» прогон 200×4 сеток
+pnpm --filter @pundoku/engine test        # vitest, включая «тяжёлый» прогон 100 сеток × 5 классов
 pnpm --filter @pundoku/engine typecheck
 pnpm --filter @pundoku/engine build       # dist/ (ESM + .d.ts)
+pnpm measure:engine 200 hard expert       # (из корня) замер попыток/времени генерации по классам
 ```
 
 ## API (`src/index.ts`)
@@ -17,16 +18,16 @@ pnpm --filter @pundoku/engine build       # dist/ (ESM + .d.ts)
 
 | Группа | Экспорты |
 | --- | --- |
-| Типы данных | `Cell`, `CellValue`, `Digit`, `Grid`, `GridInput`, `Difficulty`, `Technique`, `TechniqueOrBeyond`, `Puzzle`, `Elimination`, `Step`, `HumanSolveResult` |
+| Типы данных | `Cell`, `CellValue`, `Digit`, `Grid`, `GridInput`, `Difficulty`, `DifficultyProfile`, `Technique`, `TechniqueOrBeyond`, `Puzzle`, `Elimination`, `Step`, `HumanSolveResult` |
 | Типы лога | `Move`, `MoveKind`, `MoveLog`, `MoveLogSummary`, `SolvingStyle` |
 | Типы опций | `HumanSolveOptions`, `GenerateOptions` |
 | Сетка (`grid.ts`) | `GRID_SIZE`, `ROW_OF`, `COL_OF`, `BOX_OF`, `UNITS`, `PEERS`, `emptyGrid`, `parseGrid`, `formatGrid`, `toGrid`, `isValidGrid`, `conflicts`, `candidates` |
 | Решатель (`solver.ts`) | `solve`, `countSolutions`, `hasUniqueSolution` |
 | Human-решатель (`human.ts`) | `humanSolve`, `techniqueForCell`, `rateDifficulty`, `techniquesUsed`, `techniqueTier`, `difficultyForTechnique`, `maxTechnique`, `TECHNIQUE_ORDER` |
-| Генератор (`generator.ts`) | `generate`, `dailySeed`, `dailyPuzzle`, `GenerationError`, `DEFAULT_MAX_ATTEMPTS` |
+| Генератор (`generator.ts`) | `generate`, `dailySeed`, `dailyPuzzle`, `GenerationError`, `DEFAULT_MAX_ATTEMPTS`, `GENERATOR_VERSION` |
+| Сложность (`difficulty.ts`) | `DIFFICULTIES`, `DIFFICULTY_PROFILES`, `EASY_MIN_CLUES` |
 | PRNG (`prng.ts`) | `Rng` — `new Rng(seed: string)`, `nextU32()`, `int(n)` (в `[0, n)`), `shuffle(arr)` (Фишер–Йейтс на месте) |
 | Лог ходов (`movelog.ts`) | `createMoveLog`, `appendMove`, `heatmap`, `summary`, `solvingStyle` |
-| Константы | `DIFFICULTIES` — `['easy', 'medium', 'hard', 'expert']` |
 
 Константы геометрии — `Uint8Array`/массивы `Uint8Array` (`ROW_OF[cell]`, `UNITS[i]`, `PEERS[cell]`);
 `GRID_SIZE = 81`; `TECHNIQUE_ORDER` — техники от дешёвой к дорогой.
@@ -40,7 +41,8 @@ pnpm --filter @pundoku/engine build       # dist/ (ESM + .d.ts)
 | `Cell` | индекс клетки `0..80` (`row * 9 + col`) |
 | `Grid` | `readonly CellValue[]`, 81 значение |
 | `GridInput` | `Grid \| string` — все функции принимают и массив, и строку из 81 символа (`0`/`.` — пусто) |
-| `Difficulty` | `'easy' \| 'medium' \| 'hard' \| 'expert'` |
+| `Difficulty` | `'easy' \| 'medium' \| 'hard' \| 'expert' \| 'master'` — две оси: подсказки × техника, см. «Как определяется сложность» |
+| `DifficultyProfile` | `{ clues: number, technique: TechniqueOrBeyond }` — цель класса (`DIFFICULTY_PROFILES[difficulty]`) |
 | `Technique` | `'naked_single' \| 'hidden_single' \| 'locked_candidates' \| 'naked_pair' \| 'hidden_pair'` |
 | `TechniqueOrBeyond` | `Technique \| 'beyond'` — `beyond` = нужно что-то сверх реализованных техник |
 | `Puzzle` | `{ mission, givens, solution, difficulty, seed, techniques }` — `mission`/`solution` строки по 81 символу, `givens` — то же, что `mission`, массивом (контракт с `apps/api`) |
@@ -74,23 +76,31 @@ pnpm --filter @pundoku/engine build       # dist/ (ESM + .d.ts)
   singles — `naked_single`, если нужны ещё hidden singles — `hidden_single`, и т. д.). Если клетка
   уже заполнена — оценивается как пустая, так что можно вызывать и до, и после хода игрока.
   Это метрика «применённая техника» карточки дня (отчёт 05 §2 п. 4).
-- `rateDifficulty(input) → Difficulty`, `techniquesUsed(input)`, `techniqueTier(t)`,
-  `difficultyForTechnique(t)`, `maxTechnique(list)`.
+- `rateDifficulty(input) → Difficulty` — оценка по **двум осям** (техника × число подсказок), см.
+  «Как определяется сложность»; `techniquesUsed(input)`, `techniqueTier(t)`, `maxTechnique(list)`;
+  `difficultyForTechnique(t)` — только техническая ось (singles → easy, locked → hard, pairs → expert,
+  beyond → master; `medium` ею недостижим).
 
 ### Генератор (`generator.ts`)
 
-- `generate({ difficulty, seed, maxAttempts? }) → Puzzle` — детерминированно по seed;
-  `maxAttempts` по умолчанию `DEFAULT_MAX_ATTEMPTS` = 300.
+- `generate({ difficulty, seed, maxAttempts?, clues? }) → Puzzle` — детерминированно по seed;
+  `maxAttempts` по умолчанию `DEFAULT_MAX_ATTEMPTS` = 300. `clues` — целевое число подсказок (вторая ось
+  сложности), по умолчанию из `DIFFICULTY_PROFILES` (easy 38, medium 30, hard 26, expert 24, master 24);
+  сетка получает **ровно** столько подсказок. Целое 17..80, иначе `RangeError`; неизвестная сложность —
+  `RangeError`. Своё `clues` ≠ дефолту даёт другую сетку (свой PRNG-ключ), и `rateDifficulty` такой
+  сетки может не совпасть с `difficulty` (техническая ось гарантируется, ярлык singles-сетки
+  easy/medium определяется числом подсказок).
 - `dailySeed(date, difficulty) → string` (`'2026-09-29/medium'`) и
   `dailyPuzzle(date, difficulty)` — фолбэк сетки дня.
   **Единая seed-конвенция сетки дня:** и сервер (`apps/api`), и офлайн-клиент получают фолбэк
   только через `dailyPuzzle(date, difficulty)` (или `generate({ seed: dailySeed(date, difficulty) })`).
   Seed вручную не собирать: `generate({ seed: '2026-09-29' })` — это ДРУГАЯ сетка, и клиент без
   сети разошёлся бы с закэшированной сервером. Дата валидируется (`RangeError` на `2026-02-30`).
-  Сложность фолбэка на сервере — `DAILY_FALLBACK_DIFFICULTY` (по умолчанию `hard`), клиент обязан
+  Сложность фолбэка на сервере — `DAILY_FALLBACK_DIFFICULTY` (по умолчанию `medium` — 30 подсказок/singles, близко к Sudoku.com «hard»; `hard` движка тяжелее — 26 подсказок + locked candidates), клиент обязан
   брать ту же (её отдаёт `GET /api/daily/:date` в поле `difficulty`).
-- `GenerationError` — класс сложности не достигнут за `maxAttempts` (по умолчанию 300; медиана —
-  единицы попыток, максимум по замеру — десятки, см. «Попытки и время генерации»).
+- `GenerationError` — профиль не достигнут за `maxAttempts` (по умолчанию 300; медиана — от 1 до 14
+  попыток в зависимости от класса, максимум по замеру — 138, см. «Попытки и время генерации»).
+- `GENERATOR_VERSION` (сейчас **2**) — версия алгоритма, см. «Версии алгоритма».
 - `Rng` — PRNG xoshiro128\*\* от строкового seed (экспортирован для тестов/отладки).
 
 ### Лог ходов и карточка дня (`movelog.ts`)
@@ -156,22 +166,32 @@ pnpm --filter @pundoku/engine build       # dist/ (ESM + .d.ts)
 
 ## Как определяется сложность
 
-Не числом подсказок, а **набором техник, которые понадобились human-style решателю**
-(дешёвая применяется первой; ярлык — по самой дорогой):
+Две оси: **число подсказок** и **самая дорогая техника**, которая понадобилась human-style решателю
+(дешёвая применяется первой). Профиль каждого класса (`DIFFICULTY_PROFILES`):
 
-| Сложность | Самая дорогая техника |
-| --- | --- |
-| easy | naked single / hidden single |
-| medium | locked candidates (pointing + claiming) |
-| hard | naked pair / hidden pair |
-| expert | решатель застрял (`'beyond'`) — сетка требует X-Wing и выше; решение добивается backtracking'ом |
+| Класс | Подсказок (ровно) | Техника |
+| --- | --- | --- |
+| easy | 38 | только singles (naked/hidden single) |
+| medium | 30 | только singles (≈ Sudoku.com «hard», см. ниже) |
+| hard | 26 | до locked candidates (pointing + claiming), locked нужна обязательно |
+| expert | 24 | до naked/hidden pair, пара нужна обязательно |
+| master | 24 | решатель застрял (`'beyond'`) — нужен X-Wing и выше; решение добивается backtracking'ом |
 
-Генератор: случайная полная сетка (backtracking с перемешанным порядком цифр) → вычитание
-клеток в случайном порядке; удаление принимается, только если решение остаётся единственным
-и (для easy/medium/hard) сетка всё ещё решается техниками не дороже потолка класса.
-Вычитание останавливается, когда подсказок ≤ порога класса (easy 38, medium 32, hard 28,
-expert 26) и сложность попала в класс; иначе — новая попытка с той же PRNG-последовательностью.
-Симметрия не накладывается. Типичные размеры: easy ≈ 38 подсказок, medium/hard/expert ≈ 26.
+**Зачем вторая ось.** Калибровка PD-5: все дневные сетки Sudoku.com «hard» решаются одними singles при
+30 подсказках — то есть по одной оси техник Sudoku.com hard неотличим от лёгкой сетки. Число подсказок
+делает singles-сетку заметно тяжелее, поэтому `medium` движка (30/singles) ≈ Sudoku.com «hard»,
+а прежний `easy` (38) остался «лёгким».
+
+**`rateDifficulty(mission)`** — оценка обеих осей: техника решает всё, начиная с locked candidates
+(locked → hard, pairs → expert, решатель застрял или сетка противоречива → master); если хватает singles,
+решает число подсказок: **≥ `EASY_MIN_CLUES` (34) → easy, иначе medium** (середина между целями 38 и 30).
+Сетка, выданная `generate` с профилем по умолчанию, всегда оценивается своим классом (проверено heavy-тестом).
+
+Генератор: случайная полная сетка (backtracking с перемешанным порядком цифр) → вычитание клеток в
+случайном порядке; удаление принимается, только если решение остаётся единственным и (для классов с потолком
+техники) сетка всё ещё решается техниками не дороже потолка. Вычитание идёт **ровно до целевого числа
+подсказок**; если дальше вычитать нечего либо ярус техники не тот (hard без locked, expert без пар, master
+решился техниками) — новая попытка с той же PRNG-последовательностью. Симметрия не накладывается.
 
 **Детерминизм.** Seed-строка `${seed}\0${difficulty}` (разделитель — символ NUL, в исходнике
 записан escape-последовательностью `\0`; менять на пробел/другой символ нельзя — поменяются все сетки)
@@ -180,35 +200,54 @@ expert 26) и сложность попала в класс; иначе — но
 меняет сетки для всех seed — это ломает «сетку дня» у тех, кто играл по фолбэку, поэтому
 такие изменения версионируются осознанно.
 
-## Попытки и время генерации (замер 2026-09-29)
+## Версии алгоритма
 
-Генерация — цикл попыток: каждая строит полную сетку и вычитает клетки; если класс сложности не
-попал в цель, следующая попытка продолжает тот же PRNG-поток (поэтому детерминизм сохраняется, а
-потолок `maxAttempts` не влияет на результат, пока он не исчерпан). Замер `generateWithStats`
-(Node 24, Apple Silicon, seed `measure-N`/`measure2-N`; hard — 12 000 seed, остальные — 2000):
+`GENERATOR_VERSION` — версия алгоритма генерации. Любое изменение, меняющее сетки для существующих seed
+(профили сложности, порядок вычитания, PRNG, техники решателя), поднимает её и дописывается сюда;
+в PRNG-seed версия не подмешивается — дрейф ловят снапшот-тесты (`generator.test.ts`).
 
-| Сложность | Попыток: медиана / p90 / p99 / max | Время: медиана / p99 |
+| Версия | Изменение |
+| --- | --- |
+| 1 | Одна ось: класс по технике (easy singles ≤38 подсказок, medium locked ≤32, hard pairs ≤28, expert beyond ≤26). |
+| **2** (PD-9) | Две оси: ровно N подсказок × техника. Профили easy 38/singles, medium 30/singles, hard 26/locked, expert 24/pairs, **новый master** (24, beyond). `rateDifficulty` учитывает обе оси. **Сетки всех классов, кроме easy, изменились** (easy: профиль не менялся, и seed `2026-09-29`/easy даёт ту же сетку); смысл названий сдвинулся (v1 medium → v2 hard, v1 hard → v2 expert, v1 expert → v2 master). Сетка дня из фолбэка v1, уже закэшированная на сервере/клиенте, остаётся какой была — совпадения с v2 нет. |
+
+## Попытки и время генерации (замер v2, 2026-09-29)
+
+Генерация — цикл попыток: каждая строит полную сетку и вычитает клетки до целевого числа подсказок;
+если профиль не попал, следующая попытка продолжает тот же PRNG-поток (поэтому детерминизм сохраняется, а
+потолок `maxAttempts` не влияет на результат, пока он не исчерпан). Замер — `pnpm measure:engine N [классы…]`
+(`packages/engine/scripts/measure-generation.ts`; `generateWithStats`, seed `measure-<класс>-<i>`,
+потолок 5000). Node 24, Apple Silicon, N = 1000 seed на класс (expert — 3000 для хвоста).
+**Замер снимался на сильно загруженной машине (load average 20–28), поэтому время завышено —
+на свободной машине ожидай в разы быстрее; порядок величин и число попыток от нагрузки не зависят.**
+
+| Класс | Попыток: медиана / p95 / p99 / max | Время, мс: медиана / p95 / p99 / max |
 | --- | --- | --- |
-| easy | 1 / 1 / 1 / 1 | ≈ 1 мс / ≈ 15 мс |
-| medium | 3 / 8 / 16 / 25 | ≈ 15–25 мс / ≈ 165–270 мс |
-| hard | **6 / 19 / 37 / 77** (p99.9 = 57) | ≈ 35 мс / ≈ 380 мс |
-| expert | 2 / 5 / 9 / 15 | ≈ 10 мс / ≈ 100 мс |
+| easy | 1 / 1 / 1 / 1 | 1 / 2 / 4 / 14 |
+| medium | 1 / 1 / 1 / 1 | 1 / 3 / 4 / 11 |
+| hard | 5 / 20 / 28 / 41 | 14 / 55 / 81 / 137 |
+| expert (1000) | 14 / 54 / 94 / 138 | 59 / 233 / 408 / 524 |
+| expert (3000) | 14 / 55 / 89 / 138 | 87 / 456 / 757 / 1710 |
+| master | 4 / 15 / 23 / 33 | 13 / 50 / 78 / 106 |
 
-Хвост hard — самый тяжёлый (одиночные seed до ~75 попыток и ~2 с на нагруженной машине). Прежний
-потолок 100 был на грани, поэтому дефолт `maxAttempts` поднят до **300** (`DEFAULT_MAX_ATTEMPTS`,
-запас ≈ 4× к худшему из замеров). Подъём потолка сетки не меняет: тест `generate — maxAttempts`
-проверяет, что seed с 74 попытками (`measure2-811`, hard) даёт ту же сетку при любом потолке ≥ 74
-и `GenerationError` при потолке 73, а снапшоты сеток остались прежними. `generateWithStats(options)`
-(экспорт модуля `generator.ts`, не `index.ts`) возвращает `{ puzzle, attempts }` для повторения замера.
+Ни одного `GenerationError` при потолке 5000. **p95 для всех классов — сотни миллисекунд максимум**
+(цель p95 < 3 с на десктопе для easy–hard выполнена с большим запасом; expert/master тоже в пределах
+секунды на p99), так что генерация в Web Worker клиента укладывается без спиннера. Хвост — expert
+(одиночные seed ~140 попыток ≈ 0.5–1.7 с под нагрузкой). Дефолтный потолок `DEFAULT_MAX_ATTEMPTS = 300`
+оставлен: ≈ 2× к максимуму замера (138), а число успехов на попытку ≈ 1/14 для expert даёт вероятность
+исчерпать 300 попыток порядка 10⁻⁶ на seed. Подъём потолка сетки не меняет: тест `generate — maxAttempts`
+проверяет, что seed с 138 попытками (`measure-expert-812`, expert) даёт ту же сетку при любом потолке ≥ 138
+и `GenerationError` при потолке 137.
 
-## Производительность (Node 24, Apple Silicon, ненагруженная машина)
+## Производительность (Node 24, Apple Silicon)
 
 - `solve`/`countSolutions`: < 1 мс на сетку.
-- `generate`: среднее по замеру выше — easy ≈ 2 мс, medium ≈ 25–45 мс, hard ≈ 60–110 мс,
-  expert ≈ 12–18 мс. Smoke-тест: expert < 3 с.
+- `generate` — таблица выше (медиана: easy/medium ≈ 1 мс, hard ≈ 14 мс, expert ≈ 60 мс, master ≈ 13 мс).
+  Smoke-тесты: expert < 3 с, все 5 классов одного seed < 3 с суммарно.
 - `techniqueForCell` для всех 81 клеток hard-сетки ≈ 15 мс.
-- Полный `pnpm test` (включая 200×4 сеток в `generator.heavy.test.ts`) ≈ 20–30 с; под
-  сильной нагрузкой машины дольше — heavy-тест проверяет корректность, не время.
+- Полный `pnpm test` движка (heavy-тест — 100 сеток × 5 классов в `generator.heavy.test.ts`): по факту
+  ≈ 57 с CPU (≈ 130 с wall при load average ~20; expert и hard — основная доля), heavy-тест проверяет
+  корректность, не время. Таймаут heavy-кейсов — 180 с на класс. До PD-9 (200×4 сетки) замер QA PD-15 — ≈ 75 с.
 
 ## Лицензии
 

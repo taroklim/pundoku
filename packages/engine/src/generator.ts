@@ -1,39 +1,41 @@
 /**
  * Генератор: полная сетка → вычитание клеток с проверкой единственности после каждого
- * удаления. Детерминирован по seed (см. prng.ts). Сложность — по набору техник,
- * потребовавшихся human-style решателю, а не по числу подсказок.
+ * удаления. Детерминирован по seed (см. prng.ts). Сложность — две оси: ровно целевое число
+ * подсказок (`DIFFICULTY_PROFILES[difficulty].clues` либо `options.clues`) и самая дорогая
+ * техника, потребовавшаяся human-style решателю (см. difficulty.ts).
  */
+import { DIFFICULTY_PROFILES } from "./difficulty.js";
 import { GRID_SIZE, bytesToGrid } from "./grid.js";
 import { TECHNIQUE_ORDER, ratingTierBytes, techniqueTier, techniquesUsed } from "./human.js";
 import { Rng } from "./prng.js";
 import { countSolutionsBytes, solveBytes } from "./solver.js";
-import type { Difficulty, Puzzle, Technique } from "./types.js";
+import type { Difficulty, Puzzle } from "./types.js";
+
+/**
+ * Версия алгоритма генерации. Любое изменение, меняющее сетки для существующих seed (профили
+ * сложности, порядок вычитания, PRNG, техники решателя), обязано поднять её и попасть в changelog
+ * README («Версии алгоритма»). Версия в PRNG-seed не подмешивается — её удерживают снапшот-тесты.
+ */
+export const GENERATOR_VERSION = 2;
+
+/** Минимально осмысленное число подсказок (нижняя граница для судоку с единственным решением). */
+const MIN_CLUES = 17;
 
 export interface GenerateOptions {
   readonly difficulty: Difficulty;
   /** Любая строка; одна и та же строка → байт-в-байт та же сетка. */
   readonly seed: string;
-  /** Максимум попыток попасть в класс сложности (по умолчанию `DEFAULT_MAX_ATTEMPTS` = 300). */
+  /** Максимум попыток попасть в профиль (по умолчанию `DEFAULT_MAX_ATTEMPTS`). */
   readonly maxAttempts?: number;
+  /**
+   * Целевое число подсказок — вторая ось сложности; по умолчанию из `DIFFICULTY_PROFILES`
+   * (easy 38, medium 30, hard 26, expert 24, master 24). Сетка получает ровно столько подсказок.
+   * Целое число в 17..80, иначе `RangeError`. Значение не по умолчанию даёт другую сетку, чем
+   * дефолт, а `rateDifficulty` такой сетки может не совпасть с `difficulty` (техническая ось
+   * гарантируется, ярлык singles-сетки medium/easy определяется числом подсказок).
+   */
+  readonly clues?: number;
 }
-
-/** Самая дорогая техника, разрешённая в классе (для expert — ограничений нет). */
-const CAP: Record<Exclude<Difficulty, "expert">, Technique> = {
-  easy: "hidden_single",
-  medium: "locked_candidates",
-  hard: "hidden_pair",
-};
-
-/**
- * Ниже этого числа подсказок вычитание прекращается, как только сложность попала в
- * класс (иначе easy-сетки получались бы с 25 подсказками и утомляли).
- */
-const CLUE_FLOOR: Record<Difficulty, number> = {
-  easy: 38,
-  medium: 32,
-  hard: 28,
-  expert: 26,
-};
 
 export class GenerationError extends Error {
   constructor(difficulty: Difficulty, seed: string, attempts: number) {
@@ -55,42 +57,38 @@ export function randomSolution(rng: Rng): Uint8Array {
   return full;
 }
 
-/** Ярус самой дорогой техники, нужной сетке; TECHNIQUE_ORDER.length — beyond. */
-function ratingTier(puzzle: Uint8Array, cap: Technique | undefined): number {
-  return ratingTierBytes(puzzle, cap === undefined ? TECHNIQUE_ORDER.length - 1 : techniqueTier(cap));
-}
-
-/** Целевой ярус: easy → singles (0..1), medium → 2, hard → 3..4, expert → 5. */
-function matchesTarget(tier: number, difficulty: Difficulty): boolean {
-  switch (difficulty) {
-    case "easy":
-      return tier <= 1;
-    case "medium":
-      return tier === 2;
-    case "hard":
-      return tier === 3 || tier === 4;
-    case "expert":
-      return tier === TECHNIQUE_ORDER.length;
-  }
+/** Ярус самой дорогой техники, нужной сетке (не глубже `maxTier`); TECHNIQUE_ORDER.length — beyond. */
+function ratingTier(puzzle: Uint8Array, maxTier: number): number {
+  return ratingTierBytes(puzzle, maxTier);
 }
 
 /**
- * Одна попытка: вычитаем клетки в случайном порядке. Удаление принимается, если решение
- * остаётся единственным и (для easy/medium/hard) сетка всё ещё решается техниками не
- * дороже потолка класса. Как только подсказок ≤ CLUE_FLOOR и сложность в классе —
- * останавливаемся. Возвращает null, если класс не достигнут.
+ * Требуемый класс техники: ярус сетки в пределах цели профиля. singles — «не дороже» (0..1),
+ * locked — ровно locked (2), pairs — naked/hidden pair (3..4), beyond — застрял (5).
  */
-function attempt(rng: Rng, difficulty: Difficulty): { mission: Uint8Array; solution: Uint8Array } | null {
+function matchesTechnique(tier: number, target: number): boolean {
+  if (target <= 1) return tier <= 1;
+  if (target === 2) return tier === 2;
+  if (target <= 4) return tier === 3 || tier === 4;
+  return tier === TECHNIQUE_ORDER.length;
+}
+
+/**
+ * Одна попытка: вычитаем клетки в случайном порядке, пока подсказок не станет ровно `clues`.
+ * Удаление принимается, если решение остаётся единственным и (для классов с потолком техники)
+ * сетка всё ещё решается техниками не дороже потолка. Возвращает null, если ровно `clues`
+ * не достигнуто (дальше вычитать нечего) либо техническая ось не совпала с классом.
+ */
+function attempt(rng: Rng, clues: number, target: number): { mission: Uint8Array; solution: Uint8Array } | null {
   const solution = randomSolution(rng);
   const puzzle = Uint8Array.from(solution);
   const order = Uint8Array.from({ length: GRID_SIZE }, (_, i) => i);
   rng.shuffle(order);
-  const cap = difficulty === "expert" ? undefined : CAP[difficulty];
-  const floor = CLUE_FLOOR[difficulty];
-  let clues = GRID_SIZE;
-  let tier = 0;
+  const beyond = target === TECHNIQUE_ORDER.length;
+  const capTier = beyond ? TECHNIQUE_ORDER.length - 1 : target;
+  let left = GRID_SIZE;
 
-  for (let i = 0; i < GRID_SIZE; i++) {
+  for (let i = 0; i < GRID_SIZE && left > clues; i++) {
     const c = order[i]!;
     const d = puzzle[c]!;
     puzzle[c] = 0;
@@ -98,29 +96,21 @@ function attempt(rng: Rng, difficulty: Difficulty): { mission: Uint8Array; solut
       puzzle[c] = d;
       continue;
     }
-    if (cap !== undefined) {
-      // Под потолком класса: не даём сетке стать сложнее целевой.
-      const t = ratingTier(puzzle, cap);
-      if (t > techniqueTier(cap)) {
-        puzzle[c] = d;
-        continue;
-      }
-      tier = t;
+    // Под потолком класса: не даём сетке стать сложнее целевой. Для master потолка нет.
+    if (!beyond && ratingTier(puzzle, capTier) > capTier) {
+      puzzle[c] = d;
+      continue;
     }
-    clues--;
-    if (clues <= floor) {
-      if (cap === undefined) tier = ratingTier(puzzle, undefined);
-      if (matchesTarget(tier, difficulty)) break;
-    }
+    left--;
   }
-  if (cap === undefined) tier = ratingTier(puzzle, undefined);
-  return matchesTarget(tier, difficulty) ? { mission: puzzle, solution } : null;
+  if (left !== clues) return null;
+  const tier = ratingTier(puzzle, TECHNIQUE_ORDER.length - 1);
+  return matchesTechnique(tier, target) ? { mission: puzzle, solution } : null;
 }
 
 /**
- * Потолок числа попыток по умолчанию. По замеру (README «Попытки и время генерации») hard в худшем
- * случае требует 77 попыток на 12 000 seed (хвост тянется дальше — PM видел ~90), поэтому прежние 100
- * были на грани; 300 даёт запас ≈ 4×.
+ * Потолок числа попыток по умолчанию. По замеру v2 (README «Попытки и время генерации») худший класс —
+ * expert: максимум 138 попыток на 3000 seed (медиана 14), поэтому 300 даёт запас ≈ 2× к максимуму.
  * RNG последовательный (каждая попытка продолжает поток предыдущей), так что увеличение потолка
  * НЕ меняет уже существующие сетки — только превращает бывший `GenerationError` в успех.
  */
@@ -129,10 +119,18 @@ export const DEFAULT_MAX_ATTEMPTS = 300;
 /** Сетка + сколько попыток понадобилось (диагностика/замеры; в публичный `Puzzle` не входит). */
 export function generateWithStats(options: GenerateOptions): { puzzle: Puzzle; attempts: number } {
   const { difficulty, seed } = options;
+  const profile = DIFFICULTY_PROFILES[difficulty];
+  if (profile === undefined) throw new RangeError(`Unknown difficulty '${String(difficulty)}'`);
+  const clues = options.clues ?? profile.clues;
+  if (!Number.isInteger(clues) || clues < MIN_CLUES || clues >= GRID_SIZE) {
+    throw new RangeError(`clues must be an integer in ${MIN_CLUES}..${GRID_SIZE - 1}, got ${String(clues)}`);
+  }
   const maxAttempts = options.maxAttempts ?? DEFAULT_MAX_ATTEMPTS;
-  const rng = new Rng(`${seed}\0${difficulty}`);
+  // Дефолтные подсказки → ключ `${seed}\0${difficulty}`; своё число подсказок — другая сетка (свой ключ).
+  const rng = new Rng(clues === profile.clues ? `${seed}\0${difficulty}` : `${seed}\0${difficulty}\0${clues}`);
+  const target = techniqueTier(profile.technique);
   for (let i = 0; i < maxAttempts; i++) {
-    const res = attempt(rng, difficulty);
+    const res = attempt(rng, clues, target);
     if (res === null) continue;
     const mission = bytesToString(res.mission);
     return {
@@ -153,7 +151,7 @@ export function generateWithStats(options: GenerateOptions): { puzzle: Puzzle; a
 /**
  * Генерирует сетку заданной сложности детерминированно по seed. Бросает
  * `GenerationError`, если за `maxAttempts` (по умолчанию `DEFAULT_MAX_ATTEMPTS` = 300) попыток
- * класс не достигнут; на практике медиана — единицы попыток, максимум по замеру — 77 (hard, 12 000 seed).
+ * профиль (число подсказок × техника) не достигнут; на практике медиана — от 1 до 14 попыток, максимум по замеру — 138 (expert, 3000 seed).
  */
 export function generate(options: GenerateOptions): Puzzle {
   return generateWithStats(options).puzzle;

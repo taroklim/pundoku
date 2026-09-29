@@ -62,6 +62,9 @@ describe("PUT/GET /api/snapshot", () => {
       [{ ...base, updatedAt: "2026-02-30T10:00:00Z" }, "invalid_updated_at"],
       [{ ...base, updatedAt: "2026-09-29T25:00:00Z" }, "invalid_updated_at"],
       [{ ...base, updatedAt: 1759140000000 }, "invalid_updated_at"],
+      // RFC 3339 допускает строчные t/z, но API строгий — задокументировано в README.
+      [{ ...base, updatedAt: "2026-09-29t10:00:00Z" }, "invalid_updated_at"],
+      [{ ...base, updatedAt: "2026-09-29T10:00:00z" }, "invalid_updated_at"],
       [{ ...base, data: [] }, "invalid_data"],
       [{ ...base, data: null }, "invalid_data"],
       [{ ...base, data: "str" }, "invalid_data"],

@@ -29,6 +29,18 @@ function integer(name: string, fallback: number): number {
   return value;
 }
 
+/** Профили движка (@pundoku/engine, DIFFICULTIES) — значение проверяется при старте, а не при первом фолбэке. */
+const DIFFICULTY_NAMES = ["easy", "medium", "hard", "expert", "master"] as const;
+
+function difficulty(name: string, fallback: string): string {
+  const raw = process.env[name];
+  if (raw === undefined || raw === "") return fallback;
+  if (!(DIFFICULTY_NAMES as readonly string[]).includes(raw)) {
+    throw new Error(`Переменная окружения ${name} должна быть одной из ${DIFFICULTY_NAMES.join("|")}, получено: ${raw}`);
+  }
+  return raw;
+}
+
 function list(name: string, fallback: string[]): string[] {
   const raw = process.env[name];
   if (raw === undefined || raw.trim() === "") return fallback;
@@ -48,8 +60,12 @@ export const env = {
   /** Источник ежедневной сетки (Sudoku.com). Только через прокси, никогда из браузера. */
   sudokuComBaseUrl: process.env.SUDOKU_COM_BASE_URL ?? "https://sudoku.com/api/v2",
   sudokuComTimeoutMs: integer("SUDOKU_COM_TIMEOUT_MS", 5000),
-  /** Сложность для сгенерированной сетки дня, когда Sudoku.com недоступен (у Sudoku.com daily — hard). */
-  dailyFallbackDifficulty: process.env.DAILY_FALLBACK_DIFFICULTY ?? "hard",
+  /**
+   * Сложность сгенерированной сетки дня, когда Sudoku.com недоступен. По умолчанию `medium` —
+   * профиль движка 30 подсказок/singles (v2, PD-9), близкий к Sudoku.com «hard» (их daily решается
+   * одними singles при 30 подсказках); движковый `hard` — уже 26 подсказок + locked candidates.
+   */
+  dailyFallbackDifficulty: difficulty("DAILY_FALLBACK_DIFFICULTY", "medium"),
   /** Как часто (мс) перезапрашивать Sudoku.com за датой, у которой в кэше лежит фолбэк-сетка. */
   dailyUpstreamRetryMs: integer("DAILY_UPSTREAM_RETRY_MS", 60_000),
   /** Разрешённые origin'ы для CORS (через запятую). */
