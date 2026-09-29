@@ -269,7 +269,8 @@ export class DayStore extends GameStore<DaySnapshot> {
             { mission: saved.mission, source: saved.source, hasMoves: saved.play.log.length > 0 },
             plan.puzzle,
           );
-          if (r.action === "keep-own") return this.resumeSaved(saved, false, "local");
+          // win rate относится к чужой (серверной) сетке — у своей его нет (PD-37: в записи он мог остаться от старой сверки)
+          if (r.action === "keep-own") return this.resumeSaved({ ...saved, winRate: null }, false, "local");
           if (r.action === "keep") return this.resumeSaved(saved, false, "server", r.puzzle);
         }
         this.begin(plan.puzzle, solution, "server", false);
@@ -321,7 +322,10 @@ export class DayStore extends GameStore<DaySnapshot> {
       source: src.source,
       difficulty: src.difficulty ?? this.lastKnownDifficulty ?? DAILY_FALLBACK_DIFFICULTY,
       difficultyKnown: src.difficulty !== null,
-      winRate: verification === "server" ? src.winRate : null,
+      // Сохранённый winRate уже относится к сохранённой сетке (у чужой/клиентской его нет — см. `persist`,
+      // `keep-own`), поэтому от `verification` он не зависит: у записи, восстановленной с сервера или подменённой
+      // слиянием (`progressFromRecord`), `verification` всегда "local", а winRate в ней настоящий (PD-37).
+      winRate: src.winRate,
       verification,
       serverVerified: saved.serverVerified,
       offline,

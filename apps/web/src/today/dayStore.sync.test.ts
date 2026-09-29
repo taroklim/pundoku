@@ -3,7 +3,8 @@
 import { dailyPuzzle } from "@pundoku/engine";
 import { describe, expect, it, vi } from "vitest";
 import type { RemoteApplied, SyncEvent, SyncHooks } from "../sync/manager";
-import { progressOf } from "../sync/fixtures";
+import { progressOf, recordOf } from "../sync/fixtures";
+import { progressFromRecord } from "../sync/schema";
 import type { DayDeps } from "./dayStore";
 import { DayStore, RESTORE_WAIT_MS } from "./dayStore";
 import type { FetchedDay } from "./dayResolver";
@@ -155,5 +156,83 @@ describe("DayStore + sync", () => {
     solveAll(store);
     await vi.waitFor(async () => expect((await repo.getDay(DATE))?.solved).toBe(true));
     expect(store.getSnapshot().phase).toBe("solved");
+  });
+});
+
+describe("DayStore: «N % solved today» после восстановления с сервера и слияния (PD-37)", () => {
+  const offline = { fetchDay: vi.fn(async () => ({ ok: false, reason: "network" }) as FetchedDay) };
+  const NOON = new Date(2026, 8, 29, 12, 0);
+
+  /** День, каким его кладёт в хранилище `SyncManager` из серверной записи (`progressFromRecord`). */
+  const restoredDay = (winRate?: number) => {
+    const rec = recordOf(DATE);
+    if (winRate === undefined) delete rec.winRate;
+    else rec.winRate = winRate;
+    return progressFromRecord(DATE, rec)!;
+  };
+
+  it("восстановление после чистки IndexedDB: решённый день из записи с winRate показывает winRate", async () => {
+    const { store, repo } = make(NOON, offline);
+    await repo.saveDay(restoredDay(61.4));
+    expect(restoredDay(61.4).verification).toBe("local"); // именно этот случай и терял winRate
+    await started(store);
+    expect(store.getSnapshot()).toMatchObject({ phase: "solved", winRate: 61.4, source: "sudoku.com" });
+  });
+
+  it("восстановленный день пишется обратно с winRate (следующий снапшот не теряет его)", async () => {
+    const { store, repo } = make(NOON, offline);
+    await repo.saveDay(restoredDay(42));
+    await started(store);
+    store.dispose();
+    expect((await repo.getDay(DATE))!.winRate).toBe(42);
+    const again = new DayStore({ repo, sync: new FakeHooks(), ...offline, verify: vi.fn(), generateFallback: vi.fn(), now: () => NOON, isOnline: () => true, slowFetchMs: 50 });
+    await started(again);
+    expect(again.getSnapshot().winRate).toBe(42);
+  });
+
+  it("замена слиянием: сервер прислал решённый день (409/восстановление), пока играли — карточка со winRate", async () => {
+    const { store, repo, hooks } = make(NOON);
+    await started(store);
+    expect(store.getSnapshot().phase).toBe("playing");
+    await repo.saveDay(restoredDay(61.4)); // слияние заменило локальную запись серверной
+    hooks.emit({ dates: [DATE], gridChanged: false });
+    await vi.waitFor(() => expect(store.getSnapshot().phase).toBe("solved"));
+    expect(store.getSnapshot().winRate).toBe(61.4);
+  });
+
+  it("у записи без winRate (клиентская сетка/API не отдал) карточка без winRate", async () => {
+    const { store, repo } = make(NOON, offline);
+    await repo.saveDay(restoredDay());
+    await started(store);
+    expect(store.getSnapshot()).toMatchObject({ phase: "solved", winRate: null });
+  });
+
+  it("регресс: день, решённый на этом устройстве, после перезагрузки сохраняет winRate; фолбэк-день — без него", async () => {
+    const a = make(NOON);
+    await started(a.store);
+    solveAll(a.store);
+    await vi.waitFor(() => expect(a.hooks.events).toContain("solved"));
+    expect(a.store.getSnapshot()).toMatchObject({ winRate: 61.4, verification: "server" });
+    a.store.dispose();
+    const again = new DayStore({ ...a.deps });
+    await started(again);
+    expect(again.getSnapshot()).toMatchObject({ phase: "solved", winRate: 61.4 });
+
+    const b = make(NOON, offline); // офлайн: сетка от генератора, winRate нет
+    await started(b.store);
+    solveAll(b.store);
+    await vi.waitFor(() => expect(b.hooks.events).toContain("solved"));
+    b.store.dispose();
+    const againB = new DayStore({ ...b.deps });
+    await started(againB);
+    expect(againB.getSnapshot()).toMatchObject({ phase: "solved", winRate: null, source: "client" });
+  });
+
+  it("регресс: начатая сетка Sudoku.com, сервер отдал другую — доигрываем свою, winRate чужой сетки не показывается", async () => {
+    const { store, repo } = make(NOON, { fetchDay: vi.fn(async () => ({ ok: true, puzzle: { date: DATE, mission: dailyPuzzle("2026-09-30", "easy").mission, difficulty: "easy", source: "sudoku.com", winRate: 10 } }) as FetchedDay) });
+    const own = progressOf(DATE, { solved: false, moves: 5 }); // своя сетка, в записи остался winRate 61.4
+    await repo.saveDay(own);
+    await started(store);
+    expect(store.getSnapshot()).toMatchObject({ phase: "playing", verification: "local", winRate: null });
   });
 });
