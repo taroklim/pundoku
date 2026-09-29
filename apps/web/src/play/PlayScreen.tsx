@@ -25,6 +25,34 @@ function useClock(): string {
   return text;
 }
 
+/** Ключевые пороги остатка для озвучки: каждые 10 клеток и последние пять. */
+const isMilestone = (left: number): boolean => left > 0 && (left % 10 === 0 || left <= 5);
+
+/**
+ * Объявление «N cells left» для скринридера — не на каждую цифру: только на порогах
+ * (кратно 10 и последние 5), с debounce 600 мс и без повтора уже озвученного значения.
+ * Возвращает текст для live-региона.
+ */
+function useCellsLeftAnnouncement(left: number, active: boolean, startedAt: number): string {
+  const { t } = useTranslation();
+  const [text, setText] = useState("");
+  const last = useRef<number | null>(null);
+  useEffect(() => {
+    // Новая партия — сбрасываем, чтобы пороги озвучивались заново.
+    last.current = null;
+    setText("");
+  }, [startedAt]);
+  useEffect(() => {
+    if (!active || !isMilestone(left) || last.current === left) return;
+    const id = window.setTimeout(() => {
+      last.current = left;
+      setText(t("play.cellsLeft", { count: left }));
+    }, 600);
+    return () => window.clearTimeout(id);
+  }, [left, active, t]);
+  return text;
+}
+
 /**
  * Экран Play (PD-11): подпись дня с тихим таймером → поле B Boxes → строка статуса «N cells left»
  * → панель 1–9 в один ряд с остатками → Notes / Undo / Erase. Партия локальная, на движке.
@@ -61,6 +89,7 @@ export function PlayScreen() {
   const interactive = phase === "playing" && play !== null;
   const left = play ? cellsLeft(play) : 81;
   const rem = play ? remaining(play) : null;
+  const announcement = useCellsLeftAnnouncement(left, interactive, snap.startedOn.getTime());
 
   const onKeyDown = (e: KeyboardEvent<HTMLElement>) => {
     const target = e.target as HTMLElement;
@@ -96,6 +125,10 @@ export function PlayScreen() {
 
   return (
     <div className="play" onKeyDown={onKeyDown}>
+      {/* Live-регион для скринридера: «N cells left» только на порогах (см. хук выше). */}
+      <p className="sr-only" role="status" aria-live="polite" aria-atomic="true">
+        {announcement}
+      </p>
       <header className="toolbar">
         <h1 className="title">{t("tabs.play")}</h1>
         {/* ПРОВИЗОРНО (PD-11): выбор сложности — минимальный нативный контрол, которого нет в

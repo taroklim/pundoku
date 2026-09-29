@@ -23,7 +23,9 @@ export function App() {
           role="tabpanel"
           id={panelDomId(tab)}
           aria-labelledby={tabDomId(tab)}
-          tabIndex={0}
+          // Панель без фокусируемого содержимого (заглушки) — сама точка табуляции (APG);
+          // на Play внутри есть клетки/кнопки, лишняя остановка на оболочке не нужна.
+          tabIndex={tab === "play" ? undefined : 0}
         >
           {tab === "play" ? <PlayScreen /> : <Placeholder tab={tab} />}
         </div>
