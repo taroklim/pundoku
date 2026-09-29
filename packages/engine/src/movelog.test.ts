@@ -279,3 +279,37 @@ describe("undo contract", () => {
     expect(summary(log)).toMatchObject({ mistakes: 1, clean: false });
   });
 });
+
+/** Таблица «цепочки» из README «Контракт undo» — держим её и код синхронными. */
+describe("undo contract — README chain table", () => {
+  const erase = (t: number, cell: number): Move => ({ t, cell, kind: "erase" });
+  const undo = (t: number, cell: number): Move => ({ t, cell, kind: "undo" });
+  const note = (t: number, cell: number, digit: Digit): Move => ({ t, cell, kind: "note_add", digit });
+  // Клетка 0 — цель; t = 1, 2, 3, ...; heatmap при t_last = длительности → t / duration.
+  const rows: Array<[string, Move[], { c: number; clean: boolean; placements: number; hm: number | null; mistakes?: number }]> = [
+    ["place, undo", [place(1, 0, 1), undo(2, 0)], { c: 1, clean: false, placements: 0, hm: null }],
+    ["place, erase", [place(1, 0, 1), erase(2, 0)], { c: 1, clean: false, placements: 1, hm: null }],
+    ["place, erase, undo", [place(1, 0, 1), erase(2, 0), undo(3, 0)], { c: 0, clean: true, placements: 1, hm: 1 / 3 }],
+    ["place, erase, undo, undo", [place(1, 0, 1), erase(2, 0), undo(3, 0), undo(4, 0)], { c: 1, clean: false, placements: 0, hm: null }],
+    ["overwrite", [place(1, 0, 5, { correct: true }), place(2, 0, 1)], { c: 1, clean: false, placements: 2, hm: 1 }],
+    ["overwrite, undo", [place(1, 0, 1), place(2, 0, 5, { correct: true }), undo(3, 0)], { c: 1, clean: false, placements: 1, hm: 1 / 3 }],
+    ["overwrite, undo, undo", [place(1, 0, 1), place(2, 0, 5), undo(3, 0), undo(4, 0)], { c: 2, clean: false, placements: 0, hm: null }],
+    ["note_add, undo", [note(1, 0, 1), undo(2, 0)], { c: 0, clean: true, placements: 0, hm: null }],
+    ["place elsewhere, note_add, undo", [place(1, 1, 1), note(2, 0, 1), undo(3, 0)], { c: 0, clean: true, placements: 1, hm: null }],
+    ["undo on empty log", [undo(1, 0)], { c: 0, clean: true, placements: 0, hm: null }],
+    ["place(wrong), undo", [place(1, 0, 5, { correct: false }), undo(2, 0)], { c: 1, clean: false, placements: 0, hm: null, mistakes: 1 }],
+    ["erase empty cell, undo", [erase(1, 0), undo(2, 0)], { c: 0, clean: true, placements: 0, hm: null }],
+  ];
+  for (const [name, log, want] of rows) {
+    it(name, () => {
+      const s = summary(log);
+      expect(s.corrections).toBe(want.c);
+      expect(s.clean).toBe(want.clean);
+      expect(s.placements).toBe(want.placements);
+      expect(s.mistakes).toBe(want.mistakes ?? 0);
+      const hm = heatmap(log, { mission: MISSION, solution: SOLUTION })[0]!;
+      if (want.hm === null) expect(hm).toBeNull();
+      else expect(hm).toBeCloseTo(want.hm, 10);
+    });
+  }
+});
