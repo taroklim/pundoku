@@ -46,8 +46,8 @@ describe("GET /api/daily/:date", () => {
     expect(res.status).toBe(200);
     expect(res.body.source).toBe("generator");
     expect(res.body.winRate).toBeUndefined();
-    expect(res.body.difficulty).toBe("hard");
-    expect((generator as FakeGenerator).calls).toEqual([{ date: "2026-09-28", difficulty: "hard" }]);
+    expect(res.body.difficulty).toBe("medium"); // дефолт фолбэка (PD-9): 30 подсказок/singles
+    expect((generator as FakeGenerator).calls).toEqual([{ date: "2026-09-28", difficulty: "medium" }]);
     expect(repos.dailyPuzzles.rows.get("2026-09-28")?.source).toBe("generator");
   });
 

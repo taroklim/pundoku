@@ -9,7 +9,7 @@
  * (в Docker перед стартом сервера). Папка миграций — `migrations/` рядом с пакетом,
  * независимо от cwd.
  */
-import { readdir, readFile } from "node:fs/promises";
+import { readdir, readFile, realpath } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import pg from "pg";
@@ -59,8 +59,21 @@ export async function runMigrations(databaseUrl: string): Promise<string[]> {
   return applied;
 }
 
-const isDirectRun = process.argv[1] !== undefined && import.meta.url === pathToFileURL(process.argv[1]).href;
-if (isDirectRun) {
+/**
+ * Запущен ли этот файл как точка входа (`node dist/db/migrate.js`, `tsx src/db/migrate.ts`).
+ * Сравниваем реальные пути: `import.meta.url` уже разрешает симлинки, а `argv[1]` — нет, поэтому
+ * запуск через симлинк иначе молча выходил бы с кодом 0, ничего не применив.
+ */
+export async function isDirectRun(entry: string | undefined, moduleUrl: string): Promise<boolean> {
+  if (entry === undefined) return false;
+  try {
+    return (await realpath(entry)) === (await realpath(fileURLToPath(moduleUrl)));
+  } catch {
+    return moduleUrl === pathToFileURL(entry).href;
+  }
+}
+
+if (await isDirectRun(process.argv[1], import.meta.url)) {
   runMigrations(env.databaseUrl)
     .then((applied) => {
       console.log(applied.length === 0 ? "[migrate] нет новых миграций" : `[migrate] применено: ${applied.join(", ")}`);

@@ -1,9 +1,13 @@
 import { describe, expect, it } from "vitest";
 import {
+  EASY_MIN_CLUES,
   TECHNIQUE_ORDER,
   countSolutions,
+  difficultyForTechnique,
   formatGrid,
+  generate,
   humanSolve,
+  maxTechnique,
   parseGrid,
   rateDifficulty,
   solve,
@@ -62,7 +66,8 @@ describe("singles", () => {
     expect(res.contradiction).toBe(false);
     expect(new Set(res.steps.map((s) => s.technique))).toEqual(new Set(["naked_single"]));
     expect(formatGrid(res.grid)).toBe(formatGrid(solve(PE96_1)!));
-    expect(rateDifficulty(PE96_1)).toBe("easy");
+    // PD-9: singles-сетка с 30 подсказками — medium (вторая ось), а не easy.
+    expect(rateDifficulty(PE96_1)).toBe("medium");
     expect(techniquesUsed(PE96_1)).toEqual(["naked_single"]);
   });
 });
@@ -179,20 +184,47 @@ describe("every step of a full human solve is sound", () => {
   }
 });
 
-describe("rateDifficulty", () => {
+describe("rateDifficulty (two axes: technique × clue count)", () => {
   it("classifies reference puzzles", () => {
+    // singles, 38 подсказок → easy
     expect(rateDifficulty("104708500025030704087009020050060070270300019009017000503072001700150000608003250")).toBe("easy");
-    expect(rateDifficulty("400600370000010020200000054030900401891400532040100000054001007107050000000300000")).toBe("medium");
-    expect(rateDifficulty("000089100002100000000050370005043000090600002000008934720090003000000080006005090")).toBe("hard");
-    expect(rateDifficulty("830901020000850030001070000005300600000549070400000800602000080000000005190000300")).toBe("expert");
+    // singles, 30 подсказок → medium
+    expect(rateDifficulty("000031000028060090003970050200000800870300016091000500000003100406007000019680007")).toBe("medium");
+    // locked candidates → hard (в v1 это был medium)
+    expect(rateDifficulty("400600370000010020200000054030900401891400532040100000054001007107050000000300000")).toBe("hard");
+    // pairs → expert (в v1 это был hard)
+    expect(rateDifficulty("000089100002100000000050370005043000090600002000008934720090003000000080006005090")).toBe("expert");
+    // решатель застрял → master (в v1 это был expert)
+    expect(rateDifficulty("830901020000850030001070000005300600000549070400000800602000080000000005190000300")).toBe("master");
   });
 
-  it("a solved grid is easy; a contradictory one is expert (solver cannot proceed)", () => {
+  it("singles-only grids split at EASY_MIN_CLUES by clue count", () => {
+    const solved = solve(PE96_1)!;
+    expect(rateDifficulty(solved)).toBe("easy"); // 81 подсказка
+    expect(EASY_MIN_CLUES).toBe(34);
+    // Сетки одних singles в 34 и 33 подсказки: берём готовые из генератора с явным clues.
+    for (const [clues, expected] of [[34, "easy"], [33, "medium"], [30, "medium"]] as const) {
+      const p = generate({ difficulty: "easy", seed: "rate-axis", clues });
+      expect(techniqueTier(maxTechnique(techniquesUsed(p.mission))!)).toBeLessThanOrEqual(1);
+      expect(rateDifficulty(p.mission), `${clues} clues`).toBe(expected);
+    }
+  });
+
+  it("a solved grid is easy; a contradictory one is master (solver cannot proceed)", () => {
     expect(rateDifficulty(solve(PE96_1)!)).toBe("easy");
     const bad = [...parseGrid(PE96_1)];
     bad[0] = 3; // 3 уже есть в строке 1 → противоречие
     expect(humanSolve(bad).contradiction).toBe(true);
-    expect(rateDifficulty(bad)).toBe("expert");
+    expect(rateDifficulty(bad)).toBe("master");
+  });
+
+  it("difficultyForTechnique is the technique axis alone (medium is unreachable by technique)", () => {
+    expect(difficultyForTechnique("naked_single")).toBe("easy");
+    expect(difficultyForTechnique("hidden_single")).toBe("easy");
+    expect(difficultyForTechnique("locked_candidates")).toBe("hard");
+    expect(difficultyForTechnique("naked_pair")).toBe("expert");
+    expect(difficultyForTechnique("hidden_pair")).toBe("expert");
+    expect(difficultyForTechnique("beyond")).toBe("master");
   });
 });
 

@@ -20,7 +20,22 @@ export type Grid = readonly CellValue[];
  */
 export type GridInput = Grid | string;
 
-export type Difficulty = "easy" | "medium" | "hard" | "expert";
+/**
+ * Сложность — две оси (число подсказок × самая дорогая техника), см. `DIFFICULTY_PROFILES` и README:
+ * easy 38/singles, medium 30/singles, hard 26/locked candidates, expert 24/pairs, master — beyond.
+ */
+export type Difficulty = "easy" | "medium" | "hard" | "expert" | "master";
+
+/** Профиль класса сложности: целевое число подсказок и техническая ось. */
+export interface DifficultyProfile {
+  /** Целевое число подсказок (генератор попадает ровно в него). */
+  readonly clues: number;
+  /**
+   * Самая дорогая техника класса: генератор не допускает сетку, которой нужна техника дороже
+   * (`'beyond'` — потолка нет), и требует, чтобы она понадобилась (для singles — «не дороже»).
+   */
+  readonly technique: TechniqueOrBeyond;
+}
 
 /** Техники human-style решателя в порядке возрастания стоимости. */
 export type Technique =
