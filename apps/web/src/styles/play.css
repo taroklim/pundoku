@@ -322,7 +322,6 @@
   align-items: center;
   justify-content: center;
   gap: 6px;
-  flex-wrap: wrap;
   padding: 4px 6px;
   color: var(--label-2);
   font-size: clamp(12px, 0.82rem, 15px);
@@ -330,6 +329,22 @@
     background-color 0.12s linear,
     color 0.12s linear,
     transform 0.22s cubic-bezier(0.34, 1.36, 0.52, 1);
+}
+/* Подпись никогда не переносится (иначе кнопка выше соседей): если не влезла — многоточие. */
+.act > span {
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+/* Узкие экраны (iPhone SE, 320pt): «Скасувати»/«Отменить» рядом с иконкой не помещаются в
+   ~91pt кнопки, поэтому иконка над подписью — у всех трёх кнопок ряда, высота одна. */
+@media (max-width: 359px) {
+  .act {
+    flex-direction: column;
+    gap: 2px;
+    padding: 4px 2px;
+  }
 }
 .act svg {
   width: 19px;
