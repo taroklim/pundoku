@@ -94,5 +94,59 @@
     "gridLabel_many": "Ваша постійна сітка: {{count}} підказок, {{state}}",
     "gridLabel_other": "Ваша постійна сітка: {{count}} підказки, {{state}}",
     "gridHint": "Остання клітинка сьогодні впаде сюди."
+  },
+  "year": {
+    "chooseYear": "{{year}}. Обрати рік",
+    "yearMenu": "Рік",
+    "totalsDays_one": "{{count}} день",
+    "totalsDays_few": "{{count}} дні",
+    "totalsDays_many": "{{count}} днів",
+    "totalsDays_other": "{{count}} дня",
+    "totalsClean": "{{n}} без правок",
+    "totalsCorrections": "{{n}} з правками",
+    "legendLabel": "Що означають позначки",
+    "legend": {
+      "solved": "Розв’язано",
+      "help": "З підказкою",
+      "corrections": "Правки",
+      "unfinished": "Не завершено",
+      "missed": "Пропущено"
+    },
+    "canvasLabel": "Рік {{year}}, по місяцях",
+    "emptyLine": "Ваш рік починається сьогодні. Кожен день гри залишає тут одну позначку.",
+    "openToday": "Відкрити сьогоднішню сітку",
+    "continueToday": "Продовжити сьогоднішню сітку",
+    "monthNothing": "поки нічого",
+    "monthSummary_one": "розв’язано {{solved}} із {{count}} дня, з правками — {{corrections}}",
+    "monthSummary_few": "розв’язано {{solved}} із {{count}} днів, з правками — {{corrections}}",
+    "monthSummary_many": "розв’язано {{solved}} із {{count}} днів, з правками — {{corrections}}",
+    "monthSummary_other": "розв’язано {{solved}} із {{count}} дня, з правками — {{corrections}}",
+    "monthUnfinished": "не завершено — {{n}}",
+    "sheetDone": "Готово",
+    "sheetBack": "Назад до місяця: {{month}}",
+    "state": {
+      "solved": "розв’язано",
+      "solvedCorrections": "розв’язано з правками",
+      "solvedHelp": "розв’язано з підказкою",
+      "solvedHelpCorrections": "розв’язано з підказкою і правками",
+      "unfinished": "розпочато, не завершено",
+      "unfinishedCorrections": "розпочато з правками, не завершено",
+      "missed": "не грали",
+      "late": "розв’язано пізніше, вважається пропуском",
+      "today": "сьогодні, ще не грали",
+      "future": "ще не настав",
+      "before": "до початку користування"
+    },
+    "card": {
+      "dailyPuzzle": "сітка дня",
+      "unfinishedNote": "Ви почали цю сітку й зупинилися: заповнено {{n}} з {{total}} клітинок.",
+      "notPlayed": "Не грали.",
+      "todayWaiting": "Сьогоднішня сітка чекає.",
+      "future": "Цей день ще не настав.",
+      "before": "До того, як ви почали користуватися Pundoku.",
+      "lateNote": "Розв’язано після цього дня, тому в році він лишається пропуском.",
+      "assistedRow": "Розв’язано",
+      "assistedValue": "з підказкою"
+    }
   }
 }

@@ -1,0 +1,480 @@
+/*
+ * Экран Year (PD-25) — раскладка C «Blocks» из утверждённого макета design/pd24-year-variants.html
+ * (§4 полотно, §5 шит, §7 движение). Цвета — только токены (`--mark-*` в tokens.css), контраст не понижать.
+ * Префиксы `year-`, `ymark`, `ysheet-` — чтобы не задеть общие `.card/.heat/.legend/.rows/.row` (их
+ * карточка дня переиспользует как есть, как и карточка результата Today).
+ *
+ * Решения владельца, закодированные здесь: месяц — кнопка, день в полотне НЕ кнопка (метки aria-hidden);
+ * «были исправления» = сургуч + сколотый угол; «с подсказкой» = мягкий тон (постоянно); пропуск — контур.
+ */
+
+/* ---------- Метка дня: чистый CSS-квадрат ---------- */
+.ymark {
+  position: relative;
+  display: block;
+  aspect-ratio: 1;
+  min-width: 0;
+  border-radius: 2px;
+  --m: var(--mark-ink);
+}
+.ymark.has-corr {
+  --m: var(--mark-wax);
+}
+.ymark.has-help {
+  --m: var(--mark-ink-soft);
+}
+.ymark.has-help.has-corr {
+  --m: var(--mark-wax-soft);
+}
+/* Заливка и кольцо — в разных слоях: clip-path сколотого угла не должен резать кольцо «сегодня». */
+.ymark::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+}
+/* решён: полный квадрат */
+.ymark.is-solved::before {
+  background: var(--m);
+}
+/* начат и брошен: нижняя половина */
+.ymark.is-unfinished::before {
+  background: linear-gradient(to top, var(--m) 50%, transparent 50%);
+}
+/* пропущен (в том числе доигран позже): только контур, тихо — намеренно */
+.ymark.is-missed::before {
+  box-shadow: inset 0 0 0 1px var(--hairline);
+}
+/* будущее и «до начала пользования»: не рисуем ничего (is-void) */
+
+/* Исправления — ещё и сколотый правый верхний угол: смысл не держится на одном оттенке
+   (accessibility.md > Color and effects). У половинки скол — от её верхней грани. */
+.ymark.is-solved.has-corr::before {
+  clip-path: polygon(0 0, 62% 0, 100% 38%, 100% 100%, 0 100%);
+}
+.ymark.is-unfinished.has-corr::before {
+  clip-path: polygon(0 0, 62% 0, 62% 50%, 100% 80%, 100% 100%, 0 100%);
+}
+
+/* Сегодня — кольцо чернил СНАРУЖИ клетки (то же кольцо, что у выбранной клетки поля). */
+.ymark.is-today::after {
+  content: "";
+  position: absolute;
+  inset: -3px;
+  border-radius: 5px;
+  box-shadow: 0 0 0 1.5px var(--ink);
+}
+
+/* forced-colors: специфичность селекторов должна быть не ниже авторских (`.ymark.has-corr` и т. п.),
+   иначе метки остаются в цветах автора. Заливки и тени система отбрасывает — границы карточек и кнопок
+   дней держит `border` системного цвета; смысл метки (скол угла, форма) от цвета не зависит. */
+@media (forced-colors: active) {
+  .ymark,
+  .ymark.has-corr,
+  .ymark.has-help,
+  .ymark.has-help.has-corr {
+    forced-color-adjust: none;
+    --m: CanvasText;
+  }
+  .ymark.is-missed::before {
+    box-shadow: none;
+    border: 1px solid GrayText;
+  }
+  .ymark.is-today::after {
+    box-shadow: none;
+    border: 1.5px solid Highlight;
+  }
+  .year-month,
+  .ycell:not(.blank),
+  .year-menu {
+    box-shadow: none;
+    border: 1px solid CanvasText;
+  }
+  .ycell.today {
+    box-shadow: none;
+    border: 2px solid Highlight;
+  }
+  .year-menu button[aria-checked="true"] {
+    text-decoration: underline;
+  }
+}
+
+/* ---------- Заголовок, итоги ---------- */
+.year {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  padding-bottom: 12px;
+}
+.year .toolbar {
+  min-height: 44px;
+}
+.year-picker {
+  position: relative;
+}
+.year-picker .title-h {
+  margin: 0;
+}
+.titlebtn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 44px;
+  margin: -8px 0;
+  padding: 0 6px 0 0;
+  border-radius: 10px;
+}
+.titlebtn:active {
+  background: var(--ink-tint);
+}
+.titlebtn svg {
+  width: 15px;
+  height: 15px;
+  flex: none;
+  color: var(--label-2);
+}
+.year-menu {
+  position: absolute;
+  z-index: 10;
+  top: calc(100% + 6px);
+  left: 0;
+  min-width: 140px;
+  display: flex;
+  flex-direction: column;
+  padding: 4px;
+  border-radius: 14px;
+  background: var(--elev);
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.16);
+  border: 1px solid var(--hairline);
+}
+.year-menu button {
+  min-height: 44px;
+  padding: 0 14px;
+  border-radius: 10px;
+  text-align: left;
+  font-size: 1rem;
+  font-variant-numeric: tabular-nums;
+}
+.year-menu button[aria-checked="true"] {
+  color: var(--ink);
+  font-weight: 700;
+  background: var(--ink-tint);
+}
+.year-totals {
+  min-height: 1.3em;
+}
+
+/* ---------- Полотно: 12 карточек 3 × 4 ---------- */
+.year-months {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  padding: 12px max(16px, var(--sa-r)) 0 max(16px, var(--sa-l));
+}
+.year-month {
+  display: block;
+  min-width: 0;
+  padding: 8px 8px 10px;
+  border-radius: 12px;
+  background: var(--elev);
+  box-shadow: var(--box-shadow);
+  text-align: left;
+}
+.year-month:active {
+  background: var(--ink-tint);
+}
+.year-month .mlab {
+  display: block;
+  margin: 0 0 6px 1px;
+  color: var(--label-2);
+  font-size: 0.6875rem; /* 11 px при базовом размере, дальше следует Dynamic Type */
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.year-month .mgrid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
+}
+
+/* ---------- Легенда: кодировка не очевидна, поэтому она на экране (0.6875rem = 11 px — нижний предел, масштабируется Dynamic Type) ---------- */
+.year-legend {
+  list-style: none;
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 8px;
+  padding: 14px max(16px, var(--sa-r)) 0 max(16px, var(--sa-l));
+  color: var(--label-2);
+  font-size: 0.6875rem;
+}
+.year-legend li {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.year-legend .ymark {
+  width: 12px;
+  height: 12px;
+  flex: none;
+}
+
+/* ---------- Пустой год ---------- */
+.year-empty {
+  padding: 18px max(16px, var(--sa-r)) 0 max(16px, var(--sa-l));
+}
+.year-empty p {
+  margin: 0 0 12px;
+  max-width: 30ch;
+  color: var(--label-2);
+  font-size: 0.88rem;
+}
+.year-empty .cta {
+  display: inline-flex;
+  align-items: center;
+  min-height: 46px;
+  padding: 0 18px;
+  border-radius: 11px;
+  background: var(--ink);
+  color: var(--on-ink);
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+.year[data-empty="true"] .year-totals {
+  visibility: hidden;
+}
+
+/* ---------- Шит: месяц → день (страницы одного шита) ---------- */
+.ysheet-root {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  pointer-events: none;
+}
+.ysheet-root.is-open {
+  pointer-events: auto;
+}
+.ysheet-scrim {
+  position: absolute;
+  inset: 0;
+  background: var(--scrim);
+  opacity: 0;
+  transition: opacity 0.22s linear;
+}
+.ysheet-root.is-open .ysheet-scrim {
+  opacity: 1;
+}
+.ysheet {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  margin: 0 auto;
+  max-width: 560px;
+  display: flex;
+  flex-direction: column;
+  max-height: 88dvh;
+  background: var(--bg);
+  color: var(--label);
+  border-radius: 14px 14px 0 0;
+  padding-bottom: calc(10px + var(--sa-bot));
+  transform: translateY(101%);
+  transition: transform 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.ysheet:focus {
+  outline: none;
+}
+.ysheet-root.is-open .ysheet {
+  transform: none;
+}
+.ysheet .grabber {
+  flex: none;
+  width: 36px;
+  height: 5px;
+  margin: 6px auto 0;
+  border-radius: 3px;
+  background: var(--hairline);
+}
+.ysheet-head {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 8px;
+  padding: 8px max(12px, var(--sa-r)) 6px max(12px, var(--sa-l));
+}
+.ysheet-title {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+  text-align: center;
+}
+.ysheet-title:focus {
+  outline: none;
+}
+.ysheet-head .back,
+.ysheet-head .done {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  min-height: 44px;
+  padding: 0 6px;
+  border-radius: 10px;
+  color: var(--ink);
+  font-size: 0.95rem;
+}
+.ysheet-head .back {
+  justify-self: start;
+}
+.ysheet-head .done {
+  justify-self: end;
+  font-weight: 600;
+}
+.ysheet-body {
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 0 max(16px, var(--sa-r)) 8px max(16px, var(--sa-l));
+}
+
+/* страница месяца: клетки дней ≥ 44 pt, тап открывает карточку дня */
+.ysheet .wk {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 6px;
+  margin-bottom: 4px;
+}
+.ysheet .wk span {
+  text-align: center;
+  color: var(--label-2);
+  font-size: 0.6875rem;
+}
+.ysheet .mcal {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 6px;
+}
+.ycell {
+  position: relative;
+  aspect-ratio: 1;
+  min-width: 0;
+  min-height: 44px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  border-radius: 10px;
+  background: var(--elev);
+}
+.ycell.blank {
+  background: transparent;
+}
+.ycell .n {
+  font-size: 0.94rem;
+  font-variant-numeric: tabular-nums;
+}
+.ycell .ymark {
+  width: 11px;
+  height: 11px;
+}
+.ycell.today {
+  box-shadow: inset 0 0 0 1.5px var(--ink);
+}
+.ycell.today .n {
+  color: var(--ink);
+  font-weight: 700;
+}
+.ycell:active {
+  background: var(--ink-tint);
+}
+.ysheet .sheet-foot {
+  margin: 0;
+  padding: 12px 0 2px;
+  color: var(--label-2);
+  font-size: 0.8rem;
+}
+
+/* страница дня — та же карточка, что в результате Today */
+.daycard h3 {
+  margin: 2px 0 2px;
+  font-size: 1.15rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+.daycard h3:focus {
+  outline: none;
+}
+.daycard .sub {
+  margin: 0 0 14px;
+  color: var(--label-2);
+  font-size: 0.82rem;
+}
+.daycard .row dd.err {
+  color: var(--wax);
+}
+.daycard .emptyday {
+  margin: 6px 0 14px;
+  color: var(--label-2);
+  font-size: 0.88rem;
+}
+.daycard .rows + .emptyday {
+  margin-top: 14px;
+}
+.daycard .ghost {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 46px;
+  border: 1px solid var(--hairline);
+  border-radius: 11px;
+  color: var(--ink);
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+/* Узкие экраны (320): заголовок месяца и клетки шита не должны ломать сетку. */
+@media (max-width: 340px) {
+  .year-months {
+    gap: 6px;
+  }
+  .year-month {
+    padding: 7px 6px 8px;
+  }
+  .ysheet .mcal,
+  .ysheet .wk {
+    gap: 4px;
+  }
+}
+
+/* Низкие экраны (iPhone SE, 568 pt): легенда с переносом строки не должна оказаться под таб-баром
+   при первом показе — чуть плотнее вертикальные интервалы (ширина и размер текста не трогаются). */
+@media (max-height: 600px) {
+  .year-months {
+    padding-top: 6px;
+  }
+  .year-month .mlab {
+    margin-bottom: 4px;
+  }
+  .year-legend {
+    gap: 4px 8px;
+    padding-top: 8px;
+  }
+}
+
+/* ---------- Движение: единственное на экране — шит ---------- */
+@media (prefers-reduced-motion: reduce) {
+  .ysheet {
+    transform: none;
+    opacity: 0;
+    transition: opacity 0.16s linear;
+  }
+  .ysheet-root.is-open .ysheet {
+    opacity: 1;
+  }
+  .ysheet-scrim {
+    transition-duration: 0.16s;
+  }
+}

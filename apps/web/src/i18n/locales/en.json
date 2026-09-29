@@ -88,5 +88,55 @@
     "gridLabel_one": "Your permanent grid: {{count}} clue so far, {{state}}",
     "gridLabel_other": "Your permanent grid: {{count}} clues so far, {{state}}",
     "gridHint": "Today’s last cell lands here."
+  },
+  "year": {
+    "chooseYear": "{{year}}. Choose a year",
+    "yearMenu": "Year",
+    "totalsDays_one": "{{count}} day",
+    "totalsDays_other": "{{count}} days",
+    "totalsClean": "{{n}} clean",
+    "totalsCorrections": "{{n}} with corrections",
+    "legendLabel": "What the marks mean",
+    "legend": {
+      "solved": "Solved",
+      "help": "With help",
+      "corrections": "Corrections",
+      "unfinished": "Unfinished",
+      "missed": "Missed"
+    },
+    "canvasLabel": "Year {{year}}, by month",
+    "emptyLine": "Your year starts today. Each day you play leaves one mark here.",
+    "openToday": "Open today’s puzzle",
+    "continueToday": "Continue today’s puzzle",
+    "monthNothing": "nothing yet",
+    "monthSummary_one": "{{solved}} of {{count}} day solved, {{corrections}} with corrections",
+    "monthSummary_other": "{{solved}} of {{count}} days solved, {{corrections}} with corrections",
+    "monthUnfinished": "{{n}} unfinished",
+    "sheetDone": "Done",
+    "sheetBack": "Back to {{month}}",
+    "state": {
+      "solved": "solved",
+      "solvedCorrections": "solved with corrections",
+      "solvedHelp": "solved with help",
+      "solvedHelpCorrections": "solved with help and corrections",
+      "unfinished": "started, not finished",
+      "unfinishedCorrections": "started with corrections, not finished",
+      "missed": "not played",
+      "late": "played late, counts as missed",
+      "today": "today, not played yet",
+      "future": "not yet",
+      "before": "before you started"
+    },
+    "card": {
+      "dailyPuzzle": "daily puzzle",
+      "unfinishedNote": "You started this one and left it with {{n}} of {{total}} cells filled in.",
+      "notPlayed": "Not played.",
+      "todayWaiting": "Today’s puzzle is waiting.",
+      "future": "This day hasn’t happened yet.",
+      "before": "Before you started using Pundoku.",
+      "lateNote": "Played after the day, so the year keeps it as missed.",
+      "assistedRow": "Solved",
+      "assistedValue": "with help"
+    }
   }
 }
