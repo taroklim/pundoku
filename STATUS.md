@@ -201,8 +201,9 @@ Gates: build → typecheck, lint, тесты web/engine/api (api с TEST_DATABAS
 | PD-25 | UI: экран Year по решениям владельца (C Blocks, сургуч+срез угла, assisted светлый тон 62 %, late=пропуск, карточка дня по тапу); читает данные из хранилища PD-14; ветка `pd-25` от pd-14 @ c574f13, worktree pd-25; dev готов, pd-25 @ df1945d (gates: web 266, engine 105, api 77+2 skipped); на QA PD-34 | developer | P1 | in_progress | PD-14 |
 | PD-33 | Архив: играть прошлую дату (`GET /api/daily/:date`, DayStore на произвольную дату, `late=true`; кнопки «Play this day's puzzle»/«Finish this puzzle» в карточке дня Year) — решение владельца «пропущенный день можно доигрывать» | developer | P2 | pending | PD-25 |
 | PD-34 | QA PD-25 (pd-25 @ df1945d): PASS с оговорками, блокеров нет (36 комбинаций, 231 синтетический день без расхождений, мутационная проверка 19/22); находки → PD-35 | qa-tester | P1 | completed | PD-25 |
-| PD-35 | Фикс-проход pd-25 по QA PD-34 (бриф ниже), затем короткий QA-регресс PD-36 | developer | P1 | in_progress | PD-34 |
-| PD-37 | Low из QA PD-32: у восстановленного решённого дня (после чистки IDB кроме токена / замены слиянием) пропадает «N % solved today»: `DayStore.resumeSaved` берёт verification из записи, а `progressFromRecord` ставит "local" → локальный winRate = null. Восстанавливать winRate/verification из записи (или честно поправить README); ветка от main после мержа pd-25 | developer | P2 | pending | PD-25 |
+| PD-35 | Фикс-проход pd-25 по QA PD-34 (pd-25 @ bbf8b8f; gates: web 282, engine 105, api 77+2 skipped, интеграционные выполнены) | developer | P1 | completed | PD-34 |
+| PD-36 | QA-регресс PD-35 (pd-25 @ bbf8b8f, worktree /tmp/pundoku-qa/qa-pd36, БД pundoku_qa7, порты 3400/5400): затронутое + Year/Today/Play + gates | qa-tester | P1 | in_progress | PD-35 |
+| PD-37 | Low из QA PD-32: у восстановленного решённого дня (после чистки IDB кроме токена / замены слиянием) пропадает «N % solved today»: `DayStore.resumeSaved` берёт verification из записи, а `progressFromRecord` ставит "local" → локальный winRate = null. Восстанавливать winRate/verification из записи (или честно поправить README); ветка `pd-37` от main @ 59d5a64, worktree pd-37 (мержится после pd-25) | developer | P2 | in_progress | PD-25 |
 | PD-26 | Полировка: `apple-touch-startup-image`/тёмный launch (QA PD-16), PD-22 low, Share PNG без цифр (если владелец подтвердит) | developer | P2 | pending | PD-25 |
 | PD-27 | Привязка e-mail/пароля к анонимному аккаунту (UI в настройках) | developer | P2 | pending | PD-26 |
 | PD-20 | QA PD-14 (pd-14 @ 0026b2a): PASS с оговорками, блокеров и Medium нет; 4 Low + решение по слиянию → PD-31 | qa-tester | P1 | completed | PD-14 |
@@ -251,4 +252,5 @@ hard 26/locked candidates, expert 24/pairs, master — beyond. `rateDifficulty` 
 |-----|------|--------|-------|-----------|
 | PM-Pundoku | product-manager | waiting | PD-18, PD-20 | 2026-09-29 14:00 |
 | QA-PD18 | qa-tester | working | PD-18 | 2026-09-29 13:10 |
-| Dev-PD35 | developer | working | PD-35 | 2026-09-29 18:00 |
+| QA-PD36 | qa-tester | working | PD-36 | 2026-09-29 19:00 |
+| Dev-PD37 | developer | working | PD-37 | 2026-09-29 19:00 |
