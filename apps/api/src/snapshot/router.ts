@@ -19,13 +19,28 @@ function isPlainObject(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
+/**
+ * Строгий ISO 8601 (RFC 3339 date-time): `YYYY-MM-DDTHH:mm:ss[.fff…](Z|±HH:mm)`. Голое `new Date(str)`
+ * принимает мусор вроде `"1"` или `"March 7"` (V8 угадывает формат) — такое в БД попадать не должно.
+ */
+const ISO_8601_RE = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?(Z|[+-]\d{2}:\d{2})$/;
+
+function parseIsoDate(value: unknown): Date {
+  if (typeof value !== "string" || !ISO_8601_RE.test(value)) return new Date(NaN);
+  // V8 сдвигает 2026-02-30 на 2 марта, а не отклоняет — проверяем календарную дату отдельно.
+  const [y, m, d] = [Number(value.slice(0, 4)), Number(value.slice(5, 7)), Number(value.slice(8, 10))];
+  const probe = new Date(Date.UTC(y, m - 1, d));
+  if (probe.getUTCFullYear() !== y || probe.getUTCMonth() !== m - 1 || probe.getUTCDate() !== d) return new Date(NaN);
+  return new Date(value); // Invalid Date для 25:00 и т. п.
+}
+
 function parseBody(body: unknown): { version: number; updatedAt: Date; data: Record<string, unknown> } {
   if (!isPlainObject(body)) throw badRequest("invalid_body", "Тело должно быть JSON-объектом {version, updatedAt, data}");
   const { version, updatedAt, data } = body as SnapshotBody;
   if (typeof version !== "number" || !Number.isInteger(version) || version < 0 || version > 2_147_483_647) {
     throw badRequest("invalid_version", "version должен быть целым числом >= 0");
   }
-  const parsedUpdatedAt = typeof updatedAt === "string" ? new Date(updatedAt) : new Date(NaN);
+  const parsedUpdatedAt = parseIsoDate(updatedAt);
   if (Number.isNaN(parsedUpdatedAt.getTime())) throw badRequest("invalid_updated_at", "updatedAt должен быть датой в ISO 8601");
   if (!isPlainObject(data)) throw badRequest("invalid_data", "data должен быть JSON-объектом");
   return { version, updatedAt: parsedUpdatedAt, data };
