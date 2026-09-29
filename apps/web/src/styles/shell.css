@@ -182,9 +182,20 @@ button {
   }
 }
 
+/* forced-colors (QA PD-16, low): фон выбранной вкладки система отбрасывает — держим рамку
+   и подчёркивание подписи, чтобы выбор не зависел от цвета. */
+@media (forced-colors: active) {
+  .tab[aria-selected="true"] {
+    border: 2px solid Highlight;
+  }
+  .tab[aria-selected="true"] .lab {
+    text-decoration: underline;
+  }
+}
+
 /* ---------- Reduced motion ----------
    В оболочке нет перемещений/масштабов; остаётся только короткий кроссфейд цвета вкладки
-   (как в макете). Анимации поля (M1–M6) со своими reduced-правилами — в PD-11. */
+   (как в макете). Анимации поля (M1–M3, M6) со своими reduced-правилами — в play.css. */
 @media (prefers-reduced-motion: reduce) {
   .tab {
     transition:

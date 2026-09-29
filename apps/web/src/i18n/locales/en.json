@@ -14,5 +14,53 @@
   },
   "screens": {
     "soon": "Coming soon"
+  },
+  "board": {
+    "label": "Sudoku grid",
+    "cellClue": "Row {{row}}, column {{col}}, clue {{digit}}",
+    "cellYours": "Row {{row}}, column {{col}}, your {{digit}}",
+    "cellWrong": "Row {{row}}, column {{col}}, your {{digit}}, wrong",
+    "cellNotes": "Row {{row}}, column {{col}}, notes {{notes}}",
+    "cellEmpty": "Row {{row}}, column {{col}}, empty"
+  },
+  "difficulty": {
+    "easy": "Easy",
+    "medium": "Medium",
+    "hard": "Hard",
+    "expert": "Expert"
+  },
+  "play": {
+    "difficulty": "Difficulty",
+    "preparing": "Preparing a puzzle…",
+    "failed": "Couldn’t prepare a puzzle.",
+    "retry": "Try again",
+    "cellsLeft_one": "{{count}} cell left",
+    "cellsLeft_other": "{{count}} cells left"
+  },
+  "pad": {
+    "label": "Number pad",
+    "key": "Enter {{digit}}, {{n}} left"
+  },
+  "actions": {
+    "notes": "Notes",
+    "undo": "Undo",
+    "erase": "Erase"
+  },
+  "solved": {
+    "title": "Solved",
+    "time": "Time",
+    "corrections": "Corrections",
+    "clean": "clean",
+    "technique": "Technique reached",
+    "share": "Share",
+    "newGame": "New game"
+  },
+  "technique": {
+    "naked_single": "Naked Single",
+    "hidden_single": "Hidden Single",
+    "locked_candidates": "Locked Candidates",
+    "naked_pair": "Naked Pair",
+    "hidden_pair": "Hidden Pair",
+    "beyond": "Advanced"
   }
 }

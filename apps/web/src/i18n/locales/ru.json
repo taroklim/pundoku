@@ -14,5 +14,55 @@
   },
   "screens": {
     "soon": "Скоро"
+  },
+  "board": {
+    "label": "Сетка судоку",
+    "cellClue": "Строка {{row}}, столбец {{col}}, подсказка {{digit}}",
+    "cellYours": "Строка {{row}}, столбец {{col}}, ваша {{digit}}",
+    "cellWrong": "Строка {{row}}, столбец {{col}}, ваша {{digit}}, ошибка",
+    "cellNotes": "Строка {{row}}, столбец {{col}}, заметки {{notes}}",
+    "cellEmpty": "Строка {{row}}, столбец {{col}}, пусто"
+  },
+  "difficulty": {
+    "easy": "Легко",
+    "medium": "Средне",
+    "hard": "Сложно",
+    "expert": "Эксперт"
+  },
+  "play": {
+    "difficulty": "Сложность",
+    "preparing": "Готовим головоломку…",
+    "failed": "Не удалось подготовить головоломку.",
+    "retry": "Повторить",
+    "cellsLeft_one": "Осталась {{count}} клетка",
+    "cellsLeft_few": "Осталось {{count}} клетки",
+    "cellsLeft_many": "Осталось {{count}} клеток",
+    "cellsLeft_other": "Осталось {{count}} клетки"
+  },
+  "pad": {
+    "label": "Панель цифр",
+    "key": "Ввести {{digit}}, осталось: {{n}}"
+  },
+  "actions": {
+    "notes": "Заметки",
+    "undo": "Отменить",
+    "erase": "Стереть"
+  },
+  "solved": {
+    "title": "Решено",
+    "time": "Время",
+    "corrections": "Исправления",
+    "clean": "чисто",
+    "technique": "Достигнутая техника",
+    "share": "Поделиться",
+    "newGame": "Новая игра"
+  },
+  "technique": {
+    "naked_single": "Открытая одиночка",
+    "hidden_single": "Скрытая одиночка",
+    "locked_candidates": "Блокированные кандидаты",
+    "naked_pair": "Открытая пара",
+    "hidden_pair": "Скрытая пара",
+    "beyond": "Сложная техника"
   }
 }
