@@ -169,6 +169,8 @@ export class DayStore extends GameStore<DaySnapshot> {
   private solvedAt: string | null = null;
   private late = false;
   private assisted = false;
+  /** >0 — идёт замена записи дня победителем слияния: `persist` молчит, чтобы не записать проигравшую (PD-43). */
+  private holdPersist = 0;
   private readonly archive: boolean;
   /** Архив: играемая дата (задаётся `openArchive`); у стора «сегодня» не используется. */
   private targetDate: string | null = null;
@@ -241,13 +243,37 @@ export class DayStore extends GameStore<DaySnapshot> {
   /** Сервер дописал в локальное хранилище решённые дни/Grid ∞ (восстановление, слияние после 409). */
   private applyRemote = (info: RemoteApplied): void => {
     if (!this.started) return;
+    // Сначала день: пока снапшот держит проигравшую запись, ни одно `persist` не должно её записать поверх победителя.
+    if (info.dates.includes(this.snap.date)) {
+      if (this.snap.phase === "solved") void this.reloadSolved();
+      else if (this.snap.phase !== "loading") void this.load();
+    }
     if (info.gridChanged && !this.archive) {
       void this.deps.repo.getPermanent().then((state) => {
-        if (state) this.set({ permanent: state, permanentSolvable: isSolvable(state) });
+        // Запись дня тут не нужна: `set()` → `persist()` затёр бы в хранилище запись, пришедшую с сервера (PD-43).
+        if (state) this.patchQuiet({ permanent: state, permanentSolvable: isSolvable(state) });
       });
     }
-    if (info.dates.includes(this.snap.date) && this.snap.phase !== "solved" && this.snap.phase !== "loading") void this.load();
   };
+
+  /**
+   * Слияние заменило запись уже решённого на этом экране дня (у победителя другая сетка/`winRate`/`verification`):
+   * показать победившую запись без прохода через «загрузку» и не записывать проигравшую обратно (PD-43).
+   * Победитель всегда решён (`applyLocally` пишет только `solved`-записи), поэтому не решённая запись — не наш случай.
+   */
+  private async reloadSolved(): Promise<void> {
+    const token = ++this.token;
+    const date = this.snap.date;
+    this.holdPersist++;
+    try {
+      await this.writesSettled();
+      const saved = await this.deps.repo.getDay(date);
+      if (token !== this.token || this.snap.date !== date || !saved?.solved) return;
+      this.resumeSaved(saved);
+    } finally {
+      this.holdPersist--;
+    }
+  }
 
   // ---- постоянная сетка --------------------------------------------------------------------
 
@@ -490,9 +516,14 @@ export class DayStore extends GameStore<DaySnapshot> {
     this.persist();
   }
 
+  /** Обновить снапшот, не трогая запись дня в хранилище (данные пришли из него же). */
+  private patchQuiet(patch: Partial<DaySnapshot>): void {
+    super.set(patch);
+  }
+
   private persist(): void {
     const s = this.snap;
-    if (!s.play || s.source === null) return;
+    if (!s.play || s.source === null || this.holdPersist > 0) return;
     const solved = s.phase === "solved";
     if (solved && this.solvedAt === null) {
       const now = this.deps.now();
