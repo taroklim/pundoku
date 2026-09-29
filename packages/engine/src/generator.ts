@@ -129,7 +129,7 @@ export const DEFAULT_MAX_ATTEMPTS = 300;
 export function generateWithStats(options: GenerateOptions): { puzzle: Puzzle; attempts: number } {
   const { difficulty, seed } = options;
   const maxAttempts = options.maxAttempts ?? DEFAULT_MAX_ATTEMPTS;
-  const rng = new Rng(`${seed} ${difficulty}`);
+  const rng = new Rng(`${seed}\0${difficulty}`);
   for (let i = 0; i < maxAttempts; i++) {
     const res = attempt(rng, difficulty);
     if (res === null) continue;

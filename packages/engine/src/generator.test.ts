@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
+import { generateWithStats } from "./generator.js";
 import {
+  DEFAULT_MAX_ATTEMPTS,
   DIFFICULTIES,
   GenerationError,
   Rng,
@@ -101,6 +103,32 @@ describe("generate — validity", () => {
 
   it("throws GenerationError when attempts are exhausted", () => {
     expect(() => generate({ difficulty: "expert", seed: "x", maxAttempts: 0 })).toThrow(GenerationError);
+  });
+});
+
+describe("generate — maxAttempts (PD-8 d)", () => {
+  // 'measure2-811' / hard по замеру требует 74 попытки — «хвост» распределения (медиана hard ≈ 6).
+  const TAIL = { difficulty: "hard", seed: "measure2-811", attempts: 74 } as const;
+
+  it("default ceiling is 300 (было 100 — на грани для хвоста hard)", () => {
+    expect(DEFAULT_MAX_ATTEMPTS).toBe(300);
+  });
+
+  it("a tail seed needs many attempts; ceiling below that throws, default succeeds", () => {
+    const { puzzle, attempts } = generateWithStats({ difficulty: TAIL.difficulty, seed: TAIL.seed });
+    expect(attempts).toBe(TAIL.attempts);
+    expect(() => generate({ difficulty: TAIL.difficulty, seed: TAIL.seed, maxAttempts: TAIL.attempts - 1 })).toThrow(GenerationError);
+    expect(generate({ difficulty: TAIL.difficulty, seed: TAIL.seed }).mission).toBe(puzzle.mission);
+  });
+
+  it("RNG is sequential: raising maxAttempts never changes an existing grid", () => {
+    // Сетки, которые укладывались в старые 100 попыток, байт-в-байт те же при любом потолке ≥ их числа попыток.
+    for (const seed of ["2026-09-29", "pundoku", "measure-3"]) {
+      const { puzzle, attempts } = generateWithStats({ difficulty: "hard", seed });
+      expect(generate({ difficulty: "hard", seed, maxAttempts: attempts }).mission).toBe(puzzle.mission);
+      expect(generate({ difficulty: "hard", seed, maxAttempts: 100 }).mission).toBe(puzzle.mission);
+      expect(generate({ difficulty: "hard", seed, maxAttempts: 1000 }).mission).toBe(puzzle.mission);
+    }
   });
 });
 
