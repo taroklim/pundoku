@@ -100,6 +100,14 @@
 16. Ввод пальцем: попадание по клеткам и клавишам панели (36–41 pt на 390–430 pt — вопрос владельцу (а)), заметки, undo, таймер при сворачивании PWA, ощущение движений M1/M2/M3/M6, размер текста.
 Не проверено QA: реальное стекло iOS, `env(safe-area-inset-*)`, статус-бар в тёмной теме, установка, reduced-transparency/contrast в webkit.
 
+## Решения владельца по Year (2026-09-29, PD-24 закрыт)
+- Раскладка: **C Blocks** (12 боксов-месяцев).
+- Исправления: сургуч + срез угла; считаем факт «были/не были», не число.
+- Признак «решено с подсказкой»: **ДА, нужен** (вопреки рекомендации дизайнера): более светлый тон 62 % из макета, переключатель макета «по умолчанию выключен» → в реализации включён/постоянный. Подсказки-функции в релизе 1 нет → в записи дня обязателен флаг `assisted` (по умолчанию false), источник «помощи» определим вместе с владельцем, когда появится подсказка; поле закладываем в схему снапшота в PD-14, чтобы не мигрировать.
+- Пропущенный день можно доигрывать (архив Sudoku.com), но в Year он остаётся «пропуском» (флаг `late` в записи дня); карточка дня при этом доступна.
+- Открытый вопрос PM к владельцу (не блокирует PD-14/PD-25): что считать «помощью» до появления функции подсказок — например, только будущая подсказка, или также решение с включённым режимом «показывать ошибки»/после «Проверить»? Рекомендация: только будущая подсказка (флаг всегда false до неё).
+- Очередь: QA PD-18 → мерж PD-12 → PD-14 → PD-25 (Year) → PD-19 → привязка e-mail.
+
 ## Backlog по QA PD-17 (не чиним сейчас)
 - 320×568 (iPhone SE 1-го поколения) скролл на 6–10 px — не целевое устройство.
 - Заметки 7-8-9 касаются нижней линии клетки на 320pt — проверить на устройстве.
@@ -108,7 +116,6 @@
 - Решение PM: провизорный выбор сложности показывает все 5 уровней движка (easy/medium/hard/expert/master) после PD-9; в i18n en/uk/ru добавить `master`.
 
 ## Ожидает решения владельца
-- Year (PD-24): 4 вопроса в `design/pd24-year-notes.md` §5 — раскладка (рекомендация C Blocks), исправления цветом vs тихо, признак «решено с помощью» (рекомендация: нет), доигрывание пропущенных дней. Кадры: `design/pd24-shots/`, макет `design/pd24-year-variants.html`. Реализацию Year не начинаем до ответа.
 - (а) Клавиши панели 28–41 pt по ширине (36–41 pt на 390–430) при HIG-минимуме 44 pt — подтвердить размер после проверки на устройстве (iPhone 16, 390 pt).
 - (б) Подсвечивать ли конфликты (одинаковая цифра в ряду/колонке/блоке) до решения, или только сверка с решением (сейчас ошибка видна, только если цифра ≠ решению). Рекомендация PM: только сверка с решением (без «подсказок» о конфликтах), как сейчас — чище для ежедневной сетки; но владелец решает.
 
@@ -128,17 +135,18 @@
 | PD-10 | UI 1: app shell + таб-бар 3 вкладки (стекло с фолбэками), токены v2 в CSS, тема по системе, safe areas, 100dvh, заглушки Today/Play/Year (смержен в main, eae5fa2) | developer | P1 | completed | — |
 | PD-11 | UI 2: компонент поля B + панель 1–9 с остатками + notes/undo/erase + «N cells left» + движение M1/M2/M3/M6 (Play-экран, локальная игра на движке); смержен в main (QA PD-17 + регресс PD-23 PASS) | developer | P1 | completed | — |
 | PD-24 | Дизайн: варианты экрана Year (полотно года) + вопрос владельцу — HTML-макет в `design/`, скилл apple-design; НЕ реализация — смержен в main (8aea006): варианты A Ruled-rows/B/C Blocks, 15 кадров, заметка; ждёт выбора владельца | designer | P1 | completed | — |
-| PD-12 | UI 3: экран Today — `GET /api/daily/:date`, подпись дня с таймером, карточка дня (heatmap/summary/technique, win_rate после решения), M5, постоянная сетка. Из PD-8: клиентский фолбэк-грид ТОЛЬКО через `dailyPuzzle(date, difficulty)` с difficulty из ответа api; при возврате в сеть сверять сетку по `source`/`mission` (сетка могла смениться generator→sudoku.com, пока игрок не решил) + два Low из QA PD-23 (см. ниже); реализация по утверждённому макету (Today solved: карточка дня, Grid ∞); ветка `pd-12` | developer | P1 | in_progress | — |
-| PD-13 | UI 4: клиентское правило замены генераторной сетки (сравнение `mission`, доигрывание своей) | developer | P1 | pending | PD-12 |
-| PD-14 | UI 5: устройство/снапшот — `POST /api/devices`, `PUT/GET /api/snapshot`, IndexedDB, сервер — правда для постоянной сетки/года | developer | P1 | pending | PD-12 |
+| PD-12 | UI 3: экран Today — `GET /api/daily/:date`, подпись дня с таймером, карточка дня (heatmap/summary/technique, win_rate после решения), M5, постоянная сетка. Из PD-8: клиентский фолбэк-грид ТОЛЬКО через `dailyPuzzle(date, difficulty)` с difficulty из ответа api; при возврате в сеть сверять сетку по `source`/`mission` (сетка могла смениться generator→sudoku.com, пока игрок не решил) + два Low из QA PD-23 (см. ниже); реализация по утверждённому макету (Today solved: карточка дня, Grid ∞); ветка `pd-12` @ e5418fc, dev готов, ждёт QA PD-18 | developer | P1 | in_progress | — |
+| PD-13 | UI 4: клиентское правило замены генераторной сетки (сравнение `mission`, доигрывание своей) — ПОКРЫТ PD-12 (`dayResolver` + тесты в pd-12 @ e5418fc), отдельной реализации нет; проверяется в QA PD-18 | developer | P1 | completed | PD-12 |
+| PD-14 | UI 5: устройство/снапшот — `POST /api/devices`, `PUT/GET /api/snapshot`, IndexedDB, сервер — правда для постоянной сетки/года + поля схемы снапшота для Year (`assisted`, `late`, `hadCorrections`), чистка `source='generator'` при смене GENERATOR_VERSION (ветка `pd-14` поверх `pd-12`) | developer | P1 | in_progress | PD-12 |
 | PD-15 | QA PD-8: PASS с оговорками (seed-сетки побайтово те же, undo, api live; 2 low → PD-9/п.0) | qa-tester | P1 | completed | PD-8 |
 | PD-16 | QA PD-10 (eae5fa2): Playwright chromium+webkit, реальная сборка, apple-design как ревьюер | qa-tester | P1 | completed | PD-10 |
 | PD-17 | QA PD-11 (0e87330): PASS с оговорками, блокеров нет; 6 находок чинятся до мержа (Medium — дубликаты `.wv` после M3), остальное в backlog ниже | qa-tester | P1 | completed | PD-11 |
-| PD-18 | QA PD-12 | qa-tester | P1 | pending | PD-12 |
-| PD-19 | QA PD-13 | qa-tester | P1 | pending | PD-13 |
+| PD-18 | QA PD-12 (e5418fc) | qa-tester | P1 | in_progress | PD-12 |
+| PD-19 | QA PD-13 — слит в PD-18 (dayResolver) | qa-tester | P1 | completed | — |
 | PD-21 | QA PD-9 (b3643f0): PASS с оговорками, 400 новых сеток, easy побайтово равен cf788ce; low → PD-22 | qa-tester | P2 | completed | PD-9 |
 | PD-22 | Low-полировка по QA PD-21 (engine/api, без спешки): (а) `generate({difficulty:'constructor'/'toString'})` → RangeError с неверным текстом — `Object.hasOwn`; (б) валидация `maxAttempts` (0, -1, NaN, 1.5) и `clues:null`; (в) README: clues ≈17 практически недостижимо; (г) допустимые `DAILY_FALLBACK_DIFFICULTY` в `apps/api/src/config/env.ts` из `DIFFICULTIES`, ошибка при старте без стека; (д) README engine: у v1 easy было ровно 38, не «≤38»; (е) heavy-тест ~160 с при таймауте 180 с — поднять/разнести | developer | P3 | pending | — |
 | PD-23 | QA-регресс PD-11 (8c4d3e6): PASS, блокеров и Medium нет, 5 уровней без сырых ключей, Worker не подвешивает UI | qa-tester | P1 | completed | PD-11 |
+| PD-25 | UI: экран Year по решениям владельца (C Blocks, сургуч+срез угла, assisted светлый тон 62 %, late=пропуск, карточка дня по тапу); читает данные из хранилища PD-14 | developer | P1 | pending | PD-14 |
 | PD-20 | QA PD-14 | qa-tester | P1 | pending | PD-14 |
 
 ### Бриф PD-8 (developer, P1 — пункт (a) блокирует UI-тикеты поля/Today)
@@ -181,6 +189,7 @@ hard 26/locked candidates, expert 24/pairs, master — beyond. `rateDifficulty` 
 ## Агенты (текущий статус)
 | Имя | Роль | Статус | Тикет | Обновлено |
 |-----|------|--------|-------|-----------|
-| PM-Pundoku | product-manager | waiting | PD-12 | 2026-09-29 09:00 |
+| PM-Pundoku | product-manager | waiting | PD-18, PD-14 | 2026-09-29 09:00 |
 | Dev-PD9 | developer | working | PD-9 | 2026-09-29 09:25 |
-| Dev-PD12 | developer | working | PD-12 | 2026-09-29 12:10 |
+| QA-PD18 | qa-tester | working | PD-18 | 2026-09-29 13:10 |
+| Dev-PD14 | developer | working | PD-14 | 2026-09-29 13:10 |
