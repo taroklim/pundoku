@@ -14,13 +14,16 @@ export const DEVICES = [
   { width: 440, height: 956, ratio: 3, models: "iPhone 16 Pro Max" },
   { width: 402, height: 874, ratio: 3, models: "iPhone 16 Pro" },
   { width: 430, height: 932, ratio: 3, models: "iPhone 16 Plus, 15 Plus, 15 Pro Max, 14 Pro Max" },
+  { width: 420, height: 912, ratio: 3, models: "iPhone Air" },
   { width: 393, height: 852, ratio: 3, models: "iPhone 16, 15, 15 Pro, 14 Pro" },
   { width: 428, height: 926, ratio: 3, models: "iPhone 14 Plus, 13 Pro Max, 12 Pro Max" },
   { width: 390, height: 844, ratio: 3, models: "iPhone 14, 13, 13 Pro, 12, 12 Pro" },
   { width: 375, height: 812, ratio: 3, models: "iPhone 13 mini, 12 mini, 11 Pro, XS, X" },
   { width: 414, height: 896, ratio: 3, models: "iPhone 11 Pro Max, XS Max" },
   { width: 414, height: 896, ratio: 2, models: "iPhone 11, XR" },
+  { width: 414, height: 736, ratio: 3, models: "iPhone 8 Plus, 7 Plus, 6s Plus" },
   { width: 375, height: 667, ratio: 2, models: "iPhone SE 3, SE 2, 8, 7" },
+  { width: 320, height: 568, ratio: 2, models: "iPhone SE 1, 5s" },
 ];
 
 export const SCHEMES = /** @type {const} */ (["light", "dark"]);

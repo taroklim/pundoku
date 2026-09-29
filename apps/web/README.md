@@ -20,8 +20,8 @@ pnpm --filter @pundoku/web test                                                 
 
 - Экраны — сплошная заливка токеном темы (`--bg-grouped`: светлая `#F2F2F7`, тёмная `#000000`), без иконки,
   названия и анимаций: HIG — экран запуска почти неотличим от первого экрана приложения.
-- 10 экранов iPhone × 2 темы = 20 индексных PNG по ≈0,5 КБ в `public/splash/` (`launch-<light|dark>-<W>x<H>.png`):
-  iPhone 16/15/14 Pro-серии и Plus/Pro Max, 13/12/mini/X, 11/XR, SE 3/2/8. iPhone 16 — 393×852 pt @3 → 1179×2556.
+- 13 экранов iPhone × 2 темы = 26 индексных PNG по ≈0,5 КБ в `public/splash/` (`launch-<light|dark>-<W>x<H>.png`):
+  iPhone Air, 16/15/14 Pro-серии и Plus/Pro Max, 13/12/mini/X, 11/XR, 8/7/6s Plus, SE 3/2/8 и SE 1. Ключ выбора в Safari — точная тройка pt-ширина × pt-высота × ratio; ни одна из добавленных троек (Air 420×912@3, Plus 414×736@3, SE 1 320×568@2) не совпадает с уже существующими — конфликтов media нет (тест уникальности). iPhone 16 — 393×852 pt @3 → 1179×2556.
 - В `index.html` — блок `<link rel="apple-touch-startup-image" media="(device-width…) and (-webkit-device-pixel-ratio…)
   and (orientation: portrait) and (prefers-color-scheme: light|dark)">`; **блок и PNG генерируются**:
   `pnpm --filter @pundoku/web splash` (`scripts/gen-startup-images.mjs`, таблица устройств —

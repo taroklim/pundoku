@@ -73,6 +73,28 @@ describe("apple-touch-startup-image", () => {
     }
   });
 
+  it("есть iPhone Air (420×912 @3 → 1260×2736), Plus 8/7/6s и SE 1", () => {
+    const want = [
+      [420, 912, 3, "1260x2736"],
+      [414, 736, 3, "1242x2208"],
+      [320, 568, 2, "640x1136"],
+    ];
+    for (const [w, h, r, px] of want) {
+      const d = DEVICES.find((x) => x.width === w && x.height === h && x.ratio === r);
+      expect(d, `${w}×${h}@${r}`).toBeDefined();
+      for (const scheme of SCHEMES) {
+        expect(html).toContain(
+          `<link rel="apple-touch-startup-image" media="${mediaQuery(scheme, d)}" href="/splash/launch-${scheme}-${px}.png" />`,
+        );
+      }
+    }
+  });
+
+  it("имена файлов уникальны (одинаковый пиксельный размер при разном pt не затирает PNG)", () => {
+    const all = DEVICES.flatMap((d) => SCHEMES.map((s) => publicPath(s, d)));
+    expect(new Set(all).size).toBe(all.length);
+  });
+
   it("media-запросы уникальны — ни одна пара не перекрывается", () => {
     const all = DEVICES.flatMap((d) => SCHEMES.map((s) => mediaQuery(s, d)));
     expect(new Set(all).size).toBe(all.length);
