@@ -1,0 +1,126 @@
+/*
+ * Токены визуального направления v2 — перенесены из утверждённого макета
+ * design/pd7-board-variants.html (вариант B Boxes, чернила индиго #3B48B0), разделы 1 и B.
+ * Единственный источник визуальных решений; значения не менять без нового макета.
+ *
+ * Контрасты посчитаны по этим hex-значениям (см. комментарии в макете) — НЕ понижать.
+ * Светлая тема — база, тёмная — по `prefers-color-scheme`; ручного переключателя нет.
+ * Поле (PD-11) берёт цвета и размеры отсюда.
+ */
+:root {
+  color-scheme: light dark;
+
+  /* Шрифты — только CSS-генерики, ничего не встраиваем (typography.md > Developer note).
+     ui-serif -> New York (данные/givens), system-ui -> SF Pro (цифры игрока, интерфейс). */
+  --font-sans: system-ui, -apple-system, "SF Pro Text", "Helvetica Neue", Arial, sans-serif;
+  --font-serif: ui-serif, "New York", Charter, Georgia, serif;
+
+  /* Safe areas iPhone; viewport-fit=cover в index.html. */
+  --sa-top: env(safe-area-inset-top, 0px);
+  --sa-bot: env(safe-area-inset-bottom, 0px);
+  --sa-l: env(safe-area-inset-left, 0px);
+  --sa-r: env(safe-area-inset-right, 0px);
+
+  /* Поверхности. Вариант B: экран на grouped-фоне, девять боксов — приподнятая поверхность. */
+  --bg-plain: #ffffff; /* systemBackground */
+  --bg-grouped: #f2f2f7; /* systemGroupedBackground */
+  --elev: #ffffff; /* secondarySystemGroupedBackground */
+  --bg: var(--bg-grouped); /* фон экрана */
+  --surface: var(--elev); /* бокс поля, карточки, клавиши */
+
+  /* Контент */
+  --label: #1c1c1e; /* givens (New York Semibold) — 17.0:1 на #FFFFFF */
+  --label-2: #6e6e73; /* вторичный текст — 5.1:1 на #FFFFFF */
+  --notes: #6e6e73; /* карандашные пометки — 5.1:1 на #FFFFFF */
+  --notes-fill: #5a5a5f; /* пометки внутри залитой клетки — 5.5:1 на заливке 16 % */
+
+  /* Единственный произвольный акцент */
+  --ink: #3b48b0; /* цифры игрока, выбор, основное действие — 7.7:1 на #FFFFFF */
+  --on-ink: #ffffff;
+  --wax: #b3261e; /* сургуч — только ошибка — 6.5:1 на #FFFFFF */
+
+  /* Линии сетки. thin — разделитель внутри бокса (декор, выравнивание); в варианте B
+     структуру блоков задаёт пространство, а не линия. block — только вариант A (запасной). */
+  --rule-thin: rgba(60, 60, 67, 0.29);
+  --rule-block: rgba(0, 0, 0, 0.42); /* 3.06:1 на #FFFFFF; в B не используется */
+  --rule-thin-w: 0.5px; /* hairline: 1 px @2x */
+  --rule-block-w: 2px;
+
+  /* Заливки клеток — по одному смыслу, все производные от --ink (замена чернил не ломает пары).
+     Величины — доля непрозрачности слоя чернил: same 10 % (та же цифра), sel 16 % (+ кольцо). */
+  --fill-same: 0.1;
+  --fill-sel: 0.16;
+  --peer-fill: rgba(120, 120, 128, 0.08); /* в релизе выключена (решение владельца), токен на случай возврата */
+
+  /* Управление */
+  --key-bg: var(--elev);
+  --card: var(--elev);
+  --hairline: rgba(60, 60, 67, 0.29);
+  --ink-tint: rgba(59, 72, 176, 0.12); /* нажатие/выбранная вкладка/включённый toggle */
+  --box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04); /* только вариант B, только light */
+
+  /* Стекло — только функциональный слой (таб-бар). */
+  --glass-fill: rgba(255, 255, 255, 0.72);
+  --glass-solid: #f6f6f9; /* непрозрачный фолбэк */
+
+  /* Геометрия варианта B */
+  --box-gap: 4px;
+  --box-radius: 10px;
+  --cell-r: 3px;
+
+  /* Запасной вариант C (не используется в B) */
+  --tint: #f2f2f7;
+}
+
+/* Тёмная тема. dark-mode.md > Mobile: база #000, приподнятое #1C1C1E. */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg-plain: #000000;
+    --bg-grouped: #000000;
+    --elev: #1c1c1e;
+    --tint: #1c1c1e;
+    --label: #ffffff;
+    --label-2: #98989d;
+    --notes: #98989d;
+    --notes-fill: #aeaeb2;
+    --ink: #8c96ff;
+    --on-ink: #000000;
+    --wax: #ff6b5e;
+    --rule-thin: rgba(235, 235, 245, 0.22);
+    --rule-block: rgba(255, 255, 255, 0.38);
+    --peer-fill: rgba(120, 120, 128, 0.18);
+    --hairline: rgba(235, 235, 245, 0.22);
+    --ink-tint: rgba(140, 150, 255, 0.18);
+    --box-shadow: none;
+    --glass-fill: rgba(28, 28, 30, 0.72);
+    --glass-solid: #141416;
+  }
+}
+
+/* Повышенная контрастность (color.md: вариант на каждую схему). */
+@media (prefers-contrast: more) {
+  :root {
+    --label-2: #3c3c43;
+    --notes: #3c3c43;
+    --notes-fill: #3c3c43;
+    --rule-thin: rgba(60, 60, 67, 0.55);
+    --rule-block: rgba(0, 0, 0, 0.6);
+    --rule-thin-w: 1px;
+    --hairline: rgba(60, 60, 67, 0.6);
+    --fill-same: 0.14;
+    --fill-sel: 0.22;
+    --peer-fill: rgba(120, 120, 128, 0.14);
+    --box-shadow: none;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --label-2: #ebebf5;
+      --notes: #ebebf5;
+      --notes-fill: #ebebf5;
+      --rule-thin: rgba(235, 235, 245, 0.45);
+      --rule-block: rgba(255, 255, 255, 0.6);
+      --hairline: rgba(235, 235, 245, 0.5);
+      --peer-fill: rgba(140, 140, 150, 0.26);
+    }
+  }
+}

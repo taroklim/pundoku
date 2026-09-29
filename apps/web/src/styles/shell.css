@@ -1,0 +1,197 @@
+/*
+ * Каркас приложения (PD-10): база, экран, таб-бар. Разметка и значения — из утверждённого
+ * макета design/pd7-board-variants.html (разделы 2, 3, 7 и 9); цвета — только токены.
+ * Стекло — ТОЛЬКО таб-бар (materials.md: не использовать Liquid Glass в слое контента).
+ */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  /* Dynamic Type: -apple-system-body заставляет 1rem следовать размеру текста iOS
+     (в браузерах без поддержки декларация отбрасывается — остаётся 16px). */
+  font: -apple-system-body;
+  font-family: var(--font-sans);
+  line-height: 1.3;
+  -webkit-text-size-adjust: 100%;
+  height: 100%;
+  /* Без rubber-band у оболочки: прокручивается только .scroll. */
+  overflow: hidden;
+  overscroll-behavior: none;
+}
+
+body {
+  margin: 0;
+  height: 100%;
+  overflow: hidden;
+  overscroll-behavior: none;
+  background: var(--bg);
+  color: var(--label);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  /* Гасит задержку 300 мс и double-tap zoom. */
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+button {
+  font: inherit;
+  color: inherit;
+  background: none;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+#root {
+  height: 100dvh;
+}
+
+/* ---------- Экран ---------- */
+.shell {
+  position: relative;
+  width: 100%;
+  height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg);
+  overflow: hidden;
+}
+
+.scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  /* Место под таб-бар (макет: 72px + нижний inset). */
+  padding-bottom: calc(72px + var(--sa-bot));
+  display: flex;
+  flex-direction: column;
+}
+/* Панель вкладки занимает всю прокручиваемую область; фокус на ней не рисуем рамкой. */
+.panel {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+.panel:focus-visible {
+  outline-offset: -2px;
+}
+
+.toolbar {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 12px;
+  padding: calc(var(--sa-top) + 8px) max(16px, var(--sa-r)) 0 max(16px, var(--sa-l));
+}
+.title {
+  font-size: 1.62rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  margin: 0;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.subline {
+  margin: 2px 0 0;
+  padding: 0 max(16px, var(--sa-r)) 0 max(16px, var(--sa-l));
+  color: var(--label-2);
+  font-size: 0.88rem;
+}
+
+/* ---------- Таб-бар — единственное стекло ---------- */
+.tabbar {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 20;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 2px;
+  padding: 6px max(10px, var(--sa-r)) calc(6px + var(--sa-bot)) max(10px, var(--sa-l));
+  background: var(--glass-fill);
+  -webkit-backdrop-filter: blur(24px) saturate(1.4);
+  backdrop-filter: blur(24px) saturate(1.4);
+  border-top: 1px solid var(--hairline);
+}
+.tab {
+  min-height: 50px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  color: var(--label-2);
+  border-radius: 14px;
+  padding: 4px 2px;
+  transition:
+    background-color 0.12s linear,
+    color 0.12s linear;
+}
+.tab svg {
+  width: 26px;
+  height: 26px;
+  flex: none;
+}
+/* Подписи вкладок ограничены намеренно — typography.md > Prioritize important content:
+   при увеличении текста заголовки вкладок не растут. 11px — минимум accessibility.md. */
+.tab .lab {
+  font-size: clamp(11px, 0.65rem, 13px);
+  letter-spacing: 0.01em;
+}
+.tab[aria-selected="true"] {
+  color: var(--ink);
+  background: var(--ink-tint);
+}
+.tab[aria-selected="true"] .lab {
+  font-weight: 600;
+}
+
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .tabbar {
+    background: var(--glass-solid);
+  }
+}
+@media (prefers-reduced-transparency: reduce) {
+  .tabbar {
+    background: var(--glass-solid);
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+  }
+}
+@media (prefers-contrast: more) {
+  .tabbar {
+    background: var(--glass-solid);
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+    border-top: 1px solid var(--label-2);
+  }
+}
+
+/* ---------- Reduced motion ----------
+   В оболочке нет перемещений/масштабов; остаётся только короткий кроссфейд цвета вкладки
+   (как в макете). Анимации поля (M1–M6) со своими reduced-правилами — в PD-11. */
+@media (prefers-reduced-motion: reduce) {
+  .tab {
+    transition:
+      background-color 0.12s linear,
+      color 0.12s linear;
+  }
+  .scroll {
+    scroll-behavior: auto;
+  }
+}
