@@ -214,8 +214,7 @@ Gates: build → typecheck, lint, тесты web/engine/api (api с TEST_DATABAS
 | PD-38 | (взят в PD-41) Мелкий фикс Year (копия/CSS, объединить с любой следующей веткой, отдельного QA не нужно): (1) при firstUse в прошлом и нулевых записях дни подписаны «before you started» — неточно; (2) первая запись задним числом сразу рисует все пропуски от firstUse — заметно; (3) карточка unfinished: неверная цифра не считается «filled in» (29 of 43 при 30 на поле) — формулировка вводит в заблуждение; (5) forced-colors: media-блок выше базовых `.year-month`/`.ycell.today` — перенести ниже. Принято без правок: (4) в forced-colors «help» неотличим от solved | developer | P3 | completed | — |
 | PD-39 | PASS с оговорками: фикс работает живьём (в т.ч. слияние 409), мутации убиты; 1 Low (до PD-37) → PD-43. QA PD-37 (pd-37 @ f14ac58 на main 66ec453+): gates + чистка IDB → winRate вернулся + Today/Year регресс + замена слиянием после 409 живьём | qa-tester | P2 | completed | PD-37 |
 | PD-40 | PASS с оговорками, блокеров нет (20 splash chromium+webkit, офлайн, seed-хэш 208 сеток не изменился, PD-22 подтверждён); Low → PD-41/PD-42. QA PD-26 (pd-26 @ dec1e80): startup-image, precache/офлайн, PD-22 low, gates | qa-tester | P2 | completed | PD-41 | (готов: pd-26 @ 7202eaa; gates web 319, engine 127, api 80+2 skipped; 26 splash для 13 устройств) Фикс-проход pd-26 (после rebase на main, pd-26 @ cdd3b9d): (1) комментарий в `engine/src/generator.ts` про «21–22 нестабильно, стабильно от ~23» выровнять с README (22–23 стабильно); (2) добавить iPhone Air (420×912@3 → 1260×2736) в `startup-devices.mjs` + `pnpm splash` (Plus 8/7/6s 414×736@3 и SE1 320×568 — по усмотрению, старые); (3) PD-38 — Year: подписи «before you started», формулировка «filled in» (неверная цифра не считается: «29 of 43» при 30 на поле), порядок forced-colors CSS (media-блок ниже базовых `.year-month`/`.ycell.today`), первая запись задним числом рисует все пропуски от firstUse — оценить, смягчить/задокументировать. Отдельный QA не нужен: gates + быстрый ручной взгляд | developer | P2 | completed | PD-40 |
-| PD-42 | (ветка `pd-42` от main cb2c67b, worktree pd-42) Low: `PORT=abc` даёт сырой стек (ERR_SOCKET_BAD_PORT) вместо `ConfigError` в api (было и до PD-26) | developer | P3 | in_progress | — |
-| PD-26 |
+| PD-42 | (смержен в main d75f9f7, pd-42 @ d5c7237; gates: build/typecheck, api 127+3 skipped с TEST_DATABASE_URL; пустой `PORT=` — ошибка осознанно) Low: `PORT=abc` давал сырой стек вместо `ConfigError` в api | developer | P3 | completed | — |
 | PD-26 | (смержен в main fa4eab5 вместе с PD-41/PD-38; QA PD-40 PASS) Полировка: `apple-touch-startup-image`/тёмный launch (QA PD-16), PD-22 low, Share PNG без цифр (если владелец подтвердит — не входит); ветка `pd-26` @ dec1e80 (dev готов; gates: web 238, engine 127, api 80+2 skipped), на QA PD-40 | developer | P2 | completed | PD-25 |
 | PD-27 | Привязка e-mail/пароля к анонимному аккаунту (UI в настройках) | developer | P2 | pending | PD-26 |
 | PD-20 | QA PD-14 (pd-14 @ 0026b2a): PASS с оговорками, блокеров и Medium нет; 4 Low + решение по слиянию → PD-31 | qa-tester | P1 | completed | PD-14 |
@@ -262,7 +261,5 @@ hard 26/locked candidates, expert 24/pairs, master — beyond. `rateDifficulty` 
 ## Агенты (текущий статус)
 | Имя | Роль | Статус | Тикет | Обновлено |
 |-----|------|--------|-------|-----------|
-| PM-Pundoku | product-manager | waiting | PD-18, PD-20 | 2026-09-29 14:00 |
-| QA-PD18 | qa-tester | working | PD-18 | 2026-09-29 13:10 |
-| QA-PD44 | qa-tester | working | PD-44 | 2026-09-30 10:00 |
-| Dev-PD42 | developer | working | PD-42 | 2026-09-30 10:00 |
+| pm-pundoku-4 | product-manager | waiting | PD-44 | 2026-09-30 |
+| QA-PD44 | qa-tester | working | PD-44 | 2026-09-30 |
