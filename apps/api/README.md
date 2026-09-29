@@ -81,7 +81,11 @@ curl http://localhost:3000/api/snapshot -H "Authorization: Bearer $TOK"
   присланный `version` ≤ сохранённого — клиент сливает сам и шлёт новую версию.
 - `413 snapshot_too_large` — сериализованный `data` больше 1 МиБ.
 - `400 invalid_body | invalid_version | invalid_updated_at | invalid_data`.
-- Структура `data` не валидируется (jsonb, схема на клиенте) — только «объект».
+- Структура `data` не валидируется (jsonb, схема на клиенте) — только «объект»; лимиты PD-14 не менялись: 1 МиБ
+  `data` по UTF-8 байтам, JSON-парсер 1200 КиБ (`413 payload_too_large`), CORS разрешает `PUT`/`Authorization`.
+  Формат `data` (`schemaVersion`, `grid`, `days`), политика 409-слияния и бюджет размера — в README `apps/web`.
+- Клиент не должен полагаться на «мёртвые» устройства: токен без снапшота даёт `404 snapshot_not_found` на GET —
+  это нормальное состояние нового устройства.
 
 ## Источник сетки дня: Sudoku.com
 
@@ -114,6 +118,16 @@ mission+solution → фолбэк.
 Следствие для клиента: фолбэк-сетка дня может смениться на другую, пока игрок её не решил;
 клиент должен сверять сетку с ответом `GET /api/daily/:date` (поле `source`) при возврате в сеть.
 
+### Версия генератора у фолбэка (PD-14, миграция `0005`)
+
+`generator`-строка хранит `generator_version` — `GENERATOR_VERSION` движка на момент генерации. Когда версия строки
+не совпадает с текущей (или NULL — строки до миграции), строка **игнорируется и пересоздаётся** при запросе на
+дату: сначала пробуем Sudoku.com (с тем же троттлингом `DAILY_UPSTREAM_RETRY_MS`), иначе генерируем заново текущей
+версией (`replaceStale`, атомарная замена; гонка двух запросов не даёт двух разных сеток). Так офлайн-клиент новой
+версии движка и сервер снова считают одну и ту же фолбэк-сетку. Строки `sudoku.com` не трогаются никогда. Если движок
+не отдаёт версию (не собран) — устаревание не проверяется, строка отдаётся как есть. Тесты — `router.test.ts`,
+`generator.test.ts`, `integration.test.ts` (живой Postgres).
+
 **Точка подключения движка:** `src/daily/generator.ts`, `EngineGenerator.generateDaily(date, difficulty)` —
 вызывает `dailyPuzzle(date, difficulty)` → `{ givens, solution }` (81 число 0..9 / 1..9). Модуль
 грузится динамически, чтобы typecheck api не зависел от собранного движка (для тестов и запуска
@@ -122,7 +136,9 @@ mission+solution → фолбэк.
 ## Схема БД
 
 - `daily_puzzles(date PK, mission, solution, difficulty, win_rate, source, source_id, fetched_at)` — `0002`;
-  `replaced_at` (когда фолбэк заменён сеткой Sudoku.com, NULL — не заменялась) — `0004`.
+  `replaced_at` (когда фолбэк заменён сеткой Sudoku.com, NULL — не заменялась) — `0004`;
+  `generator_version` (версия `GENERATOR_VERSION` движка, которой создан фолбэк; NULL у `sudoku.com` и у
+  фолбэков до миграции) — `0005`.
 - `devices(id uuid PK, token_hash unique, created_at, last_seen_at)`,
   `snapshots(device_id PK → devices, version, updated_at, data jsonb, size_bytes, saved_at)` — `0003`.
 
