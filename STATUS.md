@@ -186,12 +186,12 @@ Gates: build → typecheck, lint, тесты web/engine/api (api с TEST_DATABAS
 | PD-23 | QA-регресс PD-11 (8c4d3e6): PASS, блокеров и Medium нет, 5 уровней без сырых ключей, Worker не подвешивает UI | qa-tester | P1 | completed | PD-11 |
 | PD-25 | UI: экран Year по решениям владельца (C Blocks, сургуч+срез угла, assisted светлый тон 62 %, late=пропуск, карточка дня по тапу); читает данные из хранилища PD-14; ветка `pd-25` от pd-14 @ c574f13, worktree pd-25; dev готов, pd-25 @ df1945d (gates: web 266, engine 105, api 77+2 skipped); на QA PD-34 | developer | P1 | in_progress | PD-14 |
 | PD-33 | Архив: играть прошлую дату (`GET /api/daily/:date`, DayStore на произвольную дату, `late=true`; кнопки «Play this day's puzzle»/«Finish this puzzle» в карточке дня Year) — решение владельца «пропущенный день можно доигрывать» | developer | P2 | pending | PD-25 |
-| PD-34 | QA PD-25 (pd-25 @ df1945d, worktree qa-pd25, БД pundoku_qa6) | qa-tester | P1 | in_progress | PD-25 |
+| PD-34 | QA PD-25 (pd-25 @ df1945d; перезапуск после сбоя контейнера; worktree /tmp/pundoku-qa/qa-pd25, БД pundoku_qa6, порты 3360/5360) | qa-tester | P1 | in_progress | PD-25 |
 | PD-26 | Полировка: `apple-touch-startup-image`/тёмный launch (QA PD-16), PD-22 low, Share PNG без цифр (если владелец подтвердит) | developer | P2 | pending | PD-25 |
 | PD-27 | Привязка e-mail/пароля к анонимному аккаунту (UI в настройках) | developer | P2 | pending | PD-26 |
 | PD-20 | QA PD-14 (pd-14 @ 0026b2a): PASS с оговорками, блокеров и Medium нет; 4 Low + решение по слиянию → PD-31 | qa-tester | P1 | completed | PD-14 |
 | PD-31 | Фикс-проход pd-14 по QA PD-20 (pd-14 @ c574f13; gates зелёные: web 213, engine 105, api 77+2 skipped, интеграционные 7/7 на живой БД) | developer | P1 | completed | PD-20 |
-| PD-32 | QA-регресс pd-14 @ c574f13 (worktree qa-pd32, БД pundoku_qa5): слияние 409 по источникам, отсутствие лишних PUT при 1500 днях, сокращённый регресс PD-20, gates + интеграционные api-тесты | qa-tester | P1 | in_progress | PD-31 |
+| PD-32 | QA-регресс pd-14 @ c574f13 (перезапуск после сбоя контейнера; worktree /tmp/pundoku-qa/qa-pd32, БД pundoku_qa5, порты 3320/5320): слияние 409 по источникам, отсутствие лишних PUT при 1500 днях, сокращённый регресс PD-20, gates + интеграционные api-тесты | qa-tester | P1 | in_progress | PD-31 |
 
 ### Бриф PD-8 (developer, P1 — пункт (a) блокирует UI-тикеты поля/Today)
 Движок: (a) зафиксировать и реализовать контракт `undo` в `MoveLog` — undo после `erase` не должен
@@ -235,5 +235,5 @@ hard 26/locked candidates, expert 24/pairs, master — beyond. `rateDifficulty` 
 |-----|------|--------|-------|-----------|
 | PM-Pundoku | product-manager | waiting | PD-18, PD-20 | 2026-09-29 14:00 |
 | QA-PD18 | qa-tester | working | PD-18 | 2026-09-29 13:10 |
-| QA-PD32 | qa-tester | working | PD-32 | 2026-09-29 15:30 |
-| QA-PD34 | qa-tester | working | PD-34 | 2026-09-29 16:30 |
+| QA-PD32b | qa-tester | working | PD-32 | 2026-09-29 17:30 |
+| QA-PD34b | qa-tester | working | PD-34 | 2026-09-29 17:30 |
