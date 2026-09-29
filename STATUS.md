@@ -109,14 +109,14 @@ _(пусто — макет v2 утверждён; открытые вопрос
 | PD-5 | QA PD-2: PASS с оговорками, 4 minor → PD-8 | qa-tester | P1 | completed | PD-2 |
 | PD-6 | QA PD-3: PASS с оговорками, 4 minor → PD-8 | qa-tester | P1 | completed | PD-3 |
 | PD-7 | Макет v2 поля A/B/C (15b5a24) — утверждён владельцем: B Boxes | designer | P1 | completed | — |
-| PD-8 | Полировка по QA PD-5/PD-6 (бриф ниже; ветка `pd-8`, worktree `pundoku-worktrees/pd-8`) | developer | P1 | in_progress | — |
-| PD-9 | Play: вторая ось сложности — число подсказок (бриф ниже) | developer | P2 | pending | PD-8, PD-15 |
+| PD-8 | Полировка по QA PD-5/PD-6 (бриф ниже; смержен в main, 3c02fab) | developer | P1 | completed | — |
+| PD-9 | Play: вторая ось сложности — число подсказок (бриф ниже) + п.0 low-замечания QA PD-15 (ветка `pd-9`) | developer | P2 | in_progress | — |
 | PD-10 | UI 1: app shell + таб-бар 3 вкладки (стекло с фолбэками), токены v2 в CSS, тема по системе, safe areas, 100dvh, заглушки Today/Play/Year (смержен в main, eae5fa2) | developer | P1 | completed | — |
-| PD-11 | UI 2: компонент поля B + панель 1–9 с остатками + notes/undo/erase + «N cells left» + движение M1/M2/M3/M6 (Play-экран, локальная игра на движке) | developer | P1 | pending | PD-8, PD-10 |
-| PD-12 | UI 3: экран Today — `GET /api/daily`, подпись дня с таймером, карточка дня (heatmap/summary/technique, win_rate после решения), M5, постоянная сетка | developer | P1 | pending | PD-11, PD-15 |
+| PD-11 | UI 2: компонент поля B + панель 1–9 с остатками + notes/undo/erase + «N cells left» + движение M1/M2/M3/M6 (Play-экран, локальная игра на движке); ветка `pd-11` | developer | P1 | in_progress | — |
+| PD-12 | UI 3: экран Today — `GET /api/daily/:date`, подпись дня с таймером, карточка дня (heatmap/summary/technique, win_rate после решения), M5, постоянная сетка. Из PD-8: клиентский фолбэк-грид ТОЛЬКО через `dailyPuzzle(date, difficulty)` с difficulty из ответа api; при возврате в сеть сверять сетку по `source`/`mission` (сетка могла смениться generator→sudoku.com, пока игрок не решил) | developer | P1 | pending | PD-11 |
 | PD-13 | UI 4: клиентское правило замены генераторной сетки (сравнение `mission`, доигрывание своей) | developer | P1 | pending | PD-12 |
 | PD-14 | UI 5: устройство/снапшот — `POST /api/devices`, `PUT/GET /api/snapshot`, IndexedDB, сервер — правда для постоянной сетки/года | developer | P1 | pending | PD-12 |
-| PD-15 | QA PD-8: живой прогон (Playwright не нужен — API/engine; живой Postgres `pundoku_qa`) | qa-tester | P1 | pending | PD-8 |
+| PD-15 | QA PD-8: PASS с оговорками (seed-сетки побайтово те же, undo, api live; 2 low → PD-9/п.0) | qa-tester | P1 | completed | PD-8 |
 | PD-16 | QA PD-10 (eae5fa2): Playwright chromium+webkit, реальная сборка, apple-design как ревьюер | qa-tester | P1 | completed | PD-10 |
 | PD-17 | QA PD-11 | qa-tester | P1 | pending | PD-11 |
 | PD-18 | QA PD-12 | qa-tester | P1 | pending | PD-12 |
@@ -143,8 +143,15 @@ hard 26/locked candidates, expert 24/pairs, master — beyond. `rateDifficulty` 
 `DAILY_FALLBACK_DIFFICULTY` по умолчанию → профиль, близкий к Sudoku.com hard (30/singles).
 Обновить снапшоты seed (все сетки изменятся — версия алгоритма в README), heavy-тест по классам.
 
+## Замечания QA PD-15 (PD-8, смержен)
+- low/medium: в чистом клоне `typecheck` до `build` падает (api-тест импортирует собранный `@pundoku/engine`) — порядок `build → typecheck` или references; в PD-9 п.0.
+- low: `migrate.ts` `isDirectRun` сравнивает `import.meta.url` с `argv[1]` без realpath — запуск через симлинк молча выходит с 0; в PD-9 п.0.
+- косметика: heavy-тесты движка ~75 с (README обещает 20–30); RFC3339 со строчными t/z → 400 — упомянуть в README API.
+- не проверено: живой Sudoku.com (`LIVE_SUDOKU_COM=1`), фолбэк 29.02.2028 через HTTP (даты дальше «завтра» → 400), тесты `apps/web`.
+
 ## Агенты (текущий статус)
 | Имя | Роль | Статус | Тикет | Обновлено |
 |-----|------|--------|-------|-----------|
-| PM-Pundoku | product-manager | working | PD-8, PD-15 | 2026-09-29 09:00 |
-| Dev-PD8 | developer | working | PD-8 (продолжение с 6ecf802: c–j) | 2026-09-29 08:40 |
+| PM-Pundoku | product-manager | waiting | PD-9, PD-11 | 2026-09-29 09:00 |
+| Dev-PD9 | developer | working | PD-9 | 2026-09-29 09:25 |
+| Dev-PD11 | developer | working | PD-11 | 2026-09-29 09:25 |
