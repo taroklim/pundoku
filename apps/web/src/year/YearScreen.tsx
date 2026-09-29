@@ -60,15 +60,22 @@ export function YearScreen({ days, firstUse, today, onOpenToday }: YearScreenPro
   };
   const closeSheet = useCallback(() => setSheet((s) => (s && !s.closing ? { ...s, closing: true } : s)), []);
   const closing = sheet?.closing === true;
+  const restoreFocus = useRef(false);
   useEffect(() => {
     if (!closing) return;
     const id = window.setTimeout(() => {
+      restoreFocus.current = true;
       setSheet(null);
-      // Фокус возвращается на месяц, из которого открыли шит.
-      root.current?.querySelector<HTMLElement>(`[data-month="${trigger.current}"]`)?.focus({ preventScroll: true });
     }, SHEET_MS);
     return () => window.clearTimeout(id);
   }, [closing]);
+  // Фокус возвращается на месяц, из которого открыли шит, — только ПОСЛЕ размонтирования шита:
+  // пока он смонтирован, `#root` inert и фокус на месяц не встанет.
+  useEffect(() => {
+    if (sheet !== null || !restoreFocus.current) return;
+    restoreFocus.current = false;
+    root.current?.querySelector<HTMLElement>(`[data-month="${trigger.current}"]`)?.focus({ preventScroll: true });
+  }, [sheet]);
   // Смена года при открытом шите невозможна (фон inert), но данные могли обновиться — шит на месяц не переоткрываем.
 
   const title = (
