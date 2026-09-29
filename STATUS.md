@@ -158,7 +158,8 @@ Gates: build → typecheck, lint, тесты. Закоммитить в pd-12. p
 | PD-16 | QA PD-10 (eae5fa2): Playwright chromium+webkit, реальная сборка, apple-design как ревьюер | qa-tester | P1 | completed | PD-10 |
 | PD-17 | QA PD-11 (0e87330): PASS с оговорками, блокеров нет; 6 находок чинятся до мержа (Medium — дубликаты `.wv` после M3), остальное в backlog ниже | qa-tester | P1 | completed | PD-11 |
 | PD-18 | QA PD-12 (e5418fc): PASS с оговорками, блокеров нет; Medium (lastKnownDifficulty от sudoku.com) + 2 Low чинятся в PD-29 до мержа | qa-tester | P1 | completed | PD-12 |
-| PD-29 | Фикс-проход pd-12 по QA PD-18 (п.1–3, бриф ниже) | developer | P1 | in_progress | PD-18 |
+| PD-29 | Фикс-проход pd-12 по QA PD-18 (п.1–3, бриф ниже; pd-12 @ 780a711, dev готов) | developer | P1 | completed | PD-18 |
+| PD-30 | QA-регресс PD-29 (pd-12 @ 780a711, worktree qa-pd29, БД pundoku_qa4): сценарий полуночи, Today/Play, gates | qa-tester | P1 | in_progress | PD-29 |
 | PD-19 | QA PD-13 — слит в PD-18 (dayResolver) | qa-tester | P1 | completed | — |
 | PD-21 | QA PD-9 (b3643f0): PASS с оговорками, 400 новых сеток, easy побайтово равен cf788ce; low → PD-22 | qa-tester | P2 | completed | PD-9 |
 | PD-22 | Low-полировка по QA PD-21 (engine/api, без спешки): (а) `generate({difficulty:'constructor'/'toString'})` → RangeError с неверным текстом — `Object.hasOwn`; (б) валидация `maxAttempts` (0, -1, NaN, 1.5) и `clues:null`; (в) README: clues ≈17 практически недостижимо; (г) допустимые `DAILY_FALLBACK_DIFFICULTY` в `apps/api/src/config/env.ts` из `DIFFICULTIES`, ошибка при старте без стека; (д) README engine: у v1 easy было ровно 38, не «≤38»; (е) heavy-тест ~160 с при таймауте 180 с — поднять/разнести | developer | P3 | pending | — |
@@ -211,4 +212,4 @@ hard 26/locked candidates, expert 24/pairs, master — beyond. `rateDifficulty` 
 | PM-Pundoku | product-manager | waiting | PD-18, PD-20 | 2026-09-29 14:00 |
 | QA-PD18 | qa-tester | working | PD-18 | 2026-09-29 13:10 |
 | QA-PD20 | qa-tester | working | PD-20 | 2026-09-29 14:00 |
-| Dev-PD29 | developer | working | PD-29 | 2026-09-29 14:10 |
+| QA-PD30 | qa-tester | working | PD-30 | 2026-09-29 14:30 |
