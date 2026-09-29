@@ -105,6 +105,8 @@
 21. (PD-12) Ощущение Grid ∞ и карточки дня на iPhone 16.
 22. (PD-14) Решить день в режиме полёта, выключить режим — прогресс уходит на сервер без действий пользователя (проверить с другого браузера/после чистки данных сайта, что день на месте).
 23. (PD-25, Year) Safe areas и стеклянный таб-бар на Year; VoiceOver по месяцам и дням (подписи словами); Dynamic Type (легенда, подписи месяцев); тап по месяцу и по дню в шите (эргономика); reduced-transparency / prefers-contrast.
+24. (PD-25, Year) Настройки → Экран и яркость → Размер текста (крупный) → Year: подписи месяцев и легенда масштабируются, перенос читаем, легенда не уходит под таб-бар.
+25. (PD-26) Экран запуска: удалить PWA с экрана Домой, поставить заново (iOS кэширует startup-image при установке); тёмная тема → закрыть смахиванием → открыть: чёрный экран сразу, без белой вспышки; светлая — серый #F2F2F7 без чёрной вспышки. Если вспышка осталась — сообщить (media-запрос по размеру или iOS не подхватил).
 Не проверено QA: реальное стекло iOS, `env(safe-area-inset-*)`, статус-бар в тёмной теме, установка, reduced-transparency/contrast в webkit.
 
 ## Решения владельца по Year (2026-09-29, PD-24 закрыт)
@@ -198,13 +200,16 @@ Gates: build → typecheck, lint, тесты web/engine/api (api с TEST_DATABAS
 | PD-21 | QA PD-9 (b3643f0): PASS с оговорками, 400 новых сеток, easy побайтово равен cf788ce; low → PD-22 | qa-tester | P2 | completed | PD-9 |
 | PD-22 | Low-полировка по QA PD-21 (engine/api, без спешки): (а) `generate({difficulty:'constructor'/'toString'})` → RangeError с неверным текстом — `Object.hasOwn`; (б) валидация `maxAttempts` (0, -1, NaN, 1.5) и `clues:null`; (в) README: clues ≈17 практически недостижимо; (г) допустимые `DAILY_FALLBACK_DIFFICULTY` в `apps/api/src/config/env.ts` из `DIFFICULTIES`, ошибка при старте без стека; (д) README engine: у v1 easy было ровно 38, не «≤38»; (е) heavy-тест ~160 с при таймауте 180 с — поднять/разнести | developer | P3 | pending | — |
 | PD-23 | QA-регресс PD-11 (8c4d3e6): PASS, блокеров и Medium нет, 5 уровней без сырых ключей, Worker не подвешивает UI | qa-tester | P1 | completed | PD-11 |
-| PD-25 | UI: экран Year по решениям владельца (C Blocks, сургуч+срез угла, assisted светлый тон 62 %, late=пропуск, карточка дня по тапу); читает данные из хранилища PD-14; ветка `pd-25` от pd-14 @ c574f13, worktree pd-25; dev готов, pd-25 @ df1945d (gates: web 266, engine 105, api 77+2 skipped); на QA PD-34 | developer | P1 | in_progress | PD-14 |
+| PD-25 | (смержен в main 66ec453; pd-25 @ bbf8b8f) UI: экран Year по решениям владельца (C Blocks, сургуч+срез угла, assisted светлый тон 62 %, late=пропуск, карточка дня по тапу); читает данные из хранилища PD-14; ветка `pd-25` от pd-14 @ c574f13, worktree pd-25; dev готов, pd-25 @ df1945d (gates: web 266, engine 105, api 77+2 skipped); на QA PD-34 | developer | P1 | completed | PD-14 |
 | PD-33 | Архив: играть прошлую дату (`GET /api/daily/:date`, DayStore на произвольную дату, `late=true`; кнопки «Play this day's puzzle»/«Finish this puzzle» в карточке дня Year) — решение владельца «пропущенный день можно доигрывать» | developer | P2 | pending | PD-25 |
 | PD-34 | QA PD-25 (pd-25 @ df1945d): PASS с оговорками, блокеров нет (36 комбинаций, 231 синтетический день без расхождений, мутационная проверка 19/22); находки → PD-35 | qa-tester | P1 | completed | PD-25 |
 | PD-35 | Фикс-проход pd-25 по QA PD-34 (pd-25 @ bbf8b8f; gates: web 282, engine 105, api 77+2 skipped, интеграционные выполнены) | developer | P1 | completed | PD-34 |
-| PD-36 | QA-регресс PD-35 (pd-25 @ bbf8b8f, worktree /tmp/pundoku-qa/qa-pd36, БД pundoku_qa7, порты 3400/5400): затронутое + Year/Today/Play + gates | qa-tester | P1 | in_progress | PD-35 |
+| PD-36 | PASS с оговорками, 5 Low → PD-38, 17/17 мутаций убито. QA-регресс PD-35 (pd-25 @ bbf8b8f, worktree /tmp/pundoku-qa/qa-pd36, БД pundoku_qa7, порты 3400/5400): затронутое + Year/Today/Play + gates | qa-tester | P1 | completed | PD-35 |
 | PD-37 | Low из QA PD-32: у восстановленного решённого дня (после чистки IDB кроме токена / замены слиянием) пропадает «N % solved today»: `DayStore.resumeSaved` берёт verification из записи, а `progressFromRecord` ставит "local" → локальный winRate = null. Восстанавливать winRate/verification из записи (или честно поправить README); ветка `pd-37` от main @ 59d5a64, worktree pd-37 (мержится после pd-25); dev готов, pd-37 @ 21d27c6 (web 219, engine 105, api 77+2 skipped; 6 новых тестов, живая проверка chromium); замена слиянием после 409 — только юнит | developer | P2 | in_progress | PD-25 |
-| PD-26 | Полировка: `apple-touch-startup-image`/тёмный launch (QA PD-16), PD-22 low, Share PNG без цифр (если владелец подтвердит — не входит); ветка `pd-26` от main @ 59d5a64, worktree pd-26 | developer | P2 | in_progress | PD-25 |
+| PD-38 | Мелкий фикс Year (копия/CSS, объединить с любой следующей веткой, отдельного QA не нужно): (1) при firstUse в прошлом и нулевых записях дни подписаны «before you started» — неточно; (2) первая запись задним числом сразу рисует все пропуски от firstUse — заметно; (3) карточка unfinished: неверная цифра не считается «filled in» (29 of 43 при 30 на поле) — формулировка вводит в заблуждение; (5) forced-colors: media-блок выше базовых `.year-month`/`.ycell.today` — перенести ниже. Принято без правок: (4) в forced-colors «help» неотличим от solved | developer | P3 | pending | — |
+| PD-39 | QA PD-37 (pd-37 @ f14ac58 на main 66ec453+): gates + чистка IDB → winRate вернулся + Today/Year регресс + замена слиянием после 409 живьём | qa-tester | P2 | in_progress | PD-37 |
+| PD-40 | QA PD-26 (pd-26 @ dec1e80): startup-image, precache/офлайн, PD-22 low, gates | qa-tester | P2 | in_progress | PD-26 |
+| PD-26 | Полировка: `apple-touch-startup-image`/тёмный launch (QA PD-16), PD-22 low, Share PNG без цифр (если владелец подтвердит — не входит); ветка `pd-26` @ dec1e80 (dev готов; gates: web 238, engine 127, api 80+2 skipped), на QA PD-40 | developer | P2 | in_progress | PD-25 |
 | PD-27 | Привязка e-mail/пароля к анонимному аккаунту (UI в настройках) | developer | P2 | pending | PD-26 |
 | PD-20 | QA PD-14 (pd-14 @ 0026b2a): PASS с оговорками, блокеров и Medium нет; 4 Low + решение по слиянию → PD-31 | qa-tester | P1 | completed | PD-14 |
 | PD-31 | Фикс-проход pd-14 по QA PD-20 (pd-14 @ c574f13; gates зелёные: web 213, engine 105, api 77+2 skipped, интеграционные 7/7 на живой БД) | developer | P1 | completed | PD-20 |
@@ -252,5 +257,5 @@ hard 26/locked candidates, expert 24/pairs, master — beyond. `rateDifficulty` 
 |-----|------|--------|-------|-----------|
 | PM-Pundoku | product-manager | waiting | PD-18, PD-20 | 2026-09-29 14:00 |
 | QA-PD18 | qa-tester | working | PD-18 | 2026-09-29 13:10 |
-| QA-PD36 | qa-tester | working | PD-36 | 2026-09-29 19:00 |
-| Dev-PD26 | developer | working | PD-26 | 2026-09-29 19:30 |
+| QA-PD39 | qa-tester | working | PD-39 | 2026-09-29 20:00 |
+| QA-PD40 | qa-tester | working | PD-40 | 2026-09-29 20:00 |
