@@ -613,7 +613,7 @@
       color 0.12s linear;
   }
   .key:active:not(:disabled),
-  .act:active:not(:disabled) {
+  .act:active:not(:disabled):not([aria-disabled="true"]) {
     transform: none;
   }
 }
