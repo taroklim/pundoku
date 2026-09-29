@@ -17,7 +17,7 @@ pnpm dev:api                                           # tsx watch, http://local
 `.env` ищется сначала в `apps/api/.env`, затем в корне репо (`.env.example` — там же).
 Переменные: `DATABASE_URL`, `PORT` (3000), `WEB_ORIGIN` (CORS, через запятую; по умолчанию
 `http://localhost:5173`), `SUDOKU_COM_BASE_URL`, `SUDOKU_COM_TIMEOUT_MS` (5000),
-`DAILY_FALLBACK_DIFFICULTY` (`medium` — профиль движка 30 подсказок/singles ≈ Sudoku.com «hard»; допустимо `easy|medium|hard|expert|master`, иное значение — ошибка при старте), `DAILY_UPSTREAM_RETRY_MS` (60000, см. «Замена фолбэка»), `LOG_LEVEL` (`info`), `TRUST_PROXY` (`1` за reverse proxy).
+`DAILY_FALLBACK_DIFFICULTY` (`medium` — профиль движка 30 подсказок/singles ≈ Sudoku.com «hard»; допустимо — значения `DIFFICULTIES` движка (`easy|medium|hard|expert|master`), иное значение — ошибка конфигурации при старте: одна строка в stderr без стека, код выхода 1), `DAILY_UPSTREAM_RETRY_MS` (60000, см. «Замена фолбэка»), `LOG_LEVEL` (`info`), `TRUST_PROXY` (`1` за reverse proxy).
 
 С Docker: `docker compose up -d postgres` и дальше то же самое (см. корневой README).
 

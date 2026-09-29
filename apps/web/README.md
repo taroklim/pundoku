@@ -12,6 +12,27 @@ pnpm --filter @pundoku/web test                                                 
 адрес api без завершающего `/`; `WEB_ORIGIN` api должен содержать origin web. Service worker не кэширует `/api/*`
 (`navigateFallbackDenylist`).
 
+## Экран запуска iOS PWA (PD-26)
+
+Против светлой вспышки при запуске установленной PWA в тёмной теме (замечание QA PD-16): manifest
+`background_color`/`theme_color` остаются светлыми (`#F2F2F7`, для Android/Chrome), а iOS получает
+`apple-touch-startup-image` под тему и экран.
+
+- Экраны — сплошная заливка токеном темы (`--bg-grouped`: светлая `#F2F2F7`, тёмная `#000000`), без иконки,
+  названия и анимаций: HIG — экран запуска почти неотличим от первого экрана приложения.
+- 10 экранов iPhone × 2 темы = 20 индексных PNG по ≈0,5 КБ в `public/splash/` (`launch-<light|dark>-<W>x<H>.png`):
+  iPhone 16/15/14 Pro-серии и Plus/Pro Max, 13/12/mini/X, 11/XR, SE 3/2/8. iPhone 16 — 393×852 pt @3 → 1179×2556.
+- В `index.html` — блок `<link rel="apple-touch-startup-image" media="(device-width…) and (-webkit-device-pixel-ratio…)
+  and (orientation: portrait) and (prefers-color-scheme: light|dark)">`; **блок и PNG генерируются**:
+  `pnpm --filter @pundoku/web splash` (`scripts/gen-startup-images.mjs`, таблица устройств —
+  `scripts/startup-devices.mjs`). Новый iPhone — строка в таблицу и `pnpm splash`; руками блок не править.
+- Плюс inline-стиль `html { background }` в `<head>` (светлый/тёмный по `prefers-color-scheme`) — фон есть до
+  загрузки CSS, пока экран запуска уже сменился приложением.
+- Тест `scripts/startup-images.test.mjs` сверяет таблицу ↔ `<link>` ↔ PNG (размеры, цвет) ↔ `tokens.css`.
+- Service worker прекэширует `splash/*.png` (общий `globPatterns`, +≈10 КБ к precache).
+- **iOS кэширует экран запуска при установке PWA**: после обновления удалить иконку с экрана «Домой» и
+  добавить заново. Проверка — на устройстве (агенты не могут).
+
 ## Экран Today (PD-12)
 
 Игровая механика (ввод, заметки, undo, таймер, M1/M3, лог ходов) — общая с Play: `play/gameStore.ts`
