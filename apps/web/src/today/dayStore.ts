@@ -25,7 +25,8 @@ import {
 import type { Landing, PermanentGridState } from "./permanent";
 import { initialPermanent, isSolvable, landDay, newInstallSeed } from "./permanent";
 import type { DayProgress, ProgressRepository } from "./repository";
-import { InMemoryProgressRepository } from "./repository";
+import { sync as syncRuntime } from "../sync/runtime";
+import type { RemoteApplied, SyncHooks } from "../sync/manager";
 
 export interface DaySnapshot extends PlaySnapshot {
   /** Локальная дата сетки, `YYYY-MM-DD`. */
@@ -48,6 +49,7 @@ export interface DaySnapshot extends PlaySnapshot {
 
 export interface DayDeps {
   repo: ProgressRepository;
+  sync?: SyncHooks;
   fetchDay: (date: string) => Promise<FetchedDay>;
   verify: (date: string, grid: string) => Promise<boolean | null>;
   /** Клиентский фолбэк: только `dailyPuzzle(date, difficulty)` (в браузере — в Web Worker). */
@@ -59,6 +61,8 @@ export interface DayDeps {
 }
 
 export const SLOW_FETCH_FALLBACK_MS = 2500;
+/** Сколько Today ждёт восстановления с сервера при старте, прежде чем играть локальным. */
+export const RESTORE_WAIT_MS = 1500;
 
 /** Фолбэк дня в Web Worker: `dailyPuzzle` для тяжёлых сложностей бывает секундами. */
 function workerFallback(date: string, difficulty: Difficulty): Promise<{ mission: string; solution: string }> {
@@ -81,7 +85,8 @@ function workerFallback(date: string, difficulty: Difficulty): Promise<{ mission
 }
 
 export const defaultDeps = (): DayDeps => ({
-  repo: new InMemoryProgressRepository(),
+  repo: syncRuntime.repository,
+  sync: syncRuntime.hooks,
   fetchDay: (date) => fetchDaily(date),
   verify: (date, grid) => verifyDaily(date, grid),
   generateFallback: workerFallback,
@@ -120,6 +125,14 @@ export class DayStore extends GameStore<DaySnapshot> {
   private landingSeq = 0;
   private lastKnownDifficulty: Difficulty | null = null;
   private readonly deps: DayDeps;
+  /** Записи в хранилище в полёте: порядок держит сама IndexedDB (транзакции одного хранилища идут по очереди), `notify` ждёт их все. */
+  private inflight = new Set<Promise<unknown>>();
+  private unsubscribeRemote: (() => void) | null = null;
+  private restore: Promise<void> | null = null;
+  /** Итог дня для снапшота/Year: момент решения и «поздно» — фиксируются при первом решении. */
+  private solvedAt: string | null = null;
+  private late = false;
+  private assisted = false;
 
   constructor(deps: DayDeps = defaultDeps()) {
     super(initialDaySnapshot(localDate(deps.now())));
@@ -133,21 +146,53 @@ export class DayStore extends GameStore<DaySnapshot> {
     this.watchVisibility();
     window.addEventListener("online", this.refresh);
     document.addEventListener("visibilitychange", this.onVisible);
+    this.unsubscribeRemote = this.deps.sync?.subscribeRemote(this.applyRemote) ?? null;
     void this.loadPermanent();
     void this.load();
   }
 
   private onVisible = (): void => {
     if (document.visibilityState === "visible") this.refresh();
+    else this.persist(); // таймер уже остановился (слушатель GameStore): сохранить накопленное время
+  };
+
+  private write(job: () => Promise<unknown>): Promise<unknown> {
+    const p: Promise<unknown> = job().catch(() => undefined); // сбой хранилища не должен ронять игру
+    this.inflight.add(p);
+    void p.then(() => this.inflight.delete(p));
+    return p;
+  }
+
+  private writesSettled(): Promise<unknown> {
+    return Promise.all([...this.inflight]);
+  }
+
+  /** Ждать восстановления с сервера один раз за сессию: игра не зависит от сети дольше `RESTORE_WAIT_MS`. */
+  private awaitRestore(): Promise<void> {
+    if (!this.deps.sync) return Promise.resolve();
+    this.restore ??= this.deps.sync.whenReady(RESTORE_WAIT_MS);
+    return this.restore;
+  }
+
+  /** Сервер дописал в локальное хранилище решённые дни/Grid ∞ (восстановление, слияние после 409). */
+  private applyRemote = (info: RemoteApplied): void => {
+    if (!this.started) return;
+    if (info.gridChanged) {
+      void this.deps.repo.getPermanent().then((state) => {
+        if (state) this.set({ permanent: state, permanentSolvable: isSolvable(state) });
+      });
+    }
+    if (info.dates.includes(this.snap.date) && this.snap.phase !== "solved" && this.snap.phase !== "loading") void this.load();
   };
 
   // ---- постоянная сетка --------------------------------------------------------------------
 
   private async loadPermanent(): Promise<void> {
+    await this.awaitRestore();
     const saved = await this.deps.repo.getPermanent();
     if (this.snap.permanent) return; // успели приземлить клетку до загрузки
     const state = saved ?? initialPermanent(newInstallSeed());
-    if (!saved) await this.deps.repo.savePermanent(state);
+    if (!saved) await this.write(() => this.deps.repo.savePermanent(state));
     this.set({ permanent: state, permanentSolvable: isSolvable(state) });
   }
 
@@ -159,7 +204,7 @@ export class DayStore extends GameStore<DaySnapshot> {
       if (!this.snap.permanent) this.set({ permanent: perm, permanentSolvable: isSolvable(perm) });
       return null;
     }
-    void this.deps.repo.savePermanent(landing.state);
+    void this.write(() => this.deps.repo.savePermanent(landing.state));
     return landing;
   }
 
@@ -169,8 +214,14 @@ export class DayStore extends GameStore<DaySnapshot> {
   async load(): Promise<void> {
     const token = ++this.token;
     const date = localDate(this.deps.now());
+    this.solvedAt = null;
+    this.late = false;
+    this.assisted = false;
     this.resetToLoading({ date, source: null, winRate: null, landing: null, serverVerified: null, offline: false, verification: "local" });
 
+    await this.awaitRestore();
+    if (token !== this.token) return;
+    await this.writesSettled(); // не читать день, пока не дописан предыдущий
     const saved = await this.deps.repo.getDay(date);
     if (token !== this.token) return;
     if (saved?.solved) {
@@ -262,6 +313,9 @@ export class DayStore extends GameStore<DaySnapshot> {
     latest?: DayPuzzle,
   ): void {
     const src = latest ?? saved;
+    this.solvedAt = saved.solvedAt;
+    this.late = saved.late;
+    this.assisted = saved.assisted;
     this.resumeGame(saved.play, saved.elapsedMs, {
       date: saved.date,
       source: src.source,
@@ -342,6 +396,12 @@ export class DayStore extends GameStore<DaySnapshot> {
   private persist(): void {
     const s = this.snap;
     if (!s.play || s.source === null) return;
+    const solved = s.phase === "solved";
+    if (solved && this.solvedAt === null) {
+      const now = this.deps.now();
+      this.solvedAt = now.toISOString();
+      this.late = s.date < localDate(now);
+    }
     const progress: DayProgress = {
       date: s.date,
       mission: s.play.mission.join(""),
@@ -350,11 +410,15 @@ export class DayStore extends GameStore<DaySnapshot> {
       winRate: s.winRate,
       play: s.play,
       elapsedMs: this.getElapsedMs(),
-      solved: s.phase === "solved",
+      solved,
       serverVerified: s.serverVerified,
       verification: s.verification,
+      solvedAt: solved ? this.solvedAt : null,
+      late: solved && this.late,
+      assisted: this.assisted,
     };
-    void this.deps.repo.saveDay(progress);
+    void this.write(() => this.deps.repo.saveDay(progress));
+    if (!solved && s.play.log.length > 0) this.deps.sync?.notify("progress");
   }
 
   protected override onSolved(play: PlayState): void {
@@ -369,6 +433,8 @@ export class DayStore extends GameStore<DaySnapshot> {
         : {},
     );
     if (this.snap.verification === "server") void this.verifyOnServer(play);
+    // Решён день (и улёт в Grid ∞): снапшот на сервер, когда запись в хранилище завершена.
+    void this.writesSettled().then(() => this.deps.sync?.notify("solved"));
   }
 
   private async verifyOnServer(play: PlayState): Promise<void> {
@@ -388,6 +454,8 @@ export class DayStore extends GameStore<DaySnapshot> {
   dispose(): void {
     window.removeEventListener("online", this.refresh);
     document.removeEventListener("visibilitychange", this.onVisible);
+    this.unsubscribeRemote?.();
+    this.unsubscribeRemote = null;
     this.started = false;
     this.token++;
   }

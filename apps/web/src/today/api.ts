@@ -13,14 +13,14 @@ export function apiUrl(path: string, base: string = import.meta.env.VITE_API_BAS
   return `${base.replace(/\/+$/, "")}${path}`;
 }
 
-interface Options {
+export interface Options {
   fetchFn?: typeof fetch;
   timeoutMs?: number;
   signal?: AbortSignal;
   base?: string;
 }
 
-async function request(url: string, init: RequestInit, o: Options): Promise<Response | null> {
+export async function request(url: string, init: RequestInit, o: Options): Promise<Response | null> {
   const ctl = new AbortController();
   const timer = setTimeout(() => ctl.abort(), o.timeoutMs ?? FETCH_TIMEOUT_MS);
   const onAbort = () => ctl.abort();
