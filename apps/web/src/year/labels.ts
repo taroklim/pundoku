@@ -47,6 +47,10 @@ export function dayStateKey(mark: DayMark, ctx: { today: string; start: string }
       return mark.late ? "late" : "missed";
     case "void":
       if (mark.date === ctx.today) return "today";
-      return mark.date > ctx.today ? "future" : "before";
+      if (mark.date > ctx.today) return "future";
+      // Прошедший день без метки: «до начала пользования» — только раньше `start`. Начиная с `start` метки нет
+      // лишь потому, что записей ещё нет (пропуски не рисуются, решение владельца): нейтральное «нет записи» —
+      // не «до того, как вы начали» (неверно) и не «не играно» (это слово пропуска).
+      return mark.date >= ctx.start ? "noRecord" : "before";
   }
 }

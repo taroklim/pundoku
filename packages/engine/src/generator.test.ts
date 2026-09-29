@@ -151,10 +151,34 @@ describe("generate — validity", () => {
       expect(() => generate({ difficulty: "easy", seed: "x", clues: bad }), String(bad)).toThrow(RangeError);
     }
     expect(() => generate({ difficulty: "nightmare" as never, seed: "x" })).toThrow(RangeError);
+    // null — не «опция не задана»: раньше `??` молча подставлял дефолт.
+    expect(() => generate({ difficulty: "easy", seed: "x", clues: null as never })).toThrow(RangeError);
+    // explicit undefined == опция не задана.
+    expect(generate({ difficulty: "easy", seed: "clues-opt", clues: undefined })).toEqual(generate({ difficulty: "easy", seed: "clues-opt" }));
+  });
+
+  it("unknown difficulty: own properties only — prototype names get the right RangeError", () => {
+    for (const bad of ["constructor", "toString", "__proto__", "hasOwnProperty", "valueOf", "", "EASY"]) {
+      expect(() => generate({ difficulty: bad as never, seed: "x" }), bad).toThrow(RangeError);
+      expect(() => generate({ difficulty: bad as never, seed: "x" }), bad).toThrow(`Unknown difficulty '${bad}'`);
+    }
+    for (const bad of [undefined, null, 1, {}]) {
+      expect(() => generate({ difficulty: bad as never, seed: "x" })).toThrow(/Unknown difficulty/);
+    }
+  });
+
+  it("maxAttempts is validated: integer >= 1, otherwise RangeError (not GenerationError)", () => {
+    for (const bad of [0, -1, Number.NaN, 1.5, Infinity, null, "5"]) {
+      expect(() => generate({ difficulty: "easy", seed: "x", maxAttempts: bad as never }), String(bad)).toThrow(RangeError);
+      expect(() => generate({ difficulty: "easy", seed: "x", maxAttempts: bad as never }), String(bad)).toThrow(/maxAttempts/);
+    }
+    // explicit undefined == по умолчанию.
+    expect(generate({ difficulty: "easy", seed: "x", maxAttempts: undefined })).toEqual(generate({ difficulty: "easy", seed: "x" }));
   });
 
   it("throws GenerationError when attempts are exhausted", () => {
-    expect(() => generate({ difficulty: "expert", seed: "x", maxAttempts: 0 })).toThrow(GenerationError);
+    // Профиль, до которого одна попытка почти не дотягивает: 1 — минимально допустимое maxAttempts.
+    expect(() => generate({ difficulty: "expert", seed: "x", clues: 22, maxAttempts: 1 })).toThrow(GenerationError);
   });
 });
 

@@ -1,5 +1,7 @@
+import { DIFFICULTIES } from "@pundoku/engine";
 import { config as loadDotenv } from "dotenv";
 import { fileURLToPath } from "node:url";
+import { ConfigError } from "./errors.js";
 
 // .env ищем сначала рядом с пакетом (apps/api/.env), потом в корне репо — README велит
 // `cp .env.example .env` в корне, а `pnpm --filter @pundoku/api ...` запускается из apps/api.
@@ -14,7 +16,7 @@ loadDotenv({
 function required(name: string): string {
   const value = process.env[name];
   if (!value) {
-    throw new Error(`Переменная окружения ${name} не задана (см. .env.example в корне репо)`);
+    throw new ConfigError(`Переменная окружения ${name} не задана (см. .env.example в корне репо)`);
   }
   return value;
 }
@@ -24,19 +26,17 @@ function integer(name: string, fallback: number): number {
   if (raw === undefined || raw === "") return fallback;
   const value = Number(raw);
   if (!Number.isInteger(value) || value < 0) {
-    throw new Error(`Переменная окружения ${name} должна быть целым неотрицательным числом, получено: ${raw}`);
+    throw new ConfigError(`Переменная окружения ${name} должна быть целым неотрицательным числом, получено: ${raw}`);
   }
   return value;
 }
 
-/** Профили движка (@pundoku/engine, DIFFICULTIES) — значение проверяется при старте, а не при первом фолбэке. */
-const DIFFICULTY_NAMES = ["easy", "medium", "hard", "expert", "master"] as const;
-
+/** Классы движка берутся из `DIFFICULTIES` (@pundoku/engine) — свой список тут разошёлся бы с движком. Проверка — при старте, а не при первом фолбэке. */
 function difficulty(name: string, fallback: string): string {
   const raw = process.env[name];
   if (raw === undefined || raw === "") return fallback;
-  if (!(DIFFICULTY_NAMES as readonly string[]).includes(raw)) {
-    throw new Error(`Переменная окружения ${name} должна быть одной из ${DIFFICULTY_NAMES.join("|")}, получено: ${raw}`);
+  if (!(DIFFICULTIES as readonly string[]).includes(raw)) {
+    throw new ConfigError(`Переменная окружения ${name} должна быть одной из ${DIFFICULTIES.join("|")}, получено: ${raw}`);
   }
   return raw;
 }
