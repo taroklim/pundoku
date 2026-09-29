@@ -124,6 +124,10 @@
 3. Low: смена дня только по `online`/`visibilitychange`, таймера на полночь нет — зафиксировать в README как осознанное решение (iOS даёт visibilitychange при возврате из фона).
 Gates: build → typecheck, lint, тесты. Закоммитить в pd-12. pd-14 не трогать (на нём идёт QA PD-20). Затем быстрый QA-регресс сценария полуночи + gates.
 
+- (для QA PD-20/перед PD-14) выяснить, почему `describe.skipIf` пропускает интеграционные api-тесты при заданном `TEST_DATABASE_URL` (на main: api 60 passed + 8 skipped); убедиться, что тесты миграции 0005 и живой БД реально выполняются.
+- не проверено QA PD-30: офлайн в webkit через setOffline (ограничение Playwright), реальная смена суток/часовые пояса, iOS.
+- Ветка `pd-12` оставлена до перебазирования `pd-14` (worktree удалён).
+
 ## Backlog по QA PD-17 (не чиним сейчас)
 - 320×568 (iPhone SE 1-го поколения) скролл на 6–10 px — не целевое устройство.
 - Заметки 7-8-9 касаются нижней линии клетки на 320pt — проверить на устройстве.
@@ -151,7 +155,7 @@ Gates: build → typecheck, lint, тесты. Закоммитить в pd-12. p
 | PD-10 | UI 1: app shell + таб-бар 3 вкладки (стекло с фолбэками), токены v2 в CSS, тема по системе, safe areas, 100dvh, заглушки Today/Play/Year (смержен в main, eae5fa2) | developer | P1 | completed | — |
 | PD-11 | UI 2: компонент поля B + панель 1–9 с остатками + notes/undo/erase + «N cells left» + движение M1/M2/M3/M6 (Play-экран, локальная игра на движке); смержен в main (QA PD-17 + регресс PD-23 PASS) | developer | P1 | completed | — |
 | PD-24 | Дизайн: варианты экрана Year (полотно года) + вопрос владельцу — HTML-макет в `design/`, скилл apple-design; НЕ реализация — смержен в main (8aea006): варианты A Ruled-rows/B/C Blocks, 15 кадров, заметка; ждёт выбора владельца | designer | P1 | completed | — |
-| PD-12 | UI 3: экран Today — `GET /api/daily/:date`, подпись дня с таймером, карточка дня (heatmap/summary/technique, win_rate после решения), M5, постоянная сетка. Из PD-8: клиентский фолбэк-грид ТОЛЬКО через `dailyPuzzle(date, difficulty)` с difficulty из ответа api; при возврате в сеть сверять сетку по `source`/`mission` (сетка могла смениться generator→sudoku.com, пока игрок не решил) + два Low из QA PD-23 (см. ниже); реализация по утверждённому макету (Today solved: карточка дня, Grid ∞); ветка `pd-12` @ e5418fc, dev готов, ждёт QA PD-18 | developer | P1 | in_progress | — |
+| PD-12 | UI 3: экран Today — `GET /api/daily/:date`, подпись дня с таймером, карточка дня (heatmap/summary/technique, win_rate после решения), M5, постоянная сетка. Из PD-8: клиентский фолбэк-грид ТОЛЬКО через `dailyPuzzle(date, difficulty)` с difficulty из ответа api; при возврате в сеть сверять сетку по `source`/`mission` (сетка могла смениться generator→sudoku.com, пока игрок не решил) + два Low из QA PD-23 (см. ниже); реализация по утверждённому макету (Today solved: карточка дня, Grid ∞); смержен в main (772dd90, pd-12 @ 780a711); QA PD-18 + PD-30 PASS | developer | P1 | completed | — |
 | PD-13 | UI 4: клиентское правило замены генераторной сетки (сравнение `mission`, доигрывание своей) — ПОКРЫТ PD-12 (`dayResolver` + тесты в pd-12 @ e5418fc), отдельной реализации нет; проверяется в QA PD-18 | developer | P1 | completed | PD-12 |
 | PD-14 | UI 5 (dev завершил, на QA PD-20): устройство/снапшот — `POST /api/devices`, `PUT/GET /api/snapshot`, IndexedDB, сервер — правда для постоянной сетки/года + поля схемы снапшота для Year (`assisted`, `late`, `hadCorrections`), чистка `source='generator'` при смене GENERATOR_VERSION (ветка `pd-14` поверх `pd-12`) | developer | P1 | in_progress | PD-12 |
 | PD-15 | QA PD-8: PASS с оговорками (seed-сетки побайтово те же, undo, api live; 2 low → PD-9/п.0) | qa-tester | P1 | completed | PD-8 |
@@ -159,7 +163,7 @@ Gates: build → typecheck, lint, тесты. Закоммитить в pd-12. p
 | PD-17 | QA PD-11 (0e87330): PASS с оговорками, блокеров нет; 6 находок чинятся до мержа (Medium — дубликаты `.wv` после M3), остальное в backlog ниже | qa-tester | P1 | completed | PD-11 |
 | PD-18 | QA PD-12 (e5418fc): PASS с оговорками, блокеров нет; Medium (lastKnownDifficulty от sudoku.com) + 2 Low чинятся в PD-29 до мержа | qa-tester | P1 | completed | PD-12 |
 | PD-29 | Фикс-проход pd-12 по QA PD-18 (п.1–3, бриф ниже; pd-12 @ 780a711, dev готов) | developer | P1 | completed | PD-18 |
-| PD-30 | QA-регресс PD-29 (pd-12 @ 780a711, worktree qa-pd29, БД pundoku_qa4): сценарий полуночи, Today/Play, gates | qa-tester | P1 | in_progress | PD-29 |
+| PD-30 | QA-регресс PD-29 (pd-12 @ 780a711): PASS, находок нет (полночь через UI chromium+webkit, Today/Play 13/13, gates) | qa-tester | P1 | completed | PD-29 |
 | PD-19 | QA PD-13 — слит в PD-18 (dayResolver) | qa-tester | P1 | completed | — |
 | PD-21 | QA PD-9 (b3643f0): PASS с оговорками, 400 новых сеток, easy побайтово равен cf788ce; low → PD-22 | qa-tester | P2 | completed | PD-9 |
 | PD-22 | Low-полировка по QA PD-21 (engine/api, без спешки): (а) `generate({difficulty:'constructor'/'toString'})` → RangeError с неверным текстом — `Object.hasOwn`; (б) валидация `maxAttempts` (0, -1, NaN, 1.5) и `clues:null`; (в) README: clues ≈17 практически недостижимо; (г) допустимые `DAILY_FALLBACK_DIFFICULTY` в `apps/api/src/config/env.ts` из `DIFFICULTIES`, ошибка при старте без стека; (д) README engine: у v1 easy было ровно 38, не «≤38»; (е) heavy-тест ~160 с при таймауте 180 с — поднять/разнести | developer | P3 | pending | — |
@@ -212,4 +216,3 @@ hard 26/locked candidates, expert 24/pairs, master — beyond. `rateDifficulty` 
 | PM-Pundoku | product-manager | waiting | PD-18, PD-20 | 2026-09-29 14:00 |
 | QA-PD18 | qa-tester | working | PD-18 | 2026-09-29 13:10 |
 | QA-PD20 | qa-tester | working | PD-20 | 2026-09-29 14:00 |
-| QA-PD30 | qa-tester | working | PD-30 | 2026-09-29 14:30 |
