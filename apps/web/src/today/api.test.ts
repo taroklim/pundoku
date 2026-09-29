@@ -19,6 +19,8 @@ describe("fetchDaily", () => {
     const fetchFn = vi.fn(async (..._a: unknown[]) => json({ date: "2026-09-29", mission: M, difficulty: "hard", winRate: 61, source: "sudoku.com" }));
     const r = await fetchDaily("2026-09-29", { fetchFn: fetchFn as unknown as typeof fetch, base: "" });
     expect(fetchFn.mock.calls[0]![0]).toBe("/api/daily/2026-09-29");
+    // Всегда сверяемся с сервером: фолбэк-сетка кэшируется на минуту и заменяется на сетку Sudoku.com.
+    expect((fetchFn.mock.calls[0]![1] as RequestInit).cache).toBe("no-cache");
     expect(r.ok && r.puzzle.source).toBe("sudoku.com");
   });
   it("сеть упала — network", async () => {

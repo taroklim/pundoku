@@ -36,7 +36,13 @@ async function request(url: string, init: RequestInit, o: Options): Promise<Resp
 }
 
 export async function fetchDaily(date: string, o: Options = {}): Promise<FetchedDay> {
-  const res = await request(apiUrl(`/api/daily/${date}`, o.base), { headers: { accept: "application/json" } }, o);
+  // `no-cache` = всегда сверяться с сервером: фолбэк-сетка отдаётся с `max-age=60` и заменяется на
+  // сетку Sudoku.com, а возврат в сеть как раз и проверяет, не заменилась ли она (см. README).
+  const res = await request(
+    apiUrl(`/api/daily/${date}`, o.base),
+    { headers: { accept: "application/json" }, cache: "no-cache" },
+    o,
+  );
   if (res === null) return { ok: false, reason: "network" };
   if (!res.ok) return { ok: false, reason: "http" }; // 404 not_available_yet, 429, 503 и т. п.
   try {
