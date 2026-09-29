@@ -104,6 +104,7 @@
 20. (PD-12) Свернуть и вернуться во время игры на Today: таймер, ввод, заметки на месте.
 21. (PD-12) Ощущение Grid ∞ и карточки дня на iPhone 16.
 22. (PD-14) Решить день в режиме полёта, выключить режим — прогресс уходит на сервер без действий пользователя (проверить с другого браузера/после чистки данных сайта, что день на месте).
+23. (PD-25, Year) Safe areas и стеклянный таб-бар на Year; VoiceOver по месяцам и дням (подписи словами); Dynamic Type (легенда, подписи месяцев); тап по месяцу и по дню в шите (эргономика); reduced-transparency / prefers-contrast.
 Не проверено QA: реальное стекло iOS, `env(safe-area-inset-*)`, статус-бар в тёмной теме, установка, reduced-transparency/contrast в webkit.
 
 ## Решения владельца по Year (2026-09-29, PD-24 закрыт)
@@ -143,6 +144,15 @@ Gates: build → typecheck, lint, тесты web/engine/api (api с TEST_DATABAS
 - Брошенные (unfinished) дни с другого устройства локально не восстанавливаются (`progressFromRecord` берёт только solved) — в Year виден как пропуск.
 - Заголовок шита месяца центрирован (в макете слева) — Low.
 - Кнопок «Play this day's puzzle»/«Finish this puzzle» для прошлых дней нет — PD-33.
+
+### Бриф PD-35 (developer, ветка `pd-25`, worktree pd-25 @ df1945d)
+1. Пустое состояние Year: при firstUseDate=2026-09-20 и нулевых записях показывается «Your year starts today…» и одновременно 9 контуров is-missed (пустота — по `entries.size===0`, пропуски — по firstUse). Привести к одному правилу: пустой год без пропусков (рекомендация PM: при нулевых записях пропусков не рисуем — решение владельца «до начала пользования ни один прошедший день не помечен пропуском»).
+2. forced-colors: `.has-corr`/`.has-help` остаются в авторских цветах, карточки месяцев и кнопки дней теряют границы — специфичность селекторов; README обещает системные цвета.
+3. Легенда, подписи месяцев, шапка недель в px (11px) — перевести в rem (Dynamic Type).
+4. Легенда переносится на вторую строку и на 320×568 уходит под таб-бар — ужать/убрать перенос (минимально, устройство не целевое).
+5. Карточка unfinished пишет «N of 81 cells», N включает заданные — считать только поставленные игроком (или «N of M to fill»).
+6. Тесты YearTab: reload при visibilitychange, подписка subscribeRemote, aria-hidden итогов в пустом состоянии, availableYears с записями из будущих лет (выжившие мутации).
+Без правок (бэклог): 404-шум (PD-14), unfinished с другого устройства не восстанавливаются, расхождения с макетом (центр заголовка, чеврон года, «With help» в легенде).
 
 ## Backlog по QA PD-17 (не чиним сейчас)
 - 320×568 (iPhone SE 1-го поколения) скролл на 6–10 px — не целевое устройство.
@@ -186,7 +196,8 @@ Gates: build → typecheck, lint, тесты web/engine/api (api с TEST_DATABAS
 | PD-23 | QA-регресс PD-11 (8c4d3e6): PASS, блокеров и Medium нет, 5 уровней без сырых ключей, Worker не подвешивает UI | qa-tester | P1 | completed | PD-11 |
 | PD-25 | UI: экран Year по решениям владельца (C Blocks, сургуч+срез угла, assisted светлый тон 62 %, late=пропуск, карточка дня по тапу); читает данные из хранилища PD-14; ветка `pd-25` от pd-14 @ c574f13, worktree pd-25; dev готов, pd-25 @ df1945d (gates: web 266, engine 105, api 77+2 skipped); на QA PD-34 | developer | P1 | in_progress | PD-14 |
 | PD-33 | Архив: играть прошлую дату (`GET /api/daily/:date`, DayStore на произвольную дату, `late=true`; кнопки «Play this day's puzzle»/«Finish this puzzle» в карточке дня Year) — решение владельца «пропущенный день можно доигрывать» | developer | P2 | pending | PD-25 |
-| PD-34 | QA PD-25 (pd-25 @ df1945d; перезапуск после сбоя контейнера; worktree /tmp/pundoku-qa/qa-pd25, БД pundoku_qa6, порты 3360/5360) | qa-tester | P1 | in_progress | PD-25 |
+| PD-34 | QA PD-25 (pd-25 @ df1945d): PASS с оговорками, блокеров нет (36 комбинаций, 231 синтетический день без расхождений, мутационная проверка 19/22); находки → PD-35 | qa-tester | P1 | completed | PD-25 |
+| PD-35 | Фикс-проход pd-25 по QA PD-34 (бриф ниже), затем короткий QA-регресс PD-36 | developer | P1 | in_progress | PD-34 |
 | PD-26 | Полировка: `apple-touch-startup-image`/тёмный launch (QA PD-16), PD-22 low, Share PNG без цифр (если владелец подтвердит) | developer | P2 | pending | PD-25 |
 | PD-27 | Привязка e-mail/пароля к анонимному аккаунту (UI в настройках) | developer | P2 | pending | PD-26 |
 | PD-20 | QA PD-14 (pd-14 @ 0026b2a): PASS с оговорками, блокеров и Medium нет; 4 Low + решение по слиянию → PD-31 | qa-tester | P1 | completed | PD-14 |
@@ -236,4 +247,4 @@ hard 26/locked candidates, expert 24/pairs, master — beyond. `rateDifficulty` 
 | PM-Pundoku | product-manager | waiting | PD-18, PD-20 | 2026-09-29 14:00 |
 | QA-PD18 | qa-tester | working | PD-18 | 2026-09-29 13:10 |
 | QA-PD32b | qa-tester | working | PD-32 | 2026-09-29 17:30 |
-| QA-PD34b | qa-tester | working | PD-34 | 2026-09-29 17:30 |
+| Dev-PD35 | developer | working | PD-35 | 2026-09-29 18:00 |
