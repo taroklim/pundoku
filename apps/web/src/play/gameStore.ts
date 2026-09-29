@@ -108,6 +108,22 @@ export abstract class GameStore<S extends PlaySnapshot = PlaySnapshot> {
     return play;
   }
 
+  /** Продолжить сохранённую партию: игра, накопленное время; решённая — сразу в `solved`. */
+  protected resumeGame(play: PlayState, elapsedMs: number, patch: Partial<S> = {}): void {
+    this.elapsedBase = elapsedMs;
+    this.runningSince = null;
+    this.set({
+      phase: play.solved ? "solved" : "playing",
+      play,
+      selected: play.solved ? null : firstOpenCell(play),
+      startedOn: new Date(),
+      notesMode: false,
+      pop: null,
+      wave: null,
+      ...patch,
+    } as Partial<S>);
+  }
+
   /** Сбросить партию в «загрузку» (таймер обнуляется). */
   protected resetToLoading(patch: Partial<S> = {}): void {
     this.elapsedBase = 0;
