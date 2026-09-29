@@ -138,6 +138,12 @@ Gates: build → typecheck, lint, тесты. Закоммитить в pd-12. p
 5. Low-1 (шум 404 на первый GET /api/snapshot в консоли) — не менять контракт, отметить в README как известное.
 Gates: build → typecheck, lint, тесты web/engine/api (api с TEST_DATABASE_URL на отдельной БД, напр. `pundoku_dev`-копия или свежая `pundoku_pd31`). Коммит в pd-14.
 
+## Backlog по PD-25 (Year; не блокеры)
+- После полной очистки IDB `firstUseDate` = сегодня: дни между настоящим началом и первой восстановленной записью — пустые, а не пропуски.
+- Брошенные (unfinished) дни с другого устройства локально не восстанавливаются (`progressFromRecord` берёт только solved) — в Year виден как пропуск.
+- Заголовок шита месяца центрирован (в макете слева) — Low.
+- Кнопок «Play this day's puzzle»/«Finish this puzzle» для прошлых дней нет — PD-33.
+
 ## Backlog по QA PD-17 (не чиним сейчас)
 - 320×568 (iPhone SE 1-го поколения) скролл на 6–10 px — не целевое устройство.
 - Заметки 7-8-9 касаются нижней линии клетки на 320pt — проверить на устройстве.
@@ -178,7 +184,9 @@ Gates: build → typecheck, lint, тесты web/engine/api (api с TEST_DATABAS
 | PD-21 | QA PD-9 (b3643f0): PASS с оговорками, 400 новых сеток, easy побайтово равен cf788ce; low → PD-22 | qa-tester | P2 | completed | PD-9 |
 | PD-22 | Low-полировка по QA PD-21 (engine/api, без спешки): (а) `generate({difficulty:'constructor'/'toString'})` → RangeError с неверным текстом — `Object.hasOwn`; (б) валидация `maxAttempts` (0, -1, NaN, 1.5) и `clues:null`; (в) README: clues ≈17 практически недостижимо; (г) допустимые `DAILY_FALLBACK_DIFFICULTY` в `apps/api/src/config/env.ts` из `DIFFICULTIES`, ошибка при старте без стека; (д) README engine: у v1 easy было ровно 38, не «≤38»; (е) heavy-тест ~160 с при таймауте 180 с — поднять/разнести | developer | P3 | pending | — |
 | PD-23 | QA-регресс PD-11 (8c4d3e6): PASS, блокеров и Medium нет, 5 уровней без сырых ключей, Worker не подвешивает UI | qa-tester | P1 | completed | PD-11 |
-| PD-25 | UI: экран Year по решениям владельца (C Blocks, сургуч+срез угла, assisted светлый тон 62 %, late=пропуск, карточка дня по тапу); читает данные из хранилища PD-14; ветка `pd-25` от pd-14 @ c574f13, worktree pd-25 | developer | P1 | in_progress | PD-14 |
+| PD-25 | UI: экран Year по решениям владельца (C Blocks, сургуч+срез угла, assisted светлый тон 62 %, late=пропуск, карточка дня по тапу); читает данные из хранилища PD-14; ветка `pd-25` от pd-14 @ c574f13, worktree pd-25; dev готов, pd-25 @ df1945d (gates: web 266, engine 105, api 77+2 skipped); на QA PD-34 | developer | P1 | in_progress | PD-14 |
+| PD-33 | Архив: играть прошлую дату (`GET /api/daily/:date`, DayStore на произвольную дату, `late=true`; кнопки «Play this day's puzzle»/«Finish this puzzle» в карточке дня Year) — решение владельца «пропущенный день можно доигрывать» | developer | P2 | pending | PD-25 |
+| PD-34 | QA PD-25 (pd-25 @ df1945d, worktree qa-pd25, БД pundoku_qa6) | qa-tester | P1 | in_progress | PD-25 |
 | PD-26 | Полировка: `apple-touch-startup-image`/тёмный launch (QA PD-16), PD-22 low, Share PNG без цифр (если владелец подтвердит) | developer | P2 | pending | PD-25 |
 | PD-27 | Привязка e-mail/пароля к анонимному аккаунту (UI в настройках) | developer | P2 | pending | PD-26 |
 | PD-20 | QA PD-14 (pd-14 @ 0026b2a): PASS с оговорками, блокеров и Medium нет; 4 Low + решение по слиянию → PD-31 | qa-tester | P1 | completed | PD-14 |
@@ -228,4 +236,4 @@ hard 26/locked candidates, expert 24/pairs, master — beyond. `rateDifficulty` 
 | PM-Pundoku | product-manager | waiting | PD-18, PD-20 | 2026-09-29 14:00 |
 | QA-PD18 | qa-tester | working | PD-18 | 2026-09-29 13:10 |
 | QA-PD32 | qa-tester | working | PD-32 | 2026-09-29 15:30 |
-| Dev-PD25 | developer | working | PD-25 | 2026-09-29 15:30 |
+| QA-PD34 | qa-tester | working | PD-34 | 2026-09-29 16:30 |
