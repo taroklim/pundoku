@@ -1,5 +1,5 @@
 import type { CSSProperties, KeyboardEvent } from "react";
-import { memo, useCallback, useRef } from "react";
+import { memo, useCallback, useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { digitAt, isGiven, isWrong, notesOf } from "./logic";
 import type { PlaySnapshot, PlayStore } from "./store";
@@ -112,6 +112,17 @@ export function Board({ snap, store, dim }: BoardProps) {
   const selDigit = play && selected !== null ? digitAt(play, selected) : 0;
   // Roving: клетка-«единственная остановка» — выбранная (или первая, пока ничего не выбрано).
   const stop = selected ?? 0;
+
+  // Фокус следует за выбором: undo (Ctrl+Z) и другие программные сдвиги выбора переводят
+  // DOM-фокус на выбранную клетку — но только если фокус уже внутри поля (кнопки панели
+  // и Undo фокус не отбирают).
+  useEffect(() => {
+    const board = ref.current;
+    const active = document.activeElement;
+    if (!board || selected === null || !active || !board.contains(active)) return;
+    if ((active as HTMLElement).dataset["i"] === String(selected)) return;
+    board.querySelector<HTMLElement>(`[data-i="${selected}"]`)?.focus({ preventScroll: true });
+  }, [selected]);
 
   const pick = useCallback((cell: number) => store.select(cell), [store]);
 

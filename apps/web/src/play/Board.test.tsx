@@ -78,3 +78,26 @@ describe("M3: волны не плодят элементы", () => {
     expect(c.classList.contains("wave-a")).toBe(true);
   });
 });
+
+describe("фокус следует за выбором", () => {
+  it("если фокус в поле, смена выбора (undo) переносит его на выбранную клетку", () => {
+    render(snapOf({ selected: 5 }));
+    const c5 = document.querySelector<HTMLElement>('.cell[data-i="5"]')!;
+    act(() => c5.focus());
+    expect(document.activeElement).toBe(c5);
+    render(snapOf({ selected: 20 }));
+    expect(document.activeElement).toBe(document.querySelector('.cell[data-i="20"]'));
+    expect(document.querySelector('.cell[data-i="20"]')!.getAttribute("tabindex")).toBe("0");
+    expect(c5.getAttribute("tabindex")).toBe("-1");
+  });
+
+  it("если фокус вне поля (кнопка Undo), фокус не отбирается", () => {
+    render(snapOf({ selected: 5 }));
+    const btn = document.createElement("button");
+    document.body.append(btn);
+    btn.focus();
+    render(snapOf({ selected: 20 }));
+    expect(document.activeElement).toBe(btn);
+    btn.remove();
+  });
+});

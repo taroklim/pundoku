@@ -198,7 +198,8 @@ export class PlayStore {
     const { play, selected, phase } = this.snap;
     if (phase !== "playing" || !play || selected === null) return;
     const next = eraseCell(play, selected, this.getElapsedMs());
-    if (next !== play) this.finishMove(next, { play: next });
+    // pop: null — восстановление/стирание не должно проигрывать M1 (устаревший popId).
+    if (next !== play) this.finishMove(next, { play: next, pop: null });
   }
 
   undo(): void {
@@ -206,7 +207,7 @@ export class PlayStore {
     if (phase !== "playing" || !play) return;
     const top = play.undoStack[play.undoStack.length - 1];
     const next = undoMove(play, this.getElapsedMs());
-    if (next !== play) this.finishMove(next, { play: next, selected: top ? top.cell : this.snap.selected });
+    if (next !== play) this.finishMove(next, { play: next, pop: null, selected: top ? top.cell : this.snap.selected });
   }
 
   private finishMove(next: PlayState, patch: Partial<PlaySnapshot>): void {
