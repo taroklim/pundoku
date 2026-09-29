@@ -1,0 +1,5 @@
+{
+  "app": { "name": "Pundoku" },
+  "tabs": { "today": "Сьогодні", "play": "Гра", "year": "Рік" },
+  "settings": { "title": "Налаштування", "language": "Мова" }
+}

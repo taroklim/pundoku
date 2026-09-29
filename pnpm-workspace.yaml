@@ -1,0 +1,7 @@
+packages:
+  - apps/*
+  - packages/*
+
+# pnpm 12: postinstall-скрипты запускаются только у явно разрешённых пакетов.
+allowBuilds:
+  esbuild: true

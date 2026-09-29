@@ -1,0 +1,44 @@
+# Pundoku — локальный/домашний запуск. Значения переменных — в .env
+# (см. .env.example, сам .env не коммитится).
+#
+# Только postgres для локальной разработки:  docker compose up -d postgres
+# Всё вместе (api собирается из apps/api/Dockerfile): docker compose up --build
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-pundoku}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-pundoku}
+      POSTGRES_DB: ${POSTGRES_DB:-pundoku}
+    ports:
+      # Наружу только на localhost — для `pnpm dev:api` без Docker для api.
+      - "127.0.0.1:5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-pundoku} -d ${POSTGRES_DB:-pundoku}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  api:
+    build:
+      # Контекст — корень репо: Dockerfile ставит зависимости через pnpm workspace.
+      context: .
+      dockerfile: apps/api/Dockerfile
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      DATABASE_URL: postgres://${POSTGRES_USER:-pundoku}:${POSTGRES_PASSWORD:-pundoku}@postgres:5432/${POSTGRES_DB:-pundoku}
+      SUDOKU_COM_BASE_URL: ${SUDOKU_COM_BASE_URL:-https://sudoku.com/api/v2}
+    ports:
+      - "127.0.0.1:${PORT:-3000}:3000"
+
+volumes:
+  postgres_data:

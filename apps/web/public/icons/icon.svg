@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- Плейсхолдер PD-0: чернильный фон (рабочий #3B48B0) и сетка 3×3. Финальная иконка — на согласование владельцу. -->
+  <rect width="64" height="64" rx="14" fill="#3B48B0"/>
+  <g stroke="#FFFFFF" stroke-width="3" stroke-linecap="round">
+    <path d="M14 14h36v36H14z" fill="none"/>
+    <path d="M26 14v36M38 14v36M14 26h36M14 38h36"/>
+  </g>
+</svg>

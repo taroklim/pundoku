@@ -1,0 +1,27 @@
+{
+  "name": "pundoku",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Pundoku — чистое судоку как ежедневный ритуал. Монорепо: web (PWA), api (прокси Sudoku.com + бэкап прогресса), engine (генератор/решатель).",
+  "type": "module",
+  "packageManager": "pnpm@12.6.0",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "dev": "pnpm -r --parallel dev",
+    "dev:web": "pnpm --filter @pundoku/web dev",
+    "dev:api": "pnpm --filter @pundoku/api dev",
+    "build": "pnpm -r build",
+    "test": "pnpm -r test",
+    "lint": "pnpm -r lint",
+    "typecheck": "pnpm -r typecheck",
+    "migrate": "pnpm --filter @pundoku/api migrate"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "eslint": "^10.11.0",
+    "typescript": "^5.9.3",
+    "typescript-eslint": "~8.70.1"
+  }
+}
