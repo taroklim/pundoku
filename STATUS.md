@@ -108,6 +108,7 @@
 - Решение PM: провизорный выбор сложности показывает все 5 уровней движка (easy/medium/hard/expert/master) после PD-9; в i18n en/uk/ru добавить `master`.
 
 ## Ожидает решения владельца
+- Year (PD-24): 4 вопроса в `design/pd24-year-notes.md` §5 — раскладка (рекомендация C Blocks), исправления цветом vs тихо, признак «решено с помощью» (рекомендация: нет), доигрывание пропущенных дней. Кадры: `design/pd24-shots/`, макет `design/pd24-year-variants.html`. Реализацию Year не начинаем до ответа.
 - (а) Клавиши панели 28–41 pt по ширине (36–41 pt на 390–430) при HIG-минимуме 44 pt — подтвердить размер после проверки на устройстве (iPhone 16, 390 pt).
 - (б) Подсвечивать ли конфликты (одинаковая цифра в ряду/колонке/блоке) до решения, или только сверка с решением (сейчас ошибка видна, только если цифра ≠ решению). Рекомендация PM: только сверка с решением (без «подсказок» о конфликтах), как сейчас — чище для ежедневной сетки; но владелец решает.
 
@@ -126,7 +127,7 @@
 | PD-9 | Play: вторая ось сложности — число подсказок (бриф ниже) + п.0 low-замечания QA PD-15 (смержен в main, b3643f0) | developer | P2 | completed | — |
 | PD-10 | UI 1: app shell + таб-бар 3 вкладки (стекло с фолбэками), токены v2 в CSS, тема по системе, safe areas, 100dvh, заглушки Today/Play/Year (смержен в main, eae5fa2) | developer | P1 | completed | — |
 | PD-11 | UI 2: компонент поля B + панель 1–9 с остатками + notes/undo/erase + «N cells left» + движение M1/M2/M3/M6 (Play-экран, локальная игра на движке); смержен в main (QA PD-17 + регресс PD-23 PASS) | developer | P1 | completed | — |
-| PD-24 | Дизайн: варианты экрана Year (полотно года) + вопрос владельцу — HTML-макет в `design/`, скилл apple-design; НЕ реализация (ветка `pd-24`) | designer | P1 | in_progress | — |
+| PD-24 | Дизайн: варианты экрана Year (полотно года) + вопрос владельцу — HTML-макет в `design/`, скилл apple-design; НЕ реализация — смержен в main (8aea006): варианты A Ruled-rows/B/C Blocks, 15 кадров, заметка; ждёт выбора владельца | designer | P1 | completed | — |
 | PD-12 | UI 3: экран Today — `GET /api/daily/:date`, подпись дня с таймером, карточка дня (heatmap/summary/technique, win_rate после решения), M5, постоянная сетка. Из PD-8: клиентский фолбэк-грид ТОЛЬКО через `dailyPuzzle(date, difficulty)` с difficulty из ответа api; при возврате в сеть сверять сетку по `source`/`mission` (сетка могла смениться generator→sudoku.com, пока игрок не решил) + два Low из QA PD-23 (см. ниже); реализация по утверждённому макету (Today solved: карточка дня, Grid ∞); ветка `pd-12` | developer | P1 | in_progress | — |
 | PD-13 | UI 4: клиентское правило замены генераторной сетки (сравнение `mission`, доигрывание своей) | developer | P1 | pending | PD-12 |
 | PD-14 | UI 5: устройство/снапшот — `POST /api/devices`, `PUT/GET /api/snapshot`, IndexedDB, сервер — правда для постоянной сетки/года | developer | P1 | pending | PD-12 |
@@ -180,7 +181,6 @@ hard 26/locked candidates, expert 24/pairs, master — beyond. `rateDifficulty` 
 ## Агенты (текущий статус)
 | Имя | Роль | Статус | Тикет | Обновлено |
 |-----|------|--------|-------|-----------|
-| PM-Pundoku | product-manager | waiting | PD-12, PD-24 | 2026-09-29 09:00 |
+| PM-Pundoku | product-manager | waiting | PD-12 | 2026-09-29 09:00 |
 | Dev-PD9 | developer | working | PD-9 | 2026-09-29 09:25 |
 | Dev-PD12 | developer | working | PD-12 | 2026-09-29 12:10 |
-| Des-PD24 | designer | working | PD-24 | 2026-09-29 12:10 |
