@@ -110,6 +110,21 @@ describe("dailySeed / dailyPuzzle", () => {
     expect(() => dailySeed("29.09.2026", "medium")).toThrow(RangeError);
   });
 
+  it("rejects dates that do not exist or are garbage", () => {
+    for (const bad of ["2026-13-45", "2026-02-30", "2026-00-10", "2026-04-31", "2026-01-00", "2025-02-29", "", "abc", "2026-9-29", "2026-09-29T00:00", " 2026-09-29"]) {
+      expect(() => dailySeed(bad, "easy"), bad).toThrow(RangeError);
+      expect(() => dailyPuzzle(bad, "easy"), bad).toThrow(/Date/);
+    }
+    expect(() => dailySeed(undefined as unknown as string, "easy")).toThrow(RangeError);
+  });
+
+  it("accepts real edge dates (leap day, month ends)", () => {
+    expect(dailySeed("2024-02-29", "easy")).toBe("2024-02-29/easy");
+    expect(dailySeed("2000-02-29", "easy")).toBe("2000-02-29/easy");
+    expect(dailySeed("2026-12-31", "hard")).toBe("2026-12-31/hard");
+    expect(() => dailySeed("1900-02-29", "easy")).toThrow(RangeError);
+  });
+
   it("dailyPuzzle is generate() with the daily seed", () => {
     const p = dailyPuzzle("2026-09-29", "expert");
     expect(p).toEqual(generate({ difficulty: "expert", seed: "2026-09-29/expert" }));

@@ -81,6 +81,10 @@ export interface HumanSolveResult {
   readonly contradiction: boolean;
 }
 
+/**
+ * Виды ходов. `undo` — отмена последнего ещё не отменённого действия (place / erase /
+ * note_add / note_remove), без redo. Полный контракт — README пакета, «Контракт undo».
+ */
 export type MoveKind = "place" | "erase" | "note_add" | "note_remove" | "undo";
 
 /** Ход игрока. */
@@ -89,7 +93,10 @@ export interface Move {
   readonly t: number;
   readonly cell: Cell;
   readonly kind: MoveKind;
-  /** Цифра — для place/note_add/note_remove (и для undo, если известна). */
+  /**
+   * Цифра — для place/note_add/note_remove; для undo — информационно (что откатили).
+   * Для undo `cell` тоже информационный: что именно отменяется, движок определяет по стеку.
+   */
   readonly digit?: Digit;
   /** Для place: совпала ли цифра с решением. */
   readonly correct?: boolean;
@@ -107,7 +114,10 @@ export interface MoveLogSummary {
   readonly durationMs: number;
   /** Ни одной ошибки и ни одной правки. */
   readonly clean: boolean;
-  /** Правки: erase, undo и перезапись уже поставленной игроком цифры. */
+  /**
+   * Правки: стирание цифры, перезапись поставленной цифры, снятие постановки через undo.
+   * Undo стирания и undo заметок правкой не считаются (контракт undo, README).
+   */
   readonly corrections: number;
   /** Постановки с `correct === false`. */
   readonly mistakes: number;
