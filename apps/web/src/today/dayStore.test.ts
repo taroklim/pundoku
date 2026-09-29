@@ -74,7 +74,7 @@ describe("загрузка дня", () => {
     expect(s).toMatchObject({ source: "client", verification: "local", offline: true, winRate: null });
   });
 
-  it("ответ API негоден, но сложность известна — фолбэк этой сложности", async () => {
+  it("ответ API негоден, но сложность известна (generator) — фолбэк этой сложности", async () => {
     const bad: FetchedDay = { ok: false, reason: "invalid", difficulty: "easy" };
     const { store, deps } = make({ fetchDay: vi.fn(async () => bad) });
     await started(store);
@@ -83,11 +83,19 @@ describe("загрузка дня", () => {
   });
 
   it("mission без единственного решения от сервера — фолбэк, а не поломанная игра", async () => {
-    const broken = server({ mission: "1".repeat(81) });
+    const broken = server({ mission: "1".repeat(81), source: "generator" });
     const { store, deps } = make({ fetchDay: vi.fn(async () => broken) });
     await started(store);
     expect(deps.generateFallback).toHaveBeenCalledWith(DATE, "easy");
     expect(store.getSnapshot().source).toBe("client");
+  });
+
+  it("негодная mission от sudoku.com: её метка сложности в фолбэк не идёт — DAILY_FALLBACK_DIFFICULTY", async () => {
+    const broken = server({ mission: "1".repeat(81), source: "sudoku.com", difficulty: "hard" });
+    const { store, deps } = make({ fetchDay: vi.fn(async () => broken) });
+    await started(store);
+    expect(deps.generateFallback).toHaveBeenCalledWith(DATE, DAILY_FALLBACK_DIFFICULTY);
+    expect(store.getSnapshot().play!.mission.join("")).toBe(FALLBACK.mission);
   });
 
   it("офлайн по navigator.onLine: сеть не трогаем, играем фолбэком сразу", async () => {
@@ -192,6 +200,37 @@ describe("сверка при возврате в сеть", () => {
     store.refresh();
     await Promise.resolve();
     expect(store.getSnapshot().date).toBe(DATE);
+  });
+});
+
+describe("сложность фолбэка после смены суток в офлайне", () => {
+  /** День 1 приходит с API, в полночь API недоступен — что строит клиентский фолбэк на 2026-09-30. */
+  async function midnightOffline(first: FetchedDay) {
+    let now = NOW;
+    let apiUp = true;
+    const { store, deps } = make({ now: () => now, fetchDay: vi.fn(async () => (apiUp ? first : down)) });
+    await started(store);
+    apiUp = false;
+    now = new Date(2026, 8, 30, 0, 1);
+    store.refresh(); // событие online/visibilitychange после полуночи: день не начат — грузим новый
+    await vi.waitFor(() => expect(store.getSnapshot().date).toBe("2026-09-30"));
+    await vi.waitFor(() => expect(store.getSnapshot().phase).toBe("playing"));
+    return { store, deps };
+  }
+
+  it("день из Sudoku.com (hard): фолбэк новой даты — dailyPuzzle(newDate, medium), метка hard не запоминается", async () => {
+    const { store, deps } = await midnightOffline(server({ source: "sudoku.com", difficulty: "hard" }));
+    const expected = dailyPuzzle("2026-09-30", DAILY_FALLBACK_DIFFICULTY);
+    expect(deps.generateFallback).toHaveBeenLastCalledWith("2026-09-30", DAILY_FALLBACK_DIFFICULTY);
+    const s = store.getSnapshot();
+    expect(s.source).toBe("client");
+    expect(s.play!.mission.join("")).toBe(expected.mission);
+  });
+
+  it("день из generator (hard): фолбэк новой даты сохраняет сложность из ответа — dailyPuzzle(newDate, hard)", async () => {
+    const { store, deps } = await midnightOffline(server({ source: "generator", difficulty: "hard", winRate: null }));
+    expect(deps.generateFallback).toHaveBeenLastCalledWith("2026-09-30", "hard");
+    expect(store.getSnapshot().play!.mission.join("")).toBe(dailyPuzzle("2026-09-30", "hard").mission);
   });
 });
 

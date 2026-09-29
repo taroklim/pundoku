@@ -71,6 +71,11 @@ describe("parseDaily", () => {
     const r = parseDaily("2026-09-29", { mission: "1", difficulty: "expert", source: "generator" });
     expect(!r.ok && r.difficulty).toBe("expert");
   });
+
+  it("невалидная mission у sudoku.com: метка сложности не сохраняется (чужая шкала)", () => {
+    const r = parseDaily("2026-09-29", { mission: "1", difficulty: "hard", source: "sudoku.com" });
+    expect(!r.ok && r.difficulty).toBeNull();
+  });
 });
 
 describe("planDay: что играть", () => {

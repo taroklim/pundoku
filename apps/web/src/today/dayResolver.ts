@@ -4,7 +4,8 @@
  *
  * 1. Сетка дня — ответ `GET /api/daily/:date`. Нет ответа (офлайн, 5xx, мусор в ответе) —
  *    клиентский фолбэк, и ТОЛЬКО через `dailyPuzzle(date, difficulty)` движка: `difficulty` из
- *    ответа API, если он был; иначе последняя известная; иначе `DAILY_FALLBACK_DIFFICULTY`.
+ *    ответа API, если он был и `source: generator`; иначе последняя известная у `generator`; иначе
+ *    `DAILY_FALLBACK_DIFFICULTY`. Метка сложности `sudoku.com` не запоминается и не используется.
  *    Seed вручную не собирается — сетка обязана совпасть с серверным фолбэком.
  * 2. Фолбэк (клиентский или серверный `generator`) временный: сервер может заменить его настоящей
  *    сеткой Sudoku.com. При возврате в сеть клиент перезапрашивает день и сверяет `mission`.
@@ -45,7 +46,7 @@ export type FetchedDay =
   | {
       readonly ok: false;
       readonly reason: "network" | "http" | "invalid";
-      /** Сложность из ответа, если он был, но mission оказалась негодной. */
+      /** Сложность из ответа, если он был, но mission оказалась негодной; только у `source: generator`. */
       readonly difficulty?: Difficulty | null;
     };
 
@@ -72,7 +73,8 @@ export function parseDaily(date: string, body: unknown): FetchedDay {
   const difficulty = isDifficulty(b["difficulty"]) ? b["difficulty"] : null;
   const source = b["source"];
   if (!isMission(b["mission"]) || (source !== "sudoku.com" && source !== "generator")) {
-    return { ok: false, reason: "invalid", difficulty };
+    // Метка Sudoku.com — чужая шкала, для клиентского фолбэка (`dailyPuzzle`) она не годится.
+    return { ok: false, reason: "invalid", difficulty: source === "generator" ? difficulty : null };
   }
   const rate = b["winRate"];
   return {

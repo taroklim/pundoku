@@ -199,7 +199,9 @@ export class DayStore extends GameStore<DaySnapshot> {
 
   private async fetchDay(date: string): Promise<FetchedDay> {
     const r = await this.deps.fetchDay(date);
-    const known = r.ok ? r.puzzle.difficulty : (r.difficulty ?? null);
+    // Метка сложности Sudoku.com — не сложность генератора (`dailyPuzzle` её не знает): запоминаем только
+    // сложность `generator`, иначе фолбэк новой даты зависел бы от истории сессии.
+    const known = r.ok ? generatorDifficulty(r.puzzle) : (r.difficulty ?? null);
     if (known) this.lastKnownDifficulty = known;
     return r;
   }
@@ -222,8 +224,8 @@ export class DayStore extends GameStore<DaySnapshot> {
         this.begin(plan.puzzle, solution, "server", false);
         return;
       }
-      // Мусор в mission (нет единственного решения) — как «ответа не было», но сложность известна.
-      return this.start(token, date, saved, { ok: false, reason: "invalid", difficulty: plan.puzzle.difficulty });
+      // Мусор в mission (нет решения) — как «ответа не было»; сложность берём только у `generator`.
+      return this.start(token, date, saved, { ok: false, reason: "invalid", difficulty: generatorDifficulty(plan.puzzle) });
     }
 
     try {
@@ -391,6 +393,12 @@ export class DayStore extends GameStore<DaySnapshot> {
   }
 }
 
+/** Сложность, годная для фолбэка: только у сетки нашего генератора (метка Sudoku.com — чужая шкала). */
+function generatorDifficulty(puzzle: DayPuzzle): Difficulty | null {
+  return puzzle.source === "generator" ? puzzle.difficulty : null;
+}
+
+/** Решение сетки дня (первое найденное; единственность не проверяется — см. README, «Какая сетка дня играется»). */
 function solveMission(mission: string): string | null {
   const grid = solve(mission);
   return grid ? grid.join("") : null;
