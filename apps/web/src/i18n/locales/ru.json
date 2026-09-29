@@ -58,6 +58,13 @@
     "share": "Поделиться",
     "newGame": "Новая игра"
   },
+  "result": {
+    "pathSub": "Каждая клетка затенена по тому, когда вы её заполнили.",
+    "heatLabel": "Тепловая карта порядка, в котором вы заполняли сетку.",
+    "early": "Рано",
+    "late": "Поздно",
+    "winRate": "{{percent}} % решили сегодня"
+  },
   "technique": {
     "naked_single": "Открытая одиночка",
     "hidden_single": "Скрытая одиночка",
@@ -65,5 +72,27 @@
     "naked_pair": "Открытая пара",
     "hidden_pair": "Скрытая пара",
     "beyond": "Сложная техника"
+  },
+  "today": {
+    "loading": "Загружаем сегодняшнюю сетку…",
+    "failed": "Не удалось загрузить сегодняшнюю сетку.",
+    "cardTitle": "Ваш путь",
+    "source": {
+      "sudoku.com": "Сетка с Sudoku.com",
+      "generator": "Сетка из генератора Pundoku",
+      "client": "Создано на этом устройстве"
+    },
+    "gridTitle": "Grid ∞",
+    "gridCells_one": "{{count}} клетка",
+    "gridCells_few": "{{count}} клетки",
+    "gridCells_many": "{{count}} клеток",
+    "gridCells_other": "{{count}} клетки",
+    "gridNotSolvable": "пока не решается",
+    "gridSolvable": "уже решается",
+    "gridLabel_one": "Ваша постоянная сетка: {{count}} подсказка, {{state}}",
+    "gridLabel_few": "Ваша постоянная сетка: {{count}} подсказки, {{state}}",
+    "gridLabel_many": "Ваша постоянная сетка: {{count}} подсказок, {{state}}",
+    "gridLabel_other": "Ваша постоянная сетка: {{count}} подсказки, {{state}}",
+    "gridHint": "Последняя клетка сегодня упадёт сюда."
   }
 }

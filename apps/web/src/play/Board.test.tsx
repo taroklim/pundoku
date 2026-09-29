@@ -6,7 +6,7 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import "../i18n";
 import { Board } from "./Board";
 import { createPlay } from "./logic";
-import type { PlaySnapshot, PlayStore } from "./store";
+import type { PlaySnapshot } from "./gameStore";
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
@@ -16,7 +16,7 @@ const MISSION =
   "530070000" + "600195000" + "098000060" + "800060003" + "400803001" + "700020006" + "060000280" + "000419005" + "000080079";
 
 const play = createPlay({ mission: MISSION, solution: SOLUTION });
-const fakeStore = { select: () => undefined, moveSelection: () => null } as unknown as PlayStore;
+const fakeStore = { select: () => undefined, moveSelection: () => null } as unknown as Parameters<typeof Board>[0]["store"];
 
 const snapOf = (patch: Partial<PlaySnapshot>): PlaySnapshot => ({
   phase: "playing",

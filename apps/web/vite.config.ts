@@ -31,6 +31,8 @@ export default defineConfig({
         globPatterns: ["**/*.{js,css,html,svg,png,ico,woff2}"],
         cleanupOutdatedCaches: true,
         navigateFallback: "/index.html",
+        // API — не страница: навигация на /api/* не должна отдавать index.html из SW.
+        navigateFallbackDenylist: [/^\/api\//],
       },
       devOptions: {
         // SW в dev выключен — iOS-проверки офлайна делаются на `vite preview` реальной сборки.
