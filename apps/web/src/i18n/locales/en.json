@@ -27,7 +27,8 @@
     "easy": "Easy",
     "medium": "Medium",
     "hard": "Hard",
-    "expert": "Expert"
+    "expert": "Expert",
+    "master": "Master"
   },
   "play": {
     "difficulty": "Difficulty",
