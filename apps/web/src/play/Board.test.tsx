@@ -101,3 +101,13 @@ describe("фокус следует за выбором", () => {
     btn.remove();
   });
 });
+
+describe("выбранная неверная клетка", () => {
+  it("кольцо выбора получает класс err (сургуч снаружи), у верной клетки — нет", () => {
+    const wrong = { ...play, values: play.values.map((v, i) => (i === 2 ? 1 : v)) }; // решение клетки 2 — 4
+    render(snapOf({ play: wrong, selected: 2 }));
+    expect(document.querySelector(".ring")!.classList.contains("err")).toBe(true);
+    render(snapOf({ selected: 2 }));
+    expect(document.querySelector(".ring")!.classList.contains("err")).toBe(false);
+  });
+});

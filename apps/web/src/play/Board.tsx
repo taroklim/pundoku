@@ -199,7 +199,12 @@ export function Board({ snap, store, dim }: BoardProps) {
         {/* Одно кольцо, которое переезжает (M2). Монтируется сразу на месте (key по партии),
             поэтому при старте не «прилетает» из угла. */}
         {ready && selected !== null && (
-          <div className="ring" key={snap.startedOn.getTime()} style={ringStyle} aria-hidden="true" />
+          <div
+            className={`ring${play && isWrong(play, selected) ? " err" : ""}`}
+            key={snap.startedOn.getTime()}
+            style={ringStyle}
+            aria-hidden="true"
+          />
         )}
       </div>
     </div>
