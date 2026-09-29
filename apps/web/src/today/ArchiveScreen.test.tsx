@@ -84,6 +84,7 @@ describe("экран архивного дня", () => {
     await settle();
     expect(q('[data-testid="archive-unavailable"]')!.textContent).toBe("This day’s puzzle isn’t available.");
     expect(host.querySelector("button.link")).toBeNull();
+    expect(q(".subline")!.textContent).not.toMatch(/Medium|Easy/);
   });
 
   it("решённый позже день: карточка результата с пометкой «остаётся пропуском», без Grid ∞", async () => {
@@ -113,5 +114,15 @@ describe("экран архивного дня", () => {
     expect(store.getSnapshot().phase).toBe("playing");
     await act(async () => root.render(null));
     expect(store.getSnapshot().phase).toBe("loading");
+  });
+});
+
+describe("несуществующая календарная дата в адресе", () => {
+  it("подпись не «перекатывается» в другой месяц и не показывает сложность", async () => {
+    const { store } = make(ok);
+    await render(store, "2026-02-30");
+    await settle();
+    expect(q('[data-testid="archive-unavailable"]')).not.toBeNull();
+    expect(q(".subline")!.textContent).toBe("");
   });
 });
