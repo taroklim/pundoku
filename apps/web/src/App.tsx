@@ -1,29 +1,33 @@
+import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import { SUPPORTED_LOCALES } from "./i18n";
+import { Placeholder } from "./screens/Placeholder";
+import { panelDomId, tabDomId, TabBar } from "./shell/TabBar";
+import { useTab } from "./shell/tabs";
 
-/**
- * PD-0: оболочка без экранов. Макет Today/таб-бар — на утверждении у владельца,
- * компоненты сетки/панели/таб-бара появятся отдельными тикетами.
- */
+/** Каркас (PD-10): три вкладки Today · Play · Year, стеклянный таб-бар, тема по системе. */
 export function App() {
-  const { t, i18n } = useTranslation();
+  const { i18n } = useTranslation();
+  const [tab, setTab] = useTab();
+
+  useEffect(() => {
+    document.documentElement.lang = i18n.resolvedLanguage ?? "en";
+  }, [i18n.resolvedLanguage]);
+
   return (
-    <main style={{ flex: 1, display: "grid", placeItems: "center", gap: 16 }}>
-      <h1>{t("app.name")}</h1>
-      <label style={{ fontSize: 16 }}>
-        {t("settings.language")}:{" "}
-        <select
-          style={{ fontSize: 16 }}
-          value={i18n.resolvedLanguage}
-          onChange={(event) => void i18n.changeLanguage(event.target.value)}
+    <div className="shell">
+      <main className="scroll">
+        <div
+          key={tab}
+          className="panel"
+          role="tabpanel"
+          id={panelDomId(tab)}
+          aria-labelledby={tabDomId(tab)}
+          tabIndex={0}
         >
-          {SUPPORTED_LOCALES.map((locale) => (
-            <option key={locale} value={locale}>
-              {locale}
-            </option>
-          ))}
-        </select>
-      </label>
-    </main>
+          <Placeholder tab={tab} />
+        </div>
+      </main>
+      <TabBar active={tab} onSelect={setTab} />
+    </div>
   );
 }

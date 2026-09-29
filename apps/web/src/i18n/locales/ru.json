@@ -1,5 +1,18 @@
 {
-  "app": { "name": "Pundoku" },
-  "tabs": { "today": "Сегодня", "play": "Игра", "year": "Год" },
-  "settings": { "title": "Настройки", "language": "Язык" }
+  "app": {
+    "name": "Pundoku"
+  },
+  "tabs": {
+    "today": "Сегодня",
+    "play": "Игра",
+    "year": "Год",
+    "label": "Разделы"
+  },
+  "settings": {
+    "title": "Настройки",
+    "language": "Язык"
+  },
+  "screens": {
+    "soon": "Скоро"
+  }
 }
