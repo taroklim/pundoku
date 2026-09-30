@@ -13,7 +13,7 @@ Cloudflare-домен через Cloudflare Tunnel. Отличия от SUMMON �
 ```
 iPhone (Safari / PWA) --HTTPS--> Cloudflare (домен, TLS) --Tunnel--> cloudflared (служба Windows на ноуте)
                                                                           |
-                                                          http://localhost:8090   (только 127.0.0.1)
+                                                          http://127.0.0.1:8090   (только 127.0.0.1)
                                                                           v
    ┌──────────────────────────── docker compose, проект `pundoku` ──────────────────────────────────┐
    │  web (nginx)  :80  ── /            статика PWA + SPA-fallback                                 │
@@ -35,7 +35,7 @@ iPhone (Safari / PWA) --HTTPS--> Cloudflare (домен, TLS) --Tunnel--> cloudf
 - **api** (`apps/api/Dockerfile`) — Express 5. `NODE_ENV=production`, `TRUST_PROXY=1`. Не опубликован на хост.
 - **postgres** — `postgres:16-alpine`, данные в именованном volume `pundoku_postgres_data`. Не опубликован на хост.
 - **migrate** — одноразовый контейнер того же образа, что api (см. «Миграции»).
-- **cloudflared** — служба Windows на ноуте (Cloudflare Tunnel): публичный hostname -> `http://localhost:8090`.
+- **cloudflared** — служба Windows на ноуте (Cloudflare Tunnel): публичный hostname -> `http://127.0.0.1:8090`.
 - **GitHub Actions self-hosted runner** — деплой при пуше в `main` (`.github/workflows/deploy.yml`),
   ночной бэкап (`.github/workflows/backup.yml`).
 
@@ -52,7 +52,7 @@ Service worker не кэширует `/api/*` (`navigateFallbackDenylist` в `vi
 
 | Имя | Тип | Обязателен | Что это и чем генерировать |
 |---|---|---|---|
-| `POSTGRES_PASSWORD` | Secret | да | Пароль Postgres. `openssl rand -hex 24` (hex, чтобы не ломать URL подключения — спецсимволы `/ + =` пришлось бы экранировать). Применяется **только при первом создании тома** — см. «Смена секретов» |
+| `POSTGRES_PASSWORD` | Secret | да | Пароль Postgres. `openssl rand -hex 24` (hex, чтобы не ломать URL подключения; **не** `-base64`: `/ + =` пришлось бы экранировать). Формат проверяет `deploy.yml`: только `A-Za-z0-9._~-`, от 16 символов. Применяется **только при первом создании тома** — см. «Смена секретов» |
 | `RECOVERY_KEY_HMAC_SECRET` | Secret | да | HMAC-секрет ключей восстановления, **>= 32 байт**. `openssl rand -base64 48`. Без него (или короче 32) api не стартует — см. ниже |
 | `PUBLIC_ORIGIN` | Variable (не секрет) | да | Публичный адрес PWA: `https://pundoku.<твой-домен>` — со схемой, без пути и без завершающего `/`. Уходит в `WEB_ORIGIN` api |
 | `LAPTOP_USER` | Variable | нет | Имя пользователя Windows на ноуте, у которого стоит Docker Desktop. По умолчанию `pyshn` (как в SUMMON). Нужна, только если это другой пользователь |
@@ -110,12 +110,12 @@ Service worker не кэширует `/api/*` (`navigateFallbackDenylist` в `vi
    (Cloudflared), поставить `cloudflared` на ноут как службу Windows по команде из мастера.
 2. Вкладка **Public Hostname -> Add a public hostname**:
    - Subdomain/Domain: например `pundoku` + твой домен;
-   - Service: Type **HTTP**, URL **`localhost:8090`**.
+   - Service: Type **HTTP**, URL **`http://127.0.0.1:8090`** (именно `127.0.0.1`, не `localhost`: на Windows `localhost` может резолвиться в `::1`, а порт опубликован только на IPv4 `127.0.0.1`).
 3. Cloudflare сам создаст DNS-запись (CNAME на туннель, proxied). Сертификат/HTTPS выдаёт Cloudflare, на ноуте
    TLS-настройки не нужны.
 4. Значение `PUBLIC_ORIGIN` = `https://<subdomain>.<домен>`.
 
-`cloudflared` запущен на хосте, поэтому `localhost:8090` — это опубликованный порт Docker. (Если `cloudflared` когда-нибудь
+`cloudflared` запущен на хосте, поэтому `127.0.0.1:8090` — это опубликованный порт Docker. (Если `cloudflared` когда-нибудь
 переедет в контейнер — адрес источника придётся менять на имя сервиса `web:80`; сейчас так не делаем.)
 
 ### 4. Питание ноута
@@ -144,14 +144,15 @@ curl.exe -I http://127.0.0.1:8090/          # 200
 `.github/workflows/deploy.yml`, триггеры: push в `main` и `workflow_dispatch` (только с ветки `main`).
 
 1. **gates** (GitHub-hosted `ubuntu-latest`, service Postgres 16): `pnpm install --frozen-lockfile` -> `pnpm build`
-   (engine -> api -> web) -> `pnpm typecheck` -> `pnpm migrate` -> `pnpm test` (engine, web, api включая интеграционные
-   тесты против реального Postgres и recovery-интеграцию). Lint в гейт не входит (деплой не должен блокироваться стилем);
-   гонять — `pnpm lint`.
+   (engine -> api -> web) -> `pnpm typecheck` -> `pnpm lint` -> проверка compose- и workflow-файлов (`docker compose config -q` для
+   `docker-compose.yml` и `docker-compose.dev.yml` с заглушками обязательных переменных + разбор всех четырёх YAML парсером
+   PyYAML) -> `pnpm migrate` -> `pnpm test` (engine, web, api включая интеграционные тесты против реального Postgres и
+   recovery-интеграцию). Таймаут гейтов 20 минут.
 2. **deploy** (`[self-hosted, Windows, X64]`, зависит от gates, только `main`): PATH для Docker -> `.env` из
-   Secrets/Variables (валидирует: секрет >= 32 байт, `PUBLIC_ORIGIN` вида `https://host`) -> `docker compose config -q` ->
+   Secrets/Variables (валидирует: `POSTGRES_PASSWORD` формата `[A-Za-z0-9._~-]{16,}`, `RECOVERY_KEY_HMAC_SECRET` >= 32 байт, `PUBLIC_ORIGIN` вида `https://host`) -> `docker compose config -q` ->
    `docker compose build` -> `docker compose up -d` -> smoke -> `docker image prune -f`. При падении любого шага в лог
    выводятся `docker compose ps -a` и хвост логов сервисов.
-3. **Smoke** по `127.0.0.1:8090` (мимо Cloudflare, поэтому проверяет сам стек, а не туннель), до 30 попыток с паузой 5 с:
+3. **Smoke** по `127.0.0.1:8090` (мимо Cloudflare, поэтому проверяет сам стек, а не туннель), до 30 попыток с паузой 5 с (таймаут одного запроса 15 с; таймаут всей джобы deploy — 30 минут):
    `GET /health` (nginx -> api), `GET /` (статика), `GET /manifest.webmanifest`, `GET /api/daily/<сегодня UTC>`
    (nginx -> api -> Postgres: подтверждает миграции и БД). Всё должно быть 200.
 
@@ -239,11 +240,11 @@ inline-`style` (React), Web Worker генератора (`assets/generate.worker
 curl.exe -i http://127.0.0.1:8090/health      # 1) стек жив? ожидаем 200 и {"status":"ok"}
 docker ps --filter "label=com.docker.compose.project=pundoku"   # 2) какие контейнеры живы
 docker logs --tail 80 pundoku-api-1           # 3) причина падения api
-curl.exe -i https://<PUBLIC_ORIGIN>/health    # 4) то же через Cloudflare
+curl.exe -i <PUBLIC_ORIGIN>/health          # 4) то же через Cloudflare
 ```
 
 - **1) даёт 200, а через Cloudflare 502/530/1033** — проблема в туннеле: служба `cloudflared` остановлена/не в сети,
-  либо в Public Hostname неверный URL (должно быть `http://localhost:8090`, не `https`, не другой порт).
+  либо в Public Hostname неверный URL (должно быть `http://127.0.0.1:8090`, не `https`, не другой порт).
 - **1) не отвечает вовсе** — `web` не запущен: Docker Desktop не стартовал (после перезагрузки ноута), контейнер
   упал (`docker logs pundoku-web-1`; частая причина — опечатка в `default.conf`), либо ноут спал.
 - **1) даёт 502 от nginx (страница «502 Bad Gateway» на `/health` и `/api/*`), а `/` открывается** — не работает
@@ -260,7 +261,7 @@ curl.exe -i https://<PUBLIC_ORIGIN>/health    # 4) то же через Cloudfla
 **HTTPS обязателен**: service worker (офлайн, установка) работает только в secure context; по `http://` PWA не
 установится как полноценное приложение. Cloudflare Tunnel даёт настоящий сертификат — дополнительно ничего не нужно.
 
-1. Убедиться, что деплой зелёный, а `https://<PUBLIC_ORIGIN>/health` отвечает 200.
+1. Убедиться, что деплой зелёный, а `<PUBLIC_ORIGIN>/health` (т.е. `https://<host>/health`) отвечает 200.
 2. На iPhone открыть адрес в **Safari** (не в встроенном браузере мессенджера) -> Поделиться -> **На экран «Домой»**.
    Запускать иконку с домашнего экрана — это и есть PWA (`display: standalone`).
 3. Проверить: запускается без адресной строки; экран запуска не светлая вспышка в тёмной теме (`apple-touch-startup-image`);
@@ -313,7 +314,9 @@ SUMMON `DEPLOY.md`) — отдельный тикет перед появлен�
   (`pnpm install --frozen-lockfile --filter ...`, `pnpm --filter ... build`, `pnpm --filter @pundoku/api --prod deploy
   --legacy`) в изолированной папке, куда скопированы только файлы, которые копирует Dockerfile — сборка и prod-копия api
   получаются. Не проверено: сам `corepack enable` + pnpm 12 на `node:20-alpine`, теги `node:20-alpine`/`nginx:1.27-alpine`.
-- **`docker compose`**: валидность YAML проверена парсером, но не `docker compose config`; поведение
+- **`docker compose`**: локально (на машине разработки Docker нет) YAML проверен только парсером PyYAML; `docker compose
+  config -q` запускается в гейтах `deploy.yml` на ubuntu-latest (там Docker есть) и на ноуте перед сборкой, но первый
+  реальный прогон ещё впереди. Поведение
   `depends_on: service_completed_successfully` для `migrate`, `name:` верхнего уровня и `:?`-обязательных переменных
   рассчитано на Docker Compose v2 (Docker Desktop его содержит) — на практике не запускалось.
 - **`deploy.yml` / `backup.yml` на реальном раннере**: YAML валиден, кириллицы в `run:` нет, но PowerShell-код (в

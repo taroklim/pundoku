@@ -20,7 +20,10 @@ RUN pnpm --filter @pundoku/api --prod deploy --legacy /out
 FROM node:20-alpine
 WORKDIR /app
 ENV NODE_ENV=production
-COPY --from=build /out ./
+# Не root: файлы принадлежат node (uid 1000). Приложение ничего не пишет на диск, миграции только читают
+# dist/ и migrations/, так что прав на чтение достаточно.
+COPY --from=build --chown=node:node /out ./
+USER node
 
 EXPOSE 3000
 

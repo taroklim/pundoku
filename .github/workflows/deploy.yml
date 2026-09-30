@@ -30,6 +30,7 @@ jobs:
   # не нуждается в Node/pnpm. Упавший гейт не даёт запуститься deploy.
   gates:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     services:
       postgres:
         image: postgres:16-alpine
@@ -62,6 +63,21 @@ jobs:
         run: pnpm build
       - name: Typecheck
         run: pnpm typecheck
+      - name: Lint
+        run: pnpm lint
+      # Ловит опечатки и невалидный YAML в compose и workflow-файлах ДО деплоя (на ubuntu Docker есть).
+      # Значения переменных - заглушки, нужны только чтобы сработали проверки ":?" обязательных переменных.
+      # Ошибка парсинга compose-файла ранее могла обнаружиться лишь на ноуте, после checkout и сборки .env.
+      - name: Проверить compose- и workflow-файлы
+        env:
+          POSTGRES_PASSWORD: dummy-password-for-config-check
+          RECOVERY_KEY_HMAC_SECRET: dummy-secret-for-config-check-0123456789abcdef
+          PUBLIC_ORIGIN: https://example.com
+        run: |
+          docker compose -f docker-compose.yml config -q
+          docker compose -f docker-compose.dev.yml config -q
+          python3 -c "import sys, yaml; [yaml.safe_load(open(f, encoding='utf-8')) for f in sys.argv[1:]]" \
+            docker-compose.yml docker-compose.dev.yml .github/workflows/deploy.yml .github/workflows/backup.yml
       - name: Применить миграции к тестовой базе
         run: pnpm migrate
       - name: Test (engine, api, web)
@@ -72,6 +88,8 @@ jobs:
     # Только main: workflow_dispatch с другой ветки не должен выкатить её в прод.
     if: github.ref == 'refs/heads/main'
     runs-on: [self-hosted, Windows, X64]
+    # Зависший шаг (docker build, ретраи smoke) не должен держать раннер и concurrency-группу до 6 часов.
+    timeout-minutes: 30
     defaults:
       run:
         # По умолчанию Windows блокирует .ps1 (Execution Policy). Bypass действует только на вызовы
@@ -107,6 +125,7 @@ jobs:
           $ErrorActionPreference = 'Stop'
           if (-not $env:POSTGRES_PASSWORD) { throw "secret POSTGRES_PASSWORD is not set (see DEPLOY.md)" }
           if (-not $env:RECOVERY_KEY_HMAC_SECRET) { throw "secret RECOVERY_KEY_HMAC_SECRET is not set (see DEPLOY.md)" }
+          if ($env:POSTGRES_PASSWORD -notmatch '^[A-Za-z0-9._~-]{16,}$') { throw "secret POSTGRES_PASSWORD must be 16+ chars of A-Z a-z 0-9 . _ ~ - only, it goes into DATABASE_URL (use: openssl rand -hex 24; see DEPLOY.md)" }
           if ($env:RECOVERY_KEY_HMAC_SECRET.Length -lt 32) { throw "secret RECOVERY_KEY_HMAC_SECRET is shorter than 32 bytes (openssl rand -base64 48)" }
           if (-not $env:PUBLIC_ORIGIN) { throw "variable PUBLIC_ORIGIN is not set (see DEPLOY.md)" }
           if ($env:PUBLIC_ORIGIN -notmatch '^https://[^/]+$') { throw "variable PUBLIC_ORIGIN must look like https://host with no trailing slash" }
@@ -160,7 +179,7 @@ jobs:
             $url = "$base$Path"
             $code = "000"
             for ($i = 1; $i -le 30; $i++) {
-              $code = (& curl.exe -s -o NUL -w "%{http_code}" --max-time 70 $url)
+              $code = (& curl.exe -s -o NUL -w "%{http_code}" --max-time 15 $url)
               if ($code -eq "200") { Write-Host "OK  200 $url (attempt $i)"; return }
               Write-Host "wait $url -> $code (attempt $i of 30)"
               Start-Sleep -Seconds 5

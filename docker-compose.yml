@@ -7,7 +7,7 @@
 # Локальная разработка (только Postgres) — docker-compose.dev.yml.
 #
 # Наружу опубликован ТОЛЬКО web, и только на 127.0.0.1:8090; дальше — Cloudflare Tunnel
-# (cloudflared на хосте: публичный hostname -> http://localhost:8090). api и postgres не публикуются
+# (cloudflared на хосте: публичный hostname -> http://127.0.0.1:8090). api и postgres не публикуются
 # вообще: до них можно достучаться только из сети compose.
 # Порт 8090 выбран так, чтобы не пересекаться с SUMMON (127.0.0.1:8080 и 127.0.0.1:3000).
 
@@ -27,7 +27,7 @@ services:
     restart: unless-stopped
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-pundoku}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD не задан (см. DEPLOY.md, .env.example)}
+      POSTGRES_PASSWORD: "${POSTGRES_PASSWORD:?POSTGRES_PASSWORD не задан (см. DEPLOY.md, .env.example)}"
       POSTGRES_DB: ${POSTGRES_DB:-pundoku}
     # Без ports: снаружи Postgres недоступен вообще.
     volumes:
@@ -69,13 +69,13 @@ services:
       DAILY_FALLBACK_DIFFICULTY: ${DAILY_FALLBACK_DIFFICULTY:-medium}
       # Публичный https-адрес PWA (origin, без завершающего «/»). Сейчас web и api на одном origin, CORS
       # не задействован, но api всё равно ждёт разрешённый origin — держим его равным публичному адресу.
-      WEB_ORIGIN: ${PUBLIC_ORIGIN:?PUBLIC_ORIGIN не задан: публичный https-адрес, например https://pundoku.example.com}
+      WEB_ORIGIN: "${PUBLIC_ORIGIN:?PUBLIC_ORIGIN не задан: публичный https-адрес, например https://pundoku.example.com}"
       LOG_LEVEL: ${LOG_LEVEL:-info}
       # Один reverse proxy (nginx в web) перед api: rate-limit по IP берёт адрес клиента из X-Forwarded-For.
       TRUST_PROXY: "1"
       # Вне development ОБЯЗАТЕЛЕН и >=32 байт, иначе api не стартует (ConfigError, код выхода 1):
       # `openssl rand -base64 48`.
-      RECOVERY_KEY_HMAC_SECRET: ${RECOVERY_KEY_HMAC_SECRET:?RECOVERY_KEY_HMAC_SECRET не задан: openssl rand -base64 48 (>=32 байт)}
+      RECOVERY_KEY_HMAC_SECRET: "${RECOVERY_KEY_HMAC_SECRET:?RECOVERY_KEY_HMAC_SECRET не задан: openssl rand -base64 48 (>=32 байт)}"
     # Миграции уже применены сервисом migrate — стартуем сразу сервер (CMD образа делает и то и другое).
     command: ["node", "dist/index.js"]
     # Без ports: до api достаёт только nginx из сервиса web по имени `api`.
