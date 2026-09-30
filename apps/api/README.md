@@ -21,7 +21,7 @@ pnpm dev:api                                           # tsx watch, http://local
 
 Неверное значение `PORT`, `LOG_LEVEL`, `RECOVERY_KEY_HMAC_SECRET` (вне development/test не задан или короче 32 байт), `DAILY_FALLBACK_DIFFICULTY`, `SUDOKU_COM_TIMEOUT_MS`, `DAILY_UPSTREAM_RETRY_MS` — ошибка конфигурации при старте: одна строка в stderr без стека, код выхода 1.
 
-С Docker: `docker compose up -d postgres` и дальше то же самое (см. корневой README).
+С Docker: `docker compose -f docker-compose.dev.yml up -d` (только Postgres) и дальше то же самое (см. корневой README).
 
 ## Эндпоинты
 

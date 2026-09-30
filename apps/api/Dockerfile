@@ -27,5 +27,6 @@ EXPOSE 3000
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
   CMD node -e "fetch('http://localhost:3000/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
 
-# Миграции перед стартом — достаточно для маленького личного проекта.
+# Миграции перед стартом — страховка для `docker run` образа как есть. В прод-стеке (docker-compose.yml) команда
+# переопределена: миграции гоняет одноразовый сервис `migrate` до старта api (см. DEPLOY.md, «Миграции»).
 CMD ["sh", "-c", "node dist/db/migrate.js && node dist/index.js"]

@@ -1,8 +1,25 @@
-# Pundoku — локальный/домашний запуск. Значения переменных — в .env
-# (см. .env.example, сам .env не коммитится).
+# Pundoku — ПРОД-стек (домашний Windows-ноут, Docker Desktop): postgres + api + web.
+# Обоснование, схема и раннбук — DEPLOY.md. Значения переменных — в .env (на ноуте его пишет
+# deploy.yml из GitHub Secrets/Variables; для ручного запуска — .env.example -> .env).
 #
-# Только postgres для локальной разработки:  docker compose up -d postgres
-# Всё вместе (api собирается из apps/api/Dockerfile): docker compose up --build
+#   docker compose up -d --build          # поднимает всё одной командой (миграции — сервис migrate)
+#
+# Локальная разработка (только Postgres) — docker-compose.dev.yml.
+#
+# Наружу опубликован ТОЛЬКО web, и только на 127.0.0.1:8090; дальше — Cloudflare Tunnel
+# (cloudflared на хосте: публичный hostname -> http://localhost:8090). api и postgres не публикуются
+# вообще: до них можно достучаться только из сети compose.
+# Порт 8090 выбран так, чтобы не пересекаться с SUMMON (127.0.0.1:8080 и 127.0.0.1:3000).
+
+# Явное имя проекта: иначе Compose берёт имя папки (у раннера — ...\_work\pundoku\pundoku), и повторный
+# запуск из другой папки породил бы вторую копию стека и второй том с данными. С COMPOSE_PROJECT_NAME
+# из окружения (deploy.yml) оно совпадает с этим значением.
+name: pundoku
+
+x-api-build: &api-build
+  # Контекст — корень репо: Dockerfile ставит зависимости через pnpm workspace.
+  context: .
+  dockerfile: apps/api/Dockerfile
 
 services:
   postgres:
@@ -10,11 +27,9 @@ services:
     restart: unless-stopped
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-pundoku}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-pundoku}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD не задан (см. DEPLOY.md, .env.example)}
       POSTGRES_DB: ${POSTGRES_DB:-pundoku}
-    ports:
-      # Наружу только на localhost — для `pnpm dev:api` без Docker для api.
-      - "127.0.0.1:5432:5432"
+    # Без ports: снаружи Postgres недоступен вообще.
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
@@ -23,28 +38,59 @@ services:
       timeout: 5s
       retries: 10
 
-  api:
-    build:
-      # Контекст — корень репо: Dockerfile ставит зависимости через pnpm workspace.
-      context: .
-      dockerfile: apps/api/Dockerfile
-    restart: unless-stopped
+  # Одноразовый сервис: применяет миграции и завершается (restart: "no"). api не стартует, пока он не
+  # завершился успешно. Упавшая миграция = `docker compose up` завершается с ошибкой, а работающий api
+  # старой версии остаётся как есть (его не пересоздают). Идемпотентен: без новых миграций — no-op.
+  migrate:
+    build: *api-build
+    restart: "no"
     depends_on:
       postgres:
         condition: service_healthy
     environment:
       NODE_ENV: production
+      DATABASE_URL: postgres://${POSTGRES_USER:-pundoku}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-pundoku}
+    command: ["node", "dist/db/migrate.js"]
+
+  api:
+    build: *api-build
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+    environment:
+      NODE_ENV: production
       PORT: 3000
-      DATABASE_URL: postgres://${POSTGRES_USER:-pundoku}:${POSTGRES_PASSWORD:-pundoku}@postgres:5432/${POSTGRES_DB:-pundoku}
+      DATABASE_URL: postgres://${POSTGRES_USER:-pundoku}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-pundoku}
       SUDOKU_COM_BASE_URL: ${SUDOKU_COM_BASE_URL:-https://sudoku.com/api/v2}
       SUDOKU_COM_TIMEOUT_MS: ${SUDOKU_COM_TIMEOUT_MS:-5000}
       DAILY_FALLBACK_DIFFICULTY: ${DAILY_FALLBACK_DIFFICULTY:-medium}
-      WEB_ORIGIN: ${WEB_ORIGIN:-http://localhost:5173}
+      # Публичный https-адрес PWA (origin, без завершающего «/»). Сейчас web и api на одном origin, CORS
+      # не задействован, но api всё равно ждёт разрешённый origin — держим его равным публичному адресу.
+      WEB_ORIGIN: ${PUBLIC_ORIGIN:?PUBLIC_ORIGIN не задан: публичный https-адрес, например https://pundoku.example.com}
       LOG_LEVEL: ${LOG_LEVEL:-info}
-      # Обязателен в production (≥32 байт), иначе api не стартует: `openssl rand -base64 48`.
-      RECOVERY_KEY_HMAC_SECRET: ${RECOVERY_KEY_HMAC_SECRET:-}
+      # Один reverse proxy (nginx в web) перед api: rate-limit по IP берёт адрес клиента из X-Forwarded-For.
+      TRUST_PROXY: "1"
+      # Вне development ОБЯЗАТЕЛЕН и >=32 байт, иначе api не стартует (ConfigError, код выхода 1):
+      # `openssl rand -base64 48`.
+      RECOVERY_KEY_HMAC_SECRET: ${RECOVERY_KEY_HMAC_SECRET:?RECOVERY_KEY_HMAC_SECRET не задан: openssl rand -base64 48 (>=32 байт)}
+    # Миграции уже применены сервисом migrate — стартуем сразу сервер (CMD образа делает и то и другое).
+    command: ["node", "dist/index.js"]
+    # Без ports: до api достаёт только nginx из сервиса web по имени `api`.
+
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+    restart: unless-stopped
+    depends_on:
+      api:
+        condition: service_started
     ports:
-      - "127.0.0.1:${PORT:-3000}:3000"
+      # ТОЛЬКО localhost ноута — снаружи достаёт Cloudflare Tunnel (cloudflared), не Docker.
+      - "127.0.0.1:8090:80"
 
 volumes:
   postgres_data:
