@@ -13,6 +13,7 @@
  *   (подсказки × техника) — `difficulty.ts`: `DIFFICULTIES`, `DIFFICULTY_PROFILES`;
  * - лог ходов и метрики карточки дня (`movelog.ts`): `heatmap`, `summary`, `solvingStyle`;
  * - Чернильный режим (`ink.ts`): правила `INK_RULES`/`inkAllows`, кляксы лога, проверка лога.
+ * - таймлапс и отпечаток прохождения (`timelapse.ts`): `timelapseFrames`, `timelapseFingerprint`.
  */
 export type {
   Cell,
@@ -82,3 +83,13 @@ export { INK_RULES, blotsOf, inkAllows, inkViolations, isBlotMistake, isBlotMove
 export type { Blot, InkRules, InkViolation } from "./ink.js";
 
 export { appendMove, createMoveLog, heatmap, solvingStyle, summary } from "./movelog.js";
+
+export { DEFAULT_MAX_GAP_MS, timelapseFingerprint, timelapseFrames } from "./timelapse.js";
+export type {
+  FingerprintCell,
+  FingerprintOptions,
+  Timelapse,
+  TimelapseFingerprint,
+  TimelapseFrame,
+  TimelapseOptions,
+} from "./timelapse.js";
