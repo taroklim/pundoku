@@ -201,5 +201,35 @@
       "assistedRow": "Solved",
       "assistedValue": "with help"
     }
+  },
+  "ink": {
+    "mode": "ink",
+    "row": "Ink mode",
+    "off": "Off",
+    "on": "On",
+    "foot": "Choose before your first move. Not available once you have placed a digit.",
+    "footPlay": "In ink mode there is no undo and no eraser for digits.",
+    "eraseNotes": "Erase notes",
+    "rule": {
+      "title": "Ink doesn’t lift",
+      "lead": "In ink mode every digit you place is final. Read this before you start — you can’t switch later.",
+      "r1": "No undo, and no eraser for digits.",
+      "r2": "A wrong digit leaves a blot: the cell seals, and the right digit is filled in for you.",
+      "r3": "Pencil marks still work, and can still be erased.",
+      "r4": "Once you place a digit you can’t switch back for this puzzle.",
+      "start": "Play in ink",
+      "cancel": "Not now"
+    },
+    "playSub": "A puzzle of your own, any time.",
+    "playGroup": "New puzzle",
+    "playStart": "Start",
+    "chip": "Ink",
+    "rowBlots": "Blots",
+    "rowMode": "Mode",
+    "cardSub": "Notched cells are blots.",
+    "yearValue_one": "Ink · {{count}} blot",
+    "yearValue_other": "Ink · {{count}} blots",
+    "blotSay": "Wrong digit. The cell is sealed with a blot.",
+    "cellBlot": "Row {{row}}, column {{col}}, wrong digit. Cell sealed with a blot. {{digit}}"
   }
 }

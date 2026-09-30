@@ -63,6 +63,35 @@ export function useCellsLeftAnnouncement(left: number, active: boolean, startedA
   return text;
 }
 
+/** Через сколько после кляксы озвучивается «Wrong digit…» (после самого момента M7) и сколько текст живёт в регионе. */
+export const BLOT_SAY_DELAY_MS = 200;
+const BLOT_SAY_HOLD_MS = 5000;
+
+/**
+ * Объявление кляксы (PD-74, M7): «Wrong digit. The cell is sealed with a blot. 5» — текстом, чтобы момент не нёс
+ * только цвет и движение. Живёт в том же `role="status"`, что «N cells left»; пока звучит, вытесняет его.
+ * Регион сначала очищается: два подряд одинаковых текста иначе не озвучились бы второй раз.
+ */
+export function useBlotAnnouncement(snap: Pick<PlaySnapshot, "blot" | "play">): string {
+  const { t } = useTranslation();
+  const [text, setText] = useState("");
+  const blot = snap.blot ?? null;
+  const id = blot?.id ?? 0;
+  const cell = blot?.cell ?? -1;
+  const right = snap.play && cell >= 0 ? (snap.play.values[cell] ?? 0) : 0;
+  useEffect(() => {
+    setText("");
+    if (id === 0) return;
+    const say = window.setTimeout(() => setText(`${t("ink.blotSay")} ${right}`), BLOT_SAY_DELAY_MS);
+    const clear = window.setTimeout(() => setText(""), BLOT_SAY_DELAY_MS + BLOT_SAY_HOLD_MS);
+    return () => {
+      window.clearTimeout(say);
+      window.clearTimeout(clear);
+    };
+  }, [id, right, t]);
+  return text;
+}
+
 /**
  * Сбросить `pop`/`wave` хранилища при размонтировании экрана (QA PD-23, Low 1): снапшот живёт
  * выше экрана, и без сброса возврат на вкладку заново проигрывает M1/M3.
@@ -98,11 +127,16 @@ export function handleGameKey(
   }
 }
 
-/** Панель 1–9 в один ряд с остатками + Notes / Undo / Erase (утверждённый макет, вариант «1 row + left»). */
+/**
+ * Панель 1–9 в один ряд с остатками + Notes / Undo / Erase (утверждённый макет, вариант «1 row + left»).
+ * Чернильный режим (PD-74): Undo исчезает целиком (не приглушён), ластик цифр заменён на «Erase notes» — ряд из двух
+ * кнопок по 50 %, высота та же 46 pt.
+ */
 export function GamePad({ snap, store }: { snap: PlaySnapshot; store: GameStore }) {
   const { t } = useTranslation();
   const { play, phase } = snap;
   const interactive = phase === "playing" && play !== null;
+  const ink = play?.ink === true;
   const rem = play ? remaining(play) : null;
   const canUndo = interactive && (play?.undoStack.length ?? 0) > 0;
   return (
@@ -129,7 +163,7 @@ export function GamePad({ snap, store }: { snap: PlaySnapshot; store: GameStore 
           );
         })}
       </div>
-      <div className="actions">
+      <div className={`actions${ink ? " ink" : ""}`}>
         <button
           type="button"
           className="act"
@@ -140,13 +174,15 @@ export function GamePad({ snap, store }: { snap: PlaySnapshot; store: GameStore 
           <NotesIcon />
           <span>{t("actions.notes")}</span>
         </button>
-        <button type="button" className="act" aria-disabled={!canUndo} onClick={() => store.undo()}>
-          <UndoIcon />
-          <span>{t("actions.undo")}</span>
-        </button>
+        {!ink && (
+          <button type="button" className="act" aria-disabled={!canUndo} onClick={() => store.undo()}>
+            <UndoIcon />
+            <span>{t("actions.undo")}</span>
+          </button>
+        )}
         <button type="button" className="act" disabled={!interactive} onClick={() => store.erase()}>
           <EraseIcon />
-          <span>{t("actions.erase")}</span>
+          <span>{ink ? t("ink.eraseNotes") : t("actions.erase")}</span>
         </button>
       </div>
     </div>

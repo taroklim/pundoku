@@ -194,6 +194,15 @@ export abstract class GameStore<S extends PlaySnapshot = PlaySnapshot> {
     return (next.ink === true) === on;
   }
 
+  /**
+   * Можно ли сейчас выбрать режим (PD-74): партия идёт, в логе нет ни одного хода (заметка — тоже ход) и экран
+   * допускает чернила. Строка «Ink mode» на Today показывается ровно пока это так и исчезает с первым ходом.
+   */
+  inkChoosable(): boolean {
+    const { play, phase } = this.snap;
+    return phase === "playing" && play !== null && !play.solved && play.log.length === 0 && this.inkAllowed();
+  }
+
   /** Разрешён ли Чернильный режим на этом экране: Today и Play — да; архивный `DayStore` переопределяет. */
   protected inkAllowed(): boolean {
     return true;

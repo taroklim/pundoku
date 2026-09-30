@@ -1,7 +1,7 @@
 import type { CSSProperties, KeyboardEvent } from "react";
-import { memo, useCallback, useEffect, useRef } from "react";
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { digitAt, isGiven, isWrong, notesOf } from "./logic";
+import { blotsIn, digitAt, isGiven, isWrong, notesOf } from "./logic";
 import type { GameStore, PlaySnapshot } from "./gameStore";
 
 /** Индекс клетки по номеру блока и позиции в блоке (DOM идёт блок за блоком, как в макете). */
@@ -32,6 +32,11 @@ interface CellProps {
   selected: boolean;
   same: boolean;
   wrong: boolean;
+  /** Ink (PD-74): клетка — клякса (пятно + сколотый угол, клетка заперта; цифра в ней — верная). */
+  blot: boolean;
+  /** Ненулевой id — клякса только что поставлена (M7); `wrongDigit` — неверная цифра, которая на 110 мс остаётся видимой. */
+  blotId: number;
+  wrongDigit: number;
   /** Ненулевой id — цифра только что поставлена (M1). */
   popId: number;
   /** Позиция в волне M3 (−1 — клетка не в волне) и id волны. */
@@ -48,6 +53,7 @@ const Cell = memo(function Cell(p: CellProps) {
   if (p.selected) cls.push("sel");
   if (p.same) cls.push("same");
   if (p.wrong) cls.push("err");
+  if (p.blot) cls.push("blot");
   // M3: волна — класс клетки, а не отдельный элемент (раньше <i key=waveId> делил ключ «0» со
   // span цифры и накапливался в DOM). Чётность id даёт два имени анимации подряд: смежные
   // волны перезапускают анимацию, не создавая ни одного узла.
@@ -66,10 +72,16 @@ const Cell = memo(function Cell(p: CellProps) {
       onClick={() => p.onPick(p.index)}
     >
       <i className="fl" aria-hidden="true" />
+      {p.blot && <i key={`s${p.blotId}`} className={`stain${p.blotId ? " anim" : ""}`} aria-hidden="true" />}
+      {p.blotId !== 0 && p.wrongDigit !== 0 && (
+        <span className="d player wrong leaving" aria-hidden="true">
+          {p.wrongDigit}
+        </span>
+      )}
       {digit ? (
         <span
-          key={p.popId}
-          className={`d ${p.given ? "given" : "player"}${p.wrong ? " err" : ""}${p.popId ? " anim-in" : ""}`}
+          key={p.popId || p.blotId}
+          className={`d ${p.given ? "given" : "player"}${p.wrong ? " err" : ""}${p.popId ? " anim-in" : ""}${p.blotId ? " swap-in" : ""}`}
           aria-hidden="true"
         >
           {digit}
@@ -84,6 +96,31 @@ const Cell = memo(function Cell(p: CellProps) {
     </button>
   );
 });
+
+/** Длина момента M7 (мс): 110 неверная цифра · 110–300 пятно · 300–460 верная цифра; к 470 классы анимации снимаются. */
+export const BLOT_MOMENT_MS = 470;
+
+/**
+ * Момент кляксы (M7): пока он идёт, возвращает кляксу — клетка играет анимацию; тап или клавиша в любой точке страницы
+ * завершают момент сразу (motion.md: движение можно прервать), иначе он гаснет сам через `BLOT_MOMENT_MS`.
+ */
+function useBlotMoment(blot: { cell: number; digit: number; id: number } | null): { cell: number; digit: number; id: number } | null {
+  const [done, setDone] = useState(0);
+  const id = blot?.id ?? 0;
+  useEffect(() => {
+    if (id === 0) return;
+    const finish = () => setDone(id);
+    const timer = window.setTimeout(finish, BLOT_MOMENT_MS);
+    window.addEventListener("pointerdown", finish, true);
+    window.addEventListener("keydown", finish, true);
+    return () => {
+      window.clearTimeout(timer);
+      window.removeEventListener("pointerdown", finish, true);
+      window.removeEventListener("keydown", finish, true);
+    };
+  }, [id]);
+  return blot && blot.id !== done ? blot : null;
+}
 
 const ARROWS: Record<string, [number, number]> = {
   ArrowUp: [-1, 0],
@@ -109,7 +146,10 @@ export function Board({ snap, store, dim }: BoardProps) {
   const ref = useRef<HTMLDivElement>(null);
   const { play, selected, pop, wave } = snap;
   const ready = snap.phase === "playing" && play !== null;
-  const selDigit = play && selected !== null ? digitAt(play, selected) : 0;
+  // Ink (PD-74): клетки-кляксы — из лога (единственный источник); клякса инертна — «той же цифры» из неё не берём.
+  const blotCells = useMemo(() => new Set(play?.ink === true ? blotsIn(play).map((b) => b.cell) : []), [play]);
+  const selDigit = play && selected !== null && !blotCells.has(selected) ? digitAt(play, selected) : 0;
+  const blotNow = useBlotMoment(snap.blot ?? null);
   // Roving: клетка-«единственная остановка» — выбранная (или первая, пока ничего не выбрано).
   const stop = selected ?? 0;
 
@@ -138,6 +178,7 @@ export function Board({ snap, store, dim }: BoardProps) {
     const where = { row: Math.floor(i / 9) + 1, col: (i % 9) + 1 };
     if (!play) return t("board.cellEmpty", where);
     if (isGiven(play, i)) return t("board.cellClue", { ...where, digit: play.mission[i] });
+    if (blotCells.has(i)) return t("ink.cellBlot", { ...where, digit: play.values[i] ?? 0 });
     const v = play.values[i] ?? 0;
     if (v) return t(isWrong(play, i) ? "board.cellWrong" : "board.cellYours", { ...where, digit: v });
     const nn = notesOf(play.notes[i] ?? 0);
@@ -182,8 +223,11 @@ export function Board({ snap, store, dim }: BoardProps) {
                   value={v}
                   notes={play?.notes[i] ?? 0}
                   selected={ready && selected === i}
-                  same={ready && selDigit !== 0 && selected !== i && digit === selDigit}
+                  same={ready && selDigit !== 0 && selected !== i && digit === selDigit && !blotCells.has(i)}
                   wrong={play ? isWrong(play, i) : false}
+                  blot={blotCells.has(i)}
+                  blotId={blotNow && blotNow.cell === i ? blotNow.id : 0}
+                  wrongDigit={blotNow && blotNow.cell === i ? blotNow.digit : 0}
                   popId={pop && pop.cell === i ? pop.id : 0}
                   waveIdx={wave ? (waveIndex.get(i) ?? -1) : -1}
                   waveId={wave && waveIndex.has(i) ? wave.id : 0}

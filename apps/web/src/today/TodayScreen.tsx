@@ -4,13 +4,16 @@ import { Board } from "../play/Board";
 import {
   GamePad,
   handleGameKey,
+  useBlotAnnouncement,
   useCellsLeftAnnouncement,
   useClearEffectsOnUnmount,
   useClock,
 } from "../play/controls";
 import { formatDay } from "../play/format";
+import { InkEntry } from "../play/InkEntry";
 import { cellsLeft } from "../play/logic";
 import { ResultCard } from "../play/ResultCard";
+import { Subline } from "../play/Subline";
 import type { DayStore } from "./dayStore";
 import { dayStore } from "./dayStore";
 import { MiniBoard } from "./MiniBoard";
@@ -85,7 +88,12 @@ export function DayView({ store, archive, onOpenSettings }: { store: DayStore; a
   const locale = i18n.resolvedLanguage ?? "en";
   const interactive = phase === "playing" && play !== null;
   const left = play ? cellsLeft(play) : 81;
-  const announcement = useCellsLeftAnnouncement(left, interactive, snap.startedOn.getTime());
+  const cellsAnnouncement = useCellsLeftAnnouncement(left, interactive, snap.startedOn.getTime());
+  const blotAnnouncement = useBlotAnnouncement(snap);
+  // Клякса (PD-74) вытесняет «N cells left» на время озвучивания — один live-регион.
+  const announcement = blotAnnouncement || cellsAnnouncement;
+  // Чернильный режим (PD-74): строка входа в зазоре — только до первого хода и не в архиве (там ink запрещён).
+  const inkEntry = interactive && store.inkChoosable();
 
   const dayLabel = isRealDate(snap.date) ? formatDay(dateOf(snap.date), locale) : "";
   const showClock = phase === "playing" || (phase === "solved" && !cardShown);
@@ -131,16 +139,7 @@ export function DayView({ store, archive, onOpenSettings }: { store: DayStore; a
           </button>
         )}
       </header>
-      <p className="subline">
-        {dayLabel}
-        {diffLabel && <> · {diffLabel}</>}
-        {showClock && (
-          <>
-            {" · "}
-            <span className="clock">{clock}</span>
-          </>
-        )}
-      </p>
+      <Subline day={dayLabel} difficulty={diffLabel} ink={play?.ink === true} clock={showClock ? clock : null} />
 
       {phase === "solved" && cardShown ? (
         <>
@@ -206,7 +205,8 @@ export function DayView({ store, archive, onOpenSettings }: { store: DayStore; a
                 </button>
               </p>
             )}
-            {(phase === "playing" || phase === "solved") && (
+            {inkEntry && <InkEntry on={play?.ink === true} setOn={(on) => store.setInk(on)} />}
+            {!inkEntry && (phase === "playing" || phase === "solved") && (
               <div className="today-status">
                 <p className="status">{t("play.cellsLeft", { count: left })}</p>
                 {sourceLabel && (

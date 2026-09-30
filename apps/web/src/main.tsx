@@ -7,6 +7,7 @@ import "./styles/play.css";
 import "./styles/today.css";
 import "./styles/year.css";
 import "./styles/settings.css";
+import "./styles/ink.css";
 import { App } from "./App";
 import { startSync, sync } from "./sync/runtime";
 import { recordFirstUse } from "./year/firstUse";

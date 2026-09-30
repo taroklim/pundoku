@@ -5,6 +5,7 @@ import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
 import { formatClock } from "../play/format";
 import { heatLegend, heatOpacities } from "../play/heat";
+import { blotCellSet, HeatCells, InkModeValueRow } from "../play/inkCard";
 import { cellsLeft } from "../play/logic";
 import type { DayProgress } from "../today/repository";
 import { dayLong, leadingBlanks, monthName, monthTitle, weekdayInitials } from "./format";
@@ -207,6 +208,9 @@ function DayCard({
     [progress, solved],
   );
   const legend = useMemo(() => heatLegend(), []);
+  // Ink (PD-74): кляксы дня — из лога; у обычного дня набор пуст.
+  const ink = progress?.play.ink === true;
+  const blots = useMemo(() => (progress ? blotCellSet(progress.play) : new Set<number>()), [progress]);
 
   const sub = showSub
     ? [progress.difficulty ? t(`difficulty.${progress.difficulty}`) : null, t("year.card.dailyPuzzle")].filter(Boolean).join(" · ")
@@ -222,7 +226,7 @@ function DayCard({
       {progress && solved && sum && heat ? (
         <>
           <div className="heat" role="img" aria-label={t("result.heatLabel")} data-testid="heat">
-            {heat.map((o, i) => (o === null ? <i key={i} className="g" /> : <i key={i} style={{ opacity: o }} data-o={o} />))}
+            <HeatCells heat={heat} blots={blots} />
           </div>
           <div className="legend">
             <span>{t("result.early")}</span>
@@ -233,15 +237,20 @@ function DayCard({
             </span>
             <span>{t("result.late")}</span>
           </div>
+          {ink && <p className="ink-caption">{t("ink.cardSub")}</p>}
           <dl className="rows">
             <div className="row">
               <dt>{t("solved.time")}</dt>
               <dd className="mono">{formatClock(sum.durationMs)}</dd>
             </div>
-            <div className="row">
-              <dt>{t("solved.corrections")}</dt>
-              <dd className={sum.clean ? undefined : "err"}>{sum.clean ? t("solved.clean") : sum.corrections}</dd>
-            </div>
+            {ink ? (
+              <InkModeValueRow count={blots.size} />
+            ) : (
+              <div className="row">
+                <dt>{t("solved.corrections")}</dt>
+                <dd className={sum.clean ? undefined : "err"}>{sum.clean ? t("solved.clean") : sum.corrections}</dd>
+              </div>
+            )}
             <div className="row">
               <dt>{t("solved.technique")}</dt>
               <dd>{sum.maxTechnique ? t(`technique.${sum.maxTechnique}`) : "—"}</dd>
