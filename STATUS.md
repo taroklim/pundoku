@@ -243,7 +243,9 @@ Gates: build → typecheck, lint, тесты web/engine/api (api с TEST_DATABAS
 | PD-48 | (готов, закоммичен в main: `design/pd27-settings.html`, `pd27-settings-notes.md`, `pd27-shots/` 60 кадров chromium+webkit, `pd27-shots.mjs`) PD-27 дизайн: макет экрана Settings — блок «Ключ восстановления» (`design/pd27-settings.html`) | designer | P2 | completed | — |
 | PD-49 | PD-27 web: `#/settings`, блок ключа восстановления, resetAfterLinkChange, i18n, тесты; ветка `pd-27-web`, worktree pundoku-worktrees/pd-27-web | developer | P2 | in_progress | — |
 | PD-50 | QA PD-27 (два профиля, слияние, лимиты, отвязка, перевыпуск, потеря IDB) | qa-tester | P2 | pending | PD-47, PD-49 |
-| PD-51 | Year: старт года = самая ранняя запись дня (включая архивную/late) вместо `firstUseDate`; до неё дни void («before you started»), missed — от самой ранней записи до сегодня; нулевые записи — как сейчас. Граница архива остаётся `firstUseDate`. Ветка `pd-51` от main; бриф ниже; отдельного QA нет — мелкий регресс Year в составе QA PD-50 | developer | P2 | in_progress | — |
+| PD-51 | (dev готов: pd-51 @ f6c10f7; gates engine 127, web 396, api 127; живая проверка Playwright 3 сценария; на QA PD-53; мерж --no-ff после PASS) Year: старт года = самая ранняя запись дня (включая архивную/late) вместо `firstUseDate`; до неё дни void («before you started»), missed — от самой ранней записи до сегодня; нулевые записи — как сейчас. Граница архива остаётся `firstUseDate`. Ветка `pd-51` от main; бриф ниже | developer | P2 | in_progress | — |
+| PD-52 | Low (из отчёта dev PD-51, решение PM: не чиним сейчас, в бэклог): список лет в Year начинается с года archiveStart, а не с года самой ранней записи — можно листнуть в пустой прошлый год. Ограничить `availableYears` годом старта Year (или оставить как есть по решению владельца) | developer | P3 | pending | PD-51 |
+| PD-53 | QA PD-51 (pd-51 @ f6c10f7): правило Year, регресс границы архива, копия en/uk/ru, gates, мутации; оценка поведения (1) списка лет и (2) сдвига старта сыгранным пустым днём | qa-tester | P2 | in_progress | PD-51 |
 | PD-20 | QA PD-14 (pd-14 @ 0026b2a): PASS с оговорками, блокеров и Medium нет; 4 Low + решение по слиянию → PD-31 | qa-tester | P1 | completed | PD-14 |
 | PD-31 | Фикс-проход pd-14 по QA PD-20 (pd-14 @ c574f13; gates зелёные: web 213, engine 105, api 77+2 skipped, интеграционные 7/7 на живой БД) | developer | P1 | completed | PD-20 |
 | PD-32 | PASS с оговорками (слияние 409 по источникам, 1500 дней без лишних PUT, gates, интеграционные 7/7); Low → PD-37. QA-регресс pd-14 @ c574f13 (перезапуск после сбоя контейнера; worktree /tmp/pundoku-qa/qa-pd32, БД pundoku_qa5, порты 3320/5320): слияние 409 по источникам, отсутствие лишних PUT при 1500 днях, сокращённый регресс PD-20, gates + интеграционные api-тесты | qa-tester | P1 | completed | PD-31 |
@@ -313,4 +315,4 @@ Gates: build → typecheck, lint, тесты web/engine/api (api с `TEST_DATABA
 |-----|------|--------|-------|-----------|
 | pm-pundoku-5 | product-manager | working | PD-49/PD-51 | 2026-09-30 |
 | dev-pd49 | developer | working | PD-49 | 2026-09-30 |
-| dev-pd51 | developer | working | PD-51 | 2026-09-30 |
+| qa-pd51 | qa-tester | working | PD-53 | 2026-09-30 |
