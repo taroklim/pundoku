@@ -159,7 +159,7 @@ describe("пустой год", () => {
     expect(document.querySelector('[data-testid="day-card"] .emptyday')!.textContent).toBe("Nothing recorded for this day.");
     click(document.querySelector(".ysheet-head .back"));
     click(document.querySelector('.ycell[data-date="2026-09-19"]'));
-    expect(document.querySelector('[data-testid="day-card"] .emptyday')!.textContent).toBe("Before your first recorded day.");
+    expect(document.querySelector('[data-testid="day-card"] .emptyday')!.textContent).toBe("Before your first entry.");
   });
 
   it("PD-51: как только появилась запись, пропуски начинаются с неё, а не с firstUse", () => {
@@ -190,7 +190,7 @@ describe("пустой год", () => {
     expect(label("2026-09-28")).toMatch(/, not played$/);
     // граница архива не сдвинулась: 09-25 (>= firstUse) можно сыграть, 09-19 — нет
     click(document.querySelector('.ycell[data-date="2026-09-25"]'));
-    expect(document.querySelector('[data-testid="day-card"] .emptyday')!.textContent).toBe("Before your first recorded day.");
+    expect(document.querySelector('[data-testid="day-card"] .emptyday')!.textContent).toBe("Before your first entry.");
     expect(document.querySelector('[data-testid="play-day"]')).not.toBeNull();
     click(document.querySelector(".ysheet-head .back"));
     click(document.querySelector('.ycell[data-date="2026-09-19"]'));

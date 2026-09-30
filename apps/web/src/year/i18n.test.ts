@@ -56,7 +56,7 @@ describe("i18n: блок year.* (PD-25)", () => {
   it("PD-51: «до начала» в Year — про первую запись, а не про начало пользования (en/uk/ru)", () => {
     const y = (l: object) => (l as { year: { state: { before: string }; card: { before: string } } }).year;
     expect(y(en).state.before).toBe("before your first entry");
-    expect(y(en).card.before).toBe("Before your first recorded day.");
+    expect(y(en).card.before).toBe("Before your first entry.");
     expect(y(uk).state.before).toBe("до першого запису");
     expect(y(uk).card.before).toBe("До першого запису.");
     expect(y(ru).state.before).toBe("до первой записи");
