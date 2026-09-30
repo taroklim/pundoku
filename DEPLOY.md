@@ -152,7 +152,7 @@ curl.exe -I http://127.0.0.1:8090/          # 200
    Secrets/Variables (валидирует: `POSTGRES_PASSWORD` формата `[A-Za-z0-9._~-]{16,}`, `RECOVERY_KEY_HMAC_SECRET` >= 32 байт, `PUBLIC_ORIGIN` вида `https://host`) -> `docker compose config -q` ->
    `docker compose build` -> `docker compose up -d` -> smoke -> `docker image prune -f`. При падении любого шага в лог
    выводятся `docker compose ps -a` и хвост логов сервисов.
-3. **Smoke** по `127.0.0.1:8090` (мимо Cloudflare, поэтому проверяет сам стек, а не туннель), до 30 попыток с паузой 5 с (таймаут одного запроса 15 с; таймаут всей джобы deploy — 30 минут):
+3. **Smoke** по `127.0.0.1:8090` (мимо Cloudflare, поэтому проверяет сам стек, а не туннель), до 18 попыток на адрес с паузой 3 с (таймаут одного запроса 5 с; худший случай 4 x 18 x 8 с = 576 с, около 10 минут; таймаут всей джобы deploy — 30 минут, остальное — build и up):
    `GET /health` (nginx -> api), `GET /` (статика), `GET /manifest.webmanifest`, `GET /api/daily/<сегодня UTC>`
    (nginx -> api -> Postgres: подтверждает миграции и БД). Всё должно быть 200.
 
