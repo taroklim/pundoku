@@ -268,7 +268,10 @@ Gates: build → typecheck, lint, тесты web/engine/api (api с TEST_DATABAS
 | PD-61 | (dev готов: pd-deploy @ 709c104; порт web 127.0.0.1:8090; секреты POSTGRES_PASSWORD, RECOVERY_KEY_HMAC_SECRET; vars PUBLIC_ORIGIN, LAPTOP_USER; миграции сервисом migrate; НЕ смержен, ждёт Coordinator) Деплой Pundoku публично (P1, владелец): подготовка в репо — nginx web как единый origin (SPA + /api прокси), Dockerfile web, prod docker-compose (127.0.0.1, Cloudflare Tunnel), .github/workflows/deploy.yml по образцу SUMMON, DEPLOY.md, бэкап Postgres минимально; ветка `pd-deploy`, НЕ мержить до проверки Coordinator'ом; Docker на машине нет — образы не проверить | developer | P1 | completed | — |
 | PD-62 | QA-ревью diff'а PD-61 (pd-deploy @ 709c104): FAIL — 1 Critical (compose YAML не парсится из-за «: » в `${...:?...}`), Medium (валидация POSTGRES_PASSWORD, timeouts), Low L1–L6; правки → PD-63, затем повторный QA | qa-tester | P1 | completed | PD-61 |
 | PD-63 | (готов: pd-deploy @ 0b586f2) Доработка pd-deploy по QA PD-62: C1 compose-quoting + проверка парсинга в gates, M1/M2, L1–L6, server_tokens off; без мержа | developer | P1 | completed | PD-62 |
-| PD-64 | Повторный QA только по правкам PD-63 | qa-tester | P1 | in_progress | PD-63 |
+| PD-64 | Повторный QA только по правкам PD-63: PASS с оговорками, блокеров нет; 3 страховки + оценка smoke → PD-65 | qa-tester | P1 | completed | PD-63 |
+| PD-65 | Страховки deploy.yml по QA PD-64: DOCKER_CONFIG только в env job deploy, pip install pyyaml перед gate-шагом, regex пароля `\z` вместо `$`, smoke ≤ ~10 мин; затем мерж pd-deploy в main локально без push | developer | P1 | in_progress | PD-64 |
+| PD-66 | Low: полноценные бэкапы Postgres SUMMON-уровня (локальная копия с ротацией, проверенное восстановление); до этого prod-данные считаем тестовыми | developer | P3 | pending | первый деплой |
+| PD-67 | Первый деплой на ноуте владельца — вести наблюдаемо (первый запуск workflow, smoke, Tunnel, установка PWA на iPhone; диагностика по DEPLOY.md) | product-manager | P1 | pending | владелец: репо/раннер/секреты |
 | PD-20 | QA PD-14 (pd-14 @ 0026b2a): PASS с оговорками, блокеров и Medium нет; 4 Low + решение по слиянию → PD-31 | qa-tester | P1 | completed | PD-14 |
 | PD-31 | Фикс-проход pd-14 по QA PD-20 (pd-14 @ c574f13; gates зелёные: web 213, engine 105, api 77+2 skipped, интеграционные 7/7 на живой БД) | developer | P1 | completed | PD-20 |
 | PD-32 | PASS с оговорками (слияние 409 по источникам, 1500 дней без лишних PUT, gates, интеграционные 7/7); Low → PD-37. QA-регресс pd-14 @ c574f13 (перезапуск после сбоя контейнера; worktree /tmp/pundoku-qa/qa-pd32, БД pundoku_qa5, порты 3320/5320): слияние 409 по источникам, отсутствие лишних PUT при 1500 днях, сокращённый регресс PD-20, gates + интеграционные api-тесты | qa-tester | P1 | completed | PD-31 |
@@ -338,4 +341,4 @@ Gates: build → typecheck, lint, тесты web/engine/api (api с `TEST_DATABA
 |-----|------|--------|-------|-----------|
 | pm-pundoku-5 | product-manager | working | PD-63/PD-64, потом отчёт Coordinator'у | 2026-09-30 |
 | qa-pd51 | qa-tester | done | PD-53 | 2026-09-30 |
-| qa-deploy2 | qa-tester | working | PD-64 | 2026-09-30 |
+| dev-deploy3 | developer | working | PD-65 | 2026-09-30 |
