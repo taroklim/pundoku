@@ -94,6 +94,11 @@ Service worker не кэширует `/api/*` (`navigateFallbackDenylist` в `vi
    ответить **да** (иначе раннер не переживёт закрытие терминала/перезагрузку). Метки по умолчанию (`self-hosted`,
    `Windows`, `X64`) оставить — `deploy.yml`/`backup.yml` ждут именно их.
 3. Проверить: Settings -> Actions -> Runners -> статус **Idle**.
+4. **Служба раннера должна работать под LocalSystem** (`services.msc` -> служба `actions.runner.*` -> Вход в систему
+   -> «С системной учётной записью»). Мастер по умолчанию может поставить `NetworkService` — тогда Docker не виден
+   и деплой падает с «docker is not recognized». Так и было на первом деплое 2026-09-30; после смены учётной записи
+   и перезапуска службы Deploy прошёл. Путь к Docker Desktop и `DOCKER_CONFIG` под пользователя ноута workflow
+   выставляет сам (см. выше).
 
 Особенности, унаследованные от SUMMON (все уже учтены в workflow):
 - служба раннера работает под Local System и не видит PATH пользователя -> шаг «Добавить Docker Desktop в PATH»
@@ -308,7 +313,7 @@ SUMMON `DEPLOY.md`) — отдельный тикет перед появлен�
 
 ## Не проверено (нет Docker и Windows-раннера на машине разработки)
 
-Честный список: всё ниже написано по образцу SUMMON и документации, но **ни разу не выполнялось**.
+Честный список: всё ниже написано по образцу SUMMON и документации. **Обновление 2026-09-30:** первый Deploy на ноуте прошёл (run 36746586325; smoke: `/health`, `/`, manifest, `sw.js`, `/api/daily` = 200 через Cloudflare на https://pundoku.pp.ua), то есть сборка образов, compose, `deploy.yml` на раннере и Tunnel фактически работают; `backup.yml`, откат и восстановление по-прежнему не выполнялись.
 
 - **Сборка образов** `apps/web/Dockerfile` и `apps/api/Dockerfile` в Docker. Проверено вместо этого: те же команды
   (`pnpm install --frozen-lockfile --filter ...`, `pnpm --filter ... build`, `pnpm --filter @pundoku/api --prod deploy
