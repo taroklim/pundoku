@@ -143,3 +143,39 @@ describe("точка входа при неверной конфигурации
     expect(res.stderr.trim().split("\n")).toHaveLength(1);
   });
 });
+
+describe("env.recovery: секрет HMAC ключа восстановления", () => {
+  const saved = { secret: process.env.RECOVERY_KEY_HMAC_SECRET, node: process.env.NODE_ENV };
+  const restore = (name: "RECOVERY_KEY_HMAC_SECRET" | "NODE_ENV", value: string | undefined) => {
+    if (value === undefined) delete process.env[name];
+    else process.env[name] = value;
+  };
+  afterEach(() => {
+    restore("RECOVERY_KEY_HMAC_SECRET", saved.secret);
+    restore("NODE_ENV", saved.node);
+  });
+
+  it("вне development/test без секрета — ConfigError; слишком короткий — ConfigError", async () => {
+    process.env.NODE_ENV = "production";
+    delete process.env.RECOVERY_KEY_HMAC_SECRET;
+    vi.resetModules();
+    const { loadRecoveryConfig } = await import("./env.js");
+    expect(() => loadRecoveryConfig()).toThrow(/RECOVERY_KEY_HMAC_SECRET/);
+    process.env.RECOVERY_KEY_HMAC_SECRET = "short";
+    expect(() => loadRecoveryConfig()).toThrow(/32/);
+  });
+
+  it("в development без секрета — dev-умолчание с пометкой; заданный секрет ≥32 байт принимается как есть", async () => {
+    process.env.NODE_ENV = "development";
+    delete process.env.RECOVERY_KEY_HMAC_SECRET;
+    vi.resetModules();
+    const { loadRecoveryConfig } = await import("./env.js");
+    expect(loadRecoveryConfig().hmacSecretIsDevDefault).toBe(true);
+    process.env.RECOVERY_KEY_HMAC_SECRET = "x".repeat(40);
+    const cfg = loadRecoveryConfig();
+    expect(cfg.hmacSecretIsDevDefault).toBe(false);
+    expect(cfg.hmacSecret.toString("utf8")).toBe("x".repeat(40));
+    process.env.NODE_ENV = "production";
+    expect(loadRecoveryConfig().hmacSecret).toHaveLength(40);
+  });
+});
