@@ -114,17 +114,20 @@ describe("env.port: диапазон в сообщении", () => {
 
 const apiDir = fileURLToPath(new URL("../..", import.meta.url));
 
+/** Запуск tsx под нагрузкой (полный прогон монорепо, CI) занимает 6–8 с; дефолтные 5 с и прежние 30 с — впритык. */
+const SPAWN_TIMEOUT_MS = 60_000;
+
 function runEntry(overrides: Record<string, string>) {
   return spawnSync(process.execPath, ["--import", "tsx", "src/index.ts"], {
     cwd: apiDir,
     env: { ...process.env, DATABASE_URL: "postgres://x", NODE_ENV: "test", ...overrides },
     encoding: "utf8",
-    timeout: 30_000,
+    timeout: SPAWN_TIMEOUT_MS - 5_000, // spawnSync убивает процесс раньше, чем сработает таймаут теста: сообщение об ошибке точнее
   });
 }
 
-// Каждый запуск — отдельный процесс с tsx (2–7 с под нагрузкой параллельных тестов): дефолтные 5 с мало.
-describe("точка входа при неверной конфигурации", { timeout: 30_000 }, () => {
+// Каждый запуск — отдельный процесс с tsx (~1 с без нагрузки, 6–8 с при 3-кратной перегрузке CPU): дефолтные 5 с мало (PD-46).
+describe("точка входа при неверной конфигурации", { timeout: SPAWN_TIMEOUT_MS }, () => {
   it.each([
     ["DAILY_FALLBACK_DIFFICULTY", "nightmare"],
     ["PORT", "abc"],
