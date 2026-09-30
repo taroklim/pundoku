@@ -20,12 +20,16 @@ RUN pnpm --filter @pundoku/api --prod deploy --legacy /out
 FROM node:20-alpine
 WORKDIR /app
 ENV NODE_ENV=production
-COPY --from=build /out ./
+# Не root: файлы принадлежат node (uid 1000). Приложение ничего не пишет на диск, миграции только читают
+# dist/ и migrations/, так что прав на чтение достаточно.
+COPY --from=build --chown=node:node /out ./
+USER node
 
 EXPOSE 3000
 
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
   CMD node -e "fetch('http://localhost:3000/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
 
-# Миграции перед стартом — достаточно для маленького личного проекта.
+# Миграции перед стартом — страховка для `docker run` образа как есть. В прод-стеке (docker-compose.yml) команда
+# переопределена: миграции гоняет одноразовый сервис `migrate` до старта api (см. DEPLOY.md, «Миграции»).
 CMD ["sh", "-c", "node dist/db/migrate.js && node dist/index.js"]

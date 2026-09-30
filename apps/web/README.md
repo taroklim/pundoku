@@ -8,6 +8,9 @@ pnpm --filter @pundoku/web build && pnpm --filter @pundoku/web exec vite preview
 pnpm --filter @pundoku/web test                                                    # vitest
 ```
 
+В проде web отдаётся nginx-контейнером (`apps/web/Dockerfile`, `apps/web/nginx/`), тот же nginx проксирует `/api/*` на api —
+один origin, CORS не нужен, `VITE_API_BASE_URL` пуст (см. `DEPLOY.md` в корне репо).
+
 `VITE_API_BASE_URL` (build-time) — base URL api. Пусто — тот же origin (dev-прокси Vite). В проде — публичный
 адрес api без завершающего `/`; `WEB_ORIGIN` api должен содержать origin web. Service worker не кэширует `/api/*`
 (`navigateFallbackDenylist`).

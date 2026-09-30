@@ -1,0 +1,208 @@
+name: Deploy (self-hosted)
+
+# PD-61. Схема как у SUMMON (products/game-rooms/.github/workflows/deploy.yml): раннер живёт на домашнем
+# Windows-ноуте (см. DEPLOY.md), сам инициирует соединение к GitHub, входящих портов не требует.
+# При пуше в main: гейты на GitHub-hosted ubuntu (build -> typecheck -> test), затем на ноуте
+# пересборка и подъём docker-compose стека (postgres + api + web) и smoke-проверка.
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch: {}
+
+# Два деплоя одновременно на один ноут и один compose-проект — гонка; второй ждёт первого.
+concurrency:
+  group: pundoku-deploy
+  cancel-in-progress: false
+
+env:
+  # Явное имя проекта: иначе Compose берёт имя рабочей директории раннера (...\_work\pundoku\pundoku),
+  # что не совпадёт с ручным первым запуском и породит вторую копию стека и второй том с данными.
+  COMPOSE_PROJECT_NAME: pundoku
+
+jobs:
+  # Гейты на обычном GitHub-hosted раннере, не на ноуте: чистое окружение, ноут не тратит время и
+  # не нуждается в Node/pnpm. Упавший гейт не даёт запуститься deploy.
+  gates:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: pundoku_ci
+          POSTGRES_PASSWORD: pundoku_ci
+          POSTGRES_DB: pundoku_ci
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U pundoku_ci -d pundoku_ci"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      DATABASE_URL: postgres://pundoku_ci:pundoku_ci@localhost:5432/pundoku_ci
+      # Интеграционные тесты api (в т.ч. recovery) ждут СВЕЖУЮ базу с применёнными миграциями.
+      TEST_DATABASE_URL: postgres://pundoku_ci:pundoku_ci@localhost:5432/pundoku_ci
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+      # Версия pnpm — из поля packageManager в package.json (так же, как в Dockerfile).
+      - name: Включить corepack (pnpm)
+        run: corepack enable
+      - name: Установить зависимости
+        run: pnpm install --frozen-lockfile
+      - name: Build (engine -> api -> web)
+        run: pnpm build
+      - name: Typecheck
+        run: pnpm typecheck
+      - name: Lint
+        run: pnpm lint
+      # Ловит опечатки и невалидный YAML в compose и workflow-файлах ДО деплоя (на ubuntu Docker есть).
+      # Значения переменных - заглушки, нужны только чтобы сработали проверки ":?" обязательных переменных.
+      # Ошибка парсинга compose-файла ранее могла обнаружиться лишь на ноуте, после checkout и сборки .env.
+      - name: Проверить compose- и workflow-файлы
+        env:
+          POSTGRES_PASSWORD: dummy-password-for-config-check
+          RECOVERY_KEY_HMAC_SECRET: dummy-secret-for-config-check-0123456789abcdef
+          PUBLIC_ORIGIN: https://example.com
+        run: |
+          python3 -m pip install -q pyyaml
+          docker compose -f docker-compose.yml config -q
+          docker compose -f docker-compose.dev.yml config -q
+          python3 -c "import sys, yaml; [yaml.safe_load(open(f, encoding='utf-8')) for f in sys.argv[1:]]" \
+            docker-compose.yml docker-compose.dev.yml .github/workflows/deploy.yml .github/workflows/backup.yml
+      - name: Применить миграции к тестовой базе
+        run: pnpm migrate
+      - name: Test (engine, api, web)
+        run: pnpm test
+
+  deploy:
+    needs: gates
+    # Только main: workflow_dispatch с другой ветки не должен выкатить её в прод.
+    if: github.ref == 'refs/heads/main'
+    runs-on: [self-hosted, Windows, X64]
+    # Зависший шаг (docker build, ретраи smoke) не должен держать раннер и concurrency-группу до 6 часов.
+    timeout-minutes: 30
+    env:
+      # Служба раннера на Windows работает под Local System: у него пустой профиль без CLI-плагинов
+      # (docker compose) — Docker ищет их в %USERPROFILE%\.docker конкретного пользователя. Указываем
+      # профиль пользователя ноута, где стоит Docker Desktop. Имя пользователя — GitHub Variable
+      # LAPTOP_USER (необязательная), по умолчанию pyshn — тот же ноут, что у SUMMON.
+      # Только на джобе deploy (Windows): на job gates (ubuntu) путь C:\Users\... не нужен и не имеет смысла.
+      DOCKER_CONFIG: C:\Users\${{ vars.LAPTOP_USER || 'pyshn' }}\.docker
+    defaults:
+      run:
+        # По умолчанию Windows блокирует .ps1 (Execution Policy). Bypass действует только на вызовы
+        # powershell.exe внутри этой джобы, политику всей системы на ноуте не меняет.
+        shell: 'powershell -ExecutionPolicy Bypass -File "{0}"'
+    steps:
+      - uses: actions/checkout@v4
+
+      # Служба раннера (Local System) не видит PATH пользователя, где Docker Desktop, — без этого
+      # "docker: command not found". Docker Desktop у нас per-user (AppData\Local\Programs), не
+      # Program Files. Добавление в $env:GITHUB_PATH действует на все следующие шаги этой джобы.
+      # Все run:-блоки ниже ASCII-only: кириллица в inline-PowerShell на Windows-раннере уже роняла
+      # workflow у SUMMON; пояснения по-русски живут только в комментариях YAML-уровня, как этот.
+      - name: Добавить Docker Desktop в PATH для этой джобы
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $user = if ($env:LAPTOP_USER) { $env:LAPTOP_USER } else { 'pyshn' }
+          Add-Content -Path $env:GITHUB_PATH -Value "C:\Users\$user\AppData\Local\Programs\DockerDesktop\resources\bin"
+        env:
+          LAPTOP_USER: ${{ vars.LAPTOP_USER }}
+
+      # Секреты и переменные - из GitHub (Settings -> Secrets and variables -> Actions), не из файла на
+      # диске: checkout каждый раз чистит рабочую директорию (git clean -ffdx), .env между запусками не
+      # переживает. Контейнеры при этом продолжают жить со своим уже зашитым окружением.
+      # Файл пишется без BOM и с LF: PowerShell 5.1 "Out-File -Encoding utf8" добавляет BOM, а он
+      # прилипает к имени первой переменной.
+      - name: Собрать .env из GitHub Secrets и Variables
+        env:
+          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+          RECOVERY_KEY_HMAC_SECRET: ${{ secrets.RECOVERY_KEY_HMAC_SECRET }}
+          PUBLIC_ORIGIN: ${{ vars.PUBLIC_ORIGIN }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          if (-not $env:POSTGRES_PASSWORD) { throw "secret POSTGRES_PASSWORD is not set (see DEPLOY.md)" }
+          if (-not $env:RECOVERY_KEY_HMAC_SECRET) { throw "secret RECOVERY_KEY_HMAC_SECRET is not set (see DEPLOY.md)" }
+          if ($env:POSTGRES_PASSWORD -notmatch '^[A-Za-z0-9._~-]{16,}\z') { throw "secret POSTGRES_PASSWORD must be 16+ chars of A-Z a-z 0-9 . _ ~ - only, it goes into DATABASE_URL (use: openssl rand -hex 24; see DEPLOY.md)" }
+          if ($env:RECOVERY_KEY_HMAC_SECRET.Length -lt 32) { throw "secret RECOVERY_KEY_HMAC_SECRET is shorter than 32 bytes (openssl rand -base64 48)" }
+          if (-not $env:PUBLIC_ORIGIN) { throw "variable PUBLIC_ORIGIN is not set (see DEPLOY.md)" }
+          if ($env:PUBLIC_ORIGIN -notmatch '^https://[^/]+$') { throw "variable PUBLIC_ORIGIN must look like https://host with no trailing slash" }
+          $lines = @(
+            "POSTGRES_USER=pundoku",
+            "POSTGRES_PASSWORD=$($env:POSTGRES_PASSWORD)",
+            "POSTGRES_DB=pundoku",
+            "RECOVERY_KEY_HMAC_SECRET=$($env:RECOVERY_KEY_HMAC_SECRET)",
+            "PUBLIC_ORIGIN=$($env:PUBLIC_ORIGIN)"
+          )
+          $path = Join-Path (Get-Location).ProviderPath ".env"
+          [System.IO.File]::WriteAllText($path, (($lines -join "`n") + "`n"), (New-Object System.Text.UTF8Encoding($false)))
+          Write-Host ".env written ($($lines.Count) variables)"
+
+      # Ловит опечатки в compose-файле и пропущенные обязательные переменные до долгой сборки.
+      - name: Проверить docker-compose.yml
+        run: |
+          $ErrorActionPreference = 'Stop'
+          docker compose config -q
+          if ($LASTEXITCODE -ne 0) { throw "docker compose config failed with exit code $LASTEXITCODE" }
+
+      - name: Build
+        run: |
+          $ErrorActionPreference = 'Stop'
+          docker compose build
+          if ($LASTEXITCODE -ne 0) { throw "docker compose build failed with exit code $LASTEXITCODE" }
+
+      # up поднимает postgres, затем одноразовый сервис migrate (миграции), затем api и web. Упавшая
+      # миграция - up завершается с ошибкой, деплой красный, старый api остаётся работать.
+      - name: Deploy
+        run: |
+          $ErrorActionPreference = 'Stop'
+          docker compose up -d
+          if ($LASTEXITCODE -ne 0) { throw "docker compose up failed with exit code $LASTEXITCODE" }
+          docker compose ps
+
+      # Smoke по 127.0.0.1:8090 (порт web, опубликованный только на localhost) - мимо Cloudflare, значит
+      # проверяет сам стек, а не туннель. Ретраи: api стартует после миграций не мгновенно.
+      # Бюджет: 4 адреса x 18 попыток x (curl --max-time 5 + пауза 3 с) = не более 576 с (~9.6 мин) в худшем
+      # случае, с большим запасом до timeout-minutes: 30 (остальное время - build/up).
+      #   /health           - nginx -> api (api жив)
+      #   /                 - статика web (SPA)
+      #   /manifest.webmanifest - манифест отдаётся
+      #   /api/daily/<date> - nginx -> api -> Postgres (миграции применены, БД отвечает)
+      - name: Smoke test
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $base = "http://127.0.0.1:8090"
+          $today = (Get-Date).ToUniversalTime().ToString("yyyy-MM-dd", [System.Globalization.CultureInfo]::InvariantCulture)
+
+          function Wait-Http200 {
+            param([string]$Path)
+            $url = "$base$Path"
+            $code = "000"
+            for ($i = 1; $i -le 18; $i++) {
+              $code = (& curl.exe -s -o NUL -w "%{http_code}" --max-time 5 $url)
+              if ($code -eq "200") { Write-Host "OK  200 $url (attempt $i)"; return }
+              Write-Host "wait $url -> $code (attempt $i of 18)"
+              Start-Sleep -Seconds 3
+            }
+            throw "smoke failed: $url did not return 200 (last code $code)"
+          }
+
+          Wait-Http200 "/health"
+          Wait-Http200 "/"
+          Wait-Http200 "/manifest.webmanifest"
+          Wait-Http200 "/api/daily/$today"
+
+      # При падении любого шага деплоя - состояние контейнеров и хвост логов прямо в лог джобы.
+      - name: Диагностика при падении
+        if: failure()
+        run: |
+          docker compose ps -a
+          docker compose logs --tail=80 migrate api web postgres
+
+      - name: Убрать старые неиспользуемые образы
+        run: docker image prune -f

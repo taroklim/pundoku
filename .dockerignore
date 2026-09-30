@@ -2,5 +2,12 @@
 **/dist
 **/dev-dist
 **/coverage
-.env
+# Секреты: любые .env* (в образ не нужны; compose читает .env на хосте), кроме шаблона.
+**/.env*
+!.env.example
 .git
+.github
+# Документация и дизайн-материалы сборке не нужны (проверено: ни api, ни web, ни engine их не читают).
+design
+docs
+**/*.md

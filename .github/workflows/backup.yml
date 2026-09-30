@@ -1,0 +1,167 @@
+name: Backup (postgres)
+
+# PD-61. Минимальный ночной бэкап Postgres по образцу SUMMON (products/game-rooms/.github/workflows/backup.yml,
+# без uploads, локальной ротации и сверки счётчиков): pg_dump из уже работающего контейнера ->
+# gzip на раннере -> проверка, что дамп РАЗВОРАЧИВАЕТСЯ в одноразовом контейнере postgres ->
+# артефакт GitHub Actions (14 дней, физически вне ноута).
+#
+# Ограничение: раннер на ноуте должен быть онлайн в момент cron; иначе GitHub молча пропустит запуск.
+# Что НЕ покрыто и как восстанавливать — DEPLOY.md, «Бэкапы».
+#
+# Контейнер ищется по labels compose-проекта, а не через "docker compose exec": прод-compose требует
+# обязательные переменные (POSTGRES_PASSWORD и др.) при ЛЮБОЙ команде, а .env после checkout
+# (git clean -ffdx) на диске нет. Пароль и имя БД читаются изнутри контейнера postgres.
+# Все run:-блоки ASCII-only (кириллица в inline-PowerShell на Windows-раннере роняла workflow у SUMMON).
+
+on:
+  schedule:
+    # 03:47 UTC ежедневно (SUMMON бэкапится в 03:17 - не в одну минуту на одном ноуте).
+    - cron: "47 3 * * *"
+  workflow_dispatch: {}
+
+concurrency:
+  group: pundoku-backup
+  cancel-in-progress: false
+
+env:
+  COMPOSE_PROJECT_NAME: pundoku
+  DOCKER_CONFIG: C:\Users\${{ vars.LAPTOP_USER || 'pyshn' }}\.docker
+
+jobs:
+  backup:
+    runs-on: [self-hosted, Windows, X64]
+    defaults:
+      run:
+        shell: 'powershell -ExecutionPolicy Bypass -File "{0}"'
+    steps:
+      # ВАЖНО: checkout делает git clean в рабочей директории раннера. Не запускать вручную одновременно
+      # с ручными операциями восстановления в ТОЙ ЖЕ папке (см. DEPLOY.md).
+      - uses: actions/checkout@v4
+
+      - name: Добавить Docker Desktop в PATH для этой джобы
+        env:
+          LAPTOP_USER: ${{ vars.LAPTOP_USER }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $user = if ($env:LAPTOP_USER) { $env:LAPTOP_USER } else { 'pyshn' }
+          Add-Content -Path $env:GITHUB_PATH -Value "C:\Users\$user\AppData\Local\Programs\DockerDesktop\resources\bin"
+
+      # Формат - plain SQL (не custom): восстановление одним "psql -f", без pg_restore и версионных
+      # нюансов. Файл выносится наружу через "docker cp" (побайтово), а не через PowerShell-конвейер:
+      # в Windows PowerShell 5.1 текстовый пайп портит CRLF/кодировку внутри дампа.
+      - name: pg_dump из контейнера postgres
+        timeout-minutes: 20
+        run: |
+          $ErrorActionPreference = 'Stop'
+          New-Item -ItemType Directory -Force -Path backup-out | Out-Null
+
+          $id = (docker ps -q --filter "label=com.docker.compose.project=pundoku" --filter "label=com.docker.compose.service=postgres" | Select-Object -First 1)
+          if (-not $id) { throw "postgres container of compose project pundoku is not running" }
+          Write-Host "postgres container: $id"
+
+          docker exec $id sh -c 'PGPASSWORD="$POSTGRES_PASSWORD" pg_dump -U "$POSTGRES_USER" --no-owner --no-privileges -f /tmp/pd-backup.sql "$POSTGRES_DB"'
+          if ($LASTEXITCODE -ne 0) { throw "pg_dump inside the postgres container failed with exit code $LASTEXITCODE" }
+
+          docker cp "${id}:/tmp/pd-backup.sql" backup-out/postgres.sql
+          if ($LASTEXITCODE -ne 0) { throw "docker cp of the dump failed" }
+          docker exec $id rm -f /tmp/pd-backup.sql
+
+          $rawSize = (Get-Item backup-out/postgres.sql).Length
+          if ($rawSize -eq 0) { throw "postgres.sql is empty - suspected silent pg_dump failure" }
+          Write-Host "postgres.sql: $rawSize bytes"
+
+          # Compression locally on the runner (.NET GZipStream): gzip is not guaranteed in the image.
+          Add-Type -AssemblyName System.IO.Compression
+          $src = [System.IO.File]::OpenRead((Resolve-Path "backup-out/postgres.sql"))
+          $dst = [System.IO.File]::Create((Join-Path (Get-Location).ProviderPath "backup-out/postgres.sql.gz"))
+          $gz = New-Object System.IO.Compression.GZipStream($dst, [System.IO.Compression.CompressionMode]::Compress)
+          $src.CopyTo($gz)
+          $gz.Dispose(); $dst.Dispose(); $src.Dispose()
+          Remove-Item "backup-out/postgres.sql"
+          Write-Host "postgres.sql.gz: $((Get-Item backup-out/postgres.sql.gz).Length) bytes"
+
+      # Бэкап, который ни разу не разворачивали, бэкапом не считается: распаковываем ИМЕННО .gz, который
+      # уедет в артефакт, разворачиваем в одноразовый postgres:16-alpine (не в прод-контейнер) и проверяем
+      # минимум - таблицы схемы на месте и журнал миграций непуст. Это НЕ сверка данных строка в строку
+      # (у SUMMON она есть, здесь осознанно нет - см. DEPLOY.md).
+      - name: Проверить восстановление дампа в одноразовой БД
+        timeout-minutes: 15
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $container = "pd-restore-check-$($env:GITHUB_RUN_ID)"
+          $plain = Join-Path (Get-Location).ProviderPath "restore-check.sql"
+
+          Add-Type -AssemblyName System.IO.Compression
+          $src = [System.IO.File]::OpenRead((Resolve-Path "backup-out/postgres.sql.gz"))
+          $gz = New-Object System.IO.Compression.GZipStream($src, [System.IO.Compression.CompressionMode]::Decompress)
+          $dst = [System.IO.File]::Create($plain)
+          $gz.CopyTo($dst)
+          $dst.Dispose(); $gz.Dispose(); $src.Dispose()
+
+          # pg_dump ends a plain dump with this marker; its absence means the file was cut off.
+          $tail = (Get-Content $plain -Tail 30) -join "`n"
+          if ($tail -notmatch "PostgreSQL database dump complete") { throw "dump has no completion trailer - file is truncated" }
+
+          $leftover = docker ps -a --format "{{.Names}}" --filter "name=$container"
+          if ($leftover -contains $container) { docker rm -f $container | Out-Null }
+
+          docker run -d --name $container -e POSTGRES_USER=pundoku -e POSTGRES_PASSWORD=restore-check -e POSTGRES_DB=pundoku postgres:16-alpine
+          if ($LASTEXITCODE -ne 0) { throw "could not start throwaway postgres container" }
+
+          try {
+            # The official image first starts a TEMPORARY init server that answers pg_isready, then restarts:
+            # require several successes in a row (lesson of SUMMON GR-520).
+            $needed = 3
+            $streak = 0
+            for ($i = 0; $i -lt 90; $i++) {
+              docker exec $container pg_isready -U pundoku
+              if ($LASTEXITCODE -eq 0) {
+                $streak++
+                if ($streak -ge $needed) { break }
+              } else {
+                $streak = 0
+              }
+              Start-Sleep -Seconds 2
+            }
+            if ($streak -lt $needed) { throw "throwaway postgres was never ready" }
+
+            docker cp $plain "${container}:/tmp/dump.sql"
+            if ($LASTEXITCODE -ne 0) { throw "docker cp of the dump into the throwaway container failed" }
+
+            docker exec -e PGPASSWORD=restore-check $container psql -U pundoku -d pundoku -v ON_ERROR_STOP=1 -q -f /tmp/dump.sql
+            if ($LASTEXITCODE -ne 0) { throw "psql failed to restore the dump into a clean database" }
+
+            $tables = docker exec -e PGPASSWORD=restore-check $container psql -U pundoku -d pundoku -At -c "select count(*) from information_schema.tables where table_schema = 'public' and table_name in ('devices','snapshots','daily_puzzles','sync_groups','device_links','schema_migrations')"
+            Write-Host "key tables restored: $tables of 6 expected"
+            if ([int]$tables -ne 6) { throw "restored database is missing key tables ($tables of 6)" }
+            $migrations = docker exec -e PGPASSWORD=restore-check $container psql -U pundoku -d pundoku -At -c "select count(*) from schema_migrations"
+            Write-Host "schema_migrations rows: $migrations"
+            if ([int]$migrations -lt 1) { throw "restored schema_migrations is empty" }
+          }
+          finally {
+            try { docker rm -f $container | Out-Null } catch { Write-Host "cleanup: $($_.Exception.Message)" }
+            Remove-Item $plain -Force -ErrorAction SilentlyContinue
+          }
+
+      # If the step above was killed by its timeout, its own "finally" did not run: remove the leftover.
+      - name: Убрать одноразовый контейнер, если он пережил шаг проверки
+        if: always()
+        run: |
+          $container = "pd-restore-check-$($env:GITHUB_RUN_ID)"
+          $leftover = docker ps -a --format "{{.Names}}" --filter "name=$container"
+          if ($leftover -contains $container) {
+            Write-Host "::warning::$container survived the restore-check step - removing it"
+            docker rm -f $container | Out-Null
+          } else {
+            Write-Host "nothing to clean up"
+          }
+
+      # if: always() - даже при упавшей проверке артефакт нужен: по нему разбираются, чем дамп плох.
+      - name: Залить артефакт бэкапа
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pundoku-backup-${{ github.run_id }}
+          path: backup-out/*
+          retention-days: 14
+          if-no-files-found: error

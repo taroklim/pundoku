@@ -11,7 +11,8 @@ apps/
   api/        @pundoku/api   — Express 5 (Node/TS): прокси Sudoku.com для Today + аккаунт устройства/снапшот. Postgres.
 packages/
   engine/     @pundoku/engine — генератор/решатель с логом техник. Чистый ES2022, без DOM/Node, MIT.
-docker-compose.yml           — postgres:16 + api (сборка из apps/api/Dockerfile, контекст — корень).
+docker-compose.yml           — ПРОД-стек: postgres + migrate + api + web (nginx: статика PWA + /api -> api), деплой — DEPLOY.md.
+docker-compose.dev.yml       — только postgres:16 для локальной разработки.
 tsconfig.base.json           — общий strict-конфиг TypeScript, пакеты его расширяют.
 eslint.config.js             — общий ESLint (flat config, typescript-eslint).
 ```
@@ -39,7 +40,7 @@ Postgres локально — через Docker (или любой свой, н�
 `createdb pundoku_dev`), api при этом гоняется без контейнера:
 
 ```sh
-docker compose up -d postgres   # либо свой Postgres + DATABASE_URL в .env
+docker compose -f docker-compose.dev.yml up -d   # только postgres; либо свой Postgres + DATABASE_URL в .env
 pnpm migrate                # применить миграции к DATABASE_URL из .env
 pnpm dev:api
 ```
@@ -47,7 +48,10 @@ pnpm dev:api
 `.env` ищется в `apps/api/.env`, затем в корне репо. Эндпоинты, curl-примеры и запуск без
 Docker — `apps/api/README.md`.
 
-Всё в контейнерах: `docker compose up --build` (api сам прогоняет миграции перед стартом).
+Прод-стек в контейнерах (postgres + api + web на одном origin) и публичный деплой через Cloudflare Tunnel —
+`DEPLOY.md`. Для проб на своей машине: в `.env` задать `POSTGRES_PASSWORD`, `RECOVERY_KEY_HMAC_SECRET`,
+`PUBLIC_ORIGIN` и `docker compose up -d --build` (PWA на `http://127.0.0.1:8090`; миграции — одноразовый сервис
+`migrate`, до старта api).
 
 ## Миграции (решение PD-0)
 

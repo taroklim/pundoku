@@ -1,0 +1,30 @@
+# Pundoku — локальная разработка: только Postgres, опубликованный на localhost.
+# api и web гоняются с хоста (`pnpm dev:api`, `pnpm dev:web`, см. README).
+#
+#   docker compose -f docker-compose.dev.yml up -d
+#
+# Прод-стек (postgres + api + web) — docker-compose.yml, см. DEPLOY.md. Значения — из .env (.env.example).
+# Собственный project name, чтобы dev-том не пересекался с прод-стеком на одной машине.
+name: pundoku-dev
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-pundoku}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-pundoku}
+      POSTGRES_DB: ${POSTGRES_DB:-pundoku}
+    ports:
+      # Только localhost — для `pnpm dev:api` без Docker для api.
+      - "127.0.0.1:5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-pundoku} -d ${POSTGRES_DB:-pundoku}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  postgres_data:
