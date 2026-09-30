@@ -261,6 +261,20 @@ describe("RecoveryStore: уход с экрана при неподтвержд�
     expect(snap(store)).toMatchObject({ phase: "created", shownKey: null });
   });
 
+  it("guardLeave: false и ничего не делает без показанного ключа; true и шит «не сохранён», пока ключ показан (PD-57)", async () => {
+    const { store } = setup();
+    const go = vi.fn();
+    expect(store.guardLeave(go)).toBe(false);
+    expect(go).not.toHaveBeenCalled();
+    expect(snap(store).sheet).toBeNull();
+    await store.create();
+    expect(store.guardLeave(go)).toBe(true);
+    expect(go).not.toHaveBeenCalled();
+    expect(snap(store)).toMatchObject({ sheet: "leave", phase: "shown", shownKey: KEY });
+    await store.confirmSheet();
+    expect(go).toHaveBeenCalledTimes(1);
+  });
+
   it("beforeunload удерживает страницу, пока ключ показан, и отпускает после подтверждения", async () => {
     const { store } = setup();
     await store.create();
