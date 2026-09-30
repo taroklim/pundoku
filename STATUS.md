@@ -242,9 +242,9 @@ Gates: build → typecheck, lint, тесты web/engine/api (api с TEST_DATABAS
 | PD-27 | Ключ восстановления вместо привязки e-mail (в настройках, без регистрации и почты): план `docs/pd-27-recovery-key.md`; разбит на PD-47 (api), PD-48 (макет Settings), PD-49 (web), PD-50 (QA) | developer | P2 | in_progress | PD-26 |
 | PD-47 | (dev готов: `pd-27-api` @ 0cd88cd, НЕ смержен — мержить вместе с PD-49 после QA PD-50; gates по отчёту developer: engine 127, api 172+3 skipped, web 387, живая проверка curl пройдена) PD-27 api: миграция 0006 (sync_groups, device_links), резолв снапшота в requireDevice, `/api/recovery/*` (создать/перевыпустить ключ, redeem, отвязать, удалить), rate-limit, redact, тесты; ветка `pd-27-api` | developer | P2 | completed | — |
 | PD-48 | (готов, закоммичен в main: `design/pd27-settings.html`, `pd27-settings-notes.md`, `pd27-shots/` 60 кадров chromium+webkit, `pd27-shots.mjs`) PD-27 дизайн: макет экрана Settings — блок «Ключ восстановления» (`design/pd27-settings.html`) | designer | P2 | completed | — |
-| PD-49 | PD-27 web: `#/settings`, блок ключа восстановления, resetAfterLinkChange, i18n, тесты; ветка `pd-27-web`, worktree pundoku-worktrees/pd-27-web | developer | P2 | in_progress | — |
-| PD-50 | QA PD-27 (два профиля, слияние, лимиты, отвязка, перевыпуск, потеря IDB) | qa-tester | P2 | pending | PD-47, PD-49 |
-| PD-51 | (dev готов: pd-51 @ f6c10f7; gates engine 127, web 396, api 127; живая проверка Playwright 3 сценария; на QA PD-53; мерж --no-ff после PASS) Year: старт года = самая ранняя запись дня (включая архивную/late) вместо `firstUseDate`; до неё дни void («before you started»), missed — от самой ранней записи до сегодня; нулевые записи — как сейчас. Граница архива остаётся `firstUseDate`. Ветка `pd-51` от main; бриф ниже | developer | P2 | in_progress | — |
+| PD-49 | (dev готов: pd-27-web @ 60cce81; gates engine 127, web 453, api 127+3; живая проверка 40/40, два профиля; ключ не найден в IDB/localStorage/URL/console) PD-27 web: `#/settings`, блок ключа восстановления, resetAfterLinkChange, i18n, тесты; на QA PD-50 в интеграционной ветке `pd-27-int` (main + pd-27-api + pd-27-web) | developer | P2 | completed | — |
+| PD-50 | QA PD-27 (два профиля, слияние, лимиты, отвязка, перевыпуск, потеря IDB) на `pd-27-int` (worktree pundoku-worktrees/pd-27-int) | qa-tester | P2 | in_progress | PD-47, PD-49 |
+| PD-51 | (СМЕРЖЕН в main c673521, pd-51 @ 25c4e87, QA PD-53 PASS; dev был pd-51 @ f6c10f7; gates engine 127, web 396, api 127; живая проверка Playwright 3 сценария; на QA PD-53; мерж --no-ff после PASS) Year: старт года = самая ранняя запись дня (включая архивную/late) вместо `firstUseDate`; до неё дни void, missed — от самой ранней записи до сегодня; нулевые записи — как сейчас. Граница архива остаётся `firstUseDate`; бриф ниже | developer | P2 | completed | — |
 | PD-52 | Low (из отчёта dev PD-51, решение PM: не чиним сейчас, в бэклог): список лет в Year начинается с года archiveStart, а не с года самой ранней записи — можно листнуть в пустой прошлый год. Ограничить `availableYears` годом старта Year (или оставить как есть по решению владельца) | developer | P3 | pending | PD-51 |
 | PD-53 | QA PD-51 (pd-51 @ f6c10f7): PASS с оговорками, блокеров нет (gates, chromium+webkit, мутации 7/8, граница архива цела); Low#1 копия и Info#4/#5 (README, комментарии) правятся мной в pd-51 перед мержем; Low#2/#3 → PD-54/PD-55 | qa-tester | P2 | completed | PD-51 |
 | PD-54 | Low (QA PD-53 Low#2, ждёт решения владельца, не блокирует): предупреждение на Play/архиве у void-дня — один ход на пустом дне до первой записи сдвигает старт года и разом делает ~30 клеток missed | developer | P3 | pending | решение владельца |
@@ -316,6 +316,6 @@ Gates: build → typecheck, lint, тесты web/engine/api (api с `TEST_DATABA
 ## Агенты (текущий статус)
 | Имя | Роль | Статус | Тикет | Обновлено |
 |-----|------|--------|-------|-----------|
-| pm-pundoku-5 | product-manager | working | PD-51 мерж, ждёт PD-49 | 2026-09-30 |
-| dev-pd49 | developer | working | PD-49 | 2026-09-30 |
+| pm-pundoku-5 | product-manager | working | PD-50 (QA) | 2026-09-30 |
+| qa-pd50 | qa-tester | working | PD-50 | 2026-09-30 |
 | qa-pd51 | qa-tester | done | PD-53 | 2026-09-30 |
