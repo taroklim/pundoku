@@ -265,11 +265,11 @@ Gates: build → typecheck, lint, тесты web/engine/api (api с TEST_DATABAS
 | PD-59 | (смержен в main, pd-low-1 @ 9f6cd20, QA PASS) Low (dev PD-56): существующий тест «сбрасывает META_SYNC_STATE…» в `manager.linkchange.test.ts` не ловит мутацию — усилить (мутационно) | developer | P3 | completed | — |
 | PD-60 | Info (QA pd-low-1): (1) правка адреса на #/year + Stay + «‹ Today» + Leave ведёт на #/year, а не на Today (pushState поверх записи; достижимо только ручной правкой адреса); (2) нет тестов на проводку guard в App.tsx и ветку year < текущий в yearEmpty; условие archiveStart <= today в availableYears избыточно, комментарий вводит в заблуждение | developer | P3 | pending | — |
 | PD-58 | Low: свести тексты вне макета и два косметических отличия к макету/согласовать с владельцем (вопрос в «Ожидает решения») | designer | P3 | pending | решение владельца |
-| PD-61 | (dev готов: pd-deploy @ 709c104; порт web 127.0.0.1:8090; секреты POSTGRES_PASSWORD, RECOVERY_KEY_HMAC_SECRET; vars PUBLIC_ORIGIN, LAPTOP_USER; миграции сервисом migrate; НЕ смержен, ждёт Coordinator) Деплой Pundoku публично (P1, владелец): подготовка в репо — nginx web как единый origin (SPA + /api прокси), Dockerfile web, prod docker-compose (127.0.0.1, Cloudflare Tunnel), .github/workflows/deploy.yml по образцу SUMMON, DEPLOY.md, бэкап Postgres минимально; ветка `pd-deploy`, НЕ мержить до проверки Coordinator'ом; Docker на машине нет — образы не проверить | developer | P1 | completed | — |
+| PD-61 | (dev готов: pd-deploy @ 709c104; порт web 127.0.0.1:8090; секреты POSTGRES_PASSWORD, RECOVERY_KEY_HMAC_SECRET; vars PUBLIC_ORIGIN, LAPTOP_USER; миграции сервисом migrate; смержен в main 74d0487 локально, без push) Деплой Pundoku публично (P1, владелец): подготовка в репо — nginx web как единый origin (SPA + /api прокси), Dockerfile web, prod docker-compose (127.0.0.1, Cloudflare Tunnel), .github/workflows/deploy.yml по образцу SUMMON, DEPLOY.md, бэкап Postgres минимально; ветка `pd-deploy`, НЕ мержить до проверки Coordinator'ом; Docker на машине нет — образы не проверить | developer | P1 | completed | — |
 | PD-62 | QA-ревью diff'а PD-61 (pd-deploy @ 709c104): FAIL — 1 Critical (compose YAML не парсится из-за «: » в `${...:?...}`), Medium (валидация POSTGRES_PASSWORD, timeouts), Low L1–L6; правки → PD-63, затем повторный QA | qa-tester | P1 | completed | PD-61 |
 | PD-63 | (готов: pd-deploy @ 0b586f2) Доработка pd-deploy по QA PD-62: C1 compose-quoting + проверка парсинга в gates, M1/M2, L1–L6, server_tokens off; без мержа | developer | P1 | completed | PD-62 |
 | PD-64 | Повторный QA только по правкам PD-63: PASS с оговорками, блокеров нет; 3 страховки + оценка smoke → PD-65 | qa-tester | P1 | completed | PD-63 |
-| PD-65 | Страховки deploy.yml по QA PD-64: DOCKER_CONFIG только в env job deploy, pip install pyyaml перед gate-шагом, regex пароля `\z` вместо `$`, smoke ≤ ~10 мин; затем мерж pd-deploy в main локально без push | developer | P1 | in_progress | PD-64 |
+| PD-65 | Страховки deploy.yml по QA PD-64: DOCKER_CONFIG только в env job deploy, pip install pyyaml перед gate-шагом, regex пароля `\z` вместо `$`, smoke ≤ ~10 мин; затем мерж pd-deploy в main локально без push | developer | P1 | completed | PD-64 |
 | PD-66 | Low: полноценные бэкапы Postgres SUMMON-уровня (локальная копия с ротацией, проверенное восстановление); до этого prod-данные считаем тестовыми | developer | P3 | pending | первый деплой |
 | PD-67 | Первый деплой на ноуте владельца — вести наблюдаемо (первый запуск workflow, smoke, Tunnel, установка PWA на iPhone; диагностика по DEPLOY.md) | product-manager | P1 | pending | владелец: репо/раннер/секреты |
 | PD-20 | QA PD-14 (pd-14 @ 0026b2a): PASS с оговорками, блокеров и Medium нет; 4 Low + решение по слиянию → PD-31 | qa-tester | P1 | completed | PD-14 |
@@ -339,6 +339,5 @@ Gates: build → typecheck, lint, тесты web/engine/api (api с `TEST_DATABA
 ## Агенты (текущий статус)
 | Имя | Роль | Статус | Тикет | Обновлено |
 |-----|------|--------|-------|-----------|
-| pm-pundoku-5 | product-manager | working | PD-63/PD-64, потом отчёт Coordinator'у | 2026-09-30 |
+| pm-pundoku-5 | product-manager | working | idle — деплой-подготовка в main; ждёт владельца (репо, раннер, секреты, Tunnel) | 2026-09-30 |
 | qa-pd51 | qa-tester | done | PD-53 | 2026-09-30 |
-| dev-deploy3 | developer | working | PD-65 | 2026-09-30 |
