@@ -20,6 +20,7 @@ pnpm measure:engine 200 hard expert       # (из корня) замер поп�
 | --- | --- |
 | Типы данных | `Cell`, `CellValue`, `Digit`, `Grid`, `GridInput`, `Difficulty`, `DifficultyProfile`, `Technique`, `TechniqueOrBeyond`, `Puzzle`, `Elimination`, `Step`, `HumanSolveResult` |
 | Типы лога | `Move`, `MoveKind`, `MoveLog`, `MoveLogSummary`, `SolvingStyle` |
+| Типы таймлапса | `Timelapse`, `TimelapseFrame`, `TimelapseOptions`, `TimelapseFingerprint`, `FingerprintCell`, `FingerprintOptions` |
 | Типы опций | `HumanSolveOptions`, `GenerateOptions` |
 | Сетка (`grid.ts`) | `GRID_SIZE`, `ROW_OF`, `COL_OF`, `BOX_OF`, `UNITS`, `PEERS`, `emptyGrid`, `parseGrid`, `formatGrid`, `toGrid`, `isValidGrid`, `conflicts`, `candidates` |
 | Решатель (`solver.ts`) | `solve`, `countSolutions`, `hasUniqueSolution` |
@@ -28,6 +29,7 @@ pnpm measure:engine 200 hard expert       # (из корня) замер поп�
 | Сложность (`difficulty.ts`) | `DIFFICULTIES`, `DIFFICULTY_PROFILES`, `EASY_MIN_CLUES` |
 | PRNG (`prng.ts`) | `Rng` — `new Rng(seed: string)`, `nextU32()`, `int(n)` (в `[0, n)`), `shuffle(arr)` (Фишер–Йейтс на месте) |
 | Лог ходов (`movelog.ts`) | `createMoveLog`, `appendMove`, `heatmap`, `summary`, `solvingStyle` |
+| Таймлапс (`timelapse.ts`) | `timelapseFrames`, `timelapseFingerprint`, `DEFAULT_MAX_GAP_MS` |
 
 Константы геометрии — `Uint8Array`/массивы `Uint8Array` (`ROW_OF[cell]`, `UNITS[i]`, `PEERS[cell]`);
 `GRID_SIZE = 81`; `TECHNIQUE_ORDER` — техники от дешёвой к дорогой.
@@ -125,6 +127,23 @@ pnpm measure:engine 200 hard expert       # (из корня) замер поп�
   постановок: та же/следующая цифра (сканер) → примыкающие клетки (змейка) → тот же блок
   (блочник) → рядом, ≤ 2 (змейка) → иначе снайпер; порог 0.5, при < 4 постановках — снайпер.
   Подробности в JSDoc.
+
+### Таймлапс и отпечаток прохождения (`timelapse.ts`, PD-70)
+
+Данные и воспроизведение без рендера; исследование веса лога и схемы — `docs/pd-70-timelapse-data.md` в корне репо.
+
+- `timelapseFrames(log, { mission, solution? }, opts?) → { frames, durationMs, sourceDurationMs }`. Кадр —
+  `{ t, move, cell, kind, values, notes?, wrong }`: `values` — поле целиком (подсказки + цифры игрока, 81 число), `wrong` — клетки игрока с неверной
+  цифрой (по `Move.correct`, иначе по `solution`, иначе верно), `notes` — битовые маски (только при `opts.notes`), `move` — индекс хода лога (−1 — начальный кадр).
+  Кадр на каждый ход, изменивший видимое состояние; `undo` даёт кадр отката (по стеку, как в «Контракте undo»; заметки клетки возвращаются вместе с цифрой),
+  no-op-ходы (`undo` без стека, `erase` пустой клетки, ход в подсказке, заметка в клетке с цифрой) кадров не дают, но время в шкале сохраняют. Пустой лог — один начальный кадр.
+- Время: паузы длиннее `maxGapMs` (по умолчанию `DEFAULT_MAX_GAP_MS` = 3000; `Infinity` — не сжимать; считается и «старт → первый ход») режутся до `maxGapMs`; затем шкала
+  масштабируется: `durationMs` — последний ход ровно в цель (перекрывает `speed`; при нулевой сжатой длительности кадры равномерно по индексу хода) либо делится на `speed`
+  (по умолчанию 1). `t` кадров не убывает; убывающее `t` в повреждённом логе читается как «не раньше предыдущего». Детерминирована, лог не меняет.
+- `timelapseFingerprint(log, puzzle, { maxGapMs? }) → { cells, placed }` — данные для PNG-отпечатка: для каждой клетки игрока, верно заполненной к концу лога,
+  `{ order, t, attempts }` — порядок финальной постановки (0…placed−1), время в **сжатой** шкале 0..1, число постановок цифры в клетку за партию;
+  `null` — подсказка либо пустая/неверная к концу клетка (как у `heatmap`). Цифр решения в данных нет.
+- `RangeError`: клетка хода вне 0..80, `speed ≤ 0`, отрицательные `durationMs`/`maxGapMs`.
 
 ### Контракт undo
 

@@ -33,6 +33,12 @@ export interface PlayState {
   readonly log: MoveLog;
   readonly undoStack: readonly UndoEntry[];
   readonly solved: boolean;
+  /**
+   * Лог восстановлен из `heat` записи снапшота (`sync/schema.ts › logFromHeat`), а не сыгран: нужен
+   * карточке дня, но не настоящий ход партии — не уходит в `moveLog` снапшота и не годится для Таймлапса
+   * (PD-70). Отсутствует у настоящих партий.
+   */
+  readonly logSynthetic?: true;
 }
 
 export function createPlay(puzzle: { mission: string; solution: string }): PlayState {

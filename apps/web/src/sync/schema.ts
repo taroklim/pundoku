@@ -209,8 +209,10 @@ export function dayRecordFromProgress(p: DayProgress, now: Date): DayRecord | nu
     late: p.late,
     ...base,
     heat: encodeHeat(heatmap(log, { mission: p.mission, solution: p.play.solution.join("") })),
-    moveLog: encodeMoveLog(log),
   };
+  // Синтетический лог (восстановлен из `heat`, PD-70) за настоящий не выдаём: иначе после restore он ушёл бы
+  // в снапшот как `moveLog` и вытеснил бы урезанную бюджетом запись.
+  if (p.play.logSynthetic !== true) rec.moveLog = encodeMoveLog(log);
   if (p.winRate !== null) rec.winRate = p.winRate;
   return rec;
 }
@@ -262,7 +264,8 @@ export function progressFromRecord(date: string, rec: DayRecord): DayProgress | 
   const solution = solved.map(Number);
   const mission = [...rec.mission].map(Number);
   const values = mission.map((g, i) => (g ? 0 : (solution[i] as number)));
-  const log = decodeMoveLog(rec.moveLog) ?? logFromHeat(rec, solution);
+  const decoded = decodeMoveLog(rec.moveLog);
+  const log = decoded ?? logFromHeat(rec, solution);
   const play: PlayState = {
     mission,
     solution,
@@ -271,6 +274,7 @@ export function progressFromRecord(date: string, rec: DayRecord): DayProgress | 
     log,
     undoStack: [],
     solved: true,
+    ...(decoded === null ? { logSynthetic: true as const } : {}),
   };
   return {
     date,

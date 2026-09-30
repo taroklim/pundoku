@@ -11,7 +11,8 @@
  *   `rateDifficulty`;
  * - генератор (`generator.ts`): `generate`, `dailySeed`, `dailyPuzzle`; сложность по двум осям
  *   (подсказки × техника) — `difficulty.ts`: `DIFFICULTIES`, `DIFFICULTY_PROFILES`;
- * - лог ходов и метрики карточки дня (`movelog.ts`): `heatmap`, `summary`, `solvingStyle`.
+ * - лог ходов и метрики карточки дня (`movelog.ts`): `heatmap`, `summary`, `solvingStyle`;
+ * - таймлапс и отпечаток прохождения (`timelapse.ts`): `timelapseFrames`, `timelapseFingerprint`.
  */
 export type {
   Cell,
@@ -78,3 +79,13 @@ export type { GenerateOptions } from "./generator.js";
 export { Rng } from "./prng.js";
 
 export { appendMove, createMoveLog, heatmap, solvingStyle, summary } from "./movelog.js";
+
+export { DEFAULT_MAX_GAP_MS, timelapseFingerprint, timelapseFrames } from "./timelapse.js";
+export type {
+  FingerprintCell,
+  FingerprintOptions,
+  Timelapse,
+  TimelapseFingerprint,
+  TimelapseFrame,
+  TimelapseOptions,
+} from "./timelapse.js";
