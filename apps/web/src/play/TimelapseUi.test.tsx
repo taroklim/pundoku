@@ -4,7 +4,7 @@ import { createRoot } from "react-dom/client";
 import type { Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import i18n from "../i18n";
-import { createPlay, enterDigit, type PlayState } from "./logic";
+import { createPlay, enterDigit, setInkMode, type PlayState } from "./logic";
 import { ResultCard } from "./ResultCard";
 import { TimelapseSheet } from "./TimelapseSheet";
 import { ExportSheet, fingerprintCaption } from "./ExportSheet";
@@ -23,6 +23,20 @@ function solvedPlay(): PlayState {
     if (p.mission[i]) continue;
     t += 1000;
     p = enterDigit(p, i, p.solution[i]!, t);
+  }
+  return p;
+}
+/** Чернильная партия с 2 кляксами (2-я и 10-я клетка): каждая клякса в логе — неверная цифра + авто-замена (2 кадра). */
+function inkSolvedPlay(): PlayState {
+  let p = setInkMode(createPlay({ mission: MISSION, solution: SOLUTION }), true);
+  let t = 0;
+  let k = 0;
+  for (let i = 0; i < 81; i++) {
+    if (p.mission[i]) continue;
+    t += 1000;
+    const d = p.solution[i]!;
+    p = enterDigit(p, i, k === 1 || k === 9 ? (d % 9) + 1 : d, t);
+    k++;
   }
   return p;
 }
@@ -162,6 +176,31 @@ describe("TimelapseSheet", () => {
     expect(grid.join("")).toBe(SOLUTION);
   });
 
+  it("ink-день с 2 кляксами (PD-80): «Move a of b» и ползунок считают ходы, а не кадры; шаг › проходит пару «клякса → замена» целиком", () => {
+    const play = inkSolvedPlay();
+    expect(play.solved).toBe(true);
+    act(() => root.render(<TimelapseSheet play={play} date="2026-09-30" difficulty="medium" onClose={() => {}} />));
+    click(q("tl-start"));
+    expect(q("tl-move")!.textContent).toBe(`Move 0 of ${MOVES}`);
+    const scrub = q("tl-scrub") as HTMLInputElement;
+    expect(scrub.max).toBe(String(MOVES));
+    const seen: number[] = [];
+    for (let i = 0; i < MOVES; i++) {
+      click(q("tl-next"));
+      seen.push(Number(scrub.value));
+      expect(q("tl-move")!.textContent).toBe(`Move ${i + 1} of ${MOVES}`);
+    }
+    expect(seen).toEqual(Array.from({ length: MOVES }, (_, i) => i + 1)); // монотонно, без пропусков и повторов
+    expect(document.querySelectorAll(".tl-field .cell.blot")).toHaveLength(2);
+    expect(document.querySelectorAll(".tl-field .d.err")).toHaveLength(0); // ход завершён — замена верной цифрой
+    click(q("tl-next")); // дальше последнего хода не уходит
+    expect(q("tl-move")!.textContent).toBe(`Move ${MOVES} of ${MOVES}`);
+    for (let i = MOVES; i > 0; i--) {
+      click(q("tl-prev"));
+      expect(q("tl-move")!.textContent).toBe(`Move ${i - 1} of ${MOVES}`);
+    }
+  }, 30000);
+
   it("Reduce Motion: плеер пошагово — на паузе, без скорости и повтора, с пояснением", () => {
     reduced = true;
     sheet();
@@ -191,6 +230,20 @@ describe("ExportSheet / подпись PNG", () => {
     expect(c.right).toBe("30 Sep 2026 · 8:14 · 51 moves · clean");
     expect(fingerprintCaption(t, "en", { ...base, blots: 2, clean: false }).right).toMatch(/· 2 blots$/);
     expect(fingerprintCaption(t, "en", { ...base, blots: 1, clean: false }).right).toMatch(/· 1 blot$/);
+  });
+
+  it("подпись ink-дня с 2 кляксами: ходы = число клеток (не кадров), «N moves · 2 blots»", async () => {
+    const texts: string[] = [];
+    const ctx = new Proxy({ measureText: () => ({ width: 100 }) } as Record<string, unknown>, {
+      get: (o, k) => (k === "fillText" ? (s: string) => void texts.push(s) : k in o ? o[k as string] : () => {}),
+      set: () => true,
+    });
+    vi.spyOn(HTMLCanvasElement.prototype, "getContext").mockReturnValue(ctx as never);
+    vi.spyOn(HTMLCanvasElement.prototype, "toBlob").mockImplementation((cb) => cb(new Blob([new Uint8Array([1])], { type: "image/png" })));
+    vi.stubGlobal("URL", Object.assign(URL, { createObjectURL: () => "blob:x", revokeObjectURL: () => {} }));
+    await act(async () => root.render(<ExportSheet play={inkSolvedPlay()} date="2026-09-30" onClose={() => {}} />));
+    const line = texts.find((s) => s.includes("moves"))!;
+    expect(line).toMatch(new RegExp(`· ${MOVES} moves · 2 blots$`));
   });
 
   it("шит: Share недоступен, пока PNG не готов; готовый PNG — превью 1080×1350 и передаётся в navigator.share", async () => {

@@ -7,7 +7,7 @@ import { MiniField, ReplayField } from "./ReplayField";
 import { timelapseOf } from "./timelapse";
 import { LoopIcon, NextIcon, PauseIcon, PlayIcon, PrevIcon } from "./timelapseIcons";
 import type { TimelapseSpeed } from "./timelapseModel";
-import { BUDGET_MS, LOOP_HOLD_MS, contactStages, firstBlotFrames, frameAt, playbackSchedule } from "./timelapseModel";
+import { BUDGET_MS, LOOP_HOLD_MS, contactStages, firstBlotFrames, frameAt, moveIndex, playbackSchedule } from "./timelapseModel";
 import { TimelapseSheetShell } from "./TimelapseSheetShell";
 
 const SPEEDS: readonly TimelapseSpeed[] = ["slow", "normal", "fast"];
@@ -52,10 +52,13 @@ export function TimelapseSheet({ play, date, difficulty, onClose }: TimelapseShe
   const frames = tl?.frames ?? [];
   const n = Math.max(0, frames.length - 1);
   const blots = useMemo(() => firstBlotFrames(frames), [frames]);
-  const stages = useMemo(() => contactStages(n), [n]);
+  // Счёт и скраббер — в ходах игрока, не в кадрах (PD-80): пара «клякса → замена» — один ход.
+  const moves = useMemo(() => moveIndex(frames), [frames]);
+  const stages = useMemo(() => contactStages(moves.count).map((m) => moves.frameOf[m]!), [moves]);
 
   const [mode, setMode] = useState<"contact" | "player">("contact");
   const [idx, setIdx] = useState(0);
+  const moveNow = moves.moveNo[idx] ?? 0;
   const [playing, setPlaying] = useState(false);
   const [loop, setLoop] = useState(false);
   const [speed, setSpeed] = useState<TimelapseSpeed>("normal");
@@ -134,8 +137,8 @@ export function TimelapseSheet({ play, date, difficulty, onClose }: TimelapseShe
   };
   const stepBy = (d: number) => {
     setPlaying(false);
-    const next = idxRef.current + d;
-    if (next >= 0 && next <= n) go(next, true);
+    const next = (moves.moveNo[idxRef.current] ?? 0) + d;
+    if (next >= 0 && next <= moves.count) go(moves.frameOf[next]!, true);
   };
 
   return (
@@ -163,7 +166,7 @@ export function TimelapseSheet({ play, date, difficulty, onClose }: TimelapseShe
           <ReplayField frames={frames} idx={idx} mission={play.mission} blots={blots} animate={animate} label={t("timelapse.boardLabel")} />
           <div className="tl-meta">
             <span role="status" aria-live={playing ? "off" : "polite"} data-testid="tl-move">
-              {t("timelapse.moveOf", { a: idx, b: n })}
+              {t("timelapse.moveOf", { a: moveNow, b: moves.count })}
             </span>
             <span className="mono" data-testid="tl-clock">
               {formatClock(frames[idx]!.t)} / {formatClock(tl.sourceDurationMs)}
@@ -174,14 +177,14 @@ export function TimelapseSheet({ play, date, difficulty, onClose }: TimelapseShe
               type="range"
               className="tl-scrub"
               min={0}
-              max={n}
+              max={moves.count}
               step={1}
-              value={idx}
+              value={moveNow}
               aria-label={t("timelapse.scrub")}
               data-testid="tl-scrub"
               onChange={(e) => {
                 setPlaying(false);
-                go(Number(e.target.value), false);
+                go(moves.frameOf[Number(e.target.value)] ?? 0, false);
               }}
             />
           </div>
@@ -191,13 +194,13 @@ export function TimelapseSheet({ play, date, difficulty, onClose }: TimelapseShe
                 <LoopIcon />
               </button>
             )}
-            <button type="button" className="tbtn" aria-label={t("timelapse.prev")} aria-disabled={idx <= 0} data-testid="tl-prev" onClick={() => stepBy(-1)}>
+            <button type="button" className="tbtn" aria-label={t("timelapse.prev")} aria-disabled={moveNow <= 0} data-testid="tl-prev" onClick={() => stepBy(-1)}>
               <PrevIcon />
             </button>
             <button type="button" className="tbtn big" aria-label={playing ? t("timelapse.pause") : t("timelapse.play")} data-testid="tl-play" onClick={toggle}>
               {playing ? <PauseIcon /> : <PlayIcon />}
             </button>
-            <button type="button" className="tbtn" aria-label={t("timelapse.next")} aria-disabled={idx >= n} data-testid="tl-next" onClick={() => stepBy(1)}>
+            <button type="button" className="tbtn" aria-label={t("timelapse.next")} aria-disabled={moveNow >= moves.count} data-testid="tl-next" onClick={() => stepBy(1)}>
               <NextIcon />
             </button>
             {!step && (

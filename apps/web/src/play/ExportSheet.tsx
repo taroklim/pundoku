@@ -8,7 +8,7 @@ import { formatClock } from "./format";
 import { ShareIcon } from "./icons";
 import type { PlayState } from "./logic";
 import { timelapseOf } from "./timelapse";
-import { blotCount } from "./timelapseModel";
+import { blotCount, moveIndex } from "./timelapseModel";
 import { TimelapseSheetShell } from "./TimelapseSheetShell";
 
 /** «30 Sep 2026 · 8:14 · 51 moves · clean» — подпись под сеткой PNG (owner: `clean` либо `N blots`; правки без кляксы — `N corrections`). */
@@ -58,7 +58,7 @@ export function ExportSheet({ play, date, onClose }: ExportSheetProps) {
       fingerprintCaption(t, locale, {
         date,
         durationMs: data.sum.durationMs,
-        moves: Math.max(0, (data.tl?.frames.length ?? 1) - 1),
+        moves: data.tl ? moveIndex(data.tl.frames).count : 0,
         blots: data.tl ? blotCount(data.tl.frames) : 0,
         corrections: data.sum.corrections,
         clean: data.sum.clean,

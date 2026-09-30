@@ -44,7 +44,7 @@ export function ReplayField({ frames, idx, mission, blots, animate, label }: Rep
               const fresh = animate && idx > 0 && i === last;
               return (
                 <div className={`cell${blotted ? " blot" : ""}`} key={i} data-i={i}>
-                  {blotted && <i className={`stain${fresh && blots.get(i) === idx ? " anim" : ""}`} aria-hidden="true" />}
+                  {blotted && <i className={`stain${fresh && idx - (blots.get(i) ?? -Infinity) <= 1 && (blots.get(i) ?? Infinity) <= idx ? " anim" : ""}`} aria-hidden="true" />}
                   {v ? (
                     <span
                       key={fresh ? `n${idx}` : "s"}
