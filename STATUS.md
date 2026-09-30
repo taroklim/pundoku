@@ -290,9 +290,9 @@ Gates: build → typecheck, lint, тесты web/engine/api (api с TEST_DATABAS
 | PD-69 | Релиз 1.1, дизайн: HTML-макеты (`design/pd69-*`, скилл apple-design, chromium+webkit): Чернильный режим (вход + явное правило, игровое состояние, клякса, итог/карточка дня, Year) и Таймлапс (просмотр в приложении, экспорт PNG отпечатка); варианты + вопросы владельцу; НЕ реализация | designer | P1 | completed (макет, 139 кадров; ждёт владельца) | — |
 | PD-70 | Релиз 1.1, таймлапс: данные и воспроизведение без UI — хватает ли MoveLog/`moveLog` снапшота (бюджет обрезает старые дни), чистая функция кадров `replay` в engine, совместимость схемы снапшота без ломающей миграции; ветка `pd-70`, док `docs/pd-70-timelapse-data.md` | developer | P1 | completed (смержен в main eeb46de, QA PD-72 PASS) | — |
 | PD-71 | Релиз 1.1, чернильный режим: правила в engine/store без UI (что ошибка/клякса, блокировка undo/erase, флаг `ink` в записи дня, влияние на Year/карточку/winRate); док `docs/pd-71-ink-rules.md`, спорное помечено для владельца; ветка `pd-71` | developer | P1 | completed (pd-71 @ 4d27518, не смержен; ребейз на main после мержа pd-70) | — |
-| PD-77 | Ребейз `pd-71` на main (после мержа pd-70) + тест таймлапса на ink-логе `2:` + 2 Low из QA PD-72: `hasTimelapse`/`timelapseOf` не бросают на повреждённом логе (клетка 99/null) → false/null; тест на усечённый лог (мутация M13); Info: `note_add` с нечисловой цифрой — бит 0 в маске; ветка `pd-71` | developer | P1 | in_progress | PD-71, PD-72 |
+| PD-77 | Ребейз `pd-71` на main (после мержа pd-70) + тест таймлапса на ink-логе `2:` + 2 Low из QA PD-72: `hasTimelapse`/`timelapseOf` не бросают на повреждённом логе (клетка 99/null) → false/null; тест на усечённый лог (мутация M13); Info: `note_add` с нечисловой цифрой — бит 0 в маске; ветка `pd-71` | developer | P1 | completed (pd-71 @ 03211cc) | PD-71, PD-72 |
 | PD-72 | QA PD-70 (Playwright/node + реальная сборка, мутации) | qa-tester | P1 | completed | PD-70 |
-| PD-73 | QA PD-71 | qa-tester | P1 | pending | PD-71 |
+| PD-73 | QA PD-71 | qa-tester | P1 | in_progress | PD-71 |
 | PD-74 | UI чернильного режима по утверждённому макету (вход с правилом, кляксы, без undo/erase, ink-флаг в карточке/Year) | developer | P1 | pending | PD-69 + утверждение владельца, PD-71 |
 | PD-75 | UI таймлапса (просмотр на карточке дня, экспорт PNG отпечатка) по утверждённому макету | developer | P1 | pending | PD-69 + утверждение владельца, PD-70 |
 | PD-76 | QA PD-74/PD-75: живой Playwright chromium+webkit, реальная сборка, apple-design как ревьюер | qa-tester | P1 | pending | PD-74, PD-75 |
@@ -364,4 +364,4 @@ Gates: build → typecheck, lint, тесты web/engine/api (api с `TEST_DATABA
 | Имя | Роль | Статус | Тикет | Обновлено |
 |-----|------|--------|-------|-----------|
 | pm-pundoku-6 | product-manager | working | PD-69/70/71 (релиз 1.1 запуск) | 2026-09-30 |
-| dev-pd77 | developer | working | PD-77 | 2026-09-30 |
+| qa-pd73 | qa-tester | working | PD-73 | 2026-09-30 |
