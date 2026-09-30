@@ -1,0 +1,1230 @@
+<!DOCTYPE html>
+<html lang="en"
+      data-screen="settings" data-present="push" data-key="none" data-keyfmt="base32"
+      data-lang="en" data-type="default" data-kb="down" data-busy="off"
+      data-motion="system" data-safearea="sim" data-mock="closed">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>Pundoku — Settings + Recovery key (PD-48 / PD-27)</title>
+<!--
+  PD-48 — the Settings screen and the "recovery key" block: no e-mail, no account, no password.
+  DESIGN ONLY: nothing here is wired into apps/.
+
+  Visual language inherited verbatim from the approved board mockup pd7-board-variants.html
+  (variant B "Boxes") and pd24-year-variants.html: the same tokens, ink #3B48B0 / #8C96FF,
+  wax #B3261E / #FF6B5E, grouped background #F2F2F7 / #000 with elevated surfaces #FFFFFF / #1C1C1E,
+  the same glass tab bar with its three fallbacks, CSS generics only (system-ui / ui-serif /
+  ui-monospace), nothing embedded.
+
+  TWO new tokens, both additive:
+    --label-2-grouped  #6A6A6E light. --label-2 #6E6E73 measures 5.1:1 on the WHITE card but only
+      4.37:1 on the #F2F2F7 grouped background, and section headers / footers are 13 px text living
+      exactly there — under the 4.5:1 floor. #6A6A6E on #F2F2F7 = 4.64:1. This RAISES contrast.
+      Dark needs no change: the grouped background is #000 there, #98989D on #000 = 7.31:1.
+    --chip-bg  the recess the key groups sit in: #F2F2F7 inside a white card (label 14.5:1),
+      #2C2C2E inside a #1C1C1E card (label 13.9:1).
+
+  FRAMES (mockup controls at the bottom, or window.PD27 from design/pd27-shots.mjs):
+    Screen        Today (the gear in the toolbar) · Settings
+    Key state     1 no key · 2 key shown once · 3 key exists · 4 enter a key ·
+                  5 checking · 6 restored · 7 wrong key · 8 attempt limit · 9 offline
+    Key format    base32 groups (recommended) · 12 words
+    Language      en · uk · ru        Text size  17 / 23 (xxxL) / 40 px (AX3)
+    Keyboard      down · up (~336 pt)
+    Action sheets replace key · unlink this device · delete key
+    Presentation  push ‹ Today (recommended) · sheet + Done
+
+  Everything below the "MOCKUP CONTROLS" banner is review chrome and is not part of the product.
+-->
+<style>
+/* ==================================================================
+   1. TOKENS
+   ================================================================== */
+:root{
+  --font-sans: system-ui, -apple-system, "SF Pro Text", "Helvetica Neue", Arial, sans-serif;
+  --font-serif: ui-serif, "New York", Charter, Georgia, serif;
+  --font-mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+
+  --sa-top: env(safe-area-inset-top, 0px);
+  --sa-bot: env(safe-area-inset-bottom, 0px);
+  --sa-l:   env(safe-area-inset-left, 0px);
+  --sa-r:   env(safe-area-inset-right, 0px);
+
+  /* surfaces */
+  --bg:     #F2F2F7;   /* systemGroupedBackground */
+  --elev:   #FFFFFF;   /* secondarySystemGroupedBackground — the inset cards */
+  --chip-bg:#F2F2F7;   /* the recess the key groups sit in */
+
+  /* content */
+  --label:   #1C1C1E;         /* 17.0:1 on #FFFFFF · 14.5:1 on #F2F2F7 */
+  --label-2: #6E6E73;         /* 5.1:1 on #FFFFFF  — values inside a card */
+  --label-2-grouped:#6A6A6E;  /* 4.64:1 on #F2F2F7 — section headers + footers */
+
+  --ink:    #3B48B0;   /* 7.66:1 on #FFFFFF · 6.60:1 on #F2F2F7 */
+  --on-ink: #FFFFFF;   /* 7.66:1 on #3B48B0 */
+  --wax:    #B3261E;   /* 6.50:1 on #FFFFFF — warnings, errors, the destructive actions */
+
+  /* disabled primary: #5F5F63 on #E5E5EA = 5.06:1 (a dimmed control still has to read) */
+  --dis-fill:  #E5E5EA;
+  --dis-label: #5F5F63;
+
+  --hairline: rgba(60,60,67,.29);   /* separators — alignment aid, not meaning */
+  --ink-tint: rgba(59,72,176,.12);
+  --wax-tint: rgba(179,38,30,.10);
+  --box-shadow: 0 1px 2px rgba(0,0,0,.04);
+
+  --glass-fill: rgba(255,255,255,.72);
+  --glass-solid:#F6F6F9;
+  --scrim: rgba(0,0,0,.28);
+
+  --kb-fill:#D1D3D9;  --kb-lab:#4A4A4E;   /* review chrome: stand-in for the system keyboard */
+  --page-bg:#8A8A8E;                      /* desktop only: the surface the phone sits on */
+}
+
+/* Dark. dark-mode.md > Mobile: base #000000, elevated #1C1C1E for raised surfaces. */
+@media (prefers-color-scheme: dark){
+  :root:not(.force-light){
+    --bg:#000000; --elev:#1C1C1E; --chip-bg:#2C2C2E;
+    --label:#FFFFFF; --label-2:#98989D; --label-2-grouped:#98989D;   /* 7.31:1 on #000 */
+    --ink:#8C96FF; --on-ink:#000000; --wax:#FF6B5E;                  /* 6.42:1 / 6.10:1 on #1C1C1E */
+    --dis-fill:#2C2C2E; --dis-label:#98989D;                         /* 4.85:1 */
+    --hairline:rgba(235,235,245,.22);
+    --ink-tint:rgba(140,150,255,.18); --wax-tint:rgba(255,107,94,.16);
+    --box-shadow:none;
+    --glass-fill:rgba(28,28,30,.72); --glass-solid:#141416;
+    --scrim:rgba(0,0,0,.5);
+    --kb-fill:#26262A; --kb-lab:#B0B0B6;
+    --page-bg:#2C2C2E;
+  }
+}
+.force-dark{
+  --bg:#000000; --elev:#1C1C1E; --chip-bg:#2C2C2E;
+  --label:#FFFFFF; --label-2:#98989D; --label-2-grouped:#98989D;
+  --ink:#8C96FF; --on-ink:#000000; --wax:#FF6B5E;
+  --dis-fill:#2C2C2E; --dis-label:#98989D;
+  --hairline:rgba(235,235,245,.22);
+  --ink-tint:rgba(140,150,255,.18); --wax-tint:rgba(255,107,94,.16);
+  --box-shadow:none;
+  --glass-fill:rgba(28,28,30,.72); --glass-solid:#141416;
+  --scrim:rgba(0,0,0,.5);
+  --kb-fill:#26262A; --kb-lab:#B0B0B6;
+  --page-bg:#2C2C2E;
+}
+
+/* Increased contrast. color.md > Best practices. */
+@media (prefers-contrast: more){
+  :root{
+    --label-2:#3C3C43; --label-2-grouped:#3C3C43; --dis-label:#3C3C43;
+    --hairline:rgba(60,60,67,.55); --box-shadow:none;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not(.force-light){
+      --label-2:#EBEBF5; --label-2-grouped:#EBEBF5; --dis-label:#EBEBF5;
+      --hairline:rgba(235,235,245,.45);
+    }
+  }
+  :root.force-dark{
+    --label-2:#EBEBF5; --label-2-grouped:#EBEBF5; --dis-label:#EBEBF5;
+    --hairline:rgba(235,235,245,.45);
+  }
+}
+
+/* Safe-area simulation for the review frame / screenshots (iPhone 16: 59 / 34 pt). */
+:root[data-safearea="sim"]{
+  --sa-top: max(env(safe-area-inset-top, 0px), 59px);
+  --sa-bot: max(env(safe-area-inset-bottom, 0px), 34px);
+}
+
+/* ==================================================================
+   2. FRAME + BASE
+   ================================================================== */
+*{ box-sizing:border-box; }
+html{
+  font: -apple-system-body;              /* Dynamic Type: 1rem follows the user's text size on iOS */
+  font-family: var(--font-sans);
+  line-height:1.3;
+  -webkit-text-size-adjust:100%;
+}
+/* Review-only Dynamic Type simulation. On iOS the line above does this for real; these exist so
+   the same stress test shows up in Chromium / WebKit screenshots. */
+:root[data-type="xxxl"]{ font-size:23px; }   /* largest non-accessibility size */
+:root[data-type="ax3"] { font-size:40px; }   /* Accessibility Extra Large 3 */
+
+body{
+  margin:0; background:var(--bg); color:var(--label);
+  font-family:var(--font-sans);
+  touch-action:manipulation; overscroll-behavior:none;
+  -webkit-tap-highlight-color:transparent;
+}
+button{ font:inherit; color:inherit; background:none; border:0; padding:0; cursor:pointer; touch-action:manipulation; -webkit-appearance:none; appearance:none; text-align:left; }
+input, textarea{ font:inherit; color:inherit; background:none; border:0; -webkit-appearance:none; appearance:none; }
+:focus-visible{ outline:2px solid var(--ink); outline-offset:2px; border-radius:6px; }
+
+.frame{
+  position:relative; width:100%; height:100dvh;
+  display:flex; flex-direction:column; background:var(--bg); overflow:hidden;
+}
+@media (min-width:440px){
+  body{ background:var(--page-bg); display:flex; align-items:center; justify-content:center; min-height:100vh; padding:24px 0 440px; }
+  .frame{ width:390px; height:844px; border-radius:46px; box-shadow:0 20px 60px rgba(0,0,0,.35); }
+}
+
+/* ==================================================================
+   3. TODAY — present only to show where Settings is entered from.
+   The gear is a TOOLBAR action on Today, not a fourth tab
+   (tab-bars.md > Best practices: "Use a tab bar to support navigation,
+   not to provide actions"), and settings.md > General settings asks for
+   "general, infrequently changed settings" — which is exactly what a
+   top-trailing target is right for.
+   ================================================================== */
+.today{ position:absolute; inset:0; display:flex; flex-direction:column; background:var(--bg); }
+.toolbar{
+  display:flex; align-items:flex-end; justify-content:space-between; gap:12px;
+  padding: calc(var(--sa-top) + 8px) max(16px, var(--sa-r)) 0 max(16px, var(--sa-l));
+}
+.title{ font-size:1.62rem; font-weight:700; letter-spacing:-.02em; margin:0; min-width:0; overflow-wrap:anywhere; }
+.icon-btn{
+  width:44px; height:44px; margin:-8px -10px -8px 0; flex:none;
+  display:grid; place-items:center; color:var(--label-2); border-radius:22px;
+}
+.icon-btn:active{ background:var(--ink-tint); color:var(--ink); }
+.icon-btn svg{ width:24px; height:24px; }
+.daybar{ margin:2px 0 0; padding:0 max(16px, var(--sa-r)) 0 max(16px, var(--sa-l)); color:var(--label-2); font-size:.88rem; }
+
+.board-wrap{ padding:12px 16px 0; container-type:inline-size; }
+.board{ display:grid; grid-template-columns:repeat(3,1fr); gap:4px; }
+.box{ position:relative; display:grid; grid-template-columns:repeat(3,1fr); border-radius:10px; overflow:hidden; background:var(--elev); box-shadow:var(--box-shadow); }
+.cell{ position:relative; aspect-ratio:1; min-width:0; display:grid; place-items:center; }
+.cell .d{ line-height:1; font-size:6.5cqi; }
+.cell .d.given { font-family:var(--font-serif); font-weight:600; color:var(--label); }
+.cell .d.player{ font-family:var(--font-sans);  font-weight:500; color:var(--ink); }
+.rules{ position:absolute; inset:0; width:100%; height:100%; pointer-events:none; }
+.rules .thin{ stroke:var(--hairline); stroke-width:.5px; opacity:.5; vector-effect:non-scaling-stroke; }
+
+/* ==================================================================
+   4. SETTINGS — grouped inset list.
+   lists-and-tables.md > Style: "the grouped style uses headers, footers,
+   and additional space to separate groups of data."
+   ================================================================== */
+.settings{ position:absolute; inset:0; z-index:35; display:flex; flex-direction:column; background:var(--bg); }
+:root[data-present="push"]  .sheet-chrome{ display:none; }
+:root[data-present="sheet"] .push-chrome{ display:none; }
+:root[data-present="sheet"] .settings{
+  top:calc(var(--sa-top) + 10px); border-radius:14px 14px 0 0; z-index:40;
+  box-shadow:0 -8px 30px rgba(0,0,0,.18);
+}
+
+.navbar{
+  display:flex; align-items:center; gap:8px; min-height:44px;
+  padding: calc(var(--sa-top) + 6px) max(8px, var(--sa-r)) 2px max(8px, var(--sa-l));
+}
+:root[data-present="sheet"] .navbar{ padding-top:2px; }
+.back, .done{
+  min-height:44px; display:inline-flex; align-items:center; gap:2px;
+  color:var(--ink); font-size:1rem; border-radius:10px; padding:0 8px; flex-wrap:wrap;
+}
+.back svg{ width:19px; height:19px; flex:none; }
+.done{ margin-left:auto; font-weight:600; }
+.grabber{ width:36px; height:5px; border-radius:3px; background:var(--hairline); margin:6px auto 0; flex:none; }
+
+.slarge{
+  font-size:1.62rem; font-weight:700; letter-spacing:-.02em; margin:0 0 4px;
+  padding:0 max(16px, var(--sa-r)) 0 max(16px, var(--sa-l)); overflow-wrap:anywhere;
+}
+.scroll{
+  flex:1; min-height:0; overflow-y:auto; -webkit-overflow-scrolling:touch;
+  padding-bottom:calc(76px + var(--sa-bot));
+}
+:root[data-kb="up"] .scroll{ padding-bottom:24px; }
+
+.sec{ margin-top:22px; }
+.sec:first-of-type{ margin-top:14px; }
+.sec-head{
+  margin:0 0 6px; padding:0 max(16px, var(--sa-r)) 0 max(16px, var(--sa-l));
+  font-size:.82rem; font-weight:400; color:var(--label-2-grouped); overflow-wrap:anywhere;
+}
+.sec-foot{
+  margin:7px 0 0; padding:0 max(16px, var(--sa-r)) 0 max(16px, var(--sa-l));
+  font-size:.82rem; line-height:1.35; color:var(--label-2-grouped); overflow-wrap:anywhere;
+}
+.sec-foot + .card{ margin-top:22px; }
+.card{
+  margin:0 max(16px, var(--sa-r)) 0 max(16px, var(--sa-l));
+  background:var(--elev); border-radius:12px; box-shadow:var(--box-shadow); overflow:hidden;
+}
+
+/* A row: 44 pt floor (accessibility.md > Mobility), wraps instead of truncating at large
+   text sizes (typography.md > Supporting Dynamic Type). */
+.row{
+  position:relative; width:100%; min-height:44px;
+  display:flex; align-items:center; gap:10px; flex-wrap:wrap;
+  padding:11px 16px; font-size:1rem; color:var(--label);
+}
+.row + .row::before, .row + .rowbtn::before, .rowbtn + .rowbtn::before, .rowbtn + .row::before,
+.pad + .rowbtn::before{
+  content:""; position:absolute; left:16px; right:0; top:0; height:1px;
+  background:var(--hairline); transform:scaleY(.5); transform-origin:top;
+}
+.row .lab{ min-width:0; overflow-wrap:anywhere; }
+.row .val{ margin-left:auto; color:var(--label-2); overflow-wrap:anywhere; text-align:right; font-variant-numeric:tabular-nums; }
+.row .ck{ margin-left:auto; color:var(--ink); flex:none; display:grid; place-items:center; }
+.row .ck svg{ width:20px; height:20px; }
+.row[aria-checked="false"] .ck{ visibility:hidden; }
+button.row:active{ background:var(--ink-tint); }
+
+/* Free-form block inside a card (the key display, the key field). */
+.pad{ position:relative; padding:12px 16px 14px; }
+.cap{ display:block; font-size:.82rem; color:var(--label-2); margin:0 0 8px; overflow-wrap:anywhere; }
+.hint{ margin:8px 0 0; font-size:.78rem; line-height:1.35; color:var(--label-2); overflow-wrap:anywhere; }
+
+/* ---- THE KEY, shown once -------------------------------------------------
+   The signature element of this screen: the key is broken into groups that sit
+   in their own recesses, the way the board breaks 81 cells into nine boxes —
+   structure from space, the language pd7 variant B already established. Groups
+   are what make a key transcribable by hand; the grid reflows at any text size,
+   so nothing is ever clipped. */
+.keybox{
+  display:grid; grid-template-columns:repeat(auto-fit, minmax(4.4em, 1fr)); gap:6px;
+}
+.chip{
+  background:var(--chip-bg); border-radius:8px; padding:9px 4px;
+  font-family:var(--font-mono); font-size:max(18px, 1.06rem); font-weight:600;
+  letter-spacing:.06em; text-align:center; color:var(--label);
+  overflow-wrap:anywhere;
+}
+/* 12 words: numbered, because the order is part of the key
+   (Lens 3 "does structure encode information?" — here it genuinely does). */
+.words{ display:grid; grid-template-columns:repeat(auto-fit, minmax(8.5em, 1fr)); gap:6px; }
+.word{
+  background:var(--chip-bg); border-radius:8px; padding:8px 10px;
+  display:flex; align-items:baseline; gap:8px; overflow-wrap:anywhere;
+}
+.word i{ font-style:normal; font-variant-numeric:tabular-nums; color:var(--label-2); font-size:.78rem; flex:none; min-width:1.4em; text-align:right; }
+.word b{ font-weight:600; font-size:max(16px, .98rem); }
+
+/* The one wax block on the screen: the "you cannot get this back" warning.
+   It is a plain paragraph with an icon, not an alert — alerts.md > Best practices:
+   "Avoid using an alert merely to provide information." */
+.warn{
+  display:flex; gap:8px; align-items:flex-start;
+  margin:0; padding:12px 16px 14px; color:var(--wax);
+  font-size:.86rem; line-height:1.4; overflow-wrap:anywhere;
+}
+.warn svg{ width:1.15em; height:1.15em; flex:none; margin-top:.1em; }
+
+/* Key entry. A textarea, so a pasted key with line breaks survives, and so 12 words fit. */
+.ta{
+  display:block; width:100%; resize:none; line-height:1.45;
+  /* >= 16 px or iOS zooms the page on focus (03-tech.md). 1rem carries Dynamic Type above that. */
+  font-size:max(17px, 1rem); color:var(--label);
+  background:var(--chip-bg); border-radius:8px; padding:10px 12px;
+}
+.ta.mono{ font-family:var(--font-mono); letter-spacing:.04em; font-weight:600; }
+.ta::placeholder{ color:var(--label-2); opacity:1; font-weight:400; letter-spacing:normal; }
+/* Wrong key: the same wax ring the board puts on a wrong digit. Never colour alone —
+   the ring is doubled by the message and its icon below. */
+.pad.bad .ta{ box-shadow:0 0 0 2px var(--wax); }
+
+.err{
+  display:flex; gap:6px; align-items:flex-start;
+  margin:0; padding:0 16px 12px; color:var(--wax); font-size:.82rem; line-height:1.35;
+  overflow-wrap:anywhere;
+}
+.err svg{ width:1.05em; height:1.05em; flex:none; margin-top:.12em; }
+/* Success is feedback in the interface, not a dialog (feedback.md). */
+.okline{
+  display:flex; gap:6px; align-items:flex-start;
+  margin:0 0 8px; padding:0 max(16px, var(--sa-r)) 0 max(16px, var(--sa-l));
+  color:var(--ink); font-size:.86rem; font-weight:600; line-height:1.35; overflow-wrap:anywhere;
+}
+.okline svg{ width:1.15em; height:1.15em; flex:none; margin-top:.1em; }
+
+/* Primary action: filled ink, full width, BELOW the card and low on the screen —
+   the same component as the Share button on the Today card.
+   layout.md: important controls sit within thumb reach. */
+.primary{
+  display:flex; align-items:center; justify-content:center; gap:8px; text-align:center;
+  margin:12px max(16px, var(--sa-r)) 0 max(16px, var(--sa-l));
+  min-height:50px; padding:10px 16px; border-radius:12px;
+  background:var(--ink); color:var(--on-ink);
+  font-size:max(17px, 1rem); font-weight:600; overflow-wrap:anywhere;
+}
+.primary:active{ opacity:.8; }
+.primary[aria-disabled="true"]{ background:var(--dis-fill); color:var(--dis-label); }
+.secondary{
+  display:flex; align-items:center; justify-content:center; text-align:center;
+  margin:4px max(16px, var(--sa-r)) 0 max(16px, var(--sa-l));
+  min-height:44px; padding:8px 16px; border-radius:12px;
+  color:var(--ink); font-size:max(17px, 1rem); overflow-wrap:anywhere;
+}
+.secondary:active{ background:var(--ink-tint); }
+.spin{
+  width:1em; height:1em; flex:none; border-radius:50%;
+  border:2px solid currentColor; border-top-color:transparent;
+  animation:spin .8s linear infinite;
+}
+@keyframes spin{ to{ transform:rotate(360deg) } }
+
+/* Row-shaped buttons inside a card (iOS "Sign Out" shape). */
+.rowbtn{
+  position:relative; width:100%; min-height:44px;
+  display:flex; align-items:center; justify-content:center; gap:8px;
+  padding:11px 16px; font-size:1rem; color:var(--ink); text-align:center; overflow-wrap:anywhere;
+}
+.rowbtn svg{ width:1.1em; height:1.1em; flex:none; }
+.rowbtn:active{ background:var(--ink-tint); }
+.rowbtn[aria-disabled="true"]{ color:var(--label-2); }
+.rowbtn.destructive{ color:var(--wax); }
+.rowbtn.destructive:active{ background:var(--wax-tint); }
+
+/* ==================================================================
+   5. ACTION SHEETS — the confirmation for all three account actions.
+   action-sheets.md > Best practices: "Make destructive choices visually
+   prominent ... place these buttons at the top", "provide a Cancel
+   button ... at the bottom of the action sheet".
+   ================================================================== */
+.scrim{
+  position:absolute; inset:0; z-index:50; background:var(--scrim);
+  opacity:0; pointer-events:none; transition:opacity .22s linear;
+}
+:root[data-sheet] .scrim{ opacity:1; pointer-events:auto; }
+.asheet{
+  position:absolute; left:0; right:0; bottom:0; z-index:55;
+  padding:0 8px calc(8px + var(--sa-bot));
+  transform:translateY(110%); transition:transform .3s cubic-bezier(.22,1,.36,1);
+  max-height:92%; overflow-y:auto;
+}
+:root[data-sheet] .asheet{ transform:none; }
+.asheet .grp{ background:var(--elev); border-radius:14px; overflow:hidden; margin-top:8px; box-shadow:var(--box-shadow); }
+.asheet .head{ padding:15px 16px; text-align:center; border-bottom:1px solid var(--hairline); }
+.asheet .head h3{ margin:0; font-size:.88rem; font-weight:600; color:var(--label); overflow-wrap:anywhere; }
+.asheet .head p{ margin:5px 0 0; font-size:.82rem; line-height:1.35; color:var(--label-2); overflow-wrap:anywhere; }
+.asheet button{
+  width:100%; min-height:57px; padding:14px 16px;
+  display:flex; align-items:center; justify-content:center; text-align:center;
+  font-size:max(17px, 1rem); color:var(--ink); overflow-wrap:anywhere;
+}
+.asheet button:active{ background:var(--ink-tint); }
+.asheet button.destructive{ color:var(--wax); font-weight:600; }
+.asheet button.destructive:active{ background:var(--wax-tint); }
+.asheet button.cancel{ font-weight:600; }
+.asheet .pane{ display:none; }
+:root[data-sheet="reissue"] .pane.reissue,
+:root[data-sheet="unlink"]  .pane.unlink,
+:root[data-sheet="delete"]  .pane.delete{ display:block; }
+
+/* ==================================================================
+   6. TAB BAR — untouched: three tabs, the only glass, three fallbacks.
+   Settings is a push inside the Today tab, so the tab bar stays.
+   ================================================================== */
+.tabbar{
+  position:absolute; left:0; right:0; bottom:0; z-index:20;
+  display:grid; grid-template-columns:repeat(3,1fr); gap:2px;
+  padding:6px max(10px, var(--sa-r)) calc(6px + var(--sa-bot)) max(10px, var(--sa-l));
+  background:var(--glass-fill);
+  -webkit-backdrop-filter:blur(24px) saturate(1.4);
+          backdrop-filter:blur(24px) saturate(1.4);
+  border-top:1px solid var(--hairline);
+}
+.tab{
+  min-height:50px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px;
+  color:var(--label-2); border-radius:14px; padding:4px 2px;
+  transition: background-color .12s linear, color .12s linear;
+}
+.tab svg{ width:26px; height:26px; flex:none; }
+/* Tab titles are capped: typography.md > Prioritize important content. 11 px is the floor. */
+.tab .lab{ font-size:clamp(11px, .65rem, 13px); letter-spacing:.01em; }
+.tab[aria-selected="true"]{ color:var(--ink); background:var(--ink-tint); }
+.tab[aria-selected="true"] .lab{ font-weight:600; }
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))){
+  .tabbar{ background:var(--glass-solid); }
+}
+@media (prefers-reduced-transparency: reduce){
+  .tabbar{ background:var(--glass-solid); -webkit-backdrop-filter:none !important; backdrop-filter:none !important; }
+}
+@media (prefers-contrast: more){
+  .tabbar{ background:var(--glass-solid); -webkit-backdrop-filter:none !important; backdrop-filter:none !important; border-top:1px solid var(--label-2); }
+}
+/* The virtual keyboard takes the bottom of the visual viewport with it. */
+:root[data-kb="up"] .tabbar{ display:none; }
+
+/* Stand-in for the system keyboard (review chrome, not a design element). The height is
+   APPROXIMATE for iPhone 16 portrait and has to be verified on device. */
+.kb{
+  position:absolute; left:0; right:0; bottom:0; z-index:45;
+  display:none; align-items:flex-start; justify-content:center;
+  background:var(--kb-fill); color:var(--kb-lab);
+  border-top:1px dashed rgba(0,0,0,.25);
+  font-size:11px; letter-spacing:.08em; text-transform:uppercase; padding-top:8px;
+}
+:root[data-kb="up"] .kb{ display:flex; height:336px; }
+
+/* ==================================================================
+   7. FORCED COLORS — the fallback, not a design. Meaning carried by ink
+   or wax has to survive when the OS replaces both.
+   ================================================================== */
+@media (forced-colors: active){
+  .card, .asheet .grp{ border:1px solid CanvasText; }
+  .row + .row::before, .row + .rowbtn::before, .rowbtn + .rowbtn::before,
+  .rowbtn + .row::before, .pad + .rowbtn::before{ background:CanvasText; }
+  .primary{ border:1px solid ButtonText; }
+  .primary[aria-disabled="true"]{ border-style:dashed; }
+  .chip, .word, .ta{ border:1px solid CanvasText; }
+  .pad.bad .ta{ box-shadow:none; outline:2px solid CanvasText; }
+  .tabbar{ background:Canvas; border-top:1px solid CanvasText; -webkit-backdrop-filter:none !important; backdrop-filter:none !important; }
+  .scrim{ background:Canvas; }
+  .settings{ border:1px solid CanvasText; }
+  /* The warning, the errors and the destructive rows keep their icons and their WORDS, so
+     none of them depends on wax (accessibility.md > "Don't convey information using color
+     alone"). */
+}
+
+/* ==================================================================
+   8. MOTION — one movement on this screen: the action sheet.
+   motion.md > Make motion optional, Let people cancel motion.
+   ================================================================== */
+@media (prefers-reduced-motion: reduce){
+  :root:not([data-motion="full"]) .asheet{ transition:opacity .16s linear !important; transform:none !important; opacity:0; }
+  :root:not([data-motion="full"])[data-sheet] .asheet{ opacity:1; }
+  :root:not([data-motion="full"]) .spin{ animation-duration:2.4s; }
+}
+:root[data-motion="reduced"] .asheet{ transition:opacity .16s linear !important; transform:none !important; opacity:0; }
+:root[data-motion="reduced"][data-sheet] .asheet{ opacity:1; }
+:root[data-motion="off"] *, :root[data-motion="off"] *::before, :root[data-motion="off"] *::after{
+  animation:none !important; transition:none !important;
+}
+:root[data-motion="off"] .asheet{ transform:translateY(110%); opacity:0; visibility:hidden; }
+:root[data-motion="off"][data-sheet] .asheet{ transform:none; opacity:1; visibility:visible; }
+
+/* ==================================================================
+   9. SCREEN SWITCHING
+   ================================================================== */
+:root[data-screen="today"] .settings, :root[data-screen="today"] .kb{ display:none !important; }
+:root[data-screen="settings"][data-present="push"] .today{ visibility:hidden; }
+
+/* ==================================================================
+   10. MOCKUP CONTROLS — review chrome, deliberately outside the design
+        language: fixed dark slate in both appearances, dashed edges.
+   ================================================================== */
+.mock-pill{
+  height:30px; padding:0 12px; border-radius:15px;
+  background:#26262B; color:#D6D6DC; border:1px dashed #6E6E78;
+  font-size:10px; letter-spacing:.09em; text-transform:uppercase;
+  display:inline-flex; align-items:center; gap:6px;
+}
+:root[data-mock="open"] .mock-pill{ display:none; }
+.pill-slot{ display:flex; justify-content:center; padding:16px; }
+.inline-note{
+  margin:10px 16px 0; padding:8px 10px; border:1px dashed #6E6E78; border-radius:8px;
+  color:var(--label-2); font-size:10.5px; line-height:1.4;
+}
+.mock{
+  position:fixed; left:0; right:0; bottom:0; z-index:90;
+  background:#26262B; color:#D6D6DC; border-top:2px dashed #6E6E78;
+  padding:8px 12px calc(8px + var(--sa-bot));
+  font-size:11px; display:none; max-height:64vh; overflow-y:auto;
+  font-family: var(--font-mono);
+}
+:root[data-mock="open"] .mock{ display:block; }
+.mock .hdr{ display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; letter-spacing:.08em; text-transform:uppercase; color:#9A9AA4; }
+.mock .grp2{ display:flex; align-items:center; gap:8px; margin:5px 0; flex-wrap:wrap; }
+.mock .grp2 > b{ font-weight:600; width:86px; flex:none; letter-spacing:.02em; color:#9A9AA4; }
+.mock .seg{ display:flex; flex-wrap:wrap; border:1px solid #6E6E78; border-radius:6px; overflow:hidden; }
+.mock .seg button{ padding:5px 9px; font:inherit; font-size:11px; color:#D6D6DC; background:transparent; text-align:center; }
+.mock .seg button + button{ border-left:1px solid #6E6E78; }
+.mock .seg button[aria-pressed="true"]{ background:#E6E6EA; color:#1B1B1F; font-weight:700; }
+.mock .go{ padding:6px 12px; border:1px solid #D6D6DC; border-radius:6px; font:inherit; font-size:11px; color:#1B1B1F; background:#D6D6DC; font-weight:700; }
+.mock .close{ font:inherit; font-size:11px; color:#D6D6DC; text-decoration:underline; background:none; }
+.mock .note{ color:#9A9AA4; margin:8px 0 0; line-height:1.5; font-family:var(--font-sans); font-size:10.5px; }
+@media (min-width:440px){ .mock{ max-height:none; } }
+</style>
+</head>
+<body>
+
+<div class="frame" id="frame">
+
+  <!-- ==================== TODAY (only to show the gear) ==================== -->
+  <div class="today">
+    <header class="toolbar">
+      <h1 class="title" data-t="today">Today</h1>
+      <button class="icon-btn" id="gear" data-t-aria="gear" aria-label="Settings">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+          <circle cx="12" cy="12" r="3.4"/>
+          <path d="M12 2.9v2.4M12 18.7v2.4M21.1 12h-2.4M5.3 12H2.9M18.4 5.6l-1.7 1.7M7.3 16.7l-1.7 1.7M18.4 18.4l-1.7-1.7M7.3 7.3 5.6 5.6"/>
+        </svg>
+      </button>
+    </header>
+    <p class="daybar" data-t="dayline">Wed 30 Sep · Medium</p>
+    <div class="board-wrap"><div class="board" id="board" role="img" data-t-aria="boardLabel" aria-label="Sudoku grid"></div></div>
+    <p class="inline-note">Mockup only: Today is drawn down to the board. This frame exists to show the single new
+      thing on it — the gear at the trailing end of the toolbar, which opens <code>#/settings</code>.</p>
+    <div class="pill-slot"><button class="mock-pill" id="pillA">Mockup controls ▲</button></div>
+  </div>
+
+  <!-- ==================== SETTINGS ==================== -->
+  <section class="settings" id="settings" aria-label="Settings">
+    <div class="sheet-chrome"><div class="grabber" aria-hidden="true"></div></div>
+    <header class="navbar">
+      <span class="push-chrome">
+        <button class="back" id="back">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>
+          <span data-t="today">Today</span>
+        </button>
+      </span>
+      <span class="sheet-chrome" style="margin-left:auto">
+        <button class="done" id="done" data-t="done">Done</button>
+      </span>
+    </header>
+
+    <div class="scroll" id="sscroll">
+      <h1 class="slarge" data-t="settings">Settings</h1>
+
+      <!-- ---- Language: already in the app. Kept first so that the recovery-key block,
+               which changes height with its state, always grows DOWNWARD and never shifts
+               what is already under the user's thumb. ---- -->
+      <section class="sec" aria-labelledby="h-lang">
+        <h2 class="sec-head" id="h-lang" data-t="langHead">Language</h2>
+        <div class="card" role="radiogroup" aria-labelledby="h-lang" id="langCard"></div>
+      </section>
+
+      <!-- ---- Recovery key ---- -->
+      <section class="sec" aria-labelledby="h-key">
+        <h2 class="sec-head" id="h-key" data-t="keyHead">Recovery key</h2>
+        <div id="keyBlock"></div>
+      </section>
+
+      <div class="pill-slot"><button class="mock-pill" id="pillB">Mockup controls ▲</button></div>
+    </div>
+  </section>
+
+  <!-- ==================== ACTION SHEETS ==================== -->
+  <div class="scrim" id="scrim"></div>
+  <div class="asheet" id="asheet" role="dialog" aria-modal="true">
+    <div class="pane reissue">
+      <div class="grp">
+        <div class="head"><h3 data-t="shReTitle"></h3><p data-t="shReMsg"></p></div>
+        <button class="destructive sheet-go" data-t="shReGo"></button>
+      </div>
+      <div class="grp"><button class="cancel" data-t="cancel" data-close="1"></button></div>
+    </div>
+    <div class="pane unlink">
+      <div class="grp">
+        <div class="head"><h3 data-t="shUnTitle"></h3><p data-t="shUnMsg"></p></div>
+        <button class="sheet-go" data-t="shUnGo"></button>
+      </div>
+      <div class="grp"><button class="cancel" data-t="cancel" data-close="1"></button></div>
+    </div>
+    <div class="pane delete">
+      <div class="grp">
+        <div class="head"><h3 data-t="shDelTitle"></h3><p data-t="shDelMsg"></p></div>
+        <button class="destructive sheet-go" data-t="shDelGo"></button>
+      </div>
+      <div class="grp"><button class="cancel" data-t="cancel" data-close="1"></button></div>
+    </div>
+  </div>
+
+  <!-- stand-in for the system keyboard -->
+  <div class="kb" id="kb" aria-hidden="true"><span data-t="kb">system keyboard</span></div>
+
+  <!-- ==================== TAB BAR ==================== -->
+  <nav class="tabbar" role="tablist" data-t-aria="sections" aria-label="Sections">
+    <button class="tab" role="tab" aria-selected="true">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <rect x="3.5" y="4.8" width="17" height="15.4" rx="3.4"/><path d="M3.5 9.2h17M8 3.2v2.8M16 3.2v2.8"/><circle cx="12" cy="14.7" r="1.9" fill="currentColor" stroke="none"/>
+      </svg><span class="lab" data-t="today">Today</span>
+    </button>
+    <button class="tab" role="tab" aria-selected="false" title="Not included in this mockup">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <rect x="3.5" y="3.5" width="17" height="17" rx="3.4"/><path d="M9.2 3.5v17M14.8 3.5v17M3.5 9.2h17M3.5 14.8h17"/>
+      </svg><span class="lab" data-t="play">Play</span>
+    </button>
+    <button class="tab" role="tab" aria-selected="false" title="Not included in this mockup">
+      <svg viewBox="0 0 24 24" fill="currentColor" stroke="none" aria-hidden="true">
+        <rect x="3.2" y="5.2" width="3.6" height="3.6" rx="1"/><rect x="8.6" y="5.2" width="3.6" height="3.6" rx="1"/><rect x="14" y="5.2" width="3.6" height="3.6" rx="1"/><rect x="19.4" y="5.2" width="1.4" height="3.6" rx=".7"/>
+        <rect x="3.2" y="10.2" width="3.6" height="3.6" rx="1"/><rect x="8.6" y="10.2" width="3.6" height="3.6" rx="1"/><rect x="14" y="10.2" width="3.6" height="3.6" rx="1"/><rect x="19.4" y="10.2" width="1.4" height="3.6" rx=".7"/>
+        <rect x="3.2" y="15.2" width="3.6" height="3.6" rx="1"/><rect x="8.6" y="15.2" width="3.6" height="3.6" rx="1"/><rect x="14" y="15.2" width="3.6" height="3.6" rx="1"/><rect x="19.4" y="15.2" width="1.4" height="3.6" rx=".7"/>
+      </svg><span class="lab" data-t="year">Year</span>
+    </button>
+  </nav>
+</div>
+
+<!-- ================= MOCKUP CONTROLS (not part of the design) ================= -->
+<div class="mock" id="mock">
+  <div class="hdr"><span>Mockup controls — not part of the design</span><button class="close" id="mockClose">Hide</button></div>
+
+  <div class="grp2"><b>Appearance</b>
+    <div class="seg" data-key="appearance">
+      <button data-val="system" aria-pressed="true">System</button><button data-val="light" aria-pressed="false">Light</button><button data-val="dark" aria-pressed="false">Dark</button>
+    </div>
+  </div>
+
+  <div class="grp2"><b>Screen</b>
+    <div class="seg" data-key="screen">
+      <button data-val="today" aria-pressed="false">Today (gear)</button><button data-val="settings" aria-pressed="true">Settings</button>
+    </div>
+  </div>
+
+  <div class="grp2"><b>Key state</b>
+    <div class="seg" data-key="key">
+      <button data-val="none" aria-pressed="true">1 no key</button><button data-val="shown" aria-pressed="false">2 shown once</button><button data-val="created" aria-pressed="false">3 key exists</button><button data-val="enter" aria-pressed="false">4 enter a key</button><button data-val="restored" aria-pressed="false">6 restored</button><button data-val="error" aria-pressed="false">7 wrong key</button><button data-val="limit" aria-pressed="false">8 limit</button><button data-val="offline" aria-pressed="false">9 offline</button>
+    </div>
+  </div>
+
+  <div class="grp2"><b>Busy (5)</b>
+    <div class="seg" data-key="busy">
+      <button data-val="off" aria-pressed="true">Idle</button><button data-val="on" aria-pressed="false">Checking…</button>
+    </div>
+  </div>
+
+  <div class="grp2"><b>Key format</b>
+    <div class="seg" data-key="keyfmt">
+      <button data-val="base32" aria-pressed="true">6 × 4 base32</button><button data-val="words" aria-pressed="false">12 words</button>
+    </div>
+  </div>
+
+  <div class="grp2"><b>Language</b>
+    <div class="seg" data-key="lang">
+      <button data-val="en" aria-pressed="true">en</button><button data-val="uk" aria-pressed="false">uk</button><button data-val="ru" aria-pressed="false">ru</button>
+    </div>
+  </div>
+
+  <div class="grp2"><b>Text size</b>
+    <div class="seg" data-key="type">
+      <button data-val="default" aria-pressed="true">17 px</button><button data-val="xxxl" aria-pressed="false">23 px xxxL</button><button data-val="ax3" aria-pressed="false">40 px AX3</button>
+    </div>
+  </div>
+
+  <div class="grp2"><b>Presentation</b>
+    <div class="seg" data-key="present">
+      <button data-val="push" aria-pressed="true">Push ‹ Today</button><button data-val="sheet" aria-pressed="false">Sheet + Done</button>
+    </div>
+  </div>
+
+  <div class="grp2"><b>Keyboard</b>
+    <div class="seg" data-key="kb">
+      <button data-val="down" aria-pressed="true">Down</button><button data-val="up" aria-pressed="false">Up ~336 pt</button>
+    </div>
+  </div>
+
+  <div class="grp2"><b>Motion</b>
+    <div class="seg" data-key="motion">
+      <button data-val="system" aria-pressed="true">System</button><button data-val="reduced" aria-pressed="false">Reduced</button><button data-val="off" aria-pressed="false">Off</button>
+    </div>
+  </div>
+
+  <div class="grp2"><b>Safe area</b>
+    <div class="seg" data-key="safearea">
+      <button data-val="sim" aria-pressed="true">iPhone 16</button><button data-val="env" aria-pressed="false">Real env()</button>
+    </div>
+  </div>
+
+  <div class="grp2"><b>Action sheet</b>
+    <button class="go" id="btnReissue">Replace key</button>
+    <button class="go" id="btnUnlink">Unlink device</button>
+    <button class="go" id="btnDelete">Delete key</button>
+    <button class="close" id="btnCloseSheet">Close</button>
+  </div>
+
+  <p class="note">
+    The screen is live. “Create key” shows a freshly generated key (state 2); “Key saved” moves to
+    state 3. “I already have a key” opens the entry field (state 4) — it normalises case, spaces and
+    dashes as you type; a key that is long enough enables “Restore”, and a key of all zeros
+    (<code>0000-0000-0000-0000-0000-0000</code>) lands on the wrong-key state on purpose. Appearance,
+    Text size, Motion, Keyboard, Presentation and Safe area are review switches only: the product
+    follows the system settings and ships no appearance control (dark-mode.md &gt; Best practices).
+    The grey slab stands in for the system keyboard at an APPROXIMATE iPhone 16 height — the real
+    height has to be checked on device.
+  </p>
+</div>
+
+<script>
+(function(){
+  "use strict";
+  var root = document.documentElement;
+
+  /* ---------- 1. copy, en / uk / ru --------------------------------------
+     Tone: level. No exclamation, no apology, no "we" (writing.md > Best practices:
+     "Avoid using we altogether"), no gendered forms — which is why the confirmation
+     button is "Key saved" / "Ключ сохранён" / "Ключ збережено" and not "I saved it"
+     ("Я сохранил" would be masculine).                                           */
+  var STR = {
+    en:{
+      today:"Today", play:"Play", year:"Year", sections:"Sections",
+      dayline:"Wed 30 Sep · Medium", boardLabel:"Sudoku grid for Wednesday 30 September",
+      gear:"Settings", settings:"Settings", done:"Done", kb:"system keyboard",
+      langHead:"Language",
+      langs:{ en:"English", uk:"Українська", ru:"Русский" },
+
+      keyHead:"Recovery key",
+      footNone:"No account, no email, no password. The key is the only way to bring progress back on another phone — or on this one after its data is cleared.",
+      create:"Create key",
+      haveKey:"I already have a key",
+
+      yourKey:"Your key",
+      shownOnce:"The key is shown this one time only.",
+      copy:"Copy", copied:"Copied",
+      warn:"Keep it somewhere safe. Without the key there is no way to bring progress back, and no way to recover the key itself.",
+      saved:"Key saved",
+
+      rowCreated:"Created", createdOn:"30 Sep 2026",
+      rowDevices:"Devices",
+      reissue:"Replace key",
+      unlink:"Unlink this device",
+      deleteKey:"Delete key and unlink all devices",
+      footCreated:"Progress is saved. Enter the key on another phone to continue there.",
+      footDanger:"Replacing the key makes the old one stop working. Deleting it changes nothing about the puzzles already on this phone.",
+      showEntry:"Enter a different key",
+
+      enterLabel:"Recovery key",
+      enterPhKey:"XXXX-XXXX-XXXX-XXXX-XXXX-XXXX-XXXX-XXXX",
+      enterPhWords:"twelve words, separated by spaces",
+      enterHintKey:"Case, spaces and dashes don’t matter. Paste works.",
+      enterHintWords:"Case and extra spaces don’t matter. Paste works.",
+      restore:"Restore", checking:"Checking…",
+      cancel:"Cancel",
+      footEnter:"Whatever is already on this phone is kept and merged with what the key restores.",
+
+      restored:"Progress restored.",
+      errKey:"That key didn’t work. Check it and try again.",
+      errLimit:"Too many attempts. Try again in 58 min.",
+      errOffline:"No connection. Restoring needs the internet — try again once you’re back online.",
+      retry:"Try again",
+
+      shReTitle:"Replace the recovery key?",
+      shReMsg:"The current key stops working straight away, and any other device using it is unlinked.",
+      shReGo:"Replace Key",
+      shUnTitle:"Unlink this device?",
+      shUnMsg:"It keeps everything already on it and stops syncing with the key.",
+      shUnGo:"Unlink",
+      shDelTitle:"Delete key and unlink all devices?",
+      shDelMsg:"The key is removed from the server and every device stops syncing. Nothing is deleted from the devices themselves.",
+      shDelGo:"Delete Key"
+    },
+    uk:{
+      today:"Сьогодні", play:"Гра", year:"Рік", sections:"Розділи",
+      dayline:"Ср, 30 вер. · Середньо", boardLabel:"Сітка судоку за 30 вересня",
+      gear:"Налаштування", settings:"Налаштування", done:"Готово", kb:"системна клавіатура",
+      langHead:"Мова",
+      langs:{ en:"English", uk:"Українська", ru:"Русский" },
+
+      keyHead:"Ключ відновлення",
+      footNone:"Ні акаунта, ні пошти, ні пароля. Ключ — єдиний спосіб повернути прогрес на іншому телефоні або на цьому, якщо його дані буде стерто.",
+      create:"Створити ключ",
+      haveKey:"У мене вже є ключ",
+
+      yourKey:"Ваш ключ",
+      shownOnce:"Ключ показується лише цей один раз.",
+      copy:"Копіювати", copied:"Скопійовано",
+      warn:"Збережіть його в надійному місці. Без ключа повернути прогрес неможливо, і відновити сам ключ теж не вдасться.",
+      saved:"Ключ збережено",
+
+      rowCreated:"Створено", createdOn:"30 вер. 2026",
+      rowDevices:"Пристрої",
+      reissue:"Перевипустити ключ",
+      unlink:"Відв’язати цей пристрій",
+      deleteKey:"Видалити ключ і розірвати всі зв’язки",
+      footCreated:"Прогрес зберігається. Введіть ключ на іншому телефоні, щоб продовжити там.",
+      footDanger:"Після перевипуску старий ключ перестає працювати. Видалення не змінює того, що вже розгадано на цьому телефоні.",
+      showEntry:"Ввести інший ключ",
+
+      enterLabel:"Ключ відновлення",
+      enterPhKey:"XXXX-XXXX-XXXX-XXXX-XXXX-XXXX-XXXX-XXXX",
+      enterPhWords:"дванадцять слів через пробіл",
+      enterHintKey:"Регістр, пробіли й дефіси не мають значення. Вставка працює.",
+      enterHintWords:"Регістр і зайві пробіли не мають значення. Вставка працює.",
+      restore:"Відновити", checking:"Перевіряємо…",
+      cancel:"Скасувати",
+      footEnter:"Те, що вже є на цьому телефоні, збережеться й обʼєднається з відновленим.",
+
+      restored:"Прогрес відновлено.",
+      errKey:"Ключ не підійшов. Перевірте й спробуйте ще раз.",
+      errLimit:"Занадто багато спроб. Спробуйте за 58 хв.",
+      errOffline:"Немає зʼєднання. Для відновлення потрібен інтернет — спробуйте, коли звʼязок повернеться.",
+      retry:"Повторити",
+
+      shReTitle:"Перевипустити ключ відновлення?",
+      shReMsg:"Поточний ключ перестане працювати одразу, а інші пристрої за ним буде відвʼязано.",
+      shReGo:"Перевипустити",
+      shUnTitle:"Відвʼязати цей пристрій?",
+      shUnMsg:"Усе, що вже є на телефоні, залишиться; синхронізація за ключем припиниться.",
+      shUnGo:"Відвʼязати",
+      shDelTitle:"Видалити ключ і розірвати всі звʼязки?",
+      shDelMsg:"Ключ стирається на сервері, всі пристрої перестають синхронізуватися. З самих пристроїв нічого не видаляється.",
+      shDelGo:"Видалити ключ"
+    },
+    ru:{
+      today:"Сегодня", play:"Игра", year:"Год", sections:"Разделы",
+      dayline:"Ср, 30 сент. · Средне", boardLabel:"Сетка судоку за 30 сентября",
+      gear:"Настройки", settings:"Настройки", done:"Готово", kb:"системная клавиатура",
+      langHead:"Язык",
+      langs:{ en:"English", uk:"Українська", ru:"Русский" },
+
+      keyHead:"Ключ восстановления",
+      footNone:"Ни аккаунта, ни почты, ни пароля. Ключ — единственный способ вернуть прогресс на другом телефоне или на этом, если его данные будут стёрты.",
+      create:"Создать ключ",
+      haveKey:"У меня уже есть ключ",
+
+      yourKey:"Ваш ключ",
+      shownOnce:"Ключ показывается только этот один раз.",
+      copy:"Копировать", copied:"Скопировано",
+      warn:"Сохраните его в надёжном месте. Без ключа вернуть прогресс невозможно, и восстановить сам ключ тоже нельзя.",
+      saved:"Ключ сохранён",
+
+      rowCreated:"Создан", createdOn:"30 сент. 2026",
+      rowDevices:"Устройства",
+      reissue:"Перевыпустить ключ",
+      unlink:"Отвязать это устройство",
+      deleteKey:"Удалить ключ и разорвать все связи",
+      footCreated:"Прогресс сохраняется. Введите ключ на другом телефоне, чтобы продолжить там.",
+      footDanger:"После перевыпуска старый ключ перестаёт работать. Удаление не меняет того, что уже разгадано на этом телефоне.",
+      showEntry:"Ввести другой ключ",
+
+      enterLabel:"Ключ восстановления",
+      enterPhKey:"XXXX-XXXX-XXXX-XXXX-XXXX-XXXX-XXXX-XXXX",
+      enterPhWords:"двенадцать слов через пробел",
+      enterHintKey:"Регистр, пробелы и дефисы не важны. Вставка работает.",
+      enterHintWords:"Регистр и лишние пробелы не важны. Вставка работает.",
+      restore:"Восстановить", checking:"Проверяем…",
+      cancel:"Отмена",
+      footEnter:"То, что уже есть на этом телефоне, сохранится и объединится с восстановленным.",
+
+      restored:"Прогресс восстановлен.",
+      errKey:"Ключ не подошёл. Проверьте и попробуйте снова.",
+      errLimit:"Слишком много попыток. Попробуйте через 58 мин.",
+      errOffline:"Нет соединения. Для восстановления нужен интернет — попробуйте, когда связь вернётся.",
+      retry:"Повторить",
+
+      shReTitle:"Перевыпустить ключ восстановления?",
+      shReMsg:"Текущий ключ перестанет работать сразу, а другие устройства по нему будут отвязаны.",
+      shReGo:"Перевыпустить",
+      shUnTitle:"Отвязать это устройство?",
+      shUnMsg:"Всё, что уже есть на телефоне, останется; синхронизация по ключу прекратится.",
+      shUnGo:"Отвязать",
+      shDelTitle:"Удалить ключ и разорвать все связи?",
+      shDelMsg:"Ключ стирается на сервере, все устройства перестают синхронизироваться. С самих устройств ничего не удаляется.",
+      shDelGo:"Удалить ключ"
+    }
+  };
+  function T(){ return STR[root.dataset.lang] || STR.en; }
+
+  /* ---------- 2. the key itself ------------------------------------------
+     Crockford base32: 10 digits + 22 letters, with I, L, O and U left out so a
+     hand-written key can't be misread, and 1/I/l and 0/O folded together on input.
+     8 groups of 4 = 32 symbols = 160 bits (matches docs/pd-27-recovery-key.md). Groups are what make it transcribable.
+     The 12-word alternative uses an ENGLISH word list, which is why it is not the
+     recommendation for a ru/uk player — see the notes file.                       */
+  var ALPHA = "0123456789ABCDEFGHJKMNPQRSTVWXYZ";
+  var WORDS12 = ["ember","fabric","glider","harbor","ivory","jigsaw",
+                 "kettle","lantern","marble","nutmeg","orchid","puzzle"];
+  function genKey(){
+    var out = [], i, g;
+    for (g = 0; g < 8; g++){
+      var s = "";
+      for (i = 0; i < 4; i++) s += ALPHA[Math.floor(Math.random() * ALPHA.length)];
+      out.push(s);
+    }
+    return out;
+  }
+  var st = {
+    groups: null,          /* the generated base32 key, as 8 groups */
+    typed: "",             /* what is in the entry field */
+    devices: 2,
+    copied: false
+  };
+
+  /* Normalisation, live, as the user types: fold the look-alikes, drop anything
+     that is not in the alphabet, regroup in fours. entering-data.md > Best practices:
+     "Dynamically validate field values." */
+  function normKey(v){
+    var s = v.toUpperCase().replace(/[IL]/g,"1").replace(/O/g,"0").replace(/[^0-9A-Z]/g,"")
+             .replace(/[UW]/g, function(c){ return c === "U" ? "V" : c; })
+             .slice(0,32);
+    return s.replace(/(.{4})(?=.)/g, "$1-");
+  }
+  function normWords(v){ return v.toLowerCase().replace(/[^\p{L}\s]/gu," ").replace(/\s+/g," ").replace(/^\s/,""); }
+  function keyReady(){
+    if (root.dataset.keyfmt === "words") return normWords(st.typed).trim().split(" ").filter(Boolean).length === 12;
+    return st.typed.replace(/-/g,"").length === 32;
+  }
+
+  /* ---------- 3. icons ---------------------------------------------------- */
+  var CHECK = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m4.8 12.6 4.6 4.6L19.3 7.3"/></svg>';
+  /* The icons are what keep a warning or an error readable when wax is gone
+     (forced colours, achromatopsia): accessibility.md > "Don't convey information
+     using color alone." */
+  var BANG  = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7.4v6.1"/><path d="M12 16.8h.01"/></svg>';
+  var TRI   = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3.6 22 20.4H2z"/><path d="M12 9.6v5"/><path d="M12 17.6h.01"/></svg>';
+  var COPYI = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="8.6" y="3.4" width="12" height="14" rx="2.6"/><path d="M15.4 20.6H5.8a2.4 2.4 0 0 1-2.4-2.4V7.6"/></svg>';
+
+  /* ---------- 4. Today board (static, variant B) -------------------------- */
+  (function board(){
+    var GIVEN = "53..7...." + "6..195..." + ".98....6." +
+                "8...6...3" + "4..8.3..1" + "7...2...6" +
+                ".6....28." + "...419..5" + "....8..79";
+    var MINE  = { 2:"4", 16:"2", 22:"7", 28:"5", 43:"9", 46:"1", 58:"3" };
+    function idxOf(b,k){ return (3*Math.floor(b/3) + Math.floor(k/3))*9 + (3*(b%3) + k%3); }
+    var thin = '<svg class="rules" viewBox="0 0 3 3" preserveAspectRatio="none" aria-hidden="true">' +
+      '<line class="thin" x1="1" y1="0" x2="1" y2="3"/><line class="thin" x1="2" y1="0" x2="2" y2="3"/>' +
+      '<line class="thin" x1="0" y1="1" x2="3" y2="1"/><line class="thin" x1="0" y1="2" x2="3" y2="2"/></svg>';
+    var html = "";
+    for (var b = 0; b < 9; b++){
+      html += '<div class="box">';
+      for (var k = 0; k < 9; k++){
+        var i = idxOf(b,k), g = GIVEN[i] !== "." ? GIVEN[i] : null, m = MINE[i];
+        html += '<div class="cell">' +
+          (g ? '<span class="d given">' + g + '</span>'
+             : (m ? '<span class="d player">' + m + '</span>' : "")) + '</div>';
+      }
+      html += thin + '</div>';
+    }
+    document.getElementById("board").innerHTML = html;
+  })();
+
+  /* ---------- 5. language list -------------------------------------------- */
+  function renderLangs(){
+    var t = T(), cur = root.dataset.lang, h = "";
+    ["en","uk","ru"].forEach(function(code){
+      h += '<button class="row" role="radio" data-lang-pick="' + code + '" aria-checked="' +
+           (code === cur) + '"><span class="lab">' + t.langs[code] +
+           '</span><span class="ck" aria-hidden="true">' + CHECK + '</span></button>';
+    });
+    document.getElementById("langCard").innerHTML = h;
+  }
+
+  /* ---------- 6. the recovery-key block ---------------------------------- */
+  function esc(s){ return String(s).replace(/&/g,"&amp;").replace(/"/g,"&quot;").replace(/</g,"&lt;"); }
+
+  function keyDisplay(){
+    var t = T();
+    if (root.dataset.keyfmt === "words"){
+      return '<div class="words">' + WORDS12.map(function(w,i){
+        return '<div class="word"><i>' + (i+1) + '</i><b>' + w + '</b></div>';
+      }).join("") + '</div>';
+    }
+    return '<div class="keybox">' + (st.groups || []).map(function(g){
+      return '<div class="chip">' + g + '</div>';
+    }).join("") + '</div>';
+  }
+  function keyPlain(){
+    return root.dataset.keyfmt === "words" ? WORDS12.join(" ") : (st.groups || []).join("-");
+  }
+
+  function renderKey(){
+    var t = T(), s = root.dataset.key, busy = root.dataset.busy === "on", h = "";
+    var words = root.dataset.keyfmt === "words";
+
+    /* ---- 1. no key yet ---- */
+    if (s === "none"){
+      h += '<div class="card">' +
+             '<button class="rowbtn" id="btn-have">' + t.haveKey + '</button>' +
+           '</div>' +
+           '<button class="primary" id="btn-create">' + t.create + '</button>' +
+           '<p class="sec-foot">' + t.footNone + '</p>';
+      /* The card-then-button order is deliberate: the primary action sits lowest, in the
+         thumb zone, and the explanation reads after it the way a grouped-list footer does. */
+    }
+
+    /* ---- 2. the key, shown once ---- */
+    else if (s === "shown"){
+      h += '<div class="card">' +
+             '<div class="pad">' +
+               '<span class="cap">' + t.yourKey + '</span>' +
+               keyDisplay() +
+               '<p class="hint">' + t.shownOnce + '</p>' +
+             '</div>' +
+             '<button class="rowbtn" id="btn-copy" aria-live="polite">' +
+               (st.copied ? CHECK + t.copied : COPYI + t.copy) +
+             '</button>' +
+             '<p class="warn">' + TRI + '<span>' + t.warn + '</span></p>' +
+           '</div>' +
+           '<button class="primary" id="btn-saved">' + t.saved + '</button>';
+    }
+
+    /* ---- 3. the key exists ---- */
+    else if (s === "created" || s === "restored"){
+      if (s === "restored") h += '<p class="okline" role="status">' + CHECK + '<span>' + t.restored + '</span></p>';
+      h += '<div class="card">' +
+             '<div class="row"><span class="lab">' + t.rowCreated + '</span><span class="val">' + t.createdOn + '</span></div>' +
+             '<div class="row"><span class="lab">' + t.rowDevices + '</span><span class="val">' + st.devices + '</span></div>' +
+           '</div>' +
+           '<p class="sec-foot">' + t.footCreated + '</p>' +
+           /* Account actions get their own card, and the destructive one is last:
+              managing-accounts.md > Deleting accounts — "Provide a clear way to initiate
+              account deletion within your app." */
+           '<div class="card">' +
+             '<button class="rowbtn" id="btn-reissue">' + t.reissue + '</button>' +
+             '<button class="rowbtn" id="btn-unlink">' + t.unlink + '</button>' +
+             '<button class="rowbtn destructive" id="btn-delete">' + t.deleteKey + '</button>' +
+           '</div>' +
+           '<p class="sec-foot">' + t.footDanger + '</p>';
+    }
+
+    /* ---- 4 / 5 / 7 / 8 / 9. entering a key, and everything that can go wrong ---- */
+    else {
+      var bad = s === "error";
+      h += '<div class="card">' +
+             '<div class="pad' + (bad ? " bad" : "") + '">' +
+               '<label class="cap" for="f-key">' + t.enterLabel + '</label>' +
+               '<textarea class="ta' + (words ? "" : " mono") + '" id="f-key" rows="2" ' +
+                 'autocapitalize="' + (words ? "none" : "characters") + '" autocorrect="off" ' +
+                 'spellcheck="false" autocomplete="off" enterkeyhint="done" ' +
+                 'aria-describedby="key-hint' + (bad ? " key-err" : "") + '" ' +
+                 'placeholder="' + (words ? t.enterPhWords : t.enterPhKey) + '">' + esc(st.typed) + '</textarea>' +
+               '<p class="hint" id="key-hint">' + (words ? t.enterHintWords : t.enterHintKey) + '</p>' +
+             '</div>';
+      if (bad)            h += '<p class="err" id="key-err" role="alert">' + BANG + '<span>' + t.errKey + '</span></p>';
+      if (s === "limit")  h += '<p class="err" role="alert">' + BANG + '<span>' + t.errLimit + '</span></p>';
+      if (s === "offline")h += '<p class="err" role="alert">' + BANG + '<span>' + t.errOffline + '</span></p>';
+      h +=   '</div>';
+      var blocked = s === "limit" || busy || !keyReady();
+      h += '<button class="primary" id="btn-restore" aria-disabled="' + blocked + '">' +
+             (busy ? '<span class="spin" aria-hidden="true"></span>' + t.checking
+                   : (s === "offline" ? t.retry : t.restore)) +
+           '</button>' +
+           '<button class="secondary" id="btn-cancel">' + t.cancel + '</button>' +
+           '<p class="sec-foot">' + t.footEnter + '</p>';
+    }
+
+    document.getElementById("keyBlock").innerHTML = h;
+    wireKey();
+  }
+
+  function wireKey(){
+    var g = function(id){ return document.getElementById(id); };
+
+    if (g("btn-create")) g("btn-create").addEventListener("click", function(){
+      st.groups = genKey(); st.copied = false; set("key","shown");
+    });
+    if (g("btn-have")) g("btn-have").addEventListener("click", function(){
+      st.typed = ""; set("key","enter");
+    });
+    if (g("btn-copy")) g("btn-copy").addEventListener("click", function(){
+      var txt = keyPlain();
+      if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(txt);
+      st.copied = true; renderKey();
+      /* Feedback lives in the interface, not in an alert (feedback.md). It reverts,
+         so the button never lies about what it will do next time. */
+      setTimeout(function(){ st.copied = false; if (root.dataset.key === "shown") renderKey(); }, 2200);
+    });
+    if (g("btn-saved")) g("btn-saved").addEventListener("click", function(){ set("key","created"); });
+
+    var f = g("f-key");
+    if (f) f.addEventListener("input", function(){
+      var caretAtEnd = f.selectionStart === f.value.length;
+      st.typed = root.dataset.keyfmt === "words" ? normWords(f.value) : normKey(f.value);
+      if (f.value !== st.typed){
+        f.value = st.typed;
+        if (caretAtEnd){ f.selectionStart = f.selectionEnd = st.typed.length; }
+      }
+      var b = g("btn-restore");
+      if (b) b.setAttribute("aria-disabled", String(!keyReady() || root.dataset.key === "limit"));
+    });
+
+    if (g("btn-restore")) g("btn-restore").addEventListener("click", function(){
+      var b = g("btn-restore");
+      if (b.getAttribute("aria-disabled") === "true") return;
+      root.dataset.busy = "on"; renderKey();
+      setTimeout(function(){
+        root.dataset.busy = "off";
+        var flat = st.typed.replace(/[-\s]/g,"");
+        if (/^0+$/.test(flat)) set("key","error");
+        else { st.typed = ""; set("key","restored"); }
+      }, 900);
+    });
+    if (g("btn-cancel")) g("btn-cancel").addEventListener("click", function(){
+      st.typed = ""; set("key", st.groups ? "created" : "none");
+    });
+
+    if (g("btn-reissue")) g("btn-reissue").addEventListener("click", function(){ openSheet("reissue"); });
+    if (g("btn-unlink"))  g("btn-unlink").addEventListener("click",  function(){ openSheet("unlink"); });
+    if (g("btn-delete"))  g("btn-delete").addEventListener("click",  function(){ openSheet("delete"); });
+  }
+
+  /* ---------- 7. action sheets ------------------------------------------- */
+  function openSheet(which){ root.setAttribute("data-sheet", which); applyText(); }
+  function closeSheet(){ root.removeAttribute("data-sheet"); }
+  document.getElementById("scrim").addEventListener("click", closeSheet);
+  document.getElementById("asheet").addEventListener("click", function(ev){
+    var b = ev.target.closest("button"); if (!b) return;
+    if (b.dataset.close){ closeSheet(); return; }
+    if (!b.classList.contains("sheet-go")) return;
+    var which = root.getAttribute("data-sheet");
+    closeSheet();
+    if (which === "reissue"){ st.groups = genKey(); st.copied = false; st.devices = 1; set("key","shown"); }
+    if (which === "unlink"){ st.devices = Math.max(0, st.devices - 1); set("key","none"); }
+    if (which === "delete"){ st.groups = null; st.devices = 0; set("key","none"); }
+  });
+
+  /* ---------- 8. static strings + render --------------------------------- */
+  function applyText(){
+    var t = T();
+    document.querySelectorAll("[data-t]").forEach(function(el){
+      var v = t[el.dataset.t]; if (v != null) el.textContent = v;
+    });
+    document.querySelectorAll("[data-t-aria]").forEach(function(el){
+      var v = t[el.dataset.tAria]; if (v != null) el.setAttribute("aria-label", v);
+    });
+    root.lang = root.dataset.lang;
+    var sh = root.getAttribute("data-sheet");
+    document.getElementById("asheet").setAttribute("aria-label",
+      sh === "delete" ? t.shDelTitle : sh === "reissue" ? t.shReTitle : t.shUnTitle);
+  }
+  function render(){ applyText(); renderLangs(); renderKey(); }
+
+  /* ---------- 9. review chrome ------------------------------------------- */
+  function setAppearance(v){
+    root.classList.remove("force-light","force-dark");
+    if (v === "light") root.classList.add("force-light");
+    if (v === "dark")  root.classList.add("force-dark");
+  }
+  function set(key, val){
+    if (key === "appearance") setAppearance(val);
+    else root.setAttribute("data-" + key, val);
+    document.querySelectorAll('.mock .seg[data-key="' + key + '"] button').forEach(function(x){
+      x.setAttribute("aria-pressed", String(x.dataset.val === val));
+    });
+    /* States 2 and 3 need a key to exist; the switches shouldn't show an empty grid. */
+    if ((val === "shown" || val === "created") && !st.groups) st.groups = genKey();
+    if (key === "lang" || key === "key" || key === "busy" || key === "keyfmt") render();
+  }
+  document.querySelectorAll(".mock .seg").forEach(function(seg){
+    seg.addEventListener("click", function(ev){
+      var b = ev.target.closest("button"); if (!b) return;
+      set(seg.dataset.key, b.dataset.val);
+    });
+  });
+  document.getElementById("langCard").addEventListener("click", function(ev){
+    var b = ev.target.closest("[data-lang-pick]"); if (!b) return;
+    set("lang", b.dataset.langPick);
+  });
+  document.getElementById("gear").addEventListener("click", function(){ set("screen","settings"); });
+  document.getElementById("back").addEventListener("click", function(){ set("screen","today"); });
+  document.getElementById("done").addEventListener("click", function(){ set("screen","today"); });
+  document.getElementById("pillA").addEventListener("click", function(){ root.setAttribute("data-mock","open"); });
+  document.getElementById("pillB").addEventListener("click", function(){ root.setAttribute("data-mock","open"); });
+  document.getElementById("mockClose").addEventListener("click", function(){ root.setAttribute("data-mock","closed"); });
+  document.getElementById("btnReissue").addEventListener("click", function(){ openSheet("reissue"); });
+  document.getElementById("btnUnlink").addEventListener("click", function(){ openSheet("unlink"); });
+  document.getElementById("btnDelete").addEventListener("click", function(){ openSheet("delete"); });
+  document.getElementById("btnCloseSheet").addEventListener("click", closeSheet);
+
+  /* API for design/pd27-shots.mjs — deterministic frames, no random key in a screenshot */
+  window.PD27 = {
+    set: set,
+    openSheet: openSheet,
+    closeSheet: closeSheet,
+    /* A fixed key so every screenshot shows the same one. 32 Crockford base32 symbols. */
+    useFixedKey: function(){ st.groups = ["K7QP","3M2X","9RTV","B4HN","6ZC8","JW5F","2DGT","X8MA"]; renderKey(); },
+    fillEntry: function(v){ st.typed = root.dataset.keyfmt === "words" ? v : normKey(v); renderKey(); },
+    setDevices: function(n){ st.devices = n; renderKey(); },
+    reset: function(){ st.groups = null; st.typed = ""; st.copied = false; st.devices = 2; render(); }
+  };
+
+  render();
+})();
+</script>
+</body>
+</html>
