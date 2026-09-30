@@ -74,7 +74,7 @@
   свою. Сервер — PD-8, клиент — в тикете Today.
 - Движок: X-Wing+ нет (верх expert не контролируется); любое изменение генератора меняет все
   seed-сетки — версионировать алгоритм при изменениях.
-- Ветки `pd-2`, `pd-3` смержены; worktree'ы `products/pundoku-worktrees/pd-2`, `pd-3` можно удалить
+- Все ветки релиза 1 смержены и удалены, worktree'ов нет. (Историческое: ветки `pd-2`, `pd-3` смержены; worktree'ы `products/pundoku-worktrees/pd-2`, `pd-3` можно удалить
   (`git worktree remove`), незакоммиченного там нет.
 
 ## Замечания QA PD-16 (app shell, eae5fa2 — смержен в main)
@@ -249,8 +249,8 @@ Gates: build → typecheck, lint, тесты web/engine/api (api с TEST_DATABAS
 | PD-40 | PASS с оговорками, блокеров нет (20 splash chromium+webkit, офлайн, seed-хэш 208 сеток не изменился, PD-22 подтверждён); Low → PD-41/PD-42. QA PD-26 (pd-26 @ dec1e80): startup-image, precache/офлайн, PD-22 low, gates | qa-tester | P2 | completed | PD-41 | (готов: pd-26 @ 7202eaa; gates web 319, engine 127, api 80+2 skipped; 26 splash для 13 устройств) Фикс-проход pd-26 (после rebase на main, pd-26 @ cdd3b9d): (1) комментарий в `engine/src/generator.ts` про «21–22 нестабильно, стабильно от ~23» выровнять с README (22–23 стабильно); (2) добавить iPhone Air (420×912@3 → 1260×2736) в `startup-devices.mjs` + `pnpm splash` (Plus 8/7/6s 414×736@3 и SE1 320×568 — по усмотрению, старые); (3) PD-38 — Year: подписи «before you started», формулировка «filled in» (неверная цифра не считается: «29 of 43» при 30 на поле), порядок forced-colors CSS (media-блок ниже базовых `.year-month`/`.ycell.today`), первая запись задним числом рисует все пропуски от firstUse — оценить, смягчить/задокументировать. Отдельный QA не нужен: gates + быстрый ручной взгляд | developer | P2 | completed | PD-40 |
 | PD-42 | (смержен в main d75f9f7, pd-42 @ d5c7237; gates: build/typecheck, api 127+3 skipped с TEST_DATABASE_URL; пустой `PORT=` — ошибка осознанно) Low: `PORT=abc` давал сырой стек вместо `ConfigError` в api | developer | P3 | completed | — |
 | PD-26 | (смержен в main fa4eab5 вместе с PD-41/PD-38; QA PD-40 PASS) Полировка: `apple-touch-startup-image`/тёмный launch (QA PD-16), PD-22 low, Share PNG без цифр (если владелец подтвердит — не входит); ветка `pd-26` @ dec1e80 (dev готов; gates: web 238, engine 127, api 80+2 skipped), на QA PD-40 | developer | P2 | completed | PD-25 |
-| PD-27 | Ключ восстановления вместо привязки e-mail (в настройках, без регистрации и почты): план `docs/pd-27-recovery-key.md`; разбит на PD-47 (api), PD-48 (макет Settings), PD-49 (web), PD-50 (QA) | developer | P2 | in_progress | PD-26 |
-| PD-47 | (dev готов: `pd-27-api` @ 0cd88cd, НЕ смержен — мержить вместе с PD-49 после QA PD-50; gates по отчёту developer: engine 127, api 172+3 skipped, web 387, живая проверка curl пройдена) PD-27 api: миграция 0006 (sync_groups, device_links), резолв снапшота в requireDevice, `/api/recovery/*` (создать/перевыпустить ключ, redeem, отвязать, удалить), rate-limit, redact, тесты; ветка `pd-27-api` | developer | P2 | completed | — |
+| PD-27 | (СМЕРЖЕН в main 8f3e25a + 5bb9ffe; gates на main: engine 127, web 465, api 174+3 skipped с TEST_DATABASE_URL на свежей БД с миграциями) Ключ восстановления вместо привязки e-mail: план `docs/pd-27-recovery-key.md`; PD-47 api, PD-48 макет, PD-49 web, PD-50 QA, PD-56 фикс | developer | P2 | completed | PD-26 |
+| PD-47 | (смержен в main 8f3e25a, pd-27-api @ 5c582ab; gates по отчёту developer: engine 127, api 172+3 skipped, web 387, живая проверка curl пройдена) PD-27 api: миграция 0006 (sync_groups, device_links), резолв снапшота в requireDevice, `/api/recovery/*` (создать/перевыпустить ключ, redeem, отвязать, удалить), rate-limit, redact, тесты; ветка `pd-27-api` | developer | P2 | completed | — |
 | PD-48 | (готов, закоммичен в main: `design/pd27-settings.html`, `pd27-settings-notes.md`, `pd27-shots/` 60 кадров chromium+webkit, `pd27-shots.mjs`) PD-27 дизайн: макет экрана Settings — блок «Ключ восстановления» (`design/pd27-settings.html`) | designer | P2 | completed | — |
 | PD-49 | (dev готов: pd-27-web @ 60cce81; gates engine 127, web 453, api 127+3; живая проверка 40/40, два профиля; ключ не найден в IDB/localStorage/URL/console) PD-27 web: `#/settings`, блок ключа восстановления, resetAfterLinkChange, i18n, тесты; на QA PD-50 в интеграционной ветке `pd-27-int` (main + pd-27-api + pd-27-web) | developer | P2 | completed | — |
 | PD-50 | QA PD-27 на `pd-27-int` @ 1a14fb3: PASS с оговорками, блокеров нет (gates, цикл A/B chromium+webkit, потеря IDB, 429/офлайн, reissue/unlink/delete, утечки ключа — чисто, гонки без 5xx, мутации 11/15); находки → PD-56/PD-57 | qa-tester | P2 | completed | PD-47, PD-49 |
@@ -259,8 +259,9 @@ Gates: build → typecheck, lint, тесты web/engine/api (api с TEST_DATABAS
 | PD-53 | QA PD-51 (pd-51 @ f6c10f7): PASS с оговорками, блокеров нет (gates, chromium+webkit, мутации 7/8, граница архива цела); Low#1 копия и Info#4/#5 (README, комментарии) правятся мной в pd-51 перед мержем; Low#2/#3 → PD-54/PD-55 | qa-tester | P2 | completed | PD-51 |
 | PD-54 | Low (QA PD-53 Low#2, ждёт решения владельца, не блокирует): предупреждение на Play/архиве у void-дня — один ход на пустом дне до первой записи сдвигает старт года и разом делает ~30 клеток missed | developer | P3 | pending | решение владельца |
 | PD-55 | Low (QA PD-53 Low#3): пустой прошлый год в Year листается без пояснения (вместе с PD-52 — ограничить/объяснить список лет) | developer | P3 | pending | PD-52 |
-| PD-56 | Фикс-проход по QA PD-50: (A) тест deleteGroup снимает orphaned_at (pd-27-api), (B) тест resetAfterLinkChange чистит META_SYNC_STATE, (C) ActionSheet: Esc на document + inert/focus trap, проверка webkit (pd-27-web); затем мерж | developer | P2 | in_progress | PD-50 |
+| PD-56 | (готов, смержен: pd-27-api @ 5c582ab, pd-27-web @ ad9c457) Фикс-проход по QA PD-50: тесты deleteGroup/orphaned_at и resetAfterLinkChange, ActionSheet Esc/Tab на document + inert, живая проверка chromium+webkit | developer | P2 | completed | PD-50 |
 | PD-57 | Low (QA PD-50): браузерный Back / iOS edge-swipe не показывают шит ухода при показанном ключе; ключ остаётся в памяти — оценить перехват popstate/переход на модальный экран | developer | P3 | pending | — |
+| PD-59 | Low (dev PD-56): существующий тест «сбрасывает META_SYNC_STATE…» в `manager.linkchange.test.ts` не ловит мутацию — усилить (мутационно) | developer | P3 | pending | — |
 | PD-58 | Low: свести тексты вне макета и два косметических отличия к макету/согласовать с владельцем (вопрос в «Ожидает решения») | designer | P3 | pending | решение владельца |
 | PD-20 | QA PD-14 (pd-14 @ 0026b2a): PASS с оговорками, блокеров и Medium нет; 4 Low + решение по слиянию → PD-31 | qa-tester | P1 | completed | PD-14 |
 | PD-31 | Фикс-проход pd-14 по QA PD-20 (pd-14 @ c574f13; gates зелёные: web 213, engine 105, api 77+2 skipped, интеграционные 7/7 на живой БД) | developer | P1 | completed | PD-20 |
@@ -329,6 +330,5 @@ Gates: build → typecheck, lint, тесты web/engine/api (api с `TEST_DATABA
 ## Агенты (текущий статус)
 | Имя | Роль | Статус | Тикет | Обновлено |
 |-----|------|--------|-------|-----------|
-| pm-pundoku-5 | product-manager | working | PD-56, затем мерж PD-27 | 2026-09-30 |
-| dev-pd56 | developer | working | PD-56 | 2026-09-30 |
+| pm-pundoku-5 | product-manager | working | idle — релиз 1 в main; ждёт владельца (iPhone-чек-лист) | 2026-09-30 |
 | qa-pd51 | qa-tester | done | PD-53 | 2026-09-30 |
