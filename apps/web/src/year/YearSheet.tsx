@@ -7,6 +7,7 @@ import { formatClock } from "../play/format";
 import { heatLegend, heatOpacities } from "../play/heat";
 import { blotCellSet, HeatCells, InkModeValueRow } from "../play/inkCard";
 import { cellsLeft } from "../play/logic";
+import { WatchRow, useTimelapseEntry } from "../play/TimelapseEntry";
 import type { DayProgress } from "../today/repository";
 import { dayLong, leadingBlanks, monthName, monthTitle, weekdayInitials } from "./format";
 import { dayStateKey, markClass, monthSummaryText } from "./labels";
@@ -212,6 +213,9 @@ function DayCard({
   const ink = progress?.play.ink === true;
   const blots = useMemo(() => (progress ? blotCellSet(progress.play) : new Set<number>()), [progress]);
 
+  // Таймлапс (PD-75): строка входа под карточкой решённого дня; шит рисуется порталом поверх шита Year.
+  const tl = useTimelapseEntry(solved && progress ? progress.play : null, solved ? mark.date : null, progress?.difficulty ?? null);
+
   const sub = showSub
     ? [progress.difficulty ? t(`difficulty.${progress.difficulty}`) : null, t("year.card.dailyPuzzle")].filter(Boolean).join(" · ")
     : null;
@@ -262,6 +266,8 @@ function DayCard({
               </div>
             )}
           </dl>
+          <WatchRow available={tl.available} onWatch={() => tl.open("player")} />
+          {tl.sheets}
           {mark.late && (
             <p className="emptyday" data-testid="late-note">
               {t("year.card.lateNote")}
