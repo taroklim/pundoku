@@ -252,7 +252,7 @@ moveLog; `heat` и сводка — постоянная часть записи
 ## Таймлапс: данные (PD-70, без UI)
 
 `play/timelapse.ts`: `hasTimelapse(progress)` / `recordHasTimelapse(record)` — есть ли у решённого дня **цельный настоящий** лог (воспроизводится в решённую сетку; не
-восстановлен из `heat`), `timelapseOf(progress, opts?)` — кадры движка (`timelapseFrames`) или `null`. Запись снапшота без `moveLog` (урезана бюджетом/413) таймлапса не имеет.
+восстановлен из `heat`), `timelapseOf(progress, opts?)` — кадры движка (`timelapseFrames`) или `null`. Запись снапшота без `moveLog` (урезана бюджетом/413) таймлапса не имеет. Повреждённый локальный лог (клетка вне 0..80, `null`-ход) — `false`/`null`, не исключение. Чернильная партия (`2:`-лог с `blot`) — обычный таймлапс, клякса видна кадром (`frame.blot`).
 `PlayState.logSynthetic` помечает лог, собранный `logFromHeat` при restore; такой лог не уходит в снапшот как `moveLog`. Схема снапшота не менялась (`SNAPSHOT_SCHEMA_VERSION = 1`).
 Исследование веса/бюджета/слияний — `docs/pd-70-timelapse-data.md`. UI ждёт утверждённый макет.
 

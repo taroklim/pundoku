@@ -51,6 +51,11 @@ export interface TimelapseFrame {
   readonly notes?: readonly number[];
   /** Клетки игрока, в которых сейчас неверная цифра (по `Move.correct`, иначе по решению, иначе верно). */
   readonly wrong: readonly Cell[];
+  /**
+   * Чернильный режим (PD-71): кадр порождён ходом с `Move.blot` — кляксой (неверная цифра, клетка в `wrong`)
+   * либо её авто-заменой верной цифрой (тот же `t`, следующий кадр; клетка уже не в `wrong`). Только у таких кадров.
+   */
+  readonly blot?: true;
 }
 
 export interface Timelapse {
@@ -75,6 +80,11 @@ export interface FingerprintCell {
   readonly t: number;
   /** Сколько раз в клетку ставили цифру за партию (включая отменённые и перезаписанные); 1 — с первого раза. */
   readonly attempts: number;
+  /**
+   * Чернильный режим (PD-71): в клетке была клякса (неверная цифра с `Move.blot`), её заменила верная цифра. Поле есть только
+   * у таких клеток. Клякса — одна попытка игрока (`attempts` считает её, но не авто-замену); `order`/`t` — момент замены.
+   */
+  readonly blot?: true;
 }
 
 export interface TimelapseFingerprint {
@@ -87,6 +97,8 @@ export interface TimelapseFingerprint {
 interface Entry {
   readonly digit: number;
   readonly ok: boolean;
+  /** Цифра — клякса Чернильного режима либо её авто-замена (по `Move.blot`). */
+  readonly blot: boolean;
   /** Индекс хода лога, которым поставлена цифра. */
   readonly index: number;
 }
@@ -124,7 +136,10 @@ function compressedTimes(log: MoveLog, maxGapMs: number): number[] {
 interface Sim {
   readonly mission: readonly number[];
   readonly cells: CellState[];
+  /** Постановки игрока в клетку (авто-замена клякса не считается). */
   readonly attempts: number[];
+  /** В клетке была клякса (ход `place` с `blot` и неверной цифрой). */
+  readonly blotted: boolean[];
 }
 
 /**
@@ -143,6 +158,7 @@ function simulate(
     mission,
     cells: Array.from({ length: GRID_SIZE }, (): CellState => ({ entry: null, notes: 0 })),
     attempts: new Array<number>(GRID_SIZE).fill(0),
+    blotted: new Array<boolean>(GRID_SIZE).fill(false),
   };
   const stack: StackItem[] = [];
 
@@ -166,11 +182,13 @@ function simulate(
     if (mission[cell] !== 0) return; // подсказку не меняют
     switch (m.kind) {
       case "place": {
-        if (m.digit === undefined) return;
+        if (!isDigit(m.digit)) return;
         const ok = m.correct ?? (solution !== null ? solution[cell] === m.digit : true);
-        st.entry = { digit: m.digit, ok, index };
+        const blot = m.blot === true;
+        st.entry = { digit: m.digit, ok, blot, index };
         st.notes = 0;
-        sim.attempts[cell]!++;
+        if (blot && !ok) sim.blotted[cell] = true;
+        if (!(blot && ok && before.entry?.blot === true && !before.entry.ok)) sim.attempts[cell]!++; // авто-замена клякса — не попытка игрока
         break;
       }
       case "erase":
@@ -179,7 +197,7 @@ function simulate(
         break;
       case "note_add":
       case "note_remove": {
-        if (m.digit === undefined || st.entry !== null) return; // заметка в клетке с цифрой не действует
+        if (!isDigit(m.digit) || st.entry !== null) return; // заметка в клетке с цифрой не действует
         st.notes = m.kind === "note_add" ? st.notes | (1 << m.digit) : st.notes & ~(1 << m.digit);
         break;
       }
@@ -187,6 +205,11 @@ function simulate(
     if (visiblyDiffers(before, st, withNotes)) onChange(index, cell, m, sim);
   });
   return sim;
+}
+
+/** Цифра хода — целое 1..9 (повреждённый лог с `digit` вне диапазона/нечисловым такой ход игнорирует). */
+function isDigit(d: unknown): d is number {
+  return typeof d === "number" && Number.isInteger(d) && d >= 1 && d <= 9;
 }
 
 function visiblyDiffers(a: CellState, b: CellState, withNotes: boolean): boolean {
@@ -254,7 +277,7 @@ export function timelapseFrames(
     wrong: [],
   });
   simulate(log, puzzle, withNotes, (index, cell, move, sim) => {
-    frames.push({ t: playback[index]!, move: index, cell, kind: move.kind, ...snapshot(sim) });
+    frames.push({ t: playback[index]!, move: index, cell, kind: move.kind, ...snapshot(sim), ...(move.blot === true ? { blot: true as const } : {}) });
   });
 
   return { frames, durationMs: n === 0 ? 0 : playback[n - 1]!, sourceDurationMs };
@@ -287,6 +310,7 @@ export function timelapseFingerprint(
       order,
       t: total === 0 ? 0 : compressed[s.entry!.index]! / total,
       attempts: sim.attempts[cell]!,
+      ...(sim.blotted[cell] ? { blot: true as const } : {}),
     };
   });
   return { cells, placed: placed.length };

@@ -6,7 +6,7 @@
  * прогресс дня и «улёт» последней клетки в Grid ∞ (`permanent`). Хранилище живёт выше вкладок.
  */
 import type { Difficulty } from "@pundoku/engine";
-import { solve } from "@pundoku/engine";
+import { INK_RULES, solve } from "@pundoku/engine";
 import type { GenerateRequest, GenerateResponse } from "../play/generate.worker";
 import type { PlaySnapshot } from "../play/gameStore";
 import { GameStore, initialSnapshot } from "../play/gameStore";
@@ -179,6 +179,11 @@ export class DayStore extends GameStore<DaySnapshot> {
     super(initialDaySnapshot(localDate(deps.now())));
     this.deps = deps;
     this.archive = options.archive === true;
+  }
+
+  /** Ink (PD-71): на Today — да; в архиве — только если правила (`INK_RULES.allowInArchive`) это разрешают. */
+  protected override inkAllowed(): boolean {
+    return !this.archive || INK_RULES.allowInArchive;
   }
 
   private attach(): boolean {
@@ -388,7 +393,7 @@ export class DayStore extends GameStore<DaySnapshot> {
           if (r.action === "keep-own") return this.resumeSaved({ ...saved, winRate: null }, false, "local");
           if (r.action === "keep") return this.resumeSaved(saved, false, "server", r.puzzle);
         }
-        this.begin(plan.puzzle, solution, "server", false);
+        this.begin(plan.puzzle, solution, "server", false, saved?.play.ink === true);
         return;
       }
       // Мусор в mission (нет решения) — как «ответа не было»; сложность берём только у `generator`.
@@ -405,7 +410,8 @@ export class DayStore extends GameStore<DaySnapshot> {
     }
   }
 
-  private begin(puzzle: DayPuzzle, solution: string, verification: "server" | "local", offline: boolean): void {
+  /** `ink` — сетка заменяется до первого хода (выбор Чернильного режима не теряется вместе с партией). */
+  private begin(puzzle: DayPuzzle, solution: string, verification: "server" | "local", offline: boolean, ink = false): void {
     this.beginGame(
       { mission: puzzle.mission, solution },
       {
@@ -420,6 +426,7 @@ export class DayStore extends GameStore<DaySnapshot> {
         landing: null,
       },
     );
+    if (ink) this.setInk(true);
   }
 
   private resumeSaved(
@@ -499,7 +506,7 @@ export class DayStore extends GameStore<DaySnapshot> {
         return;
       case "replace": {
         const solution = solveMission(r.puzzle.mission);
-        if (solution) this.begin(r.puzzle, solution, "server", false); // молча: ходов не было
+        if (solution) this.begin(r.puzzle, solution, "server", false, s.play.ink === true); // молча: ходов не было
         return;
       }
       case "keep-own":

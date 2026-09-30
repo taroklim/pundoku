@@ -7,9 +7,13 @@
  * движка один в один: каждое залогированное действие — ровно одна запись стека; `undo` пишется
  * в лог только когда есть что отменять (иначе движок сделал бы no-op, а клиент — ничего).
  * Стирание пустой клетки и ввод в заданную клетку (given) — не действия: не логируются.
+ *
+ * Чернильный режим (PD-71): `PlayState.ink`. Правила — `@pundoku/engine` `ink.ts` (`INK_RULES`, `inkAllows`),
+ * здесь только их применение к состоянию; docs/pd-71-ink-rules.md. В ink-партии `undo` и стирание цифр —
+ * no-op (отвергаются самой логикой, не только UI), заполненная клетка заблокирована, ошибка — клякса.
  */
-import type { Digit, Move, MoveLog, TechniqueOrBeyond } from "@pundoku/engine";
-import { appendMove, createMoveLog, techniqueForCell } from "@pundoku/engine";
+import type { Blot, Digit, InkRules, Move, MoveLog, TechniqueOrBeyond } from "@pundoku/engine";
+import { INK_RULES, appendMove, blotsOf, createMoveLog, inkAllows, techniqueForCell } from "@pundoku/engine";
 
 export const CELLS = 81;
 
@@ -33,6 +37,11 @@ export interface PlayState {
   readonly log: MoveLog;
   readonly undoStack: readonly UndoEntry[];
   readonly solved: boolean;
+  /**
+   * Чернильный режим (PD-71): включён на входе до первого хода и после первого хода неизменен (`setInkMode`).
+   * Поле опциональное: `undefined`/`false` — обычная партия (старые записи читаются как раньше).
+   */
+  readonly ink?: boolean;
   /**
    * Лог восстановлен из `heat` записи снапшота (`sync/schema.ts › logFromHeat`), а не сыгран: нужен
    * карточке дня, но не настоящий ход партии — не уходит в `moveLog` снапшота и не годится для Таймлапса
@@ -76,12 +85,43 @@ export const notesOf = (mask: number): number[] => {
 const isCorrectAt = (s: PlayState, cell: number): boolean => digitAt(s, cell) === s.solution[cell];
 
 /**
+ * Клетка «закрыта»: верна либо (ink) заполнена — в ink-партии неверная цифра в клетке бывает только кляксой,
+ * оставленной при `autoReplaceBlot = false`; такая клетка считается закрытой, иначе партия не завершилась бы.
+ * Не зависит от текущего флага правил: состояние, сохранённое при другом значении флага, остаётся корректным.
+ */
+const isSettled = (s: PlayState, cell: number): boolean =>
+  isCorrectAt(s, cell) || (s.ink === true && (s.values[cell] ?? 0) !== 0);
+
+export const isInk = (s: PlayState): boolean => s.ink === true;
+
+/** Кляксы партии (пусто у обычной партии) — из лога, единственного источника. */
+export const blotsIn = (s: PlayState): Blot[] => blotsOf(s.log);
+
+/** Клетка — клякса (ink): в ней стояла неверная цифра. */
+export const isBlotCell = (s: PlayState, cell: number): boolean => s.ink === true && s.log.some((m) => m.cell === cell && m.blot === true);
+
+/**
+ * Включить/выключить Чернильный режим. Допустимо только пока в логе нет ни одного хода (включая заметки) и
+ * партия не решена; после первого хода режим не меняется ни в какую сторону. Иначе возвращает `s` как есть.
+ * Разрешён ли режим для этого экрана (архив) — решает хранилище (`GameStore.setInk`), не логика.
+ */
+export function setInkMode(s: PlayState, on: boolean): PlayState {
+  if (s.log.length > 0 || s.solved || isInk(s) === on) return s;
+  if (!on) {
+    const rest = { ...s };
+    delete rest.ink;
+    return rest;
+  }
+  return { ...s, ink: true };
+}
+
+/**
  * Сколько клеток ещё не стоят на своём месте. Неверная цифра считается «осталась»:
  * ошибки подсвечиваются сразу, и «0 cells left» при нерешённой сетке был бы ложью.
  */
 export function cellsLeft(s: PlayState): number {
   let n = 0;
-  for (let i = 0; i < CELLS; i++) if (!isCorrectAt(s, i)) n++;
+  for (let i = 0; i < CELLS; i++) if (!isSettled(s, i)) n++;
   return n;
 }
 
@@ -89,7 +129,7 @@ export function cellsLeft(s: PlayState): number {
 export function remaining(s: PlayState): number[] {
   const left = [0, 9, 9, 9, 9, 9, 9, 9, 9, 9];
   for (let i = 0; i < CELLS; i++) {
-    if (isCorrectAt(s, i)) left[s.solution[i] as number]!--;
+    if (isSettled(s, i)) left[s.solution[i] as number]!--;
   }
   return left;
 }
@@ -113,7 +153,7 @@ function withCell(arr: readonly number[], cell: number, v: number): number[] {
 function finish(s: PlayState): PlayState {
   let solved = true;
   for (let i = 0; i < CELLS; i++) {
-    if (!isCorrectAt(s, i)) {
+    if (!isSettled(s, i)) {
       solved = false;
       break;
     }
@@ -131,12 +171,19 @@ function techniqueOf(s: PlayState, cell: number): TechniqueOrBeyond | undefined 
   }
 }
 
-/** Цифра с панели/клавиатуры (режим цифр): повторное нажатие той же цифры стирает её (как в макете). */
-export function enterDigit(s: PlayState, cell: number, digit: number, t: number): PlayState {
+/**
+ * Цифра с панели/клавиатуры (режим цифр): повторное нажатие той же цифры стирает её (как в макете).
+ * Ink: клетка с цифрой заблокирована (и повторное нажатие не стирает); неверная цифра — клякса
+ * (`inkBlot`): по `rules.autoReplaceBlot` клетка тут же получает верную цифру.
+ */
+export function enterDigit(s: PlayState, cell: number, digit: number, t: number, rules: InkRules = INK_RULES): PlayState {
   if (s.solved || isGiven(s, cell) || digit < 1 || digit > 9) return s;
-  if (s.values[cell] === digit) return eraseCell(s, cell, t);
+  const ink = s.ink === true;
+  if (ink && !inkAllows("place", (s.values[cell] ?? 0) !== 0, rules)) return s;
+  if (!ink && s.values[cell] === digit) return eraseCell(s, cell, t);
   const d = digit as Digit;
   const correct = s.solution[cell] === digit;
+  if (ink && !correct) return finish(inkBlot(s, cell, d, t, rules));
   const technique = correct ? techniqueOf(s, cell) : undefined;
   const move: Move = {
     t: stamp(s, t),
@@ -151,14 +198,32 @@ export function enterDigit(s: PlayState, cell: number, digit: number, t: number)
     values: withCell(s.values, cell, digit),
     notes: withCell(s.notes, cell, 0),
     log: push(s, move),
-    undoStack: [...s.undoStack, { cell, prevValue: s.values[cell] ?? 0, prevNotes: s.notes[cell] ?? 0, digit: d }],
+    // В ink undo нет — стек не ведём: кнопка «Отменить» в UI не должна оживать.
+    undoStack: ink ? s.undoStack : [...s.undoStack, { cell, prevValue: s.values[cell] ?? 0, prevNotes: s.notes[cell] ?? 0, digit: d }],
   };
   return finish(next);
 }
 
+/**
+ * Ошибка в ink = клякса (PD-71): ход `place` с `correct: false, blot: true`; при `autoReplaceBlot` сразу
+ * (тот же `t`) второй ход — верная цифра с `blot: true`, клетка закрыта правильно. Одна клякса = одна правка
+ * (считает движок, `movelog.ts`). Клетка заблокирована, заметки в ней очищены.
+ */
+function inkBlot(s: PlayState, cell: number, digit: Digit, t: number, rules: InkRules): PlayState {
+  const at = stamp(s, t);
+  let log = push(s, { t: at, cell, kind: "place", digit, correct: false, blot: true });
+  let value: number = digit;
+  if (rules.autoReplaceBlot) {
+    value = s.solution[cell] as number;
+    log = appendMove(log, { t: at, cell, kind: "place", digit: value as Digit, correct: true, blot: true });
+  }
+  return { ...s, values: withCell(s.values, cell, value), notes: withCell(s.notes, cell, 0), log };
+}
+
 /** Заметка (режим карандаша): в клетке с цифрой и в заданной — не действует. */
-export function toggleNote(s: PlayState, cell: number, digit: number, t: number): PlayState {
+export function toggleNote(s: PlayState, cell: number, digit: number, t: number, rules: InkRules = INK_RULES): PlayState {
   if (s.solved || isGiven(s, cell) || (s.values[cell] ?? 0) !== 0 || digit < 1 || digit > 9) return s;
+  if (s.ink === true && !inkAllows("note_add", false, rules)) return s;
   const d = digit as Digit;
   const had = ((s.notes[cell] ?? 0) & (1 << digit)) !== 0;
   const move: Move = { t: stamp(s, t), cell, kind: had ? "note_remove" : "note_add", digit: d };
@@ -166,16 +231,27 @@ export function toggleNote(s: PlayState, cell: number, digit: number, t: number)
     ...s,
     notes: withCell(s.notes, cell, (s.notes[cell] ?? 0) ^ (1 << digit)),
     log: push(s, move),
-    undoStack: [...s.undoStack, { cell, prevValue: 0, prevNotes: s.notes[cell] ?? 0, digit: d }],
+    undoStack: s.ink === true ? s.undoStack : [...s.undoStack, { cell, prevValue: 0, prevNotes: s.notes[cell] ?? 0, digit: d }],
   };
 }
 
-/** Стереть цифру и заметки клетки. Пустая клетка без заметок — не действие. */
-export function eraseCell(s: PlayState, cell: number, t: number): PlayState {
+/**
+ * Стереть цифру и заметки клетки. Пустая клетка без заметок — не действие.
+ * Ink: цифру стереть нельзя (no-op); заметки пустой клетки — можно.
+ */
+export function eraseCell(s: PlayState, cell: number, t: number, rules: InkRules = INK_RULES): PlayState {
   if (s.solved || isGiven(s, cell)) return s;
   const value = s.values[cell] ?? 0;
   const notes = s.notes[cell] ?? 0;
   if (value === 0 && notes === 0) return s;
+  if (s.ink === true) {
+    if (!inkAllows("erase", value !== 0, rules)) return s;
+    return {
+      ...s,
+      notes: withCell(s.notes, cell, 0),
+      log: push(s, { t: stamp(s, t), cell, kind: "erase" }),
+    };
+  }
   return {
     ...s,
     values: withCell(s.values, cell, 0),
@@ -185,10 +261,11 @@ export function eraseCell(s: PlayState, cell: number, t: number): PlayState {
   };
 }
 
-/** Отменить последнее действие (стек без redo, как в контракте движка). */
-export function undo(s: PlayState, t: number): PlayState {
+/** Отменить последнее действие (стек без redo, как в контракте движка). Ink: отмены нет — no-op. */
+export function undo(s: PlayState, t: number, rules: InkRules = INK_RULES): PlayState {
   const top = s.undoStack[s.undoStack.length - 1];
   if (s.solved || !top) return s;
+  if (s.ink === true && !inkAllows("undo", false, rules)) return s;
   const move: Move = { t: stamp(s, t), cell: top.cell, kind: "undo", ...(top.digit ? { digit: top.digit } : {}) };
   return {
     ...s,

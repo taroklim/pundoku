@@ -14,7 +14,7 @@
  * ```
  */
 import type { Difficulty, Digit, Move, MoveLog, TechniqueOrBeyond } from "@pundoku/engine";
-import { DIFFICULTIES, heatmap, solve, summary } from "@pundoku/engine";
+import { DIFFICULTIES, blotsOf, heatmap, solve, summary } from "@pundoku/engine";
 import type { PlayState } from "../play/logic";
 import { CELLS } from "../play/logic";
 import type { DaySource } from "../today/dayResolver";
@@ -53,6 +53,14 @@ export interface DayRecord {
   heat?: string;
   /** Сжатый лог ходов (`codec.encodeMoveLog`); опционален, идёт с бюджетом размера (см. `applyMoveLogBudget`). */
   moveLog?: string;
+  /**
+   * Чернильный режим (PD-71): день сыгран без отмены/ластика. Только `true` (у обычного дня поля нет — старые записи
+   * и записи без ink равны побайтно). Запись слияния атомарна: `ink`/`blots`/`moveLog` победителя не смешиваются с
+   * проигравшим (`merge.ts`).
+   */
+  ink?: boolean;
+  /** Число клякс (только при `ink`) — для сводки; переживает бюджет `moveLog`. Каждая клякса уже входит в `corrections`. */
+  blots?: number;
 }
 
 export interface SnapshotData {
@@ -152,6 +160,11 @@ export function sanitizeDayRecord(raw: unknown): DayRecord | null {
   if (typeof corrections === "number" && Number.isInteger(corrections) && corrections >= 0) rec.corrections = corrections;
   const winRate = raw["winRate"];
   if (typeof winRate === "number" && winRate >= 0 && winRate <= 100) rec.winRate = winRate;
+  if (raw["ink"] === true) {
+    rec.ink = true;
+    const blots = raw["blots"];
+    if (typeof blots === "number" && Number.isInteger(blots) && blots >= 0 && blots <= 81) rec.blots = blots;
+  }
   if (status === "solved") {
     const solvedAt = raw["solvedAt"];
     if (typeof solvedAt !== "string" || !ISO_RE.test(solvedAt) || Number.isNaN(Date.parse(solvedAt))) return null;
@@ -197,6 +210,7 @@ export function dayRecordFromProgress(p: DayProgress, now: Date): DayRecord | nu
     source: toRecordSource(p.source),
     difficulty: p.difficulty,
     mission: p.mission,
+    ...(p.play.ink === true ? { ink: true, blots: blotsOf(log).length } : {}),
   };
   if (!p.solved) {
     return { status: "unfinished", timeMs: Math.round(p.elapsedMs), late: false, ...base };
@@ -232,7 +246,10 @@ export function logFromHeat(rec: DayRecord, solution: readonly number[]): MoveLo
     .filter((x): x is { h: number; cell: number } => x.h !== null && mission[x.cell] === 0)
     .sort((a, b) => a.h - b.h || a.cell - b.cell);
   const log: Move[] = [];
-  const corrections = rec.corrections ?? (rec.hadCorrections ? 1 : 0);
+  // Ink (PD-71): кляксы — настоящие пары blot (неверная + авто-замена) на первых по времени клетках: правка и ошибка
+  // считаются движком так же, как у настоящего лога; обычных «поставил/стёр» в ink-логе быть не должно.
+  const blots = rec.ink === true ? Math.min(rec.blots ?? 0, placed.length) : 0;
+  const corrections = rec.ink === true ? 0 : (rec.corrections ?? (rec.hadCorrections ? 1 : 0));
   const anyCell = placed[0]?.cell ?? mission.findIndex((g) => g === 0);
   if (anyCell >= 0) {
     for (let i = 0; i < corrections; i++) {
@@ -241,6 +258,13 @@ export function logFromHeat(rec: DayRecord, solution: readonly number[]): MoveLo
     }
   }
   placed.forEach(({ h, cell }, i) => {
+    if (i < blots) {
+      const t = Math.round(h * timeMs);
+      const right = solution[cell] as Digit;
+      log.push({ t, cell, kind: "place", digit: ((right % 9) + 1) as Digit, correct: false, blot: true });
+      log.push({ t, cell, kind: "place", digit: right, correct: true, blot: true });
+      return;
+    }
     log.push({
       t: Math.round(h * timeMs),
       cell,
@@ -274,6 +298,7 @@ export function progressFromRecord(date: string, rec: DayRecord): DayProgress | 
     log,
     undoStack: [],
     solved: true,
+    ...(rec.ink === true ? { ink: true } : {}),
     ...(decoded === null ? { logSynthetic: true as const } : {}),
   };
   return {

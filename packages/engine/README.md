@@ -113,7 +113,7 @@ pnpm measure:engine 200 hard expert       # (из корня) замер поп�
 
 ### Лог ходов и карточка дня (`movelog.ts`)
 
-`Move = { t, cell, kind: 'place' | 'erase' | 'note_add' | 'note_remove' | 'undo', digit?, correct?, technique? }`,
+`Move = { t, cell, kind: 'place' | 'erase' | 'note_add' | 'note_remove' | 'undo', digit?, correct?, technique?, blot? }`,
 `t` — мс от старта, не убывает. `createMoveLog()`, `appendMove(log, move)` (возвращает новый лог).
 
 - `heatmap(log, { mission, solution? }) → (number | null)[]` — момент финального правильного
@@ -127,6 +127,15 @@ pnpm measure:engine 200 hard expert       # (из корня) замер поп�
   постановок: та же/следующая цифра (сканер) → примыкающие клетки (змейка) → тот же блок
   (блочник) → рядом, ≤ 2 (змейка) → иначе снайпер; порог 0.5, при < 4 постановках — снайпер.
   Подробности в JSDoc.
+
+### Чернильный режим (`ink.ts`, PD-71)
+
+Правила режима — в одном модуле: `INK_RULES` (`autoReplaceBlot`, `allowInArchive`, `allowNotes`), `inkAllows(kind, filled)`
+(что допустимо в ink-партии: нет `undo`, нет стирания и перезаписи цифр, заметки — да), `blotsOf(log)`,
+`inkViolations(log)` (проверка лога на соответствие правилам). `Move.blot` — обратно-совместимый маркер клякса/замена:
+`place(wrong, correct:false, blot:true)` + сразу (тот же `t`) `place(right, correct:true, blot:true)`. В `summary`:
+клякса = 1 правка + 1 ошибка, авто-замена не считается постановкой игрока (`placements`/`evenness`/`solvingStyle`/
+`maxTechnique` её игнорируют). Полностью — `docs/pd-71-ink-rules.md` (корень продукта).
 
 ### Таймлапс и отпечаток прохождения (`timelapse.ts`, PD-70)
 
@@ -143,6 +152,8 @@ pnpm measure:engine 200 hard expert       # (из корня) замер поп�
 - `timelapseFingerprint(log, puzzle, { maxGapMs? }) → { cells, placed }` — данные для PNG-отпечатка: для каждой клетки игрока, верно заполненной к концу лога,
   `{ order, t, attempts }` — порядок финальной постановки (0…placed−1), время в **сжатой** шкале 0..1, число постановок цифры в клетку за партию;
   `null` — подсказка либо пустая/неверная к концу клетка (как у `heatmap`). Цифр решения в данных нет.
+- Чернильный режим (`Move.blot`, PD-71): клякса и её авто-замена — два кадра подряд с одним `t`, оба с `blot: true` (в первом клетка в `wrong`); в отпечатке клетка с кляксой
+  помечена `blot: true`, замена не считается попыткой (`attempts`). Ход `place`/`note_*` с цифрой не из 1..9 игнорируется.
 - `RangeError`: клетка хода вне 0..80, `speed ≤ 0`, отрицательные `durationMs`/`maxGapMs`.
 
 ### Контракт undo

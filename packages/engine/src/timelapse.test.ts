@@ -313,3 +313,87 @@ describe("timelapse on real engine puzzles", () => {
     expect(f.placed).toBe(empties);
   });
 });
+
+describe("Чернильный режим: клякса в таймлапсе (PD-71)", () => {
+  const blotWrong = (t: number, cell: number, digit: Digit): Move => place(t, cell, digit, { correct: false, blot: true });
+  const blotFix = (t: number, cell: number, digit: Digit): Move => place(t, cell, digit, { correct: true, blot: true });
+  /** r1c1: клякса 9 → авто-замена 1 (тот же t); r1c2, r1c3 — верно; у r1c3 клякса тоже. */
+  const inkLog: MoveLog = [
+    blotWrong(1000, 0, 9),
+    blotFix(1000, 0, 1),
+    place(2500, 1, 2),
+    blotWrong(4000, 2, 5),
+    blotFix(4000, 2, 3),
+  ];
+
+  it("клякса видна кадром, замена — следующим кадром, финальный кадр — решение", () => {
+    const r = timelapseFrames(inkLog, puzzle);
+    expect(r.frames).toHaveLength(6);
+    const f1 = r.frames[1]!;
+    expect(head(f1.values)).toEqual([9, 0, 0]);
+    expect(f1.wrong).toEqual([0]);
+    expect(f1.blot).toBe(true);
+    const f2 = r.frames[2]!;
+    expect(head(f2.values)).toEqual([1, 0, 0]);
+    expect(f2.wrong).toEqual([]);
+    expect(f2.blot).toBe(true);
+    expect(f2.t).toBe(f1.t); // авто-замена в тот же момент
+    expect(r.frames[3]!.blot).toBeUndefined(); // обычный ход кадром без blot
+    expect(r.frames.at(-1)!.values.join("")).toBe(SOLUTION);
+    expect(r.frames.at(-1)!.wrong).toEqual([]);
+    expect(r.frames.filter((f) => f.wrong.length > 0).map((f) => f.wrong)).toEqual([[0], [2]]);
+  });
+
+  it("время кадров монотонно (также при durationMs/speed)", () => {
+    for (const opts of [{}, { durationMs: 5000 }, { speed: 2 }, { maxGapMs: Infinity }]) {
+      const ts = timelapseFrames(inkLog, puzzle, opts).frames.map((f) => f.t);
+      expect(ts).toEqual([...ts].sort((a, b) => a - b));
+    }
+  });
+
+  it("без solution: верность — по Move.correct, финал тот же", () => {
+    const r = timelapseFrames(inkLog, { mission: MISSION });
+    expect(r.frames[1]!.wrong).toEqual([0]);
+    expect(r.frames.at(-1)!.values.join("")).toBe(SOLUTION);
+  });
+
+  it("отпечаток: клякса отмечена, авто-замена не попытка, цифр решения в данных нет", () => {
+    const fp = timelapseFingerprint(inkLog, puzzle);
+    expect(fp.placed).toBe(3);
+    expect(fp.cells[0]).toMatchObject({ order: 0, attempts: 1, blot: true });
+    expect(fp.cells[1]).toMatchObject({ order: 1, attempts: 1 });
+    expect(fp.cells[1]).not.toHaveProperty("blot");
+    expect(fp.cells[2]).toMatchObject({ order: 2, t: 1, attempts: 1, blot: true });
+    expect(fp.cells[0]!.t).toBeCloseTo(0.25, 5);
+    const json = JSON.stringify(fp);
+    expect(json).not.toContain('"digit"');
+    expect(Object.keys(fp.cells[0]!).sort()).toEqual(["attempts", "blot", "order", "t"]);
+  });
+
+  it("обычный лог: поля blot нет ни в кадрах, ни в отпечатке", () => {
+    const log: MoveLog = [place(0, 0, 9, { correct: false }), place(100, 0, 1), place(200, 1, 2), place(300, 2, 3)];
+    expect(timelapseFrames(log, puzzle).frames.some((f) => "blot" in f)).toBe(false);
+    expect(timelapseFingerprint(log, puzzle).cells.some((c) => c !== null && "blot" in c)).toBe(false);
+  });
+});
+
+describe("timelapseFrames — повреждённые цифры хода", () => {
+  it("note_add с нечисловой/вне 1..9 цифрой игнорируется: маска заметок не получает бит 0", () => {
+    const bad = [
+      { t: 10, cell: 0, kind: "note_add", digit: "x" },
+      { t: 20, cell: 0, kind: "note_add", digit: 0 },
+      { t: 30, cell: 0, kind: "note_add", digit: 10 },
+      { t: 40, cell: 0, kind: "note_add", digit: 1.5 },
+      { t: 50, cell: 0, kind: "note_remove", digit: null },
+    ] as unknown as MoveLog;
+    const r = timelapseFrames(bad, puzzle, { notes: true });
+    expect(r.frames).toHaveLength(1);
+    const good = timelapseFrames([...bad, noteAdd(60, 0, 3)], puzzle, { notes: true });
+    expect(good.frames.at(-1)!.notes![0]).toBe(1 << 3);
+  });
+
+  it("place с цифрой вне 1..9 не ставит значение", () => {
+    const bad = [{ t: 10, cell: 0, kind: "place", digit: 99 }] as unknown as MoveLog;
+    expect(timelapseFrames(bad, puzzle).frames).toHaveLength(1);
+  });
+});

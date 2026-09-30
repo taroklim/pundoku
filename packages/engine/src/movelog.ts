@@ -24,6 +24,8 @@ export function appendMove(log: MoveLog, move: Move): MoveLog {
 interface CellEntry {
   readonly t: number;
   readonly ok: boolean;
+  /** Клетка — клякса Чернильного режима (неверная цифра с `blot`) либо её авто-замена. */
+  readonly blot?: boolean;
 }
 
 interface Replayed {
@@ -63,9 +65,13 @@ function replay(log: MoveLog, okOf: (m: Move) => boolean): Replayed {
     switch (m.kind) {
       case "place": {
         const prev = cells[m.cell]!;
-        const own = prev === null ? 0 : 1;
+        // Чернила (PD-71): клякса = ровно одна правка; её авто-замена верной цифрой (`blot` поверх клетки-
+        // кляксы) новой правки не добавляет — иначе счёт при `autoReplaceBlot` true/false расходился бы.
+        const blotMistake = m.blot === true && m.correct === false;
+        const resolvesBlot = m.blot === true && !blotMistake && prev?.blot === true;
+        const own = resolvesBlot ? 0 : (prev === null ? 0 : 1) + (blotMistake ? 1 : 0);
         corrections += own;
-        cells[m.cell] = { t: m.t, ok: okOf(m) };
+        cells[m.cell] = { t: m.t, ok: okOf(m), ...(blotMistake || resolvesBlot ? { blot: true } : {}) };
         stack.push({ index, move: m, prev, ownCorrections: own });
         break;
       }
@@ -127,6 +133,11 @@ export function heatmap(log: MoveLog, puzzle: { mission: GridInput; solution?: G
   });
 }
 
+/** Авто-замена клетки-кляксы (Чернильный режим): верная цифра с `blot`, поставленная движком, а не игроком. */
+function isBlotReplacement(m: Move): boolean {
+  return m.blot === true && m.correct !== false;
+}
+
 function durationOf(log: MoveLog): number {
   return log.length === 0 ? 0 : log[log.length - 1]!.t;
 }
@@ -141,6 +152,9 @@ function durationOf(log: MoveLog): number {
  * - `placements`, `firstCell`, `maxTechnique`, `evenness` — только по действующим (не отменённым)
  *   постановкам.
  * - `durationMs` — `t` последнего хода лога, включая undo и заметки.
+ * - Чернильный режим (PD-71): клякса (`place` с `blot` и `correct: false`) = 1 правка + 1 ошибка, её
+ *   авто-замена (`place` с `blot`, `correct: true`) не считается постановкой игрока (`placements`,
+ *   `evenness`, `solvingStyle`, `maxTechnique` её игнорируют).
  */
 export function summary(log: MoveLog): MoveLogSummary {
   const { corrections, effective } = replay(log, () => true);
@@ -152,7 +166,7 @@ export function summary(log: MoveLog): MoveLogSummary {
   const techniques: NonNullable<Move["technique"]>[] = [];
   const times: number[] = [];
   for (const m of effective) {
-    if (m.kind !== "place") continue;
+    if (m.kind !== "place" || isBlotReplacement(m)) continue; // авто-замена клетки-кляксы — не действие игрока
     placements++;
     times.push(m.t);
     if (firstCell === null) firstCell = m.cell;
@@ -198,7 +212,7 @@ export function summary(log: MoveLog): MoveLogSummary {
  * определён и возвращается `sniper`.
  */
 export function solvingStyle(log: MoveLog): SolvingStyle {
-  const places = replay(log, () => true).effective.filter((m) => m.kind === "place");
+  const places = replay(log, () => true).effective.filter((m) => m.kind === "place" && !isBlotReplacement(m));
   if (places.length < 4) return "sniper";
   let sameDigit = 0;
   let sameBox = 0;

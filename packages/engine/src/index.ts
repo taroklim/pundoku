@@ -12,6 +12,7 @@
  * - генератор (`generator.ts`): `generate`, `dailySeed`, `dailyPuzzle`; сложность по двум осям
  *   (подсказки × техника) — `difficulty.ts`: `DIFFICULTIES`, `DIFFICULTY_PROFILES`;
  * - лог ходов и метрики карточки дня (`movelog.ts`): `heatmap`, `summary`, `solvingStyle`;
+ * - Чернильный режим (`ink.ts`): правила `INK_RULES`/`inkAllows`, кляксы лога, проверка лога.
  * - таймлапс и отпечаток прохождения (`timelapse.ts`): `timelapseFrames`, `timelapseFingerprint`.
  */
 export type {
@@ -77,6 +78,9 @@ export { DIFFICULTIES, DIFFICULTY_PROFILES, EASY_MIN_CLUES } from "./difficulty.
 export type { GenerateOptions } from "./generator.js";
 
 export { Rng } from "./prng.js";
+
+export { INK_RULES, blotsOf, inkAllows, inkViolations, isBlotMistake, isBlotMove } from "./ink.js";
+export type { Blot, InkRules, InkViolation } from "./ink.js";
 
 export { appendMove, createMoveLog, heatmap, solvingStyle, summary } from "./movelog.js";
 
