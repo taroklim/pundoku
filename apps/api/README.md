@@ -17,9 +17,9 @@ pnpm dev:api                                           # tsx watch, http://local
 `.env` ищется сначала в `apps/api/.env`, затем в корне репо (`.env.example` — там же).
 Переменные: `DATABASE_URL`, `PORT` (3000; целое 1–65535 — порт 0 не поддерживается; не задан → 3000, пустой/нечисловой/дробной/вне диапазона → ошибка конфигурации), `WEB_ORIGIN` (CORS, через запятую; по умолчанию
 `http://localhost:5173`), `SUDOKU_COM_BASE_URL`, `SUDOKU_COM_TIMEOUT_MS` (5000),
-`DAILY_FALLBACK_DIFFICULTY` (`medium` — профиль движка 30 подсказок/singles ≈ Sudoku.com «hard»; допустимо — значения `DIFFICULTIES` движка (`easy|medium|hard|expert|master`), иное значение — ошибка конфигурации при старте), `DAILY_UPSTREAM_RETRY_MS` (60000, см. «Замена фолбэка»; как и `SUDOKU_COM_TIMEOUT_MS` — только десятичные цифры), `LOG_LEVEL` (`info`; `trace|debug|info|warn|error|fatal|silent`), `TRUST_PROXY` (`1` за reverse proxy).
+`DAILY_FALLBACK_DIFFICULTY` (`medium` — профиль движка 30 подсказок/singles ≈ Sudoku.com «hard»; допустимо — значения `DIFFICULTIES` движка (`easy|medium|hard|expert|master`), иное значение — ошибка конфигурации при старте), `DAILY_UPSTREAM_RETRY_MS` (60000, см. «Замена фолбэка»; как и `SUDOKU_COM_TIMEOUT_MS` — только десятичные цифры), `LOG_LEVEL` (`info`; `trace|debug|info|warn|error|fatal|silent`), `TRUST_PROXY` (`1` за reverse proxy), `RECOVERY_KEY_HMAC_SECRET` (секрет HMAC ключей восстановления, см. «Ключ восстановления»).
 
-Неверное значение `PORT`, `LOG_LEVEL`, `DAILY_FALLBACK_DIFFICULTY`, `SUDOKU_COM_TIMEOUT_MS`, `DAILY_UPSTREAM_RETRY_MS` — ошибка конфигурации при старте: одна строка в stderr без стека, код выхода 1.
+Неверное значение `PORT`, `LOG_LEVEL`, `RECOVERY_KEY_HMAC_SECRET` (вне development/test не задан или короче 32 байт), `DAILY_FALLBACK_DIFFICULTY`, `SUDOKU_COM_TIMEOUT_MS`, `DAILY_UPSTREAM_RETRY_MS` — ошибка конфигурации при старте: одна строка в stderr без стека, код выхода 1.
 
 С Docker: `docker compose up -d postgres` и дальше то же самое (см. корневой README).
 
@@ -89,6 +89,59 @@ curl http://localhost:3000/api/snapshot -H "Authorization: Bearer $TOK"
 - Клиент не должен полагаться на «мёртвые» устройства: токен без снапшота даёт `404 snapshot_not_found` на GET —
   это нормальное состояние нового устройства.
 
+### Ключ восстановления и синхронизация устройств (PD-27)
+
+Без почты, аккаунтов и паролей: устройство просит у сервера **ключ восстановления**, второе устройство вводит его и
+начинает работать с тем же снапшотом. Устройства, делящие один снапшот, образуют **группу синхронизации**; токен
+устройства остаётся прежним, `GET/PUT /api/snapshot` сами определяют, чей снапшот читать/писать (логика версий и
+`409` не менялась). Все маршруты — с `Authorization: Bearer <deviceToken>`, ответы с `Cache-Control: no-store`.
+
+| Метод и путь | Ответ |
+| --- | --- |
+| `POST /api/recovery/key` | `201 {key, devices: 1}` — создаёт группу; снапшот этого устройства становится снапшотом группы. `409 key_exists`, если устройство уже в группе |
+| `POST /api/recovery/key/rotate` | `200 {key}` — новый ключ, старый перестаёт работать; `404 no_key`, если устройство не в группе. Перевыпустить может любое устройство группы |
+| `POST /api/recovery/redeem` `{key}` | `200 {linked: true, devices}` — устройство присоединено (повтор — идемпотентный успех); любая неудача — `400 invalid_key` |
+| `GET /api/recovery` | `{hasKey: false}` или `{hasKey: true, devices, keyCreatedAt}` |
+| `DELETE /api/recovery/link` | `200 {linked: false}` — «отвязать это устройство» (идемпотентно) |
+| `DELETE /api/recovery` | `200 {hasKey: false}` — «удалить ключ и разорвать все связи» (идемпотентно) |
+
+```sh
+A=$(curl -s -X POST localhost:3000/api/devices | jq -r .deviceToken)
+KEY=$(curl -s -X POST localhost:3000/api/recovery/key -H "Authorization: Bearer $A" | jq -r .key)   # XXXX-XXXX-…(8×4), показывается один раз
+B=$(curl -s -X POST localhost:3000/api/devices | jq -r .deviceToken)
+curl -X POST localhost:3000/api/recovery/redeem -H "Authorization: Bearer $B" -H 'content-type: application/json' -d "{\"key\":\"$KEY\"}"
+# 200 {"linked":true,"devices":2}   — теперь GET /api/snapshot с токеном B отдаёт снапшот A
+```
+
+Поведение:
+- **Ключ** — 160 бит из CSPRNG, Crockford base32, 32 символа, показ группами `XXXX-…` (8×4). При вводе игнорируются
+  регистр, пробелы и дефисы, `I/L` читаются как `1`, `O` как `0`.
+- **Отвязка не владельца** снапшота группы: устройство получает *копию* снапшота как собственный. **Владельца при
+  наличии других устройств:** снапшот группы переезжает на самое раннее из оставшихся, у ушедшего остаётся копия.
+  **Последнего устройства:** группа и ключ гасятся, снапшот остаётся у устройства.
+- **Удаление ключа:** группа и связи удаляются, снапшот группы достаётся устройству, вызвавшему удаление; остальные
+  возвращаются к своим прежним снапшотам (если они были).
+- **Присоединение (redeem):** прежний собственный снапшот устройства не удаляется, а помечается `snapshots.orphaned_at`
+  (сирота, для будущей уборки); любой успешный `PUT` в свой снапшот снимает пометку. Устройство из другой группы
+  сначала выходит из неё по правилам отвязки.
+- **Гонки:** каждая изменяющая операция — транзакция, первым шагом блокирующая строку устройства
+  (`devices … FOR UPDATE`), redeem/rotate/удаление — ещё и строку группы (`FOR UPDATE`); при `40P01`/`40001` — до 3 попыток.
+
+Безопасность:
+- В БД только `HMAC-SHA256(RECOVERY_KEY_HMAC_SECRET, нормализованный ключ)` (`sync_groups.key_hmac`, unique, 32 байта);
+  утечка одной БД ключей не даёт. Сравнение — `timingSafeEqual` поверх индексного поиска по HMAC.
+- `RECOVERY_KEY_HMAC_SECRET` — ≥32 байта (`openssl rand -base64 48`); вне development/test обязателен (старт падает с
+  `ConfigError`), в development без него используется публичное dev-умолчание (предупреждение при старте). Смена секрета
+  обесценивает все выданные ключи. Не коммитить.
+- Ответ на неудачный redeem **один и тот же** (`400 invalid_key`) для неверного формата, чужого, перевыпущенного,
+  удалённого ключа и не-строки — как по телу, так и по времени (любая строка идёт в HMAC и поиск, формат не проверяется).
+- Лимиты (in-memory, по клиенту): redeem — **20 неудач/час с IP** и **10 неудач/час с устройства** (успехи не считаются;
+  `429 rate_limited` + `Retry-After` блокирует и верный ключ до конца окна); создание + перевыпуск — **5/час на устройство**.
+  За reverse proxy включить `TRUST_PROXY=1`, иначе лимит по IP видит адрес прокси. Лимиты сбрасываются перезапуском api.
+- **Не логируется:** ключ (ни в каком виде, ни в теле запроса, ни в ответе), токен устройства, заголовок
+  `Authorization`. pino `redact` закрывает `key`/`*.key`/`req.body.key`/`res.body.key` и заголовки; в логах событий
+  только `groupId` и `keyHmacPrefix` (6 hex HMAC) для расследований. Тест собирает весь лог и проверяет отсутствие ключа.
+
 ## Источник сетки дня: Sudoku.com
 
 Неофициальный JSON Easybrain, проверен живым запросом 2026-09-29 (детали и примеры —
@@ -143,6 +196,10 @@ mission+solution → фолбэк.
   фолбэков до миграции) — `0005`.
 - `devices(id uuid PK, token_hash unique, created_at, last_seen_at)`,
   `snapshots(device_id PK → devices, version, updated_at, data jsonb, size_bytes, saved_at)` — `0003`.
+- `sync_groups(id PK, key_hmac bytea unique (32 байта), snapshot_device_id unique → devices, key_created_at, created_at)`,
+  `device_links(device_id PK → devices on delete cascade, group_id → sync_groups on delete cascade, linked_at)`,
+  `snapshots.orphaned_at` (сирота после присоединения к группе) — `0006`. Устройство вне `device_links` работает со
+  своим снапшотом, как раньше.
 
 Раннер — `src/db/migrate.ts` (см. `migrations/README.md`). Запуск как точка входа определяется по
 реальным путям (`realpath`), поэтому `node /путь/к/симлинку-на-migrate.js` работает так же, как прямой запуск.
@@ -171,6 +228,17 @@ DATABASE_URL=postgres://localhost:5432/pundoku_test pnpm migrate      # из к�
 TEST_DATABASE_URL=postgres://localhost:5432/pundoku_test pnpm --filter @pundoku/api test
 ```
 
+Ключ восстановления (`src/recovery/integration.test.ts`) требует **именно `TEST_DATABASE_URL`** и свежую БД с применённой
+миграцией `0006` (без таблицы `sync_groups` файл скипается); он не удаляет чужие строки — изоляция уникальными
+устройствами. Те же сценарии (`src/test/recovery-scenarios.ts`) гоняются и на in-memory репозитории (unit,
+`src/recovery/router.test.ts`), плюс на Postgres — гонки redeem/rotate/unlink/delete и SQL-инварианты:
+
+```sh
+createdb pundoku_pd47 && DATABASE_URL=postgres:///pundoku_pd47 pnpm --filter @pundoku/api migrate
+TEST_DATABASE_URL=postgres:///pundoku_pd47 pnpm --filter @pundoku/api test
+dropdb pundoku_pd47
+```
+
 Проверка: `pnpm --filter @pundoku/api exec vitest run --reporter=verbose | grep integration` — должны быть строки
 `✓ src/integration.test.ts > integration (Postgres) > …` (7 тестов), а не `↓` (skipped). Если БД недоступна при
 заданном URL — файл тоже скипается с предупреждением, проверяйте вывод. Отдельно от него `sudoku-com-live` всегда
@@ -181,10 +249,11 @@ skipped без `LIVE_SUDOKU_COM=1` — это норма.
 ```
 src/app.ts               сборка Express-приложения с DI (helmet, cors, pino-http, json, роуты, ошибки)
 src/index.ts             реальные зависимости (pg Pool, SudokuComSource, EngineGenerator) + listen
-src/config/env.ts        переменные окружения
+src/config/env.ts        переменные окружения (в т.ч. loadRecoveryConfig)
 src/daily/               types, sudoku-com-source (адаптер), generator (адаптер движка), service, router
 src/devices/             tokens (генерация/хеш), auth (requireDevice), router
 src/snapshot/            types, router
+src/recovery/            key (генерация/нормализация/HMAC ключа), types, router (/api/recovery)
 src/db/                  pool, migrate, *-repo (Postgres-реализации репозиториев)
 src/middleware/          error-handler, rate-limit, request-log
 src/test/fakes.ts        in-memory репозитории и фейки для unit-тестов (не попадает в dist: tsconfig.build.json)

@@ -6,6 +6,8 @@ import { DailyService } from "./daily/service.js";
 import { dailyRouter } from "./daily/router.js";
 import type { DeviceRepo } from "./devices/types.js";
 import { devicesRouter } from "./devices/router.js";
+import type { RecoveryRepo } from "./recovery/types.js";
+import { recoveryRouter, type RecoveryLimits } from "./recovery/router.js";
 import type { SnapshotRepo } from "./snapshot/types.js";
 import { snapshotRouter } from "./snapshot/router.js";
 import { errorHandler, notFoundHandler } from "./middleware/error-handler.js";
@@ -14,7 +16,9 @@ import { requestLog } from "./middleware/request-log.js";
 import type { Logger } from "./lib/logger.js";
 
 export interface AppDeps {
-  repos: { dailyPuzzles: DailyPuzzleRepo; devices: DeviceRepo; snapshots: SnapshotRepo };
+  repos: { dailyPuzzles: DailyPuzzleRepo; devices: DeviceRepo; snapshots: SnapshotRepo; recovery: RecoveryRepo };
+  /** Ключ восстановления (PD-27): серверный секрет HMAC (≥32 байт). */
+  recovery: { hmacSecret: Buffer; limits?: RecoveryLimits };
   dailySource: DailyPuzzleSource;
   generator: PuzzleGenerator;
   logger: Logger;
@@ -24,6 +28,8 @@ export interface AppDeps {
   upstreamRetryMs?: number;
   trustProxy?: boolean;
   now?: () => Date;
+  /** Часы (мс) для окон rate-limit'ов recovery; в тестах — управляемые. */
+  clock?: () => number;
   rateLimits?: { daily?: number; devices?: number };
 }
 
@@ -40,7 +46,7 @@ export function createApp(deps: AppDeps): express.Express {
   app.use(
     cors({
       origin: deps.webOrigins,
-      methods: ["GET", "POST", "PUT"],
+      methods: ["GET", "POST", "PUT", "DELETE"],
       allowedHeaders: ["Authorization", "Content-Type"],
       maxAge: 600,
     }),
@@ -66,7 +72,19 @@ export function createApp(deps: AppDeps): express.Express {
 
   app.use("/api/daily", rateLimit({ windowMs: 60_000, max: deps.rateLimits?.daily ?? 60 }), dailyRouter(dailyService));
   app.use("/api/devices", rateLimit({ windowMs: 60_000, max: deps.rateLimits?.devices ?? 10 }), devicesRouter(deps.repos.devices));
-  app.use("/api/snapshot", snapshotRouter(deps.repos.devices, deps.repos.snapshots));
+  app.use("/api/snapshot", snapshotRouter(deps.repos.devices, deps.repos.recovery, deps.repos.snapshots));
+  app.use(
+    "/api/recovery",
+    recoveryRouter({
+      devices: deps.repos.devices,
+      recovery: deps.repos.recovery,
+      logger: deps.logger,
+      hmacSecret: deps.recovery.hmacSecret,
+      now: deps.now ?? (() => new Date()),
+      ...(deps.recovery.limits ? { limits: deps.recovery.limits } : {}),
+      ...(deps.clock ? { clock: deps.clock } : {}),
+    }),
+  );
 
   app.use(notFoundHandler);
   app.use(errorHandler(deps.logger));
