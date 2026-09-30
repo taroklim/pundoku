@@ -86,9 +86,11 @@ describe("полотно года: формы и цвет меток", () => {
     expect(mark("2026-09-14").className).toBe("ymark is-missed");
   });
 
-  it("пропуск после первого запуска — контур; до первого запуска и будущее — пусто", () => {
-    expect(mark("2026-09-02").className).toBe("ymark is-missed");
+  it("пропуск после самой ранней записи (09-10) — контур; до неё (даже после firstUse 09-01) и будущее — пусто", () => {
+    expect(mark("2026-09-15").className).toBe("ymark is-missed");
     expect(mark("2026-09-28").className).toBe("ymark is-missed");
+    expect(mark("2026-09-02").className).toBe("ymark is-void");
+    expect(mark("2026-09-09").className).toBe("ymark is-void");
     expect(mark("2026-08-31").className).toBe("ymark is-void");
     expect(mark("2026-03-15").className).toBe("ymark is-void");
     expect(mark("2026-10-01").className).toBe("ymark is-void");
@@ -144,26 +146,61 @@ describe("пустой год", () => {
     expect(label("2026-09-29")).toContain("today");
   });
 
-  it("firstUse в прошлом, записей нет: дни с firstUse — «nothing recorded», а не «before you started»; раньше firstUse — «before»", () => {
+  it("firstUse в прошлом, записей нет: дни с firstUse — «nothing recorded», раньше firstUse — «before your first entry»", () => {
     render([], "2026-09-29", "2026-09-20");
     click(month(8));
     const label = (d: string) => document.querySelector<HTMLElement>(`.ycell[data-date="${d}"]`)!.getAttribute("aria-label")!;
     expect(label("2026-09-25")).toMatch(/, nothing recorded$/);
     expect(label("2026-09-20")).toMatch(/, nothing recorded$/); // сам день первого запуска: до начала он не был
-    expect(label("2026-09-19")).toMatch(/, before you started$/);
+    expect(label("2026-09-19")).toMatch(/, before your first entry$/);
     expect(label("2026-09-30")).toMatch(/, not yet$/);
     // карточка: то же различие словами
     click(document.querySelector('.ycell[data-date="2026-09-25"]'));
     expect(document.querySelector('[data-testid="day-card"] .emptyday')!.textContent).toBe("Nothing recorded for this day.");
     click(document.querySelector(".ysheet-head .back"));
     click(document.querySelector('.ycell[data-date="2026-09-19"]'));
-    expect(document.querySelector('[data-testid="day-card"] .emptyday')!.textContent).toBe("Before you started using Pundoku.");
+    expect(document.querySelector('[data-testid="day-card"] .emptyday')!.textContent).toBe("Before your first entry.");
   });
 
-  it("как только появилась запись, пропуски с firstUse возвращаются", () => {
+  it("PD-51: как только появилась запись, пропуски начинаются с неё, а не с firstUse", () => {
     render([progressOf("2026-09-27")], "2026-09-29", "2026-09-20");
     expect(host.querySelector('[data-testid="year-empty"]')).toBeNull();
-    expect(mark("2026-09-25").className).toBe("ymark is-missed");
+    expect(mark("2026-09-25").className).toBe("ymark is-void"); // между firstUse и записью — пусто
+    expect(mark("2026-09-26").className).toBe("ymark is-void");
+    expect(mark("2026-09-27").className).toBe("ymark is-solved");
+    expect(mark("2026-09-28").className).toBe("ymark is-missed");
+    expect(mark("2026-09-29").className).toBe("ymark is-void is-today");
+  });
+
+  it("PD-51: первая запись задним числом (архивная, late) сдвигает старт года на её дату", () => {
+    // firstUse 09-20, первая партия — архивный день 09-22 (late): пропуски 09-23..09-28, раньше — пусто
+    render([progressOf("2026-09-22", { late: true })], "2026-09-29", "2026-09-20");
+    expect(mark("2026-09-21").className).toBe("ymark is-void");
+    expect(mark("2026-09-22").className).toBe("ymark is-missed"); // late = контур
+    expect(mark("2026-09-23").className).toBe("ymark is-missed");
+    expect(mark("2026-09-28").className).toBe("ymark is-missed");
+  });
+
+  it("PD-51: запись позже старта (firstUse раньше неё) — дни до записи void, но играбельны и подписаны «before your first entry»", () => {
+    render([progressOf("2026-09-27")], "2026-09-29", "2026-09-20");
+    click(month(8));
+    const label = (d: string) => document.querySelector<HTMLElement>(`.ycell[data-date="${d}"]`)!.getAttribute("aria-label")!;
+    expect(label("2026-09-25")).toMatch(/, before your first entry$/);
+    expect(label("2026-09-19")).toMatch(/, before your first entry$/);
+    expect(label("2026-09-28")).toMatch(/, not played$/);
+    // граница архива не сдвинулась: 09-25 (>= firstUse) можно сыграть, 09-19 — нет
+    click(document.querySelector('.ycell[data-date="2026-09-25"]'));
+    expect(document.querySelector('[data-testid="day-card"] .emptyday')!.textContent).toBe("Before your first entry.");
+    expect(document.querySelector('[data-testid="play-day"]')).not.toBeNull();
+    click(document.querySelector(".ysheet-head .back"));
+    click(document.querySelector('.ycell[data-date="2026-09-19"]'));
+    expect(document.querySelector('[data-testid="play-day"]')).toBeNull();
+  });
+
+  it("PD-51: запись раньше firstUse (восстановленная) — старт года на ней, архив тоже с неё", () => {
+    render([progressOf("2026-09-03")], "2026-09-29", "2026-09-20");
+    expect(mark("2026-09-02").className).toBe("ymark is-void");
+    expect(mark("2026-09-04").className).toBe("ymark is-missed");
   });
 
   it("итоги в пустом состоянии скрыты от VoiceOver (aria-hidden), с записями — читаются", () => {
@@ -235,7 +272,8 @@ describe("шит месяца и карточка дня", () => {
     expect(cell("2026-09-12").getAttribute("aria-label")).toContain("solved with help");
     expect(cell("2026-09-13").getAttribute("aria-label")).toContain("started, not finished");
     expect(cell("2026-09-14").getAttribute("aria-label")).toContain("played late, counts as missed");
-    expect(cell("2026-09-05").getAttribute("aria-label")).toContain("not played");
+    expect(cell("2026-09-15").getAttribute("aria-label")).toContain("not played");
+    expect(cell("2026-09-05").getAttribute("aria-label")).toContain("before your first entry");
     expect(cell(TODAY).getAttribute("aria-label")).toContain("today, not played yet");
     expect(cell("2026-09-30").getAttribute("aria-label")).toContain("not yet");
     expect(cell("2026-09-11").querySelector(".ymark")!.className).toBe("ymark is-solved has-corr");
@@ -306,7 +344,7 @@ describe("шит месяца и карточка дня", () => {
   });
 
   it("пропущенный день: карточка есть, «Not played.»; будущее и «до начала» — своими словами", () => {
-    openDay(8, "2026-09-05");
+    openDay(8, "2026-09-15");
     expect(document.querySelector('[data-testid="day-card"] .emptyday')!.textContent).toBe("Not played.");
     click(document.querySelector(".ysheet-head .back"));
     click(document.querySelector('.ycell[data-date="2026-09-30"]'));

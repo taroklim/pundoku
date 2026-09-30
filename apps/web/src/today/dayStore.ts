@@ -323,7 +323,7 @@ export class DayStore extends GameStore<DaySnapshot> {
     await this.writesSettled(); // не читать день, пока не дописан предыдущий
     if (this.archive) {
       // День раньше начала пользования Year не предлагает — прямой URL тоже не открывает: без фолбэка, без запроса
-      // сетки и без записи (запись сдвинула бы начало пользования и породила бы пропуски «до первого запуска»).
+      // сетки и без записи (граница архива — firstUseDate: играть раньше первого дня пользования нельзя, хотя запись теперь и так сдвигает старт года, PD-51).
       const start = (await this.deps.useStart?.(today)) ?? null;
       if (token !== this.token) return;
       if (start !== null && date < start) {

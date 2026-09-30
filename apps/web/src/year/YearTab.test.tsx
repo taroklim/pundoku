@@ -84,7 +84,7 @@ describe("YearTab: загрузка и перечитывание данных",
     expect(h.getMeta).toHaveBeenCalledWith("firstUseDate");
     expect(isEmpty()).toBe(false);
     expect(marks("is-solved")).toBe(1);
-    expect(marks("is-missed")).toBe(8); // firstUse = 20 сентября, запись 27-го → пропуски 20..26 и 28
+    expect(marks("is-missed")).toBe(1); // PD-51: старт года — запись 27-го (firstUse = 20 сентября не в счёт) → пропуск только 28-го
   });
 
   it("возврат приложения на передний план (visibilitychange → visible) перечитывает данные", async () => {
