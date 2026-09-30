@@ -365,3 +365,5 @@ Gates: build → typecheck, lint, тесты web/engine/api (api с `TEST_DATABA
 | Имя | Роль | Статус | Тикет | Обновлено |
 |-----|------|--------|-------|-----------|
 | PM-Pundoku-7 | product-manager | working | PD-74/75/76 (релиз 1.1 UI) | 2026-10-01 |
+| dev-pd74 | developer | working | PD-74 (+PD-78), worktree pd-74 | 2026-10-01 |
+| dev-pd75 | developer | working | PD-75, worktree pd-75 | 2026-10-01 |
