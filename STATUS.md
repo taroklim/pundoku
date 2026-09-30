@@ -229,7 +229,11 @@ Gates: build → typecheck, lint, тесты web/engine/api (api с TEST_DATABAS
 | PD-40 | PASS с оговорками, блокеров нет (20 splash chromium+webkit, офлайн, seed-хэш 208 сеток не изменился, PD-22 подтверждён); Low → PD-41/PD-42. QA PD-26 (pd-26 @ dec1e80): startup-image, precache/офлайн, PD-22 low, gates | qa-tester | P2 | completed | PD-41 | (готов: pd-26 @ 7202eaa; gates web 319, engine 127, api 80+2 skipped; 26 splash для 13 устройств) Фикс-проход pd-26 (после rebase на main, pd-26 @ cdd3b9d): (1) комментарий в `engine/src/generator.ts` про «21–22 нестабильно, стабильно от ~23» выровнять с README (22–23 стабильно); (2) добавить iPhone Air (420×912@3 → 1260×2736) в `startup-devices.mjs` + `pnpm splash` (Plus 8/7/6s 414×736@3 и SE1 320×568 — по усмотрению, старые); (3) PD-38 — Year: подписи «before you started», формулировка «filled in» (неверная цифра не считается: «29 of 43» при 30 на поле), порядок forced-colors CSS (media-блок ниже базовых `.year-month`/`.ycell.today`), первая запись задним числом рисует все пропуски от firstUse — оценить, смягчить/задокументировать. Отдельный QA не нужен: gates + быстрый ручной взгляд | developer | P2 | completed | PD-40 |
 | PD-42 | (смержен в main d75f9f7, pd-42 @ d5c7237; gates: build/typecheck, api 127+3 skipped с TEST_DATABASE_URL; пустой `PORT=` — ошибка осознанно) Low: `PORT=abc` давал сырой стек вместо `ConfigError` в api | developer | P3 | completed | — |
 | PD-26 | (смержен в main fa4eab5 вместе с PD-41/PD-38; QA PD-40 PASS) Полировка: `apple-touch-startup-image`/тёмный launch (QA PD-16), PD-22 low, Share PNG без цифр (если владелец подтвердит — не входит); ветка `pd-26` @ dec1e80 (dev готов; gates: web 238, engine 127, api 80+2 skipped), на QA PD-40 | developer | P2 | completed | PD-25 |
-| PD-27 | Привязка e-mail/пароля к анонимному аккаунту (UI в настройках) | developer | P2 | in_progress | PD-26 |
+| PD-27 | Привязка e-mail (код из письма, в настройках, без регистрации): план `docs/pd-27-email-link.md`; разбит на PD-47 (api), PD-48 (макет Settings), PD-49 (web), PD-50 (QA) | developer | P2 | in_progress | PD-26 |
+| PD-47 | PD-27 api: миграция 0006, резолв снапшота в requireDevice, `/api/account/*`, MailTransport (file), лимиты, redact, тесты; ветка `pd-27-api` | developer | P2 | in_progress | — |
+| PD-48 | PD-27 дизайн: макет экрана Settings (`design/pd27-settings.html`) | designer | P2 | in_progress | — |
+| PD-49 | PD-27 web: `#/settings`, блок e-mail, resetAfterAccountChange, i18n, тесты; ветка `pd-27-web` | developer | P2 | pending | PD-48 |
+| PD-50 | QA PD-27 (два профиля, слияние, лимиты, отвязка) | qa-tester | P2 | pending | PD-47, PD-49 |
 | PD-20 | QA PD-14 (pd-14 @ 0026b2a): PASS с оговорками, блокеров и Medium нет; 4 Low + решение по слиянию → PD-31 | qa-tester | P1 | completed | PD-14 |
 | PD-31 | Фикс-проход pd-14 по QA PD-20 (pd-14 @ c574f13; gates зелёные: web 213, engine 105, api 77+2 skipped, интеграционные 7/7 на живой БД) | developer | P1 | completed | PD-20 |
 | PD-32 | PASS с оговорками (слияние 409 по источникам, 1500 дней без лишних PUT, gates, интеграционные 7/7); Low → PD-37. QA-регресс pd-14 @ c574f13 (перезапуск после сбоя контейнера; worktree /tmp/pundoku-qa/qa-pd32, БД pundoku_qa5, порты 3320/5320): слияние 409 по источникам, отсутствие лишних PUT при 1500 днях, сокращённый регресс PD-20, gates + интеграционные api-тесты | qa-tester | P1 | completed | PD-31 |
@@ -283,4 +287,5 @@ Gates: build → typecheck, lint, тесты web/engine/api (api с `TEST_DATABA
 | Имя | Роль | Статус | Тикет | Обновлено |
 |-----|------|--------|-------|-----------|
 | pm-pundoku-4 | product-manager | working | PD-27 | 2026-09-30 |
-| Explore-PD27 | Explore | working | PD-27 | 2026-09-30 |
+| Dev-PD47 | developer | working | PD-47 | 2026-09-30 |
+| Designer-PD48 | designer | working | PD-48 | 2026-09-30 |
