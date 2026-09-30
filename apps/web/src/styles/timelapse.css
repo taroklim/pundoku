@@ -110,6 +110,8 @@
   display: flex;
   align-items: center;
   min-height: 44px;
+  min-width: 44px;
+  justify-content: flex-end;
   padding: 0 4px;
   color: var(--ink);
   font-size: 0.95rem;
@@ -340,6 +342,7 @@ input[type="range"].tl-scrub:focus-visible {
 }
 .tl-seg button {
   min-height: 44px;
+  min-width: 44px;
   padding: 0 10px;
   border-radius: 7px;
   color: var(--label);
