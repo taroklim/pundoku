@@ -6,6 +6,7 @@
  * Хранилище живёт выше вкладок: переключение Today/Play/Year не сбрасывает партию.
  */
 import type { Difficulty } from "@pundoku/engine";
+import { isBlotMistake } from "@pundoku/engine";
 import type { PlayState } from "./logic";
 import {
   closedUnits,
@@ -13,6 +14,7 @@ import {
   enterDigit,
   eraseCell,
   firstOpenCell,
+  setInkMode,
   toggleNote,
   undo as undoMove,
 } from "./logic";
@@ -31,6 +33,8 @@ export interface PlaySnapshot {
   readonly pop: { readonly cell: number; readonly id: number } | null;
   /** M3: собранный юнит (клетки по порядку) — одна волна. */
   readonly wave: { readonly cells: readonly number[]; readonly id: number } | null;
+  /** Ink (PD-71): клякса, только что поставленная игроком (неверная цифра и клетка; id меняется на каждую). */
+  readonly blot?: { readonly cell: number; readonly digit: number; readonly id: number } | null;
 }
 
 type Mutable<T> = { -readonly [K in keyof T]: T[K] };
@@ -47,6 +51,7 @@ export function initialSnapshot(): PlaySnapshot {
     notesMode: false,
     pop: null,
     wave: null,
+    blot: null,
   };
 }
 
@@ -103,6 +108,7 @@ export abstract class GameStore<S extends PlaySnapshot = PlaySnapshot> {
       notesMode: false,
       pop: null,
       wave: null,
+      blot: null,
       ...patch,
     } as Partial<S>);
     return play;
@@ -120,6 +126,7 @@ export abstract class GameStore<S extends PlaySnapshot = PlaySnapshot> {
       notesMode: false,
       pop: null,
       wave: null,
+      blot: null,
       ...patch,
     } as Partial<S>);
   }
@@ -135,6 +142,7 @@ export abstract class GameStore<S extends PlaySnapshot = PlaySnapshot> {
       notesMode: false,
       pop: null,
       wave: null,
+      blot: null,
       startedOn: new Date(),
       ...patch,
     } as Partial<S>);
@@ -173,6 +181,24 @@ export abstract class GameStore<S extends PlaySnapshot = PlaySnapshot> {
     return next;
   }
 
+  /**
+   * Чернильный режим (PD-71): включить/выключить. Только до первого хода (после — режим неизменен) и только
+   * там, где он разрешён (`inkAllowed`). Возвращает `true`, если режим теперь ровно такой, как запрошено.
+   */
+  setInk(on: boolean): boolean {
+    const { play, phase } = this.snap;
+    if (phase !== "playing" || !play) return false;
+    if (on && !this.inkAllowed()) return (play.ink === true) === on;
+    const next = setInkMode(play, on);
+    if (next !== play) this.set({ play: next } as Partial<S>);
+    return (next.ink === true) === on;
+  }
+
+  /** Разрешён ли Чернильный режим на этом экране: Today и Play — да; архивный `DayStore` переопределяет. */
+  protected inkAllowed(): boolean {
+    return true;
+  }
+
   toggleNotesMode(): void {
     if (this.snap.phase !== "playing") return;
     this.set({ notesMode: !this.snap.notesMode } as Partial<S>);
@@ -188,6 +214,9 @@ export abstract class GameStore<S extends PlaySnapshot = PlaySnapshot> {
     if (next === play) return;
     const placed = !notes && next.values[selected] === digit;
     const patch: Mutable<Partial<PlaySnapshot>> = { play: next };
+    // Ink: неверная цифра не остаётся в `values` (авто-замена) — клякса видна только в логе нового хода.
+    const blot = notes ? undefined : next.log.slice(play.log.length).find(isBlotMistake);
+    if (blot) patch.blot = { cell: blot.cell, digit: blot.digit ?? digit, id: ++this.effectId };
     if (placed) {
       patch.pop = { cell: selected, id: ++this.effectId };
       if (next.solution[selected] === digit) {
@@ -220,8 +249,8 @@ export abstract class GameStore<S extends PlaySnapshot = PlaySnapshot> {
    * стухшие «чернила впитались»/«волна». Экран зовёт это при размонтировании.
    */
   clearEffects(): void {
-    if (this.snap.pop === null && this.snap.wave === null) return;
-    this.set({ pop: null, wave: null } as Partial<S>);
+    if (this.snap.pop === null && this.snap.wave === null && (this.snap.blot ?? null) === null) return;
+    this.set({ pop: null, wave: null, blot: null } as Partial<S>);
   }
 
   private finishMove(next: PlayState, patch: Partial<PlaySnapshot>): void {

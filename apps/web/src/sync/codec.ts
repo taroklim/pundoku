@@ -7,13 +7,18 @@
  * (≈ 3–5 КБ на партию, год ≈ 1–1,5 МиБ), поэтому `moveLog` в снапшот идёт с бюджетом (см. `schema.ts`),
  * а «вечная» часть записи дня — `heat` (81 клетка × 2 символа = 162 байта) + сводка.
  *
- * Формат лога: `1:` + ходы через `,`. Ход = `k` `cc` `d` `c` `q` `dt`:
+ * Формат лога: `1:` (или `2:`, см. ниже) + ходы через `,`. Ход = `k` `cc` `d` `c` `q` `dt`:
  *   k  — вид: p place, e erase, a note_add, r note_remove, u undo;
  *   cc — клетка, base36, 2 символа (00..2h);
  *   d  — цифра 1..9, `0` — нет;
- *   c  — `1` correct=true, `0` correct=false, `-` не задано;
+ *   c  — `1` correct=true, `0` correct=false, `-` не задано; Чернильный режим (PD-71, `Move.blot`):
+ *        `4` blot+correct=true (авто-замена), `3` blot+correct=false (клякса), `2` blot без correct.
+ *        Символы `2`/`3`/`4` бывают только в формате `2:`; `1:` их не содержит и с ними — повреждена;
  *   q  — техника: индекс в `TECHNIQUES`, `-` нет;
  *   dt — приращение `t` к предыдущему ходу, мс, base36 (для первого хода — сам `t`).
+ * Префикс `2:` пишется, только если в логе есть ход с `blot` (PD-71); любой другой лог — по-прежнему `1:`
+ * байт-в-байт. Старый декодер (до PD-71) `2:` не читает (`null`) — у такого клиента день опирается на `heat`
+ * вместо того, чтобы молча терять вид хода; новый читает оба префикса.
  * Формат тепловой карты: 81 × 2 символа base36 (0..1295 ⇒ доля 0..1), `--` — клетка без значения (`null`).
  */
 import type { Digit, Move, MoveKind, MoveLog, TechniqueOrBeyond } from "@pundoku/engine";
@@ -23,6 +28,7 @@ const KINDS: readonly MoveKind[] = ["place", "erase", "note_add", "note_remove",
 const KIND_CHARS = "pearu";
 const TECHNIQUES: readonly TechniqueOrBeyond[] = [...TECHNIQUE_ORDER, "beyond"];
 const LOG_PREFIX = "1:";
+const LOG_PREFIX_INK = "2:";
 const HEAT_STEPS = 1295; // 36² − 1
 
 export function encodeMoveLog(log: MoveLog): string {
@@ -32,18 +38,30 @@ export function encodeMoveLog(log: MoveLog): string {
     const k = KIND_CHARS[KINDS.indexOf(m.kind)];
     const cell = m.cell.toString(36).padStart(2, "0");
     const digit = m.digit ?? 0;
-    const correct = m.correct === undefined ? "-" : m.correct ? "1" : "0";
+    const correct = m.blot
+      ? m.correct === undefined
+        ? "2"
+        : m.correct
+          ? "4"
+          : "3"
+      : m.correct === undefined
+        ? "-"
+        : m.correct
+          ? "1"
+          : "0";
     const tech = m.technique === undefined ? "-" : String(TECHNIQUES.indexOf(m.technique));
     const dt = Math.max(0, Math.round(m.t) - prev);
     prev += dt;
     parts.push(`${k}${cell}${digit}${correct}${tech}${dt.toString(36)}`);
   }
-  return LOG_PREFIX + parts.join(",");
+  return (log.some((m) => m.blot === true) ? LOG_PREFIX_INK : LOG_PREFIX) + parts.join(",");
 }
 
 /** Строка → лог; `null` — строка повреждена (тогда запись дня опирается на `heat`). */
 export function decodeMoveLog(text: unknown): MoveLog | null {
-  if (typeof text !== "string" || !text.startsWith(LOG_PREFIX)) return null;
+  if (typeof text !== "string") return null;
+  const inkFormat = text.startsWith(LOG_PREFIX_INK);
+  if (!inkFormat && !text.startsWith(LOG_PREFIX)) return null;
   const body = text.slice(LOG_PREFIX.length);
   if (body === "") return [];
   const out: Move[] = [];
@@ -57,7 +75,7 @@ export function decodeMoveLog(text: unknown): MoveLog | null {
     const c = part[4];
     const q = part[5]!;
     if (!kind || !Number.isInteger(cell) || cell < 0 || cell > 80 || !Number.isInteger(digit) || !Number.isFinite(dt)) return null;
-    if (c !== "-" && c !== "0" && c !== "1") return null;
+    if (c === undefined || !(inkFormat ? "-01234" : "-01").includes(c)) return null;
     const technique = q === "-" ? undefined : TECHNIQUES[Number(q)];
     if (q !== "-" && technique === undefined) return null;
     t += dt;
@@ -66,7 +84,8 @@ export function decodeMoveLog(text: unknown): MoveLog | null {
       cell,
       kind,
       ...(digit >= 1 ? { digit: digit as Digit } : {}),
-      ...(c === "-" ? {} : { correct: c === "1" }),
+      ...(c === "-" || c === "2" ? {} : { correct: c === "1" || c === "4" }),
+      ...(c === "2" || c === "3" || c === "4" ? { blot: true } : {}),
       ...(technique ? { technique } : {}),
     });
   }

@@ -111,7 +111,7 @@ pnpm measure:engine 200 hard expert       # (из корня) замер поп�
 
 ### Лог ходов и карточка дня (`movelog.ts`)
 
-`Move = { t, cell, kind: 'place' | 'erase' | 'note_add' | 'note_remove' | 'undo', digit?, correct?, technique? }`,
+`Move = { t, cell, kind: 'place' | 'erase' | 'note_add' | 'note_remove' | 'undo', digit?, correct?, technique?, blot? }`,
 `t` — мс от старта, не убывает. `createMoveLog()`, `appendMove(log, move)` (возвращает новый лог).
 
 - `heatmap(log, { mission, solution? }) → (number | null)[]` — момент финального правильного
@@ -125,6 +125,15 @@ pnpm measure:engine 200 hard expert       # (из корня) замер поп�
   постановок: та же/следующая цифра (сканер) → примыкающие клетки (змейка) → тот же блок
   (блочник) → рядом, ≤ 2 (змейка) → иначе снайпер; порог 0.5, при < 4 постановках — снайпер.
   Подробности в JSDoc.
+
+### Чернильный режим (`ink.ts`, PD-71)
+
+Правила режима — в одном модуле: `INK_RULES` (`autoReplaceBlot`, `allowInArchive`, `allowNotes`), `inkAllows(kind, filled)`
+(что допустимо в ink-партии: нет `undo`, нет стирания и перезаписи цифр, заметки — да), `blotsOf(log)`,
+`inkViolations(log)` (проверка лога на соответствие правилам). `Move.blot` — обратно-совместимый маркер клякса/замена:
+`place(wrong, correct:false, blot:true)` + сразу (тот же `t`) `place(right, correct:true, blot:true)`. В `summary`:
+клякса = 1 правка + 1 ошибка, авто-замена не считается постановкой игрока (`placements`/`evenness`/`solvingStyle`/
+`maxTechnique` её игнорируют). Полностью — `docs/pd-71-ink-rules.md` (корень продукта).
 
 ### Контракт undo
 

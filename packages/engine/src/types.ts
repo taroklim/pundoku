@@ -117,6 +117,12 @@ export interface Move {
   readonly correct?: boolean;
   /** Для place: техника, которой клетка выводилась в момент хода (см. `techniqueForCell`). */
   readonly technique?: TechniqueOrBeyond;
+  /**
+   * Чернильный режим (PD-71). Для place: `correct === false` + `blot` — клякса (неверная цифра
+   * осталась в клетке, клетка заблокирована); `correct === true` + `blot` сразу после неё (тот же `t`,
+   * та же клетка) — авто-замена верной цифрой. Поле опциональное: старые логи читаются как раньше.
+   */
+  readonly blot?: boolean;
 }
 
 /** Append-only лог ходов. Сериализуем в JSON как есть. */
