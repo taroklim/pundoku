@@ -1,0 +1,1629 @@
+<!DOCTYPE html>
+<html lang="en"
+      data-screen="today-entry" data-lang="en" data-type="default"
+      data-blot="now" data-mark="line" data-yearsign="none"
+      data-tl="player" data-fp="rhythm"
+      data-motion="system" data-safearea="sim" data-mock="open">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>Pundoku — Ink mode + Timelapse (PD-69)</title>
+<!--
+  PD-69 — release 1.1 mockup: Ink mode and Timelapse. FOR APPROVAL, not an implementation.
+
+  Everything visual is inherited from the APPROVED board mockup design/pd7-board-variants.html
+  (variant B Boxes) and from design/pd24-year-variants.html / design/pd27-settings.html:
+  same tokens, same ink #3B48B0 / #8C96FF, same wax #B3261E / #FF6B5E, same grouped background
+  #F2F2F7 / #000 with the elevated surface #FFFFFF / #1C1C1E, same glass tab bar with three
+  fallbacks, typefaces only through CSS generics (system-ui, ui-serif, ui-monospace).
+  NO NEW COLOUR is introduced. The board is variant B and is not re-invented.
+
+  Screens (Mockup controls -> Screen):
+    today-entry  Today before the first move: the "Ink mode" row lives in the gap
+    rule         the rule sheet — the explicit rule in plain words, before the first move
+    play-setup   Play: ink mode as a setup option next to difficulty
+    ink-game     ink mode active mid-game: no Undo, no digit eraser, notes stay
+    ink-blot     the blot moment (M7), three variants
+    ink-card     the day card of an ink game
+    year         Year canvas + day sheet of an ink day
+    tl-card      day card with the Timelapse entry point
+    tl-player    the replay player (player / step / contact-sheet modes)
+    tl-export    the PNG "fingerprint" (three variants)
+    tl-share     handing off to the iOS share sheet (system UI is NOT drawn)
+    tl-none      a day whose move log was not kept
+
+  Everything below the "MOCKUP CONTROLS" banner is review chrome and is not part of the product.
+-->
+<style>
+/* ==================================================================
+   1. TOKENS — copied from the approved pd7 mockup (variant B), plus
+   --label-2-grouped from PD-48 and the two blot tokens introduced here.
+   Contrast figures are computed from these hex values, not estimated.
+   ================================================================== */
+:root{
+  --font-sans: system-ui, -apple-system, "SF Pro Text", "Helvetica Neue", Arial, sans-serif;
+  --font-serif: ui-serif, "New York", Charter, Georgia, serif;
+  --font-mono: ui-monospace, "SF Mono", Menlo, monospace;
+
+  --sa-top: env(safe-area-inset-top, 0px);
+  --sa-bot: env(safe-area-inset-bottom, 0px);
+  --sa-l:   env(safe-area-inset-left, 0px);
+  --sa-r:   env(safe-area-inset-right, 0px);
+
+  --bg-grouped: #F2F2F7;   /* systemGroupedBackground — variant B screen */
+  --elev:       #FFFFFF;   /* secondarySystemGroupedBackground — the nine boxes, cards */
+  --bg: var(--bg-grouped);
+  --surface: var(--elev);
+
+  --label:      #1C1C1E;   /* givens, New York Semibold — 17.0:1 on #FFFFFF */
+  --label-2:    #6E6E73;   /* secondary text on an elevated surface — 5.1:1 */
+  --label-2-grouped: #6A6A6E; /* PD-48: 4.64:1 on #F2F2F7 (plain --label-2 is 4.37:1 there) */
+  --notes:      #6E6E73;
+  --notes-fill: #5A5A5F;
+
+  --ink:        #3B48B0;   /* player digits, selection, primary action — 7.7:1 on #FFFFFF */
+  --on-ink:     #FFFFFF;
+  --wax:        #B3261E;   /* error, blot — 6.5:1 on #FFFFFF */
+
+  --rule-thin:  rgba(60,60,67,.29);
+  --rule-thin-w: .5px;
+
+  --fill-same: .10;        /* same digit elsewhere */
+  --fill-sel:  .16;        /* selection (plus a ring) */
+
+  /* NEW in PD-69 — the blot. Both are opacities of the EXISTING wax token, so the
+     stain can never drift away from the error colour.
+       light: wax @ 14 % over #FFFFFF -> #F4E1E0
+              ink digit on it        6.10:1   given on it 13.5:1   wax numeral on it 5.20:1
+       dark : wax @ 16 % over #1C1C1E -> #402928
+              ink digit on it        5.06:1
+     The stain is never the only carrier: the cell's top-right corner is notched (the same
+     channel Year already uses for corrections) and the blob has a wax edge at 38 %. */
+  --stain:      .14;
+  --stain-edge: rgba(179,38,30,.38);
+
+  --key-bg:   var(--elev);
+  --card:     var(--elev);
+  --hairline: rgba(60,60,67,.29);
+  --ink-tint: rgba(59,72,176,.12);
+  --box-shadow: 0 1px 2px rgba(0,0,0,.04);
+
+  --glass-fill: rgba(255,255,255,.72);
+  --glass-solid:#F6F6F9;
+
+  --page-bg:  #8A8A8E;
+}
+
+@media (prefers-color-scheme: dark){
+  :root:not(.force-light){
+    --bg-grouped:#000000; --elev:#1C1C1E;
+    --label:#FFFFFF; --label-2:#98989D; --label-2-grouped:#98989D;
+    --notes:#98989D; --notes-fill:#AEAEB2;
+    --ink:#8C96FF; --on-ink:#000000; --wax:#FF6B5E;
+    --rule-thin:rgba(235,235,245,.22);
+    --stain:.16; --stain-edge:rgba(255,107,94,.42);
+    --hairline:rgba(235,235,245,.22);
+    --ink-tint:rgba(140,150,255,.18);
+    --box-shadow:none;
+    --glass-fill:rgba(28,28,30,.72); --glass-solid:#141416;
+    --page-bg:#2C2C2E;
+  }
+}
+.force-dark{
+  --bg-grouped:#000000; --elev:#1C1C1E;
+  --label:#FFFFFF; --label-2:#98989D; --label-2-grouped:#98989D;
+  --notes:#98989D; --notes-fill:#AEAEB2;
+  --ink:#8C96FF; --on-ink:#000000; --wax:#FF6B5E;
+  --rule-thin:rgba(235,235,245,.22);
+  --stain:.16; --stain-edge:rgba(255,107,94,.42);
+  --hairline:rgba(235,235,245,.22);
+  --ink-tint:rgba(140,150,255,.18);
+  --box-shadow:none;
+  --glass-fill:rgba(28,28,30,.72); --glass-solid:#141416;
+  --page-bg:#2C2C2E;
+}
+
+:root[data-safearea="sim"]{
+  --sa-top: max(env(safe-area-inset-top, 0px), 59px);
+  --sa-bot: max(env(safe-area-inset-bottom, 0px), 34px);
+}
+
+/* Dynamic Type simulation: 17 px default, 23 px xxxL, 40 px AX3. Production uses
+   font: -apple-system-body so 1rem follows the user's setting. */
+html{ font-size:17px; }
+:root[data-type="xxxl"]{ font-size:23px; }
+:root[data-type="ax3"]{  font-size:40px; }
+
+@media (prefers-contrast: more){
+  :root{
+    --label-2:#3C3C43; --label-2-grouped:#3C3C43; --notes:#3C3C43; --notes-fill:#3C3C43;
+    --rule-thin:rgba(60,60,67,.55); --rule-thin-w:1px;
+    --hairline:rgba(60,60,67,.6);
+    --fill-same:.14; --fill-sel:.22;
+    --stain:.20; --stain-edge:rgba(179,38,30,.6);
+    --box-shadow:none;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not(.force-light){
+      --label-2:#EBEBF5; --label-2-grouped:#EBEBF5; --notes:#EBEBF5; --notes-fill:#EBEBF5;
+      --rule-thin:rgba(235,235,245,.45); --hairline:rgba(235,235,245,.5);
+      --stain:.24; --stain-edge:rgba(255,107,94,.65);
+    }
+  }
+  :root.force-dark{
+    --label-2:#EBEBF5; --label-2-grouped:#EBEBF5; --notes:#EBEBF5; --notes-fill:#EBEBF5;
+    --rule-thin:rgba(235,235,245,.45); --hairline:rgba(235,235,245,.5);
+    --stain:.24; --stain-edge:rgba(255,107,94,.65);
+  }
+}
+
+/* ==================================================================
+   2. FRAME + BASE
+   ================================================================== */
+*{ box-sizing:border-box; }
+html{ font-family:var(--font-sans); line-height:1.3; -webkit-text-size-adjust:100%; }
+body{
+  margin:0; background:var(--bg); color:var(--label);
+  font-family:var(--font-sans);
+  touch-action:manipulation; overscroll-behavior:none;
+  -webkit-tap-highlight-color:transparent;
+}
+button{ font:inherit; color:inherit; background:none; border:0; padding:0; cursor:pointer; touch-action:manipulation; -webkit-appearance:none; appearance:none; }
+:focus-visible{ outline:2px solid var(--ink); outline-offset:2px; border-radius:6px; }
+[hidden]{ display:none !important; }
+
+.frame{
+  position:relative; width:100%; height:100dvh;
+  display:flex; flex-direction:column; background:var(--bg); overflow:hidden;
+}
+@media (min-width:440px){
+  body{ background:var(--page-bg); display:flex; align-items:center; justify-content:center; min-height:100vh; padding:24px 0 340px; }
+  .frame{ width:393px; height:852px; border-radius:46px; box-shadow:0 20px 60px rgba(0,0,0,.35); }
+}
+.scroll{
+  flex:1; min-height:0; overflow-y:auto; -webkit-overflow-scrolling:touch;
+  padding-bottom:calc(72px + var(--sa-bot));
+  display:flex; flex-direction:column;
+}
+/* each screen is itself the flex column, so the deliberate free space between the board
+   and the pad (approved in PD-7) still lands between them and never above the board */
+.screen{ display:flex; flex-direction:column; flex:1 0 auto; }
+
+/* ==================================================================
+   3. TOOLBAR + DAY LINE
+   ================================================================== */
+.toolbar{
+  display:flex; align-items:flex-end; justify-content:space-between; gap:12px;
+  padding: calc(var(--sa-top) + 8px) max(16px, var(--sa-r)) 0 max(16px, var(--sa-l));
+}
+.title{ font-size:1.62rem; font-weight:700; letter-spacing:-.02em; margin:0; min-width:0; overflow-wrap:anywhere; }
+.icon-btn{
+  width:44px; height:44px; margin:-8px -10px -8px 0;
+  display:grid; place-items:center; color:var(--label-2-grouped); border-radius:22px; flex:none;
+}
+.icon-btn:active{ background:var(--ink-tint); }
+.daybar{
+  margin:2px 0 0; padding:0 max(16px, var(--sa-r)) 0 max(16px, var(--sa-l));
+  color:var(--label-2-grouped); font-size:.88rem; overflow-wrap:anywhere;
+}
+/* The mode mark in the day line: a word, not a badge. Reads without colour, costs no element,
+   and travels into the card and the archive. accessibility.md > Vision: "Convey information
+   with more than color alone." */
+.daybar .inkmark{ color:var(--ink); font-weight:600; }
+.daybar .inkmark::before{ content:"·\00a0"; color:var(--label-2-grouped); font-weight:400; }
+
+/* ==================================================================
+   4. BOARD — variant B Boxes, taken from the approved mockup unchanged
+   ================================================================== */
+.board-wrap{ padding:12px 16px 0; container-type:inline-size; }
+.board{ position:relative; display:grid; grid-template-columns:repeat(3,1fr); gap:4px; --cell-r:3px; }
+.box{ position:relative; display:grid; grid-template-columns:repeat(3,1fr); border-radius:10px; overflow:hidden; background:var(--surface); box-shadow:var(--box-shadow); }
+.cell{
+  position:relative; aspect-ratio:1; min-width:0; min-height:0;
+  display:grid; place-items:center; overflow:hidden; background:var(--surface);
+}
+.cell > .fl{ position:absolute; inset:0; pointer-events:none; background:var(--ink); opacity:0; transition:opacity .16s linear; }
+.cell.same > .fl{ opacity:var(--fill-same); }
+.cell.sel  > .fl{ opacity:var(--fill-sel); }
+.cell .d{ position:relative; z-index:2; line-height:1; font-size:6.5cqi; }
+.cell .d.given { font-family:var(--font-serif); font-weight:600; color:var(--label); }
+.cell .d.player{ font-family:var(--font-sans);  font-weight:500; color:var(--ink); }
+.cell .d.wrong { color:var(--wax); }
+.marks{ position:relative; z-index:2; display:grid; grid-template-columns:repeat(3,1fr); grid-template-rows:repeat(3,1fr); width:100%; height:100%; padding:7%; }
+.marks span{ font-size:max(10px, 3.05cqi); line-height:1; font-weight:400; letter-spacing:-.02em; color:var(--notes); display:grid; place-items:center; }
+.cell.same .marks span, .cell.sel .marks span{ color:var(--notes-fill); }
+.rules{ position:absolute; inset:0; width:100%; height:100%; z-index:3; pointer-events:none; }
+.rules .thin{ stroke:var(--rule-thin); stroke-width:var(--rule-thin-w); vector-effect:non-scaling-stroke; opacity:.5; }
+.ring{
+  position:absolute; left:0; top:0; z-index:4; pointer-events:none;
+  border:2px solid var(--ink); border-radius:4px; opacity:0;
+  transition: transform .16s cubic-bezier(.32,.72,0,1), opacity .12s linear;
+}
+@media (prefers-contrast: more){ .ring{ border-width:3px; } }
+.ring.noanim{ transition:none !important; }
+
+/* ---- THE BLOT ------------------------------------------------------
+   Three carriers, none of them colour on its own:
+     1. the stain   — wax at 14 % (light) / 16 % (dark) with a 38 % wax edge
+     2. the blob    — an irregular silhouette inside the stain: this is what makes it
+                      read as spilled ink and not as "selected cell"
+     3. the notch   — the cell's top-right corner is cut away to the box surface. Year
+                      already spends exactly this channel on "there were corrections",
+                      so an ink day needs no new vocabulary anywhere.
+   A blot cell is inert: it never takes the selection or same-digit fill, so the cell
+   can only ever carry one meaning at a time (color.md: one colour, one meaning). */
+.stain{
+  position:absolute; inset:0; z-index:1; pointer-events:none;
+  background:var(--wax); opacity:var(--stain);
+  box-shadow: inset 0 0 0 1px var(--stain-edge);
+  border-radius:var(--cell-r);
+  clip-path: polygon(0 0, 62% 0, 100% 38%, 100% 100%, 0 100%);
+}
+.stain::after{
+  content:""; position:absolute; left:8%; top:10%; width:84%; height:80%;
+  background:var(--wax); opacity:.55;
+  border-radius:58% 42% 47% 53% / 44% 56% 44% 56%;
+  transform:rotate(-8deg);
+}
+.cell.blot > .fl{ opacity:0 !important; }
+/* The wrong digit kept as a record — variant "answer + ghost" only. 10 px is under the
+   11 pt text floor; it is the same accepted deviation as the pencil marks, and it is a
+   duplicate of information the card states in words. */
+.ghost{
+  position:absolute; right:4%; bottom:0; z-index:3;
+  font-size:max(10px, 2.9cqi); line-height:1; font-weight:600; color:var(--wax);
+  text-decoration:line-through; text-decoration-thickness:1px;
+}
+:root:not([data-blot="ghost"]) .ghost{ display:none; }
+:root[data-blot="late"] .cell.blot .d{ display:none; }
+
+@keyframes blotSpread{ 0%{ transform:scale(.35); opacity:0 } 60%{ opacity:var(--stain) } 100%{ transform:scale(1); opacity:var(--stain) } }
+@keyframes blotFade  { from{ opacity:0 } to{ opacity:var(--stain) } }
+@keyframes digitSwap { 0%{ opacity:0; transform:scale(1.08) } 100%{ opacity:1; transform:scale(1) } }
+@keyframes digitFade { from{ opacity:0 } to{ opacity:1 } }
+@keyframes wrongHold { 0%{ opacity:1 } 70%{ opacity:1 } 100%{ opacity:0 } }
+.stain.anim{ animation: blotSpread 190ms cubic-bezier(.2,.7,.3,1) both; }
+.d.swap-in{ animation: digitSwap 160ms cubic-bezier(.2,.7,.3,1) both; }
+.d.wrong.leaving{ animation: wrongHold 240ms linear both; }
+
+/* ==================================================================
+   5. NUMBER PAD + ACTIONS
+   ================================================================== */
+.gap{ flex:1 1 auto; min-height:20px; display:flex; flex-direction:column; align-items:stretch; justify-content:center; gap:8px; padding:8px 16px; }
+.status{ text-align:center; color:var(--label-2-grouped); font-size:.82rem; }
+.pad-wrap{ padding:0 16px; }
+.pad{ display:grid; gap:5px; grid-template-columns:repeat(9,1fr); }
+.key{
+  min-width:0; min-height:56px; border-radius:9px; background:var(--key-bg); color:var(--label);
+  display:flex; flex-direction:column; align-items:center; justify-content:center; gap:1px;
+  transition: background-color .12s linear, color .12s linear, transform .22s cubic-bezier(.34,1.36,.52,1);
+}
+.key .kd{ font-size:clamp(18px, 1.24rem, 23px); font-weight:500; line-height:1.05; }
+.key .kr{ font-size:11px; line-height:1; color:var(--label-2); font-variant-numeric:tabular-nums; }
+.key:active{ background:var(--ink-tint); color:var(--ink); transform:scale(.96); transition-duration:.08s; }
+.key.done{ opacity:.4; }
+@media (max-width: 359px){
+  .pad{ grid-template-columns:repeat(10,1fr); }
+  .key{ grid-column:span 2; }
+  .key:nth-child(6){ grid-column: 2 / span 2; }
+}
+.actions{ display:grid; grid-template-columns:repeat(3,1fr); gap:8px; padding:10px 0 14px; }
+:root[data-phase="mid"] .actions.ink, :root[data-phase="blot"] .actions.ink{ grid-template-columns:repeat(2,1fr); }
+.act{
+  min-width:0; min-height:46px; border-radius:11px; display:flex; align-items:center; justify-content:center;
+  gap:6px; flex-wrap:wrap; padding:4px 6px; text-align:center;
+  color:var(--label-2); font-size:clamp(12px, .82rem, 15px);
+  transition: background-color .12s linear, color .12s linear, transform .22s cubic-bezier(.34,1.36,.52,1);
+}
+.act svg{ width:19px; height:19px; flex:none; }
+.act[aria-pressed="true"]{ background:var(--ink-tint); color:var(--ink); font-weight:600; }
+.act[aria-disabled="true"]{ opacity:.4; }
+.act:active{ background:var(--ink-tint); transform:scale(.97); transition-duration:.08s; }
+
+/* ==================================================================
+   6. LIST ROWS (the ink-mode row, the Play setup, the sheets)
+   ================================================================== */
+.list{ background:var(--card); border-radius:14px; overflow:hidden; }
+.list.inset{ margin:0 16px; }
+.row-btn, .row-static{
+  display:flex; align-items:center; gap:12px; width:100%; text-align:left;
+  min-height:46px; padding:11px 14px;
+}
+.row-btn + .row-btn, .row-btn + .row-static, .row-static + .row-btn{ box-shadow: inset 0 var(--rule-thin-w) 0 var(--hairline); }
+.row-btn:active{ background:var(--ink-tint); }
+.row-t{ flex:1; min-width:0; overflow-wrap:anywhere; font-size:.95rem; }
+.row-v{ color:var(--label-2); font-size:.9rem; text-align:right; overflow-wrap:anywhere; }
+.row-v.on{ color:var(--ink); font-weight:600; }
+.chev{ width:15px; height:15px; color:var(--label-2); flex:none; }
+.sect-foot{ color:var(--label-2-grouped); font-size:.78rem; padding:6px 16px 0; overflow-wrap:anywhere; }
+.sect-head{ color:var(--label-2-grouped); font-size:.78rem; text-transform:uppercase; letter-spacing:.04em; padding:18px 16px 6px; }
+
+/* the nib glyph: the only drawn mark the mode owns, and it is a stroke icon in the
+   existing icon language (1.8 px strokes, 24-box), not an emblem */
+.nib{ width:19px; height:19px; flex:none; color:var(--ink); }
+
+/* ==================================================================
+   7. DAY CARD
+   ================================================================== */
+.card{ background:var(--card); border-radius:18px; margin:14px 16px 0; padding:16px; }
+.card h2{ font-size:1.0rem; font-weight:600; margin:0 0 2px; display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+.chip{
+  font-size:.7rem; font-weight:600; letter-spacing:.03em; text-transform:uppercase;
+  color:var(--label-2); border:1px solid var(--hairline); border-radius:6px; padding:2px 6px;
+  display:inline-flex; align-items:center; gap:4px;
+}
+.chip .nib{ width:12px; height:12px; color:var(--label-2); }
+.card .sub{ color:var(--label-2); font-size:.8rem; margin:0 0 12px; overflow-wrap:anywhere; }
+.heat{ display:grid; grid-template-columns:repeat(9,1fr); gap:2px; }
+.heat i{ aspect-ratio:1; border-radius:2px; display:block; background:var(--ink); position:relative; }
+.heat i.g{ background:transparent; box-shadow:inset 0 0 0 1px var(--hairline); }
+.heat i.b{ background:var(--wax); opacity:1 !important; clip-path: polygon(0 0, 58% 0, 100% 42%, 100% 100%, 0 100%); }
+.legend{ display:flex; align-items:center; gap:8px; margin-top:10px; color:var(--label-2); font-size:.72rem; flex-wrap:wrap; }
+.legend .bar{ flex:1; min-width:80px; display:grid; grid-template-columns:repeat(9,1fr); gap:1px; }
+.legend .bar i{ height:6px; border-radius:1px; background:var(--ink); display:block; }
+.rows{ margin:14px 0 0; border-top:var(--rule-thin-w) solid var(--hairline); }
+.row{ display:flex; justify-content:space-between; align-items:baseline; gap:10px; padding:9px 0; border-bottom:var(--rule-thin-w) solid var(--hairline); font-size:.9rem; }
+.row dt{ color:var(--label-2); margin:0; font-size:.82rem; overflow-wrap:anywhere; }
+.row dd{ margin:0; font-weight:600; text-align:right; overflow-wrap:anywhere; }
+.row dd.mono{ font-variant-numeric:tabular-nums; }
+.row dd.wax{ color:var(--wax); }
+.winrate{ margin:12px 0 0; color:var(--label-2); font-size:.82rem; }
+.btn{
+  margin-top:10px; width:100%; min-height:46px; border-radius:11px; padding:8px 12px;
+  display:flex; align-items:center; justify-content:center; gap:8px; flex-wrap:wrap;
+  font-size:.95rem; font-weight:600; text-align:center;
+}
+.btn svg{ width:19px; height:19px; flex:none; }
+.btn.primary{ background:var(--ink); color:var(--on-ink); }
+.btn.tinted{ background:var(--ink-tint); color:var(--ink); }
+.btn.quiet{ background:transparent; color:var(--ink); font-weight:500; }
+.btn:active{ opacity:.82; }
+.note-static{
+  margin-top:10px; padding:10px 12px; border-radius:11px;
+  background:var(--bg-grouped); color:var(--label-2-grouped); font-size:.82rem;
+  display:flex; gap:8px; align-items:flex-start; overflow-wrap:anywhere;
+}
+:root.force-dark .note-static, :root[data-appearance="dark"] .note-static{ background:rgba(120,120,128,.18); }
+.note-static svg{ width:17px; height:17px; flex:none; margin-top:1px; color:var(--label-2-grouped); }
+.section-head{ display:flex; align-items:baseline; justify-content:space-between; gap:12px; padding:22px 16px 0; }
+.section-head h2{ font-size:1.0rem; font-weight:600; margin:0; }
+.section-head .meta{ color:var(--label-2-grouped); font-size:.8rem; text-align:right; }
+
+/* ==================================================================
+   8. YEAR (C Blocks, from the approved pd24 mockup)
+   ================================================================== */
+.year-wrap{ padding:8px 12px 0; display:grid; grid-template-columns:repeat(3,1fr); gap:8px; }
+.year-month{ background:var(--card); border-radius:10px; padding:6px 6px 7px; }
+.ym-name{ font-size:11px; font-weight:600; color:var(--label-2); margin:0 0 4px 1px; }
+.ydays{ display:grid; grid-template-columns:repeat(7,1fr); gap:2px; }
+.ycell{ aspect-ratio:1; border-radius:2px; position:relative; background:transparent; box-shadow:inset 0 0 0 1px var(--hairline); }
+.ycell.solved{ background:var(--ink); box-shadow:none; }
+.ycell.corr{ background:var(--wax); box-shadow:none; clip-path: polygon(0 0, 62% 0, 100% 38%, 100% 100%, 0 100%); }
+.ycell.part{ background:linear-gradient(to top, var(--ink) 50%, transparent 50%); box-shadow:inset 0 0 0 1px var(--hairline); }
+.ycell.void{ box-shadow:none; }
+.ycell.today{ box-shadow:inset 0 0 0 2px var(--ink); }
+/* the "ink day" sign the owner is asked about — a SECOND notch, bottom-left */
+:root[data-yearsign="corner"] .ycell.inkday{ clip-path: polygon(0 0, 62% 0, 100% 38%, 100% 100%, 38% 100%, 0 62%); }
+.ylegend{ display:flex; flex-wrap:wrap; gap:10px; padding:12px 16px 0; color:var(--label-2-grouped); font-size:.72rem; }
+.ylegend span{ display:inline-flex; align-items:center; gap:5px; }
+.ykey{ width:11px; height:11px; border-radius:2px; flex:none; }
+
+/* ==================================================================
+   9. SHEETS — one at a time. modality.md: a single short task, an obvious way out.
+   ================================================================== */
+.scrim{ position:absolute; inset:0; z-index:30; background:rgba(0,0,0,.28); }
+.sheet{
+  position:absolute; left:0; right:0; bottom:0; z-index:31;
+  background:var(--bg-grouped); border-radius:16px 16px 0 0;
+  max-height:calc(100% - 24px); display:flex; flex-direction:column;
+  padding-bottom:calc(10px + var(--sa-bot));
+  animation: sheetUp 300ms cubic-bezier(.22,1,.36,1);
+}
+@keyframes sheetUp{ from{ transform:translateY(26px); opacity:0 } to{ transform:none; opacity:1 } }
+@keyframes sheetFade{ from{ opacity:0 } to{ opacity:1 } }
+.grabber{ width:36px; height:5px; border-radius:3px; background:var(--hairline); margin:6px auto 0; flex:none; }
+.sheet-head{ display:flex; align-items:baseline; gap:12px; padding:8px 16px 0; }
+.sheet-head h2{ flex:1; min-width:0; margin:0; font-size:1.18rem; font-weight:700; letter-spacing:-.01em; overflow-wrap:anywhere; }
+.sheet-head .done{ color:var(--ink); font-weight:600; font-size:.95rem; min-height:44px; display:flex; align-items:center; flex:none; }
+.sheet-sub{ margin:2px 16px 0; color:var(--label-2-grouped); font-size:.84rem; overflow-wrap:anywhere; }
+.sheet-body{ overflow-y:auto; padding:10px 0 0; }
+.sheet-foot{ padding:10px 16px 0; flex:none; }
+
+/* the rule sheet */
+.rulelist{ list-style:none; margin:0; padding:0 16px; display:grid; gap:12px; }
+.rulelist li{ display:flex; gap:10px; align-items:flex-start; font-size:.92rem; overflow-wrap:anywhere; }
+.rulelist svg{ width:20px; height:20px; flex:none; margin-top:1px; color:var(--ink); }
+.rulelist li.wax svg{ color:var(--wax); }
+
+/* ==================================================================
+   10. TIMELAPSE PLAYER
+   ================================================================== */
+.tl-board{ padding:10px 16px 0; container-type:inline-size; }
+.tl-meta{ display:flex; justify-content:space-between; gap:10px; padding:10px 16px 0; color:var(--label-2-grouped); font-size:.82rem; }
+.tl-meta .mono{ font-variant-numeric:tabular-nums; }
+.scrub-wrap{ padding:2px 16px 0; }
+input[type=range].scrub{
+  -webkit-appearance:none; appearance:none; width:100%; height:44px; background:transparent; display:block;
+}
+input[type=range].scrub::-webkit-slider-runnable-track{ height:4px; border-radius:2px; background:var(--hairline); }
+input[type=range].scrub::-webkit-slider-thumb{
+  -webkit-appearance:none; appearance:none; width:26px; height:26px; border-radius:13px;
+  background:var(--elev); box-shadow:0 0 0 1px var(--hairline), 0 1px 3px rgba(0,0,0,.2); margin-top:-11px;
+}
+input[type=range].scrub::-moz-range-track{ height:4px; border-radius:2px; background:var(--hairline); }
+input[type=range].scrub::-moz-range-thumb{ width:26px; height:26px; border:1px solid var(--hairline); border-radius:13px; background:var(--elev); }
+.transport{ display:flex; align-items:center; justify-content:center; gap:6px; padding:0 16px; flex-wrap:wrap; }
+.tbtn{ width:44px; height:44px; border-radius:22px; display:grid; place-items:center; color:var(--ink); flex:none; }
+.tbtn svg{ width:24px; height:24px; }
+.tbtn.big svg{ width:30px; height:30px; }
+.tbtn:active{ background:var(--ink-tint); }
+.tbtn[aria-pressed="true"]{ background:var(--ink-tint); }
+.tbtn[aria-disabled="true"]{ color:var(--label-2); opacity:.5; }
+.seg-ui{ display:flex; background:var(--bg-grouped); border-radius:9px; padding:2px; gap:2px; margin-left:auto; flex:none; }
+:root.force-dark .seg-ui, :root[data-appearance="dark"] .seg-ui{ background:rgba(120,120,128,.24); }
+.seg-ui button{ min-height:36px; padding:0 9px; border-radius:7px; font-size:.78rem; color:var(--label); }
+.seg-ui button[aria-pressed="true"]{ background:var(--elev); font-weight:600; box-shadow:0 1px 2px rgba(0,0,0,.08); }
+.tl-note{ padding:10px 16px 0; color:var(--label-2-grouped); font-size:.78rem; overflow-wrap:anywhere; }
+.contact{ display:grid; grid-template-columns:repeat(3,1fr); gap:8px; padding:10px 16px 0; }
+.contact figure{ margin:0; }
+.contact figcaption{ font-size:.68rem; color:var(--label-2-grouped); margin-top:3px; font-variant-numeric:tabular-nums; }
+.mini{ display:grid; grid-template-columns:repeat(9,1fr); gap:1px; background:var(--elev); border-radius:6px; padding:3px; }
+.mini i{ aspect-ratio:1; border-radius:1px; display:block; background:var(--ink); }
+.mini i.g{ background:transparent; box-shadow:inset 0 0 0 1px var(--hairline); }
+.mini i.e{ background:transparent; }
+.mini i.b{ background:var(--wax); clip-path: polygon(0 0, 58% 0, 100% 42%, 100% 100%, 0 100%); }
+
+/* ==================================================================
+   11. FINGERPRINT (the exported PNG)
+   ================================================================== */
+.fp-frame{ margin:0 16px; }
+.fp{
+  aspect-ratio:4/5; background:var(--elev); border-radius:12px;
+  padding:7%; display:flex; flex-direction:column; gap:5%;
+  box-shadow:0 0 0 1px var(--hairline);
+}
+.fp-art{ flex:1; min-height:0; min-width:0; display:grid; grid-template-columns:minmax(0,1fr); place-items:stretch; position:relative; }
+.fp-grid{ display:grid; grid-template-columns:repeat(9,minmax(0,1fr)); min-width:0; gap:1.6%; }
+.fp-grid i{ aspect-ratio:1; display:block; background:var(--ink); border-radius:2px; }
+.fp-grid i.g{ background:transparent; box-shadow:inset 0 0 0 1px var(--hairline); }
+.fp-grid i.b{ background:var(--wax); clip-path: polygon(0 0, 58% 0, 100% 42%, 100% 100%, 0 100%); }
+.fp-cap{ display:flex; justify-content:space-between; align-items:baseline; gap:8px; flex:none; }
+.fp-cap .l{ font-family:var(--font-serif); font-weight:600; font-size:.9rem; }
+.fp-cap .r{ font-size:.72rem; color:var(--label-2); font-variant-numeric:tabular-nums; text-align:right; overflow-wrap:anywhere; }
+.fp-sys{
+  margin:14px 16px 0; border-radius:14px; background:var(--elev); box-shadow:0 0 0 1px var(--hairline);
+  padding:16px; text-align:center; color:var(--label-2-grouped); font-size:.82rem;
+  border:2px dashed var(--label-2);
+}
+
+/* ==================================================================
+   12. TAB BAR — unchanged from the approved mockup
+   ================================================================== */
+.tabbar{
+  position:absolute; left:0; right:0; bottom:0; z-index:20;
+  display:grid; gap:2px; grid-template-columns:repeat(3,1fr);
+  padding:6px max(10px, var(--sa-r)) calc(6px + var(--sa-bot)) max(10px, var(--sa-l));
+  background:var(--glass-fill);
+  -webkit-backdrop-filter:blur(24px) saturate(1.4); backdrop-filter:blur(24px) saturate(1.4);
+  border-top:1px solid var(--hairline);
+}
+.tab{ min-height:50px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px; color:var(--label-2-grouped); border-radius:14px; padding:4px 2px; transition: background-color .12s linear, color .12s linear; }
+.tab svg{ width:26px; height:26px; flex:none; }
+.tab .lab{ font-size:clamp(11px, .65rem, 13px); letter-spacing:.01em; }
+.tab[aria-selected="true"]{ color:var(--ink); background:var(--ink-tint); }
+.tab[aria-selected="true"] .lab{ font-weight:600; }
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))){ .tabbar{ background:var(--glass-solid); } }
+@media (prefers-reduced-transparency: reduce){ .tabbar{ background:var(--glass-solid); -webkit-backdrop-filter:none !important; backdrop-filter:none !important; } }
+@media (prefers-contrast: more){ .tabbar{ background:var(--glass-solid); -webkit-backdrop-filter:none !important; backdrop-filter:none !important; border-top:1px solid var(--label-2); } }
+
+/* ==================================================================
+   13. FORCED COLORS — nothing may rest on our palette
+   ================================================================== */
+@media (forced-colors: active){
+  .box, .card, .list, .year-month, .mini, .fp, .sheet{ border:1px solid CanvasText; }
+  .tabbar{ background:Canvas; -webkit-backdrop-filter:none !important; backdrop-filter:none !important; border-top:1px solid CanvasText; }
+  .tab[aria-selected="true"]{ outline:2px solid Highlight; outline-offset:-2px; }
+  .btn.primary, .btn.tinted, .btn.quiet, .key, .act, .row-btn, .tbtn, .seg-ui button{ border:1px solid CanvasText; forced-color-adjust:none; background:Canvas; color:CanvasText; }
+  .btn.primary{ background:Highlight; color:HighlightText; }
+  .act[aria-pressed="true"], .seg-ui button[aria-pressed="true"], .tbtn[aria-pressed="true"]{ background:Highlight; color:HighlightText; }
+  .ring{ border-color:Highlight; }
+  /* the blot survives as shape + hatch, never as wax */
+  .stain{ background:CanvasText; opacity:1; forced-color-adjust:none;
+          background-image:repeating-linear-gradient(45deg, Canvas 0 2px, CanvasText 2px 4px); }
+  .stain::after{ display:none; }
+  .cell.blot{ outline:2px dashed CanvasText; outline-offset:-2px; }
+  .cell.blot .d{ forced-color-adjust:none; color:CanvasText; background:Canvas; padding:0 2px; }
+  .heat i, .fp-grid i, .mini i, .ycell{ forced-color-adjust:none; border:1px solid CanvasText; }
+  .heat i.b, .fp-grid i.b, .mini i.b, .ycell.corr{ background:CanvasText; }
+  .ycell.today{ outline:2px solid Highlight; outline-offset:-2px; }
+  .daybar .inkmark{ color:CanvasText; text-decoration:underline; }
+  .chip{ border:1px solid CanvasText; }
+}
+
+/* ==================================================================
+   14. REDUCED MOTION — nothing travels or scales; fades only.
+   accessibility.md > Cognitive: "Replacing transitions in x-, y-, and z-axes with fades".
+   ================================================================== */
+@media (prefers-reduced-motion: reduce){
+  :root:not([data-motion="full"]) .ring{ transition:none !important; }
+  :root:not([data-motion="full"]) .sheet{ animation: sheetFade 140ms linear !important; }
+  :root:not([data-motion="full"]) .stain.anim{ animation: blotFade 140ms linear both !important; }
+  :root:not([data-motion="full"]) .d.swap-in{ animation: digitFade 140ms linear both !important; }
+  :root:not([data-motion="full"]) .d.wrong.leaving{ animation: wrongHold 140ms linear both !important; }
+  :root:not([data-motion="full"]) .key:active, :root:not([data-motion="full"]) .act:active, :root:not([data-motion="full"]) .btn:active{ transform:none !important; }
+}
+:root[data-motion="reduced"] .ring{ transition:none !important; }
+:root[data-motion="reduced"] .sheet{ animation: sheetFade 140ms linear !important; }
+:root[data-motion="reduced"] .stain.anim{ animation: blotFade 140ms linear both !important; }
+:root[data-motion="reduced"] .d.swap-in{ animation: digitFade 140ms linear both !important; }
+:root[data-motion="reduced"] .d.wrong.leaving{ animation: wrongHold 140ms linear both !important; }
+:root[data-motion="reduced"] .key:active, :root[data-motion="reduced"] .act:active{ transform:none !important; }
+:root[data-motion="off"] *, :root[data-motion="off"] *::before, :root[data-motion="off"] *::after{ animation:none !important; transition:none !important; }
+
+/* ==================================================================
+   15. MOCKUP CONTROLS — review chrome, deliberately outside the design language
+   ================================================================== */
+.mock-pill{
+  height:30px; padding:0 12px; border-radius:15px; background:#26262B; color:#D6D6DC;
+  border:1px dashed #6E6E78; font-size:10px; letter-spacing:.09em; text-transform:uppercase;
+  display:inline-flex; align-items:center; gap:6px; align-self:center;
+}
+:root[data-mock="open"] .mock-pill{ display:none; }
+.mock{
+  position:fixed; left:0; right:0; bottom:0; z-index:61;
+  background:#26262B; color:#D6D6DC; border-top:2px dashed #6E6E78;
+  padding:8px 12px calc(8px + var(--sa-bot)); font-size:11px; display:none;
+  max-height:62vh; overflow-y:auto; font-family:var(--font-mono);
+}
+:root[data-mock="open"] .mock{ display:block; }
+.mock .hdr{ display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; letter-spacing:.08em; text-transform:uppercase; color:#9A9AA4; }
+.mock .grp{ display:flex; align-items:center; gap:8px; margin:5px 0; flex-wrap:wrap; }
+.mock .grp > b{ font-weight:600; width:84px; flex:none; letter-spacing:.02em; color:#9A9AA4; }
+.mock .seg{ display:flex; border:1px solid #6E6E78; border-radius:6px; overflow:hidden; flex-wrap:wrap; }
+.mock .seg button{ padding:5px 9px; font:inherit; font-size:11px; color:#D6D6DC; background:transparent; }
+.mock .seg button + button{ border-left:1px solid #6E6E78; }
+.mock .seg button[aria-pressed="true"]{ background:#E6E6EA; color:#1B1B1F; font-weight:700; }
+.mock .go{ padding:6px 14px; border:1px solid #D6D6DC; border-radius:6px; font:inherit; font-size:11px; color:#1B1B1F; background:#D6D6DC; font-weight:700; }
+.mock .close{ font:inherit; font-size:11px; color:#D6D6DC; text-decoration:underline; }
+.mock .note{ color:#9A9AA4; margin:8px 0 0; line-height:1.5; font-family:var(--font-sans); font-size:10.5px; }
+@media (min-width:440px){ .mock{ max-height:none; } }
+.sr{ position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; }
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <!-- One icon language: 24-box, 1.8 stroke, round caps — the same as the approved mockup. -->
+  <g id="i-nib"><path d="M6 18.4 8.1 12 15.4 4.7a1.6 1.6 0 0 1 2.3 0l1.6 1.6a1.6 1.6 0 0 1 0 2.3L12 15.9zM8.1 12l3.9 3.9M5 21h6"/></g>
+  <g id="i-gear"><circle cx="12" cy="12" r="3.4"/><path d="M12 2.9v2.4M12 18.7v2.4M21.1 12h-2.4M5.3 12H2.9M18.4 5.6l-1.7 1.7M7.3 16.7l-1.7 1.7M18.4 18.4l-1.7-1.7M7.3 7.3 5.6 5.6"/></g>
+  <g id="i-chev"><path d="m9 5 7 7-7 7"/></g>
+  <g id="i-pencil"><path d="M4.5 19.5l4.2-1.1 9.6-9.6a1.9 1.9 0 0 0 0-2.7l-1.4-1.4a1.9 1.9 0 0 0-2.7 0l-9.6 9.6z"/><path d="M14.2 5.9l3.9 3.9"/></g>
+  <g id="i-undo"><path d="M9.2 7.2H15a4.4 4.4 0 1 1 0 8.8H8.2"/><path d="M11.8 4.2 8.8 7.2l3 3"/></g>
+  <g id="i-erase"><path d="M8.4 18.2 5 14.8a1.9 1.9 0 0 1 0-2.7l6.9-6.9a1.9 1.9 0 0 1 2.7 0l4 4a1.9 1.9 0 0 1 0 2.7l-6.3 6.3z"/><path d="M20 19.6H10"/></g>
+  <g id="i-share"><path d="M12 3.4v10.2"/><path d="m8.6 6.8 3.4-3.4 3.4 3.4"/><path d="M5.6 12.6v5.2a2.2 2.2 0 0 0 2.2 2.2h8.4a2.2 2.2 0 0 0 2.2-2.2v-5.2"/></g>
+  <g id="i-play"><path d="M8 5.4 18.4 12 8 18.6z"/></g>
+  <g id="i-pause"><path d="M9 5.4v13.2M15 5.4v13.2"/></g>
+  <g id="i-prev"><path d="M15.4 5.4 7.6 12l7.8 6.6zM17.6 5.4v13.2"/></g>
+  <g id="i-next"><path d="M8.6 5.4 16.4 12 8.6 18.6zM6.4 5.4v13.2"/></g>
+  <g id="i-loop"><path d="M4.6 11.2A5.4 5.4 0 0 1 10 6h9.4"/><path d="m16.6 3.2 2.8 2.8-2.8 2.8"/><path d="M19.4 12.8A5.4 5.4 0 0 1 14 18H4.6"/><path d="m7.4 20.8-2.8-2.8 2.8-2.8"/></g>
+  <g id="i-lock"><rect x="5.4" y="10.6" width="13.2" height="9.4" rx="2.4"/><path d="M8.4 10.6V8a3.6 3.6 0 0 1 7.2 0v2.6"/></g>
+  <g id="i-warn"><path d="M12 4.2 21 19.4H3z"/><path d="M12 9.6v4.6M12 16.8v.1"/></g>
+  <g id="i-check"><path d="m5 12.6 4.6 4.4L19 6.8"/></g>
+  <g id="i-film"><rect x="3.4" y="5.4" width="17.2" height="13.2" rx="2.4"/><path d="M8.2 5.4v13.2M15.8 5.4v13.2M3.4 12h17.2"/></g>
+  <g id="i-info"><circle cx="12" cy="12" r="8.4"/><path d="M12 11v5.4M12 7.8v.1"/></g>
+</defs></svg>
+
+<div class="frame" id="frame">
+  <div class="scroll" id="scroll">
+
+  <!-- ============================ TODAY ============================ -->
+  <div class="screen" id="s-today">
+    <header class="toolbar">
+      <h1 class="title" data-t="navToday">Today</h1>
+      <button class="icon-btn" data-ta="navSettings" aria-label="Settings">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><use href="#i-gear"/></svg>
+      </button>
+    </header>
+    <p class="daybar"><span data-t="dayLine">Wed 30 Sep · Medium</span><span class="inkmark" data-ink="1" data-t="markWord">Ink</span></p>
+
+    <!-- ---- solving (entry / mid / blot) ---- -->
+    <div class="board-wrap" data-show="entry mid blot">
+      <div class="board" id="board-today" role="group" data-ta="boardLabel" aria-label="Sudoku grid"></div>
+    </div>
+
+    <div class="gap" data-show="entry mid blot">
+      <p class="status" data-show="mid blot"><span>27 cells left</span></p>
+      <!-- The entry point on Today. It lives in the free space that the approved layout
+           already leaves between the board and the pad, so turning it on moves nothing,
+           and it disappears at the first move without the board jumping. -->
+      <div class="list" data-show="entry" id="ink-row-wrap">
+        <button class="row-btn" id="ink-row">
+          <svg class="nib" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><use href="#i-nib"/></svg>
+          <span class="row-t" data-t="inkRow">Ink mode</span>
+          <span class="row-v" id="ink-row-v" data-t="inkOff">Off</span>
+          <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><use href="#i-chev"/></svg>
+        </button>
+      </div>
+      <p class="sect-foot" data-show="entry" data-t="inkFoot">Choose before your first move.</p>
+      <button class="mock-pill" data-pill aria-controls="mock">Mockup controls ▲</button>
+    </div>
+
+    <div class="pad-wrap" data-show="entry mid blot">
+      <div class="pad" id="pad" role="group" data-ta="padLabel" aria-label="Number pad"></div>
+
+      <!-- normal actions: three -->
+      <div class="actions" data-ink="0">
+        <button class="act" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><use href="#i-pencil"/></svg><span data-t="actNotes">Notes</span></button>
+        <button class="act"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><use href="#i-undo"/></svg><span data-t="actUndo">Undo</span></button>
+        <button class="act"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><use href="#i-erase"/></svg><span data-t="actErase">Erase</span></button>
+      </div>
+
+      <!-- ink actions: two. Undo is GONE — not dimmed. A disabled control invites tapping
+           and then explains nothing; an absent one is explained once, in the rule sheet.
+           "Erase notes" is named for what it touches, because the digit eraser is gone. -->
+      <div class="actions ink" data-ink="1">
+        <button class="act" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><use href="#i-pencil"/></svg><span data-t="actNotes">Notes</span></button>
+        <button class="act" id="act-erase-notes" aria-disabled="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><use href="#i-erase"/></svg><span data-t="actEraseNotes">Erase notes</span></button>
+      </div>
+    </div>
+
+    <!-- ---- solved: the day card ---- -->
+    <section class="card" data-show="solved" aria-label="Today's result">
+      <h2><span data-t="cardTitle">Your path</span><span class="chip" data-ink="1"><svg class="nib" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><use href="#i-nib"/></svg><span data-t="markWord">Ink</span></span></h2>
+      <p class="sub"><span data-t="cardSub">Every cell shaded by when you filled it.</span> <span data-ink="1" data-t="cardSubInk">Notched cells are blots.</span></p>
+      <div class="heat" id="heat" role="img" data-ta="heatLabel" aria-label="Heat map of the order in which you filled the grid."></div>
+      <div class="legend"><span data-t="legEarly">Early</span><span class="bar" id="legend-bar" aria-hidden="true"></span><span data-t="legLate">Late</span></div>
+      <dl class="rows">
+        <div class="row"><dt data-t="rowTime">Time</dt><dd class="mono">8:14</dd></div>
+        <div class="row" data-ink="0"><dt data-t="rowCorr">Corrections</dt><dd data-t="valClean">clean</dd></div>
+        <div class="row" data-ink="1"><dt data-t="rowBlots">Blots</dt><dd class="wax" id="blot-count">2</dd></div>
+        <div class="row"><dt data-t="rowTech">Technique reached</dt><dd data-t="valTech">Hidden Pair</dd></div>
+      </dl>
+      <p class="winrate" data-t="winRate">61 % solved today</p>
+
+      <!-- Timelapse entry point. A tinted secondary action above the filled primary:
+           the standard iOS pairing, and it keeps Share as the end of the card. -->
+      <button class="btn tinted" id="tl-open" data-show-tl="1">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><use href="#i-play"/></svg>
+        <span data-t="tlRow">Replay your solve</span>
+      </button>
+      <!-- and the honest version of "no button": a sentence, not a dead control -->
+      <p class="note-static" data-show-tl="0">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><use href="#i-info"/></svg>
+        <span data-t="tlNone">Replay isn't available for this day — the moves weren't kept.</span>
+      </p>
+
+      <button class="btn primary">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><use href="#i-share"/></svg>
+        <span data-t="share">Share</span>
+      </button>
+    </section>
+
+    <div data-show="solved">
+      <div class="section-head"><h2>Grid&nbsp;∞</h2><span class="meta" data-t="infMeta">13 cells · not yet solvable</span></div>
+      <div class="board-wrap"><div class="board" id="board-inf" role="img" data-ta="infLabel" aria-label="Your permanent grid"></div></div>
+      <div class="gap"><button class="mock-pill" data-pill aria-controls="mock">Mockup controls ▲</button></div>
+    </div>
+  </div>
+
+  <!-- ============================ PLAY ============================ -->
+  <!-- Play already has a setup step, so ink mode is a setup option here, not a row in the
+       gap. Same wording, same nib, one product. -->
+  <div class="screen" id="s-play" hidden>
+    <header class="toolbar"><h1 class="title" data-t="navPlay">Play</h1></header>
+    <p class="daybar" data-t="playSub">A puzzle of your own, any time.</p>
+    <div style="height:8px"></div>
+    <p class="sect-head" data-t="playGroup">New puzzle</p>
+    <div class="list inset">
+      <button class="row-btn"><span class="row-t" data-t="playDiff">Difficulty</span><span class="row-v" data-t="playDiffVal">Hard</span>
+        <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><use href="#i-chev"/></svg></button>
+      <button class="row-btn" id="ink-row-play">
+        <svg class="nib" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><use href="#i-nib"/></svg>
+        <span class="row-t" data-t="inkRow">Ink mode</span><span class="row-v" data-t="inkOff">Off</span>
+        <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><use href="#i-chev"/></svg></button>
+    </div>
+    <p class="sect-foot" data-t="inkFootPlay">In ink mode there is no undo and no eraser for digits.</p>
+    <div style="padding:14px 16px 0"><button class="btn primary" style="margin:0"><span data-t="playStart">Start</span></button></div>
+    <div class="gap"><button class="mock-pill" data-pill aria-controls="mock">Mockup controls ▲</button></div>
+  </div>
+
+  <!-- ============================ YEAR ============================ -->
+  <div class="screen" id="s-year" hidden>
+    <header class="toolbar"><h1 class="title">2026</h1>
+      <button class="icon-btn" data-ta="navSettings" aria-label="Settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><use href="#i-gear"/></svg></button>
+    </header>
+    <p class="daybar" data-t="yearSummary">148 days · 121 clean · 27 with corrections</p>
+    <div class="year-wrap" id="year-wrap"></div>
+    <div class="ylegend">
+      <span><i class="ykey" style="background:var(--ink)"></i><span data-t="legSolved">Solved</span></span>
+      <span><i class="ykey corr" style="background:var(--wax);clip-path:polygon(0 0,62% 0,100% 38%,100% 100%,0 100%)"></i><span data-t="legCorr">With corrections</span></span>
+      <span><i class="ykey" style="box-shadow:inset 0 0 0 1px var(--hairline)"></i><span data-t="legMissed">Missed</span></span>
+    </div>
+    <div class="gap"><button class="mock-pill" data-pill aria-controls="mock">Mockup controls ▲</button></div>
+  </div>
+
+  </div><!-- /scroll -->
+
+  <nav class="tabbar" role="tablist" aria-label="Sections">
+    <button class="tab" role="tab" id="tab-today" aria-selected="true">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="4.8" width="17" height="15.4" rx="3.4"/><path d="M3.5 9.2h17M8 3.2v2.8M16 3.2v2.8"/><circle cx="12" cy="14.7" r="1.9" fill="currentColor" stroke="none"/></svg>
+      <span class="lab" data-t="navToday">Today</span>
+    </button>
+    <button class="tab" role="tab" id="tab-play" aria-selected="false">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="3.5" width="17" height="17" rx="3.4"/><path d="M9.2 3.5v17M14.8 3.5v17M3.5 9.2h17M3.5 14.8h17"/></svg>
+      <span class="lab" data-t="navPlay">Play</span>
+    </button>
+    <button class="tab" role="tab" id="tab-year" aria-selected="false">
+      <svg viewBox="0 0 24 24" fill="currentColor" stroke="none" aria-hidden="true"><rect x="3.2" y="5.2" width="3.6" height="3.6" rx="1"/><rect x="8.6" y="5.2" width="3.6" height="3.6" rx="1"/><rect x="14" y="5.2" width="3.6" height="3.6" rx="1"/><rect x="19.4" y="5.2" width="1.4" height="3.6" rx=".7"/><rect x="3.2" y="10.2" width="3.6" height="3.6" rx="1"/><rect x="8.6" y="10.2" width="3.6" height="3.6" rx="1"/><rect x="14" y="10.2" width="3.6" height="3.6" rx="1"/><rect x="19.4" y="10.2" width="1.4" height="3.6" rx=".7"/><rect x="3.2" y="15.2" width="3.6" height="3.6" rx="1"/><rect x="8.6" y="15.2" width="3.6" height="3.6" rx="1"/><rect x="14" y="15.2" width="3.6" height="3.6" rx="1"/><rect x="19.4" y="15.2" width="1.4" height="3.6" rx=".7"/></svg>
+      <span class="lab" data-t="navYear">Year</span>
+    </button>
+  </nav>
+
+  <div class="scrim" id="scrim" hidden></div>
+
+  <!-- ---------------- the rule sheet (the explicit rule, before the first move) ------- -->
+  <section class="sheet" id="sh-rule" role="dialog" aria-modal="true" aria-labelledby="rule-h" hidden>
+    <div class="grabber" aria-hidden="true"></div>
+    <div class="sheet-head"><h2 id="rule-h" data-t="ruleTitle">Ink doesn't lift</h2></div>
+    <p class="sheet-sub" data-t="ruleLead">In ink mode every digit you place is final.</p>
+    <div class="sheet-body">
+      <ul class="rulelist">
+        <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><use href="#i-undo"/></svg><span data-t="rule1">No undo, and no eraser for digits.</span></li>
+        <li class="wax"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><use href="#i-warn"/></svg><span data-t="rule2" id="rule2">A wrong digit leaves a blot: the cell seals, and the right digit is filled in for you.</span></li>
+        <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><use href="#i-pencil"/></svg><span data-t="rule3">Pencil marks still work, and can still be erased.</span></li>
+        <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><use href="#i-lock"/></svg><span data-t="rule4">Once you place a digit you can't switch back for this puzzle.</span></li>
+      </ul>
+    </div>
+    <div class="sheet-foot">
+      <button class="btn primary" id="rule-start" style="margin:0"><span data-t="ruleStart">Play in ink</span></button>
+      <button class="btn quiet" id="rule-cancel"><span data-t="ruleCancel">Not now</span></button>
+    </div>
+  </section>
+
+  <!-- ---------------- Year: the day sheet of an ink day ------------------------------- -->
+  <section class="sheet" id="sh-day" role="dialog" aria-modal="true" aria-labelledby="day-h" hidden>
+    <div class="grabber" aria-hidden="true"></div>
+    <div class="sheet-head">
+      <h2 id="day-h" data-t="daySheetTitle">Tue 15 Sep</h2>
+      <button class="done" data-t="done">Done</button>
+    </div>
+    <p class="sheet-sub" data-t="daySheetSub">Solved that day · 2 corrections</p>
+    <div class="sheet-body">
+      <div class="list inset">
+        <div class="row-static"><span class="row-t" data-t="rowTime">Time</span><span class="row-v mono">9:41</span></div>
+        <!-- the ONLY place an ink day is named, in the recommended variant -->
+        <div class="row-static"><span class="row-t" data-t="rowMode">Mode</span><span class="row-v on" data-t="yearInkValue">Ink · 2 blots</span></div>
+        <div class="row-static"><span class="row-t" data-t="rowTech">Technique reached</span><span class="row-v" data-t="valTech2">Locked Candidates</span></div>
+      </div>
+      <div style="padding:12px 16px 0">
+        <button class="btn tinted" style="margin:0" id="tl-open-2"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><use href="#i-play"/></svg><span data-t="tlRow">Replay your solve</span></button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ---------------- Timelapse player ---------------------------------------------- -->
+  <section class="sheet" id="sh-player" role="dialog" aria-modal="true" aria-labelledby="pl-h" hidden>
+    <div class="grabber" aria-hidden="true"></div>
+    <div class="sheet-head">
+      <h2 id="pl-h" data-t="tlTitle">Your solve</h2>
+      <button class="done" id="pl-done" data-t="done">Done</button>
+    </div>
+    <p class="sheet-sub"><span data-t="dayLine">Wed 30 Sep · Medium</span> · <span class="mono">8:14</span></p>
+
+    <div class="sheet-body">
+      <!-- player + step modes share the board; contact sheet replaces it -->
+      <div id="pl-main">
+        <div class="tl-board"><div class="board" id="board-tl" role="img" data-ta="tlBoardLabel" aria-label="Replay of your solve"></div></div>
+        <div class="tl-meta">
+          <span id="pl-move" data-t-tpl="tlMove">Move 41 of 51</span>
+          <span class="mono" id="pl-clock">3:12 / 8:14</span>
+        </div>
+        <div class="scrub-wrap">
+          <input type="range" class="scrub" id="pl-scrub" min="0" max="51" value="41" data-ta="tlScrub" aria-label="Move">
+        </div>
+        <div class="transport">
+          <button class="tbtn" id="pl-loop" aria-pressed="false" data-ta="tlLoop" aria-label="Repeat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><use href="#i-loop"/></svg></button>
+          <button class="tbtn" id="pl-prev" data-ta="tlPrev" aria-label="Previous move"><svg viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round" aria-hidden="true"><use href="#i-prev"/></svg></button>
+          <button class="tbtn big" id="pl-play" data-ta="tlPlay" aria-label="Play"><svg viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round" aria-hidden="true"><use href="#i-play"/></svg></button>
+          <button class="tbtn" id="pl-next" data-ta="tlNext" aria-label="Next move"><svg viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round" aria-hidden="true"><use href="#i-next"/></svg></button>
+          <div class="seg-ui" role="group" data-ta="tlSpeed" aria-label="Speed">
+            <button data-speed="slow" aria-pressed="false" data-t="spSlow">Slow</button>
+            <button data-speed="normal" aria-pressed="true" data-t="spNormal">Normal</button>
+            <button data-speed="fast" aria-pressed="false" data-t="spFast">Fast</button>
+          </div>
+        </div>
+        <p class="tl-note" id="pl-note" data-t="tlRhythm">Real rhythm, long pauses shortened.</p>
+      </div>
+
+      <div id="pl-contact" hidden>
+        <div class="contact" id="contact-grid"></div>
+        <p class="tl-note" data-t="tlContactNote">Nine stages of your solve. Nothing moves.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ---------------- Fingerprint export ------------------------------------------- -->
+  <section class="sheet" id="sh-export" role="dialog" aria-modal="true" aria-labelledby="fp-h" hidden>
+    <div class="grabber" aria-hidden="true"></div>
+    <div class="sheet-head">
+      <h2 id="fp-h" data-t="fpTitle">Fingerprint</h2>
+      <button class="done" id="fp-done" data-t="done">Done</button>
+    </div>
+    <p class="sheet-sub" data-t="fpSub">No digits from the solution — safe to post.</p>
+    <div class="sheet-body">
+      <div class="fp-frame">
+        <div class="fp" id="fp" role="img" data-ta="fpLabel" aria-label="Your fingerprint for this day">
+          <div class="fp-art" id="fp-art"></div>
+          <div class="fp-cap">
+            <span class="l">Pundoku</span>
+            <span class="r" id="fp-cap">30 Sep 2026 · 8:14 · 51 moves · clean</span>
+          </div>
+        </div>
+      </div>
+      <div style="padding:12px 16px 0"><div class="seg-ui" style="margin:0" role="group" data-ta="fpStyle" aria-label="Style">
+        <button data-fp="path"   aria-pressed="false" data-t="fpPath">Path</button>
+        <button data-fp="rhythm" aria-pressed="true"  data-t="fpRhythm">Rhythm</button>
+        <button data-fp="trace"  aria-pressed="false" data-t="fpTrace">Trace</button>
+      </div></div>
+      <p class="tl-note" id="fp-note" data-t="fpRhythmSub">Tone is the order you filled cells; size is how long you thought.</p>
+      <div id="fp-share-block" style="padding:4px 16px 0">
+        <button class="btn primary" style="margin:0" id="fp-share"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><use href="#i-share"/></svg><span data-t="share">Share</span></button>
+        <p class="tl-note" data-t="fpSize">PNG 1080 × 1350</p>
+      </div>
+      <div class="fp-sys" id="fp-sys" hidden data-t="fpSys">(iOS share sheet — system UI, not drawn in this mockup)</div>
+    </div>
+  </section>
+
+  <p class="sr" role="status" aria-live="polite" id="live"></p>
+</div>
+<!-- ================= MOCKUP CONTROLS (not part of the design) ================= -->
+<div class="mock" id="mock">
+  <div class="hdr"><span>Mockup controls — not part of the design</span><button class="close" id="mock-close">Hide</button></div>
+
+  <div class="grp"><b>Appearance</b><div class="seg" data-key="appearance">
+    <button data-val="system" aria-pressed="true">System</button><button data-val="light" aria-pressed="false">Light</button><button data-val="dark" aria-pressed="false">Dark</button>
+  </div></div>
+
+  <div class="grp"><b>Language</b><div class="seg" data-key="lang">
+    <button data-val="en" aria-pressed="true">en</button><button data-val="uk" aria-pressed="false">uk</button><button data-val="ru" aria-pressed="false">ru</button>
+  </div></div>
+
+  <div class="grp"><b>Screen</b><div class="seg" data-key="screen">
+    <button data-val="today-entry" aria-pressed="true">Today entry</button><button data-val="rule" aria-pressed="false">Rule sheet</button><button data-val="play-setup" aria-pressed="false">Play setup</button><button data-val="ink-game" aria-pressed="false">Ink game</button><button data-val="ink-blot" aria-pressed="false">Blot</button><button data-val="ink-card" aria-pressed="false">Ink card</button><button data-val="year" aria-pressed="false">Year day</button><button data-val="tl-card" aria-pressed="false">TL entry</button><button data-val="tl-player" aria-pressed="false">TL player</button><button data-val="tl-export" aria-pressed="false">Fingerprint</button><button data-val="tl-share" aria-pressed="false">Share</button><button data-val="tl-none" aria-pressed="false">No log</button>
+  </div></div>
+
+  <div class="grp"><b>Blot rule</b><div class="seg" data-key="blot">
+    <button data-val="now" aria-pressed="true">Answer now</button><button data-val="ghost" aria-pressed="false">+ wrong digit</button><button data-val="late" aria-pressed="false">Answer at the end</button>
+  </div></div>
+
+  <div class="grp"><b>Mode mark</b><div class="seg" data-key="mark">
+    <button data-val="line" aria-pressed="true">Day line</button><button data-val="none" aria-pressed="false">None</button>
+  </div></div>
+
+  <div class="grp"><b>Year sign</b><div class="seg" data-key="yearsign">
+    <button data-val="none" aria-pressed="true">No sign</button><button data-val="corner" aria-pressed="false">Second notch</button>
+  </div></div>
+
+  <div class="grp"><b>Replay</b><div class="seg" data-key="tl">
+    <button data-val="player" aria-pressed="true">Player</button><button data-val="step" aria-pressed="false">Step by step</button><button data-val="contact" aria-pressed="false">Contact sheet</button>
+  </div></div>
+
+  <div class="grp"><b>Fingerprint</b><div class="seg" data-key="fp">
+    <button data-val="path" aria-pressed="false">Path</button><button data-val="rhythm" aria-pressed="true">Rhythm</button><button data-val="trace" aria-pressed="false">Trace</button>
+  </div></div>
+
+  <div class="grp"><b>Text size</b><div class="seg" data-key="type">
+    <button data-val="default" aria-pressed="true">17 px</button><button data-val="xxxl" aria-pressed="false">23 px</button><button data-val="ax3" aria-pressed="false">40 px</button>
+  </div></div>
+
+  <div class="grp"><b>Motion</b><div class="seg" data-key="motion">
+    <button data-val="system" aria-pressed="true">System</button><button data-val="reduced" aria-pressed="false">Reduced</button><button data-val="off" aria-pressed="false">Off</button>
+  </div></div>
+
+  <div class="grp"><b>Safe area</b><div class="seg" data-key="safearea">
+    <button data-val="sim" aria-pressed="true">iPhone 16</button><button data-val="env" aria-pressed="false">Real env()</button>
+  </div></div>
+
+  <div class="grp"><b>Play</b>
+    <button class="go" id="btn-blot">Blot — M7</button>
+    <button class="go" id="btn-replay">Replay from the start</button>
+    <button class="close" id="btn-reset">Reset</button>
+  </div>
+
+  <p class="note">
+    Ink mode is <b>off by default on every screen</b>; the rule sheet is the only way in.
+    On “Blot”, press “Blot — M7” to watch the moment; the three Blot rule options are the three
+    answers to owner question 1. Appearance, Language, Text size and Motion are review switches
+    only — the product follows the system settings and ships no appearance control.
+    Increase Contrast, Reduce Transparency and forced-colors have CSS answers that this panel
+    cannot toggle: set them in the OS or in Playwright.
+  </p>
+</div>
+<!--@@BODY@@-->
+<script>
+(function(){
+"use strict";
+var root = document.documentElement;
+
+/* ======================= 1. PUZZLE + PATH DATA =========================
+   Same grid as the approved pd7 mockup, so the board is literally the one the
+   owner signed off. One dataset drives the heat map, the replay and the
+   fingerprint: they can never disagree. */
+var SOL =
+  "534678912"+"672195348"+"198342567"+
+  "859761423"+"426853791"+"713924856"+
+  "961537284"+"287419635"+"345286179";
+var GIVEN =
+  "53..7...."+"6..195..."+".98....6."+
+  "8...6...3"+"4..8.3..1"+"7...2...6"+
+  ".6....28."+"...419..5"+"....8..79";
+
+function rc(i){ return [Math.floor(i/9), i%9]; }
+function idxOf(b,k){ return (3*Math.floor(b/3)+Math.floor(k/3))*9 + (3*(b%3)+k%3); }
+function rnd(i){ var s=Math.sin(i*12.9898)*43758.5453; return s-Math.floor(s); }
+
+/* Fill order: the same plausible human sweep pd7 used for its heat map. */
+var ORDER = (function(){
+  var a=[];
+  for(var j=0;j<81;j++){
+    if(GIVEN[j]!==".") continue;
+    var p=rc(j);
+    var dist=Math.hypot(p[0]-7.2,p[1]-7.2);
+    var centre=3.2-Math.hypot(p[0]-4,p[1]-4);
+    a.push({i:j, score:dist+Math.max(0,centre)*1.35+rnd(j)*1.6});
+  }
+  a.sort(function(x,y){ return x.score-y.score; });
+  return a.map(function(o){ return o.i; });
+})();
+var N = ORDER.length;                       /* 51 player cells */
+var POS = {}; ORDER.forEach(function(i,k){ POS[i]=k; });
+
+/* Thinking time before each move, in seconds, with four real stalls. Scaled so the
+   whole solve is 8:14 — the time the approved card already shows. */
+var DWELL = (function(){
+  var d=[], stalls={6:52,17:64,32:41,45:57};
+  for(var k=0;k<N;k++) d.push(stalls[k] || (1.6 + rnd(k+7)*6.4));
+  var sum=d.reduce(function(a,b){return a+b;},0), want=494;
+  return d.map(function(v){ return v*want/sum; });
+})();
+var TOTAL = DWELL.reduce(function(a,b){return a+b;},0);
+var ELAPSED = (function(){ var t=[],s=0; for(var k=0;k<N;k++){ s+=DWELL[k]; t.push(s); } return t; })();
+
+/* Blots: two in the finished game. The demo blot is a third one, at move 25. */
+var BLOT_POS = [16, 37], DEMO_POS = 24;
+var WRONGS = {}; [16,37,24].forEach(function(p){
+  var i=ORDER[p], right=+SOL[i], w=right===9?4:right+1;
+  WRONGS[i]=String(w);
+});
+function blotCells(limit, withDemo){
+  var m={};
+  BLOT_POS.forEach(function(p){ if(p<limit) m[ORDER[p]]=true; });
+  if(withDemo && DEMO_POS<limit) m[ORDER[DEMO_POS]]=true;
+  return m;
+}
+var NOTES = { 2:[4,9], 22:[2,4,7], 63:[2,5], 74:[1,5,8] };
+var INF = {4:"7",11:"3",19:"9",25:"1",30:"6",33:"8",38:"2",44:"5",51:"4",57:"7",66:"1",74:"9",40:"6"};
+
+function mmss(sec){ var m=Math.floor(sec/60), s=Math.round(sec%60); if(s===60){m++;s=0;} return m+":"+(s<10?"0":"")+s; }
+
+/* ======================= 2. TEXTS (en / uk / ru) ========================
+   writing.md > "Keep settings labels clear and simple": the row says what the mode does
+   when it is ON, and the rule sheet spells it out before anything is irreversible. */
+var T = {
+en:{
+  navToday:"Today", navPlay:"Play", navYear:"Year", navSettings:"Settings", done:"Done", share:"Share",
+  dayLine:"Wed 30 Sep · Medium", markWord:"Ink",
+  boardLabel:"Sudoku grid for Wednesday 30 September", padLabel:"Number pad",
+  inkRow:"Ink mode", inkOff:"Off", inkOn:"On",
+  inkFoot:"Choose before your first move. Not available once you have placed a digit.",
+  inkFootPlay:"In ink mode there is no undo and no eraser for digits.",
+  actNotes:"Notes", actUndo:"Undo", actErase:"Erase", actEraseNotes:"Erase notes",
+  ruleTitle:"Ink doesn’t lift",
+  ruleLead:"In ink mode every digit you place is final. Read this before you start — you can’t switch later.",
+  rule1:"No undo, and no eraser for digits.",
+  rule2:"A wrong digit leaves a blot: the cell seals, and the right digit is filled in for you.",
+  rule2ghost:"A wrong digit leaves a blot: the cell seals with your wrong digit still on it, and the right digit is filled in.",
+  rule2late:"A wrong digit leaves a blot and the cell seals. The right digit appears only once the rest of the grid is done.",
+  rule3:"Pencil marks still work, and can still be erased.",
+  rule4:"Once you place a digit you can’t switch back for this puzzle.",
+  ruleStart:"Play in ink", ruleCancel:"Not now",
+  playSub:"A puzzle of your own, any time.", playGroup:"New puzzle",
+  playDiff:"Difficulty", playDiffVal:"Hard", playStart:"Start",
+  cardTitle:"Your path", cardSub:"Every cell shaded by when you filled it.",
+  cardSubInk:"Notched cells are blots.", heatLabel:"Heat map of the order in which you filled the grid.",
+  legEarly:"Early", legLate:"Late",
+  rowTime:"Time", rowCorr:"Corrections", rowBlots:"Blots", rowTech:"Technique reached", rowMode:"Mode",
+  valClean:"clean", valTech:"Hidden Pair", valTech2:"Locked Candidates", valNone:"none",
+  winRate:"61 % solved today", infMeta:"13 cells · not yet solvable", infLabel:"Your permanent grid",
+  yearSummary:"148 days · 121 clean · 27 with corrections",
+  legSolved:"Solved", legCorr:"With corrections", legMissed:"Missed",
+  daySheetTitle:"Tue 15 Sep", daySheetSub:"Solved that day · 2 corrections", yearInkValue:"Ink · 2 blots",
+  tlRow:"Replay your solve",
+  tlNone:"Replay isn’t available for this day — the moves weren’t kept.",
+  tlTitle:"Your solve", tlBoardLabel:"Replay of your solve", tlScrub:"Move",
+  tlLoop:"Repeat", tlPlay:"Play", tlPause:"Pause", tlPrev:"Previous move", tlNext:"Next move",
+  tlSpeed:"Speed", spSlow:"Slow", spNormal:"Normal", spFast:"Fast",
+  tlRhythm:"Real rhythm, long pauses shortened.",
+  tlStepNote:"Reduce Motion is on, so the replay opens step by step. Nothing animates.",
+  tlContactNote:"Nine stages of your solve. Nothing moves.",
+  fpTitle:"Fingerprint", fpSub:"No digits from the solution — safe to post.",
+  fpLabel:"Your fingerprint for this day", fpStyle:"Style",
+  fpPath:"Path", fpRhythm:"Rhythm", fpTrace:"Trace",
+  fpPathSub:"Ink by the order you filled cells — the day card’s map, exported.",
+  fpRhythmSub:"Tone is the order you filled cells; size is how long you thought.",
+  fpTraceSub:"One line through your moves, thicker where you stopped to think.",
+  fpSize:"PNG 1080 × 1350", fpSys:"(iOS share sheet — system UI, not drawn in this mockup)", fpMovesWord:"moves",
+  blotSay:"Wrong digit. The cell is sealed with a blot.",
+  moveOf:"Move {a} of {b}", cellsLeft:"{n} cells left"
+},
+uk:{
+  navToday:"Сьогодні", navPlay:"Гра", navYear:"Рік", navSettings:"Налаштування", done:"Готово", share:"Поділитися",
+  dayLine:"Ср 30 вер · Середня", markWord:"чорнило",
+  boardLabel:"Сітка судоку за середу 30 вересня", padLabel:"Панель цифр",
+  inkRow:"Чорнильний режим", inkOff:"Вимкнено", inkOn:"Увімкнено",
+  inkFoot:"Виберіть до першого ходу. Після першої цифри перемкнути не вийде.",
+  inkFootPlay:"У чорнильному режимі немає скасування і немає гумки для цифр.",
+  actNotes:"Позначки", actUndo:"Скасувати", actErase:"Стерти", actEraseNotes:"Стерти позначки",
+  ruleTitle:"Чорнило не стирається",
+  ruleLead:"У чорнильному режимі кожна поставлена цифра — остаточна. Прочитайте до початку: потім режим не перемкнути.",
+  rule1:"Немає скасування і немає гумки для цифр.",
+  rule2:"Хибна цифра залишає ляпку: клітинка замикається, а правильна цифра вписується сама.",
+  rule2ghost:"Хибна цифра залишає ляпку: клітинка замикається разом з вашою хибною цифрою, а правильна вписується сама.",
+  rule2late:"Хибна цифра залишає ляпку, і клітинка замикається. Правильна цифра з’явиться лише тоді, коли решту сітки буде заповнено.",
+  rule3:"Олівцеві позначки працюють і стираються, як завжди.",
+  rule4:"Після першої поставленої цифри режим для цієї сітки не змінити.",
+  ruleStart:"Грати чорнилом", ruleCancel:"Не зараз",
+  playSub:"Власна сітка, коли завгодно.", playGroup:"Нова сітка",
+  playDiff:"Складність", playDiffVal:"Складна", playStart:"Почати",
+  cardTitle:"Ваш шлях", cardSub:"Кожна клітинка затінена за часом, коли ви її заповнили.",
+  cardSubInk:"Клітинки зі зрізаним кутом — ляпки.", heatLabel:"Теплова карта порядку заповнення сітки.",
+  legEarly:"Раніше", legLate:"Пізніше",
+  rowTime:"Час", rowCorr:"Виправлення", rowBlots:"Ляпки", rowTech:"Досягнута техніка", rowMode:"Режим",
+  valClean:"чисто", valTech:"Прихована пара", valTech2:"Замкнені кандидати", valNone:"немає",
+  winRate:"61 % розв’язали сьогодні", infMeta:"13 клітинок · ще не розв’язується", infLabel:"Ваша постійна сітка",
+  yearSummary:"148 днів · 121 чисто · 27 з виправленнями",
+  legSolved:"Розв’язано", legCorr:"З виправленнями", legMissed:"Пропущено",
+  daySheetTitle:"Вт 15 вер", daySheetSub:"Розв’язано того дня · 2 виправлення", yearInkValue:"Чорнило · 2 ляпки",
+  tlRow:"Подивитися своє розв’язання",
+  tlNone:"Повтор для цього дня недоступний — ходи не збереглися.",
+  tlTitle:"Ваше розв’язання", tlBoardLabel:"Повтор вашого розв’язання", tlScrub:"Хід",
+  tlLoop:"Повторювати", tlPlay:"Грати", tlPause:"Пауза", tlPrev:"Попередній хід", tlNext:"Наступний хід",
+  tlSpeed:"Швидкість", spSlow:"Повільно", spNormal:"Звичайно", spFast:"Швидко",
+  tlRhythm:"Справжній ритм, довгі паузи скорочено.",
+  tlStepNote:"Увімкнено «Зменшення руху», тому повтор відкривається покроково. Нічого не анімується.",
+  tlContactNote:"Дев’ять етапів вашого розв’язання. Ніщо не рухається.",
+  fpTitle:"Відбиток", fpSub:"Жодної цифри з розв’язку — можна публікувати.",
+  fpLabel:"Ваш відбиток цього дня", fpStyle:"Стиль",
+  fpPath:"Шлях", fpRhythm:"Ритм", fpTrace:"Слід",
+  fpPathSub:"Чорнило за порядком заповнення — карта з картки дня, як зображення.",
+  fpRhythmSub:"Тон — порядок заповнення, розмір — скільки ви думали.",
+  fpTraceSub:"Одна лінія через ваші ходи, товща там, де ви зупинялися подумати.",
+  fpSize:"PNG 1080 × 1350", fpSys:"(системний аркуш поширення iOS — не малюється в макеті)", fpMovesWord:"ходів",
+  blotSay:"Хибна цифра. Клітинку запечатано ляпкою.",
+  moveOf:"Хід {a} з {b}", cellsLeft:"залишилось {n}"
+},
+ru:{
+  navToday:"Сегодня", navPlay:"Игра", navYear:"Год", navSettings:"Настройки", done:"Готово", share:"Поделиться",
+  dayLine:"Ср 30 сен · Средняя", markWord:"чернила",
+  boardLabel:"Сетка судоку за среду 30 сентября", padLabel:"Панель цифр",
+  inkRow:"Чернильный режим", inkOff:"Выключен", inkOn:"Включён",
+  inkFoot:"Выберите до первого хода. После первой цифры переключить нельзя.",
+  inkFootPlay:"В чернильном режиме нет отмены и нет ластика для цифр.",
+  actNotes:"Заметки", actUndo:"Отменить", actErase:"Стереть", actEraseNotes:"Стереть заметки",
+  ruleTitle:"Чернила не стираются",
+  ruleLead:"В чернильном режиме каждая поставленная цифра — окончательная. Прочитайте до начала: потом режим не переключить.",
+  rule1:"Нет отмены и нет ластика для цифр.",
+  rule2:"Неверная цифра оставляет кляксу: клетка запирается, а верная цифра вписывается сама.",
+  rule2ghost:"Неверная цифра оставляет кляксу: клетка запирается вместе с вашей неверной цифрой, а верная вписывается сама.",
+  rule2late:"Неверная цифра оставляет кляксу, и клетка запирается. Верная цифра появится только когда остальная сетка будет заполнена.",
+  rule3:"Заметки карандашом работают и стираются, как обычно.",
+  rule4:"После первой поставленной цифры режим для этой сетки не изменить.",
+  ruleStart:"Играть чернилами", ruleCancel:"Не сейчас",
+  playSub:"Своя сетка в любое время.", playGroup:"Новая сетка",
+  playDiff:"Сложность", playDiffVal:"Сложная", playStart:"Начать",
+  cardTitle:"Ваш путь", cardSub:"Каждая клетка затенена по времени, когда вы её заполнили.",
+  cardSubInk:"Клетки со срезанным углом — кляксы.", heatLabel:"Тепловая карта порядка заполнения сетки.",
+  legEarly:"Раньше", legLate:"Позже",
+  rowTime:"Время", rowCorr:"Исправления", rowBlots:"Кляксы", rowTech:"Достигнутая техника", rowMode:"Режим",
+  valClean:"чисто", valTech:"Скрытая пара", valTech2:"Запертые кандидаты", valNone:"нет",
+  winRate:"61 % решили сегодня", infMeta:"13 клеток · ещё не решается", infLabel:"Ваша постоянная сетка",
+  yearSummary:"148 дней · 121 чисто · 27 с исправлениями",
+  legSolved:"Решено", legCorr:"С исправлениями", legMissed:"Пропущено",
+  daySheetTitle:"Вт 15 сен", daySheetSub:"Решено в тот день · 2 исправления", yearInkValue:"Чернила · 2 кляксы",
+  tlRow:"Посмотреть своё решение",
+  tlNone:"Повтор для этого дня недоступен — ходы не сохранились.",
+  tlTitle:"Ваше решение", tlBoardLabel:"Повтор вашего решения", tlScrub:"Ход",
+  tlLoop:"Повторять", tlPlay:"Играть", tlPause:"Пауза", tlPrev:"Предыдущий ход", tlNext:"Следующий ход",
+  tlSpeed:"Скорость", spSlow:"Медленно", spNormal:"Обычно", spFast:"Быстро",
+  tlRhythm:"Настоящий ритм, длинные паузы сокращены.",
+  tlStepNote:"Включено «Уменьшение движения», поэтому повтор открывается покадрово. Ничего не анимируется.",
+  tlContactNote:"Девять этапов вашего решения. Ничто не движется.",
+  fpTitle:"Отпечаток", fpSub:"Ни одной цифры из решения — можно публиковать.",
+  fpLabel:"Ваш отпечаток этого дня", fpStyle:"Стиль",
+  fpPath:"Путь", fpRhythm:"Ритм", fpTrace:"След",
+  fpPathSub:"Чернила по порядку заполнения — карта с карточки дня, как картинка.",
+  fpRhythmSub:"Тон — порядок заполнения, размер — сколько вы думали.",
+  fpTraceSub:"Одна линия через ваши ходы, толще там, где вы останавливались подумать.",
+  fpSize:"PNG 1080 × 1350", fpSys:"(системный лист «Поделиться» iOS — в макете не рисуется)", fpMovesWord:"ходов",
+  blotSay:"Неверная цифра. Клетка запечатана кляксой.",
+  moveOf:"Ход {a} из {b}", cellsLeft:"осталось {n}"
+}};
+function t(k){ return (T[root.getAttribute("data-lang")] || T.en)[k] || T.en[k] || k; }
+
+/* ======================= 3. BOARD ===================================== */
+function rulesSvg(){
+  var s='<svg class="rules" viewBox="0 0 3 3" preserveAspectRatio="none" aria-hidden="true">';
+  for(var k=1;k<3;k++){
+    s+='<line class="thin" x1="'+k+'" y1="0" x2="'+k+'" y2="3"/>';
+    s+='<line class="thin" x1="0" y1="'+k+'" x2="3" y2="'+k+'"/>';
+  }
+  return s+"</svg>";
+}
+function buildBoard(el, withRing){
+  var html="", b, k;
+  for(b=0;b<9;b++){
+    html+='<div class="box">';
+    for(k=0;k<9;k++) html+='<div class="cell" data-i="'+idxOf(b,k)+'"><i class="fl"></i></div>';
+    html+=rulesSvg()+"</div>";
+  }
+  if(withRing) html+='<div class="ring"></div>';
+  el.innerHTML=html;
+  var cells=[];
+  Array.prototype.forEach.call(el.querySelectorAll(".cell"), function(c){ cells[+c.dataset.i]=c; });
+  return cells;
+}
+function clearCell(c){
+  Array.prototype.forEach.call(c.querySelectorAll(".d,.marks,.stain,.ghost"), function(n){ n.remove(); });
+  c.classList.remove("blot","same","sel");
+}
+function digit(c, cls, text, anim){
+  var d=document.createElement("span"); d.className="d "+cls+(anim?" swap-in":"");
+  d.textContent=text; c.appendChild(d); return d;
+}
+function marks(c, list){
+  var m=document.createElement("span"); m.className="marks";
+  var h="";
+  for(var n=1;n<=9;n++) h+="<span>"+(list.indexOf(n)>=0?n:"")+"</span>";
+  m.innerHTML=h; c.appendChild(m);
+}
+function stain(c, anim){
+  var s=document.createElement("i"); s.className="stain"+(anim?" anim":""); c.appendChild(s);
+  c.classList.add("blot"); return s;
+}
+/* Paint a board at a given point in the solve.
+   opts: {blots:{}, notes:bool, ring:cellIndex|null, animAt:cellIndex|null} */
+function paintBoard(cells, upto, opts){
+  opts=opts||{};
+  var blots=opts.blots||{}, variant=root.getAttribute("data-blot"), complete=(upto>=N);
+  for(var i=0;i<81;i++){
+    var c=cells[i]; if(!c) continue;
+    clearCell(c);
+    if(GIVEN[i]!=="."){ digit(c,"given",GIVEN[i]); continue; }
+    var k=POS[i];
+    if(k<upto){
+      if(blots[i]){
+        stain(c, opts.animAt===i);
+        if(variant!=="late" || complete) digit(c,"player",SOL[i], opts.animAt===i);
+        if(variant==="ghost"){
+          var g=document.createElement("span"); g.className="ghost"; g.textContent=WRONGS[i]; c.appendChild(g);
+        }
+      } else digit(c,"player",SOL[i], opts.animAt===i);
+    } else if(opts.notes && NOTES[i]) marks(c, NOTES[i]);
+    c.setAttribute("aria-label", cellLabel(i, k<upto, blots[i]));
+  }
+  if(opts.same){
+    for(var j=0;j<81;j++){
+      var cc=cells[j]; if(!cc || cc.classList.contains("blot")) continue;
+      var v = GIVEN[j]!=="." ? GIVEN[j] : (POS[j]<upto ? SOL[j] : null);
+      if(v===opts.same && j!==opts.ring) cc.classList.add("same");
+    }
+  }
+}
+function cellLabel(i, filled, blot){
+  var a=rc(i), where="r"+(a[0]+1)+"c"+(a[1]+1);
+  if(GIVEN[i]!==".") return where+", clue "+GIVEN[i];
+  if(blot) return where+", "+t("blotSay")+" "+SOL[i];
+  return where+(filled?(", "+SOL[i]):", empty");
+}
+function placeRing(boardEl, idx, cells, anim){
+  var ring=boardEl.querySelector(".ring"); if(!ring) return;
+  var c = idx==null ? null : cells[idx];
+  if(!c){ ring.style.opacity=0; return; }
+  if(!anim) ring.classList.add("noanim");
+  var br=boardEl.getBoundingClientRect(), cr=c.getBoundingClientRect();
+  ring.style.width=cr.width+"px"; ring.style.height=cr.height+"px";
+  ring.style.transform="translate("+(cr.left-br.left)+"px,"+(cr.top-br.top)+"px)";
+  ring.style.opacity=1;
+  if(!anim) requestAnimationFrame(function(){ requestAnimationFrame(function(){ ring.classList.remove("noanim"); }); });
+}
+
+var todayCells = buildBoard(document.getElementById("board-today"), true);
+var infCells   = buildBoard(document.getElementById("board-inf"), false);
+var tlCells    = buildBoard(document.getElementById("board-tl"), true);
+(function(){ for(var i=0;i<81;i++){ if(INF[i]){ clearCell(infCells[i]); digit(infCells[i],"given",INF[i]); } } })();
+
+/* pad */
+(function(){
+  var h="", left={};
+  for(var d=1;d<=9;d++) left[d]=0;
+  for(var i=0;i<81;i++){ var v=GIVEN[i]!=="."?+GIVEN[i]:0; if(v) left[v]++; }
+  for(d=1;d<=9;d++) h+='<button class="key"><span class="kd">'+d+'</span><span class="kr">'+(9-left[d])+'</span></button>';
+  document.getElementById("pad").innerHTML=h;
+})();
+
+/* ======================= 4. HEAT MAP + CONTACT SHEET ================== */
+function heatOpacity(k){ return (0.12 + 0.86*(k/(N-1))).toFixed(3); }
+(function heat(){
+  var h="", b=blotCells(N,false);
+  for(var i=0;i<81;i++){
+    if(GIVEN[i]!==".") h+='<i class="g"></i>';
+    else h+='<i class="'+(b[i]?"b":"")+'" style="opacity:'+heatOpacity(POS[i])+'"></i>';
+  }
+  document.getElementById("heat").innerHTML=h;
+  var l=""; for(var s=0;s<9;s++) l+='<i style="opacity:'+(0.12+0.86*(s/8)).toFixed(3)+'"></i>';
+  document.getElementById("legend-bar").innerHTML=l;
+})();
+(function contact(){
+  var out="", b=blotCells(N,false);
+  for(var s=1;s<=9;s++){
+    var upto=Math.round(N*s/9), g="";
+    for(var i=0;i<81;i++){
+      if(GIVEN[i]!==".") g+='<i class="g"></i>';
+      else if(POS[i]<upto) g+='<i class="'+(b[i]?"b":"")+'"></i>';
+      else g+='<i class="e"></i>';
+    }
+    out+='<figure><div class="mini" aria-hidden="true">'+g+'</div><figcaption>'+mmss(ELAPSED[upto-1])+'</figcaption></figure>';
+  }
+  document.getElementById("contact-grid").innerHTML=out;
+})();
+
+/* ======================= 5. YEAR CANVAS (C Blocks) ==================== */
+function buildYear(){
+  var days=[31,28,31,30,31,30,31,31,30,31,30,31];
+  var names={en:["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"],
+             uk:["січ","лют","бер","кві","тра","чер","лип","сер","вер","жов","лис","гру"],
+             ru:["янв","фев","мар","апр","май","июн","июл","авг","сен","окт","ноя","дек"]};
+  var lang=root.getAttribute("data-lang")||"en", out="", n=0;
+  for(var m=0;m<12;m++){
+    out+='<div class="year-month"><p class="ym-name">'+names[lang][m]+'</p><div class="ydays">';
+    for(var d=1;d<=days[m];d++){
+      n++;
+      var cls="ycell", past = m<8 || (m===8 && d<30), today = (m===8 && d===30);
+      if(today) cls+=" today";
+      else if(!past) cls+=" void";
+      else {
+        var r=rnd(n*3.7);
+        if(r<0.22) cls+="";                       /* missed */
+        else if(r<0.34) cls+=" part";
+        else if(r<0.52) cls+=" corr";
+        else cls+=" solved";
+        if(rnd(n*5.1)<0.16) cls+=" inkday";
+      }
+      out+='<i class="'+cls+'"></i>';
+    }
+    out+='</div></div>';
+  }
+  document.getElementById("year-wrap").innerHTML=out;
+}
+
+/* ======================= 6. FINGERPRINT =============================== */
+function dwellT(k){                         /* 0 = instant, 1 = the longest stall */
+  var mx=Math.max.apply(null,DWELL), mn=Math.min.apply(null,DWELL);
+  return (DWELL[k]-mn)/(mx-mn);
+}
+function renderFingerprint(){
+  var style=root.getAttribute("data-fp"), art=document.getElementById("fp-art"), b=blotCells(N,false), i, h;
+  if(style==="trace"){
+    h='<svg viewBox="0 0 90 90" preserveAspectRatio="xMidYMid meet" style="width:100%;height:100%" aria-hidden="true">';
+    for(i=0;i<81;i++){ if(GIVEN[i]!=="."){ var p=rc(i); h+='<circle cx="'+(p[1]*10+5)+'" cy="'+(p[0]*10+5)+'" r="1" fill="var(--hairline)"/>'; } }
+    for(var k=1;k<N;k++){
+      var a=rc(ORDER[k-1]), c=rc(ORDER[k]);
+      h+='<line x1="'+(a[1]*10+5)+'" y1="'+(a[0]*10+5)+'" x2="'+(c[1]*10+5)+'" y2="'+(c[0]*10+5)+
+         '" stroke="var(--ink)" stroke-width="'+(0.5+2.6*dwellT(k)).toFixed(2)+'" stroke-linecap="round" opacity="'+(0.35+0.6*(k/(N-1))).toFixed(2)+'"/>';
+    }
+    for(k=0;k<N;k++){
+      var q=rc(ORDER[k]), isB=b[ORDER[k]];
+      h+='<circle cx="'+(q[1]*10+5)+'" cy="'+(q[0]*10+5)+'" r="'+(isB?2.2:1.3)+'" fill="'+(isB?"var(--wax)":"var(--ink)")+'"/>';
+    }
+    art.innerHTML=h+"</svg>";
+  } else {
+    h='<div class="fp-grid">';
+    for(i=0;i<81;i++){
+      if(GIVEN[i]!=="."){ h+='<i class="g"></i>'; continue; }
+      var kk=POS[i], op=heatOpacity(kk), sc = style==="rhythm" ? (1-0.55*dwellT(kk)) : 1;
+      h+='<i class="'+(b[i]?"b":"")+'" style="opacity:'+op+';transform:scale('+sc.toFixed(3)+')"></i>';
+    }
+    art.innerHTML=h+"</div>";
+  }
+  document.getElementById("fp-note").textContent =
+    style==="path" ? t("fpPathSub") : style==="trace" ? t("fpTraceSub") : t("fpRhythmSub");
+  Array.prototype.forEach.call(document.querySelectorAll('[data-fp]'), function(btn){
+    if(btn.tagName==="BUTTON") btn.setAttribute("aria-pressed", String(btn.dataset.fp===style));
+  });
+  var ink=!!(SCREENS[root.getAttribute("data-screen")]||{}).ink;
+  document.getElementById("fp-cap").textContent =
+    "30 Sep 2026 · 8:14 · "+N+" "+t("fpMovesWord")+" · "+
+    (ink ? BLOT_POS.length+" "+t("rowBlots").toLowerCase() : t("valClean"));
+}
+
+/* ======================= 7. TIMELAPSE PLAYBACK ========================
+   playing-video.md > Best practices: "reference the behavior and interface of the system
+   video player" — play/pause, a scrubber, and a speed control, in that order, nothing invented.
+   Playback compresses the real rhythm: a 60-second stall becomes the longest pause on screen,
+   not 60 seconds of nothing. */
+var BUDGET={slow:60000, normal:30000, fast:15000};
+var speed="normal", idx=0, playing=false, loop=false, raf=null, t0=0, offset=0;
+var SCHED=(function(){
+  var cap=0.06*TOTAL, w=DWELL.map(function(v){ return Math.min(v,cap); });
+  var sum=w.reduce(function(a,b){return a+b;},0), acc=0, out=[];
+  for(var k=0;k<N;k++){ acc+=w[k]; out.push(acc/sum); }
+  return out;                                /* 0..1 fractions of the budget */
+})();
+function stepMode(){ return root.getAttribute("data-tl")==="step"; }
+function reduced(){
+  var m=root.getAttribute("data-motion");
+  if(m==="reduced"||m==="off") return true;
+  if(m==="full") return false;
+  return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+}
+function renderTL(anim){
+  var ink=!!(SCREENS[root.getAttribute("data-screen")]||{}).ink;
+  var last = idx>0 ? ORDER[idx-1] : null;
+  paintBoard(tlCells, idx, { blots: ink?blotCells(idx,false):{}, ring:last, animAt: anim?last:null });
+  placeRing(document.getElementById("board-tl"), last, tlCells, anim);
+  document.getElementById("pl-move").textContent = t("moveOf").replace("{a}",idx).replace("{b}",N);
+  document.getElementById("pl-clock").textContent = (idx>0?mmss(ELAPSED[idx-1]):"0:00")+" / 8:14";
+  document.getElementById("pl-scrub").value=idx;
+  document.getElementById("pl-prev").setAttribute("aria-disabled", String(idx<=0));
+  document.getElementById("pl-next").setAttribute("aria-disabled", String(idx>=N));
+}
+function setPlayIcon(){
+  var b=document.getElementById("pl-play");
+  b.querySelector("use").setAttribute("href", playing?"#i-pause":"#i-play");
+  b.setAttribute("aria-label", playing?t("tlPause"):t("tlPlay"));
+}
+function tick(now){
+  if(!playing) return;
+  var el=(now-t0)+offset, frac=el/BUDGET[speed], want=0;
+  while(want<N && SCHED[want]<=frac) want++;
+  if(want!==idx){ idx=want; renderTL(true); }
+  if(frac>=1){
+    if(loop){ offset=0; t0=now; idx=0; renderTL(false); }
+    else { playing=false; setPlayIcon(); return; }
+  }
+  raf=requestAnimationFrame(tick);
+}
+function play(){
+  if(idx>=N){ idx=0; renderTL(false); }
+  playing=true; setPlayIcon();
+  offset = idx>0 ? SCHED[idx-1]*BUDGET[speed] : 0;
+  t0=performance.now();
+  raf=requestAnimationFrame(tick);
+}
+function pause(){ playing=false; if(raf) cancelAnimationFrame(raf); setPlayIcon(); }
+document.getElementById("pl-play").addEventListener("click", function(){ playing?pause():play(); });
+document.getElementById("pl-prev").addEventListener("click", function(){ pause(); if(idx>0){ idx--; renderTL(true);} });
+document.getElementById("pl-next").addEventListener("click", function(){ pause(); if(idx<N){ idx++; renderTL(true);} });
+document.getElementById("pl-loop").addEventListener("click", function(){
+  loop=!loop; this.setAttribute("aria-pressed", String(loop));
+});
+document.getElementById("pl-scrub").addEventListener("input", function(){
+  pause(); idx=+this.value; renderTL(false);
+});
+Array.prototype.forEach.call(document.querySelectorAll("[data-speed]"), function(b){
+  b.addEventListener("click", function(){
+    speed=b.dataset.speed;
+    Array.prototype.forEach.call(document.querySelectorAll("[data-speed]"), function(x){
+      x.setAttribute("aria-pressed", String(x.dataset.speed===speed));
+    });
+    if(playing){ pause(); play(); }
+  });
+});
+function applyTlMode(){
+  var mode=root.getAttribute("data-tl");
+  document.getElementById("pl-main").hidden = (mode==="contact");
+  document.getElementById("pl-contact").hidden = (mode!=="contact");
+  document.getElementById("pl-loop").hidden = (mode==="step");
+  document.querySelector('.seg-ui[data-ta="tlSpeed"]').hidden = (mode==="step");
+  document.getElementById("pl-note").textContent = mode==="step" ? t("tlStepNote") : t("tlRhythm");
+  if(mode!=="player") pause();
+}
+
+/* ======================= 8. THE BLOT MOMENT (M7) =====================
+   ~420 ms, one shot, and a tap completes it immediately (motion.md: "Let people cancel
+   motion"). Under Reduce Motion nothing spreads or scales: the stain fades in, the wrong
+   digit fades out, the right one fades in — accessibility.md's prescribed replacement.
+   The announcement is text, so the moment is not carried by colour or motion at all. */
+function playBlot(){
+  var screen=root.getAttribute("data-screen"); if(screen!=="ink-blot") return;
+  var i=ORDER[DEMO_POS], c=todayCells[i], re=reduced();
+  paintBoard(todayCells, DEMO_POS, { blots: blotCells(DEMO_POS,false), notes:true, ring:i });
+  placeRing(document.getElementById("board-today"), i, todayCells, false);
+  clearCell(c);
+  var wrong=digit(c,"player wrong",WRONGS[i]);
+  document.getElementById("live").textContent="";
+  setTimeout(function(){
+    wrong.classList.add("leaving");
+    stain(c, true);
+    setTimeout(function(){
+      wrong.remove();
+      if(root.getAttribute("data-blot")!=="late") digit(c,"player",SOL[i], true);
+      if(root.getAttribute("data-blot")==="ghost"){
+        var g=document.createElement("span"); g.className="ghost"; g.textContent=WRONGS[i]; c.appendChild(g);
+      }
+      document.getElementById("live").textContent = t("blotSay");
+    }, re?140:200);
+  }, re?60:110);
+}
+
+/* ======================= 9. SCREENS =================================== */
+var SCREENS={
+  "today-entry":{base:"today", phase:"entry"},
+  "rule":       {base:"today", phase:"entry", sheet:"sh-rule"},
+  "play-setup": {base:"play",  phase:"entry"},
+  "ink-game":   {base:"today", phase:"mid",   ink:true},
+  "ink-blot":   {base:"today", phase:"blot",  ink:true},
+  "ink-card":   {base:"today", phase:"solved",ink:true},
+  "year":       {base:"year",  phase:"solved",ink:true, sheet:"sh-day"},
+  "tl-card":    {base:"today", phase:"solved"},
+  "tl-player":  {base:"today", phase:"solved", sheet:"sh-player"},
+  "tl-export":  {base:"today", phase:"solved", sheet:"sh-export"},
+  "tl-share":   {base:"today", phase:"solved", sheet:"sh-export", sys:true},
+  "tl-none":    {base:"today", phase:"solved", nolog:true}
+};
+var FILLED={entry:0, mid:24, blot:25, solved:N};
+
+function applyLang(){
+  Array.prototype.forEach.call(document.querySelectorAll("[data-t]"), function(el){
+    el.textContent=t(el.getAttribute("data-t"));
+  });
+  Array.prototype.forEach.call(document.querySelectorAll("[data-ta]"), function(el){
+    el.setAttribute("aria-label", t(el.getAttribute("data-ta")));
+  });
+  root.setAttribute("lang", root.getAttribute("data-lang"));
+  document.getElementById("blot-count").textContent=String(BLOT_POS.length);
+  setPlayIcon();
+}
+function applyScreen(){
+  var name=root.getAttribute("data-screen"), S=SCREENS[name]||SCREENS["today-entry"];
+  var phase=S.phase, ink=!!S.ink, hasLog=!S.nolog, filled=FILLED[phase];
+  root.setAttribute("data-phase", phase);
+  root.setAttribute("data-inkmode", ink?"1":"0");
+
+  ["today","play","year"].forEach(function(b){ document.getElementById("s-"+b).hidden = (S.base!==b); });
+  ["today","play","year"].forEach(function(b){
+    document.getElementById("tab-"+b).setAttribute("aria-selected", String(S.base===b));
+  });
+  Array.prototype.forEach.call(document.querySelectorAll("[data-show]"), function(el){
+    el.hidden = el.getAttribute("data-show").split(" ").indexOf(phase)<0;
+  });
+  Array.prototype.forEach.call(document.querySelectorAll("[data-ink]"), function(el){
+    el.hidden = (el.getAttribute("data-ink")==="1") !== ink;
+  });
+  if(root.getAttribute("data-mark")==="none"){
+    Array.prototype.forEach.call(document.querySelectorAll(".daybar .inkmark"), function(el){ el.hidden=true; });
+  }
+  Array.prototype.forEach.call(document.querySelectorAll("[data-show-tl]"), function(el){
+    el.hidden = (el.getAttribute("data-show-tl")==="1") !== hasLog;
+  });
+
+  /* sheets: one at a time */
+  ["sh-rule","sh-day","sh-player","sh-export"].forEach(function(id){
+    document.getElementById(id).hidden = (S.sheet!==id);
+  });
+  document.getElementById("scrim").hidden = !S.sheet;
+  document.getElementById("fp-sys").hidden = !S.sys;
+  document.getElementById("fp-share-block").hidden = !!S.sys;
+
+  /* the ink row reads Off until the rule sheet is confirmed */
+  var v=document.getElementById("ink-row-v");
+  v.textContent = t(ink?"inkOn":"inkOff");
+  v.classList.toggle("on", ink);
+
+  /* boards */
+  var blots = ink ? blotCells(filled, phase==="blot") : {};
+  var lastCell = phase==="blot" ? ORDER[DEMO_POS] : (filled>0 ? ORDER[filled-1] : 40);
+  paintBoard(todayCells, filled, { blots:blots, notes:true, ring:lastCell,
+                                   same: phase==="entry"? null : SOL[lastCell] });
+  requestAnimationFrame(function(){ placeRing(document.getElementById("board-today"), lastCell, todayCells, false); });
+  document.querySelector(".status span").textContent = t("cellsLeft").replace("{n}", N-filled);
+
+  document.getElementById("rule2").textContent =
+    t({now:"rule2", ghost:"rule2ghost", late:"rule2late"}[root.getAttribute("data-blot")]);
+
+  if(S.sheet==="sh-player"){ idx=41; renderTL(false); applyTlMode();
+    requestAnimationFrame(function(){ placeRing(document.getElementById("board-tl"), ORDER[idx-1], tlCells, false); }); }
+  else pause();
+  if(S.sheet==="sh-export") renderFingerprint();
+}
+function refresh(){ buildYear(); applyLang(); applyScreen(); renderFingerprint(); }
+
+/* ======================= 10. MOCK CONTROLS ============================ */
+var handlers={
+  appearance:function(v){
+    root.classList.remove("force-light","force-dark");
+    if(v==="light") root.classList.add("force-light");
+    if(v==="dark")  root.classList.add("force-dark");
+    root.setAttribute("data-appearance", v);
+    root.style.colorScheme = (v==="system") ? "" : v;
+  },
+  lang:function(v){ root.setAttribute("data-lang", v); refresh(); },
+  screen:function(v){ root.setAttribute("data-screen", v); applyScreen(); },
+  blot:function(v){ root.setAttribute("data-blot", v); applyScreen(); },
+  mark:function(v){ root.setAttribute("data-mark", v); applyScreen(); },
+  yearsign:function(v){ root.setAttribute("data-yearsign", v); },
+  tl:function(v){ root.setAttribute("data-tl", v); applyTlMode(); },
+  fp:function(v){ root.setAttribute("data-fp", v); renderFingerprint(); },
+  type:function(v){ root.setAttribute("data-type", v); applyScreen(); },
+  motion:function(v){ root.setAttribute("data-motion", v); },
+  safearea:function(v){ root.setAttribute("data-safearea", v); applyScreen(); }
+};
+function setControl(key,val){
+  var seg=document.querySelector('.seg[data-key="'+key+'"]');
+  if(seg) Array.prototype.forEach.call(seg.querySelectorAll("button"), function(b){
+    b.setAttribute("aria-pressed", String(b.dataset.val===val));
+  });
+  if(handlers[key]) handlers[key](val);
+}
+Object.keys(handlers).forEach(function(key){
+  var seg=document.querySelector('.seg[data-key="'+key+'"]');
+  if(!seg) return;
+  seg.addEventListener("click", function(e){ var b=e.target.closest("button"); if(b) setControl(key,b.dataset.val); });
+});
+function setMock(open){
+  root.setAttribute("data-mock", open?"open":"closed");
+  Array.prototype.forEach.call(document.querySelectorAll("[data-pill]"), function(p){ p.setAttribute("aria-expanded", String(open)); });
+  requestAnimationFrame(function(){ applyScreen(); });
+}
+Array.prototype.forEach.call(document.querySelectorAll("[data-pill]"), function(p){ p.addEventListener("click", function(){ setMock(true); }); });
+document.getElementById("mock-close").addEventListener("click", function(){ setMock(false); });
+document.getElementById("btn-blot").addEventListener("click", function(e){ e.stopPropagation(); setControl("screen","ink-blot"); playBlot(); });
+document.getElementById("btn-replay").addEventListener("click", function(e){
+  e.stopPropagation(); setControl("screen","tl-player"); setControl("tl","player"); idx=0; renderTL(false); play();
+});
+document.getElementById("btn-reset").addEventListener("click", function(){ setControl("screen","today-entry"); });
+
+/* in-mockup navigation, so the flow can be walked without the panel */
+document.getElementById("ink-row").addEventListener("click", function(){ setControl("screen","rule"); });
+document.getElementById("ink-row-play").addEventListener("click", function(){ setControl("screen","rule"); });
+document.getElementById("rule-start").addEventListener("click", function(){ setControl("screen","ink-game"); });
+document.getElementById("rule-cancel").addEventListener("click", function(){ setControl("screen","today-entry"); });
+document.getElementById("tl-open").addEventListener("click", function(){ setControl("screen","tl-player"); });
+document.getElementById("tl-open-2").addEventListener("click", function(){ setControl("screen","tl-player"); });
+document.getElementById("pl-done").addEventListener("click", function(){ setControl("screen","tl-card"); });
+document.getElementById("fp-done").addEventListener("click", function(){ setControl("screen","tl-card"); });
+document.getElementById("fp-share").addEventListener("click", function(){ setControl("screen","tl-share"); });
+document.querySelector(".card .btn.primary").addEventListener("click", function(){ setControl("screen","tl-export"); });
+document.getElementById("scrim").addEventListener("click", function(){
+  var s=root.getAttribute("data-screen");
+  setControl("screen", s==="rule" ? "today-entry" : s==="year" ? "year" : "tl-card");
+});
+["tab-today","tab-play","tab-year"].forEach(function(id){
+  document.getElementById(id).addEventListener("click", function(){
+    setControl("screen", id==="tab-play" ? "play-setup" : id==="tab-year" ? "year" : "today-entry");
+  });
+});
+window.addEventListener("resize", function(){ applyScreen(); });
+
+/* review hook for the screenshot script */
+window.PD69={
+  set:setControl,
+  blot:playBlot,
+  scrubTo:function(k){ idx=k; renderTL(false); },
+  openMock:function(){ setMock(true); },
+  hideMock:function(){ setMock(false); },
+  reset:function(){
+    setControl("appearance","system"); setControl("lang","en"); setControl("type","default");
+    setControl("blot","now"); setControl("mark","line"); setControl("yearsign","none");
+    setControl("tl","player"); setControl("fp","rhythm"); setControl("motion","system");
+    setControl("safearea","sim"); setControl("screen","today-entry"); setMock(false);
+  }
+};
+
+refresh();
+setMock(true);   /* expanded on first open: the owner must find Appearance and Screen */
+})();
+</script>
+</body>
+</html>
