@@ -15,6 +15,7 @@ import {
   frameAt,
   hasBlots,
   isBlotReplacement,
+  moveIndex,
   playbackSchedule,
   rhythmScale,
 } from "./timelapseModel";
@@ -139,5 +140,45 @@ describe("dwellScales / rhythmScale", () => {
   });
   it("blotsOf импортируется для проверки ink-лога", () => {
     expect(blotsOf(inkPlay("2026-09-20", [3]).log)).toHaveLength(1);
+  });
+});
+
+describe("moveIndex (PD-80): ход игрока, а не кадр", () => {
+  it("обычный день: ходы = кадры, индексы тождественны", () => {
+    const f = timelapseOf(progressOf("2026-09-29", { withFix: true }), { maxGapMs: Infinity })!.frames;
+    const m = moveIndex(f);
+    expect(m.count).toBe(f.length - 1);
+    expect(m.moveNo).toEqual(f.map((_, j) => j));
+    expect(m.frameOf).toEqual(f.map((_, j) => j));
+  });
+
+  it("ink с 2 кляксами: ходов = числу заполненных клеток, пара кадров — один ход, монотонно без дыр", () => {
+    const play = inkPlay("2026-09-20", [2, 9]);
+    const f = real(play).frames;
+    const cells = play.mission.filter((g) => !g).length;
+    expect(blotCount(f)).toBe(2);
+    expect(f.length - 1).toBe(cells + 2); // кадров больше на число клякс...
+    const m = moveIndex(f);
+    expect(m.count).toBe(cells); // ...ходов — ровно клеток
+    expect(m.frameOf).toHaveLength(cells + 1);
+    for (let j = 1; j < f.length; j++) {
+      const d = m.moveNo[j]! - m.moveNo[j - 1]!;
+      expect(d).toBe(isBlotReplacement(f, j) ? 0 : 1);
+    }
+    expect(m.frameOf[m.count]).toBe(f.length - 1);
+    // ход завершается кадром без «неверной» цифры
+    m.frameOf.forEach((j) => expect(f[j]!.wrong).toEqual([]));
+  });
+
+  it("клякса на последней клетке: финальный кадр — замена, последний ход заканчивается решением", () => {
+    const play = inkPlay("2026-09-20", [1000]); // вне диапазона — контроль: без клякс
+    expect(moveIndex(real(play).frames).count).toBe(play.mission.filter((g) => !g).length);
+    const empties = play.mission.filter((g) => !g).length;
+    const last = inkPlay("2026-09-20", [empties - 1]);
+    const f = real(last).frames;
+    const m = moveIndex(f);
+    expect(m.count).toBe(empties);
+    expect(m.frameOf[m.count]).toBe(f.length - 1);
+    expect(f.at(-1)!.values.join("")).toBe(last.solution.join(""));
   });
 });

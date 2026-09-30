@@ -26,6 +26,30 @@ export function isBlotReplacement(frames: readonly TimelapseFrame[], j: number):
   return f?.blot === true && prev?.blot === true && f.cell !== null && f.cell === prev.cell;
 }
 
+/**
+ * Ходы игрока (PD-80). Ход = одна поставленная клетка: в ink-дне пара кадров «неверная цифра → верная поверх
+ * кляксы» — ОДИН ход (PD-70 хранит два кадра ради анимации, счёт ходов — не по кадрам). `moveNo[j]` — номер хода,
+ * к которому относится кадр `j` (обе половины пары — один номер; `moveNo[0] = 0`), `frameOf[m]` — кадр, в котором ход `m`
+ * завершён (у пары — замена; `frameOf[0] = 0`), `count` — число ходов. В не-ink дне всё тождественно кадрам.
+ */
+export interface MoveIndex {
+  readonly count: number;
+  readonly moveNo: readonly number[];
+  readonly frameOf: readonly number[];
+}
+
+export function moveIndex(frames: readonly TimelapseFrame[]): MoveIndex {
+  const moveNo: number[] = [];
+  const frameOf: number[] = [];
+  let m = 0;
+  frames.forEach((_, j) => {
+    if (j > 0 && !isBlotReplacement(frames, j)) m++;
+    moveNo.push(m);
+    frameOf[m] = j; // у пары перезаписывается замена — она завершает ход
+  });
+  return { count: m, moveNo, frameOf };
+}
+
 export interface PlaybackSchedule {
   /** `offsets[j]` — момент показа кадра `j` от начала проигрывания, мс; `offsets[0] = 0`, не убывает. */
   readonly offsets: readonly number[];
