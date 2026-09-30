@@ -19,6 +19,8 @@ export function parseHash(hash: string): TabId {
  * Куда смотрит приложение (PD-33). Кроме трёх вкладок есть два «вложенных» адреса, оба живут на вкладке Year:
  * - `#/day/YYYY-MM-DD` — архив: игра прошлого дня (вкладка Year остаётся подсвеченной, «‹ Year» ведёт назад);
  * - `#/year/YYYY-MM-DD` — Year с открытой карточкой этого дня (куда возвращает «‹ Year» из архива).
+ * Третий — `#/settings` (PD-49): push-экран внутри вкладки Today (таб-бар остаётся, подсвечена Today). В отличие от
+ * остальных адресов, он ложится в историю (`pushState`): свайп от края и «назад» возвращают на Today.
  */
 export interface Route {
   readonly tab: TabId;
@@ -26,12 +28,19 @@ export interface Route {
   readonly archiveDate: string | null;
   /** Year открывается сразу на карточке этого дня. */
   readonly yearDate: string | null;
+  /** Открыт экран Settings (PD-49); у остальных адресов поля нет. */
+  readonly settings?: true;
 }
 
-export type Target = { readonly tab: TabId } | { readonly archive: string } | { readonly yearDay: string };
+export type Target =
+  | { readonly tab: TabId }
+  | { readonly archive: string }
+  | { readonly yearDay: string }
+  | { readonly settings: true };
 
 export function parseRoute(hash: string): Route {
   const [head = "", arg] = hash.replace(/^#\/?/, "").split("/");
+  if (head === "settings") return { tab: "today", archiveDate: null, yearDate: null, settings: true };
   if (head === "day" && arg !== undefined && DATE_RE.test(arg)) return { tab: "year", archiveDate: arg, yearDate: null };
   if (head === "year" && arg !== undefined && DATE_RE.test(arg)) return { tab: "year", archiveDate: null, yearDate: arg };
   return { tab: isTabId(head) ? head : DEFAULT_TAB, archiveDate: null, yearDate: null };
@@ -40,12 +49,15 @@ export function parseRoute(hash: string): Route {
 export function hashOf(target: Target): string {
   if ("archive" in target) return `#/day/${target.archive}`;
   if ("yearDay" in target) return `#/year/${target.yearDay}`;
+  if ("settings" in target) return "#/settings";
   return `#/${target.tab}`;
 }
 
 /**
  * Активный маршрут как простое состояние, синхронизированное с хэшем (перезагрузка и ручная правка адреса
- * работают). Переключение — replaceState: вкладки и архив не засоряют историю.
+ * работают). Переключение — replaceState: вкладки и архив не засоряют историю. Исключение — вход в Settings
+ * (`pushState` с меткой `pdSettings`): экран живёт в истории. `back()` из него: если запись поставили мы (метка в
+ * `history.state`) — `history.back()`, иначе (глубокая ссылка/перезагрузка без предыдущей записи) — `replace` на Today.
  */
 export function useRoute(): [Route, (target: Target) => void] {
   const [route, setRoute] = useState<Route>(() => parseRoute(window.location.hash));
@@ -53,14 +65,26 @@ export function useRoute(): [Route, (target: Target) => void] {
   useEffect(() => {
     const onHash = () => setRoute(parseRoute(window.location.hash));
     window.addEventListener("hashchange", onHash);
-    return () => window.removeEventListener("hashchange", onHash);
+    window.addEventListener("popstate", onHash);
+    return () => {
+      window.removeEventListener("hashchange", onHash);
+      window.removeEventListener("popstate", onHash);
+    };
   }, []);
 
   const go = useCallback((target: Target) => {
     const hash = hashOf(target);
-    window.history.replaceState(null, "", hash);
+    if ("settings" in target) window.history.pushState({ pdSettings: true }, "", hash);
+    else window.history.replaceState(null, "", hash);
     setRoute(parseRoute(hash));
   }, []);
 
   return [route, go];
+}
+
+/** Уйти с Settings назад: по истории, если в неё нас поставило приложение, иначе — на вкладку Today. */
+export function leaveSettings(go: (target: Target) => void): void {
+  const state = window.history.state as { pdSettings?: unknown } | null;
+  if (state?.pdSettings === true) window.history.back();
+  else go({ tab: "today" });
 }

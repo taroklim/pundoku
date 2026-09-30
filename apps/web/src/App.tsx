@@ -1,12 +1,14 @@
 import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { PlayScreen } from "./play/PlayScreen";
+import { recoveryStore } from "./recovery/runtime";
+import { SettingsScreen } from "./recovery/SettingsScreen";
 import { ArchiveScreen } from "./today/ArchiveScreen";
 import { dayStore } from "./today/dayStore";
 import { TodayScreen } from "./today/TodayScreen";
 import { panelDomId, tabDomId, TabBar } from "./shell/TabBar";
 import type { TabId } from "./shell/tabs";
-import { useRoute } from "./shell/tabs";
+import { leaveSettings, useRoute } from "./shell/tabs";
 import { YearTab } from "./year/YearTab";
 
 /**
@@ -17,7 +19,12 @@ export function App() {
   const { i18n } = useTranslation();
   const [route, go] = useRoute();
   const { tab, archiveDate } = route;
-  const setTab = (next: TabId) => go({ tab: next });
+  const settings = route.settings === true;
+  // Пока ключ показан и не подтверждён, уход с Settings (вкладка, «‹ Today») идёт через action sheet «Ключ ещё не сохранён».
+  const setTab = (next: TabId) => {
+    if (!settings) return go({ tab: next });
+    recoveryStore.requestLeave(() => (next === "today" ? leaveSettings(go) : go({ tab: next })));
+  };
 
   // «Play this day's puzzle» / «Finish this puzzle» из карточки дня Year. Вчерашний день, начатый на Today и не
   // доигранный к полуночи, остаётся в сторе Today (у него ходы): открывать его ещё и в архиве значило бы вести одну
@@ -36,19 +43,21 @@ export function App() {
     <div className="shell">
       <main className="scroll">
         <div
-          key={archiveDate ? `day-${archiveDate}` : tab}
+          key={settings ? "settings" : archiveDate ? `day-${archiveDate}` : tab}
           className="panel"
           role="tabpanel"
           id={panelDomId(tab)}
           aria-labelledby={tabDomId(tab)}
           // На всех вкладках внутри есть кнопки/клетки — лишняя остановка Tab на оболочке не нужна.
         >
-          {archiveDate ? (
+          {settings ? (
+            <SettingsScreen store={recoveryStore} onBack={() => recoveryStore.requestLeave(() => leaveSettings(go))} />
+          ) : archiveDate ? (
             <ArchiveScreen date={archiveDate} onBack={() => go({ yearDay: archiveDate })} />
           ) : tab === "play" ? (
             <PlayScreen />
           ) : tab === "today" ? (
-            <TodayScreen />
+            <TodayScreen onOpenSettings={() => go({ settings: true })} />
           ) : (
             <YearTab
               onOpenToday={() => setTab("today")}
