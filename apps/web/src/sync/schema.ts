@@ -248,8 +248,12 @@ export function logFromHeat(rec: DayRecord, solution: readonly number[]): MoveLo
   const log: Move[] = [];
   // Ink (PD-71): кляксы — настоящие пары blot (неверная + авто-замена) на первых по времени клетках: правка и ошибка
   // считаются движком так же, как у настоящего лога; обычных «поставил/стёр» в ink-логе быть не должно.
-  const blots = rec.ink === true ? Math.min(rec.blots ?? 0, placed.length) : 0;
-  const corrections = rec.ink === true ? 0 : (rec.corrections ?? (rec.hadCorrections ? 1 : 0));
+  // PD-78: при ink и негодном/отсутствующем `blots` (санитайзер его выкидывает) число клякс берём из `corrections`
+  // (либо 1 при hadCorrections), а не теряем правки; в любом случае не больше числа поставленных клеток.
+  const validBlots = typeof rec.blots === "number" && Number.isInteger(rec.blots) && rec.blots >= 0 && rec.blots <= CELLS;
+  const fallback = rec.corrections ?? (rec.hadCorrections ? 1 : 0);
+  const blots = rec.ink === true ? Math.min(validBlots ? (rec.blots as number) : fallback, placed.length) : 0;
+  const corrections = rec.ink === true ? 0 : fallback;
   const anyCell = placed[0]?.cell ?? mission.findIndex((g) => g === 0);
   if (anyCell >= 0) {
     for (let i = 0; i < corrections; i++) {

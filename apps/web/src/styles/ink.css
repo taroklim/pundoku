@@ -1,0 +1,469 @@
+/*
+ * Чернильный режим (PD-74) — перенос из утверждённого макета design/pd69-ink-timelapse.html (разделы 1, 4–7, 9, 13, 14).
+ * Ни одного нового цвета: --stain и --stain-edge — доли уже существующего сургуча (--wax), см. design/pd69-notes.md §4.
+ * Контрасты посчитаны в макете: light — wax 14 % на #FFFFFF = #F4E1E0, цифра чернилами 6.10:1; dark — 16 % на #1C1C1E = #402928,
+ * цифра чернилами 5.06:1. Клякса никогда не держится на одном цвете: пятно + пятно-«клякса» + сколотый верхний правый угол.
+ * Классы с префиксом `ink-` (и `.stain`, `.inkmark`) — не пересекаются с общими `.card/.chip/.list/.row`.
+ */
+:root {
+  --stain: 0.14;
+  --stain-edge: rgba(179, 38, 30, 0.38);
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --stain: 0.16;
+    --stain-edge: rgba(255, 107, 94, 0.42);
+  }
+}
+@media (prefers-contrast: more) {
+  :root {
+    --stain: 0.2;
+    --stain-edge: rgba(179, 38, 30, 0.6);
+  }
+}
+@media (prefers-contrast: more) and (prefers-color-scheme: dark) {
+  :root {
+    --stain: 0.24;
+    --stain-edge: rgba(255, 107, 94, 0.65);
+  }
+}
+
+/* ---------- Слово режима в подписи дня: слово, не плашка (читается без цвета, попадает в карточку и архив) ---------- */
+.subline .inkmark {
+  color: var(--ink);
+  font-weight: 600;
+}
+
+/* ---------- Клякса на поле ---------- */
+.stain {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background: var(--wax);
+  opacity: var(--stain);
+  box-shadow: inset 0 0 0 1px var(--stain-edge);
+  border-radius: var(--cell-r);
+  /* Срез верхнего правого угла — тот же канал, что у Year («были исправления»): нового словаря нет. */
+  clip-path: polygon(0 0, 62% 0, 100% 38%, 100% 100%, 0 100%);
+}
+.stain::after {
+  content: "";
+  position: absolute;
+  left: 8%;
+  top: 10%;
+  width: 84%;
+  height: 80%;
+  background: var(--wax);
+  opacity: 0.55;
+  border-radius: 58% 42% 47% 53% / 44% 56% 44% 56%;
+  transform: rotate(-8deg);
+}
+/* Клякса инертна: выбор и «та же цифра» в неё не попадают — клетка несёт ровно один смысл. */
+.cell.blot > .fl {
+  opacity: 0 !important;
+}
+.cell .d.leaving {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  color: var(--wax);
+  pointer-events: none;
+}
+
+/* M7 (≤460 мс): 0–110 неверная цифра · 110–300 пятно растёт .35→1 ease-out, неверная гаснет · 300–460 верная 1.08→1. */
+@keyframes blotSpread {
+  0% {
+    transform: scale(0.35);
+    opacity: 0;
+  }
+  60% {
+    opacity: var(--stain);
+  }
+  100% {
+    transform: scale(1);
+    opacity: var(--stain);
+  }
+}
+@keyframes blotFade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: var(--stain);
+  }
+}
+@keyframes digitSwap {
+  0% {
+    opacity: 0;
+    transform: scale(1.08);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+@keyframes digitFade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes wrongHold {
+  0%,
+  36% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+.stain.anim {
+  animation: blotSpread 190ms cubic-bezier(0.2, 0.7, 0.3, 1) 110ms both;
+}
+.cell .d.swap-in {
+  animation: digitSwap 160ms cubic-bezier(0.2, 0.7, 0.3, 1) 300ms both;
+}
+.cell .d.leaving {
+  animation: wrongHold 300ms linear both;
+}
+
+/* ---------- Панель в чернилах: две кнопки (Notes + Erase notes), Undo нет вовсе ---------- */
+.actions.ink {
+  grid-template-columns: repeat(2, 1fr);
+}
+
+/* ---------- Список-строки (строка «Ink mode», шаг «New puzzle») ---------- */
+.ink-entry {
+  width: 100%;
+}
+.ink-list {
+  background: var(--card);
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: var(--box-shadow);
+}
+.ink-list.inset {
+  margin: 0 max(16px, var(--sa-r)) 0 max(16px, var(--sa-l));
+}
+.ink-row {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 46px;
+  padding: 11px 14px;
+  text-align: left;
+  color: var(--label);
+  font-size: 1rem;
+}
+.ink-row + .ink-row {
+  box-shadow: inset 0 var(--rule-thin-w) 0 var(--hairline);
+}
+.ink-row:active {
+  background: var(--ink-tint);
+}
+.ink-row .row-t {
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  font-size: 0.95rem;
+}
+.ink-row .row-v {
+  color: var(--label-2);
+  font-size: 0.9rem;
+  text-align: right;
+  overflow-wrap: anywhere;
+}
+.ink-row .row-v.on {
+  color: var(--ink);
+  font-weight: 600;
+}
+.ink-row .chev {
+  width: 15px;
+  height: 15px;
+  color: var(--label-2);
+  flex: none;
+}
+.ink-row .nib {
+  width: 19px;
+  height: 19px;
+  flex: none;
+  color: var(--ink);
+}
+/* Строка сложности: прозрачный нативный select на всю площадь (системный пикер, 16 px — без зума iOS). */
+.row-select {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  font-size: 1rem;
+  cursor: pointer;
+}
+.ink-row-select:focus-within {
+  outline: 2px solid var(--ink);
+  outline-offset: -2px;
+}
+.ink-foot {
+  margin: 0;
+  padding: 6px max(16px, var(--sa-r)) 0 max(16px, var(--sa-l));
+  color: var(--label-2-grouped);
+  font-size: 0.78rem;
+  overflow-wrap: anywhere;
+}
+.ink-entry .ink-foot {
+  padding-inline: 2px;
+}
+.sect-head {
+  margin: 0;
+  padding: 18px max(16px, var(--sa-r)) 6px max(16px, var(--sa-l));
+  color: var(--label-2-grouped);
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.play-setup {
+  padding-top: 6px;
+}
+.setup-start {
+  padding: 14px max(16px, var(--sa-r)) 0 max(16px, var(--sa-l));
+}
+
+/* ---------- Кнопки шита и «Start» ---------- */
+.ink-primary,
+.ink-quiet {
+  width: 100%;
+  min-height: 46px;
+  border-radius: 11px;
+  padding: 8px 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+.ink-primary {
+  background: var(--ink);
+  color: var(--on-ink);
+}
+.ink-primary:active {
+  opacity: 0.82;
+}
+.ink-quiet {
+  margin-top: 4px;
+  color: var(--ink);
+  font-weight: 500;
+}
+.ink-quiet:active {
+  background: var(--ink-tint);
+}
+
+/* ---------- Шит правила «Ink doesn't lift» ---------- */
+.ink-scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  background: var(--scrim);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  animation: ink-fade 0.22s linear;
+}
+.ink-sheet {
+  width: 100%;
+  max-width: 560px;
+  max-height: 92dvh;
+  overflow-y: auto;
+  background: var(--bg-grouped);
+  color: var(--label);
+  border-radius: 16px 16px 0 0;
+  padding: 0 0 calc(10px + var(--sa-bot));
+  animation: ink-rise 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.ink-sheet:focus {
+  outline: none;
+}
+.ink-sheet .grabber {
+  width: 36px;
+  height: 5px;
+  border-radius: 3px;
+  background: var(--hairline);
+  margin: 6px auto 0;
+}
+.ink-sheet-title {
+  margin: 0;
+  padding: 10px 16px 0;
+  font-size: 1.18rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  overflow-wrap: anywhere;
+}
+.ink-sheet-lead {
+  margin: 2px 16px 0;
+  color: var(--label-2-grouped);
+  font-size: 0.84rem;
+  overflow-wrap: anywhere;
+}
+.ink-rules {
+  list-style: none;
+  margin: 0;
+  padding: 14px 16px 0;
+  display: grid;
+  gap: 12px;
+}
+.ink-rules li {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  font-size: 0.92rem;
+  overflow-wrap: anywhere;
+}
+.ink-rules svg {
+  width: 20px;
+  height: 20px;
+  flex: none;
+  margin-top: 1px;
+  color: var(--ink);
+}
+.ink-rules li.wax svg {
+  color: var(--wax);
+}
+.ink-sheet-foot {
+  padding: 14px 16px 0;
+}
+@keyframes ink-rise {
+  from {
+    transform: translateY(26px);
+    opacity: 0;
+  }
+  to {
+    transform: none;
+    opacity: 1;
+  }
+}
+@keyframes ink-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* ---------- Карточка и Year: чип режима, строка «Blots», клякса в тепловой карте ---------- */
+.ink-h2 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.ink-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 6px;
+  border: 1px solid var(--hairline);
+  border-radius: 6px;
+  color: var(--label-2);
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+.ink-chip .nib {
+  width: 12px;
+  height: 12px;
+  color: var(--label-2);
+}
+.row dd.wax {
+  color: var(--wax);
+}
+.heat i.b {
+  background: var(--wax);
+  opacity: 1 !important;
+  clip-path: polygon(0 0, 58% 0, 100% 42%, 100% 100%, 0 100%);
+}
+
+/* ---------- Forced colors: клякса остаётся формой и штриховкой, не сургучом ---------- */
+@media (forced-colors: active) {
+  .ink-list,
+  .ink-sheet {
+    border: 1px solid CanvasText;
+  }
+  .ink-primary,
+  .ink-quiet,
+  .ink-row {
+    border: 1px solid CanvasText;
+    forced-color-adjust: none;
+    background: Canvas;
+    color: CanvasText;
+  }
+  .ink-primary {
+    background: Highlight;
+    color: HighlightText;
+  }
+  .stain {
+    background: CanvasText;
+    opacity: 1;
+    forced-color-adjust: none;
+    background-image: repeating-linear-gradient(45deg, Canvas 0 2px, CanvasText 2px 4px);
+  }
+  .stain::after {
+    display: none;
+  }
+  .cell.blot {
+    outline: 2px dashed CanvasText;
+    outline-offset: -2px;
+  }
+  .cell.blot .d {
+    forced-color-adjust: none;
+    color: CanvasText;
+    background: Canvas;
+    padding: 0 2px;
+  }
+  .heat i.b {
+    background: CanvasText;
+    forced-color-adjust: none;
+  }
+  .subline .inkmark {
+    color: CanvasText;
+    text-decoration: underline;
+  }
+  .ink-chip {
+    border: 1px solid CanvasText;
+  }
+}
+
+/* ---------- Reduced motion: только затухания 140 мс, ничего не растёт и не едет ---------- */
+@media (prefers-reduced-motion: reduce) {
+  .ink-sheet {
+    animation: ink-fade 140ms linear !important;
+  }
+  .stain.anim {
+    animation: blotFade 140ms linear both !important;
+  }
+  .cell .d.swap-in {
+    animation: digitFade 140ms linear both !important;
+  }
+  .cell .d.leaving {
+    animation: wrongHold 140ms linear both !important;
+  }
+  .ink-row:active,
+  .ink-primary:active {
+    transform: none !important;
+  }
+}
+
+/* Подпись к тепловой карте в шите дня Year: «клетки со срезанным углом — кляксы». */
+.ink-caption {
+  margin: 6px 0 0;
+  color: var(--label-2);
+  font-size: 0.72rem;
+  overflow-wrap: anywhere;
+}

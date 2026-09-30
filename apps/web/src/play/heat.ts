@@ -5,6 +5,9 @@
  * сжала бы всю карту в два оттенка, а макет показывает именно порядок («every cell shaded by
  * when you filled it»). `null` — подсказка (given) либо клетка, не заполненная верно.
  */
+/** Одна клетка карты: непрозрачность чернил или `null` (подсказка / не заполнена). */
+export type HeatCell = number | null;
+
 export const HEAT_MIN = 0.12;
 export const HEAT_MAX = 0.98;
 export const HEAT_LEGEND_STEPS = 9;

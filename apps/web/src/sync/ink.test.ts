@@ -178,6 +178,28 @@ describe("восстановление записи в прогресс", () => 
     const log = logFromHeat(rec, dailyPuzzle(DATE, "easy").solution.split("").map(Number));
     expect(log.some((m) => m.kind === "erase")).toBe(false);
   });
+
+  it("PD-78: ink с негодным blots (99, -1, 1.5, нет) берёт число клякс из corrections, а не теряет правки", () => {
+    const solution = dailyPuzzle(DATE, "easy").solution.split("").map(Number);
+    const base = dayRecordFromProgress(inkProgress(DATE, []), NOW)!;
+    for (const bad of [99, -1, 1.5, undefined]) {
+      const rec: DayRecord = { ...base, ink: true, corrections: 3, hadCorrections: true, ...(bad === undefined ? {} : { blots: bad }) };
+      if (bad === undefined) delete rec.blots;
+      const log = logFromHeat(rec, solution);
+      expect(blotsOf(log).length).toBe(3);
+      expect(log.some((m) => m.kind === "erase")).toBe(false);
+    }
+  });
+
+  it("PD-78: без blots и corrections, но с hadCorrections, — одна клякса; валидный blots главнее corrections", () => {
+    const solution = dailyPuzzle(DATE, "easy").solution.split("").map(Number);
+    const base = dayRecordFromProgress(inkProgress(DATE, []), NOW)!;
+    const a: DayRecord = { ...base, ink: true, hadCorrections: true };
+    delete a.blots;
+    delete a.corrections;
+    expect(blotsOf(logFromHeat(a, solution)).length).toBe(1);
+    expect(blotsOf(logFromHeat({ ...base, ink: true, blots: 2, corrections: 5, hadCorrections: true }, solution)).length).toBe(2);
+  });
 });
 
 describe("слияние по дню (409/восстановление): запись атомарна, побеждает первое решение", () => {

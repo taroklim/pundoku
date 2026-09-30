@@ -5,6 +5,7 @@ import { useTranslation } from "react-i18next";
 import { formatClock } from "./format";
 import { heatLegend, heatOpacities } from "./heat";
 import { ShareIcon } from "./icons";
+import { BlotsRow, blotCellSet, HeatCells, InkChip } from "./inkCard";
 import type { PlayState } from "./logic";
 
 interface ResultCardProps {
@@ -32,14 +33,20 @@ export function ResultCard({ play, cardRef, title, winRate, winRateScope = "toda
     [play],
   );
   const legend = useMemo(() => heatLegend(), []);
+  const ink = play.ink === true;
+  const blots = useMemo(() => blotCellSet(play), [play]);
   return (
     <section className="card" ref={cardRef} tabIndex={-1} aria-labelledby="result-title" data-testid="result-card">
-      <h2 id="result-title">{title}</h2>
-      <p className="sub">{t("result.pathSub")}</p>
+      <h2 id="result-title" className={ink ? "ink-h2" : undefined}>
+        {title}
+        {ink && <InkChip />}
+      </h2>
+      <p className="sub">
+        {t("result.pathSub")}
+        {ink && ` ${t("ink.cardSub")}`}
+      </p>
       <div className="heat" role="img" aria-label={t("result.heatLabel")} data-testid="heat">
-        {heat.map((o, i) =>
-          o === null ? <i key={i} className="g" /> : <i key={i} style={{ opacity: o }} data-o={o} />,
-        )}
+        <HeatCells heat={heat} blots={blots} />
       </div>
       <div className="legend">
         <span>{t("result.early")}</span>
@@ -55,10 +62,14 @@ export function ResultCard({ play, cardRef, title, winRate, winRateScope = "toda
           <dt>{t("solved.time")}</dt>
           <dd className="mono">{formatClock(sum.durationMs)}</dd>
         </div>
-        <div className="row">
-          <dt>{t("solved.corrections")}</dt>
-          <dd>{sum.clean ? t("solved.clean") : sum.corrections}</dd>
-        </div>
+        {ink ? (
+          <BlotsRow count={blots.size} />
+        ) : (
+          <div className="row">
+            <dt>{t("solved.corrections")}</dt>
+            <dd>{sum.clean ? t("solved.clean") : sum.corrections}</dd>
+          </div>
+        )}
         <div className="row">
           <dt>{t("solved.technique")}</dt>
           <dd>{sum.maxTechnique ? t(`technique.${sum.maxTechnique}`) : "—"}</dd>
