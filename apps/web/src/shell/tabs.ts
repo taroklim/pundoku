@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 export const TAB_IDS = ["today", "play", "year"] as const;
 export type TabId = (typeof TAB_IDS)[number];
@@ -54,16 +54,40 @@ export function hashOf(target: Target): string {
 }
 
 /**
+ * Перехват ухода с Settings «снаружи» (PD-57): браузерный «назад», iOS edge-swipe, правка адреса. `proceed` довершает
+ * переход, когда пользователь его подтвердил. Возвращает `true`, если уход перехвачен (переход откатывается на
+ * `#/settings`, пока `proceed` не вызван); `false` — перехватывать нечего.
+ */
+export type LeaveGuard = (proceed: () => void) => boolean;
+
+/**
  * Активный маршрут как простое состояние, синхронизированное с хэшем (перезагрузка и ручная правка адреса
  * работают). Переключение — replaceState: вкладки и архив не засоряют историю. Исключение — вход в Settings
  * (`pushState` с меткой `pdSettings`): экран живёт в истории. `back()` из него: если запись поставили мы (метка в
  * `history.state`) — `history.back()`, иначе (глубокая ссылка/перезагрузка без предыдущей записи) — `replace` на Today.
+ *
+ * `guard` (PD-57): когда открыт Settings, а `popstate`/`hashchange` уводит в другой маршрут, а `guard` перехватывает
+ * уход — маршрут остаётся Settings (состояние экрана и ключ в памяти не трогаются), адрес возвращается на
+ * `#/settings` новой записью (`pushState`), а сам переход выполняется через `history.back()` только после
+ * подтверждения: он приводит в ту запись, куда пользователь и шёл (предыдущую при «назад», набранную при правке адреса).
  */
-export function useRoute(): [Route, (target: Target) => void] {
+export function useRoute(guard?: LeaveGuard): [Route, (target: Target) => void] {
   const [route, setRoute] = useState<Route>(() => parseRoute(window.location.hash));
+  const routeRef = useRef(route);
+  const guardRef = useRef(guard);
+  guardRef.current = guard;
 
   useEffect(() => {
-    const onHash = () => setRoute(parseRoute(window.location.hash));
+    const onHash = () => {
+      const next = parseRoute(window.location.hash);
+      if (routeRef.current.settings === true && next.settings !== true && guardRef.current?.(() => window.history.back())) {
+        // Уход перехвачен: возвращаем адрес на Settings, пока висит шит. Подтверждённый уход — history.back().
+        window.history.pushState({ pdSettings: true }, "", hashOf({ settings: true }));
+        return;
+      }
+      routeRef.current = next;
+      setRoute(next);
+    };
     window.addEventListener("hashchange", onHash);
     window.addEventListener("popstate", onHash);
     return () => {
@@ -76,7 +100,9 @@ export function useRoute(): [Route, (target: Target) => void] {
     const hash = hashOf(target);
     if ("settings" in target) window.history.pushState({ pdSettings: true }, "", hash);
     else window.history.replaceState(null, "", hash);
-    setRoute(parseRoute(hash));
+    const next = parseRoute(hash);
+    routeRef.current = next;
+    setRoute(next);
   }, []);
 
   return [route, go];

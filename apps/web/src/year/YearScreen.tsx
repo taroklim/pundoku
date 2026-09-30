@@ -56,6 +56,12 @@ export function YearScreen({ days, firstUse, today, onOpenToday, onPlayDay, init
   const year = picked !== null && years.includes(picked) ? picked : yearOfDate(today);
   const view = useMemo(() => buildYear(year, entries, ctx), [year, entries, ctx]);
   const empty = days !== null && entries.size === 0;
+  // PD-55: прошлый год без единой записи (при том что записи есть в других годах) — вместо строки итогов «0 days · 0 clean»
+  // одна пояснялка. Месяцы остаются: дни такого года играбельны (пропуски/дни от границы архива), доступ к ним не отнимаем.
+  const yearEmpty = useMemo(
+    () => days !== null && entries.size > 0 && year < yearOfDate(today) && ![...entries.keys()].some((d) => yearOfDate(d) === year),
+    [days, entries, year, today],
+  );
 
   // ---- шит месяца / дня ----
   const [sheet, setSheet] = useState<SheetState | null>(null);
@@ -116,15 +122,21 @@ export function YearScreen({ days, firstUse, today, onOpenToday, onPlayDay, init
           </h1>
         )}
       </header>
-      <p className="subline year-totals" aria-hidden={empty ? "true" : undefined} data-testid="year-totals">
-        {[
-          t("year.totalsDays", { count: view.totals.played }),
-          t("year.totalsClean", { n: view.totals.clean }),
-          view.totals.withCorrections > 0 ? t("year.totalsCorrections", { n: view.totals.withCorrections }) : null,
-        ]
-          .filter(Boolean)
-          .join(" · ")}
-      </p>
+      {yearEmpty ? (
+        <p className="subline year-totals" data-testid="year-empty-year">
+          {t("year.emptyYear", { year })}
+        </p>
+      ) : (
+        <p className="subline year-totals" aria-hidden={empty ? "true" : undefined} data-testid="year-totals">
+          {[
+            t("year.totalsDays", { count: view.totals.played }),
+            t("year.totalsClean", { n: view.totals.clean }),
+            view.totals.withCorrections > 0 ? t("year.totalsCorrections", { n: view.totals.withCorrections }) : null,
+          ]
+            .filter(Boolean)
+            .join(" · ")}
+        </p>
+      )}
 
       <div className="year-months" role="group" aria-label={t("year.canvasLabel", { year })} data-testid="year-canvas">
         {view.months.map((m) => (

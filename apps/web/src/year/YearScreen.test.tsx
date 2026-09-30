@@ -448,6 +448,59 @@ describe("шит месяца и карточка дня", () => {
   });
 });
 
+describe("PD-52 / PD-55: прошлый год без записей", () => {
+  const pickYear = (y: string) => {
+    click(host.querySelector(".titlebtn"));
+    click([...host.querySelectorAll<HTMLElement>('[role="menuitemradio"]')].find((i) => i.textContent === y)!);
+  };
+  const line = () => host.querySelector('[data-testid="year-empty-year"]') as HTMLElement | null;
+
+  it("год границы архива достижим и без записей: играбельные дни доступны из карточки дня (PD-52)", () => {
+    // firstUse 2025-11-20, единственная запись — сегодня в 2026: 2025 в списке, дни ноября-декабря играбельны.
+    render([progressOf("2026-03-05")], "2026-03-06", "2025-11-20");
+    click(host.querySelector(".titlebtn"));
+    expect([...host.querySelectorAll('[role="menuitemradio"]')].map((i) => i.textContent)).toEqual(["2026", "2025"]);
+    click(host.querySelector('[role="menuitemradio"]:last-child'));
+    openDay(10, "2025-11-25");
+    click(document.querySelector('[data-testid="play-day"]'));
+    expect(playDay).toHaveBeenCalledWith("2025-11-25");
+  });
+
+  it("одна пояснялка вместо «0 days · 0 clean», месяцы остаются (PD-55)", () => {
+    render([progressOf("2026-03-05")], "2026-03-06", "2025-11-20");
+    expect(line()).toBeNull(); // текущий год с записью: обычные итоги
+    expect(host.querySelector('[data-testid="year-totals"]')).not.toBeNull();
+    pickYear("2025");
+    expect(line()?.textContent).toBe("Nothing recorded in 2025.");
+    expect(host.querySelector('[data-testid="year-totals"]')).toBeNull();
+    expect(line()?.getAttribute("aria-hidden")).toBeNull(); // читается VoiceOver, а не скрыта как итоги пустого состояния
+    expect(host.querySelectorAll(".year-month")).toHaveLength(12);
+    // Играбельные дни (от 2025-11-20) видны: месяц открывается, дни до границы не «пропуск».
+    expect(month(10).getAttribute("aria-label")).toContain("nothing yet");
+  });
+
+  it("год с записью пояснялки не получает; wholly-empty состояние — прежнее приглашение", () => {
+    render([progressOf("2025-12-30"), progressOf("2026-01-02")], "2026-01-03", "2025-12-30");
+    pickYear("2025");
+    expect(line()).toBeNull();
+    act(() => root.unmount());
+    root = createRoot(host);
+    render([], "2026-01-03", "2025-12-30");
+    pickYear("2025");
+    expect(line()).toBeNull();
+    expect(host.querySelector('[data-testid="year-empty"]')).not.toBeNull();
+  });
+
+  for (const [lng, want] of [["uk", "У 2025 році записів немає."], ["ru", "В 2025 году записей нет."]] as const) {
+    it(`${lng}: пояснялка переведена`, async () => {
+      await i18n.changeLanguage(lng);
+      render([progressOf("2026-03-05")], "2026-03-06", "2025-11-20");
+      pickYear("2025");
+      expect(line()?.textContent).toBe(want);
+    });
+  }
+});
+
 describe("локали", () => {
   for (const [lng, wantMonth] of [["uk", "Вересень"], ["ru", "Сентябрь"]] as const) {
     it(`${lng}: месяц и итоги переведены, сырых ключей нет`, async () => {

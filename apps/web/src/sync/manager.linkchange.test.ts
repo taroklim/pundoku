@@ -112,14 +112,23 @@ describe("resetAfterLinkChange", () => {
     expect(await dates(a.storage)).toEqual(["2026-09-01", "2026-09-02", "2026-09-10"]);
   });
 
-  it("сбрасывает META_SYNC_STATE и запоминает новый снапшот после слияния (а не старое серверное состояние)", async () => {
+  it("стирает META_SYNC_STATE до первого запроса нового цикла и запоминает новый снапшот после слияния (а не старое серверное состояние)", async () => {
     const b = await device("token-B", ["2026-09-10"]);
     const before = await b.storage.getMeta(META_SYNC_STATE);
     expect(before).toBeTruthy();
     server.link("token-B", "token-A");
     server.register("token-A");
     server.snaps.set("token-A", { version: 7, updatedAt: "2026-09-29T00:00:00.000Z", data: { schemaVersion: 1, grid: null, days: {} } });
+    // PD-59: к моменту первого запроса нового цикла старое подтверждённое состояние уже стёрто в хранилище
+    // (успешный цикл потом всё равно перезапишет его — по итоговому значению сброс не виден, только по моменту pull).
+    const pullNow = server.api.pull;
+    let metaAtPull: unknown = "not-called";
+    server.api.pull = async (...args) => {
+      if (metaAtPull === "not-called") metaAtPull = await b.storage.getMeta(META_SYNC_STATE);
+      return pullNow(...args);
+    };
     await b.m.resetAfterLinkChange();
+    expect(metaAtPull).toBeNull();
     const after = (await b.storage.getMeta(META_SYNC_STATE)) as { version?: number } | null;
     expect(after).toBeTruthy();
     expect(after).not.toEqual(before);

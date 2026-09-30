@@ -334,12 +334,19 @@ export class RecoveryStore {
    * ухода — action sheet «Ключ ещё не сохранён». Иначе `proceed` вызывается сразу.
    */
   requestLeave(proceed: () => void): void {
-    if (this.snap.phase !== "shown") {
-      proceed();
-      return;
-    }
+    if (!this.guardLeave(proceed)) proceed();
+  }
+
+  /**
+   * То же, но без побочного вызова: `true` — уход перехвачен (показан шит «Ключ ещё не сохранён», `proceed` вызовется
+   * после подтверждения), `false` — ключ не показан, ничего не сделано и `proceed` не вызван. Нужен браузерному
+   * «назад»/hashchange (PD-57): им заранее надо знать, что переход придётся откатить.
+   */
+  guardLeave(proceed: () => void): boolean {
+    if (this.snap.phase !== "shown") return false;
     this.pendingLeave = proceed;
     this.set({ sheet: "leave" });
+    return true;
   }
 
   private confirmLeave(): void {

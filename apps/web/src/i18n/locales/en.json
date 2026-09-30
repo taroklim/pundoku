@@ -163,6 +163,7 @@
       "missed": "Missed"
     },
     "canvasLabel": "Year {{year}}, by month",
+    "emptyYear": "Nothing recorded in {{year}}.",
     "emptyLine": "Your year starts today. Each day you play leaves one mark here.",
     "openToday": "Open today’s puzzle",
     "continueToday": "Continue today’s puzzle",

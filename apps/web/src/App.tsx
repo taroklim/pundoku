@@ -17,7 +17,8 @@ import { YearTab } from "./year/YearTab";
  */
 export function App() {
   const { i18n } = useTranslation();
-  const [route, go] = useRoute();
+  // Браузерное «назад»/edge-swipe/правка адреса при показанном ключе — тот же шит «Ключ ещё не сохранён» (PD-57).
+  const [route, go] = useRoute((proceed) => recoveryStore.guardLeave(proceed));
   const { tab, archiveDate } = route;
   const settings = route.settings === true;
   // Пока ключ показан и не подтверждён, уход с Settings (вкладка, «‹ Today») идёт через action sheet «Ключ ещё не сохранён».

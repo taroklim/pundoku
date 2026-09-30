@@ -144,12 +144,16 @@ export function buildYear(year: number, entries: ReadonlyMap<string, YearEntry>,
 }
 
 /**
- * Годы, между которыми можно листать: от границы архива (первого дня пользования/первой записи) до текущего (и позже,
- * если записи есть). Год до первой записи, но с играбельными днями, остаётся доступным: иначе эти дни не открыть из Year.
+ * Годы, между которыми можно листать (PD-52): от самого раннего года, где что-то есть, до текущего (и позже, если
+ * записи есть). «Есть» = запись дня либо играбельный день — от границы архива до сегодня. Поэтому год `archiveStart`
+ * (первого запуска/первой записи) входит, если этот день не позже сегодня: дни между ним и первой записью играбельны
+ * и должны быть достижимы из Year. Граница из будущего (сдвиг часов назад) год не добавляет — в нём нечего играть,
+ * иначе список пустел бы, а текущий год выпадал из выбора. Года внутри диапазона не пропускаются (список без дыр).
  */
 export function availableYears(entries: ReadonlyMap<string, YearEntry>, ctx: YearContext): number[] {
-  let lo = yearOfDate(ctx.archiveStart);
-  let hi = yearOfDate(ctx.today);
+  let lo = yearOfDate(ctx.today);
+  let hi = lo;
+  if (ctx.archiveStart <= ctx.today) lo = Math.min(lo, yearOfDate(ctx.archiveStart));
   for (const date of entries.keys()) {
     lo = Math.min(lo, yearOfDate(date));
     hi = Math.max(hi, yearOfDate(date));
