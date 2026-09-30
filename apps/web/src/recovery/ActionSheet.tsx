@@ -1,4 +1,4 @@
-import type { KeyboardEvent, ReactNode } from "react";
+import type { ReactNode } from "react";
 import { useEffect, useId, useRef } from "react";
 
 interface ActionSheetProps {
@@ -18,46 +18,61 @@ const FOCUSABLE = "button:not([disabled])";
 
 /**
  * Action sheet (макет PD-48 §5): подтверждение внизу экрана, действие сверху, «Отмена» отдельной группой. Модальный
- * диалог: фокус внутри (Tab по кругу), Esc и тап по фону — отмена, фокус возвращается на кнопку, открывшую шит.
+ * диалог: фон `inert`, фокус внутри (Tab по кругу), Esc (на document) и тап по фону — отмена, фокус возвращается на кнопку, открывшую шит.
  * Шит над шитом не бывает — поэтому Settings сделан push-экраном.
  */
 export function ActionSheet({ title, message, actionLabel, destructive = false, cancelLabel, onAction, onCancel }: ActionSheetProps) {
+  const scrim = useRef<HTMLDivElement>(null);
   const root = useRef<HTMLDivElement>(null);
+  const cancelRef = useRef(onCancel);
+  cancelRef.current = onCancel;
   const titleId = useId();
   const msgId = useId();
 
   useEffect(() => {
     const opener = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    // Фон недоступен (Tab/VoiceOver), пока шит открыт: `inert` на всех «соседях» цепочки предков шита до <body>.
+    const inerted: Element[] = [];
+    for (let node: HTMLElement | null = scrim.current; node && node.parentElement && node !== document.body; node = node.parentElement) {
+      for (const sibling of node.parentElement.children) {
+        if (sibling !== node && !sibling.hasAttribute("inert")) {
+          sibling.setAttribute("inert", "");
+          inerted.push(sibling);
+        }
+      }
+    }
     root.current?.focus({ preventScroll: true });
+
+    // Клавиатура — на document, а не на шите: если фокус всё же оказался вне его (тап по фону, `body`), Esc и Tab работают.
+    const onKey = (event: globalThis.KeyboardEvent) => {
+      if (event.key === "Escape") {
+        event.stopPropagation();
+        cancelRef.current();
+        return;
+      }
+      if (event.key !== "Tab") return;
+      const items = [...(root.current?.querySelectorAll<HTMLElement>(FOCUSABLE) ?? [])];
+      if (items.length === 0) return;
+      // Tab ведём сами по кругу, а не полагаемся на нативный: Safari по умолчанию не считает кнопки табстопами, и Tab
+      // уводил фокус из страницы (после чего Esc до шита не доходил).
+      event.preventDefault();
+      const active = document.activeElement;
+      const at = active instanceof HTMLElement ? items.indexOf(active) : -1; // -1: фокус на самом шите или вне его
+      const next = event.shiftKey ? (at <= 0 ? items.length - 1 : at - 1) : at === -1 || at === items.length - 1 ? 0 : at + 1;
+      items[next]!.focus();
+    };
+    document.addEventListener("keydown", onKey);
+
     return () => {
+      document.removeEventListener("keydown", onKey);
+      for (const el of inerted) el.removeAttribute("inert"); // до возврата фокуса: inert-элемент не принимает фокус
       // Кнопка-открыватель могла исчезнуть (действие сменило экран) — тогда фокус остаётся на теле, это нормально.
       if (opener && opener.isConnected) opener.focus({ preventScroll: true });
     };
   }, []);
 
-  const onKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
-    if (event.key === "Escape") {
-      event.stopPropagation();
-      onCancel();
-      return;
-    }
-    if (event.key !== "Tab") return;
-    const items = [...(root.current?.querySelectorAll<HTMLElement>(FOCUSABLE) ?? [])];
-    if (items.length === 0) return;
-    const first = items[0]!;
-    const last = items[items.length - 1]!;
-    const active = document.activeElement;
-    if (event.shiftKey && (active === first || active === root.current)) {
-      event.preventDefault();
-      last.focus();
-    } else if (!event.shiftKey && active === last) {
-      event.preventDefault();
-      first.focus();
-    }
-  };
-
   return (
-    <div className="st-scrim" onClick={onCancel} data-testid="action-sheet-scrim">
+    <div ref={scrim} className="st-scrim" onClick={onCancel} data-testid="action-sheet-scrim">
       <div
         ref={root}
         className="st-asheet"
@@ -67,7 +82,6 @@ export function ActionSheet({ title, message, actionLabel, destructive = false, 
         aria-describedby={msgId}
         tabIndex={-1}
         onClick={(e) => e.stopPropagation()}
-        onKeyDown={onKeyDown}
         data-testid="action-sheet"
       >
         <div className="st-agrp">

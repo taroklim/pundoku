@@ -219,6 +219,42 @@ describe("SettingsScreen: action sheets", () => {
     expect(document.activeElement).toBe(go);
   });
 
+  it("Tab, вышедший за шит (фокус на body), возвращается в шит; Esc на document закрывает шит и возвращает фокус", async () => {
+    await mount(created);
+    q("key-reissue")!.focus();
+    await click("key-reissue");
+    (document.activeElement as HTMLElement).blur(); // фокус на <body>, как после выхода Tab за пределы страницы
+    expect(document.activeElement).toBe(document.body);
+    const tab = new KeyboardEvent("keydown", { key: "Tab", bubbles: true, cancelable: true });
+    await act(async () => void document.body.dispatchEvent(tab));
+    expect(tab.defaultPrevented).toBe(true);
+    expect(document.activeElement).toBe(q("action-sheet-go"));
+    (document.activeElement as HTMLElement).blur();
+    const back = new KeyboardEvent("keydown", { key: "Tab", shiftKey: true, bubbles: true, cancelable: true });
+    await act(async () => void document.body.dispatchEvent(back));
+    expect(document.activeElement).toBe(q("action-sheet-cancel"));
+
+    (document.activeElement as HTMLElement).blur();
+    await act(async () => void document.body.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true })));
+    expect(q("action-sheet")).toBeNull();
+    expect(document.activeElement).toBe(q("key-reissue"));
+  });
+
+  it("пока шит открыт, фон inert (всё, кроме цепочки предков шита); после закрытия — снят", async () => {
+    await mount(created);
+    const reissue = q("key-reissue")!;
+    reissue.focus();
+    await click("key-reissue");
+    const dlg = q("action-sheet-scrim")!;
+    const inertNodes = () => [...document.body.querySelectorAll("[inert]")];
+    expect(inertNodes().length).toBeGreaterThan(0);
+    expect(inertNodes().some((n) => n.contains(reissue))).toBe(true); // кнопка-открыватель под inert
+    expect(inertNodes().some((n) => n === dlg || n.contains(dlg))).toBe(false); // сам шит — нет
+    await click("action-sheet-cancel");
+    expect(inertNodes()).toHaveLength(0);
+    expect(document.activeElement).toBe(reissue);
+  });
+
   it("Unlink (не деструктивный): подтверждение → запрос → resetAfterLinkChange → «нет ключа»", async () => {
     await mount(created);
     await click("key-unlink");

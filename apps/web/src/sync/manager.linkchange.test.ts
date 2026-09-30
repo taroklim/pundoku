@@ -126,6 +126,14 @@ describe("resetAfterLinkChange", () => {
     expect(b.m.getSnapshot().version).toBeGreaterThanOrEqual(8); // push поверх версии группы, а не по старой версии 1
   });
 
+  it("очищает сохранённый META_SYNC_STATE, даже если новый цикл не дошёл до сервера (старое состояние не переживёт перезапуск)", async () => {
+    const b = await device("token-B", ["2026-09-10"]);
+    expect(await b.storage.getMeta(META_SYNC_STATE)).toBeTruthy(); // после первой синхронизации состояние сохранено
+    server.down = true; // цикл после сброса ничего не запишет — виден только сам сброс
+    expect(await b.m.resetAfterLinkChange()).toBe(false);
+    expect(await b.storage.getMeta(META_SYNC_STATE)).toBeNull();
+  });
+
   it("unlink: устройство остаётся с локальными днями и получает копию снапшота группы на своё имя", async () => {
     const a = await device("token-A", ["2026-09-01"]);
     const b = await device("token-B", ["2026-09-10"]);
