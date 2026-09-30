@@ -136,6 +136,7 @@
 48. (PD-74) Клякса: неверная цифра даёт пятно со срезанным углом и сразу верную цифру; ощущение M7 (не слишком ли быстро исчезает неверная), читаемость пятна и среза под углом/на солнце; при «Уменьшить движение» — без расползания.
 49. (PD-75) Контактный лист: девять стадий читаются на iPhone 16; запуск анимации отдельной кнопкой; скраббер/транспорт пальцем и под VoiceOver.
 50. (PD-75) PNG-экспорт: «Share» открывает системный лист iOS с PNG 1080×1350 (Rhythm, светлая тема, без цифр); сохранить в Фото/отправить — читается ли разница размеров квадратов; в тёмной теме PNG всё равно светлый.
+51. (PD-75) PNG-отпечаток: точка Share и отступы — оценить на iPhone; отступы PNG подгоним после просмотра владельцем.
 Не проверено QA: реальное стекло iOS, `env(safe-area-inset-*)`, статус-бар в тёмной теме, установка, reduced-transparency/contrast в webkit.
 
 ## Решения владельца по Year (2026-09-29, PD-24 закрыт)
@@ -292,12 +293,13 @@ Gates: build → typecheck, lint, тесты web/engine/api (api с TEST_DATABAS
 | PD-71 | Релиз 1.1, чернильный режим: правила в engine/store без UI (что ошибка/клякса, блокировка undo/erase, флаг `ink` в записи дня, влияние на Year/карточку/winRate); док `docs/pd-71-ink-rules.md`, спорное помечено для владельца; ветка `pd-71` | developer | P1 | completed (смержен в main f71788f вместе с PD-77, QA PD-73 PASS) | — |
 | PD-77 | Ребейз `pd-71` на main (после мержа pd-70) + тест таймлапса на ink-логе `2:` + 2 Low из QA PD-72: `hasTimelapse`/`timelapseOf` не бросают на повреждённом логе (клетка 99/null) → false/null; тест на усечённый лог (мутация M13); Info: `note_add` с нечисловой цифрой — бит 0 в маске; ветка `pd-71` | developer | P1 | completed (pd-71 @ 03211cc) | PD-71, PD-72 |
 | PD-78 | (берёт PD-74) Low (QA PD-73): при `ink=true` и невалидном `blots` (например 99) `logFromHeat` даёт 0 правок и игнорирует `rec.corrections` — только испорченная запись; нормализовать/использовать `corrections`; плюс Low принятое: старый клиент затирает `ink`/`blots` при push (в доке PD-71, не чиним) | developer | P3 | pending | — |
-| PD-79 | (берёт QA PD-76, первым шагом на main) Info (QA PD-73): один прогон chromium — reload через 600 мс после хода на Today не сохранил прогресс (1500 мс ок). Persist в PD-71 не менялся — проверить на main (до 10 прогонов chromium+webkit, реальная сборка); если воспроизводится — существовавший дефект (debounce/сохранение на pagehide), отдельный фикс | qa-tester | P3 | pending | — |
+| PD-79 | (отдельный QA-прогон на слитом main cf4e1b3, параллельно PD-80) Info (QA PD-73): один прогон chromium — reload через 600 мс после хода на Today не сохранил прогресс (1500 мс ок). Persist в PD-71 не менялся — проверить на main (до 10 прогонов chromium+webkit, реальная сборка); если воспроизводится — существовавший дефект (debounce/сохранение на pagehide), отдельный фикс | qa-tester | P3 | pending | — |
 | PD-72 | QA PD-70 (Playwright/node + реальная сборка, мутации) | qa-tester | P1 | completed | PD-70 |
 | PD-73 | QA PD-71 | qa-tester | P1 | completed | PD-71 |
 | PD-74 | UI чернильного режима по макету PD-69 + решения владельца 2026-10-01 (dev готов: pd-74 @ 73444b2, gates web 584/engine 178/api 174+3, живой chromium+webkit; ветка `pd-74`; вход/шит правила, игровой экран без Undo, «Erase notes», метка режима в подписи дня, клякса M7, карточка ink-дня, Play-setup; + PD-78) | developer | P1 | completed (dev; ждёт мержа и QA PD-76) | — |
-| PD-75 | UI таймлапса по макету PD-69 + решения (ветка `pd-75`; вход с карточки дня, контактный лист по умолчанию + запуск анимации, экспорт PNG Rhythm — всегда светлая тема, без цифр, «нет лога» тихой фразой) | developer | P1 | in_progress | — |
-| PD-76 | QA PD-74/PD-75: живой Playwright chromium+webkit, реальная сборка, отдельная БД и worktree, apple-design как ревьюер, en/uk/ru, светлая/тёмная, Dynamic Type, reduced motion/transparency, forced-colors, 320/390/430; включает PD-79 на main | qa-tester | P1 | pending | PD-74, PD-75 |
+| PD-75 | UI таймлапса по макету PD-69 + решения (ветка `pd-75`; вход с карточки дня, контактный лист по умолчанию + запуск анимации, экспорт PNG Rhythm — всегда светлая тема, без цифр, «нет лога» тихой фразой) | developer | P1 | completed (dev; pd-75 @ bfeedbf, смержен локально; gates web 591; ждёт QA PD-76) | — |
+| PD-80 | Мелкий фикс: «Moves» в ink-дне (подпись PNG «N moves · M blots» и «Move a of b» в плеере) считает ходы игрока, а не кадры: клякса = один ход (ветка `pd-80` от слитого main) | developer | P2 | in_progress | PD-74, PD-75 |
+| PD-76 | QA PD-74/PD-75 на слитом main (PD-74 @ 73444b2 + PD-75 @ bfeedbf); вживую проверить: запрет ink в архиве, карточка Year (шит дня ink + вход таймлапса), «Moves» в ink-дне после PD-80, строка источника Today при виде выбора режима: живой Playwright chromium+webkit, реальная сборка, отдельная БД и worktree, apple-design как ревьюер, en/uk/ru, светлая/тёмная, Dynamic Type, reduced motion/transparency, forced-colors, 320/390/430; включает PD-79 на main | qa-tester | P1 | pending | PD-74, PD-75 |
 | PD-20 | QA PD-14 (pd-14 @ 0026b2a): PASS с оговорками, блокеров и Medium нет; 4 Low + решение по слиянию → PD-31 | qa-tester | P1 | completed | PD-14 |
 | PD-31 | Фикс-проход pd-14 по QA PD-20 (pd-14 @ c574f13; gates зелёные: web 213, engine 105, api 77+2 skipped, интеграционные 7/7 на живой БД) | developer | P1 | completed | PD-20 |
 | PD-32 | PASS с оговорками (слияние 409 по источникам, 1500 дней без лишних PUT, gates, интеграционные 7/7); Low → PD-37. QA-регресс pd-14 @ c574f13 (перезапуск после сбоя контейнера; worktree /tmp/pundoku-qa/qa-pd32, БД pundoku_qa5, порты 3320/5320): слияние 409 по источникам, отсутствие лишних PUT при 1500 днях, сокращённый регресс PD-20, gates + интеграционные api-тесты | qa-tester | P1 | completed | PD-31 |
@@ -367,4 +369,6 @@ Gates: build → typecheck, lint, тесты web/engine/api (api с `TEST_DATABA
 |-----|------|--------|-------|-----------|
 | PM-Pundoku-7 | product-manager | working | PD-74/75/76 (релиз 1.1 UI) | 2026-10-01 |
 | dev-pd74 | developer | done | PD-74 (+PD-78) @ 73444b2 | 2026-10-01 |
-| dev-pd75 | developer | working | PD-75, worktree pd-75 | 2026-10-01 |
+| dev-pd75 | developer | done | PD-75 @ bfeedbf | 2026-10-01 |
+| dev-pd80 | developer | working | PD-80, worktree pd-80 (запуск) | 2026-10-01 |
+| qa-pd79 | qa-tester | working | PD-79 на main (запуск) | 2026-10-01 |
