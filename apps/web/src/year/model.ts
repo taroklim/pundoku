@@ -9,8 +9,11 @@
  *   (`assisted`) — более светлый тон постоянно;
  * - пропущенный день можно доиграть (архив), но в Year он остаётся пропуском: решённый день с
  *   `late = true` рисуется как `missed`;
- * - до начала пользования ни один прошедший день не помечен пропуском; при нулевых записях пропусков нет вообще;
- *   «сегодня» без прогресса — пусто + кольцо.
+ * - PD-51 (решение владельца 2026-09-30): началом года считается САМАЯ РАННЯЯ ЗАПИСЬ дня (solved/unfinished/late,
+ *   включая архивную), а не `firstUseDate`. До неё дни `void`; пропуски (`missed`) — только от неё до вчера.
+ *   При нулевых записях пропусков нет вообще; «сегодня» без прогресса — пусто + кольцо;
+ * - граница архива (`archiveStart`: меньшее из `firstUseDate` и самой ранней записи) от этого НЕ меняется — играть
+ *   можно с первого дня пользования; она влияет только на кнопку «сыграть» и на список годов, не на раскраску.
  */
 import { summary } from "@pundoku/engine";
 import type { DayProgress } from "../today/repository";
@@ -73,8 +76,10 @@ export interface YearView {
 export interface YearContext {
   /** Локальная сегодняшняя дата `YYYY-MM-DD`. */
   readonly today: string;
-  /** Начало пользования (первый день): раньше него пропусков нет. */
+  /** Начало года на полотне: дата самой ранней записи дня (нет записей — сегодня). Раньше неё пропусков нет. */
   readonly start: string;
+  /** Граница архива: с какого дня можно играть прошлые дни (`archiveStart`); не влияет на раскраску. */
+  readonly archiveStart: string;
   /**
    * Есть ли хоть одна запись прогресса. Без записей пропуски не рисуются вовсе: пока игрок ничего не сыграл,
    * ни один прошедший день не помечен пропуском (даже если `firstUseDate` в прошлом).
@@ -107,8 +112,8 @@ export function markOf(date: string, entry: YearEntry | undefined, ctx: YearCont
     }
     return { ...base, kind: "unfinished", corrections: entry.hadCorrections, assisted: false, late: false, hasRecord: true };
   }
-  // Без записи: пропуск — только прошедший день, только начиная с первого дня пользования и только если
-  // у игрока уже есть хоть одна запись (пустое состояние: пропусков нет вообще, кольцо сегодняшнего дня остаётся).
+  // Без записи: пропуск — только прошедший день, только начиная с самой ранней записи (`ctx.start`; PD-51) и только
+  // если записи есть (пустое состояние: пропусков нет вообще, кольцо сегодняшнего дня остаётся).
   const missed = ctx.hasRecords && date < ctx.today && date >= ctx.start;
   return { ...base, kind: missed ? "missed" : "void", corrections: false, assisted: false, late: false, hasRecord: false };
 }
@@ -138,9 +143,12 @@ export function buildYear(year: number, entries: ReadonlyMap<string, YearEntry>,
   return { year, months, totals: { played, clean: played - withCorrections, withCorrections } };
 }
 
-/** Годы, между которыми можно листать: от начала пользования/первой записи до текущего (и позже, если записи есть). */
+/**
+ * Годы, между которыми можно листать: от границы архива (первого дня пользования/первой записи) до текущего (и позже,
+ * если записи есть). Год до первой записи, но с играбельными днями, остаётся доступным: иначе эти дни не открыть из Year.
+ */
 export function availableYears(entries: ReadonlyMap<string, YearEntry>, ctx: YearContext): number[] {
-  let lo = yearOfDate(ctx.start);
+  let lo = yearOfDate(ctx.archiveStart);
   let hi = yearOfDate(ctx.today);
   for (const date of entries.keys()) {
     lo = Math.min(lo, yearOfDate(date));
@@ -149,14 +157,24 @@ export function availableYears(entries: ReadonlyMap<string, YearEntry>, ctx: Yea
   return Array.from({ length: hi - lo + 1 }, (_, i) => lo + i);
 }
 
-/** Начало пользования: меньшее из сохранённой даты первого запуска и самой ранней записи; нет ничего — сегодня. */
-export function startDate(firstUse: string | null, entries: ReadonlyMap<string, YearEntry>, today: string): string {
+/**
+ * Граница архива (`ArchiveScreen`/`dayStore`, `firstUse.ts › readUseStart`): меньшее из сохранённой даты первого запуска
+ * и самой ранней записи; нет ничего — сегодня. Играть можно с этого дня; на раскраску Year не влияет (см. `yearStart`).
+ */
+export function archiveStart(firstUse: string | null, entries: ReadonlyMap<string, YearEntry>, today: string): string {
   let start = firstUse ?? today;
   for (const date of entries.keys()) if (date < start) start = date;
   return start;
 }
 
-/** Контекст полотна: сегодня, начало пользования и признак «записи есть» — единое правило для полотна и шита. */
+/** Старт года на полотне (PD-51): дата самой ранней записи дня, включая архивную/late; записей нет — сегодня. */
+export function yearStart(entries: ReadonlyMap<string, YearEntry>, today: string): string {
+  let start: string | null = null;
+  for (const date of entries.keys()) if (start === null || date < start) start = date;
+  return start ?? today;
+}
+
+/** Контекст полотна: сегодня, старт года, граница архива и признак «записи есть» — единое правило для полотна и шита. */
 export function yearContext(firstUse: string | null, entries: ReadonlyMap<string, YearEntry>, today: string): YearContext {
-  return { today, start: startDate(firstUse, entries, today), hasRecords: entries.size > 0 };
+  return { today, start: yearStart(entries, today), archiveStart: archiveStart(firstUse, entries, today), hasRecords: entries.size > 0 };
 }

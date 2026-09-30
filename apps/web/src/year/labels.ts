@@ -31,7 +31,7 @@ export function monthAriaLabel(t: TFunction, month: YearMonth, locale: string): 
 }
 
 /** Ключ состояния дня для подписи кнопки дня в шите (полные слова, не цвет и не форма). */
-export function dayStateKey(mark: DayMark, ctx: { today: string; start: string }): string {
+export function dayStateKey(mark: DayMark, ctx: { today: string; archiveStart: string; hasRecords: boolean }): string {
   switch (mark.kind) {
     case "solved":
       return mark.assisted
@@ -48,9 +48,9 @@ export function dayStateKey(mark: DayMark, ctx: { today: string; start: string }
     case "void":
       if (mark.date === ctx.today) return "today";
       if (mark.date > ctx.today) return "future";
-      // Прошедший день без метки: «до начала пользования» — только раньше `start`. Начиная с `start` метки нет
-      // лишь потому, что записей ещё нет (пропуски не рисуются, решение владельца): нейтральное «нет записи» —
-      // не «до того, как вы начали» (неверно) и не «не играно» (это слово пропуска).
-      return mark.date >= ctx.start ? "noRecord" : "before";
+      // Прошедший день без метки (PD-51). С записями пропуск начинается с самой ранней записи, так что безымянными
+      // остаются только дни ДО неё: «before your first entry». Без записей пропусков нет вообще: дни с границы архива —
+      // нейтральное «нет записи» (не «не играно»: это слово пропуска), раньше неё — тоже «before».
+      return !ctx.hasRecords && mark.date >= ctx.archiveStart ? "noRecord" : "before";
   }
 }

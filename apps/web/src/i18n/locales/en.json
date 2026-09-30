@@ -134,7 +134,7 @@
       "today": "today, not played yet",
       "future": "not yet",
       "noRecord": "nothing recorded",
-      "before": "before you started"
+      "before": "before your first entry"
     },
     "card": {
       "dailyPuzzle": "daily puzzle",
@@ -143,7 +143,7 @@
       "todayWaiting": "Today’s puzzle is waiting.",
       "future": "This day hasn’t happened yet.",
       "noRecord": "Nothing recorded for this day.",
-      "before": "Before you started using Pundoku.",
+      "before": "Before your first recorded day.",
       "lateNote": "Played after the day, so the year keeps it as missed.",
       "play": "Play this day’s puzzle",
       "finish": "Finish this puzzle",

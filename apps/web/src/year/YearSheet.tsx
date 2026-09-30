@@ -191,8 +191,8 @@ function DayCard({
 }) {
   const { t, i18n } = useTranslation();
   const locale = i18n.resolvedLanguage ?? "en";
-  // Архив (PD-33): играть можно прошлый день, начиная с первого дня пользования (раньше — «до начала», пропусков там нет).
-  const archivable = mark.date < ctx.today && mark.date >= ctx.start;
+  // Архив (PD-33): играть можно прошлый день, начиная с первого дня пользования (`archiveStart`; PD-51: не то же, что старт года).
+  const archivable = mark.date < ctx.today && mark.date >= ctx.archiveStart;
   const solved = progress?.solved === true;
   const showSub = progress !== undefined;
   // «Сколько поставлено» считается только по клеткам, которые игрок заполняет сам: заданные клетки не в счёт.
@@ -283,7 +283,7 @@ function DayCard({
       ) : (
         <>
           <p className="emptyday">
-            {mark.date > ctx.today ? t("year.card.future") : mark.kind === "missed" ? t("year.card.notPlayed") : mark.date >= ctx.start ? t("year.card.noRecord") : t("year.card.before")}
+            {mark.date > ctx.today ? t("year.card.future") : mark.kind === "missed" ? t("year.card.notPlayed") : !ctx.hasRecords && mark.date >= ctx.archiveStart ? t("year.card.noRecord") : t("year.card.before")}
           </p>
           {archivable && (
             <button type="button" className="ghost" data-testid="play-day" onClick={() => onPlayDay(mark.date)}>

@@ -1,17 +1,17 @@
 /**
- * Начало пользования для Year (PD-25): локальная дата первого запуска приложения хранится в `meta`
- * хранилища прогресса (`meta:firstUseDate`). Раньше этой даты Year не рисует «пропуски»
- * («нельзя пропустить день, когда тебя ещё не было»).
+ * Первый запуск (PD-25): локальная дата первого запуска приложения хранится в `meta` хранилища прогресса
+ * (`meta:firstUseDate`). С PD-51 она НЕ задаёт начало года в Year (им стала самая ранняя запись дня,
+ * `year/model.ts › yearStart`), а задаёт границу архива: играть прошлые дни можно с этой даты
+ * (`archiveStart`: меньшее из неё и самой ранней записи).
  *
  * Пишется один раз (`setMetaIfAbsent`) при старте приложения из `main.tsx`. Не синхронизируется:
- * после чистки IndexedDB дата становится «сегодня», а Year берёт меньшее из неё и самой ранней
- * восстановленной записи (`year/model.ts › startDate`) — дни между настоящим первым запуском и
- * первой сыгранной партией в таком случае остаются пустыми, а не пропусками.
+ * после чистки IndexedDB дата становится «сегодня», а граница архива берёт меньшее из неё и самой ранней
+ * восстановленной записи.
  */
 import type { SyncStorage } from "../today/repository";
 import { localDate } from "../today/dayResolver";
 import type { YearEntry } from "./model";
-import { entryFromProgress, startDate } from "./model";
+import { archiveStart, entryFromProgress } from "./model";
 
 export const META_FIRST_USE = "firstUseDate";
 
@@ -37,8 +37,8 @@ export async function readFirstUse(storage: Pick<SyncStorage, "getMeta">): Promi
 }
 
 /**
- * Начало пользования ровно так, как его считает Year (`startDate`: меньшее из первого запуска и самой ранней записи
- * дня с ходами; нет ничего — сегодня). Архив играет только дни не раньше этой даты — Year другие не предлагает.
+ * Граница архива (`archiveStart`: меньшее из первого запуска и самой ранней записи дня с ходами; нет ничего — сегодня).
+ * Архив играет только дни не раньше этой даты; Year предлагает «сыграть» на тех же днях (раскраска Year от неё не зависит).
  * `null` — хранилище не читается (тогда границу не применяем: судить не по чему).
  */
 export async function readUseStart(storage: Pick<SyncStorage, "getMeta" | "listDays">, today: string): Promise<string | null> {
@@ -49,7 +49,7 @@ export async function readUseStart(storage: Pick<SyncStorage, "getMeta" | "listD
       const e = entryFromProgress(p);
       if (e) entries.set(p.date, e);
     }
-    return startDate(firstUse, entries, today);
+    return archiveStart(firstUse, entries, today);
   } catch {
     return null;
   }
