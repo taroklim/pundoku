@@ -158,5 +158,48 @@ describe.skipIf(unavailable !== null)("recovery integration (Postgres)", () => {
       const live = await pool.query<{ orphaned_at: Date | null }>(`SELECT orphaned_at FROM snapshots WHERE device_id = $1`, [a.id]);
       expect(live.rows[0]!.orphaned_at).toBeNull();
     });
+
+    describe("удаление ключа (deleteGroup) снимает orphaned_at", () => {
+      const orphanedAt = async (id: string) => (await pool.query<{ orphaned_at: Date | null }>(`SELECT orphaned_at FROM snapshots WHERE device_id = $1`, [id])).rows[0]?.orphaned_at;
+
+      it("инициатор — владелец снапшота группы: собственные снапшоты остальных устройств снова «живые», данные целы", async () => {
+        const { app } = pgHarness();
+        const a = await newDevice(app);
+        await putSnapshot(app, a, 1, { owner: "a" });
+        const key = (await createKey(app, a)).body.key as string;
+        const others = await Promise.all([newDevice(app), newDevice(app)]);
+        for (const [i, d] of others.entries()) {
+          await putSnapshot(app, d, 3, { own: i });
+          expect((await redeem(app, d, key)).status).toBe(200);
+          expect(await orphanedAt(d.id)).toBeTruthy(); // при вступлении собственный снапшот стал сиротой
+        }
+
+        expect((await deleteKey(app, a)).status).toBe(200);
+
+        for (const d of others) expect(await orphanedAt(d.id)).toBeNull();
+        for (const [i, d] of others.entries()) expect((await getSnapshot(app, d)).body.data).toEqual({ own: i });
+      });
+
+      it("инициатор — не владелец: снапшот группы переезжает к нему живым, у остальных сирота снят", async () => {
+        const { app } = pgHarness();
+        const a = await newDevice(app);
+        await putSnapshot(app, a, 1, { owner: "a" });
+        const key = (await createKey(app, a)).body.key as string;
+        const b = await newDevice(app);
+        const c = await newDevice(app);
+        await putSnapshot(app, b, 3, { own: "b" });
+        await putSnapshot(app, c, 3, { own: "c" });
+        await redeem(app, b, key);
+        await redeem(app, c, key);
+        expect(await orphanedAt(c.id)).toBeTruthy();
+
+        expect((await deleteKey(app, b)).status).toBe(200);
+
+        expect(await orphanedAt(c.id)).toBeNull();
+        expect(await orphanedAt(b.id)).toBeNull();
+        expect((await getSnapshot(app, b)).body.data).toEqual({ owner: "a" });
+        expect((await getSnapshot(app, c)).body.data).toEqual({ own: "c" });
+      });
+    });
   });
 });
