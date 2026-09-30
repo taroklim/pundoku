@@ -265,6 +265,8 @@ Gates: build → typecheck, lint, тесты web/engine/api (api с TEST_DATABAS
 | PD-59 | (смержен в main, pd-low-1 @ 9f6cd20, QA PASS) Low (dev PD-56): существующий тест «сбрасывает META_SYNC_STATE…» в `manager.linkchange.test.ts` не ловит мутацию — усилить (мутационно) | developer | P3 | completed | — |
 | PD-60 | Info (QA pd-low-1): (1) правка адреса на #/year + Stay + «‹ Today» + Leave ведёт на #/year, а не на Today (pushState поверх записи; достижимо только ручной правкой адреса); (2) нет тестов на проводку guard в App.tsx и ветку year < текущий в yearEmpty; условие archiveStart <= today в availableYears избыточно, комментарий вводит в заблуждение | developer | P3 | pending | — |
 | PD-58 | Low: свести тексты вне макета и два косметических отличия к макету/согласовать с владельцем (вопрос в «Ожидает решения») | designer | P3 | pending | решение владельца |
+| PD-61 | Деплой Pundoku публично (P1, владелец): подготовка в репо — nginx web как единый origin (SPA + /api прокси), Dockerfile web, prod docker-compose (127.0.0.1, Cloudflare Tunnel), .github/workflows/deploy.yml по образцу SUMMON, DEPLOY.md, бэкап Postgres минимально; ветка `pd-deploy`, НЕ мержить до проверки Coordinator'ом; Docker на машине нет — образы не проверить | developer | P1 | in_progress | — |
+| PD-62 | QA-ревью diff'а PD-61 (без живого Docker) | qa-tester | P1 | pending | PD-61 |
 | PD-20 | QA PD-14 (pd-14 @ 0026b2a): PASS с оговорками, блокеров и Medium нет; 4 Low + решение по слиянию → PD-31 | qa-tester | P1 | completed | PD-14 |
 | PD-31 | Фикс-проход pd-14 по QA PD-20 (pd-14 @ c574f13; gates зелёные: web 213, engine 105, api 77+2 skipped, интеграционные 7/7 на живой БД) | developer | P1 | completed | PD-20 |
 | PD-32 | PASS с оговорками (слияние 409 по источникам, 1500 дней без лишних PUT, gates, интеграционные 7/7); Low → PD-37. QA-регресс pd-14 @ c574f13 (перезапуск после сбоя контейнера; worktree /tmp/pundoku-qa/qa-pd32, БД pundoku_qa5, порты 3320/5320): слияние 409 по источникам, отсутствие лишних PUT при 1500 днях, сокращённый регресс PD-20, gates + интеграционные api-тесты | qa-tester | P1 | completed | PD-31 |
@@ -332,5 +334,6 @@ Gates: build → typecheck, lint, тесты web/engine/api (api с `TEST_DATABA
 ## Агенты (текущий статус)
 | Имя | Роль | Статус | Тикет | Обновлено |
 |-----|------|--------|-------|-----------|
-| pm-pundoku-5 | product-manager | working | idle — Low-пакет в main; бэклог только Low/ждёт владельца | 2026-09-30 |
+| pm-pundoku-5 | product-manager | working | PD-61 (деплой) | 2026-09-30 |
 | qa-pd51 | qa-tester | done | PD-53 | 2026-09-30 |
+| dev-deploy | developer | working | PD-61 | 2026-09-30 |
