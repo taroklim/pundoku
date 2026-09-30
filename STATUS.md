@@ -272,7 +272,7 @@ Gates: build → typecheck, lint, тесты web/engine/api (api с TEST_DATABAS
 | PD-65 | Страховки deploy.yml по QA PD-64: DOCKER_CONFIG только в env job deploy, pip install pyyaml перед gate-шагом, regex пароля `\z` вместо `$`, smoke ≤ ~10 мин; затем мерж pd-deploy в main локально без push | developer | P1 | completed | PD-64 |
 | PD-66 | Low: полноценные бэкапы Postgres SUMMON-уровня (локальная копия с ротацией, проверенное восстановление); до этого prod-данные считаем тестовыми | developer | P3 | pending | первый деплой |
 | PD-67 | Первый деплой на ноуте владельца — вести наблюдаемо (первый запуск workflow, smoke, Tunnel, установка PWA на iPhone; диагностика по DEPLOY.md) | product-manager | P1 | pending | владелец: репо/раннер/секреты |
-| PD-68 | P0: CI gates падает на Node 20 (.nvmrc) — vitest/jsdom в apps/web: `markAsUncloneable is not a function`; выровнять Node на 24 везде (.nvmrc, Dockerfile'ы, engines, README/DEPLOY.md, workflows); ветка `pd-node24`, мерж локально, push делает Coordinator | developer | P0 | in_progress | — |
+| PD-68 | (смержен в main, pd-node24 @ feeb5ca; gates на Node 24.19: engine 127, api 174, web 478; не проверено: сборка node:24-alpine, реальный CI) P0: CI gates падает на Node 20 (.nvmrc) — vitest/jsdom в apps/web: `markAsUncloneable is not a function`; выровнять Node на 24 везде (.nvmrc, Dockerfile'ы, engines, README/DEPLOY.md, workflows); ветка `pd-node24`, мерж локально, push делает Coordinator | developer | P0 | completed | — |
 | PD-20 | QA PD-14 (pd-14 @ 0026b2a): PASS с оговорками, блокеров и Medium нет; 4 Low + решение по слиянию → PD-31 | qa-tester | P1 | completed | PD-14 |
 | PD-31 | Фикс-проход pd-14 по QA PD-20 (pd-14 @ c574f13; gates зелёные: web 213, engine 105, api 77+2 skipped, интеграционные 7/7 на живой БД) | developer | P1 | completed | PD-20 |
 | PD-32 | PASS с оговорками (слияние 409 по источникам, 1500 дней без лишних PUT, gates, интеграционные 7/7); Low → PD-37. QA-регресс pd-14 @ c574f13 (перезапуск после сбоя контейнера; worktree /tmp/pundoku-qa/qa-pd32, БД pundoku_qa5, порты 3320/5320): слияние 409 по источникам, отсутствие лишних PUT при 1500 днях, сокращённый регресс PD-20, gates + интеграционные api-тесты | qa-tester | P1 | completed | PD-31 |
@@ -342,4 +342,3 @@ Gates: build → typecheck, lint, тесты web/engine/api (api с `TEST_DATABA
 |-----|------|--------|-------|-----------|
 | pm-pundoku-5 | product-manager | working | idle — деплой-подготовка в main; ждёт владельца (репо, раннер, секреты, Tunnel) | 2026-09-30 |
 | qa-pd51 | qa-tester | done | PD-53 | 2026-09-30 |
-| dev-node24 | developer | working | PD-68 | 2026-09-30 |
