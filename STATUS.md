@@ -217,6 +217,7 @@ Gates: build → typecheck, lint, тесты web/engine/api (api с TEST_DATABAS
 3. **Плеер Таймлапса по умолчанию:** контактный лист из девяти стадий; анимацию можно запустить отдельно.
 4. **Стиль PNG-отпечатка:** Rhythm (сравнение — `design/pd69-fingerprint-compare.html`). **Тема PNG — всегда светлая**, независимо от темы приложения (макет рисовал наследование — реализовать по решению владельца).
 5. Приняты рекомендации PM/дизайнера: заметки в ink остаются, undo и ластик цифр убраны («Erase notes»); режим выбирается до первого хода, заметка = ход, верная клетка заблокирована; в Year отдельного знака ink нет, в карточке дня и шите дня — тихая метка «ink»; win_rate Sudoku.com как есть; таймлапс только там, где лог цел (иначе тихая фраза); слияние двух устройств — первое решение дня побеждает. Если что-то из этого окажется проблемным при реализации — эскалировать владельцу, молча не менять.
+Сверка PD-74 с макетом (PM, 2026-10-01): шаг настройки «New puzzle» в Play (Difficulty / Ink mode / Start) — соответствует макету `cr-a3-play-setup`; заголовок шита en «Ink doesn't lift» — по макету. Проверить QA: запрет ink в архиве вживую, строка источника Today скрыта при виде выбора режима, uk-термины «нотатки/ляпки».
 Реализация: PD-74 (UI ink), PD-75 (UI таймлапса), PD-76 (QA), мелкие P3 PD-78/PD-79 — в проходах.
 
 ## Тикеты (fallback-трекер)
@@ -294,7 +295,7 @@ Gates: build → typecheck, lint, тесты web/engine/api (api с TEST_DATABAS
 | PD-79 | (берёт QA PD-76, первым шагом на main) Info (QA PD-73): один прогон chromium — reload через 600 мс после хода на Today не сохранил прогресс (1500 мс ок). Persist в PD-71 не менялся — проверить на main (до 10 прогонов chromium+webkit, реальная сборка); если воспроизводится — существовавший дефект (debounce/сохранение на pagehide), отдельный фикс | qa-tester | P3 | pending | — |
 | PD-72 | QA PD-70 (Playwright/node + реальная сборка, мутации) | qa-tester | P1 | completed | PD-70 |
 | PD-73 | QA PD-71 | qa-tester | P1 | completed | PD-71 |
-| PD-74 | UI чернильного режима по макету PD-69 + решения владельца 2026-10-01 (ветка `pd-74`; вход/шит правила, игровой экран без Undo, «Erase notes», метка режима в подписи дня, клякса M7, карточка ink-дня, Play-setup; + PD-78) | developer | P1 | in_progress | — |
+| PD-74 | UI чернильного режима по макету PD-69 + решения владельца 2026-10-01 (dev готов: pd-74 @ 73444b2, gates web 584/engine 178/api 174+3, живой chromium+webkit; ветка `pd-74`; вход/шит правила, игровой экран без Undo, «Erase notes», метка режима в подписи дня, клякса M7, карточка ink-дня, Play-setup; + PD-78) | developer | P1 | completed (dev; ждёт мержа и QA PD-76) | — |
 | PD-75 | UI таймлапса по макету PD-69 + решения (ветка `pd-75`; вход с карточки дня, контактный лист по умолчанию + запуск анимации, экспорт PNG Rhythm — всегда светлая тема, без цифр, «нет лога» тихой фразой) | developer | P1 | in_progress | — |
 | PD-76 | QA PD-74/PD-75: живой Playwright chromium+webkit, реальная сборка, отдельная БД и worktree, apple-design как ревьюер, en/uk/ru, светлая/тёмная, Dynamic Type, reduced motion/transparency, forced-colors, 320/390/430; включает PD-79 на main | qa-tester | P1 | pending | PD-74, PD-75 |
 | PD-20 | QA PD-14 (pd-14 @ 0026b2a): PASS с оговорками, блокеров и Medium нет; 4 Low + решение по слиянию → PD-31 | qa-tester | P1 | completed | PD-14 |
@@ -365,5 +366,5 @@ Gates: build → typecheck, lint, тесты web/engine/api (api с `TEST_DATABA
 | Имя | Роль | Статус | Тикет | Обновлено |
 |-----|------|--------|-------|-----------|
 | PM-Pundoku-7 | product-manager | working | PD-74/75/76 (релиз 1.1 UI) | 2026-10-01 |
-| dev-pd74 | developer | working | PD-74 (+PD-78), worktree pd-74 | 2026-10-01 |
+| dev-pd74 | developer | done | PD-74 (+PD-78) @ 73444b2 | 2026-10-01 |
 | dev-pd75 | developer | working | PD-75, worktree pd-75 | 2026-10-01 |
