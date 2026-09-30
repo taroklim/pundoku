@@ -26,9 +26,31 @@ export function detectLocale(languages: readonly string[] = navigator.languages 
   return "en";
 }
 
+/** Выбранный в Settings язык (PD-49): маленькая настройка интерфейса, не прогресс — лежит в localStorage, не в IndexedDB. */
+export const LOCALE_STORAGE_KEY = "pundoku.locale";
+
+export function storedLocale(): Locale | null {
+  try {
+    const v = localStorage.getItem(LOCALE_STORAGE_KEY);
+    return v !== null && isLocale(v) ? v : null;
+  } catch {
+    return null; // хранилище недоступно (приватный режим) — язык по системе
+  }
+}
+
+/** Сменить язык интерфейса и запомнить выбор. */
+export function setLocale(locale: Locale): Promise<unknown> {
+  try {
+    localStorage.setItem(LOCALE_STORAGE_KEY, locale);
+  } catch {
+    /* выбор живёт до перезагрузки */
+  }
+  return i18n.changeLanguage(locale);
+}
+
 void i18n.use(initReactI18next).init({
   resources,
-  lng: detectLocale(),
+  lng: storedLocale() ?? detectLocale(),
   fallbackLng: "en",
   supportedLngs: SUPPORTED_LOCALES,
   interpolation: { escapeValue: false },

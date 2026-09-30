@@ -79,6 +79,15 @@
   --mark-wax: #b3261e;
   --mark-wax-soft: #d07874;
   --scrim: rgba(0, 0, 0, 0.28);
+
+  /* Settings + ключ восстановления (PD-49, макет design/pd27-settings.html). Токены аддитивные.
+     --label-2-grouped: 13-px заголовки/подписи групп лежат на #F2F2F7, где --label-2 даёт 4.37:1 (< 4.5); #6A6A6E = 4.64:1.
+     --chip-bg: углубление плашек ключа/поля (label на нём 14.5:1). --dis-*: заблокированное основное действие 5.06:1. */
+  --label-2-grouped: #6a6a6e;
+  --chip-bg: #f2f2f7;
+  --dis-fill: #e5e5ea;
+  --dis-label: #5f5f63;
+  --wax-tint: rgba(179, 38, 30, 0.1);
 }
 
 /* Тёмная тема. dark-mode.md > Mobile: база #000, приподнятое #1C1C1E. */
@@ -109,6 +118,11 @@
     --mark-wax: #ff6b5e;
     --mark-wax-soft: #b14d46;
     --scrim: rgba(0, 0, 0, 0.5);
+    --label-2-grouped: #98989d; /* 7.31:1 на #000 */
+    --chip-bg: #2c2c2e;
+    --dis-fill: #2c2c2e;
+    --dis-label: #98989d; /* 4.85:1 */
+    --wax-tint: rgba(255, 107, 94, 0.16);
   }
 }
 
@@ -129,6 +143,8 @@
     /* Мягкий тон Year уходит с 62 % на 78 % (light #6670C1 = 4.42:1). */
     --mark-ink-soft: #6670c1;
     --mark-wax-soft: #c1544c;
+    --label-2-grouped: #3c3c43;
+    --dis-label: #3c3c43;
   }
   @media (prefers-color-scheme: dark) {
     :root {
@@ -141,6 +157,8 @@
       --rule-block: rgba(255, 255, 255, 0.6);
       --hairline: rgba(235, 235, 245, 0.5);
       --peer-fill: rgba(140, 140, 150, 0.26);
+      --label-2-grouped: #ebebf5;
+      --dis-label: #ebebf5;
     }
   }
 }

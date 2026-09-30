@@ -1,0 +1,516 @@
+/*
+ * Settings + «Ключ восстановления» (PD-49). Перенос из утверждённого макета design/pd27-settings.html (PD-48): сгруппированный
+ * inset-список, плашки ключа, action sheet, те же токены. Классы с префиксом `settings-` / `st-` — не пересекаются с
+ * Play/Today/Year. Экран — push внутри вкладки Today: таб-бар остаётся, поэтому нижний отступ даёт `.scroll` оболочки.
+ */
+.settings {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  padding-bottom: 24px;
+}
+
+.settings-navbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: calc(var(--sa-top) + 6px) max(8px, var(--sa-r)) 2px max(8px, var(--sa-l));
+}
+.settings-back {
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  color: var(--ink);
+  font-size: 1rem;
+  border-radius: 10px;
+  padding: 0 8px;
+  flex-wrap: wrap;
+}
+.settings-back svg {
+  width: 19px;
+  height: 19px;
+  flex: none;
+}
+.settings-large {
+  font-size: 1.62rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  margin: 0 0 4px;
+  padding: 0 max(16px, var(--sa-r)) 0 max(16px, var(--sa-l));
+  overflow-wrap: anywhere;
+}
+
+.settings-sec {
+  margin-top: 22px;
+}
+.settings-large + .settings-sec {
+  margin-top: 14px;
+}
+.settings-head {
+  margin: 0 0 6px;
+  padding: 0 max(16px, var(--sa-r)) 0 max(16px, var(--sa-l));
+  font-size: 0.82rem;
+  font-weight: 400;
+  color: var(--label-2-grouped);
+  overflow-wrap: anywhere;
+}
+.settings-foot {
+  margin: 7px 0 0;
+  padding: 0 max(16px, var(--sa-r)) 0 max(16px, var(--sa-l));
+  font-size: 0.82rem;
+  line-height: 1.35;
+  color: var(--label-2-grouped);
+  overflow-wrap: anywhere;
+}
+.settings-foot + .settings-card {
+  margin-top: 22px;
+}
+.settings-card {
+  margin: 0 max(16px, var(--sa-r)) 0 max(16px, var(--sa-l));
+  background: var(--elev);
+  border-radius: 12px;
+  box-shadow: var(--box-shadow);
+  overflow: hidden;
+}
+
+/* Строка: пол 44 pt, при крупном тексте переносится, а не обрезается. */
+.settings-row {
+  position: relative;
+  width: 100%;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin: 0;
+  padding: 11px 16px;
+  font-size: 1rem;
+  color: var(--label);
+  text-align: left;
+}
+.settings-row + .settings-row::before,
+.settings-row + .settings-rowbtn::before,
+.settings-rowbtn + .settings-rowbtn::before,
+.settings-rowbtn + .settings-row::before,
+.settings-pad + .settings-rowbtn::before {
+  content: "";
+  position: absolute;
+  left: 16px;
+  right: 0;
+  top: 0;
+  height: 1px;
+  background: var(--hairline);
+  transform: scaleY(0.5);
+  transform-origin: top;
+}
+.settings-row .lab {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.settings-row .val {
+  margin-left: auto;
+  color: var(--label-2);
+  overflow-wrap: anywhere;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+.settings-row .ck {
+  margin-left: auto;
+  color: var(--ink);
+  flex: none;
+  display: grid;
+  place-items: center;
+}
+.settings-row .ck svg {
+  width: 20px;
+  height: 20px;
+}
+.settings-row[aria-checked="false"] .ck {
+  visibility: hidden;
+}
+button.settings-row:active {
+  background: var(--ink-tint);
+}
+
+.settings-pad {
+  position: relative;
+  padding: 12px 16px 14px;
+}
+.settings-cap {
+  display: block;
+  font-size: 0.82rem;
+  color: var(--label-2);
+  margin: 0 0 8px;
+  overflow-wrap: anywhere;
+}
+.settings-hint {
+  margin: 8px 0 0;
+  font-size: 0.78rem;
+  line-height: 1.35;
+  color: var(--label-2);
+  overflow-wrap: anywhere;
+}
+
+/* Ключ: группы в своих углублениях, как поле — девять боксов. Сетка перетекает при любом размере текста
+   (на AX3 плашка — одна колонка), ничего не обрезается. */
+.settings-keybox {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(4.4em, 1fr));
+  gap: 6px;
+}
+.settings-keybox:focus-visible {
+  outline-offset: 4px;
+}
+.settings-chip {
+  background: var(--chip-bg);
+  border-radius: 8px;
+  padding: 9px 4px;
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  font-size: max(18px, 1.06rem);
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-align: center;
+  color: var(--label);
+  overflow-wrap: anywhere;
+  -webkit-user-select: all;
+  user-select: all;
+}
+
+/* Единственный сургучный блок экрана: «этого не вернуть». Абзац с иконкой, не алерт. */
+.settings-warn {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  margin: 0;
+  padding: 12px 16px 14px;
+  color: var(--wax);
+  font-size: 0.86rem;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+.settings-warn svg {
+  width: 1.15em;
+  height: 1.15em;
+  flex: none;
+  margin-top: 0.1em;
+}
+
+.settings-ta {
+  display: block;
+  width: 100%;
+  resize: none;
+  line-height: 1.45;
+  /* >= 16 px, иначе iOS масштабирует страницу при фокусе. */
+  font: inherit;
+  font-size: max(17px, 1rem);
+  color: var(--label);
+  background: var(--chip-bg);
+  border: 0;
+  border-radius: 8px;
+  padding: 10px 12px;
+  -webkit-appearance: none;
+  appearance: none;
+}
+.settings-ta.mono {
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  letter-spacing: 0.04em;
+  font-weight: 600;
+  font-size: max(17px, 1rem);
+}
+.settings-ta::placeholder {
+  color: var(--label-2);
+  opacity: 1;
+  font-weight: 400;
+  letter-spacing: normal;
+}
+/* Неверный ключ: сургучное кольцо, как на неверной цифре поля; дублируется текстом и значком. */
+.settings-pad.bad .settings-ta {
+  box-shadow: 0 0 0 2px var(--wax);
+}
+
+.settings-err {
+  display: flex;
+  gap: 6px;
+  align-items: flex-start;
+  margin: 0;
+  padding: 0 16px 12px;
+  color: var(--wax);
+  font-size: 0.82rem;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+.settings-primary + .settings-err,
+.settings-card + .settings-err {
+  padding-top: 8px;
+  padding-left: max(16px, var(--sa-l));
+  padding-right: max(16px, var(--sa-r));
+  margin-bottom: 0;
+}
+.settings-err svg {
+  width: 1.05em;
+  height: 1.05em;
+  flex: none;
+  margin-top: 0.12em;
+}
+.settings-ok {
+  display: flex;
+  gap: 6px;
+  align-items: flex-start;
+  margin: 0 0 8px;
+  padding: 0 max(16px, var(--sa-r)) 0 max(16px, var(--sa-l));
+  color: var(--ink);
+  font-size: 0.86rem;
+  font-weight: 600;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+.settings-ok svg {
+  width: 1.15em;
+  height: 1.15em;
+  flex: none;
+  margin-top: 0.1em;
+}
+
+/* Основное действие — под карточкой, низко (зона большого пальца); тот же компонент, что «Share» на карточке дня. */
+.settings-primary {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  text-align: center;
+  width: calc(100% - max(16px, var(--sa-r)) - max(16px, var(--sa-l)));
+  margin: 12px max(16px, var(--sa-r)) 0 max(16px, var(--sa-l));
+  min-height: 50px;
+  padding: 10px 16px;
+  border-radius: 12px;
+  background: var(--ink);
+  color: var(--on-ink);
+  font-size: max(17px, 1rem);
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+.settings-primary:active {
+  opacity: 0.8;
+}
+.settings-primary[aria-disabled="true"] {
+  background: var(--dis-fill);
+  color: var(--dis-label);
+}
+.settings-secondary {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  width: calc(100% - max(16px, var(--sa-r)) - max(16px, var(--sa-l)));
+  margin: 4px max(16px, var(--sa-r)) 0 max(16px, var(--sa-l));
+  min-height: 44px;
+  padding: 8px 16px;
+  border-radius: 12px;
+  color: var(--ink);
+  font-size: max(17px, 1rem);
+  overflow-wrap: anywhere;
+}
+.settings-secondary:active {
+  background: var(--ink-tint);
+}
+.settings-spin {
+  width: 1em;
+  height: 1em;
+  flex: none;
+  border-radius: 50%;
+  border: 2px solid currentColor;
+  border-top-color: transparent;
+  animation: settings-spin 0.8s linear infinite;
+}
+@keyframes settings-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.settings-rowbtn {
+  position: relative;
+  width: 100%;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 11px 16px;
+  font-size: 1rem;
+  color: var(--ink);
+  text-align: center;
+  overflow-wrap: anywhere;
+}
+.settings-rowbtn svg {
+  width: 1.1em;
+  height: 1.1em;
+  flex: none;
+}
+.settings-rowbtn:active {
+  background: var(--ink-tint);
+}
+.settings-rowbtn[aria-disabled="true"] {
+  color: var(--label-2);
+}
+.settings-rowbtn.destructive {
+  color: var(--wax);
+}
+.settings-rowbtn.destructive:active {
+  background: var(--wax-tint);
+}
+
+/* Шестерёнка в тулбаре Today: действие тулбара, не вкладка (макет §3). */
+.gear-btn {
+  width: 44px;
+  height: 44px;
+  margin: -8px -10px -8px 0;
+  flex: none;
+  display: grid;
+  place-items: center;
+  color: var(--label-2);
+  border-radius: 22px;
+}
+.gear-btn:active {
+  background: var(--ink-tint);
+  color: var(--ink);
+}
+.gear-btn svg {
+  width: 24px;
+  height: 24px;
+}
+
+/* ---------- Action sheet (макет §5): действие сверху, «Отмена» отдельной группой ---------- */
+.st-scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  background: var(--scrim);
+  display: flex;
+  align-items: flex-end;
+  animation: st-fade 0.22s linear;
+}
+.st-asheet {
+  width: 100%;
+  max-height: 92%;
+  overflow-y: auto;
+  padding: 0 max(8px, var(--sa-l)) calc(8px + var(--sa-bot)) max(8px, var(--sa-r));
+  animation: st-rise 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.st-asheet:focus {
+  outline: none;
+}
+.st-agrp {
+  background: var(--elev);
+  border-radius: 14px;
+  overflow: hidden;
+  margin-top: 8px;
+  box-shadow: var(--box-shadow);
+}
+.st-ahead {
+  padding: 15px 16px;
+  text-align: center;
+  border-bottom: 1px solid var(--hairline);
+}
+.st-ahead h3 {
+  margin: 0;
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--label);
+  overflow-wrap: anywhere;
+}
+.st-ahead p {
+  margin: 5px 0 0;
+  font-size: 0.82rem;
+  line-height: 1.35;
+  color: var(--label-2);
+  overflow-wrap: anywhere;
+}
+.st-asheet button {
+  width: 100%;
+  min-height: 57px;
+  padding: 14px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  font-size: max(17px, 1rem);
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}
+.st-asheet button:active {
+  background: var(--ink-tint);
+}
+.st-asheet button.destructive {
+  color: var(--wax);
+  font-weight: 600;
+}
+.st-asheet button.destructive:active {
+  background: var(--wax-tint);
+}
+.st-asheet button.cancel {
+  font-weight: 600;
+}
+@keyframes st-rise {
+  from {
+    transform: translateY(110%);
+  }
+  to {
+    transform: none;
+  }
+}
+@keyframes st-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Reduced motion: шит появляется кроссфейдом, без подъёма; спиннер медленнее. */
+@media (prefers-reduced-motion: reduce) {
+  .st-asheet {
+    animation: st-fade 0.16s linear;
+  }
+  .settings-spin {
+    animation-duration: 2.4s;
+  }
+}
+
+/* Forced colors: смысл, который несли чернила и сургуч, держат иконки и слова. */
+@media (forced-colors: active) {
+  .settings-card,
+  .st-agrp {
+    border: 1px solid CanvasText;
+  }
+  .settings-row + .settings-row::before,
+  .settings-row + .settings-rowbtn::before,
+  .settings-rowbtn + .settings-rowbtn::before,
+  .settings-rowbtn + .settings-row::before,
+  .settings-pad + .settings-rowbtn::before {
+    background: CanvasText;
+  }
+  .settings-primary {
+    border: 1px solid ButtonText;
+  }
+  .settings-primary[aria-disabled="true"] {
+    border-style: dashed;
+  }
+  .settings-chip,
+  .settings-ta {
+    border: 1px solid CanvasText;
+  }
+  .settings-pad.bad .settings-ta {
+    box-shadow: none;
+    outline: 2px solid CanvasText;
+  }
+  .st-scrim {
+    background: Canvas;
+  }
+  .settings-back {
+    color: LinkText;
+  }
+}

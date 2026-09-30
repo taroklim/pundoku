@@ -214,6 +214,54 @@ export class SyncManager {
     return this.kick(pull);
   }
 
+  /**
+   * Токен устройства для вызовов `/api/recovery/*` (PD-27). Нет токена (первый запуск без сети) — пробуем
+   * зарегистрироваться циклом синхронизации. `revalidate` — сервер ответил 401: цикл с `pull` сам сбросит
+   * неизвестный серверу токен и заведёт новый (локальные данные не теряются), затем берём актуальный.
+   */
+  async ensureToken(revalidate = false): Promise<string | null> {
+    if (this.disposed) return null;
+    if (this.started) await this.booted;
+    if (this.token && !revalidate) return this.token;
+    await this.syncNow(revalidate);
+    return this.token;
+  }
+
+  /**
+   * Устройство вступило в группу/вышло из неё/группу удалили (PD-27): токен устройства НЕ меняется, меняется
+   * только то, чей снапшот сервер отдаёт на этот токен. Поэтому подтверждённое серверное состояние (`state`)
+   * больше не годится: сбрасываем его и `META_SYNC_STATE` и делаем первую синхронизацию заново. `integrate` при
+   * `state === null` сливает снапшот группы с локальными днями (ничего не теряется, `merge.ts`), дальше — штатный
+   * цикл PUT/409. Открытые экраны узнают о новых данных через `onRemoteApplied` (как при обычном восстановлении).
+   * Возвращает `true`, если новый снапшот уже получен и слит; `false` — сети нет/ошибка: цикл повторится сам
+   * (`scheduleRetry`, `online`), локальные данные целы.
+   */
+  async resetAfterLinkChange(): Promise<boolean> {
+    if (this.disposed) return false;
+    if (this.started) await this.booted;
+    // Идущий цикл дописывает состояние старого снапшота — ждём его, иначе он затрёт сброс.
+    while (this.running) await this.running.catch(() => undefined);
+    this.state = null;
+    this.pulled = false;
+    this.wantPull = true;
+    this.compressStep = 0;
+    this.failures = 0;
+    this.freshToken = false;
+    if (this.retryTimer) {
+      clearTimeout(this.retryTimer);
+      this.retryTimer = null;
+    }
+    // Новый снапшот может оказаться читаемым (`newer_schema`) или влезть по размеру (`too_large`) — снимаем блокировку.
+    this.setStatus({ phase: "idle", error: null, version: 0 });
+    try {
+      await this.deps.storage.setMeta(META_SYNC_STATE, null);
+    } catch {
+      /* хранилище недоступно — состояние в памяти уже сброшено */
+    }
+    await this.syncNow(true);
+    return this.pulled && this.status.phase !== "blocked";
+  }
+
   dispose(): void {
     this.disposed = true;
     if (this.debounceTimer) clearTimeout(this.debounceTimer);

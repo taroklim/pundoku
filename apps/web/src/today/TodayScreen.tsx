@@ -35,8 +35,8 @@ function isRealDate(ymd: string): boolean {
  * панель 1–9. После решения — карточка дня («Your path»: heatmap, время, техника, win rate) и
  * Grid ∞ с посадкой последней клетки дня (M5). Источник сетки — `DayStore`: API либо фолбэк.
  */
-export function TodayScreen() {
-  return <DayView store={dayStore} />;
+export function TodayScreen({ onOpenSettings }: { onOpenSettings?: () => void } = {}) {
+  return <DayView store={dayStore} onOpenSettings={onOpenSettings} />;
 }
 
 /** Архив (PD-33): режим экрана для прошлой даты — заголовок «Archive», кнопка «‹ Year», без Grid ∞. */
@@ -50,7 +50,7 @@ export interface ArchiveProps {
  * Одно поле и одна карточка результата на два экрана: сегодняшний день (`dayStore`) и архивный (`archiveStore`,
  * `archive` задан). Компонент поля/панели/карточки общие — различаются только шапка, тексты состояний и Grid ∞.
  */
-export function DayView({ store, archive }: { store: DayStore; archive?: ArchiveProps }) {
+export function DayView({ store, archive, onOpenSettings }: { store: DayStore; archive?: ArchiveProps; onOpenSettings?: () => void }) {
   const { t, i18n } = useTranslation();
   const rawSnap = useSyncExternalStore(store.subscribe, store.getSnapshot);
   // Архив: стор мог ещё держать другую дату (первый кадр до эффекта) — показываем «загрузку», а не чужую партию.
@@ -121,8 +121,16 @@ export function DayView({ store, archive }: { store: DayStore; archive?: Archive
           </button>
         )}
         <h1 className="title">{archive ? t("archive.title") : t("tabs.today")}</h1>
+        {/* Шестерёнка (PD-49): действие тулбара, а не четвёртая вкладка; ведёт на `#/settings`. */}
+        {!archive && onOpenSettings && (
+          <button type="button" className="gear-btn" onClick={onOpenSettings} aria-label={t("settings.open")} data-testid="open-settings">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
+              <circle cx="12" cy="12" r="3.4" />
+              <path d="M12 2.9v2.4M12 18.7v2.4M21.1 12h-2.4M5.3 12H2.9M18.4 5.6l-1.7 1.7M7.3 16.7l-1.7 1.7M18.4 18.4l-1.7-1.7M7.3 7.3 5.6 5.6" />
+            </svg>
+          </button>
+        )}
       </header>
-      {/* TODO(PD-12 → дизайн): шестерёнка настроек из макета — экрана настроек нет, значок не рисуем. */}
       <p className="subline">
         {dayLabel}
         {diffLabel && <> · {diffLabel}</>}
