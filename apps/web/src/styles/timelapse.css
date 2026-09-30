@@ -1,0 +1,555 @@
+/*
+ * Таймлапс и экспорт отпечатка (PD-75, макет PD-69 design/pd69-ink-timelapse.html §9–§11, §13–§14).
+ * Префикс `tl-` — чтобы не задеть общие стили карточки/шитов Year. Токены — из tokens.css (ничего не пересчитано);
+ * пятно клякса `--stain` в tokens.css пока нет (ink UI — PD-74), поэтому значения макета заданы локально на `.tl-root`.
+ * Размеры вне поля — в rem (Dynamic Type), текст переносится (`overflow-wrap`), блоки — `flex-wrap`.
+ */
+
+/* ---------- Строка входа в карточке дня ---------- */
+.tl-watch,
+.tl-start {
+  margin-top: 12px;
+  width: 100%;
+  min-height: 46px;
+  padding: 8px 12px;
+  border-radius: 11px;
+  background: var(--ink-tint);
+  color: var(--ink);
+  font-size: 0.95rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  text-align: center;
+}
+.tl-watch svg,
+.tl-start svg {
+  width: 19px;
+  height: 19px;
+  flex: none;
+}
+.tl-watch:active,
+.tl-start:active {
+  opacity: 0.82;
+}
+/* Повтора нет — честное предложение, а не мёртвая кнопка: тихая строка без иконки. */
+.tl-nolog {
+  margin: 12px 0 0;
+  padding: 10px 12px;
+  border-radius: 11px;
+  background: var(--bg-grouped);
+  color: var(--label-2-grouped);
+  font-size: 0.85rem;
+  overflow-wrap: anywhere;
+}
+.heat.tl-tap {
+  cursor: pointer;
+}
+
+/* ---------- Шит ---------- */
+.tl-root {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  --stain: 0.14;
+  --stain-edge: rgba(179, 38, 30, 0.38);
+}
+.tl-scrim {
+  position: absolute;
+  inset: 0;
+  background: var(--scrim);
+  animation: tlFade 0.22s linear;
+}
+.tl-sheet {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  margin: 0 auto;
+  max-width: 560px;
+  display: flex;
+  flex-direction: column;
+  max-height: 88dvh;
+  background: var(--bg);
+  color: var(--label);
+  border-radius: 16px 16px 0 0;
+  padding-bottom: calc(10px + var(--sa-bot));
+  animation: tlUp 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.tl-grabber {
+  flex: none;
+  width: 36px;
+  height: 5px;
+  margin: 6px auto 0;
+  border-radius: 3px;
+  background: var(--hairline);
+}
+.tl-head {
+  flex: none;
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  padding: 8px max(16px, var(--sa-r)) 0 max(16px, var(--sa-l));
+}
+.tl-head h2 {
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+  font-size: 1.18rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  overflow-wrap: anywhere;
+}
+.tl-head h2:focus {
+  outline: none;
+}
+.tl-done {
+  flex: none;
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 4px;
+  color: var(--ink);
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+.tl-sub {
+  flex: none;
+  margin: 2px max(16px, var(--sa-r)) 0 max(16px, var(--sa-l));
+  color: var(--label-2-grouped);
+  font-size: 0.84rem;
+  overflow-wrap: anywhere;
+}
+.tl-body {
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 0 max(16px, var(--sa-r)) 4px max(16px, var(--sa-l));
+}
+.tl-note {
+  margin: 0;
+  padding: 10px 0 0;
+  color: var(--label-2-grouped);
+  font-size: 0.78rem;
+  overflow-wrap: anywhere;
+}
+.tl-actions {
+  padding-top: 4px;
+}
+.tl-quiet {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 44px;
+  color: var(--ink);
+  font-size: 0.95rem;
+  font-weight: 500;
+}
+
+/* ---------- Контактный лист ---------- */
+.tl-contact {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(max(5.5rem, calc((100% - 16px) / 3)), 1fr));
+  gap: 8px;
+  padding-top: 10px;
+}
+.tl-contact figure {
+  margin: 0;
+  min-width: 0;
+}
+.tl-contact figcaption {
+  margin-top: 3px;
+  font-size: 0.72rem;
+  color: var(--label-2-grouped);
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+.mini {
+  display: grid;
+  grid-template-columns: repeat(9, 1fr);
+  gap: 1px;
+  background: var(--elev);
+  border-radius: 6px;
+  padding: 3px;
+}
+.mini i {
+  aspect-ratio: 1;
+  border-radius: 1px;
+  display: block;
+  background: var(--ink);
+}
+.mini i.g {
+  background: transparent;
+  box-shadow: inset 0 0 0 1px var(--hairline);
+}
+.mini i.e {
+  background: transparent;
+}
+.mini i.b {
+  background: var(--wax);
+  clip-path: polygon(0 0, 58% 0, 100% 42%, 100% 100%, 0 100%);
+}
+
+/* ---------- Плеер ---------- */
+.tl-board {
+  padding-top: 10px;
+  container-type: inline-size;
+}
+/* Клякса: три носителя смысла — пятно, неправильный силуэт внутри и сколотый угол (цвет один не несёт). */
+.tl-field .stain {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background: var(--wax);
+  opacity: var(--stain);
+  box-shadow: inset 0 0 0 1px var(--stain-edge);
+  border-radius: var(--cell-r);
+  clip-path: polygon(0 0, 62% 0, 100% 38%, 100% 100%, 0 100%);
+}
+.tl-field .stain::after {
+  content: "";
+  position: absolute;
+  left: 8%;
+  top: 10%;
+  width: 84%;
+  height: 80%;
+  background: var(--wax);
+  opacity: 0.55;
+  border-radius: 58% 42% 47% 53% / 44% 56% 44% 56%;
+  transform: rotate(-8deg);
+}
+.tl-field .stain.anim {
+  animation: tlBlotSpread 190ms cubic-bezier(0.2, 0.7, 0.3, 1) both;
+}
+.tl-field .d.tl-in {
+  animation: tlDigit 160ms cubic-bezier(0.2, 0.7, 0.3, 1) both;
+}
+.tl-meta {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 4px 10px;
+  padding-top: 10px;
+  color: var(--label-2-grouped);
+  font-size: 0.82rem;
+}
+.tl-meta .mono {
+  font-variant-numeric: tabular-nums;
+}
+.tl-scrub-wrap {
+  padding-top: 2px;
+}
+input[type="range"].tl-scrub {
+  -webkit-appearance: none;
+  appearance: none;
+  display: block;
+  width: 100%;
+  height: 44px;
+  margin: 0;
+  background: transparent;
+}
+input[type="range"].tl-scrub::-webkit-slider-runnable-track {
+  height: 4px;
+  border-radius: 2px;
+  background: var(--hairline);
+}
+input[type="range"].tl-scrub::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 26px;
+  height: 26px;
+  margin-top: -11px;
+  border-radius: 13px;
+  background: var(--elev);
+  box-shadow:
+    0 0 0 1px var(--hairline),
+    0 1px 3px rgba(0, 0, 0, 0.2);
+}
+input[type="range"].tl-scrub::-moz-range-track {
+  height: 4px;
+  border-radius: 2px;
+  background: var(--hairline);
+}
+input[type="range"].tl-scrub::-moz-range-thumb {
+  width: 26px;
+  height: 26px;
+  border: 1px solid var(--hairline);
+  border-radius: 13px;
+  background: var(--elev);
+}
+input[type="range"].tl-scrub:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 0;
+  border-radius: 8px;
+}
+.tl-transport {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.tbtn {
+  flex: none;
+  width: 44px;
+  height: 44px;
+  border-radius: 22px;
+  display: grid;
+  place-items: center;
+  color: var(--ink);
+}
+.tbtn svg {
+  width: 24px;
+  height: 24px;
+}
+.tbtn.big svg {
+  width: 30px;
+  height: 30px;
+}
+.tbtn:active,
+.tbtn[aria-pressed="true"] {
+  background: var(--ink-tint);
+}
+.tbtn[aria-disabled="true"] {
+  color: var(--label-2);
+  opacity: 0.5;
+}
+.tl-seg {
+  display: flex;
+  flex: none;
+  margin-left: auto;
+  gap: 2px;
+  padding: 2px;
+  border-radius: 9px;
+  background: var(--bg-grouped);
+}
+@media (prefers-color-scheme: dark) {
+  .tl-seg {
+    background: rgba(120, 120, 128, 0.24);
+  }
+  .tl-root {
+    --stain: 0.16;
+    --stain-edge: rgba(255, 107, 94, 0.42);
+  }
+  .tl-nolog {
+    background: rgba(120, 120, 128, 0.18);
+  }
+}
+.tl-seg button {
+  min-height: 44px;
+  padding: 0 10px;
+  border-radius: 7px;
+  color: var(--label);
+  font-size: 0.78rem;
+}
+.tl-seg button[aria-pressed="true"] {
+  background: var(--elev);
+  font-weight: 600;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
+}
+
+/* ---------- Экспорт отпечатка ---------- */
+.tl-fp-frame {
+  padding-top: 10px;
+}
+/* PNG всегда светлый (его публикуют на чужой фон) — предпросмотр тоже, независимо от темы приложения. */
+.tl-fp {
+  display: block;
+  width: auto;
+  max-width: 100%;
+  max-height: 60dvh;
+  margin: 0 auto;
+  aspect-ratio: 1080 / 1350;
+  border-radius: 12px;
+  background: #ffffff;
+  box-shadow: 0 0 0 1px var(--hairline);
+}
+.tl-fp-wait {
+  width: 100%;
+}
+.tl-share-block {
+  padding-top: 4px;
+}
+.tl-primary {
+  width: 100%;
+  min-height: 46px;
+  padding: 8px 12px;
+  border-radius: 11px;
+  background: var(--ink);
+  color: var(--on-ink);
+  font-size: 0.95rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.tl-primary svg {
+  width: 19px;
+  height: 19px;
+  flex: none;
+}
+.tl-primary:disabled {
+  background: var(--dis-fill);
+  color: var(--dis-label);
+}
+
+/* ---------- Движение ---------- */
+@keyframes tlFade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes tlUp {
+  from {
+    transform: translateY(26px);
+    opacity: 0;
+  }
+  to {
+    transform: none;
+    opacity: 1;
+  }
+}
+@keyframes tlBlotSpread {
+  0% {
+    transform: scale(0.35);
+    opacity: 0;
+  }
+  60% {
+    opacity: var(--stain);
+  }
+  100% {
+    transform: scale(1);
+    opacity: var(--stain);
+  }
+}
+@keyframes tlBlotFade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: var(--stain);
+  }
+}
+@keyframes tlDigit {
+  0% {
+    opacity: 0;
+    transform: scale(1.08);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+@keyframes tlDigitFade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+/* Reduce Motion: ничего не едет и не масштабируется — только затухание ≤ 140 мс (accessibility.md > Cognitive). */
+@media (prefers-reduced-motion: reduce) {
+  .tl-sheet {
+    animation: tlFade 140ms linear;
+  }
+  .tl-scrim {
+    animation-duration: 0.14s;
+  }
+  .tl-field .stain.anim {
+    animation: tlBlotFade 140ms linear both;
+  }
+  .tl-field .d.tl-in {
+    animation: tlDigitFade 140ms linear both;
+  }
+  .tl-field .ring {
+    transition: none;
+    animation: none;
+  }
+}
+
+/* ---------- Контраст и forced-colors ---------- */
+@media (prefers-contrast: more) {
+  .tl-root {
+    --stain: 0.2;
+    --stain-edge: rgba(179, 38, 30, 0.6);
+  }
+  .tl-note,
+  .tl-sub,
+  .tl-meta,
+  .tl-contact figcaption,
+  .tl-nolog {
+    color: var(--label);
+  }
+}
+@media (forced-colors: active) {
+  .tl-sheet,
+  .mini,
+  .tl-fp,
+  .tl-nolog {
+    border: 1px solid CanvasText;
+  }
+  .tl-watch,
+  .tl-start,
+  .tl-primary,
+  .tbtn,
+  .tl-seg button,
+  .tl-quiet {
+    border: 1px solid CanvasText;
+    forced-color-adjust: none;
+    background: Canvas;
+    color: CanvasText;
+  }
+  .tl-primary {
+    background: Highlight;
+    color: HighlightText;
+  }
+  .tl-primary:disabled {
+    background: Canvas;
+    color: GrayText;
+    border-color: GrayText;
+  }
+  .tl-seg button[aria-pressed="true"],
+  .tbtn[aria-pressed="true"] {
+    background: Highlight;
+    color: HighlightText;
+  }
+  .tl-field .ring {
+    border-color: Highlight;
+  }
+  /* Клякса остаётся формой и штриховкой, а не сургучом. */
+  .tl-field .stain {
+    forced-color-adjust: none;
+    background: CanvasText;
+    opacity: 1;
+    background-image: repeating-linear-gradient(45deg, Canvas 0 2px, CanvasText 2px 4px);
+  }
+  .tl-field .stain::after {
+    display: none;
+  }
+  .tl-field .cell.blot {
+    outline: 2px dashed CanvasText;
+    outline-offset: -2px;
+  }
+  .mini i {
+    forced-color-adjust: none;
+    border: 1px solid CanvasText;
+  }
+  .mini i.b {
+    background: CanvasText;
+  }
+  input[type="range"].tl-scrub::-webkit-slider-runnable-track {
+    background: CanvasText;
+  }
+  input[type="range"].tl-scrub::-webkit-slider-thumb {
+    background: Highlight;
+  }
+}

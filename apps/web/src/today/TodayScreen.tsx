@@ -145,7 +145,7 @@ export function DayView({ store, archive, onOpenSettings }: { store: DayStore; a
       {phase === "solved" && cardShown ? (
         <>
           {play && (
-            <ResultCard play={play} cardRef={cardRef} title={t("today.cardTitle")} winRate={winRate} winRateScope={archive ? "day" : "today"}>
+            <ResultCard play={play} cardRef={cardRef} title={t("today.cardTitle")} winRate={winRate} winRateScope={archive ? "day" : "today"} timelapse={isRealDate(snap.date) ? { date: snap.date, difficulty: snap.difficultyKnown ? difficulty : null } : undefined}>
               {sourceLabel && <p className="source">{sourceLabel}</p>}
               {archive && snap.late && (
                 <p className="source" data-testid="late-note">
