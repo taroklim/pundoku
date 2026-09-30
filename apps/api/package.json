@@ -5,7 +5,7 @@
   "description": "Pundoku api — минимальный Node/TS бэкенд: прокси Sudoku.com (Today) с кэшем/фолбэком + анонимный аккаунт устройства и снапшот прогресса.",
   "type": "module",
   "engines": {
-    "node": ">=20"
+    "node": ">=24"
   },
   "files": [
     "dist",
@@ -33,7 +33,7 @@
   "devDependencies": {
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.6",
-    "@types/node": "^22.20.4",
+    "@types/node": "^24.19.0",
     "@types/pg": "^8.23.1",
     "@types/supertest": "^7.2.1",
     "pino-pretty": "^13.1.3",

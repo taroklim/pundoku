@@ -2,7 +2,7 @@
 # Контекст сборки — корень репо (см. docker-compose.yml: context: ., dockerfile: apps/api/Dockerfile).
 
 # ---- этап 1: зависимости + сборка ----
-FROM node:20-alpine AS build
+FROM node:24-alpine AS build
 RUN corepack enable
 WORKDIR /repo
 # Сначала только манифесты — слой установки кэшируется, пока не меняются зависимости.
@@ -17,7 +17,7 @@ RUN pnpm --filter @pundoku/api... build
 RUN pnpm --filter @pundoku/api --prod deploy --legacy /out
 
 # ---- этап 2: рантайм ----
-FROM node:20-alpine
+FROM node:24-alpine
 WORKDIR /app
 ENV NODE_ENV=production
 # Не root: файлы принадлежат node (uid 1000). Приложение ничего не пишет на диск, миграции только читают

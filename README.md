@@ -19,7 +19,7 @@ eslint.config.js             — общий ESLint (flat config, typescript-esli
 
 ## Запуск
 
-Требования: Node 20+ (`.nvmrc`), pnpm 12 (`corepack enable` подхватит версию из `packageManager`).
+Требования: Node 24+ (`.nvmrc`), pnpm 12 (`corepack enable` подхватит версию из `packageManager`).
 
 ```sh
 pnpm i                      # зависимости всего workspace

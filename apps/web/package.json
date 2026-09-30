@@ -5,7 +5,7 @@
   "description": "Pundoku web — PWA-каркас для iPhone (Vite + React + TypeScript, vite-plugin-pwa, i18n en/uk/ru). Экран Play — PD-11.",
   "type": "module",
   "engines": {
-    "node": ">=20"
+    "node": ">=24"
   },
   "scripts": {
     "dev": "vite",
