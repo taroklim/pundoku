@@ -313,7 +313,7 @@ SUMMON `DEPLOY.md`) — отдельный тикет перед появлен�
 - **Сборка образов** `apps/web/Dockerfile` и `apps/api/Dockerfile` в Docker. Проверено вместо этого: те же команды
   (`pnpm install --frozen-lockfile --filter ...`, `pnpm --filter ... build`, `pnpm --filter @pundoku/api --prod deploy
   --legacy`) в изолированной папке, куда скопированы только файлы, которые копирует Dockerfile — сборка и prod-копия api
-  получаются. Не проверено: сам `corepack enable` + pnpm 12 на `node:20-alpine`, теги `node:20-alpine`/`nginx:1.27-alpine`.
+  получаются. Не проверено: сам `corepack enable` + pnpm 12 на `node:24-alpine`, теги `node:24-alpine`/`nginx:1.27-alpine`.
 - **`docker compose`**: локально (на машине разработки Docker нет) YAML проверен только парсером PyYAML; `docker compose
   config -q` запускается в гейтах `deploy.yml` на ubuntu-latest (там Docker есть) и на ноуте перед сборкой, но первый
   реальный прогон ещё впереди. Поведение

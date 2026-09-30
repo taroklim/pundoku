@@ -2,7 +2,7 @@
 # Контекст сборки — корень монорепо (docker-compose.yml: context: ., dockerfile: apps/web/Dockerfile).
 
 # ---- этап 1: зависимости + сборка (engine -> web) ----
-FROM node:20-alpine AS build
+FROM node:24-alpine AS build
 RUN corepack enable
 WORKDIR /repo
 # Сначала только манифесты — слой установки кэшируется, пока не меняются зависимости.
