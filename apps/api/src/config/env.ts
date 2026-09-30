@@ -81,12 +81,47 @@ function list(name: string, fallback: string[]): string[] {
     .filter(Boolean);
 }
 
+/** Dev-секрет только для development/test, чтобы `pnpm dev`/тесты работали без настройки. Вне dev — обязателен свой. */
+const DEV_RECOVERY_KEY_HMAC_SECRET = "pundoku-dev-only-recovery-hmac-secret-do-not-use-in-prod";
+export const RECOVERY_SECRET_MIN_BYTES = 32;
+
+export interface RecoveryConfig {
+  /** Секрет HMAC ключей восстановления (≥32 байт). Никогда не логируется. */
+  hmacSecret: Buffer;
+  /** true — взят dev-секрет по умолчанию (допустимо только в development/test). */
+  hmacSecretIsDevDefault: boolean;
+}
+
+/**
+ * Конфиг ключа восстановления (PD-27). Читает process.env в момент вызова и проверяется при старте сервера
+ * (main.ts), а не при импорте модуля: миграции и /health не должны зависеть от него. Ошибки — ConfigError без стека.
+ * Вне development/test секрет обязателен: без него HMAC ключей был бы предсказуем по исходникам.
+ */
+export function loadRecoveryConfig(): RecoveryConfig {
+  const nodeEnv = process.env.NODE_ENV ?? "development";
+  const isDev = nodeEnv === "development" || nodeEnv === "test";
+  const raw = process.env.RECOVERY_KEY_HMAC_SECRET;
+  const missing = raw === undefined || raw === "";
+  if (missing && !isDev) {
+    throw new ConfigError("Переменная окружения RECOVERY_KEY_HMAC_SECRET не задана: вне development нужен секрет ≥32 байт (например, `openssl rand -base64 48`)");
+  }
+  const secret = Buffer.from(missing ? DEV_RECOVERY_KEY_HMAC_SECRET : raw, "utf8");
+  if (secret.length < RECOVERY_SECRET_MIN_BYTES) {
+    throw new ConfigError(`Переменная окружения RECOVERY_KEY_HMAC_SECRET должна быть не короче ${RECOVERY_SECRET_MIN_BYTES} байт (сейчас ${secret.length})`);
+  }
+  return { hmacSecret: secret, hmacSecretIsDevDefault: missing };
+}
+
 export const env = {
   nodeEnv: process.env.NODE_ENV ?? "development",
   port: port("PORT", 3000),
   /** Читается лениво — /health и dev-запуск не должны падать без базы. */
   get databaseUrl(): string {
     return required("DATABASE_URL");
+  },
+  /** Ключ восстановления (PD-27). Лениво, как databaseUrl: проверяется при старте сервера, не при импорте. */
+  get recovery(): RecoveryConfig {
+    return loadRecoveryConfig();
   },
   /** Источник ежедневной сетки (Sudoku.com). Только через прокси, никогда из браузера. */
   sudokuComBaseUrl: process.env.SUDOKU_COM_BASE_URL ?? "https://sudoku.com/api/v2",

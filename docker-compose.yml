@@ -41,6 +41,8 @@ services:
       DAILY_FALLBACK_DIFFICULTY: ${DAILY_FALLBACK_DIFFICULTY:-medium}
       WEB_ORIGIN: ${WEB_ORIGIN:-http://localhost:5173}
       LOG_LEVEL: ${LOG_LEVEL:-info}
+      # Обязателен в production (≥32 байт), иначе api не стартует: `openssl rand -base64 48`.
+      RECOVERY_KEY_HMAC_SECRET: ${RECOVERY_KEY_HMAC_SECRET:-}
     ports:
       - "127.0.0.1:${PORT:-3000}:3000"
 

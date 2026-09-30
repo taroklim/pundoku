@@ -11,8 +11,9 @@ import { runMigrations } from "./db/migrate.js";
 import { PgDailyPuzzleRepo } from "./db/daily-puzzles-repo.js";
 import { PgDeviceRepo } from "./db/devices-repo.js";
 import { PgSnapshotRepo } from "./db/snapshots-repo.js";
+import { PgRecoveryRepo } from "./db/recovery-repo.js";
 import { createApp } from "./app.js";
-import { FakeGenerator, FakeSource, SAMPLE, silentLogger } from "./test/fakes.js";
+import { FakeGenerator, FakeSource, SAMPLE, TEST_HMAC_SECRET, silentLogger } from "./test/fakes.js";
 import { hashDeviceToken } from "./devices/tokens.js";
 
 const databaseUrl = process.env.TEST_DATABASE_URL ?? process.env.DATABASE_URL;
@@ -43,7 +44,8 @@ describe.skipIf(unavailable !== null)("integration (Postgres)", () => {
   const source = new FakeSource();
   const generator = new FakeGenerator();
   const app = createApp({
-    repos: { dailyPuzzles: new PgDailyPuzzleRepo(pool), devices: new PgDeviceRepo(pool), snapshots: new PgSnapshotRepo(pool) },
+    repos: { dailyPuzzles: new PgDailyPuzzleRepo(pool), devices: new PgDeviceRepo(pool), snapshots: new PgSnapshotRepo(pool), recovery: new PgRecoveryRepo(pool) },
+    recovery: { hmacSecret: TEST_HMAC_SECRET },
     dailySource: source,
     generator,
     logger: silentLogger,

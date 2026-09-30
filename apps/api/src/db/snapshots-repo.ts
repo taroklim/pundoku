@@ -34,7 +34,7 @@ export class PgSnapshotRepo implements SnapshotRepo {
        VALUES ($1, $2, $3, $4::jsonb, $5)
        ON CONFLICT (device_id) DO UPDATE
          SET version = EXCLUDED.version, updated_at = EXCLUDED.updated_at,
-             data = EXCLUDED.data, size_bytes = EXCLUDED.size_bytes, saved_at = now()
+             data = EXCLUDED.data, size_bytes = EXCLUDED.size_bytes, saved_at = now(), orphaned_at = NULL
          WHERE snapshots.version < EXCLUDED.version
        RETURNING ${COLUMNS}`,
       [w.deviceId, w.version, w.updatedAt, JSON.stringify(w.data), w.sizeBytes],

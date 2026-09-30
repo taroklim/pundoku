@@ -2,7 +2,8 @@ import { Router } from "express";
 import type { Snapshot, SnapshotRepo } from "./types.js";
 import { SNAPSHOT_MAX_BYTES } from "./types.js";
 import type { DeviceRepo } from "../devices/types.js";
-import { deviceIdOf, requireDevice } from "../devices/auth.js";
+import type { RecoveryRepo } from "../recovery/types.js";
+import { requireDevice, snapshotOwnerIdOf } from "../devices/auth.js";
 import { HttpError, badRequest, notFound } from "../lib/errors.js";
 
 interface SnapshotBody {
@@ -46,13 +47,16 @@ function parseBody(body: unknown): { version: number; updatedAt: Date; data: Rec
   return { version, updatedAt: parsedUpdatedAt, data };
 }
 
-/** GET/PUT /api/snapshot — снапшот прогресса устройства (сервер — источник правды между устройствами). */
-export function snapshotRouter(devices: DeviceRepo, snapshots: SnapshotRepo): Router {
+/**
+ * GET/PUT /api/snapshot — снапшот прогресса (сервер — источник правды между устройствами). Читает/пишет по
+ * `snapshotOwnerId`: для устройства в группе синхронизации (PD-27) это владелец группы, иначе само устройство.
+ */
+export function snapshotRouter(devices: DeviceRepo, recovery: RecoveryRepo, snapshots: SnapshotRepo): Router {
   const router = Router();
-  router.use(requireDevice(devices));
+  router.use(requireDevice(devices, recovery));
 
   router.get("/", async (_req, res) => {
-    const snapshot = await snapshots.get(deviceIdOf(res));
+    const snapshot = await snapshots.get(snapshotOwnerIdOf(res));
     if (!snapshot) throw notFound("snapshot_not_found", "У устройства ещё нет снапшота");
     res.setHeader("Cache-Control", "no-store");
     res.json(toResponse(snapshot));
@@ -64,7 +68,7 @@ export function snapshotRouter(devices: DeviceRepo, snapshots: SnapshotRepo): Ro
     if (sizeBytes > SNAPSHOT_MAX_BYTES) {
       throw new HttpError(413, "snapshot_too_large", `data больше лимита ${SNAPSHOT_MAX_BYTES} байт (${sizeBytes})`);
     }
-    const result = await snapshots.upsertIfNewer({ deviceId: deviceIdOf(res), version, updatedAt, data, sizeBytes });
+    const result = await snapshots.upsertIfNewer({ deviceId: snapshotOwnerIdOf(res), version, updatedAt, data, sizeBytes });
     res.setHeader("Cache-Control", "no-store");
     if (!result.stored) {
       throw new HttpError(
