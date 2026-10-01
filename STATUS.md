@@ -299,7 +299,9 @@ Gates: build → typecheck, lint, тесты web/engine/api (api с TEST_DATABAS
 | PD-74 | UI чернильного режима по макету PD-69 + решения владельца 2026-10-01 (dev готов: pd-74 @ 73444b2, gates web 584/engine 178/api 174+3, живой chromium+webkit; ветка `pd-74`; вход/шит правила, игровой экран без Undo, «Erase notes», метка режима в подписи дня, клякса M7, карточка ink-дня, Play-setup; + PD-78) | developer | P1 | completed (dev; ждёт мержа и QA PD-76) | — |
 | PD-75 | UI таймлапса по макету PD-69 + решения (ветка `pd-75`; вход с карточки дня, контактный лист по умолчанию + запуск анимации, экспорт PNG Rhythm — всегда светлая тема, без цифр, «нет лога» тихой фразой) | developer | P1 | completed (dev; pd-75 @ bfeedbf, смержен локально; gates web 591; ждёт QA PD-76) | — |
 | PD-80 | Мелкий фикс: «Moves» в ink-дне (подпись PNG «N moves · M blots» и «Move a of b» в плеере) считает ходы игрока, а не кадры: клякса = один ход (ветка `pd-80` от слитого main) | developer | P2 | completed (pd-80 @ de5a52d смержен в main, web 624/624) | PD-74, PD-75 |
-| PD-76 | QA PD-74/PD-75 на слитом main (PD-74 @ 73444b2 + PD-75 @ bfeedbf); вживую проверить: запрет ink в архиве, карточка Year (шит дня ink + вход таймлапса), «Moves» в ink-дне после PD-80, строка источника Today при виде выбора режима: живой Playwright chromium+webkit, реальная сборка, отдельная БД и worktree, apple-design как ревьюер, en/uk/ru, светлая/тёмная, Dynamic Type, reduced motion/transparency, forced-colors, 320/390/430; включает PD-79 на main | qa-tester | P1 | pending | PD-74, PD-75 |
+| PD-76 | QA PD-74/PD-75 на слитом main (PD-74 @ 73444b2 + PD-75 @ bfeedbf); вживую проверить: запрет ink в архиве, карточка Year (шит дня ink + вход таймлапса), «Moves» в ink-дне после PD-80, строка источника Today при виде выбора режима: живой Playwright chromium+webkit, реальная сборка, отдельная БД и worktree, apple-design как ревьюер, en/uk/ru, светлая/тёмная, Dynamic Type, reduced motion/transparency, forced-colors, 320/390/430; включает PD-79 на main | qa-tester | P1 | in_progress | PD-74, PD-75 |
+| PD-81 | Дизайн (владелец 2026-10-01): 3 варианта «живости» (эффекты/анимации) в рамках Apple-стиля и макета B; интерактивные HTML-демки + сводка (S/M/L, перф/батарея, reduced-motion фолбэк, рекомендация) — `design/pd81-motion-variants.html/.md`; НЕ реализация | designer | P2 | in_progress | — |
+| PD-82 | iPhone-чек-лист для владельца `docs/ios-checklist.html` (пп. 1–51, чекбоксы, копирование результата) + самопроверка пунктов Playwright webkit-эмуляцией iPhone 16 (`docs/ios-selfcheck/`); владельцу остаётся только непокрываемое эмуляцией | developer | P2 | in_progress | — |
 | PD-20 | QA PD-14 (pd-14 @ 0026b2a): PASS с оговорками, блокеров и Medium нет; 4 Low + решение по слиянию → PD-31 | qa-tester | P1 | completed | PD-14 |
 | PD-31 | Фикс-проход pd-14 по QA PD-20 (pd-14 @ c574f13; gates зелёные: web 213, engine 105, api 77+2 skipped, интеграционные 7/7 на живой БД) | developer | P1 | completed | PD-20 |
 | PD-32 | PASS с оговорками (слияние 409 по источникам, 1500 дней без лишних PUT, gates, интеграционные 7/7); Low → PD-37. QA-регресс pd-14 @ c574f13 (перезапуск после сбоя контейнера; worktree /tmp/pundoku-qa/qa-pd32, БД pundoku_qa5, порты 3320/5320): слияние 409 по источникам, отсутствие лишних PUT при 1500 днях, сокращённый регресс PD-20, gates + интеграционные api-тесты | qa-tester | P1 | completed | PD-31 |
@@ -367,7 +369,10 @@ Gates: build → typecheck, lint, тесты web/engine/api (api с `TEST_DATABA
 ## Агенты (текущий статус)
 | Имя | Роль | Статус | Тикет | Обновлено |
 |-----|------|--------|-------|-----------|
-| PM-Pundoku-7 | product-manager | idle | релиз 1.1: стоп по просьбе владельца 2026-10-01 | 2026-10-01 |
+| PM-Pundoku-8 | product-manager | working | PD-76 | 2026-10-01 |
+| QA-Pundoku | qa-tester | working | PD-76 | 2026-10-01 |
+| Dev-Pundoku-iOS | developer | working | PD-82 | 2026-10-01 |
+| Designer-Pundoku | designer | working | PD-81 | 2026-10-01 |
 
 ## Чек-пойнт 2026-10-01 (конец сессии PM-Pundoku-7)
 - **Сделано:** решения владельца по релизу 1.1 зафиксированы; PD-74 (UI ink, pd-74 @ 73444b2), PD-75 (UI таймлапса/PNG Rhythm, pd-75 @ bfeedbf), PD-80 (счёт ходов в ink, pd-80 @ de5a52d) смержены в локальный main; gates на слитом: build/typecheck/lint, web 624, engine 178 (api не затронут, 174+3). PD-78 сделан в PD-74. PD-79 закрыт: не дефект.
