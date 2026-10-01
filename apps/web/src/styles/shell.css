@@ -36,6 +36,23 @@ body {
   -webkit-tap-highlight-color: transparent;
 }
 
+/* Ручка шита (grabber + заголовок): отсюда шит закрывается жестом вниз (useSheetSwipe, PD-85). touch-action: none — чтобы
+   браузер не забирал вертикальный жест под прокрутку; содержимое шита (его прокрутка) этим не затронуто. */
+.sheet-handle {
+  touch-action: none;
+}
+/* Сам grabber 36x5 — не цель для пальца: невидимая зона вокруг. */
+.grabber.sheet-handle,
+.tl-grabber.sheet-handle {
+  position: relative;
+}
+.grabber.sheet-handle::before,
+.tl-grabber.sheet-handle::before {
+  content: "";
+  position: absolute;
+  inset: -8px -48px -14px;
+}
+
 button {
   font: inherit;
   color: inherit;

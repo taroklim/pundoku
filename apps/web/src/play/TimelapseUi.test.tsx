@@ -126,6 +126,19 @@ describe("TimelapseSheet", () => {
     expect(document.querySelector(".tl-sub")!.textContent).toContain("Medium");
   });
 
+  it("PD-85: на контактном листе есть Cancel слева (в паре с Done), он закрывает шит; в плеере Cancel нет (там «Nine stages»)", () => {
+    const onClose = vi.fn();
+    act(() => root.render(<TimelapseSheet play={solvedPlay()} date="2026-09-30" difficulty="medium" onClose={onClose} />));
+    const cancel = q("tl-cancel")!;
+    expect(cancel.textContent).toBe("Cancel");
+    expect(document.querySelector(".tl-done")!.textContent).toBe("Done");
+    click(cancel);
+    expect(onClose).toHaveBeenCalledTimes(1);
+    click(q("tl-start"));
+    expect(q("tl-cancel")).toBeNull();
+    expect(q("tl-back")).not.toBeNull();
+  });
+
   it("«Start» открывает плеер на нулевом ходу: Move 0 of N, ползунок «Move», транспорт с aria-label, скорость Slow/Normal/Fast", () => {
     sheet();
     click(q("tl-start"));

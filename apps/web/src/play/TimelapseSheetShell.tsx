@@ -2,28 +2,34 @@ import type { ReactNode } from "react";
 import { useEffect, useId, useRef } from "react";
 import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
+import { useSheetSwipe } from "../shell/useSheetSwipe";
 
 interface ShellProps {
   title: string;
   sub?: string;
   onClose: () => void;
   testId: string;
+  /** Подпись кнопки Cancel/Back слева (HIG sheets.md: «Done» не бывает без пары). Нет — кнопки слева нет. */
+  cancelLabel?: string;
   children: ReactNode;
 }
 
 /**
- * Шит Таймлапса/экспорта (макет PD-69 §9): один за раз, понятный выход («Done»), модальный. Рисуется порталом в
+ * Шит Таймлапса/экспорта (макет PD-69 §9): один за раз, понятный выход («Done» + при необходимости Cancel слева;
+ * закрытие жестом вниз по grabber/заголовку — `useSheetSwipe`), модальный. Рисуется порталом в
  * `body` — поверх шита Year, если открыт из него. Пока открыт: остальное содержимое `body` — `inert` (снимается при
  * закрытии; то, что уже было `inert`, не трогаем), Escape закрывает ТОЛЬКО этот шит (перехват на `window` в фазе
  * захвата, до слушателя Year), фокус уходит на заголовок и возвращается на то, что открыло шит.
  */
-export function TimelapseSheetShell({ title, sub, onClose, testId, children }: ShellProps) {
+export function TimelapseSheetShell({ title, sub, onClose, testId, cancelLabel, children }: ShellProps) {
   const { t } = useTranslation();
   const rootRef = useRef<HTMLDivElement>(null);
   const headRef = useRef<HTMLHeadingElement>(null);
+  const sheetRef = useRef<HTMLElement>(null);
   const titleId = useId();
   const closeRef = useRef(onClose);
   closeRef.current = onClose;
+  const swipe = useSheetSwipe(sheetRef, () => closeRef.current());
 
   useEffect(() => {
     const opener = document.activeElement instanceof HTMLElement ? document.activeElement : null;
@@ -51,9 +57,14 @@ export function TimelapseSheetShell({ title, sub, onClose, testId, children }: S
   return createPortal(
     <div className="tl-root" ref={rootRef} data-testid={testId}>
       <div className="tl-scrim" onClick={() => closeRef.current()} aria-hidden="true" />
-      <section className="tl-sheet" role="dialog" aria-modal="true" aria-labelledby={titleId}>
-        <div className="tl-grabber" aria-hidden="true" />
-        <header className="tl-head">
+      <section ref={sheetRef} className="tl-sheet" role="dialog" aria-modal="true" aria-labelledby={titleId}>
+        <div className="tl-grabber sheet-handle" aria-hidden="true" {...swipe} />
+        <header className={`tl-head sheet-handle${cancelLabel ? " has-cancel" : ""}`} {...swipe}>
+          {cancelLabel && (
+            <button type="button" className="tl-cancel" data-testid="tl-cancel" onClick={() => closeRef.current()}>
+              {cancelLabel}
+            </button>
+          )}
           <h2 id={titleId} ref={headRef} tabIndex={-1}>
             {title}
           </h2>

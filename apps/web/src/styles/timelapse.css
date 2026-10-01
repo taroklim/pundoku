@@ -63,6 +63,8 @@
   animation: tlFade 0.22s linear;
 }
 .tl-sheet {
+  /* Контейнер для @container ниже: шапка и сегмент скорости перестраиваются от ширины шита (в rem — следует Dynamic Type). */
+  container-type: inline-size;
   position: absolute;
   left: 0;
   right: 0;
@@ -100,7 +102,9 @@
   font-size: 1.18rem;
   font-weight: 700;
   letter-spacing: -0.01em;
-  overflow-wrap: anywhere;
+  /* Не рвём слово посреди без нужды (PD-84): сначала перенос по пробелам и переносы по слогам, посимвольно — лишь если слово длиннее строки. */
+  overflow-wrap: break-word;
+  hyphens: auto;
 }
 .tl-head h2:focus {
   outline: none;
@@ -122,7 +126,47 @@
   margin: 2px max(16px, var(--sa-r)) 0 max(16px, var(--sa-l));
   color: var(--label-2-grouped);
   font-size: 0.84rem;
-  overflow-wrap: anywhere;
+  overflow-wrap: break-word;
+  hyphens: auto;
+}
+/* Cancel слева (HIG sheets.md: Done всегда в паре с Cancel/Back). */
+.tl-cancel {
+  flex: none;
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+  min-width: 44px;
+  padding: 0 4px;
+  color: var(--ink);
+  font-size: 0.95rem;
+  font-weight: 500;
+}
+.tl-head.has-cancel {
+  align-items: center;
+}
+.tl-head.has-cancel h2 {
+  text-align: center;
+}
+/* Узкий шит (или крупный текст): Cancel и Done в первой строке по краям, заголовок под ними на всю ширину. */
+@container (max-width: 22rem) {
+  .tl-head {
+    flex-wrap: wrap;
+    align-items: center;
+  }
+  .tl-head h2 {
+    order: 3;
+    flex: 1 0 100%;
+  }
+  .tl-head .tl-cancel,
+  .tl-head .tl-done {
+    order: 1;
+  }
+  .tl-head .tl-done {
+    margin-left: auto;
+  }
+  .tl-head.has-cancel h2 {
+    text-align: start;
+  }
 }
 .tl-body {
   overflow-y: auto;
@@ -293,6 +337,7 @@ input[type="range"].tl-scrub:focus-visible {
   justify-content: center;
   flex-wrap: wrap;
   gap: 6px;
+  min-width: 0;
 }
 .tbtn {
   flex: none;
@@ -321,7 +366,11 @@ input[type="range"].tl-scrub:focus-visible {
 }
 .tl-seg {
   display: flex;
-  flex: none;
+  /* Не flex:none: на узком экране/крупном тексте сегмент уходит на свою строку, а его кнопки переносятся внутри (PD-84). */
+  flex: 0 1 auto;
+  flex-wrap: wrap;
+  min-width: 0;
+  max-width: 100%;
   margin-left: auto;
   gap: 2px;
   padding: 2px;
@@ -341,12 +390,16 @@ input[type="range"].tl-scrub:focus-visible {
   }
 }
 .tl-seg button {
+  flex: 1 1 auto;
   min-height: 44px;
   min-width: 44px;
+  max-width: 100%;
   padding: 0 10px;
   border-radius: 7px;
   color: var(--label);
   font-size: 0.78rem;
+  overflow-wrap: break-word;
+  hyphens: auto;
 }
 .tl-seg button[aria-pressed="true"] {
   background: var(--elev);

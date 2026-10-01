@@ -74,6 +74,17 @@ describe("Year: день в чернилах", () => {
     expect(card().querySelector(".ink-caption")!.textContent).toBe("Notched cells are blots.");
   });
 
+  it("PD-86: чистый чернильный день — «Ink · clean», а не «Ink · 0 blots» (как «clean» в карточке и PNG), en/uk/ru", async () => {
+    render([inkDay("2026-09-11", 0)]);
+    openDay("2026-09-11");
+    expect(rows()).toContainEqual(["Mode", "Ink · clean"]);
+    expect(card().textContent).not.toContain("0 blots");
+    await act(() => i18n.changeLanguage("uk"));
+    expect(card().querySelector('[data-testid="ink-mode-row"] dd')!.textContent).toBe("Чорнило · чисто");
+    await act(() => i18n.changeLanguage("ru"));
+    expect(card().querySelector('[data-testid="ink-mode-row"] dd')!.textContent).toBe("Чернила · чисто");
+  });
+
   it("одна клякса — единственное число; uk/ru тоже склоняются", async () => {
     render([inkDay("2026-09-11", 1)]);
     openDay("2026-09-11");

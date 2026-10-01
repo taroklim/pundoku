@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
 import { formatClock } from "../play/format";
+import { useSheetSwipe } from "../shell/useSheetSwipe";
 import { heatLegend, heatOpacities } from "../play/heat";
 import { blotCellSet, HeatCells, InkModeValueRow } from "../play/inkCard";
 import { cellsLeft } from "../play/logic";
@@ -51,6 +52,7 @@ export function YearSheet({ year, month, date, closing, ctx, progress, onOpenDay
   const sheetRef = useRef<HTMLElement>(null);
   const headRef = useRef<HTMLHeadingElement>(null);
   const [entered, setEntered] = useState(false);
+  const swipe = useSheetSwipe(sheetRef, onClose);
 
   // Проявление: сначала кадр в закрытом состоянии, затем класс — иначе transition не сработает.
   useEffect(() => {
@@ -98,8 +100,8 @@ export function YearSheet({ year, month, date, closing, ctx, progress, onOpenDay
         data-testid="year-sheet"
         data-page={date ? "day" : "month"}
       >
-        <div className="grabber" aria-hidden="true" />
-        <header className="ysheet-head">
+        <div className="grabber sheet-handle" aria-hidden="true" {...swipe} />
+        <header className="ysheet-head sheet-handle" {...swipe}>
           {date ? (
             <button type="button" className="back" onClick={onBack} aria-label={t("year.sheetBack", { month: monthName(month.index, locale, "long") })}>
               <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
