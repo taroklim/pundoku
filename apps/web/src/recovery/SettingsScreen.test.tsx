@@ -3,6 +3,7 @@ import { act } from "react";
 import { createRoot } from "react-dom/client";
 import type { Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import pkg from "../../package.json";
 import i18n from "../i18n";
 import type { RecoveryApi, RecoveryResult, RecoveryStatus } from "./api";
 import { formatCreated, SettingsScreen } from "./SettingsScreen";
@@ -323,5 +324,38 @@ describe("SettingsScreen: язык и навигация", () => {
     expect(formatCreated(iso, "en")).toBe("30 Sep 2026");
     expect(formatCreated(iso, "uk")).toBe("30 вер. 2026");
     expect(formatCreated(iso, "ru")).toBe("30 сент. 2026");
+  });
+
+  it("About (PD-102): последняя секция, знак 60 (малая оптика) + вордмарк 28, версия из package.json, всё декоративное", async () => {
+    await mount();
+    const sections = [...host.querySelectorAll("section.settings-sec")];
+    const about = sections[sections.length - 1]!;
+    expect(about.getAttribute("aria-labelledby")).toBe("settings-h-about");
+    expect(about.querySelector("h2")!.textContent).toBe("About");
+    const mark = about.querySelector<SVGSVGElement>("svg.settings-about-mark")!;
+    expect(mark.getAttribute("width")).toBe("60");
+    expect(mark.dataset.optics).toBe("small");
+    expect(mark.getAttribute("aria-hidden")).toBe("true");
+    const word = about.querySelector<SVGSVGElement>("svg.settings-about-word")!;
+    expect(word.getAttribute("height")).toBe("28");
+    expect(word.getAttribute("width")).toBe("142");
+    expect(word.getAttribute("aria-hidden")).toBe("true");
+    const { version } = pkg;
+    expect(__APP_VERSION__).toBe(version);
+    const ver = q("about-version")!;
+    expect(ver.querySelector('[aria-hidden="true"]')!.textContent).toBe(`v${version}`);
+    expect(ver.querySelector(".sr-only")!.textContent).toBe(`Pundoku, Version ${version}`);
+    // не интерактивен: ни кнопок, ни ссылок внутри
+    expect(about.querySelector(".settings-about")!.querySelector("button, a, [tabindex]")).toBeNull();
+  });
+
+  it("About: заголовок и озвучка версии переводятся (uk, ru)", async () => {
+    await mount();
+    await click("lang-uk");
+    expect(host.querySelector("#settings-h-about")!.textContent).toBe("Про застосунок");
+    expect(q("about-version")!.querySelector(".sr-only")!.textContent).toContain("Версія");
+    await click("lang-ru");
+    expect(host.querySelector("#settings-h-about")!.textContent).toBe("О приложении");
+    expect(q("about-version")!.querySelector(".sr-only")!.textContent).toContain("Версия");
   });
 });

@@ -1,6 +1,8 @@
 import type { ChangeEvent, KeyboardEvent } from "react";
 import { useEffect, useLayoutEffect, useRef, useSyncExternalStore } from "react";
 import { useTranslation } from "react-i18next";
+import { Mark } from "../brand/Mark";
+import { Wordmark } from "../brand/Wordmark";
 import type { Locale } from "../i18n";
 import { setLocale, SUPPORTED_LOCALES } from "../i18n";
 import { ActionSheet } from "./ActionSheet";
@@ -377,6 +379,23 @@ export function SettingsScreen({ store, onBack }: { store: RecoveryStore; onBack
           {t("settings.key.head")}
         </h2>
         {keyBlock}
+      </section>
+
+      {/* About (PD-102, §18.5в): знак + вордмарк + версия — там, где о приложении спрашивают. Всё статично и декоративно. */}
+      <section className="settings-sec" aria-labelledby="settings-h-about">
+        <h2 className="settings-head" id="settings-h-about">
+          {t("settings.about.head")}
+        </h2>
+        <div className="settings-card settings-about" data-testid="settings-about">
+          <Mark size={60} className="settings-about-mark" />
+          <Wordmark height={28} className="settings-about-word" />
+          <p className="settings-about-ver" data-testid="about-version">
+            <span className="sr-only">
+              {t("settings.about.name")}, {t("settings.about.version", { version: __APP_VERSION__ })}
+            </span>
+            <span aria-hidden="true">v{__APP_VERSION__}</span>
+          </p>
+        </div>
       </section>
 
       {sheetProps && (

@@ -1,6 +1,7 @@
 import type { KeyboardEvent } from "react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { Mark } from "../brand/Mark";
 import type { DayProgress } from "../today/repository";
 import { monthName } from "./format";
 import { markClass, monthAriaLabel } from "./labels";
@@ -165,6 +166,7 @@ export function YearScreen({ days, firstUse, today, onOpenToday, onPlayDay, init
 
       {empty ? (
         <div className="year-empty" data-testid="year-empty">
+          <Mark size={56} className="year-empty-mark" />
           <p>{t("year.emptyLine")}</p>
           <button type="button" className="cta" onClick={onOpenToday}>
             {t("year.openToday")}

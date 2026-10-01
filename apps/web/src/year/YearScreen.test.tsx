@@ -133,6 +133,19 @@ describe("пустой год", () => {
     expect(openToday).toHaveBeenCalledTimes(1);
   });
 
+  it("знак D5 над строкой (PD-102): 56 px, малая оптика, декоративный, перед текстом; в непустом году знака нет", () => {
+    render([], TODAY, TODAY);
+    const empty = host.querySelector('[data-testid="year-empty"]')!;
+    const mark = empty.querySelector<SVGSVGElement>("svg.year-empty-mark")!;
+    expect(mark.getAttribute("width")).toBe("56");
+    expect(mark.dataset.optics).toBe("small");
+    expect(mark.getAttribute("aria-hidden")).toBe("true");
+    expect(empty.firstElementChild).toBe(mark);
+    expect(mark.nextElementSibling!.tagName).toBe("P");
+    render();
+    expect(host.querySelector(".year-empty-mark")).toBeNull();
+  });
+
   it("firstUse в прошлом и ни одной записи: приглашение есть, пропусков нет (одно правило), кольцо сегодня остаётся", () => {
     render([], "2026-09-29", "2026-09-20");
     expect(host.querySelector('[data-testid="year-empty"]')!.textContent).toContain("Your year starts today");

@@ -13,6 +13,11 @@
     "language": "Language",
     "open": "Settings",
     "backLabel": "Back to Today",
+    "about": {
+      "head": "About",
+      "name": "Pundoku",
+      "version": "Version {{version}}"
+    },
     "key": {
       "head": "Recovery key",
       "footNone": "No account, no email, no password. The key is the only way to bring progress back on another phone — or on this one after its data is cleared.",
