@@ -5,7 +5,7 @@ import { createRoot } from "react-dom/client";
 import type { Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { LeaveGuard, Route, Target } from "./tabs";
-import { useRoute } from "./tabs";
+import { leaveSettings, useRoute } from "./tabs";
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
@@ -102,5 +102,42 @@ describe("useRoute: перехват ухода с Settings (PD-57)", () => {
     await act(async () => go({ tab: "today" })); // штатный уход идёт через requestLeave в App, а не через guard
     expect(guard).not.toHaveBeenCalled();
     expect(route.tab).toBe("today");
+  });
+});
+
+describe("leaveSettings после перехвата (PD-60)", () => {
+  const intercept = async (edit: () => void) => {
+    let armed = true;
+    await mount(() => armed);
+    await act(async () => go({ settings: true }));
+    await act(async () => edit());
+    await settle();
+    expect(route.settings).toBe(true);
+    return () => {
+      armed = false; // пользователь подтвердил «Leave»: guard больше не держит
+    };
+  };
+
+  it("правка адреса на #/year, «Остаться», «‹ Today» ведёт на Today, а не на набранный #/year", async () => {
+    const confirm = await intercept(() => {
+      window.location.hash = "#/year";
+    });
+    confirm();
+    // «Остаться»: ничего. «‹ Today» из Settings → leaveSettings (уход разрешён: шит «Leave» подтверждён).
+    await act(async () => leaveSettings(go));
+    await settle();
+    expect(route.settings).toBeUndefined();
+    expect(route.tab).toBe("today");
+    expect(window.location.hash).toBe("#/today");
+  });
+
+  it("«назад», «Остаться», «‹ Today» — как раньше: history.back() на предыдущий Today", async () => {
+    const confirm = await intercept(() => window.history.back());
+    confirm();
+    await act(async () => leaveSettings(go));
+    await settle();
+    expect(route.tab).toBe("today");
+    expect(route.settings).toBeUndefined();
+    expect(window.location.hash).toBe("#/today");
   });
 });

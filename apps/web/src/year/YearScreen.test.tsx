@@ -500,6 +500,21 @@ describe("PD-52 / PD-55: прошлый год без записей", () => {
     expect(month(10).getAttribute("aria-label")).toContain("nothing yet");
   });
 
+  it("PD-60: ветка `year < текущий`: пояснялка только у прошлого года — текущий и будущий год без записей получают обычные итоги", () => {
+    // Записи в 2025 и 2027 (будущее), сегодня 2026: у 2026 и у будущего «пустого» года нет записи, но они не «прошлый год».
+    render([progressOf("2025-06-05"), progressOf("2027-02-03")], "2026-03-06", "2025-06-01");
+    expect(line()).toBeNull(); // текущий 2026 — без записей, но не прошлый
+    expect(host.querySelector('[data-testid="year-totals"]')).not.toBeNull();
+    pickYear("2025");
+    expect(line()).toBeNull(); // в 2025 запись есть
+    act(() => root.unmount());
+    root = createRoot(host);
+    render([progressOf("2025-06-05"), progressOf("2028-02-03")], "2026-03-06", "2025-06-01");
+    pickYear("2027"); // дыра между текущим годом и будущей записью: список без дыр, записей в 2027 нет
+    expect(line()).toBeNull();
+    expect(host.querySelector('[data-testid="year-totals"]')).not.toBeNull();
+  });
+
   it("год с записью пояснялки не получает; wholly-empty состояние — прежнее приглашение", () => {
     render([progressOf("2025-12-30"), progressOf("2026-01-02")], "2026-01-03", "2025-12-30");
     pickYear("2025");
