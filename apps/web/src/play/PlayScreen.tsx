@@ -3,6 +3,7 @@ import { DIFFICULTIES } from "@pundoku/engine";
 import type { ChangeEvent } from "react";
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { useTranslation } from "react-i18next";
+import { swallowGhostClick } from "../shell/ghostClick";
 import { Board } from "./Board";
 import {
   GamePad,
@@ -48,12 +49,23 @@ export function PlayScreen() {
       setCardShown(false);
       return;
     }
-    const show = () => setCardShown(true);
+    // Карточка уже показана (по таймеру или тапом) — дальше обычные тапы, без перехвата хвоста (PD-94).
+    let shown = false;
+    const show = () => {
+      shown = true;
+      setCardShown(true);
+    };
+    // Тап-прерывание: хвост этого касания (click над новой карточкой) гасим — иначе тап в позиции «New game» запускал её.
+    const onTap = (e: Event) => {
+      if (shown) return;
+      show();
+      swallowGhostClick(e);
+    };
     const id = window.setTimeout(show, prefersReducedMotion() ? 140 : 240);
-    document.addEventListener("pointerdown", show, true);
+    document.addEventListener("pointerdown", onTap, true);
     return () => {
       window.clearTimeout(id);
-      document.removeEventListener("pointerdown", show, true);
+      document.removeEventListener("pointerdown", onTap, true);
     };
   }, [phase]);
 

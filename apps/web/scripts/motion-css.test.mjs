@@ -35,3 +35,92 @@ describe("CSS движения", () => {
     expect(kf).not.toMatch(/\b(width|height|top|left|margin|padding)\s*:/);
   });
 });
+
+// --- множитель --mo: при 0 все transform в keyframes единичные (PD-94, QA PD-91: раньше ловилось только вживую) ---
+
+/** Тела всех @keyframes (учёт вложенных скобок), пара [имя, тело]. */
+function keyframes() {
+  const out = [];
+  for (const f of files) {
+    const css = read(f);
+    for (const m of css.matchAll(/@keyframes\s+([\w-]+)\s*\{/g)) {
+      let depth = 1;
+      let i = m.index + m[0].length;
+      const start = i;
+      for (; i < css.length && depth > 0; i++) depth += css[i] === "{" ? 1 : css[i] === "}" ? -1 : 0;
+      out.push([m[1], css.slice(start, i - 1), f]);
+    }
+  }
+  return out;
+}
+
+/** Числовое значение CSS-аргумента: подставляет --mo, считает calc(); единицы (px, %, ms) отбрасываются. */
+function evalArg(arg, mo) {
+  let expr = arg.replace(/var\(--mo\)/g, String(mo));
+  expr = expr.replace(/calc\(/g, "(").replace(/(\d*\.?\d+)(px|%|ms|s|deg|em|rem)(?![a-z])/g, "$1");
+  if (/var\(|[^\d+\-*/().\s]/.test(expr)) throw new Error(`не разобрал аргумент: ${arg}`);
+  return Function(`"use strict"; return (${expr});`)();
+}
+
+/** Верхнеуровневые аргументы функции transform: `translateY(calc(a * b))` -> ["calc(a * b)"]. */
+function transformCalls(value) {
+  const calls = [];
+  for (const m of value.matchAll(/\b(translate[XYZ]?|scale[XY]?|rotate|skew[XY]?)\(/g)) {
+    let depth = 1;
+    let i = m.index + m[0].length;
+    const start = i;
+    for (; i < value.length && depth > 0; i++) depth += value[i] === "(" ? 1 : value[i] === ")" ? -1 : 0;
+    const args = [];
+    let d = 0;
+    let cur = "";
+    for (const ch of value.slice(start, i - 1)) {
+      if (ch === "(") d++;
+      if (ch === ")") d--;
+      if (ch === "," && d === 0) (args.push(cur.trim()), (cur = ""));
+      else cur += ch;
+    }
+    args.push(cur.trim());
+    calls.push([m[1], args]);
+  }
+  return calls;
+}
+
+describe("множитель --mo (reduced motion одной переменной)", () => {
+  const kfs = keyframes();
+  const rows = kfs.flatMap(([name, body, f]) =>
+    [...body.matchAll(/transform:\s*([^;]+);/g)].map((m) => ({ name, file: f, value: m[1] })),
+  );
+
+  it("находит keyframes с transform (тест не вырожден)", () => {
+    expect(kfs.length).toBeGreaterThan(10);
+    expect(rows.some((r) => /var\(--mo\)/.test(r.value))).toBe(true);
+  });
+
+  // Бесконечный индикатор занятости: вращение — его смысл, при reduced он не гаснет, а замедляется (длительность ×3, settings.css).
+  const SPINNERS = new Set(["settings-spin"]);
+
+  it("при --mo:0 каждый transform в keyframes единичный: translate 0, scale 1, rotate 0", () => {
+    const bad = [];
+    for (const r of rows) {
+      if (SPINNERS.has(r.name)) continue;
+      for (const [fn, args] of transformCalls(r.value)) {
+        for (const a of args) {
+          const v = evalArg(a, 0);
+          const unit = fn.startsWith("scale") ? 1 : 0;
+          if (Math.abs(v - unit) > 1e-9) bad.push(`${r.file} @keyframes ${r.name}: ${fn}(${a}) = ${v} при --mo:0, ждали ${unit}`);
+        }
+      }
+    }
+    expect(bad).toEqual([]);
+  });
+
+  it("при --mo:1 амплитуды ненулевые хотя бы у части keyframes (множитель что-то меняет)", () => {
+    let moving = 0;
+    for (const r of rows) {
+      for (const [fn, args] of transformCalls(r.value)) {
+        if (args.some((a) => /var\(--mo\)/.test(a) && Math.abs(evalArg(a, 1) - (fn.startsWith("scale") ? 1 : 0)) > 1e-9)) moving++;
+      }
+    }
+    expect(moving).toBeGreaterThan(5);
+  });
+});

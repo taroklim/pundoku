@@ -2,6 +2,7 @@ import type { RefObject } from "react";
 import { useEffect, useRef, useState } from "react";
 import { flushSync } from "react-dom";
 import { prefersReducedMotion } from "../play/controls";
+import { swallowGhostClick } from "../shell/ghostClick";
 import type { DayStore } from "./dayStore";
 import { lastMoveCell } from "./dayStore";
 
@@ -85,8 +86,10 @@ export function useSolveSequence(
       });
       store.acknowledgeLanding();
     };
-    function onInterrupt() {
+    function onInterrupt(e: Event) {
+      if (finished) return;
       finish(false);
+      swallowGhostClick(e); // хвост этого касания (click над карточкой) не должен нажать кнопку под пальцем — PD-94
     }
     document.addEventListener("pointerdown", onInterrupt, true);
 
