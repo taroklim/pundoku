@@ -59,4 +59,14 @@ describe("i18n: блок settings.* (PD-49)", () => {
       }
     }
   });
+
+  it("текст шита «Перевыпустить» ссылается на действия в кавычках, как в макете PD-27, и называет их точно", () => {
+    for (const l of [en, uk, ru]) {
+      const t = settings(l);
+      const msg = t["key.sheetReMsg"]!;
+      for (const k of ["key.unlink", "key.deleteKey"]) {
+        expect(msg, k).toMatch(new RegExp(`[“«]${t[k]}[”»]`));
+      }
+    }
+  });
 });

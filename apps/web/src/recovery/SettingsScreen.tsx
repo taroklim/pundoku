@@ -42,13 +42,21 @@ const BackIcon = () => (
   </svg>
 );
 
-/** «30 сент. 2026»: без хвоста «г.»/«р.», который добавляют ru/uk (в макете его нет). */
+/**
+ * Как в макете: «30 Sep 2026» / «30 вер. 2026» / «30 сент. 2026» — день, месяц, год.
+ * ru/uk: без хвоста «г.»/«р.», который они добавляют. en: порядок «день месяц год» (en-US даёт «Sep 30, 2026»),
+ * поэтому en собирается из частей en-US вручную — месяц остаётся «Sep» во всех движках (en-GB в новых ICU даёт «Sept»).
+ */
 export function formatCreated(iso: string | null, locale: string): string {
   if (!iso) return "—";
   const date = new Date(iso);
   if (Number.isNaN(date.getTime())) return "—";
-  return new Intl.DateTimeFormat(locale, { day: "numeric", month: "short", year: "numeric" })
-    .formatToParts(date)
+  const parts = new Intl.DateTimeFormat(locale, { day: "numeric", month: "short", year: "numeric" }).formatToParts(date);
+  if (locale === "en") {
+    const get = (type: string) => parts.find((p) => p.type === type)?.value ?? "";
+    return `${get("day")} ${get("month")} ${get("year")}`;
+  }
+  return parts
     .filter((p) => !(p.type === "literal" && /\p{L}/u.test(p.value)))
     .map((p) => p.value)
     .join("")
