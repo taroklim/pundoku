@@ -2,6 +2,7 @@ import type { RefObject } from "react";
 import { useEffect, useRef, useState } from "react";
 import { flushSync } from "react-dom";
 import { prefersReducedMotion } from "../play/controls";
+import { afterPaint } from "../shell/afterPaint";
 import { swallowGhostClick } from "../shell/ghostClick";
 import type { DayStore } from "./dayStore";
 import { lastMoveCell } from "./dayStore";
@@ -17,8 +18,15 @@ export const FINALE_FLIGHT_MS = 300;
 export const FINALE_EASING = "cubic-bezier(.3,0,.2,1)";
 
 export interface SolveSequence {
-  /** Карточка дня (и Grid ∞) уже показаны. */
+  /** Карточка дня уже показана. */
   cardShown: boolean;
+  /**
+   * Grid ∞ смонтирован (PD-95). Идёт СЛЕДОМ за карточкой, отдельной задачей после кадра: карточка появляется сразу,
+   * тяжёлый монтаж сетки не делит с ней один long task. Цель полёта существует ровно с этого момента.
+   */
+  gridShown: boolean;
+  /** Финал закончился (дошёл сам или прерван тапом): можно переводить фокус на карточку, не красть его посреди анимации. */
+  finaleDone: boolean;
   /** Приземление в этой сессии дошло до конца — кольцо клетки даёт «толчок» (иначе просто сплошное). */
   flown: boolean;
 }
@@ -29,6 +37,13 @@ export interface SolveSequence {
  * ЛЮБОЕ касание прерывает в любой точке и сразу показывает конечное состояние. Reduced motion — без
  * полёта: данные гаснут 140 мс, карточка, целевая клетка подсвечивается кольцом (`ringIn`).
  *
+ * PD-95 (фриз монтажа при CPU 4x): порядок записи/чтения DOM. (1) Источник полёта замеряется в момент таймера, ДО записи
+ * карточки (раскладка чистая: за 240 мс кадры отрисованы) — а не в эффекте сразу после коммита решённой партии. (2) Карточка
+ * монтируется сразу; (3) Grid ∞ — следом, после кадра (`afterPaint`); (4) полёт стартует после кадра с Grid ∞ (цель
+ * смонтирована, раскладка чистая — `scrollIntoView`/`getBoundingClientRect` не форсируют layout) и не раньше паузы 60 мс
+ * после карточки; (5) фокус на карточку — по `finaleDone`, не посреди анимации. Тап в любой точке по-прежнему показывает
+ * карточку синхронно (в том же событии), Grid ∞ — следующим кадром; хвост касания гасит `swallowGhostClick` (PD-94).
+ *
  * `root` — контейнер экрана (поле и Grid ∞ ищутся внутри него). Экран, смонтированный уже на
  * решённом дне (возврат на вкладку/перезапуск), показывает всё сразу без анимации.
  */
@@ -38,6 +53,8 @@ export function useSolveSequence(
   root: RefObject<HTMLElement | null>,
 ): SolveSequence {
   const [cardShown, setCardShown] = useState(() => phase === "solved");
+  const [gridShown, setGridShown] = useState(() => phase === "solved");
+  const [finaleDone, setFinaleDone] = useState(() => phase === "solved");
   const [flown, setFlown] = useState(false);
   const prevPhase = useRef(phase);
 
@@ -46,6 +63,8 @@ export function useSolveSequence(
     prevPhase.current = phase;
     if (phase !== "solved") {
       setCardShown(false);
+      setGridShown(false);
+      setFinaleDone(false);
       setFlown(false);
       return;
     }
@@ -53,20 +72,29 @@ export function useSolveSequence(
     // Решённый день подгрузился из сохранённого (loading → solved): не «решили сейчас» — без анимации.
     if (from !== "playing") {
       setCardShown(true);
+      setGridShown(true);
+      setFinaleDone(true);
       return;
     }
 
     const reduce = prefersReducedMotion();
-    const snap = store.getSnapshot();
-    // Источник полёта — клетка последнего хода; замеряем, пока поле ещё на экране.
-    const srcCell = snap.play ? lastMoveCell(snap.play) : null;
-    const srcEl = srcCell === null ? null : root.current?.querySelector<HTMLElement>(`.board [data-i="${srcCell}"]`);
-    const srcRect = srcEl?.getBoundingClientRect() ?? null;
+    // Источник полёта — клетка последнего хода. Замер — в таймере ниже, пока поле ещё на экране, но до записи карточки.
+    let measured: DOMRect | null = null;
+    const measureSource = () => {
+      const snap = store.getSnapshot();
+      const srcCell = snap.play ? lastMoveCell(snap.play) : null;
+      const srcEl = srcCell === null ? null : root.current?.querySelector<HTMLElement>(`.board [data-i="${srcCell}"]`);
+      measured = srcEl?.getBoundingClientRect() ?? null;
+    };
 
     let timer = 0;
     let anim: Animation | null = null;
     let flyer: HTMLElement | null = null;
     let finished = false;
+    // Grid ∞: «scheduled» — монтаж запланирован, «painted» — смонтирован и отрисован (цель полёта в раскладке).
+    let grid: "none" | "scheduled" | "painted" = "none";
+    let cancelGrid: (() => void) | null = null;
+    let delayElapsed = reduce; // пауза 60 мс «карточка → вылет» (при reduced её нет)
 
     const teardown = () => {
       window.clearTimeout(timer);
@@ -76,6 +104,18 @@ export function useSolveSequence(
       flyer = null;
       document.removeEventListener("pointerdown", onInterrupt, true);
     };
+    /** Смонтировать Grid ∞ после ближайшего кадра (идемпотентно); по готовности цели — попытка старта полёта. */
+    const scheduleGrid = () => {
+      if (grid !== "none") return;
+      grid = "scheduled";
+      cancelGrid = afterPaint(() => {
+        flushSync(() => setGridShown(true));
+        cancelGrid = afterPaint(() => {
+          grid = "painted";
+          tryLaunch();
+        });
+      });
+    };
     const finish = (played: boolean) => {
       if (finished) return;
       finished = true;
@@ -83,7 +123,9 @@ export function useSolveSequence(
       flushSync(() => {
         setCardShown(true);
         setFlown(played);
+        setFinaleDone(true);
       });
+      scheduleGrid(); // не успел смонтироваться (тап в dim-фазе): конечное состояние — Grid ∞ следующим кадром
       store.acknowledgeLanding();
     };
     function onInterrupt(e: Event) {
@@ -93,14 +135,18 @@ export function useSolveSequence(
     }
     document.addEventListener("pointerdown", onInterrupt, true);
 
+    function tryLaunch() {
+      if (!finished && grid === "painted" && delayElapsed) launch();
+    }
     const launch = () => {
       const landing = store.getSnapshot().landing;
       const dstEl = root.current?.querySelector<HTMLElement>('[data-testid="grid-inf-target"]');
       if (!landing || !dstEl) return finish(false);
       if (reduce) return finish(true);
-      // Доводим место посадки до экрана ДО замера; сам скролл мгновенный.
+      // Раскладка чистая (мы после кадра с Grid ∞): скролл мгновенный, чтения — пачкой, до любой записи.
       dstEl.scrollIntoView({ block: "center", behavior: "auto" });
       const dst = dstEl.getBoundingClientRect();
+      const srcRect: DOMRect | null = measured;
       if (!srcRect || !dst.width) return finish(true);
       flyer = document.createElement("span");
       flyer.className = "flyer";
@@ -131,21 +177,28 @@ export function useSolveSequence(
 
     timer = window.setTimeout(
       () => {
+        if (!reduce) measureSource(); // чтение — до записи карточки
         flushSync(() => setCardShown(true));
-        if (reduce) return launch();
-        // Короткая пауза между карточкой и вылетом цифры (ритм V2).
-        timer = window.setTimeout(launch, FINALE_FLIGHT_DELAY_MS);
+        scheduleGrid();
+        if (!store.getSnapshot().landing) return finish(false); // нечего сажать (архив/сетка не загружена) — полёта не будет
+        if (reduce) return;
+        // Короткая пауза между карточкой и вылетом цифры (ритм V2); сам вылет ждёт ещё и Grid ∞ (tryLaunch).
+        timer = window.setTimeout(() => {
+          delayElapsed = true;
+          tryLaunch();
+        }, FINALE_FLIGHT_DELAY_MS);
       },
       reduce ? FINALE_DIM_REDUCED_MS : FINALE_DIM_MS,
     );
 
     return () => {
       // Ушли с экрана/партию сменили посреди последовательности: без полёта, состояние — конечное.
+      cancelGrid?.();
       teardown();
       if (!finished) store.acknowledgeLanding();
     };
     // cardShown намеренно не в зависимостях: последовательность стартует один раз на переходе в solved.
   }, [phase, store, root]);
 
-  return { cardShown, flown };
+  return { cardShown, gridShown, finaleDone, flown };
 }
