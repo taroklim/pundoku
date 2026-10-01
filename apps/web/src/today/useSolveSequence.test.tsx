@@ -30,6 +30,7 @@ function lastMovePlay(): PlayState {
 
 const play = lastMovePlay();
 const acknowledgeLanding = vi.fn();
+const onWatch = vi.fn();
 const store = {
   getSnapshot: () => ({ play, landing: { cell: 5, digit: 7 } }) as never,
   acknowledgeLanding,
@@ -45,6 +46,11 @@ function Harness({ phase }: { phase: string }) {
         <i data-i={String(play.log[play.log.length - 1]!.cell)} />
       </div>
       <i data-testid="grid-inf-target" />
+      {latest.cardShown && (
+        <button type="button" data-testid="tl-watch" onClick={onWatch}>
+          watch
+        </button>
+      )}
     </div>
   );
 }
@@ -61,6 +67,7 @@ function setReduced(reduced: boolean) {
 beforeEach(() => {
   vi.useFakeTimers();
   acknowledgeLanding.mockClear();
+  onWatch.mockClear();
   setReduced(false);
   anim = { cancel: vi.fn(), onfinish: null };
   animate = vi.fn(() => anim);
@@ -125,6 +132,51 @@ describe("финал V2 (PD-89)", () => {
     wait(1000);
     expect(animate).not.toHaveBeenCalled();
     expect(acknowledgeLanding).toHaveBeenCalledTimes(1);
+  });
+
+  // PD-94: хвост прерывающего касания не должен нажать кнопку карточки под пальцем (tl-watch/share на Today).
+  const tapOnWatch = (detail = 1) => {
+    const b = host.querySelector('[data-testid="tl-watch"]')!;
+    act(() => {
+      b.dispatchEvent(new Event("pointerup", { bubbles: true }));
+      b.dispatchEvent(new MouseEvent("click", { bubbles: true, cancelable: true, detail }));
+    });
+  };
+
+  it("тап-прерывание в dim: click того же касания над кнопкой таймлапса гасится (PD-94)", () => {
+    solve();
+    wait(100);
+    act(() => void document.dispatchEvent(new Event("pointerdown")));
+    tapOnWatch();
+    expect(onWatch).not.toHaveBeenCalled();
+  });
+
+  it("тап-прерывание в полёте: click того же касания гасится; следующий тап работает", () => {
+    solve();
+    wait(FINALE_DIM_MS + FINALE_FLIGHT_DELAY_MS + 100);
+    act(() => void document.dispatchEvent(new Event("pointerdown")));
+    tapOnWatch();
+    expect(onWatch).not.toHaveBeenCalled();
+    act(() => void host.querySelector('[data-testid="tl-watch"]')!.dispatchEvent(new Event("pointerdown", { bubbles: true })));
+    tapOnWatch();
+    expect(onWatch).toHaveBeenCalledTimes(1);
+  });
+
+  it("клавиатурная активация сразу после прерывания проходит (detail 0)", () => {
+    solve();
+    wait(100);
+    act(() => void document.dispatchEvent(new Event("pointerdown")));
+    tapOnWatch(0);
+    expect(onWatch).toHaveBeenCalledTimes(1);
+  });
+
+  it("финал дошёл до конца сам: последующий тап по кнопке без перехвата", () => {
+    solve();
+    wait(FINALE_DIM_MS + FINALE_FLIGHT_DELAY_MS);
+    act(() => anim.onfinish?.()); // полёт дошёл до конца: слушатель снят, тапы обычные
+    act(() => void host.querySelector('[data-testid="tl-watch"]')!.dispatchEvent(new Event("pointerdown", { bubbles: true })));
+    tapOnWatch();
+    expect(onWatch).toHaveBeenCalledTimes(1);
   });
 
   it("тап прерывает в полёте: цифра снимается, состояние конечное, анимация отменена", () => {
