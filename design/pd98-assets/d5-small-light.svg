@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024" role="img" aria-label="Pundoku app icon, direction D5 The Carry, small optics, light appearance">
+  <title>Pundoku — D5 «Унос» — малая оптика — light</title>
+  <desc>Small-size variant of the chosen D5 icon for nominal sizes 60 px and below. Same canvas, same palette, same composition bbox (224..800). Three geometry changes against d5-icon-light.svg: corridor 124 to 164, carried cell 164 to 176, radii 113/41 to 72/30, and the concave fillet 27 at the notch is removed (all three notch corners are sharp). Field and cell are flat fills sampled from the midpoints of the gradients they replace, so the rasterizer needs one gradient (the ground) instead of three. No filters.</desc>
+  <defs>
+    <linearGradient id="d5sl-bg" x1="0" y1="0" x2="0.3" y2="1">
+      <stop offset="0" stop-color="#5A616E"/>
+      <stop offset="0.45" stop-color="#2B2F38"/>
+      <stop offset="1" stop-color="#14161B"/>
+    </linearGradient>
+  </defs>
+  <rect width="1024" height="1024" fill="url(#d5sl-bg)"/>
+  <path fill="#E3E3E4" d="M296 388H460V564H636V728A72 72 0 0 1 564 800H296A72 72 0 0 1 224 728V460A72 72 0 0 1 296 388Z"/>
+  <path fill="#838EF9" d="M654 224H770A30 30 0 0 1 800 254V370A30 30 0 0 1 770 400H654A30 30 0 0 1 624 370V254A30 30 0 0 1 654 224Z"/>
+</svg>

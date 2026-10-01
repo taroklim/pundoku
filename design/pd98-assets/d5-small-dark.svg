@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024" role="img" aria-label="Pundoku app icon, direction D5 The Carry, small optics, dark appearance">
+  <title>Pundoku — D5 «Унос» — малая оптика — dark</title>
+  <desc>Dark appearance of the small-optics D5 icon. Same geometry as d5-small-light.svg; flat fills are the midpoints of the dark-appearance paper and ink gradients of d5-icon-dark.svg. No filters.</desc>
+  <defs>
+    <linearGradient id="d5sd-bg" x1="0" y1="0" x2="0.3" y2="1">
+      <stop offset="0" stop-color="#3A404C"/>
+      <stop offset="0.45" stop-color="#1B1E25"/>
+      <stop offset="1" stop-color="#0A0B0E"/>
+    </linearGradient>
+  </defs>
+  <rect width="1024" height="1024" fill="url(#d5sd-bg)"/>
+  <path fill="#B9BABB" d="M296 388H460V564H636V728A72 72 0 0 1 564 800H296A72 72 0 0 1 224 728V460A72 72 0 0 1 296 388Z"/>
+  <path fill="#747EEB" d="M654 224H770A30 30 0 0 1 800 254V370A30 30 0 0 1 770 400H654A30 30 0 0 1 624 370V254A30 30 0 0 1 654 224Z"/>
+</svg>
