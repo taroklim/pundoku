@@ -5,11 +5,15 @@ import { prefersReducedMotion } from "../play/controls";
 import type { DayStore } from "./dayStore";
 import { lastMoveCell } from "./dayStore";
 
-/** Длительности M5 (`design/pd7-board-critique.md`, таблица M5): всего ≤ 600 мс. */
-export const M5_DIM_MS = 200;
-export const M5_DIM_REDUCED_MS = 140;
-export const M5_FLIGHT_MS = 340;
-export const M5_EASING = "cubic-bezier(.34,.9,.2,1)";
+/**
+ * Финал решённой сетки (PD-89, вариант V2 «Ритм», `design/pd81-motion-variants.md` §3): всего ≈600 мс.
+ * Данные гаснут 240 мс → карточка → через 60 мс цифра летит 300 мс в Grid ∞. Заменяет прежний M5 (1050 мс не берём).
+ */
+export const FINALE_DIM_MS = 240;
+export const FINALE_DIM_REDUCED_MS = 140;
+export const FINALE_FLIGHT_DELAY_MS = 60;
+export const FINALE_FLIGHT_MS = 300;
+export const FINALE_EASING = "cubic-bezier(.3,0,.2,1)";
 
 export interface SolveSequence {
   /** Карточка дня (и Grid ∞) уже показаны. */
@@ -19,10 +23,10 @@ export interface SolveSequence {
 }
 
 /**
- * M5 «улёт» последней клетки (PD-12): данные гаснут → карточка дня → цифра клетки дня летит с поля
- * в целевую клетку Grid ∞ → приземление. Полное время ≤ 600 мс (200 + 340); ЛЮБОЕ касание
- * прерывает и сразу показывает конечное состояние. Reduced motion — без полёта: данные гаснут
- * 140 мс, карточка и кроссфейд, целевая клетка подсвечивается кольцом (`ringIn`).
+ * Финал «улёт» последней клетки (PD-12, тайминги V2 — PD-89): данные гаснут → карточка дня → цифра
+ * клетки дня летит с поля в целевую клетку Grid ∞ → приземление. Полное время ≈600 мс (240 + 60 + 300);
+ * ЛЮБОЕ касание прерывает в любой точке и сразу показывает конечное состояние. Reduced motion — без
+ * полёта: данные гаснут 140 мс, карточка, целевая клетка подсвечивается кольцом (`ringIn`).
  *
  * `root` — контейнер экрана (поле и Grid ∞ ищутся внутри него). Экран, смонтированный уже на
  * решённом дне (возврат на вкладку/перезапуск), показывает всё сразу без анимации.
@@ -86,34 +90,50 @@ export function useSolveSequence(
     }
     document.addEventListener("pointerdown", onInterrupt, true);
 
+    const launch = () => {
+      const landing = store.getSnapshot().landing;
+      const dstEl = root.current?.querySelector<HTMLElement>('[data-testid="grid-inf-target"]');
+      if (!landing || !dstEl) return finish(false);
+      if (reduce) return finish(true);
+      // Доводим место посадки до экрана ДО замера; сам скролл мгновенный.
+      dstEl.scrollIntoView({ block: "center", behavior: "auto" });
+      const dst = dstEl.getBoundingClientRect();
+      if (!srcRect || !dst.width) return finish(true);
+      flyer = document.createElement("span");
+      flyer.className = "flyer";
+      flyer.textContent = String(landing.digit);
+      flyer.style.width = `${srcRect.width}px`;
+      flyer.style.height = `${srcRect.height}px`;
+      flyer.style.fontSize = `${Math.round(srcRect.width * 0.56)}px`;
+      document.body.appendChild(flyer);
+      // Центр цифры → центр целевой клетки; на подъёме (offset .55) дуга: 52 % по x, 30 % по y.
+      const dx = dst.left + dst.width / 2 - (srcRect.left + srcRect.width / 2);
+      const dy = dst.top + dst.height / 2 - (srcRect.top + srcRect.height / 2);
+      const sc = Math.min(1, Math.max(0.12, dst.width / srcRect.width));
+      const at = (x: number, y: number, k: number) => `translate(${srcRect.left + x}px, ${srcRect.top + y}px) scale(${k})`;
+      try {
+        anim = flyer.animate(
+          [
+            { transform: at(0, 0, 1), opacity: 1, offset: 0 },
+            { transform: at(dx * 0.52, dy * 0.3, 1 + (sc - 1) * 0.35), opacity: 1, offset: 0.55 },
+            { transform: at(dx, dy, sc), opacity: 0.9, offset: 1 },
+          ],
+          { duration: FINALE_FLIGHT_MS, easing: FINALE_EASING, fill: "forwards" },
+        );
+      } catch {
+        return finish(true);
+      }
+      anim.onfinish = () => finish(true);
+    };
+
     timer = window.setTimeout(
       () => {
         flushSync(() => setCardShown(true));
-        const landing = store.getSnapshot().landing;
-        const dstEl = root.current?.querySelector<HTMLElement>('[data-testid="grid-inf-target"]');
-        if (!landing || !dstEl) return finish(false);
-        if (reduce) return finish(true);
-        // Доводим место посадки до экрана ДО замера; сам скролл мгновенный.
-        dstEl.scrollIntoView({ block: "center", behavior: "auto" });
-        const dst = dstEl.getBoundingClientRect();
-        if (!srcRect) return finish(true);
-        flyer = document.createElement("span");
-        flyer.className = "flyer";
-        flyer.textContent = String(landing.digit);
-        flyer.style.width = `${srcRect.width}px`;
-        flyer.style.height = `${srcRect.height}px`;
-        flyer.style.fontSize = `${Math.round(srcRect.width * 0.56)}px`;
-        document.body.appendChild(flyer);
-        anim = flyer.animate(
-          [
-            { transform: `translate(${srcRect.left}px, ${srcRect.top}px) scale(1)`, opacity: 1 },
-            { transform: `translate(${dst.left}px, ${dst.top}px) scale(.94)`, opacity: 1 },
-          ],
-          { duration: M5_FLIGHT_MS, easing: M5_EASING, fill: "forwards" },
-        );
-        anim.onfinish = () => finish(true);
+        if (reduce) return launch();
+        // Короткая пауза между карточкой и вылетом цифры (ритм V2).
+        timer = window.setTimeout(launch, FINALE_FLIGHT_DELAY_MS);
       },
-      reduce ? M5_DIM_REDUCED_MS : M5_DIM_MS,
+      reduce ? FINALE_DIM_REDUCED_MS : FINALE_DIM_MS,
     );
 
     return () => {

@@ -60,7 +60,7 @@
   position: absolute;
   inset: 0;
   background: var(--scrim);
-  animation: tlFade 0.22s linear;
+  animation: tlFade calc(220ms * var(--mk)) linear;
 }
 .tl-sheet {
   /* Контейнер для @container ниже: шапка и сегмент скорости перестраиваются от ширины шита (в rem — следует Dynamic Type). */
@@ -78,7 +78,7 @@
   color: var(--label);
   border-radius: 16px 16px 0 0;
   padding-bottom: calc(10px + var(--sa-bot));
-  animation: tlUp 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+  animation: tlUp calc(300ms * var(--mk)) var(--e-spring) both;
 }
 .tl-grabber {
   flex: none;
@@ -268,10 +268,11 @@
   transform: rotate(-8deg);
 }
 .tl-field .stain.anim {
-  animation: tlBlotSpread 190ms cubic-bezier(0.2, 0.7, 0.3, 1) both;
+  animation: tlBlotSpread calc(190ms * var(--mk)) var(--e-out) both;
+  transform-origin: 50% 50%;
 }
 .tl-field .d.tl-in {
-  animation: tlDigit 160ms cubic-bezier(0.2, 0.7, 0.3, 1) both;
+  animation: tlDigit calc(160ms * var(--mk)) var(--e-out) both;
 }
 .tl-meta {
   display: flex;
@@ -454,7 +455,7 @@ input[type="range"].tl-scrub:focus-visible {
   color: var(--dis-label);
 }
 
-/* ---------- Движение ---------- */
+/* ---------- Движение: амплитуды через --mo, длительности через --mk (tokens.css); reduced-блока нет ---------- */
 @keyframes tlFade {
   from {
     opacity: 0;
@@ -465,7 +466,7 @@ input[type="range"].tl-scrub:focus-visible {
 }
 @keyframes tlUp {
   from {
-    transform: translateY(26px);
+    transform: translateY(calc(var(--mo) * 26px));
     opacity: 0;
   }
   to {
@@ -475,7 +476,7 @@ input[type="range"].tl-scrub:focus-visible {
 }
 @keyframes tlBlotSpread {
   0% {
-    transform: scale(0.35);
+    transform: scale(calc(0.35 + 0.65 * (1 - var(--mo))));
     opacity: 0;
   }
   60% {
@@ -486,52 +487,16 @@ input[type="range"].tl-scrub:focus-visible {
     opacity: var(--stain);
   }
 }
-@keyframes tlBlotFade {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: var(--stain);
-  }
-}
 @keyframes tlDigit {
   0% {
     opacity: 0;
-    transform: scale(1.08);
+    transform: scale(calc(1 + 0.08 * var(--mo)));
   }
   100% {
     opacity: 1;
     transform: scale(1);
   }
 }
-@keyframes tlDigitFade {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-/* Reduce Motion: ничего не едет и не масштабируется — только затухание ≤ 140 мс (accessibility.md > Cognitive). */
-@media (prefers-reduced-motion: reduce) {
-  .tl-sheet {
-    animation: tlFade 140ms linear;
-  }
-  .tl-scrim {
-    animation-duration: 0.14s;
-  }
-  .tl-field .stain.anim {
-    animation: tlBlotFade 140ms linear both;
-  }
-  .tl-field .d.tl-in {
-    animation: tlDigitFade 140ms linear both;
-  }
-  .tl-field .ring {
-    transition: none;
-    animation: none;
-  }
-}
-
 /* ---------- Контраст и forced-colors ---------- */
 @media (prefers-contrast: more) {
   .tl-root {

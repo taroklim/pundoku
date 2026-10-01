@@ -6,6 +6,7 @@ import { useTranslation } from "react-i18next";
 import { Board } from "./Board";
 import {
   GamePad,
+  StatusLine,
   handleGameKey,
   prefersReducedMotion,
   useBlotAnnouncement,
@@ -40,15 +41,20 @@ export function PlayScreen() {
   // QA PD-23, Low 1: возврат на вкладку не должен заново проигрывать стухшие M1/M3.
   useClearEffectsOnUnmount(playStore);
 
-  // «Решено»: сначала данные гаснут до 60 % (240 мс), затем карточка (см. макет, M5-прелюдия).
+  // «Решено»: сначала данные гаснут до 60 % (240 мс), затем карточка (финал V2, PD-89); тап прерывает паузу.
   const [cardShown, setCardShown] = useState(false);
   useEffect(() => {
     if (phase !== "solved") {
       setCardShown(false);
       return;
     }
-    const id = window.setTimeout(() => setCardShown(true), prefersReducedMotion() ? 140 : 240);
-    return () => window.clearTimeout(id);
+    const show = () => setCardShown(true);
+    const id = window.setTimeout(show, prefersReducedMotion() ? 140 : 240);
+    document.addEventListener("pointerdown", show, true);
+    return () => {
+      window.clearTimeout(id);
+      document.removeEventListener("pointerdown", show, true);
+    };
   }, [phase]);
 
   const cardRef = useRef<HTMLElement>(null);
@@ -142,7 +148,7 @@ export function PlayScreen() {
               </p>
             )}
             {(phase === "playing" || phase === "solved") && (
-              <p className="status">{t("play.cellsLeft", { count: left })}</p>
+              <StatusLine left={left} />
             )}
           </div>
 

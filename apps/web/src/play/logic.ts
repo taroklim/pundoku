@@ -293,6 +293,39 @@ export function closedUnits(s: PlayState, cell: number): number[][] {
   return [row, col, box].filter((u) => u.every((i) => isCorrectAt(s, i)));
 }
 
+/**
+ * Волна M3 по закрытым юнитам хода (PD-89): объединение клеток и «шаг» каждой — расстояние от поставленной клетки
+ * по юниту наружу (позиция в строке/столбце/блоке; стаггер 26 мс на шаг рисует CSS). Клетка из нескольких юнитов
+ * берёт минимальный шаг: волна идёт от поставленной цифры сразу во все собранные стороны.
+ */
+export function waveOf(units: readonly (readonly number[])[], origin: number): { cells: number[]; steps: number[] } {
+  const best = new Map<number, number>();
+  for (const unit of units) {
+    const oi = unit.indexOf(origin);
+    unit.forEach((cell, k) => {
+      const d = oi < 0 ? k : Math.abs(k - oi);
+      const prev = best.get(cell);
+      if (prev === undefined || d < prev) best.set(cell, d);
+    });
+  }
+  const cells = [...best.keys()];
+  return { cells, steps: cells.map((c) => best.get(c) as number) };
+}
+
+/**
+ * M8: клетки закрытой цифры (все девять на месте) в порядке постановки — сначала заданные (по номеру клетки), затем
+ * цифры игрока по ходу партии (последний верный `place` в клетке). Ответ идёт от первой поставленной к последней.
+ */
+export function digitCells(s: PlayState, digit: number): number[] {
+  const lastPlace = new Map<number, number>();
+  s.log.forEach((m, k) => {
+    if (m.kind === "place" && m.digit === digit) lastPlace.set(m.cell, k);
+  });
+  const out: number[] = [];
+  for (let i = 0; i < CELLS; i++) if (s.solution[i] === digit && isSettled(s, i)) out.push(i);
+  return out.sort((a, b) => (lastPlace.get(a) ?? -1) - (lastPlace.get(b) ?? -1) || a - b);
+}
+
 /** Первая пустая клетка (для стартового выбора), иначе 0. */
 export function firstOpenCell(s: PlayState): number {
   const i = s.mission.findIndex((g) => g === 0);

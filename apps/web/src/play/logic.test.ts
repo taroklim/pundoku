@@ -5,6 +5,7 @@ import {
   closedUnits,
   createPlay,
   digitAt,
+  digitCells,
   enterDigit,
   eraseCell,
   firstOpenCell,
@@ -13,6 +14,7 @@ import {
   remaining,
   toggleNote,
   undo,
+  waveOf,
 } from "./logic";
 
 const SOLUTION =
@@ -197,5 +199,36 @@ describe("юниты и решено", () => {
 
   it("firstOpenCell — первая пустая клетка", () => {
     expect(firstOpenCell(fresh())).toBe(2);
+  });
+});
+
+describe("PD-89: волна и эхо цифры", () => {
+  const row0 = [0, 1, 2, 3, 4, 5, 6, 7, 8];
+  const col2 = [2, 11, 20, 29, 38, 47, 56, 65, 74];
+
+  it("waveOf: шаг клетки — расстояние от поставленной по юниту; общая клетка берёт минимум", () => {
+    const w = waveOf([row0], 2);
+    expect(w.cells).toEqual(row0);
+    expect(w.steps).toEqual([2, 1, 0, 1, 2, 3, 4, 5, 6]);
+    const both = waveOf([row0, col2], 2);
+    expect(both.cells.length).toBe(17); // клетка 2 общая
+    expect(both.steps[both.cells.indexOf(2)]).toBe(0);
+    expect(both.steps[both.cells.indexOf(11)]).toBe(1);
+    expect(both.steps[both.cells.indexOf(0)]).toBe(2);
+  });
+
+  it("digitCells: заданные по номеру, затем цифры игрока в порядке постановки", () => {
+    let s = fresh();
+    // Цифра 4: решение ставит её в клетках 2 (пусто), 12?; соберём все по решению.
+    const cells = [...Array(81).keys()].filter((i) => s.solution[i] === 4);
+    const open = cells.filter((i) => !s.mission[i]);
+    const given = cells.filter((i) => s.mission[i]);
+    [...open].reverse().forEach((c, k) => {
+      s = enterDigit(s, c, 4, k + 1);
+    });
+    const out = digitCells(s, 4);
+    expect(out).toHaveLength(9);
+    expect(out.slice(0, given.length)).toEqual(given);
+    expect(out.slice(given.length)).toEqual([...open].reverse());
   });
 });

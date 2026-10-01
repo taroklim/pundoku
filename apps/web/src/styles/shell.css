@@ -106,6 +106,13 @@ button {
 .panel:focus-visible {
   outline-offset: -2px;
 }
+/* M10: смена вкладки — вход новой панели кроссфейдом с подъёмом 6 px, 200 мс; без слайда и свайпа
+   (нативные таб-бары не листаются жестом, движение не должно его обещать). Только после первой
+   навигации (класс ставит App); fill-mode backwards — после конца на панели не остаётся transform,
+   который сделал бы её containing block для position:fixed (шиты). */
+.panel.enter {
+  animation: fadeRise calc(200ms * var(--mk)) var(--e-out) backwards;
+}
 
 .toolbar {
   display: flex;
@@ -235,20 +242,6 @@ button {
   }
   .tab[aria-selected="true"] .lab {
     text-decoration: underline;
-  }
-}
-
-/* ---------- Reduced motion ----------
-   В оболочке нет перемещений/масштабов; остаётся только короткий кроссфейд цвета вкладки
-   (как в макете). Анимации поля (M1–M3, M6) со своими reduced-правилами — в play.css. */
-@media (prefers-reduced-motion: reduce) {
-  .tab {
-    transition:
-      background-color 0.12s linear,
-      color 0.12s linear;
-  }
-  .scroll {
-    scroll-behavior: auto;
   }
 }
 

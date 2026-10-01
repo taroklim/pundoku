@@ -1,5 +1,5 @@
 /*
- * Экран Play (PD-11): поле B Boxes, панель 1–9, действия, карточка «решено», движение M1/M2/M3/M6.
+ * Экран Play (PD-11): поле B Boxes, панель 1–9, действия, карточка «решено», движение M1–M9 (PD-89).
  * Значения — из утверждённого макета design/pd7-board-variants.html (разделы 4, 5, 6, 8, 9);
  * цвета — только токены tokens.css. Отклонения от макета помечены «ОТКЛОНЕНИЕ».
  */
@@ -83,7 +83,8 @@
   outline: none;
 }
 .cell > .fl,
-.cell.wave::before {
+.cell.wave::before,
+.cell.echo::after {
   content: "";
   position: absolute;
   inset: 0;
@@ -91,8 +92,10 @@
   background: var(--ink);
   opacity: 0;
 }
-/* Волна M3 живёт в ::before клетки под цифрой; над заливкой .fl, но под .d (z-index 2). */
-.cell.wave::before {
+/* Волна M3 живёт в ::before клетки, ответ M8 («цифра закрыта») — в ::after: слои не мешают друг другу,
+   если клетка и в собранном юните, и в закрытой цифре. Над заливкой .fl, но под .d (z-index 2). */
+.cell.wave::before,
+.cell.echo::after {
   z-index: 1;
 }
 .fl {
@@ -136,7 +139,7 @@
   pointer-events: none;
   border: 2px solid var(--wax);
   border-radius: var(--r-tl) var(--r-tr) var(--r-br) var(--r-bl);
-  animation: ringIn 120ms linear;
+  animation: ringIn calc(120ms * var(--mk)) linear;
 }
 
 /* Заметки 3×3.
@@ -201,8 +204,9 @@
     calc(var(--c) * var(--s) + var(--bc) * var(--box-gap)),
     calc(var(--r) * var(--s) + var(--br) * var(--box-gap))
   );
-  transition: transform 0.16s cubic-bezier(0.32, 0.72, 0, 1);
-  animation: ringIn 120ms linear;
+  /* M2: при --mo:0 переезд длится 1 мс, то есть кольцо просто оказывается на месте. */
+  transition: transform calc(160ms * var(--mo) + 1ms) var(--e-ring);
+  animation: ringIn calc(120ms * var(--mk)) linear;
 }
 /* Выбрана неверная клетка: кольцо выбора закрывало бы сургучное, и ошибку было бы видно только
    по цвету цифры. Двойное кольцо: сургуч снаружи (border), индиго внутри (inset-тень);
@@ -224,7 +228,7 @@
 .board.dim .d.given,
 .board.dim .d.player {
   opacity: 0.6;
-  transition: opacity 240ms linear;
+  transition: opacity calc(240ms * var(--mk)) linear;
 }
 
 /* Загрузка: та же структура (9 блоков), спокойный пульс — без спиннера. */
@@ -232,6 +236,7 @@
   opacity: 0.55;
 }
 .board[data-phase="loading"] {
+  /* Амплитуда пульса — через --mo: при reduced поле просто стоит на 55 % (см. @keyframes calm). */
   animation: calm 1.6s ease-in-out infinite;
 }
 
@@ -250,6 +255,11 @@
   font-size: 0.88rem;
   font-variant-numeric: tabular-nums;
   text-align: center;
+}
+/* M9: «осталось N» перекатывается (translateY 6 px + opacity, 220 мс). Класс ставит StatusLine только
+   при смене числа и только если включён флаг MOTION_FLAGS.statusRoll (play/motion.ts). */
+.status.roll {
+  animation: fadeRise calc(220ms * var(--mk)) var(--e-out) both;
 }
 .link {
   color: var(--ink);
@@ -283,7 +293,8 @@
   transition:
     background-color 0.12s linear,
     color 0.12s linear,
-    transform 0.22s cubic-bezier(0.34, 1.36, 0.52, 1);
+    transform calc(220ms * var(--mk)) cubic-bezier(0.34, 1.36, 0.52, 1),
+    opacity 0.16s linear;
 }
 .key .kd {
   font-size: clamp(18px, 1.24rem, 23px);
@@ -300,8 +311,13 @@
 .key:active:not(:disabled) {
   background: var(--ink-tint);
   color: var(--ink);
-  transform: scale(0.96);
-  transition-duration: 0.08s, 0.08s, 0.08s;
+  transform: scale(calc(1 - 0.04 * var(--mo)));
+  transition-duration: 0.08s, 0.08s, 0.08s, 0.16s;
+}
+/* M8: остаток закрытой цифры уезжает вверх и гаснет (220 мс); потом счётчик становится «·». */
+.key .kr.out {
+  animation: countOut calc(220ms * var(--mk)) var(--e-out) both;
+  animation-delay: calc(var(--ed, 0) * 1ms * var(--mo));
 }
 /* Закрытые цифры приглушены, не спрятаны; «0» дублирует смысл текстом. */
 .key.done {
@@ -338,7 +354,7 @@
   transition:
     background-color 0.12s linear,
     color 0.12s linear,
-    transform 0.22s cubic-bezier(0.34, 1.36, 0.52, 1);
+    transform calc(220ms * var(--mk)) cubic-bezier(0.34, 1.36, 0.52, 1);
 }
 /* Подпись никогда не переносится (иначе кнопка выше соседей): если не влезла — многоточие. */
 .act > span {
@@ -372,7 +388,7 @@
 }
 .act:active:not(:disabled):not([aria-disabled="true"]) {
   background: var(--ink-tint);
-  transform: scale(0.97);
+  transform: scale(calc(1 - 0.03 * var(--mo)));
   transition-duration: 0.08s;
 }
 
@@ -382,7 +398,7 @@
   border-radius: 18px;
   margin: 14px max(16px, var(--sa-r)) 0 max(16px, var(--sa-l));
   padding: 16px;
-  animation: cardUp 300ms cubic-bezier(0.22, 1, 0.36, 1);
+  animation: cardUp calc(300ms * var(--mk)) var(--e-spring) both;
 }
 .card:focus-visible {
   outline-offset: 2px;
@@ -520,10 +536,40 @@
   }
 }
 
-/* ---------- Движение ---------- */
+/* ---------- Движение (PD-89) ----------
+   Правило: амплитуда — через --mo, длительность — через --mk (tokens.css). При --mo:0 каждая анимация
+   сама становится кроссфейдом/мягким тинтом; @media (prefers-reduced-motion) здесь НЕ дублируется. */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes fadeOut {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+/* Вход панели вкладки (M10) и перекат статуса (M9): подъём 6 px + прозрачность. */
+@keyframes fadeRise {
+  from {
+    transform: translateY(calc(var(--mo) * 6px));
+    opacity: 0;
+  }
+  to {
+    transform: none;
+    opacity: 1;
+  }
+}
+/* M1: цифра встаёт на место — scale 1.25→1 + opacity. */
 @keyframes inkSet {
   from {
-    transform: scale(1.25);
+    transform: scale(calc(1 + 0.25 * var(--mo)));
     opacity: 0;
   }
   to {
@@ -531,58 +577,48 @@
     opacity: 1;
   }
 }
-@keyframes inkFade {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
+/* M3 / M8: волна заливки чернил по юниту — пик 15 %, а при --mo:0 плоский тинт 12 %.
+   Копия под вторым именем: чередование -a/-b перезапускает анимацию у клетки, которая входит
+   в две волны подряд, не пересоздавая узлов. */
 @keyframes unitWave {
   0% {
     opacity: 0;
   }
   40% {
-    opacity: 0.15;
+    opacity: calc(0.12 + 0.03 * var(--mo));
   }
   100% {
     opacity: 0;
   }
 }
-/* Копия unitWave под другим именем: чередование wave-a/wave-b перезапускает анимацию
-   у клетки, которая входит в две волны подряд. */
 @keyframes unitWave2 {
   0% {
     opacity: 0;
   }
   40% {
-    opacity: 0.15;
+    opacity: calc(0.12 + 0.03 * var(--mo));
   }
   100% {
     opacity: 0;
   }
 }
-@keyframes unitTint {
-  0% {
-    opacity: 0;
+/* Подъём цифр юнита на 1.6 px (только по Y — текст не «мылится»). */
+@keyframes lift {
+  0%,
+  100% {
+    transform: translateY(0);
   }
   45% {
-    opacity: 0.12;
-  }
-  100% {
-    opacity: 0;
+    transform: translateY(calc(var(--mo) * -1.6px));
   }
 }
-@keyframes unitTint2 {
-  0% {
-    opacity: 0;
+@keyframes lift2 {
+  0%,
+  100% {
+    transform: translateY(0);
   }
   45% {
-    opacity: 0.12;
-  }
-  100% {
-    opacity: 0;
+    transform: translateY(calc(var(--mo) * -1.6px));
   }
 }
 @keyframes ringIn {
@@ -593,9 +629,10 @@
     opacity: 1;
   }
 }
+/* M5: карточка «решено» выезжает снизу. */
 @keyframes cardUp {
   from {
-    transform: translateY(24px);
+    transform: translateY(calc(var(--mo) * 22px));
     opacity: 0;
   }
   to {
@@ -603,12 +640,15 @@
     opacity: 1;
   }
 }
-@keyframes cardFade {
+/* M8: остаток на клавише уезжает вверх. */
+@keyframes countOut {
   from {
-    opacity: 0;
+    transform: translateY(0);
+    opacity: 1;
   }
   to {
-    opacity: 1;
+    transform: translateY(calc(var(--mo) * -5px));
+    opacity: 0;
   }
 }
 @keyframes calm {
@@ -617,61 +657,53 @@
     opacity: 0.55;
   }
   50% {
-    opacity: 0.8;
+    opacity: calc(0.55 + 0.25 * var(--mo));
   }
 }
 
-/* M1: цифра — scale 1.25→1 + opacity, 180 мс ease-out («чернила впитались»). */
+/* M1: цифра — scale 1.25→1 + opacity, 180 мс ease-out. (Кольцо «впитывания» убрано по решению владельца.) */
 .d.anim-in {
-  animation: inkSet 180ms cubic-bezier(0.2, 0.7, 0.3, 1);
+  animation: inkSet calc(180ms * var(--mk)) var(--e-out) both;
 }
-/* M3: одна волна заливки чернил 15 %→0 по юниту; 156 мс + 8 мс на клетку ≈ 220 мс суммарно. */
+
+/* M3: направленная волна. Задержка = расстояние от поставленной клетки по юниту (--wi) × 26 мс; при
+   --mo:0 стаггер нулевой, и волна превращается в одновременный тинт. */
 .cell.wave-a::before {
-  animation: unitWave 156ms ease-out;
-  animation-delay: calc(var(--wi, 0) * 8ms);
+  animation: unitWave calc(200ms * var(--mk)) var(--e-out) both;
+  animation-delay: calc(var(--wi, 0) * 26ms * var(--mo));
 }
 .cell.wave-b::before {
-  animation: unitWave2 156ms ease-out;
-  animation-delay: calc(var(--wi, 0) * 8ms);
+  animation: unitWave2 calc(200ms * var(--mk)) var(--e-out) both;
+  animation-delay: calc(var(--wi, 0) * 26ms * var(--mo));
+}
+/* Подъём цифр. На только что поставленной клетке (идёт M1) цифру не трогаем. */
+.cell.wave-a .d:not(.anim-in) {
+  animation: lift calc(240ms * var(--mk)) var(--e-out) both;
+  animation-delay: calc(var(--wi, 0) * 26ms * var(--mo));
+}
+.cell.wave-b .d:not(.anim-in) {
+  animation: lift2 calc(240ms * var(--mk)) var(--e-out) both;
+  animation-delay: calc(var(--wi, 0) * 26ms * var(--mo));
 }
 
-/* ---------- Reduced motion (таблица спеки PD-7): ни transform, ни scale, ни перемещений —
-   остаются короткие кроссфейды непрозрачности. ---------- */
-@media (prefers-reduced-motion: reduce) {
-  .ring {
-    transition: none;
-  }
-  .d.anim-in {
-    animation: inkFade 120ms linear;
-  }
-  .cell.wave-a::before {
-    animation: unitTint 130ms linear;
-    animation-delay: 0ms;
-  }
-  .cell.wave-b::before {
-    animation: unitTint2 130ms linear;
-    animation-delay: 0ms;
-  }
-  .card {
-    animation: cardFade 140ms linear;
-  }
-  .board[data-phase="loading"] {
-    animation: none;
-  }
-  .board.dim .d.given,
-  .board.dim .d.player {
-    transition: opacity 140ms linear;
-  }
-  .key,
-  .act {
-    transition:
-      background-color 0.12s linear,
-      color 0.12s linear;
-  }
-  .key:active:not(:disabled),
-  .act:active:not(:disabled):not([aria-disabled="true"]) {
-    transform: none;
-  }
+/* M8: девять клеток закрытой цифры отвечают тинтом в порядке постановки — стаггер 22 мс (--ei);
+   --ed — пауза (мс), если ход заодно собрал юнит и волна M3 должна дойти раньше. Тот же тинт, что у M3,
+   но на ::after, поэтому оба могут идти на одной клетке. Подъём цифры — только если у клетки нет волны. */
+.cell.echo-a::after {
+  animation: unitWave calc(200ms * var(--mk)) var(--e-out) both;
+  animation-delay: calc((var(--ed, 0) + var(--ei, 0) * 22) * 1ms * var(--mo));
+}
+.cell.echo-b::after {
+  animation: unitWave2 calc(200ms * var(--mk)) var(--e-out) both;
+  animation-delay: calc((var(--ed, 0) + var(--ei, 0) * 22) * 1ms * var(--mo));
+}
+.cell.echo-a:not(.wave) .d:not(.anim-in) {
+  animation: lift calc(240ms * var(--mk)) var(--e-out) both;
+  animation-delay: calc((var(--ed, 0) + var(--ei, 0) * 22) * 1ms * var(--mo));
+}
+.cell.echo-b:not(.wave) .d:not(.anim-in) {
+  animation: lift2 calc(240ms * var(--mk)) var(--e-out) both;
+  animation-delay: calc((var(--ed, 0) + var(--ei, 0) * 22) * 1ms * var(--mo));
 }
 
 /* Windows High Contrast / forced-colors: заливки не рисуются, поэтому выбор держит кольцо,

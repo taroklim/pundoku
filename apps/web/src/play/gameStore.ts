@@ -11,12 +11,15 @@ import type { PlayState } from "./logic";
 import {
   closedUnits,
   createPlay,
+  digitCells,
   enterDigit,
   eraseCell,
   firstOpenCell,
+  remaining,
   setInkMode,
   toggleNote,
   undo as undoMove,
+  waveOf,
 } from "./logic";
 
 export type Phase = "loading" | "playing" | "solved" | "error";
@@ -31,8 +34,16 @@ export interface PlaySnapshot {
   readonly notesMode: boolean;
   /** M1: клетка, в которой только что поставлена цифра (id меняется на каждый ввод). */
   readonly pop: { readonly cell: number; readonly id: number } | null;
-  /** M3: собранный юнит (клетки по порядку) — одна волна. */
-  readonly wave: { readonly cells: readonly number[]; readonly id: number } | null;
+  /**
+   * M3: собранные ходом юниты (ряд/столбец/блок — все, что закрылись разом) — одна волна. `steps[k]` — расстояние
+   * клетки `cells[k]` от поставленной клетки по юниту (стаггер 26 мс на шаг); нет — шаг равен позиции в `cells`.
+   */
+  readonly wave: { readonly cells: readonly number[]; readonly steps?: readonly number[]; readonly id: number } | null;
+  /**
+   * M8 (PD-89): цифра исчерпана — девятая верная. `cells` — её девять клеток в порядке постановки (стаггер 22 мс),
+   * `delay` — пауза до ответа, мс: 180, если тем же ходом собран юнит (волна M3 доходит раньше), иначе 60.
+   */
+  readonly echo?: { readonly digit: number; readonly cells: readonly number[]; readonly delay: number; readonly id: number } | null;
   /** Ink (PD-71): клякса, только что поставленная игроком (неверная цифра и клетка; id меняется на каждую). */
   readonly blot?: { readonly cell: number; readonly digit: number; readonly id: number } | null;
 }
@@ -51,6 +62,7 @@ export function initialSnapshot(): PlaySnapshot {
     notesMode: false,
     pop: null,
     wave: null,
+    echo: null,
     blot: null,
   };
 }
@@ -61,6 +73,8 @@ export abstract class GameStore<S extends PlaySnapshot = PlaySnapshot> {
   private effectId = 0;
   /** Счётчик волн M3: подряд идущие волны получают id разной чётности (см. Board, класс wave-a/b). */
   private waveSeq = 0;
+  /** То же для M8: свой счётчик, чтобы чётность id волн и ответов не сбивали друг друга. */
+  private echoSeq = 0;
 
   // Таймер: накопленное + текущий отрезок. Идёт только пока партия играется, вкладка показана
   // и страница видима.
@@ -108,6 +122,7 @@ export abstract class GameStore<S extends PlaySnapshot = PlaySnapshot> {
       notesMode: false,
       pop: null,
       wave: null,
+      echo: null,
       blot: null,
       ...patch,
     } as Partial<S>);
@@ -126,6 +141,7 @@ export abstract class GameStore<S extends PlaySnapshot = PlaySnapshot> {
       notesMode: false,
       pop: null,
       wave: null,
+      echo: null,
       blot: null,
       ...patch,
     } as Partial<S>);
@@ -142,6 +158,7 @@ export abstract class GameStore<S extends PlaySnapshot = PlaySnapshot> {
       notesMode: false,
       pop: null,
       wave: null,
+      echo: null,
       blot: null,
       startedOn: new Date(),
       ...patch,
@@ -229,8 +246,13 @@ export abstract class GameStore<S extends PlaySnapshot = PlaySnapshot> {
     if (placed) {
       patch.pop = { cell: selected, id: ++this.effectId };
       if (next.solution[selected] === digit) {
-        const unit = closedUnits(next, selected)[0];
-        if (unit) patch.wave = { cells: unit, id: ++this.waveSeq };
+        // M3: волна по ВСЕМ собранным ходом юнитам (ряд + столбец + блок), от поставленной клетки наружу.
+        const units = closedUnits(next, selected);
+        if (units.length > 0) patch.wave = { ...waveOf(units, selected), id: ++this.waveSeq };
+        // M8: цифра закрыта — её остаток был > 0, стал 0.
+        if (remaining(play)[digit]! > 0 && remaining(next)[digit] === 0) {
+          patch.echo = { digit, cells: digitCells(next, digit), delay: units.length > 0 ? 180 : 60, id: ++this.echoSeq };
+        }
       }
     }
     this.finishMove(next, patch);
@@ -241,7 +263,7 @@ export abstract class GameStore<S extends PlaySnapshot = PlaySnapshot> {
     if (phase !== "playing" || !play || selected === null) return;
     const next = eraseCell(play, selected, this.getElapsedMs());
     // pop: null — восстановление/стирание не должно проигрывать M1 (устаревший popId).
-    if (next !== play) this.finishMove(next, { play: next, pop: null });
+    if (next !== play) this.finishMove(next, { play: next, pop: null, echo: null });
   }
 
   undo(): void {
@@ -249,17 +271,17 @@ export abstract class GameStore<S extends PlaySnapshot = PlaySnapshot> {
     if (phase !== "playing" || !play) return;
     const top = play.undoStack[play.undoStack.length - 1];
     const next = undoMove(play, this.getElapsedMs());
-    if (next !== play) this.finishMove(next, { play: next, pop: null, selected: top ? top.cell : this.snap.selected });
+    if (next !== play) this.finishMove(next, { play: next, pop: null, echo: null, selected: top ? top.cell : this.snap.selected });
   }
 
   /**
-   * Сбросить данные одноразовых анимаций M1/M3 (QA PD-23, Low 1). `pop`/`wave` живут в снапшоте
+   * Сбросить данные одноразовых анимаций M1/M3/M7/M8 (QA PD-23, Low 1). `pop`/`wave`/`echo`/`blot` живут в снапшоте
    * выше экрана: при возврате на вкладку экран монтируется заново и без сброса заново проиграл бы
    * стухшие «чернила впитались»/«волна». Экран зовёт это при размонтировании.
    */
   clearEffects(): void {
-    if (this.snap.pop === null && this.snap.wave === null && (this.snap.blot ?? null) === null) return;
-    this.set({ pop: null, wave: null, blot: null } as Partial<S>);
+    if (this.snap.pop === null && this.snap.wave === null && (this.snap.echo ?? null) === null && (this.snap.blot ?? null) === null) return;
+    this.set({ pop: null, wave: null, echo: null, blot: null } as Partial<S>);
   }
 
   private finishMove(next: PlayState, patch: Partial<PlaySnapshot>): void {

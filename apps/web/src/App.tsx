@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { PlayScreen } from "./play/PlayScreen";
 import { recoveryStore } from "./recovery/runtime";
@@ -36,6 +36,15 @@ export function App() {
     else go({ archive: date });
   };
 
+  // M10: панель кроссфейдится только при смене вкладки/маршрута — первый показ при запуске не анимируется.
+  const panelKey = settings ? "settings" : archiveDate ? `day-${archiveDate}` : tab;
+  const [shownKey, setShownKey] = useState(panelKey);
+  const [navigated, setNavigated] = useState(false);
+  if (shownKey !== panelKey) {
+    setShownKey(panelKey);
+    setNavigated(true);
+  }
+
   useEffect(() => {
     document.documentElement.lang = i18n.resolvedLanguage ?? "en";
   }, [i18n.resolvedLanguage]);
@@ -44,8 +53,8 @@ export function App() {
     <div className="shell">
       <main className="scroll">
         <div
-          key={settings ? "settings" : archiveDate ? `day-${archiveDate}` : tab}
-          className="panel"
+          key={panelKey}
+          className={navigated ? "panel enter" : "panel"}
           role="tabpanel"
           id={panelDomId(tab)}
           aria-labelledby={tabDomId(tab)}

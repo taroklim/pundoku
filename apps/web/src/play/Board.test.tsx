@@ -2,9 +2,10 @@
 import { act } from "react";
 import { createRoot } from "react-dom/client";
 import type { Root } from "react-dom/client";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import "../i18n";
-import { Board } from "./Board";
+import { Board, BLOT_MOMENT_MS } from "./Board";
+import { MOTION_MS } from "./motion";
 import { createPlay } from "./logic";
 import type { PlaySnapshot } from "./gameStore";
 
@@ -109,5 +110,73 @@ describe("выбранная неверная клетка", () => {
     expect(document.querySelector(".ring")!.classList.contains("err")).toBe(true);
     render(snapOf({ selected: 2 }));
     expect(document.querySelector(".ring")!.classList.contains("err")).toBe(false);
+  });
+});
+
+describe("PD-89: M3 стаггер от поставленной клетки", () => {
+  it("--wi берётся из steps (расстояние по юниту), а не из порядка клеток", () => {
+    const cells = row(0);
+    const steps = [2, 1, 0, 1, 2, 3, 4, 5, 6];
+    render(snapOf({ wave: { cells, steps, id: 1 } }));
+    cells.forEach((c, k) => {
+      expect(document.querySelector<HTMLElement>(`.cell[data-i="${c}"]`)!.style.getPropertyValue("--wi")).toBe(String(steps[k]));
+    });
+  });
+});
+
+describe("PD-89: M8 эхо закрытой цифры", () => {
+  const cells = [0, 14, 71, 24, 28, 40, 52, 57, 74];
+  it("клетки цифры получают echo-a/b, --ei в порядке постановки и общую задержку --ed; остальные — нет", () => {
+    render(snapOf({ echo: { digit: 5, cells, delay: 180, id: 1 } }));
+    expect(document.querySelectorAll(".cell.echo")).toHaveLength(9);
+    cells.forEach((c, n) => {
+      const el = document.querySelector<HTMLElement>(`.cell[data-i="${c}"]`)!;
+      expect(el.classList.contains("echo-a")).toBe(true);
+      expect(el.style.getPropertyValue("--ei")).toBe(String(n));
+      expect(el.style.getPropertyValue("--ed")).toBe("180");
+    });
+    render(snapOf({ echo: { digit: 5, cells, delay: 60, id: 2 } }));
+    expect(document.querySelector('.cell[data-i="0"]')!.classList.contains("echo-b")).toBe(true);
+    expect(document.querySelectorAll(".cell.echo-a")).toHaveLength(0);
+  });
+
+  it("без echo в снапшоте классов нет, число узлов не меняется", () => {
+    render(snapOf({}));
+    const base = total();
+    render(snapOf({ echo: { digit: 5, cells, delay: 60, id: 1 } }));
+    expect(total()).toBe(base);
+    render(snapOf({ echo: null }));
+    expect(document.querySelectorAll(".cell.echo")).toHaveLength(0);
+  });
+});
+
+describe("PD-89: события движения гаснут сами", () => {
+  beforeEach(() => vi.useFakeTimers());
+  afterEach(() => vi.useRealTimers());
+  const wait = (ms: number) => act(() => void vi.advanceTimersByTime(ms));
+
+  it("волна и эхо снимают классы по таймеру, чтобы пересборка клетки не переигрывала стухшую анимацию", () => {
+    render(snapOf({ wave: { cells: row(0), id: 1 }, echo: { digit: 5, cells: [0, 14], delay: 60, id: 1 } }));
+    expect(document.querySelectorAll(".cell.wave")).toHaveLength(9);
+    expect(document.querySelectorAll(".cell.echo")).toHaveLength(2);
+    wait(MOTION_MS.wave);
+    expect(document.querySelectorAll(".cell.wave")).toHaveLength(0);
+    wait(MOTION_MS.echo);
+    expect(document.querySelectorAll(".cell.echo")).toHaveLength(0);
+  });
+
+  it("M7: клетка вжимается (blotting) на 620 мс; тап в любой точке завершает момент сразу", () => {
+    expect(BLOT_MOMENT_MS).toBe(620);
+    render(snapOf({ blot: { cell: 2, digit: 5, id: 1 } }));
+    expect(document.querySelectorAll(".cell.blotting").length).toBeGreaterThan(0);
+    wait(BLOT_MOMENT_MS - 1);
+    expect(document.querySelectorAll(".cell.blotting").length).toBeGreaterThan(0);
+    wait(1);
+    expect(document.querySelectorAll(".cell.blotting")).toHaveLength(0);
+
+    render(snapOf({ blot: { cell: 2, digit: 5, id: 2 } }));
+    expect(document.querySelectorAll(".cell.blotting").length).toBeGreaterThan(0);
+    act(() => void window.dispatchEvent(new Event("pointerdown")));
+    expect(document.querySelectorAll(".cell.blotting")).toHaveLength(0);
   });
 });

@@ -228,7 +228,7 @@
   inset: 0;
   background: var(--scrim);
   opacity: 0;
-  transition: opacity 0.22s linear;
+  transition: opacity calc(220ms * var(--mk)) linear;
 }
 .ysheet-root.is-open .ysheet-scrim {
   opacity: 1;
@@ -247,14 +247,19 @@
   color: var(--label);
   border-radius: 14px 14px 0 0;
   padding-bottom: calc(10px + var(--sa-bot));
-  transform: translateY(101%);
-  transition: transform 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+  /* При --mo:0 шит не «приезжает», а проявляется на месте (прозрачность). */
+  transform: translateY(calc(var(--mo) * 101%));
+  opacity: 0;
+  transition:
+    transform calc(280ms * var(--mk)) var(--e-spring),
+    opacity calc(160ms * var(--mk)) linear;
 }
 .ysheet:focus {
   outline: none;
 }
 .ysheet-root.is-open .ysheet {
   transform: none;
+  opacity: 1;
 }
 .ysheet .grabber {
   flex: none;
@@ -430,20 +435,7 @@
   }
 }
 
-/* ---------- Движение: единственное на экране — шит ---------- */
-@media (prefers-reduced-motion: reduce) {
-  .ysheet {
-    transform: none;
-    opacity: 0;
-    transition: opacity 0.16s linear;
-  }
-  .ysheet-root.is-open .ysheet {
-    opacity: 1;
-  }
-  .ysheet-scrim {
-    transition-duration: 0.16s;
-  }
-}
+/* Движение: единственное на экране — шит; амплитуда и длительность — через --mo/--mk (tokens.css). */
 
 /* forced-colors: специфичность селекторов должна быть не ниже авторских (`.ymark.has-corr` и т. п.),
    иначе метки остаются в цветах автора. Заливки и тени система отбрасывает — границы карточек и кнопок
