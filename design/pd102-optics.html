@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PD-102 — D5 «Унос»: малая оптика, до и после</title>
+<!--
+  Кадры для проверки (design/pd102-shots.mjs). Каждая плитка — настоящий SVG-ассет (design/pd98-assets) или PNG приложения
+  в номинальном размере: при deviceScaleFactor 3 плитка 29 — это те самые 87 физических пикселей iPhone.
+  Скругление плитки 22.37 % — имитация маски iOS (в самих файлах углы квадратные).
+-->
+<style>
+  :root { color-scheme: light dark; --bg:#f2f2f7; --fg:#1c1c1e; --fg2:#6a6a6e; }
+  @media (prefers-color-scheme: dark) { :root { --bg:#000; --fg:#fff; --fg2:#98989d; } }
+  * { box-sizing: border-box; }
+  body { margin:0; padding:16px; background:var(--bg); color:var(--fg); font:15px/1.4 system-ui,-apple-system,sans-serif; }
+  h1 { font-size:20px; margin:0 0 4px; } h2 { font-size:15px; margin:22px 0 8px; }
+  p.n { margin:0 0 10px; color:var(--fg2); font-size:13px; }
+  .rows { display:grid; gap:10px; }
+  .row { display:flex; align-items:flex-end; gap:10px; flex-wrap:wrap; }
+  .row > b { flex:0 0 100%; font-size:12px; font-weight:600; color:var(--fg2); }
+  .t { display:flex; flex-direction:column; align-items:center; gap:3px; font-size:10px; color:var(--fg2); }
+  .t img { display:block; border-radius:22.37%; }
+  .wall { border-radius:14px; padding:14px; display:flex; gap:18px; align-items:flex-end; flex-wrap:wrap; }
+  .wall.l { background:#d8dbe6; } .wall.d { background:#16171b; color:#c8c9cf; }
+  .wall .t { color:inherit; }
+  .tab { display:flex; align-items:center; gap:7px; padding:7px 12px; border-radius:9px 9px 0 0; width:210px; font-size:12px; }
+  .tab.l { background:#fff; color:#1c1c1e; } .tab.d { background:#2c2c2e; color:#f2f2f7; }
+  .tab img { display:block; }
+  .strip { display:flex; gap:12px; flex-wrap:wrap; }
+  .strip > div { border-radius:10px; overflow:hidden; }
+  .bar.l { background:#dee1e6; padding-top:8px; } .bar.d { background:#1c1c1e; padding-top:8px; }
+</style>
+</head>
+<body>
+<h1>D5 «Унос» — малая оптика</h1>
+<p class="n">Полная геометрия (d5-icon-*) против малой (d5-small-*): коридор 124 → 164, скругления 113/41 → 72/30, без фелета. Порог переключения в приложении — 60 px.</p>
+
+<section id="optics">
+  <script>
+    const SIZES = [16, 29, 32, 40, 58, 60, 87, 120, 180];
+    const out = [];
+    for (const ap of ["light", "dark", "tinted"]) {
+      for (const [kind, label] of [["icon", "полная"], ["small", "малая"]]) {
+        out.push(`<div class="row" data-ap="${ap}" data-kind="${kind}"><b>${ap} · ${label} (d5-${kind}-${ap})</b>` +
+          SIZES.map((s) => `<div class="t"><img alt="" src="pd98-assets/d5-${kind}-${ap}.svg" width="${s}" height="${s}">${s}</div>`).join("") + "</div>");
+      }
+    }
+    document.currentScript.insertAdjacentHTML("beforebegin", `<div class="rows">${out.join("")}</div>`);
+  </script>
+</section>
+
+<section id="touch">
+  <h2>apple-touch-icon-180.png (PNG приложения) на обоях</h2>
+  <div class="wall l" data-wall="light"><div class="t"><img alt="" src="../apps/web/public/icons/apple-touch-icon-180.png" width="60" height="60">60 pt</div><div class="t"><img alt="" src="../apps/web/public/icons/apple-touch-icon-180.png" width="40" height="40">40 pt</div><div class="t"><img alt="" src="../apps/web/public/icons/apple-touch-icon-180.png" width="29" height="29">29 pt</div></div>
+  <div class="wall d" data-wall="dark" style="margin-top:8px"><div class="t"><img alt="" src="../apps/web/public/icons/apple-touch-icon-180.png" width="60" height="60">60 pt</div><div class="t"><img alt="" src="../apps/web/public/icons/apple-touch-icon-180.png" width="40" height="40">40 pt</div><div class="t"><img alt="" src="../apps/web/public/icons/apple-touch-icon-180.png" width="29" height="29">29 pt</div></div>
+</section>
+
+<section id="favicon">
+  <h2>favicon (d5-favicon.svg, 16-сетка) во вкладке</h2>
+  <div class="strip">
+    <div class="bar l"><div class="tab l"><img alt="" src="../apps/web/public/icons/icon.svg" width="16" height="16">Pundoku</div></div>
+    <div class="bar d"><div class="tab d"><img alt="" src="../apps/web/public/icons/icon.svg" width="16" height="16">Pundoku</div></div>
+    <div class="bar l"><div class="tab l"><img alt="" src="../apps/web/public/icons/icon.svg" width="32" height="32">32 px</div></div>
+    <div class="bar d"><div class="tab d"><img alt="" src="../apps/web/public/icons/icon.svg" width="32" height="32">32 px</div></div>
+    <div class="bar l"><div class="tab l"><img alt="" src="../apps/web/public/icons/favicon-32.png" width="16" height="16">PNG 32 → 16</div></div>
+    <div class="bar d"><div class="tab d"><img alt="" src="../apps/web/public/icons/favicon-32.png" width="32" height="32">PNG 32</div></div>
+  </div>
+</section>
+</body>
+</html>
