@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024" role="img" aria-label="Pundoku mark, direction 1 Aperture">
+  <title>Pundoku mark — D1 «Створ»</title>
+  <desc>Single flat shape, currentColor. The inner aperture is offset 16/1024 up and left, so the lower-right wall is thicker (164 vs 196) — the chamfer that makes the ring read as a slab of glass instead of a concentric frame.</desc>
+  <path fill="currentColor" fill-rule="evenodd" d="M357 172H667A185 185 0 0 1 852 357V667A185 185 0 0 1 667 852H357A185 185 0 0 1 172 667V357A185 185 0 0 1 357 172ZM432 336H560A96 96 0 0 1 656 432V560A96 96 0 0 1 560 656H432A96 96 0 0 1 336 560V432A96 96 0 0 1 432 336Z"/>
+</svg>

@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-2 94 588 108" width="588" height="108" role="img" aria-label="Pundoku wordmark, direction 1">
+  <title>Pundoku wordmark — D1 «Створ»</title>
+  <desc>Drawn letterforms, not a font: monolinear geometric construction, stroke 22 on a cap height of 104 and an x-height of 76. No glyph from any typeface is embedded, so there is no font licence to clear. The o of "doku" is built as the aperture cell — use this standalone version only when the mark is NOT also present in the lockup (branding.md: a logo should not repeat itself).</desc>
+  <g fill="none" stroke-width="22" stroke-linecap="butt" stroke-linejoin="round">
+    <g stroke="#3B48B0">
+      <path d="M11 96V200M11 107H36A22 22 0 0 1 36 151H11"/>
+      <path transform="translate(83 0)" d="M11 135V167A23 22 0 0 0 57 167V135"/>
+      <path transform="translate(165 0)" d="M11 200V157A23 22 0 0 1 57 157V200"/>
+    </g>
+    <g stroke="#6E6E73">
+      <path transform="translate(247 0)" d="M11 162A28 27 0 0 1 67 162A28 27 0 0 1 11 162M67 96V200"/>
+      <rect transform="translate(339 0)" x="11" y="135" width="56" height="54" rx="20"/>
+      <path transform="translate(431 0)" d="M11 96V200M58 135L24 171L60 200"/>
+      <path transform="translate(516 0)" d="M11 135V167A23 22 0 0 0 57 167V135"/>
+    </g>
+  </g>
+</svg>

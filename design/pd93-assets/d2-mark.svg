@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024" role="img" aria-label="Pundoku mark, direction 2 The Nine">
+  <title>Pundoku mark — D2 «Девять»</title>
+  <desc>Geometric nine. Bowl is a circle r=230 at (512,420); the counter is a rounded square (190, r=56) instead of a circle — so the same shape reads both as the digit 9 and as one cell of the grid. The tail is the bowl's own right wall (135 wide, the same weight everywhere) continued down to y=830 and cut flat. Non-zero fill rule: bowl and tail wind clockwise, the counter counter-clockwise.</desc>
+  <path fill="currentColor" d="M512 190A230 230 0 0 1 512 650A230 230 0 0 1 512 190ZM607 420H742V814A16 16 0 0 1 726 830H623A16 16 0 0 1 607 814ZM473 325A56 56 0 0 0 417 381V459A56 56 0 0 0 473 515H551A56 56 0 0 0 607 459V381A56 56 0 0 0 551 325Z"/>
+</svg>

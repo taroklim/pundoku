@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024" role="img" aria-label="Pundoku app icon, direction 1 Aperture, light appearance">
+  <title>Pundoku — D1 «Створ» — light</title>
+  <defs>
+    <linearGradient id="d1l-bg" x1="0" y1="0" x2="0.32" y2="1">
+      <stop offset="0" stop-color="#8A93FF"/>
+      <stop offset="0.42" stop-color="#4450C4"/>
+      <stop offset="1" stop-color="#1E2470"/>
+    </linearGradient>
+    <radialGradient id="d1l-sheen" cx="0.24" cy="0.1" r="0.95">
+      <stop offset="0" stop-color="#FFFFFF" stop-opacity="0.42"/>
+      <stop offset="0.55" stop-color="#FFFFFF" stop-opacity="0.06"/>
+      <stop offset="1" stop-color="#FFFFFF" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="d1l-glass" x1="0.1" y1="0" x2="0.6" y2="1">
+      <stop offset="0" stop-color="#FFFFFF" stop-opacity="0.84"/>
+      <stop offset="0.5" stop-color="#E4E8FF" stop-opacity="0.62"/>
+      <stop offset="1" stop-color="#A7B0F0" stop-opacity="0.52"/>
+    </linearGradient>
+    <linearGradient id="d1l-rim" x1="0.1" y1="0" x2="0.85" y2="0.95">
+      <stop offset="0" stop-color="#FFFFFF" stop-opacity="0.95"/>
+      <stop offset="0.45" stop-color="#FFFFFF" stop-opacity="0.18"/>
+      <stop offset="1" stop-color="#FFFFFF" stop-opacity="0.04"/>
+    </linearGradient>
+    <linearGradient id="d1l-rim2" x1="0.2" y1="0.1" x2="0.9" y2="1">
+      <stop offset="0" stop-color="#FFFFFF" stop-opacity="0.04"/>
+      <stop offset="0.6" stop-color="#FFFFFF" stop-opacity="0.35"/>
+      <stop offset="1" stop-color="#FFFFFF" stop-opacity="0.9"/>
+    </linearGradient>
+    <filter id="d1l-soft" x="-40%" y="-40%" width="180%" height="180%">
+      <feGaussianBlur stdDeviation="26" color-interpolation-filters="sRGB"/>
+    </filter>
+    <mask id="d1l-mask">
+      <path fill="#FFFFFF" fill-rule="evenodd" d="M357 172H667A185 185 0 0 1 852 357V667A185 185 0 0 1 667 852H357A185 185 0 0 1 172 667V357A185 185 0 0 1 357 172ZM432 336H560A96 96 0 0 1 656 432V560A96 96 0 0 1 560 656H432A96 96 0 0 1 336 560V432A96 96 0 0 1 432 336Z"/>
+    </mask>
+  </defs>
+  <rect width="1024" height="1024" fill="url(#d1l-bg)"/>
+  <rect width="1024" height="1024" fill="url(#d1l-sheen)"/>
+  <g mask="url(#d1l-mask)">
+    <rect width="1024" height="1024" fill="url(#d1l-glass)"/>
+    <ellipse cx="320" cy="300" rx="190" ry="120" fill="#FFFFFF" fill-opacity="0.5" filter="url(#d1l-soft)"/>
+    <ellipse cx="730" cy="762" rx="200" ry="130" fill="#1A2068" fill-opacity="0.28" filter="url(#d1l-soft)"/>
+    <path fill="none" stroke="url(#d1l-rim)" stroke-width="12" d="M357 172H667A185 185 0 0 1 852 357V667A185 185 0 0 1 667 852H357A185 185 0 0 1 172 667V357A185 185 0 0 1 357 172Z"/>
+    <path fill="none" stroke="url(#d1l-rim2)" stroke-width="10" d="M432 336H560A96 96 0 0 1 656 432V560A96 96 0 0 1 560 656H432A96 96 0 0 1 336 560V432A96 96 0 0 1 432 336Z"/>
+  </g>
+</svg>

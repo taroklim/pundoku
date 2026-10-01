@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024" role="img" aria-label="Pundoku app icon, direction 2 The Nine, tinted/mono appearance">
+  <title>Pundoku — D2 «Девять» — tinted (mono mapping)</title>
+  <desc>Mono mapping that iOS uses to generate the tinted and clear appearances. The real tinted icon is produced by the system from this luminance map, not shipped as a file.</desc>
+  <defs>
+    <linearGradient id="d2t-bg" x1="0" y1="0" x2="0.3" y2="1">
+      <stop offset="0" stop-color="#3A3A3C"/>
+      <stop offset="0.55" stop-color="#1C1C1E"/>
+      <stop offset="1" stop-color="#000000"/>
+    </linearGradient>
+    <linearGradient id="d2t-glass" x1="0.15" y1="0" x2="0.7" y2="1">
+      <stop offset="0" stop-color="#FFFFFF" stop-opacity="1"/>
+      <stop offset="0.55" stop-color="#FFFFFF" stop-opacity="0.78"/>
+      <stop offset="1" stop-color="#FFFFFF" stop-opacity="0.54"/>
+    </linearGradient>
+    <linearGradient id="d2t-spec" x1="0.45" y1="0.18" x2="0.27" y2="0.46">
+      <stop offset="0" stop-color="#FFFFFF" stop-opacity="0"/>
+      <stop offset="0.45" stop-color="#FFFFFF" stop-opacity="1"/>
+      <stop offset="1" stop-color="#FFFFFF" stop-opacity="0"/>
+    </linearGradient>
+    <mask id="d2t-mask">
+      <path fill="#FFFFFF" d="M512 190A230 230 0 0 1 512 650A230 230 0 0 1 512 190ZM607 420H742V814A16 16 0 0 1 726 830H623A16 16 0 0 1 607 814ZM473 325A56 56 0 0 0 417 381V459A56 56 0 0 0 473 515H551A56 56 0 0 0 607 459V381A56 56 0 0 0 551 325Z"/>
+    </mask>
+  </defs>
+  <rect width="1024" height="1024" fill="url(#d2t-bg)"/>
+  <g mask="url(#d2t-mask)">
+    <rect width="1024" height="1024" fill="url(#d2t-glass)"/>
+    <path fill="none" stroke="url(#d2t-spec)" stroke-width="16" stroke-linecap="round" d="M472.1 193.5A230 230 0 0 0 285.5 459.9"/>
+  </g>
+</svg>

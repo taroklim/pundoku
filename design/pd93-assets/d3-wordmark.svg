@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-2 94 588 131" width="588" height="131" role="img" aria-label="Pundoku wordmark, direction 3">
+  <title>Pundoku wordmark — D3 «Капля»</title>
+  <desc>Drawn letterforms, not a font: monolinear geometric construction, stroke 22 on a cap height of 104 and an x-height of 76. No glyph from any typeface is embedded, so there is no font licence to clear. The right stem of the n in "Pun" ends in a hanging drop (r=17 at the stem axis, 34 wide against a 22 stem) — the one letterform intervention, and it sits on the last letter of the player's name.</desc>
+  <g fill="none" stroke-width="22" stroke-linecap="butt" stroke-linejoin="round">
+    <g stroke="#3B48B0">
+      <path d="M11 96V200M11 107H36A22 22 0 0 1 36 151H11"/>
+      <path transform="translate(83 0)" d="M11 135V167A23 22 0 0 0 57 167V135"/>
+      <path transform="translate(165 0)" d="M11 200V157A23 22 0 0 1 57 157V200"/>
+    </g>
+    <g stroke="#6E6E73">
+      <path transform="translate(247 0)" d="M11 162A28 27 0 0 1 67 162A28 27 0 0 1 11 162M67 96V200"/>
+      <path transform="translate(339 0)" d="M11 162A28 27 0 0 1 67 162A28 27 0 0 1 11 162"/>
+      <path transform="translate(431 0)" d="M11 96V200M58 135L24 171L60 200"/>
+      <path transform="translate(516 0)" d="M11 135V167A23 22 0 0 0 57 167V135"/>
+    </g>
+  </g>
+  <circle cx="222" cy="206" r="17" fill="#3B48B0"/>
+</svg>

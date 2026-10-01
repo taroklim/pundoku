@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
+  <title>Pundoku — D3 foreground layers for Icon Composer</title>
+  <desc>Production layers. Flat, opaque, full white, transparent background, no platform mask, no baked shadows/blurs/highlights. TWO groups that must become TWO Icon Composer layers (blot in depth group 1, droplet in depth group 2 at a lower opacity) — split this file in the design tool before importing, or export each group separately. Background is a gradient defined inside Icon Composer (see pd93-logo-round2.md, Layer sheet D3).</desc>
+  <g id="blot" fill="#FFFFFF">
+    <path transform="translate(512 512) scale(1.3) translate(-512 -512)" d="M786 530C784.5 462.45 678.67 372.92 608.5 335.1C538.33 297.28 423.42 270.62 365 303.1C306.58 335.58 259.67 451.48 258 530C256.33 608.52 295.08 739.13 355 774.2C414.92 809.27 545.67 781.1 617.5 740.4C689.33 699.7 787.5 597.55 786 530Z"/>
+  </g>
+  <g id="droplet" fill="#FFFFFF">
+    <circle cx="650" cy="185" r="42"/>
+  </g>
+</svg>

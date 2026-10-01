@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024" role="img" aria-label="Pundoku app icon, direction 2 The Nine, light appearance">
+  <title>Pundoku — D2 «Девять» — light</title>
+  <defs>
+    <linearGradient id="d2l-bg" x1="0" y1="0" x2="0.3" y2="1">
+      <stop offset="0" stop-color="#2FE9C2"/>
+      <stop offset="0.4" stop-color="#0C9C84"/>
+      <stop offset="1" stop-color="#04463E"/>
+    </linearGradient>
+    <radialGradient id="d2l-sheen" cx="0.22" cy="0.08" r="0.95">
+      <stop offset="0" stop-color="#FFFFFF" stop-opacity="0.4"/>
+      <stop offset="0.5" stop-color="#FFFFFF" stop-opacity="0.05"/>
+      <stop offset="1" stop-color="#FFFFFF" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="d2l-glass" x1="0.15" y1="0" x2="0.7" y2="1">
+      <stop offset="0" stop-color="#FFFFFF" stop-opacity="0.96"/>
+      <stop offset="0.5" stop-color="#EAFFF9" stop-opacity="0.8"/>
+      <stop offset="1" stop-color="#B9F0E2" stop-opacity="0.62"/>
+    </linearGradient>
+    <linearGradient id="d2l-spec" x1="0.45" y1="0.18" x2="0.27" y2="0.46" gradientUnits="objectBoundingBox">
+      <stop offset="0" stop-color="#FFFFFF" stop-opacity="0"/>
+      <stop offset="0.45" stop-color="#FFFFFF" stop-opacity="0.95"/>
+      <stop offset="1" stop-color="#FFFFFF" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="d2l-rim2" x1="0.2" y1="0.1" x2="0.9" y2="1">
+      <stop offset="0" stop-color="#03352E" stop-opacity="0.3"/>
+      <stop offset="0.55" stop-color="#FFFFFF" stop-opacity="0.2"/>
+      <stop offset="1" stop-color="#FFFFFF" stop-opacity="0.85"/>
+    </linearGradient>
+    <linearGradient id="d2l-tail" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FFFFFF" stop-opacity="0.7"/>
+      <stop offset="1" stop-color="#FFFFFF" stop-opacity="0.08"/>
+    </linearGradient>
+    <filter id="d2l-soft" x="-40%" y="-40%" width="180%" height="180%">
+      <feGaussianBlur stdDeviation="28" color-interpolation-filters="sRGB"/>
+    </filter>
+    <mask id="d2l-mask">
+      <path fill="#FFFFFF" d="M512 190A230 230 0 0 1 512 650A230 230 0 0 1 512 190ZM607 420H742V814A16 16 0 0 1 726 830H623A16 16 0 0 1 607 814ZM473 325A56 56 0 0 0 417 381V459A56 56 0 0 0 473 515H551A56 56 0 0 0 607 459V381A56 56 0 0 0 551 325Z"/>
+    </mask>
+  </defs>
+  <rect width="1024" height="1024" fill="url(#d2l-bg)"/>
+  <rect width="1024" height="1024" fill="url(#d2l-sheen)"/>
+  <g mask="url(#d2l-mask)">
+    <rect width="1024" height="1024" fill="url(#d2l-glass)"/>
+    <ellipse cx="392" cy="286" rx="170" ry="110" fill="#FFFFFF" fill-opacity="0.55" filter="url(#d2l-soft)"/>
+    <ellipse cx="700" cy="770" rx="150" ry="150" fill="#033A32" fill-opacity="0.3" filter="url(#d2l-soft)"/>
+    <path fill="none" stroke="url(#d2l-spec)" stroke-width="16" stroke-linecap="round" d="M472.1 193.5A230 230 0 0 0 285.5 459.9"/>
+    <path fill="none" stroke="url(#d2l-rim2)" stroke-width="10" d="M473 325A56 56 0 0 0 417 381V459A56 56 0 0 0 473 515H551A56 56 0 0 0 607 459V381A56 56 0 0 0 551 325Z"/>
+    <path fill="none" stroke="url(#d2l-tail)" stroke-width="9" d="M742 424V812"/>
+  </g>
+</svg>

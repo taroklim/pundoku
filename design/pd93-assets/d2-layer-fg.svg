@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
+  <title>Pundoku — D2 foreground layer for Icon Composer</title>
+  <desc>Production layer. Flat, opaque, full white, transparent background, no platform mask, no baked shadows/blurs/highlights — the system draws specular highlights and refraction. Background is a gradient defined inside Icon Composer (see pd93-logo-round2.md, Layer sheet D2).</desc>
+  <path fill="#FFFFFF" d="M512 190A230 230 0 0 1 512 650A230 230 0 0 1 512 190ZM607 420H742V814A16 16 0 0 1 726 830H623A16 16 0 0 1 607 814ZM473 325A56 56 0 0 0 417 381V459A56 56 0 0 0 473 515H551A56 56 0 0 0 607 459V381A56 56 0 0 0 551 325Z"/>
+</svg>

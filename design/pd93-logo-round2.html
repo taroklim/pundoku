@@ -1,0 +1,1134 @@
+<!DOCTYPE html>
+<html lang="ru" data-dir="d1" data-appear="light" data-motion="system">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<title>Pundoku · PD-93 · логотип и иконка, раунд 2</title>
+<style>
+  * { box-sizing: border-box; -webkit-text-size-adjust: 100%; }
+  html, body { margin: 0; padding: 0; }
+
+  /* ── Page chrome + brand tokens, by appearance ───────────────── */
+  [data-appear="light"] {
+    --bg:#F2F2F7; --card:#FFFFFF; --card2:#FFFFFF; --lbl:#1C1C1E; --lbl2:#6E6E73;
+    --lbl3:#7C7C82; --sep:rgba(60,60,67,.29); --ctl:#E4E4EB; --ctlOn:#FFFFFF;
+    --wall:linear-gradient(160deg,#C9D2F2 0%,#E6DEF4 48%,#F3E9EE 100%);
+    --pun:#3B48B0; --pun2:#2A3488; --doku:#6E6E73;
+  }
+  [data-appear="dark"], [data-appear="tinted"] {
+    --bg:#000000; --card:#1C1C1E; --card2:#2C2C2E; --lbl:#F2F2F7; --lbl2:#98989D;
+    --lbl3:#8E8E93; --sep:rgba(84,84,88,.65); --ctl:#1C1C1E; --ctlOn:#3A3A3C;
+    --wall:linear-gradient(160deg,#141730 0%,#0A0B18 52%,#000000 100%);
+    --pun:#8C96FF; --pun2:#B3BAFF; --doku:#98989D;
+  }
+  [data-dir="d2"][data-appear="light"] { --pun:#0B8470; --pun2:#075045; --doku:#1C1C1E; }
+  [data-dir="d2"][data-appear="dark"], [data-dir="d2"][data-appear="tinted"] { --pun:#3FD9BC; --pun2:#7FEFD6; --doku:#F2F2F7; }
+
+  body {
+    background: var(--bg); color: var(--lbl);
+    font: 400 17px/1.47 system-ui, -apple-system, "Segoe UI", sans-serif;
+    padding-bottom: calc(40px + env(safe-area-inset-bottom));
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ── Sticky controls ─────────────────────────────────────────── */
+  header {
+    position: sticky; top: 0; z-index: 40; background: var(--bg);
+    border-bottom: 1px solid var(--sep);
+    padding: calc(8px + env(safe-area-inset-top)) 16px 8px;
+  }
+  header h1 { margin: 0; font-size: 17px; line-height: 1.25; font-weight: 700; letter-spacing: -.01em; }
+  .seg { display: flex; gap: 4px; background: var(--ctl); border-radius: 12px; padding: 4px; margin-top: 8px; }
+  .seg button {
+    flex: 1 1 0; min-height: 44px; border: 0; border-radius: 9px; background: transparent;
+    color: var(--lbl); font: 500 16px/1.2 system-ui, -apple-system, sans-serif;
+    padding: 6px 2px; cursor: pointer; -webkit-tap-highlight-color: transparent;
+  }
+  .seg button[aria-pressed="true"] { background: var(--ctlOn); box-shadow: 0 1px 3px rgba(0,0,0,.14); font-weight: 600; }
+  .seglab { font-size: 16px; color: var(--lbl2); margin: 0; }
+
+  /* ── Layout ──────────────────────────────────────────────────── */
+  main { padding: 0 16px; }
+  section { margin: 26px 0 0; }
+  h2 { font-size: 16px; line-height: 1.3; letter-spacing: .04em; text-transform: uppercase;
+       color: var(--lbl2); margin: 0 0 8px 4px; font-weight: 600; }
+  .card { background: var(--card); border-radius: 18px; padding: 16px; }
+  .card + .card { margin-top: 12px; }
+  p { margin: 0 0 10px; }
+  p:last-child { margin-bottom: 0; }
+  .note { font-size: 16px; color: var(--lbl2); }
+  .note b { color: var(--lbl); font-weight: 600; }
+  .row { display: flex; flex-wrap: wrap; gap: 14px; align-items: flex-end; }
+  .center { display: flex; justify-content: center; }
+  ul { margin: 0 0 0 20px; padding: 0; }
+  li { margin: 0 0 8px; }
+  code { font: 500 16px/1.4 ui-monospace, "SF Mono", Menlo, monospace; }
+
+  /* ── Icon plates ─────────────────────────────────────────────── */
+  .sq { border-radius: 22.37%; overflow: hidden; display: block; flex: 0 0 auto;
+        box-shadow: 0 1px 2px rgba(0,0,0,.16); }
+  .sq svg { display: block; width: 100%; height: 100%; }
+  .raw { border-radius: 0; }
+  .cap { font-size: 16px; color: var(--lbl2); text-align: center; margin-top: 6px; }
+  .cap b { color: var(--lbl); font-weight: 600; }
+  .fine { font-size: 16px; color: var(--lbl3); }
+
+  .wallband { background: var(--wall); border-radius: 16px; padding: 18px 10px 12px;
+              display: flex; justify-content: space-around; gap: 6px; }
+  .wallband .lab { font-size: 16px; text-align: center; margin-top: 8px;
+                   color: rgba(255,255,255,.95); text-shadow: 0 1px 2px rgba(0,0,0,.55); }
+  [data-appear="light"] .wallband .lab { color: #26262E; text-shadow: 0 1px 2px rgba(255,255,255,.65); }
+
+  .wallband > span { text-align: center; }
+  .wallband .sq { margin: 0 auto; }
+  @media (max-width: 380px) {
+    .wallband { padding: 18px 4px 12px; gap: 4px; }
+    .wallband .sq { width: 72px !important; height: 72px !important; }
+    .wallband .lab { font-size: 16px; }
+  }
+
+  .gs { filter: grayscale(1) contrast(1.02); }
+
+  /* ── Device frame (scaled schematic) ─────────────────────────── */
+  .mini { position: relative; overflow: hidden; flex: 0 0 auto;
+          width: calc(393px * var(--s)); height: calc(852px * var(--s));
+          border-radius: calc(48px * var(--s)); box-shadow: 0 2px 10px rgba(0,0,0,.22);
+          background: #000; }
+  .mini > .sc { position: absolute; top: 0; left: 0; width: 393px; height: 852px;
+                transform: scale(var(--s)); transform-origin: top left;
+                font: 400 15px/1.3 system-ui, -apple-system, sans-serif; }
+
+  .hs { background: var(--wall); width: 100%; height: 100%; padding: 60px 22px 0; }
+  .hs .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 26px 18px; }
+  .hs .app { text-align: center; }
+  .hs .app .sq { width: 62px; height: 62px; margin: 0 auto; }
+  .hs .app .nm { font-size: 11px; margin-top: 5px; color: rgba(255,255,255,.95);
+                 text-shadow: 0 1px 2px rgba(0,0,0,.45); }
+  [data-appear="light"] .hs .app .nm { color: #2C2C33; text-shadow: 0 1px 2px rgba(255,255,255,.55); }
+  .ph  { background: #D8D8DE; }
+  .ph2 { background: linear-gradient(160deg,#FFD66B,#F0892B); }
+  .ph3 { background: linear-gradient(160deg,#6ED0FF,#1A7AE0); }
+  .ph4 { background: linear-gradient(160deg,#FF8A9B,#D92B55); }
+  .ph5 { background: linear-gradient(160deg,#C9CCD2,#8A8F98); }
+  .ph6 { background: linear-gradient(160deg,#9BE88A,#2F9E44); }
+  .hs .dock { position: absolute; left: 14px; right: 14px; bottom: 26px; height: 92px;
+              border-radius: 30px; background: rgba(255,255,255,.26);
+              -webkit-backdrop-filter: blur(22px); backdrop-filter: blur(22px);
+              display: flex; align-items: center; justify-content: space-around; padding: 0 16px; }
+  [data-appear="dark"] .hs .dock, [data-appear="tinted"] .hs .dock { background: rgba(120,120,128,.3); }
+  .hs .dock .sq { width: 60px; height: 60px; }
+
+  /* ── App screen schematics ───────────────────────────────────── */
+  [data-appear="light"] .sc { --appbg:#F2F2F7; --appsurf:#FFFFFF; --applbl:#1C1C1E; --applbl2:#6E6E73;
+                              --appline:rgba(60,60,67,.18); --appsel:rgba(59,72,176,.16); --ink:#3B48B0; }
+  [data-appear="dark"] .sc, [data-appear="tinted"] .sc { --appbg:#000; --appsurf:#1C1C1E; --applbl:#F2F2F7;
+                              --applbl2:#98989D; --appline:rgba(84,84,88,.5); --appsel:rgba(140,150,255,.22); --ink:#8C96FF; }
+  .app-sc { width: 100%; height: 100%; background: var(--appbg); color: var(--applbl);
+            display: flex; flex-direction: column; }
+  .statusbar { height: 54px; display: flex; align-items: flex-end; justify-content: space-between;
+               padding: 0 28px 6px; font-size: 15px; font-weight: 600; }
+  .daycap { text-align: center; font-size: 17px; color: var(--applbl2); padding: 10px 0 0; }
+  .daycap b { color: var(--applbl); font-weight: 600; }
+  .scrtitle { font-size: 28px; font-weight: 700; padding: 14px 20px 0; color: var(--applbl); }
+  .board { width: 351px; aspect-ratio: 1; margin: 12px auto 0; display: grid;
+           grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(3, 1fr); gap: 4px; }
+  .bx { background: var(--appsurf); border-radius: 10px; display: grid;
+        grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(3, 1fr); }
+  .bx span { display: flex; align-items: center; justify-content: center; font-size: 21px;
+             border-right: 1px solid var(--appline); border-bottom: 1px solid var(--appline); }
+  .bx span:nth-child(3n) { border-right: 0; }
+  .bx span:nth-child(n+7) { border-bottom: 0; }
+  .bx .g { font-family: ui-serif, Georgia, "Times New Roman", serif; font-weight: 600; }
+  .bx .p { color: var(--ink); font-weight: 500; }
+  .bx .sel { background: var(--appsel); border-radius: 4px; }
+  .statusline { text-align: center; font-size: 15px; color: var(--applbl2); padding: 14px 0 0; }
+  .pad { display: flex; gap: 6px; padding: 0 16px; margin-top: auto; }
+  .pad i { flex: 1; height: 54px; background: var(--appsurf); border-radius: 10px;
+           display: flex; flex-direction: column; align-items: center; justify-content: center;
+           font-style: normal; font-size: 22px; color: var(--ink); font-weight: 500; }
+  .pad i u { font-size: 10px; text-decoration: none; color: var(--applbl2); }
+  .tabbar { height: 84px; margin-top: 14px; display: flex; align-items: flex-start;
+            justify-content: space-around; padding-top: 10px; background: rgba(120,120,128,.14);
+            -webkit-backdrop-filter: blur(20px); backdrop-filter: blur(20px); }
+  .tabbar em { font-style: normal; font-size: 12px; color: var(--applbl2); text-align: center; }
+  .tabbar em.on { color: var(--ink); font-weight: 600; }
+  .tabbar em b { display: block; width: 26px; height: 26px; margin: 0 auto 4px; border-radius: 7px;
+                 background: currentColor; opacity: .85; }
+
+  .yearwrap { padding: 16px 20px 0; }
+  .yeargrid { height: 420px; border-radius: 12px; background-color: var(--appsurf);
+              background-image: repeating-linear-gradient(to right, var(--appline) 0 1px, transparent 1px 11px),
+                                repeating-linear-gradient(to bottom, var(--appline) 0 1px, transparent 1px 34px);
+              position: relative; overflow: hidden; }
+  .yeargrid i { position: absolute; width: 9px; height: 9px; border-radius: 2px; }
+
+  .list { background: var(--appsurf); border-radius: 12px; margin: 14px 16px 0; overflow: hidden; }
+  .list div { padding: 14px 16px; font-size: 17px; border-bottom: 1px solid var(--appline);
+              display: flex; justify-content: space-between; }
+  .list div:last-child { border-bottom: 0; }
+  .list div s { text-decoration: none; color: var(--applbl2); }
+  .about { background: var(--appsurf); border-radius: 12px; margin: 14px 16px 0;
+           padding: 28px 16px 22px; text-align: center; }
+  .about .mkbox { width: 60px; height: 60px; margin: 0 auto 14px; color: var(--pun); }
+  .about .mkbox svg { display: block; width: 100%; height: 100%; }
+  .about .wmbox { width: 190px; margin: 0 auto; }
+  .about .wmbox svg { display: block; width: 100%; height: auto; }
+  .about .ver { font-size: 15px; color: var(--applbl2); margin-top: 10px; }
+
+  .pngcard { margin: 18px 16px 0; background: #fff; border-radius: 14px; padding: 20px 18px 14px;
+             color: #1C1C1E; box-shadow: 0 2px 10px rgba(0,0,0,.16); }
+  .pngcard h4 { margin: 0 0 14px; font-size: 19px; font-weight: 600; }
+  .pngcard h4 s { text-decoration: none; display: block; font-size: 13px; color: #8A8A90; font-weight: 400; }
+  .pngcard .hm { display: grid; grid-template-columns: repeat(9, 1fr); gap: 3px; }
+  .pngcard .hm i { aspect-ratio: 1; border-radius: 3px; background: #E8EAF6; }
+  .pngcard .ft { display: flex; align-items: center; gap: 6px; margin-top: 16px;
+                 font-size: 11px; color: #8A8A90; }
+  .pngcard .ft .mk { width: 13px; height: 13px; color: #8A8A90; flex: 0 0 auto; }
+  .pngcard .ft .mk svg { display: block; width: 100%; height: 100%; }
+
+  /* ── Mark & wordmark display ─────────────────────────────────── */
+  .markplate { color: var(--pun); display: flex; justify-content: center; align-items: center; gap: 18px; }
+  .markplate .m { width: 104px; height: 104px; }
+  .markplate .m.s2 { width: 56px; height: 56px; color: var(--lbl2); }
+  .markplate .m.s3 { width: 30px; height: 30px; color: var(--lbl2); }
+  .markplate .m svg { display: block; width: 100%; height: 100%; }
+  .wmplate svg { display: block; width: 100%; height: auto; }
+  .wmplate.w1 { width: 100%; }
+  .wmplate.w2 { width: 68%; }
+  .wmplate.w3 { width: 46%; }
+  .lockup { display: flex; align-items: center; gap: 14px; }
+  .lockup .m { width: 62px; height: 62px; color: var(--pun); flex: 0 0 auto; }
+  .lockup .m svg { display: block; width: 100%; height: 100%; }
+  .lockup .w { flex: 1 1 auto; }
+  .lockup .w svg { display: block; width: 100%; height: auto; }
+
+  /* ── Visibility: direction only ──────────────────────────────── */
+  .d1, .d2, .d3 { display: none; }
+  [data-dir="d1"] .d1, [data-dir="d2"] .d2, [data-dir="d3"] .d3 { display: revert; }
+
+  /* ── Visibility: direction AND appearance (one rule, no leaks) ─ */
+  .v { display: none; }
+  [data-dir="d1"][data-appear="light"]  .v.vd1l,
+  [data-dir="d1"][data-appear="dark"]   .v.vd1d,
+  [data-dir="d1"][data-appear="tinted"] .v.vd1t,
+  [data-dir="d2"][data-appear="light"]  .v.vd2l,
+  [data-dir="d2"][data-appear="dark"]   .v.vd2d,
+  [data-dir="d2"][data-appear="tinted"] .v.vd2t,
+  [data-dir="d3"][data-appear="light"]  .v.vd3l,
+  [data-dir="d3"][data-appear="dark"]   .v.vd3d,
+  [data-dir="d3"][data-appear="tinted"] .v.vd3t { display: revert; }
+
+  /* ── Motion ──────────────────────────────────────────────────── */
+  .moplate { display: flex; justify-content: center; }
+  .moplate svg { border-radius: 22.37%; box-shadow: 0 1px 3px rgba(0,0,0,.18); }
+  @keyframes mo-sweep { from { transform: translateX(0); } to { transform: translateX(1480px); } }
+  @keyframes mo-fill  { from { transform: translateY(780px); } to { transform: translateY(0); } }
+  @keyframes mo-land  {
+    0%   { transform: translate(102.4px,102.4px) scale(.8); opacity: .25; }
+    70%  { transform: translate(-20.48px,-20.48px) scale(1.04); opacity: 1; }
+    100% { transform: translate(0,0) scale(1); opacity: 1; }
+  }
+  @keyframes mo-late { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes mo-fade { from { opacity: 0; } to { opacity: 1; } }
+  .anim-sweep { animation: mo-sweep 1500ms cubic-bezier(.33,0,.2,1) both 2; }
+  .anim-fill  { animation: mo-fill 860ms cubic-bezier(.3,0,.2,1) both; }
+  .anim-late  { animation: mo-late 420ms linear 700ms both; }
+  .anim-land  { animation: mo-land 740ms cubic-bezier(.34,1.26,.64,1) both; }
+  .reduced .anim-sweep, .reduced .anim-fill, .reduced .anim-late, .reduced .anim-land {
+    animation: mo-fade 280ms linear both !important;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    [data-motion="system"] .anim-sweep, [data-motion="system"] .anim-fill,
+    [data-motion="system"] .anim-late,  [data-motion="system"] .anim-land {
+      animation: mo-fade 280ms linear both !important;
+    }
+  }
+  .playbtn { display: block; width: 100%; min-height: 48px; margin-top: 14px; border: 0;
+             border-radius: 12px; background: var(--ctl); color: var(--lbl);
+             font: 600 17px/1.2 system-ui, -apple-system, sans-serif; cursor: pointer; }
+
+  table { width: 100%; border-collapse: collapse; font-size: 16px; }
+  th, td { text-align: left; padding: 8px 6px; border-bottom: 1px solid var(--sep); vertical-align: top; }
+  th { font-size: 16px; color: var(--lbl2); font-weight: 600; }
+  td:first-child { font-weight: 600; }
+  .defs { position: absolute; width: 0; height: 0; overflow: hidden; }
+</style>
+</head>
+<body>
+
+<!-- ═════════════ SVG library ═════════════ -->
+<svg class="defs" aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg">
+<defs>
+  <!-- D1 light -->
+  <linearGradient id="d1l-bg" x1="0" y1="0" x2="0.32" y2="1">
+    <stop offset="0" stop-color="#8A93FF"/><stop offset="0.42" stop-color="#4450C4"/><stop offset="1" stop-color="#1E2470"/>
+  </linearGradient>
+  <radialGradient id="d1l-sheen" cx="0.24" cy="0.1" r="0.95">
+    <stop offset="0" stop-color="#FFFFFF" stop-opacity="0.42"/><stop offset="0.55" stop-color="#FFFFFF" stop-opacity="0.06"/><stop offset="1" stop-color="#FFFFFF" stop-opacity="0"/>
+  </radialGradient>
+  <linearGradient id="d1l-glass" x1="0.1" y1="0" x2="0.6" y2="1">
+    <stop offset="0" stop-color="#FFFFFF" stop-opacity="0.84"/><stop offset="0.5" stop-color="#E4E8FF" stop-opacity="0.62"/><stop offset="1" stop-color="#A7B0F0" stop-opacity="0.52"/>
+  </linearGradient>
+  <linearGradient id="d1l-rim" x1="0.1" y1="0" x2="0.85" y2="0.95">
+    <stop offset="0" stop-color="#FFFFFF" stop-opacity="0.95"/><stop offset="0.45" stop-color="#FFFFFF" stop-opacity="0.18"/><stop offset="1" stop-color="#FFFFFF" stop-opacity="0.04"/>
+  </linearGradient>
+  <linearGradient id="d1l-rim2" x1="0.2" y1="0.1" x2="0.9" y2="1">
+    <stop offset="0" stop-color="#FFFFFF" stop-opacity="0.04"/><stop offset="0.6" stop-color="#FFFFFF" stop-opacity="0.35"/><stop offset="1" stop-color="#FFFFFF" stop-opacity="0.9"/>
+  </linearGradient>
+  <!-- D1 dark -->
+  <linearGradient id="d1d-bg" x1="0" y1="0" x2="0.32" y2="1">
+    <stop offset="0" stop-color="#353E8E"/><stop offset="0.45" stop-color="#1A1E52"/><stop offset="1" stop-color="#0A0C24"/>
+  </linearGradient>
+  <radialGradient id="d1d-sheen" cx="0.24" cy="0.1" r="0.95">
+    <stop offset="0" stop-color="#9BA4FF" stop-opacity="0.28"/><stop offset="0.55" stop-color="#9BA4FF" stop-opacity="0.05"/><stop offset="1" stop-color="#9BA4FF" stop-opacity="0"/>
+  </radialGradient>
+  <linearGradient id="d1d-glass" x1="0.1" y1="0" x2="0.6" y2="1">
+    <stop offset="0" stop-color="#D2D8FF" stop-opacity="0.6"/><stop offset="0.5" stop-color="#8C96FF" stop-opacity="0.46"/><stop offset="1" stop-color="#5A64C8" stop-opacity="0.4"/>
+  </linearGradient>
+  <linearGradient id="d1d-rim" x1="0.1" y1="0" x2="0.85" y2="0.95">
+    <stop offset="0" stop-color="#E2E6FF" stop-opacity="0.85"/><stop offset="0.45" stop-color="#E2E6FF" stop-opacity="0.14"/><stop offset="1" stop-color="#E2E6FF" stop-opacity="0.03"/>
+  </linearGradient>
+  <linearGradient id="d1d-rim2" x1="0.2" y1="0.1" x2="0.9" y2="1">
+    <stop offset="0" stop-color="#E2E6FF" stop-opacity="0.03"/><stop offset="0.6" stop-color="#E2E6FF" stop-opacity="0.3"/><stop offset="1" stop-color="#E2E6FF" stop-opacity="0.8"/>
+  </linearGradient>
+  <!-- D1 tinted -->
+  <linearGradient id="d1t-bg" x1="0" y1="0" x2="0.32" y2="1">
+    <stop offset="0" stop-color="#3A3A3C"/><stop offset="0.55" stop-color="#1C1C1E"/><stop offset="1" stop-color="#000000"/>
+  </linearGradient>
+  <linearGradient id="d1t-glass" x1="0.1" y1="0" x2="0.6" y2="1">
+    <stop offset="0" stop-color="#FFFFFF" stop-opacity="0.95"/><stop offset="0.55" stop-color="#FFFFFF" stop-opacity="0.68"/><stop offset="1" stop-color="#FFFFFF" stop-opacity="0.46"/>
+  </linearGradient>
+  <linearGradient id="d1t-rim" x1="0.1" y1="0" x2="0.85" y2="0.95">
+    <stop offset="0" stop-color="#FFFFFF" stop-opacity="1"/><stop offset="0.5" stop-color="#FFFFFF" stop-opacity="0.2"/><stop offset="1" stop-color="#FFFFFF" stop-opacity="0.06"/>
+  </linearGradient>
+
+  <!-- D2 light -->
+  <linearGradient id="d2l-bg" x1="0" y1="0" x2="0.3" y2="1">
+    <stop offset="0" stop-color="#2FE9C2"/><stop offset="0.4" stop-color="#0C9C84"/><stop offset="1" stop-color="#04463E"/>
+  </linearGradient>
+  <radialGradient id="d2l-sheen" cx="0.22" cy="0.08" r="0.95">
+    <stop offset="0" stop-color="#FFFFFF" stop-opacity="0.4"/><stop offset="0.5" stop-color="#FFFFFF" stop-opacity="0.05"/><stop offset="1" stop-color="#FFFFFF" stop-opacity="0"/>
+  </radialGradient>
+  <linearGradient id="d2l-glass" x1="0.15" y1="0" x2="0.7" y2="1">
+    <stop offset="0" stop-color="#FFFFFF" stop-opacity="0.96"/><stop offset="0.5" stop-color="#EAFFF9" stop-opacity="0.8"/><stop offset="1" stop-color="#B9F0E2" stop-opacity="0.62"/>
+  </linearGradient>
+  <linearGradient id="d2l-spec" x1="0.45" y1="0.18" x2="0.27" y2="0.46">
+    <stop offset="0" stop-color="#FFFFFF" stop-opacity="0"/><stop offset="0.45" stop-color="#FFFFFF" stop-opacity="0.95"/><stop offset="1" stop-color="#FFFFFF" stop-opacity="0"/>
+  </linearGradient>
+  <linearGradient id="d2l-rim2" x1="0.2" y1="0.1" x2="0.9" y2="1">
+    <stop offset="0" stop-color="#03352E" stop-opacity="0.3"/><stop offset="0.55" stop-color="#FFFFFF" stop-opacity="0.2"/><stop offset="1" stop-color="#FFFFFF" stop-opacity="0.85"/>
+  </linearGradient>
+  <linearGradient id="d2l-tail" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#FFFFFF" stop-opacity="0.7"/><stop offset="1" stop-color="#FFFFFF" stop-opacity="0.08"/>
+  </linearGradient>
+  <!-- D2 dark -->
+  <linearGradient id="d2d-bg" x1="0" y1="0" x2="0.3" y2="1">
+    <stop offset="0" stop-color="#0E6E5E"/><stop offset="0.45" stop-color="#073B34"/><stop offset="1" stop-color="#021815"/>
+  </linearGradient>
+  <radialGradient id="d2d-sheen" cx="0.22" cy="0.08" r="0.95">
+    <stop offset="0" stop-color="#5FE8CC" stop-opacity="0.26"/><stop offset="0.5" stop-color="#5FE8CC" stop-opacity="0.04"/><stop offset="1" stop-color="#5FE8CC" stop-opacity="0"/>
+  </radialGradient>
+  <linearGradient id="d2d-glass" x1="0.15" y1="0" x2="0.7" y2="1">
+    <stop offset="0" stop-color="#C6FFF1" stop-opacity="0.88"/><stop offset="0.5" stop-color="#6FE3C6" stop-opacity="0.6"/><stop offset="1" stop-color="#3FB69A" stop-opacity="0.42"/>
+  </linearGradient>
+  <linearGradient id="d2d-spec" x1="0.45" y1="0.18" x2="0.27" y2="0.46">
+    <stop offset="0" stop-color="#E8FFF9" stop-opacity="0"/><stop offset="0.45" stop-color="#E8FFF9" stop-opacity="0.85"/><stop offset="1" stop-color="#E8FFF9" stop-opacity="0"/>
+  </linearGradient>
+  <linearGradient id="d2d-rim2" x1="0.2" y1="0.1" x2="0.9" y2="1">
+    <stop offset="0" stop-color="#01100E" stop-opacity="0.4"/><stop offset="0.55" stop-color="#E8FFF9" stop-opacity="0.16"/><stop offset="1" stop-color="#E8FFF9" stop-opacity="0.75"/>
+  </linearGradient>
+  <linearGradient id="d2d-tail" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#E8FFF9" stop-opacity="0.6"/><stop offset="1" stop-color="#E8FFF9" stop-opacity="0.06"/>
+  </linearGradient>
+  <!-- D2 tinted -->
+  <linearGradient id="d2t-bg" x1="0" y1="0" x2="0.3" y2="1">
+    <stop offset="0" stop-color="#3A3A3C"/><stop offset="0.55" stop-color="#1C1C1E"/><stop offset="1" stop-color="#000000"/>
+  </linearGradient>
+  <linearGradient id="d2t-glass" x1="0.15" y1="0" x2="0.7" y2="1">
+    <stop offset="0" stop-color="#FFFFFF" stop-opacity="1"/><stop offset="0.55" stop-color="#FFFFFF" stop-opacity="0.78"/><stop offset="1" stop-color="#FFFFFF" stop-opacity="0.54"/>
+  </linearGradient>
+  <linearGradient id="d2t-spec" x1="0.45" y1="0.18" x2="0.27" y2="0.46">
+    <stop offset="0" stop-color="#FFFFFF" stop-opacity="0"/><stop offset="0.45" stop-color="#FFFFFF" stop-opacity="1"/><stop offset="1" stop-color="#FFFFFF" stop-opacity="0"/>
+  </linearGradient>
+
+  <!-- D3 light -->
+  <linearGradient id="d3l-bg" x1="0" y1="0" x2="0.3" y2="1">
+    <stop offset="0" stop-color="#FFFFFF"/><stop offset="0.55" stop-color="#F3F3FA"/><stop offset="1" stop-color="#E2E3F2"/>
+  </linearGradient>
+  <linearGradient id="d3l-ink" x1="0.12" y1="0.1" x2="0.8" y2="0.95">
+    <stop offset="0" stop-color="#6B76E8"/><stop offset="0.45" stop-color="#3B48B0"/><stop offset="1" stop-color="#262E80"/>
+  </linearGradient>
+  <linearGradient id="d3l-rim" x1="0.15" y1="0.05" x2="0.85" y2="1">
+    <stop offset="0" stop-color="#FFFFFF" stop-opacity="0.88"/><stop offset="0.4" stop-color="#FFFFFF" stop-opacity="0.1"/><stop offset="1" stop-color="#151A52" stop-opacity="0.5"/>
+  </linearGradient>
+  <!-- D3 dark -->
+  <linearGradient id="d3d-bg" x1="0" y1="0" x2="0.3" y2="1">
+    <stop offset="0" stop-color="#1A1D3A"/><stop offset="0.55" stop-color="#0D0F22"/><stop offset="1" stop-color="#05060E"/>
+  </linearGradient>
+  <linearGradient id="d3d-ink" x1="0.12" y1="0.1" x2="0.8" y2="0.95">
+    <stop offset="0" stop-color="#9AA3FF"/><stop offset="0.45" stop-color="#6470E6"/><stop offset="1" stop-color="#3F4AB8"/>
+  </linearGradient>
+  <linearGradient id="d3d-rim" x1="0.15" y1="0.05" x2="0.85" y2="1">
+    <stop offset="0" stop-color="#FFFFFF" stop-opacity="0.85"/><stop offset="0.4" stop-color="#FFFFFF" stop-opacity="0.12"/><stop offset="1" stop-color="#090B1E" stop-opacity="0.6"/>
+  </linearGradient>
+  <radialGradient id="d3d-glow" cx="0.5" cy="0.54" r="0.52">
+    <stop offset="0" stop-color="#5A66DC" stop-opacity="0.45"/><stop offset="1" stop-color="#5A66DC" stop-opacity="0"/>
+  </radialGradient>
+  <!-- D3 tinted -->
+  <linearGradient id="d3t-bg" x1="0" y1="0" x2="0.3" y2="1">
+    <stop offset="0" stop-color="#3A3A3C"/><stop offset="0.55" stop-color="#1C1C1E"/><stop offset="1" stop-color="#000000"/>
+  </linearGradient>
+  <linearGradient id="d3t-ink" x1="0.12" y1="0.1" x2="0.8" y2="0.95">
+    <stop offset="0" stop-color="#FFFFFF" stop-opacity="1"/><stop offset="0.5" stop-color="#FFFFFF" stop-opacity="0.78"/><stop offset="1" stop-color="#FFFFFF" stop-opacity="0.55"/>
+  </linearGradient>
+  <linearGradient id="d3t-rim" x1="0.15" y1="0.05" x2="0.85" y2="1">
+    <stop offset="0" stop-color="#FFFFFF" stop-opacity="1"/><stop offset="0.45" stop-color="#FFFFFF" stop-opacity="0.15"/><stop offset="1" stop-color="#FFFFFF" stop-opacity="0.05"/>
+  </linearGradient>
+
+  <!-- shared -->
+  <linearGradient id="mo-band" x1="0" y1="0" x2="1" y2="0">
+    <stop offset="0" stop-color="#FFFFFF" stop-opacity="0"/><stop offset="0.5" stop-color="#FFFFFF" stop-opacity="0.9"/><stop offset="1" stop-color="#FFFFFF" stop-opacity="0"/>
+  </linearGradient>
+  <filter id="f-soft26" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur stdDeviation="26" color-interpolation-filters="sRGB"/></filter>
+  <filter id="f-soft28" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur stdDeviation="28" color-interpolation-filters="sRGB"/></filter>
+  <filter id="f-soft30" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur stdDeviation="30" color-interpolation-filters="sRGB"/></filter>
+  <filter id="f-cast" x="-40%" y="-90%" width="180%" height="280%"><feGaussianBlur stdDeviation="26" color-interpolation-filters="sRGB"/></filter>
+
+  <mask id="m-d1"><path fill="#FFFFFF" fill-rule="evenodd" d="M357 172H667A185 185 0 0 1 852 357V667A185 185 0 0 1 667 852H357A185 185 0 0 1 172 667V357A185 185 0 0 1 357 172ZM432 336H560A96 96 0 0 1 656 432V560A96 96 0 0 1 560 656H432A96 96 0 0 1 336 560V432A96 96 0 0 1 432 336Z"/></mask>
+  <mask id="m-d2"><path fill="#FFFFFF" d="M512 190A230 230 0 0 1 512 650A230 230 0 0 1 512 190ZM607 420H742V814A16 16 0 0 1 726 830H623A16 16 0 0 1 607 814ZM473 325A56 56 0 0 0 417 381V459A56 56 0 0 0 473 515H551A56 56 0 0 0 607 459V381A56 56 0 0 0 551 325Z"/></mask>
+  <mask id="m-d3"><g fill="#FFFFFF"><path transform="translate(512 512) scale(1.3) translate(-512 -512)" d="M786 530C784.5 462.45 678.67 372.92 608.5 335.1C538.33 297.28 423.42 270.62 365 303.1C306.58 335.58 259.67 451.48 258 530C256.33 608.52 295.08 739.13 355 774.2C414.92 809.27 545.67 781.1 617.5 740.4C689.33 699.7 787.5 597.55 786 530Z"/><circle cx="650" cy="185" r="42"/></g></mask>
+</defs>
+
+<symbol id="ic-d1-l" viewBox="0 0 1024 1024">
+  <rect width="1024" height="1024" fill="url(#d1l-bg)"/>
+  <rect width="1024" height="1024" fill="url(#d1l-sheen)"/>
+  <g mask="url(#m-d1)">
+    <rect width="1024" height="1024" fill="url(#d1l-glass)"/>
+    <ellipse cx="320" cy="300" rx="190" ry="120" fill="#FFFFFF" fill-opacity="0.5" filter="url(#f-soft26)"/>
+    <ellipse cx="730" cy="762" rx="200" ry="130" fill="#1A2068" fill-opacity="0.28" filter="url(#f-soft26)"/>
+    <path fill="none" stroke="url(#d1l-rim)" stroke-width="12" d="M357 172H667A185 185 0 0 1 852 357V667A185 185 0 0 1 667 852H357A185 185 0 0 1 172 667V357A185 185 0 0 1 357 172Z"/>
+    <path fill="none" stroke="url(#d1l-rim2)" stroke-width="10" d="M432 336H560A96 96 0 0 1 656 432V560A96 96 0 0 1 560 656H432A96 96 0 0 1 336 560V432A96 96 0 0 1 432 336Z"/>
+  </g>
+</symbol>
+<symbol id="ic-d1-d" viewBox="0 0 1024 1024">
+  <rect width="1024" height="1024" fill="url(#d1d-bg)"/>
+  <rect width="1024" height="1024" fill="url(#d1d-sheen)"/>
+  <g mask="url(#m-d1)">
+    <rect width="1024" height="1024" fill="url(#d1d-glass)"/>
+    <ellipse cx="320" cy="300" rx="190" ry="120" fill="#C8CEFF" fill-opacity="0.38" filter="url(#f-soft26)"/>
+    <ellipse cx="730" cy="762" rx="200" ry="130" fill="#05061A" fill-opacity="0.32" filter="url(#f-soft26)"/>
+    <path fill="none" stroke="url(#d1d-rim)" stroke-width="12" d="M357 172H667A185 185 0 0 1 852 357V667A185 185 0 0 1 667 852H357A185 185 0 0 1 172 667V357A185 185 0 0 1 357 172Z"/>
+    <path fill="none" stroke="url(#d1d-rim2)" stroke-width="10" d="M432 336H560A96 96 0 0 1 656 432V560A96 96 0 0 1 560 656H432A96 96 0 0 1 336 560V432A96 96 0 0 1 432 336Z"/>
+  </g>
+</symbol>
+<symbol id="ic-d1-t" viewBox="0 0 1024 1024">
+  <rect width="1024" height="1024" fill="url(#d1t-bg)"/>
+  <g mask="url(#m-d1)">
+    <rect width="1024" height="1024" fill="url(#d1t-glass)"/>
+    <path fill="none" stroke="url(#d1t-rim)" stroke-width="12" d="M357 172H667A185 185 0 0 1 852 357V667A185 185 0 0 1 667 852H357A185 185 0 0 1 172 667V357A185 185 0 0 1 357 172Z"/>
+  </g>
+</symbol>
+
+<symbol id="ic-d2-l" viewBox="0 0 1024 1024">
+  <rect width="1024" height="1024" fill="url(#d2l-bg)"/>
+  <rect width="1024" height="1024" fill="url(#d2l-sheen)"/>
+  <g mask="url(#m-d2)">
+    <rect width="1024" height="1024" fill="url(#d2l-glass)"/>
+    <ellipse cx="392" cy="286" rx="170" ry="110" fill="#FFFFFF" fill-opacity="0.55" filter="url(#f-soft28)"/>
+    <ellipse cx="700" cy="770" rx="150" ry="150" fill="#033A32" fill-opacity="0.3" filter="url(#f-soft28)"/>
+    <path fill="none" stroke="url(#d2l-spec)" stroke-width="16" stroke-linecap="round" d="M472.1 193.5A230 230 0 0 0 285.5 459.9"/>
+    <path fill="none" stroke="url(#d2l-rim2)" stroke-width="10" d="M473 325A56 56 0 0 0 417 381V459A56 56 0 0 0 473 515H551A56 56 0 0 0 607 459V381A56 56 0 0 0 551 325Z"/>
+    <path fill="none" stroke="url(#d2l-tail)" stroke-width="9" d="M742 424V812"/>
+  </g>
+</symbol>
+<symbol id="ic-d2-d" viewBox="0 0 1024 1024">
+  <rect width="1024" height="1024" fill="url(#d2d-bg)"/>
+  <rect width="1024" height="1024" fill="url(#d2d-sheen)"/>
+  <g mask="url(#m-d2)">
+    <rect width="1024" height="1024" fill="url(#d2d-glass)"/>
+    <ellipse cx="392" cy="286" rx="170" ry="110" fill="#DFFFF6" fill-opacity="0.4" filter="url(#f-soft28)"/>
+    <ellipse cx="700" cy="770" rx="150" ry="150" fill="#010C0A" fill-opacity="0.45" filter="url(#f-soft28)"/>
+    <path fill="none" stroke="url(#d2d-spec)" stroke-width="16" stroke-linecap="round" d="M472.1 193.5A230 230 0 0 0 285.5 459.9"/>
+    <path fill="none" stroke="url(#d2d-rim2)" stroke-width="10" d="M473 325A56 56 0 0 0 417 381V459A56 56 0 0 0 473 515H551A56 56 0 0 0 607 459V381A56 56 0 0 0 551 325Z"/>
+    <path fill="none" stroke="url(#d2d-tail)" stroke-width="9" d="M742 424V812"/>
+  </g>
+</symbol>
+<symbol id="ic-d2-t" viewBox="0 0 1024 1024">
+  <rect width="1024" height="1024" fill="url(#d2t-bg)"/>
+  <g mask="url(#m-d2)">
+    <rect width="1024" height="1024" fill="url(#d2t-glass)"/>
+    <path fill="none" stroke="url(#d2t-spec)" stroke-width="16" stroke-linecap="round" d="M472.1 193.5A230 230 0 0 0 285.5 459.9"/>
+  </g>
+</symbol>
+
+<symbol id="ic-d3-l" viewBox="0 0 1024 1024">
+  <rect width="1024" height="1024" fill="url(#d3l-bg)"/>
+  <ellipse cx="520" cy="878" rx="300" ry="46" fill="#3B48B0" fill-opacity="0.16" filter="url(#f-cast)"/>
+  <g mask="url(#m-d3)">
+    <rect width="1024" height="1024" fill="url(#d3l-ink)"/>
+    <ellipse cx="398" cy="332" rx="150" ry="96" fill="#FFFFFF" fill-opacity="0.3" filter="url(#f-soft30)"/>
+    <ellipse cx="742" cy="760" rx="190" ry="150" fill="#1B2068" fill-opacity="0.45" filter="url(#f-soft30)"/>
+  </g>
+  <g fill="none" stroke="url(#d3l-rim)" stroke-width="11">
+    <path transform="translate(512 512) scale(1.3) translate(-512 -512)" d="M786 530C784.5 462.45 678.67 372.92 608.5 335.1C538.33 297.28 423.42 270.62 365 303.1C306.58 335.58 259.67 451.48 258 530C256.33 608.52 295.08 739.13 355 774.2C414.92 809.27 545.67 781.1 617.5 740.4C689.33 699.7 787.5 597.55 786 530Z"/>
+    <circle cx="650" cy="185" r="38"/>
+  </g>
+</symbol>
+<symbol id="ic-d3-d" viewBox="0 0 1024 1024">
+  <rect width="1024" height="1024" fill="url(#d3d-bg)"/>
+  <rect width="1024" height="1024" fill="url(#d3d-glow)"/>
+  <g mask="url(#m-d3)">
+    <rect width="1024" height="1024" fill="url(#d3d-ink)"/>
+    <ellipse cx="398" cy="332" rx="150" ry="96" fill="#E6E9FF" fill-opacity="0.3" filter="url(#f-soft30)"/>
+    <ellipse cx="742" cy="760" rx="190" ry="150" fill="#0B0E2C" fill-opacity="0.5" filter="url(#f-soft30)"/>
+  </g>
+  <g fill="none" stroke="url(#d3d-rim)" stroke-width="11">
+    <path transform="translate(512 512) scale(1.3) translate(-512 -512)" d="M786 530C784.5 462.45 678.67 372.92 608.5 335.1C538.33 297.28 423.42 270.62 365 303.1C306.58 335.58 259.67 451.48 258 530C256.33 608.52 295.08 739.13 355 774.2C414.92 809.27 545.67 781.1 617.5 740.4C689.33 699.7 787.5 597.55 786 530Z"/>
+    <circle cx="650" cy="185" r="38"/>
+  </g>
+</symbol>
+<symbol id="ic-d3-t" viewBox="0 0 1024 1024">
+  <rect width="1024" height="1024" fill="url(#d3t-bg)"/>
+  <g mask="url(#m-d3)"><rect width="1024" height="1024" fill="url(#d3t-ink)"/></g>
+  <g fill="none" stroke="url(#d3t-rim)" stroke-width="11">
+    <path transform="translate(512 512) scale(1.3) translate(-512 -512)" d="M786 530C784.5 462.45 678.67 372.92 608.5 335.1C538.33 297.28 423.42 270.62 365 303.1C306.58 335.58 259.67 451.48 258 530C256.33 608.52 295.08 739.13 355 774.2C414.92 809.27 545.67 781.1 617.5 740.4C689.33 699.7 787.5 597.55 786 530Z"/>
+  </g>
+</symbol>
+
+<symbol id="mk-d1" viewBox="0 0 1024 1024">
+  <path fill="currentColor" fill-rule="evenodd" d="M357 172H667A185 185 0 0 1 852 357V667A185 185 0 0 1 667 852H357A185 185 0 0 1 172 667V357A185 185 0 0 1 357 172ZM432 336H560A96 96 0 0 1 656 432V560A96 96 0 0 1 560 656H432A96 96 0 0 1 336 560V432A96 96 0 0 1 432 336Z"/>
+</symbol>
+<symbol id="mk-d2" viewBox="0 0 1024 1024">
+  <path fill="currentColor" d="M512 190A230 230 0 0 1 512 650A230 230 0 0 1 512 190ZM607 420H742V814A16 16 0 0 1 726 830H623A16 16 0 0 1 607 814ZM473 325A56 56 0 0 0 417 381V459A56 56 0 0 0 473 515H551A56 56 0 0 0 607 459V381A56 56 0 0 0 551 325Z"/>
+</symbol>
+<symbol id="mk-d3" viewBox="0 0 1024 1024">
+  <g fill="currentColor">
+    <path transform="translate(512 512) scale(1.3) translate(-512 -512)" d="M786 530C784.5 462.45 678.67 372.92 608.5 335.1C538.33 297.28 423.42 270.62 365 303.1C306.58 335.58 259.67 451.48 258 530C256.33 608.52 295.08 739.13 355 774.2C414.92 809.27 545.67 781.1 617.5 740.4C689.33 699.7 787.5 597.55 786 530Z"/>
+    <circle cx="650" cy="185" r="42"/>
+  </g>
+</symbol>
+
+<!-- wordmarks. Authored on a baseline of y=200; the group shifts by translate(2 -94) so the
+     symbol viewBox can start at 0 0 — a <use> places a symbol's viewport at user-space (0,0),
+     not at the viewBox origin, so a non-zero origin here would push the letters out of frame.
+     All three share viewBox 0 0 588 148 (148 = cap 104 + descender room) so baselines align. -->
+
+<symbol id="wm-d1" viewBox="0 0 588 148">
+  <g transform="translate(2 -94)" fill="none" stroke-width="22" stroke-linecap="butt" stroke-linejoin="round">
+    <g style="stroke:var(--pun,#3B48B0)">
+      <path d="M11 96V200M11 107H36A22 22 0 0 1 36 151H11"/>
+      <path transform="translate(83 0)" d="M11 135V167A23 22 0 0 0 57 167V135"/>
+      <path transform="translate(165 0)" d="M11 200V157A23 22 0 0 1 57 157V200"/>
+    </g>
+    <g style="stroke:var(--doku,#6E6E73)">
+      <path transform="translate(247 0)" d="M11 162A28 27 0 0 1 67 162A28 27 0 0 1 11 162M67 96V200"/>
+      <rect transform="translate(339 0)" x="11" y="135" width="56" height="54" rx="20"/>
+      <path transform="translate(431 0)" d="M11 96V200M58 135L24 171L60 200"/>
+      <path transform="translate(516 0)" d="M11 135V167A23 22 0 0 0 57 167V135"/>
+    </g>
+  </g>
+</symbol>
+<symbol id="wm-d1-plain" viewBox="0 0 588 148">
+  <g transform="translate(2 -94)" fill="none" stroke-width="22" stroke-linecap="butt" stroke-linejoin="round">
+    <g style="stroke:var(--pun,#3B48B0)">
+      <path d="M11 96V200M11 107H36A22 22 0 0 1 36 151H11"/>
+      <path transform="translate(83 0)" d="M11 135V167A23 22 0 0 0 57 167V135"/>
+      <path transform="translate(165 0)" d="M11 200V157A23 22 0 0 1 57 157V200"/>
+    </g>
+    <g style="stroke:var(--doku,#6E6E73)">
+      <path transform="translate(247 0)" d="M11 162A28 27 0 0 1 67 162A28 27 0 0 1 11 162M67 96V200"/>
+      <path transform="translate(339 0)" d="M11 162A28 27 0 0 1 67 162A28 27 0 0 1 11 162"/>
+      <path transform="translate(431 0)" d="M11 96V200M58 135L24 171L60 200"/>
+      <path transform="translate(516 0)" d="M11 135V167A23 22 0 0 0 57 167V135"/>
+    </g>
+  </g>
+</symbol>
+<symbol id="wm-d2" viewBox="0 0 588 148">
+  <linearGradient id="wm-d2-g" x1="0" y1="96" x2="233" y2="236" gradientUnits="userSpaceOnUse">
+    <stop offset="0" style="stop-color:var(--pun,#0B8470)"/>
+    <stop offset="1" style="stop-color:var(--pun2,#075045)"/>
+  </linearGradient>
+  <g transform="translate(2 -94)" fill="none" stroke-width="22" stroke-linecap="butt" stroke-linejoin="round">
+    <g stroke="url(#wm-d2-g)">
+      <path d="M11 96V200M11 107H36A22 22 0 0 1 36 151H11"/>
+      <path transform="translate(83 0)" d="M11 135V167A23 22 0 0 0 57 167V135"/>
+      <path transform="translate(165 0)" d="M11 200V157A23 22 0 0 1 57 157V236"/>
+    </g>
+    <g style="stroke:var(--doku,#1C1C1E)">
+      <path transform="translate(247 0)" d="M11 162A28 27 0 0 1 67 162A28 27 0 0 1 11 162M67 96V200"/>
+      <path transform="translate(339 0)" d="M11 162A28 27 0 0 1 67 162A28 27 0 0 1 11 162"/>
+      <path transform="translate(431 0)" d="M11 96V200M58 135L24 171L60 200"/>
+      <path transform="translate(516 0)" d="M11 135V167A23 22 0 0 0 57 167V135"/>
+    </g>
+  </g>
+</symbol>
+<symbol id="wm-d3" viewBox="0 0 588 148">
+  <g transform="translate(2 -94)" fill="none" stroke-width="22" stroke-linecap="butt" stroke-linejoin="round">
+    <g style="stroke:var(--pun,#3B48B0)">
+      <path d="M11 96V200M11 107H36A22 22 0 0 1 36 151H11"/>
+      <path transform="translate(83 0)" d="M11 135V167A23 22 0 0 0 57 167V135"/>
+      <path transform="translate(165 0)" d="M11 200V157A23 22 0 0 1 57 157V200"/>
+    </g>
+    <g style="stroke:var(--doku,#6E6E73)">
+      <path transform="translate(247 0)" d="M11 162A28 27 0 0 1 67 162A28 27 0 0 1 11 162M67 96V200"/>
+      <path transform="translate(339 0)" d="M11 162A28 27 0 0 1 67 162A28 27 0 0 1 11 162"/>
+      <path transform="translate(431 0)" d="M11 96V200M58 135L24 171L60 200"/>
+      <path transform="translate(516 0)" d="M11 135V167A23 22 0 0 0 57 167V135"/>
+    </g>
+  </g>
+  <circle cx="224" cy="112" r="17" style="fill:var(--pun,#3B48B0)"/>
+</symbol>
+</svg>
+
+<!-- ═════════════ Controls ═════════════ -->
+<header>
+  <h1>Pundoku · логотип и иконка · PD-93, раунд 2</h1>
+  <div class="seg" role="group" aria-label="Направление">
+    <button type="button" data-set="dir" data-val="d1" aria-pressed="true">D1 Створ</button>
+    <button type="button" data-set="dir" data-val="d2" aria-pressed="false">D2 Девять</button>
+    <button type="button" data-set="dir" data-val="d3" aria-pressed="false">D3 Капля</button>
+  </div>
+  <div class="seg" role="group" aria-label="Подача иконки">
+    <button type="button" data-set="appear" data-val="light" aria-pressed="true">Светлая</button>
+    <button type="button" data-set="appear" data-val="dark" aria-pressed="false">Тёмная</button>
+    <button type="button" data-set="appear" data-val="tinted" aria-pressed="false">Tinted</button>
+  </div>
+</header>
+
+<main>
+
+<section>
+  <h2>Направление</h2>
+  <div class="card">
+    <div class="d1">
+      <p><b>D1 · «Створ».</b> Один толстый стеклянный створ — клетка, которую ещё не заполнили. Внутреннее
+      окно сдвинуто на 16 из 1024 вверх-влево, поэтому нижне-правая стенка толще (196 против 164): это
+      фаска, из-за которой кольцо читается куском стекла, а не рамкой. Якорь — индиго #3B48B0.</p>
+      <p class="note">Приём: <b>пустота как знак</b> плюс материал. Сетки 3×3 нет — она и была шаблоном
+      раунда 1.</p>
+    </div>
+    <div class="d2">
+      <p><b>D2 · «Девять».</b> Цифра 9 как знак: чаша — окружность r=230, но <b>контрформа — скруглённый
+      квадрат</b>, поэтому одна и та же форма читается и девяткой, и клеткой. Хвост — та же правая стенка
+      чаши (135, вес один везде), продлённая вниз и срезанная плоско. Якорь — <b>нефрит, не индиго</b>.</p>
+      <p class="note">Приём: <b>единственное число, которое принадлежит жанру</b>, крупно и без сетки.
+      Это тот вариант, где индиго не главный — палитру бренда владелец решает отдельно, приложение не
+      трогаем.</p>
+    </div>
+    <div class="d3">
+      <p><b>D3 · «Капля».</b> Чернильная капля, только что севшая на бумагу, и одна отлетевшая капелька.
+      Чернила — собственный материал продукта (Чернильный режим: ошибка = клякса), а не найденная со
+      стороны метафора. Якорь — индиго #3B48B0.</p>
+      <p class="note">Приём: <b>материал вместо геометрии</b>. Кривая одна, замкнутая, без шипов и
+      хвостов — это не мультяшная клякса.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>Иконка 1024 × 1024</h2>
+  <div class="card">
+    <div class="center">
+      <span class="sq" style="width:300px;height:300px">
+        <svg viewBox="0 0 1024 1024" role="img" aria-label="Иконка Pundoku">
+          <use class="v vd1l" href="#ic-d1-l"/><use class="v vd1d" href="#ic-d1-d"/><use class="v vd1t" href="#ic-d1-t"/>
+          <use class="v vd2l" href="#ic-d2-l"/><use class="v vd2d" href="#ic-d2-d"/><use class="v vd2t" href="#ic-d2-t"/>
+          <use class="v vd3l" href="#ic-d3-l"/><use class="v vd3d" href="#ic-d3-d"/><use class="v vd3t" href="#ic-d3-t"/>
+        </svg>
+      </span>
+    </div>
+    <p class="cap">Маску iOS здесь наложила <b>страница</b>, а не файл</p>
+    <p class="fine" style="text-align:center">Скругление сделано как CSS 22.37 %, то есть круговое; у iOS
+      это непрерывная суперэллипса. Приближение, а не точная форма.</p>
+  </div>
+  <div class="card">
+    <p class="note">Файл поставляется <b>без скругления</b>, полем во весь квадрат. Слева — он как есть,
+      справа — безопасные зоны: квадрат 86 % (срез углов) и круг 80 % (круглая маска
+      Android maskable / watchOS).</p>
+    <div class="row" style="justify-content:center">
+      <span>
+        <span class="sq raw" style="width:150px;height:150px">
+          <svg viewBox="0 0 1024 1024" aria-hidden="true">
+            <use class="v vd1l" href="#ic-d1-l"/><use class="v vd1d" href="#ic-d1-d"/><use class="v vd1t" href="#ic-d1-t"/>
+            <use class="v vd2l" href="#ic-d2-l"/><use class="v vd2d" href="#ic-d2-d"/><use class="v vd2t" href="#ic-d2-t"/>
+            <use class="v vd3l" href="#ic-d3-l"/><use class="v vd3d" href="#ic-d3-d"/><use class="v vd3t" href="#ic-d3-t"/>
+          </svg>
+        </span>
+        <span class="cap" style="display:block">как в файле</span>
+      </span>
+      <span>
+        <span style="display:block;width:150px;height:150px;background:var(--card2);border:1px solid var(--sep)">
+          <svg viewBox="0 0 1024 1024" style="display:block;width:100%;height:100%" aria-hidden="true">
+            <g style="color:var(--lbl)" opacity="0.85">
+              <use class="d1" href="#mk-d1"/><use class="d2" href="#mk-d2"/><use class="d3" href="#mk-d3"/>
+            </g>
+            <rect x="71.7" y="71.7" width="880.6" height="880.6" fill="none" stroke="#FF375F" stroke-width="7" stroke-dasharray="26 18"/>
+            <circle cx="512" cy="512" r="409.6" fill="none" stroke="#FF9F0A" stroke-width="7" stroke-dasharray="26 18"/>
+          </svg>
+        </span>
+        <span class="cap" style="display:block">86 % · 80 %</span>
+      </span>
+    </div>
+    <p class="note" style="margin-top:12px">Самая далёкая закрашенная точка от центра: <span class="d1"><b>404.2</b> из 409.6 (створ 680, радиус угла 185)</span><span class="d2"><b>386.2</b> из 409.6 (нижний правый угол хвоста, радиус 16)</span><span class="d3"><b>≈397</b> из 409.6 (нижняя доля), капелька — <b>396.9</b></span>.
+      Круг не нарушен ни одним направлением, значит переиспользование <code>icon-512</code> как
+      <code>maskable</code> остаётся корректным. Это и ограничило знак: без круга знак мог бы быть на
+      10 % крупнее.</p>
+  </div>
+</section>
+
+<section>
+  <h2>Домашний экран</h2>
+  <div class="card">
+    <div class="center">
+      <div class="mini" style="--s:.52">
+        <div class="sc">
+          <div class="hs">
+            <div class="grid">
+              <div class="app">
+                <span class="sq">
+                  <svg viewBox="0 0 1024 1024" aria-hidden="true">
+                    <use class="v vd1l" href="#ic-d1-l"/><use class="v vd1d" href="#ic-d1-d"/><use class="v vd1t" href="#ic-d1-t"/>
+                    <use class="v vd2l" href="#ic-d2-l"/><use class="v vd2d" href="#ic-d2-d"/><use class="v vd2t" href="#ic-d2-t"/>
+                    <use class="v vd3l" href="#ic-d3-l"/><use class="v vd3d" href="#ic-d3-d"/><use class="v vd3t" href="#ic-d3-t"/>
+                  </svg>
+                </span>
+                <div class="nm">Pundoku</div>
+              </div>
+              <div class="app"><span class="sq ph2"></span><div class="nm">Заметки</div></div>
+              <div class="app"><span class="sq ph3"></span><div class="nm">Погода</div></div>
+              <div class="app"><span class="sq ph4"></span><div class="nm">Музыка</div></div>
+              <div class="app"><span class="sq ph5"></span><div class="nm">Настройки</div></div>
+              <div class="app"><span class="sq ph6"></span><div class="nm">Здоровье</div></div>
+              <div class="app"><span class="sq ph"></span><div class="nm">Файлы</div></div>
+              <div class="app"><span class="sq ph2"></span><div class="nm">Календарь</div></div>
+            </div>
+            <div class="dock">
+              <span class="sq ph3"></span><span class="sq ph4"></span><span class="sq ph6"></span><span class="sq ph5"></span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <p class="cap">Обои, подписи и док — имитация системного хрома</p>
+  </div>
+  <div class="card">
+    <p class="note">Три подачи рядом, на одних обоях:</p>
+    <div class="wallband">
+      <span>
+        <span class="sq" style="width:92px;height:92px">
+          <svg viewBox="0 0 1024 1024" aria-hidden="true"><use class="d1" href="#ic-d1-l"/><use class="d2" href="#ic-d2-l"/><use class="d3" href="#ic-d3-l"/></svg>
+        </span><div class="lab">light</div>
+      </span>
+      <span>
+        <span class="sq" style="width:92px;height:92px">
+          <svg viewBox="0 0 1024 1024" aria-hidden="true"><use class="d1" href="#ic-d1-d"/><use class="d2" href="#ic-d2-d"/><use class="d3" href="#ic-d3-d"/></svg>
+        </span><div class="lab">dark</div>
+      </span>
+      <span>
+        <span class="sq" style="width:92px;height:92px">
+          <svg viewBox="0 0 1024 1024" aria-hidden="true"><use class="d1" href="#ic-d1-t"/><use class="d2" href="#ic-d2-t"/><use class="d3" href="#ic-d3-t"/></svg>
+        </span><div class="lab">tinted / mono</div>
+      </span>
+    </div>
+    <p class="note" style="margin-top:12px"><b>Честно про tinted и clear.</b> Это не файлы, которые мы
+      поставляем: iOS генерирует их сам из моно-карты светлоты. Третий квадрат показывает именно карту,
+      а не итог. Для PWA их вообще нет — см. «Что доедет до PWA».</p>
+  </div>
+</section>
+
+<section>
+  <h2>Размеры: 180 / 120 / 60 / 29</h2>
+  <div class="card">
+    <div class="row" style="justify-content:center">
+      <span><span class="sq" style="width:180px;height:180px"><svg viewBox="0 0 1024 1024" aria-hidden="true">
+        <use class="v vd1l" href="#ic-d1-l"/><use class="v vd1d" href="#ic-d1-d"/><use class="v vd1t" href="#ic-d1-t"/>
+        <use class="v vd2l" href="#ic-d2-l"/><use class="v vd2d" href="#ic-d2-d"/><use class="v vd2t" href="#ic-d2-t"/>
+        <use class="v vd3l" href="#ic-d3-l"/><use class="v vd3d" href="#ic-d3-d"/><use class="v vd3t" href="#ic-d3-t"/>
+      </svg></span><span class="cap" style="display:block">180 — apple-touch-icon</span></span>
+      <span><span class="sq" style="width:120px;height:120px"><svg viewBox="0 0 1024 1024" aria-hidden="true">
+        <use class="v vd1l" href="#ic-d1-l"/><use class="v vd1d" href="#ic-d1-d"/><use class="v vd1t" href="#ic-d1-t"/>
+        <use class="v vd2l" href="#ic-d2-l"/><use class="v vd2d" href="#ic-d2-d"/><use class="v vd2t" href="#ic-d2-t"/>
+        <use class="v vd3l" href="#ic-d3-l"/><use class="v vd3d" href="#ic-d3-d"/><use class="v vd3t" href="#ic-d3-t"/>
+      </svg></span><span class="cap" style="display:block">120</span></span>
+    </div>
+    <div class="row" style="justify-content:center;margin-top:16px">
+      <span><span class="sq" style="width:60px;height:60px"><svg viewBox="0 0 1024 1024" aria-hidden="true">
+        <use class="v vd1l" href="#ic-d1-l"/><use class="v vd1d" href="#ic-d1-d"/><use class="v vd1t" href="#ic-d1-t"/>
+        <use class="v vd2l" href="#ic-d2-l"/><use class="v vd2d" href="#ic-d2-d"/><use class="v vd2t" href="#ic-d2-t"/>
+        <use class="v vd3l" href="#ic-d3-l"/><use class="v vd3d" href="#ic-d3-d"/><use class="v vd3t" href="#ic-d3-t"/>
+      </svg></span><span class="cap" style="display:block">60</span></span>
+      <span><span class="sq" style="width:29px;height:29px"><svg viewBox="0 0 1024 1024" aria-hidden="true">
+        <use class="v vd1l" href="#ic-d1-l"/><use class="v vd1d" href="#ic-d1-d"/><use class="v vd1t" href="#ic-d1-t"/>
+        <use class="v vd2l" href="#ic-d2-l"/><use class="v vd2d" href="#ic-d2-d"/><use class="v vd2t" href="#ic-d2-t"/>
+        <use class="v vd3l" href="#ic-d3-l"/><use class="v vd3d" href="#ic-d3-d"/><use class="v vd3t" href="#ic-d3-t"/>
+      </svg></span><span class="cap" style="display:block">29 — Настройки</span></span>
+    </div>
+    <p class="note" style="margin-top:14px"><b>29 pt — главный размер.</b> Это иконка в Настройках и в
+      поиске, её владелец увидит чаще всего. Смотреть прежде всего сюда.</p>
+  </div>
+</section>
+
+<section>
+  <h2>Чёрно-белое: проверка силуэта</h2>
+  <div class="card">
+    <div class="row gs" style="justify-content:center">
+      <span class="sq" style="width:120px;height:120px"><svg viewBox="0 0 1024 1024" aria-hidden="true">
+        <use class="v vd1l" href="#ic-d1-l"/><use class="v vd1d" href="#ic-d1-d"/><use class="v vd1t" href="#ic-d1-t"/>
+        <use class="v vd2l" href="#ic-d2-l"/><use class="v vd2d" href="#ic-d2-d"/><use class="v vd2t" href="#ic-d2-t"/>
+        <use class="v vd3l" href="#ic-d3-l"/><use class="v vd3d" href="#ic-d3-d"/><use class="v vd3t" href="#ic-d3-t"/>
+      </svg></span>
+      <span class="sq" style="width:60px;height:60px"><svg viewBox="0 0 1024 1024" aria-hidden="true">
+        <use class="v vd1l" href="#ic-d1-l"/><use class="v vd1d" href="#ic-d1-d"/><use class="v vd1t" href="#ic-d1-t"/>
+        <use class="v vd2l" href="#ic-d2-l"/><use class="v vd2d" href="#ic-d2-d"/><use class="v vd2t" href="#ic-d2-t"/>
+        <use class="v vd3l" href="#ic-d3-l"/><use class="v vd3d" href="#ic-d3-d"/><use class="v vd3t" href="#ic-d3-t"/>
+      </svg></span>
+      <span class="sq" style="width:29px;height:29px"><svg viewBox="0 0 1024 1024" aria-hidden="true">
+        <use class="v vd1l" href="#ic-d1-l"/><use class="v vd1d" href="#ic-d1-d"/><use class="v vd1t" href="#ic-d1-t"/>
+        <use class="v vd2l" href="#ic-d2-l"/><use class="v vd2d" href="#ic-d2-d"/><use class="v vd2t" href="#ic-d2-t"/>
+        <use class="v vd3l" href="#ic-d3-l"/><use class="v vd3d" href="#ic-d3-d"/><use class="v vd3t" href="#ic-d3-t"/>
+      </svg></span>
+    </div>
+    <p class="note" style="margin-top:14px">Grayscale сохраняет светлоту, поэтому контраст в ч/б тот же,
+      что в цвете. Проверять тут надо <b>не читаемость, а узнаваемость силуэта</b>: отличим ли знак от
+      любого другого кольца, цифры или пятна.</p>
+  </div>
+</section>
+
+<section>
+  <h2>Знак отдельно</h2>
+  <div class="card">
+    <div class="markplate">
+      <span class="m"><svg viewBox="0 0 1024 1024" aria-hidden="true"><use class="d1" href="#mk-d1"/><use class="d2" href="#mk-d2"/><use class="d3" href="#mk-d3"/></svg></span>
+      <span class="m s2"><svg viewBox="0 0 1024 1024" aria-hidden="true"><use class="d1" href="#mk-d1"/><use class="d2" href="#mk-d2"/><use class="d3" href="#mk-d3"/></svg></span>
+      <span class="m s3"><svg viewBox="0 0 1024 1024" aria-hidden="true"><use class="d1" href="#mk-d1"/><use class="d2" href="#mk-d2"/><use class="d3" href="#mk-d3"/></svg></span>
+    </div>
+    <p class="cap" style="margin-top:12px">104 / 56 / 30 pt — одна плоская фигура, <code>currentColor</code></p>
+  </div>
+</section>
+
+<section>
+  <h2>Вордмарк</h2>
+  <div class="card">
+    <div class="wmplate w1"><svg viewBox="0 0 588 148" role="img" aria-label="Pundoku"><use class="d1" href="#wm-d1"/><use class="d2" href="#wm-d2"/><use class="d3" href="#wm-d3"/></svg></div>
+    <div class="wmplate w2" style="margin-top:18px"><svg viewBox="0 0 588 148" aria-hidden="true"><use class="d1" href="#wm-d1"/><use class="d2" href="#wm-d2"/><use class="d3" href="#wm-d3"/></svg></div>
+    <div class="wmplate w3" style="margin-top:18px"><svg viewBox="0 0 588 148" aria-hidden="true"><use class="d1" href="#wm-d1"/><use class="d2" href="#wm-d2"/><use class="d3" href="#wm-d3"/></svg></div>
+    <p class="note" style="margin-top:16px"><b>Это не шрифт.</b> Семь букв нарисованы монолинейной
+      геометрической конструкцией: штрих 22, рост прописных 104, рост строчных 76, контрформы —
+      окружности. Ни один глиф чужой гарнитуры не вшит, поэтому <b>лицензионного вопроса нет вообще</b> —
+      ни к системным шрифтам Apple, ни к OFL. Это и есть ответ на находку раунда 1 §1.2, где контурный
+      вордмарк был признан невозможным.</p>
+    <p class="note"><b>«Pun» выделен</b> цветом (чернила или нефрит против нейтрального), а в D2 и D3 —
+      ещё и одной правкой буквы:</p>
+    <ul class="note">
+      <li class="d1"><b>D1:</b> «o» в «doku» собрана как створ. Эту версию ставить <b>только без знака
+        рядом</b>, иначе логотип повторяет себя (<code>branding.md › Best practices</code>: «Resist the
+        temptation to display your logo throughout your app or game»).</li>
+      <li class="d2"><b>D2:</b> правая стойка «n» уходит под базовую линию до 236 — тот же хвост, что у
+        девятки. <b>Это спорно:</b> может прочитаться опечаткой. Вордмарк живёт и с закрытой «n», и это
+        первый кандидат на отмену.</li>
+      <li class="d3"><b>D3:</b> правая стойка «n» заканчивается висящей каплей (радиус 17 против стойки
+        22). Вмешательство одно и стоит на последней букве имени игрока.</li>
+    </ul>
+  </div>
+  <div class="card">
+    <p class="note" style="margin-bottom:12px">Локап со знаком — в нём «o» обычная:</p>
+    <div class="lockup">
+      <span class="m"><svg viewBox="0 0 1024 1024" aria-hidden="true"><use class="d1" href="#mk-d1"/><use class="d2" href="#mk-d2"/><use class="d3" href="#mk-d3"/></svg></span>
+      <span class="w"><svg viewBox="0 0 588 148" aria-hidden="true"><use class="d1" href="#wm-d1-plain"/><use class="d2" href="#wm-d2"/><use class="d3" href="#wm-d3"/></svg></span>
+    </div>
+  </div>
+  <div class="card">
+    <p class="note"><b>Про свободный шрифт (OFL).</b> Для вордмарка он не нужен и дал бы хуже: нарисованные
+      буквы — это и есть признак бренда, а подобранная гарнитура — подбор. Для <b>интерфейса</b> остаются
+      системные (<code>system-ui</code> → SF, <code>ui-serif</code> → New York), как записано в
+      ограничениях продукта. Единственное место, где OFL-гарнитура с характером реально улучшила бы
+      результат, — заголовок на <b>экспортируемой карточке дня</b>: там текст уходит из системы и системный
+      шрифт ничего не держит. Кандидат — <b>Fraunces</b> (SIL OFL 1.1, переменная, оси
+      <code>SOFT</code> и <code>WONK</code>). Это отдельное решение и отдельная загрузка в офлайн-кэш; в
+      рамках PD-93 не предлагаю.</p>
+  </div>
+</section>
+
+<section>
+  <h2>Где знак появляется — и где нет</h2>
+  <div class="card">
+    <p class="note">Правило одно: знак появляется там, где <b>контекста приложения нет</b> (экспорт PNG),
+      где <b>контента нет</b> (пустое состояние) или где <b>о приложении и спрашивают</b> (About).
+      На рабочем экране — никогда.</p>
+  </div>
+  <div class="row" style="justify-content:center;margin-top:12px">
+    <div>
+      <div class="mini" style="--s:.44"><div class="sc"><div class="app-sc">
+        <div class="statusbar"><span>9:41</span><span>100 %</span></div>
+        <div class="daycap"><b>Ср 1 окт</b> · Средняя · 4:12</div>
+        <div class="board">
+          <div class="bx"><span class="g">5</span><span class="g">3</span><span></span><span class="p">6</span><span></span><span></span><span></span><span class="g">9</span><span class="g">8</span></div>
+          <div class="bx"><span></span><span class="g">7</span><span></span><span class="g">1</span><span class="g">9</span><span class="g">5</span><span></span><span></span><span></span></div>
+          <div class="bx"><span></span><span></span><span></span><span></span><span></span><span class="p">4</span><span></span><span class="g">6</span><span></span></div>
+          <div class="bx"><span class="g">8</span><span></span><span></span><span class="g">4</span><span></span><span></span><span class="g">7</span><span></span><span></span></div>
+          <div class="bx"><span></span><span class="g">6</span><span></span><span class="g">8</span><span class="sel p">3</span><span></span><span></span><span class="g">2</span><span></span></div>
+          <div class="bx"><span></span><span></span><span class="g">3</span><span></span><span></span><span class="g">1</span><span></span><span></span><span class="g">6</span></div>
+          <div class="bx"><span></span><span class="g">6</span><span></span><span></span><span></span><span></span><span></span><span></span><span class="p">2</span></div>
+          <div class="bx"><span></span><span></span><span></span><span class="g">4</span><span class="g">1</span><span class="g">9</span><span></span><span class="g">8</span><span></span></div>
+          <div class="bx"><span class="g">2</span><span class="g">8</span><span></span><span></span><span></span><span class="g">5</span><span></span><span class="p">7</span><span class="g">9</span></div>
+        </div>
+        <div class="statusline">27 клеток осталось</div>
+        <div class="pad"><i>1<u>6</u></i><i>2<u>4</u></i><i>3<u>5</u></i><i>4<u>3</u></i><i>5<u>2</u></i><i>6<u>4</u></i><i>7<u>5</u></i><i>8<u>1</u></i><i>9<u>3</u></i></div>
+        <div class="tabbar"><em class="on"><b></b>Today</em><em><b></b>Play</em><em><b></b>Year</em></div>
+      </div></div></div>
+      <div class="cap">Today — <b>знака нет</b></div>
+    </div>
+    <div>
+      <div class="mini" style="--s:.44"><div class="sc"><div class="app-sc">
+        <div class="statusbar"><span>9:41</span><span>100 %</span></div>
+        <div class="daycap"><b>2026</b> · 184 дня · 71 % чисто</div>
+        <div class="yearwrap"><div class="yeargrid">
+          <i style="left:14px;top:12px;background:#3B48B0"></i><i style="left:36px;top:12px;background:#8C96FF"></i>
+          <i style="left:58px;top:12px;background:#3B48B0"></i><i style="left:102px;top:12px;background:#C3C8F0"></i>
+          <i style="left:14px;top:46px;background:#8C96FF"></i><i style="left:58px;top:46px;background:#3B48B0"></i>
+          <i style="left:80px;top:46px;background:#3B48B0"></i><i style="left:146px;top:46px;background:#C3C8F0"></i>
+          <i style="left:14px;top:80px;background:#3B48B0"></i><i style="left:36px;top:80px;background:#3B48B0"></i>
+          <i style="left:124px;top:80px;background:#8C96FF"></i><i style="left:190px;top:80px;background:#3B48B0"></i>
+          <i style="left:36px;top:114px;background:#C3C8F0"></i><i style="left:102px;top:114px;background:#3B48B0"></i>
+          <i style="left:168px;top:114px;background:#8C96FF"></i><i style="left:14px;top:148px;background:#3B48B0"></i>
+          <i style="left:80px;top:148px;background:#8C96FF"></i><i style="left:212px;top:148px;background:#3B48B0"></i>
+          <i style="left:58px;top:182px;background:#3B48B0"></i><i style="left:124px;top:182px;background:#C3C8F0"></i>
+          <i style="left:14px;top:216px;background:#8C96FF"></i><i style="left:146px;top:216px;background:#3B48B0"></i>
+          <i style="left:36px;top:250px;background:#3B48B0"></i><i style="left:190px;top:250px;background:#8C96FF"></i>
+          <i style="left:14px;top:284px;background:#3B48B0"></i><i style="left:102px;top:284px;background:#3B48B0"></i>
+          <i style="left:58px;top:318px;background:#8C96FF"></i><i style="left:168px;top:318px;background:#C3C8F0"></i>
+          <i style="left:14px;top:352px;background:#3B48B0"></i><i style="left:80px;top:352px;background:#3B48B0"></i>
+          <i style="left:36px;top:386px;background:#C3C8F0"></i>
+        </div></div>
+        <div class="statusline">Декабрь ещё пуст</div>
+        <div class="tabbar" style="margin-top:auto"><em><b></b>Today</em><em><b></b>Play</em><em class="on"><b></b>Year</em></div>
+      </div></div></div>
+      <div class="cap">Year — <b>знака нет</b></div>
+    </div>
+  </div>
+
+  <div class="row" style="justify-content:center;margin-top:16px">
+    <div>
+      <div class="mini" style="--s:.44"><div class="sc"><div class="app-sc">
+        <div class="statusbar"><span>9:41</span><span>100 %</span></div>
+        <div class="scrtitle">О приложении</div>
+        <div class="about">
+          <div class="mkbox"><svg viewBox="0 0 1024 1024" aria-hidden="true"><use class="d1" href="#mk-d1"/><use class="d2" href="#mk-d2"/><use class="d3" href="#mk-d3"/></svg></div>
+          <div class="wmbox"><svg viewBox="0 0 588 148" aria-hidden="true"><use class="d1" href="#wm-d1-plain"/><use class="d2" href="#wm-d2"/><use class="d3" href="#wm-d3"/></svg></div>
+          <div class="ver">Версия 1.0 (12)</div>
+        </div>
+        <div class="list">
+          <div><span>Сетка дня</span><s>Sudoku.com</s></div>
+          <div><span>Движок</span><s>свой, MIT</s></div>
+          <div><span>Лицензии</span><s>→</s></div>
+        </div>
+        <div class="tabbar" style="margin-top:auto"><em><b></b>Today</em><em><b></b>Play</em><em><b></b>Year</em></div>
+      </div></div></div>
+      <div class="cap">Settings → About — <b>дом знака</b></div>
+    </div>
+    <div>
+      <div class="mini" style="--s:.44"><div class="sc"><div class="app-sc">
+        <div class="statusbar"><span>9:41</span><span>100 %</span></div>
+        <div class="scrtitle">Решено</div>
+        <div class="pngcard">
+          <h4>8:14 · чисто<s>51 ход · hidden single ×7 · locked ×3</s></h4>
+          <div class="hm">
+            <i style="background:#3B48B0"></i><i style="background:#8C96FF"></i><i></i><i style="background:#C3C8F0"></i><i></i><i style="background:#3B48B0"></i><i></i><i style="background:#8C96FF"></i><i style="background:#3B48B0"></i>
+            <i></i><i style="background:#3B48B0"></i><i style="background:#C3C8F0"></i><i></i><i style="background:#8C96FF"></i><i></i><i style="background:#3B48B0"></i><i></i><i></i>
+            <i style="background:#8C96FF"></i><i></i><i style="background:#3B48B0"></i><i style="background:#3B48B0"></i><i></i><i style="background:#C3C8F0"></i><i></i><i style="background:#8C96FF"></i><i></i>
+            <i></i><i style="background:#C3C8F0"></i><i></i><i style="background:#8C96FF"></i><i style="background:#3B48B0"></i><i></i><i style="background:#8C96FF"></i><i></i><i style="background:#3B48B0"></i>
+            <i style="background:#3B48B0"></i><i></i><i style="background:#8C96FF"></i><i></i><i style="background:#C3C8F0"></i><i style="background:#3B48B0"></i><i></i><i style="background:#3B48B0"></i><i></i>
+            <i></i><i style="background:#8C96FF"></i><i></i><i style="background:#3B48B0"></i><i></i><i style="background:#8C96FF"></i><i style="background:#C3C8F0"></i><i></i><i style="background:#8C96FF"></i>
+            <i style="background:#C3C8F0"></i><i></i><i style="background:#3B48B0"></i><i></i><i style="background:#8C96FF"></i><i></i><i style="background:#3B48B0"></i><i></i><i></i>
+            <i></i><i style="background:#3B48B0"></i><i></i><i style="background:#C3C8F0"></i><i></i><i style="background:#3B48B0"></i><i></i><i style="background:#8C96FF"></i><i style="background:#3B48B0"></i>
+            <i style="background:#8C96FF"></i><i></i><i style="background:#C3C8F0"></i><i></i><i style="background:#3B48B0"></i><i></i><i style="background:#8C96FF"></i><i></i><i style="background:#C3C8F0"></i>
+          </div>
+          <div class="ft">
+            <span class="mk"><svg viewBox="0 0 1024 1024" aria-hidden="true"><use class="d1" href="#mk-d1"/><use class="d2" href="#mk-d2"/><use class="d3" href="#mk-d3"/></svg></span>
+            <span>Pundoku · 1 окт 2026 · 8:14 · 51 ход · чисто</span>
+          </div>
+        </div>
+        <div class="list" style="margin-top:16px"><div><span>Поделиться карточкой</span><s>→</s></div></div>
+        <div class="tabbar" style="margin-top:auto"><em class="on"><b></b>Today</em><em><b></b>Play</em><em><b></b>Year</em></div>
+      </div></div></div>
+      <div class="cap">Карточка дня (PNG) — знак в нижней строке, нейтральным</div>
+    </div>
+  </div>
+  <p class="fine" style="margin:12px 4px 0">Экраны уменьшены до 44 %: это схемы размещения знака, а не
+    макеты на утверждение. Весь мелкий текст внутри них — имитация интерфейса, не интерфейс этой страницы.</p>
+</section>
+
+<section>
+  <h2>Движение</h2>
+  <div class="card">
+    <div class="moplate">
+      <svg class="d1" viewBox="0 0 1024 1024" width="240" height="240" aria-hidden="true">
+        <rect width="1024" height="1024" fill="url(#d1l-bg)"/>
+        <rect width="1024" height="1024" fill="url(#d1l-sheen)"/>
+        <g mask="url(#m-d1)">
+          <rect width="1024" height="1024" fill="url(#d1l-glass)"/>
+          <g class="anim-sweep"><rect x="-300" y="-320" width="190" height="1680" fill="url(#mo-band)" transform="rotate(16 512 512)"/></g>
+          <path fill="none" stroke="url(#d1l-rim)" stroke-width="12" d="M357 172H667A185 185 0 0 1 852 357V667A185 185 0 0 1 667 852H357A185 185 0 0 1 172 667V357A185 185 0 0 1 357 172Z"/>
+          <path fill="none" stroke="url(#d1l-rim2)" stroke-width="10" d="M432 336H560A96 96 0 0 1 656 432V560A96 96 0 0 1 560 656H432A96 96 0 0 1 336 560V432A96 96 0 0 1 432 336Z"/>
+        </g>
+      </svg>
+      <svg class="d2" viewBox="0 0 1024 1024" width="240" height="240" aria-hidden="true">
+        <rect width="1024" height="1024" fill="url(#d2l-bg)"/>
+        <rect width="1024" height="1024" fill="url(#d2l-sheen)"/>
+        <g mask="url(#m-d2)">
+          <g class="anim-fill"><rect width="1024" height="1024" fill="url(#d2l-glass)"/></g>
+          <g class="anim-late">
+            <path fill="none" stroke="url(#d2l-spec)" stroke-width="16" stroke-linecap="round" d="M472.1 193.5A230 230 0 0 0 285.5 459.9"/>
+            <path fill="none" stroke="url(#d2l-rim2)" stroke-width="10" d="M473 325A56 56 0 0 0 417 381V459A56 56 0 0 0 473 515H551A56 56 0 0 0 607 459V381A56 56 0 0 0 551 325Z"/>
+            <path fill="none" stroke="url(#d2l-tail)" stroke-width="9" d="M742 424V812"/>
+          </g>
+        </g>
+      </svg>
+      <svg class="d3" viewBox="0 0 1024 1024" width="240" height="240" aria-hidden="true">
+        <rect width="1024" height="1024" fill="url(#d3l-bg)"/>
+        <g class="anim-land">
+          <ellipse cx="520" cy="878" rx="300" ry="46" fill="#3B48B0" fill-opacity="0.16" filter="url(#f-cast)"/>
+          <g mask="url(#m-d3)">
+            <rect width="1024" height="1024" fill="url(#d3l-ink)"/>
+            <ellipse cx="398" cy="332" rx="150" ry="96" fill="#FFFFFF" fill-opacity="0.3" filter="url(#f-soft30)"/>
+            <ellipse cx="742" cy="760" rx="190" ry="150" fill="#1B2068" fill-opacity="0.45" filter="url(#f-soft30)"/>
+          </g>
+          <g fill="none" stroke="url(#d3l-rim)" stroke-width="11">
+            <path transform="translate(512 512) scale(1.3) translate(-512 -512)" d="M786 530C784.5 462.45 678.67 372.92 608.5 335.1C538.33 297.28 423.42 270.62 365 303.1C306.58 335.58 259.67 451.48 258 530C256.33 608.52 295.08 739.13 355 774.2C414.92 809.27 545.67 781.1 617.5 740.4C689.33 699.7 787.5 597.55 786 530Z"/>
+            <circle cx="650" cy="185" r="38"/>
+          </g>
+        </g>
+      </svg>
+    </div>
+    <button class="playbtn" type="button" id="play">Проиграть заново</button>
+    <p class="seglab" style="margin-top:16px">Уменьшение движения:</p>
+    <div class="seg" role="group" aria-label="Уменьшение движения">
+      <button type="button" data-set="motion" data-val="system" aria-pressed="true">Система</button>
+      <button type="button" data-set="motion" data-val="on" aria-pressed="false">Reduce вкл</button>
+      <button type="button" data-set="motion" data-val="off" aria-pressed="false">Reduce выкл</button>
+    </div>
+    <p class="note" style="margin-top:14px">
+      <span class="d1"><b>D1:</b> спекулярная полоса проходит по стеклу — это наклон телефона, 1500 мс × 2.</span>
+      <span class="d2"><b>D2:</b> чернила заливают девятку снизу вверх, 860 мс, затем проявляются кромки.</span>
+      <span class="d3"><b>D3:</b> капля садится — 740 мс со спринговым перелётом до 1.04 и возвратом.</span>
+    </p>
+    <p class="note"><b>Фолбэк.</b> При «Уменьшении движения» все три превращаются в один кроссфейд 280 мс:
+      ни сдвига, ни масштаба (<code>accessibility.md</code>: «Motion is optional and never the only
+      carrier of meaning»). Проверить кнопкой «Reduce вкл».</p>
+    <p class="note"><b>Где это живёт.</b> Только Settings → About при открытии и первое появление пустого
+      состояния. Ни на поле, ни в таб-баре, ни на «Решено». На заставке PWA — <b>технически
+      невозможно</b>: <code>apple-touch-startup-image</code> это статический PNG.</p>
+    <p class="fine">Демо движения показано в светлой подаче независимо от переключателя подачи — чтобы не
+      держать в файле девять копий иконки.</p>
+  </div>
+</section>
+
+<section>
+  <h2>Слои для Icon Composer</h2>
+  <div class="card">
+    <p class="note">Превью выше — это <b>имитация</b> Liquid Glass градиентами и SVG-фильтрами. Итоговый
+      рендер на iOS даёт Icon Composer: он сам рисует спекулярные блики, рефракцию и тени, и
+      <code>app-icons.md › Visual effects</code> прямо требует их <b>не</b> запекать («there's no need to
+      include specular highlights, drop shadows between layers, beveled edges, blurs, glows, and other
+      effects»). Поэтому поставляемые слои — плоские, белые, с прозрачным фоном и без маски платформы.</p>
+    <table>
+      <thead><tr><th>Слой</th><th>Что в нём</th></tr></thead>
+      <tbody class="d1">
+        <tr><td>Фон</td><td>градиент <b>внутри</b> Icon Composer, не файл: #8A93FF → #4450C4 (42 %) → #1E2470</td></tr>
+        <tr><td>FG 1</td><td><code>d1-layer-fg.svg</code> — створ. Liquid Glass вкл., спекуляр высокий, тень нейтральная</td></tr>
+        <tr><td>FG 2 (опц.)</td><td>копия створа, уменьшенная на 2 %, прозрачность 45 % — вторая кромка и глубина стекла</td></tr>
+      </tbody>
+      <tbody class="d2">
+        <tr><td>Фон</td><td>градиент внутри Icon Composer: #2FE9C2 → #0C9C84 (40 %) → #04463E</td></tr>
+        <tr><td>FG 1</td><td><code>d2-layer-fg.svg</code> — девятка целиком. Liquid Glass вкл., спекуляр высокий, тень <b>хроматическая</b></td></tr>
+      </tbody>
+      <tbody class="d3">
+        <tr><td>Фон</td><td>светлая: #FFFFFF → #F3F3FA (55 %) → #E2E3F2. Тёмная: #1A1D3A → #0D0F22 → #05060E</td></tr>
+        <tr><td>FG 1</td><td>группа <code>#blot</code> из <code>d3-layer-fg.svg</code>, прозрачность 100 %</td></tr>
+        <tr><td>FG 2</td><td>группа <code>#droplet</code>, отдельным слоем, прозрачность ~70 % — разная прозрачность слоёв и даёт глубину («Vary opacity in foreground layers»)</td></tr>
+      </tbody>
+    </table>
+    <p class="note" style="margin-top:12px">Во всех трёх: углы скруглены (по острым свет идёт хуже),
+      тонких линий нет, текста нет, фон не чисто белый и не чисто чёрный.</p>
+  </div>
+</section>
+
+<section>
+  <h2>Что доедет до PWA на iPhone</h2>
+  <div class="card">
+    <table>
+      <thead><tr><th>Часть</th><th>PWA, как сейчас</th></tr></thead>
+      <tbody>
+        <tr><td>Форма, цвет, градиент</td><td><b>Да.</b> Один PNG 180×180 в <code>apple-touch-icon</code> — рисунок доезжает полностью</td></tr>
+        <tr><td>Слои, стекло, блик по гироскопу</td><td><b>Нет.</b> Веб-клип — плоская картинка. Только в нативной оболочке</td></tr>
+        <tr><td>Dark / tinted / clear</td><td><b>Нет официально.</b> В манифесте и мета-тегах варианта иконки не существует; подмена <code>apple-touch-icon</code> через JS срабатывает только в момент установки</td></tr>
+        <tr><td>Заставка</td><td>Статический PNG, 26 файлов. Анимации невозможны</td></tr>
+        <tr><td>Анимация знака</td><td><b>Да</b>, но только внутри приложения: About и пустое состояние</td></tr>
+      </tbody>
+    </table>
+    <p class="note" style="margin-top:12px">Отсюда проектное решение: <b>единственный поставляемый PNG
+      обязан выжить без вариантов</b> — знак держится на светлоте и силуэте, а не на цвете. Файлы dark и
+      tinted нарисованы на случай нативной оболочки и ничего не стоят: те же фигуры другими заливками.</p>
+    <p class="note">И практическое: iOS <b>кэширует</b> иконку веб-клипа. Чтобы увидеть новую, приложение
+      надо удалить с домашнего экрана и добавить заново. Это не баг сборки.</p>
+  </div>
+</section>
+
+<section>
+  <h2>Чего без iPhone не проверить</h2>
+  <div class="card">
+    <ul class="note">
+      <li>Как Icon Composer на самом деле осветит эти слои. Любой блик здесь нарисован вручную и может
+        конфликтовать с системным.</li>
+      <li>Читается ли створ, девятка и капля на <b>29 pt на настоящем экране</b>, а не в браузере на мониторе.</li>
+      <li>Применяет ли конкретная версия iOS моно-подачу к иконке веб-клипа: в форумах разработчиков
+        поведение описывают как непоследовательное (домашний экран и Настройки ведут себя по-разному).</li>
+      <li>Как нефрит D2 смотрится рядом с системными иконками на живых обоях.</li>
+      <li><code>backdrop-filter</code> в имитации дока на этой странице — косметика страницы, не продукта.</li>
+    </ul>
+  </div>
+</section>
+
+<p class="fine" style="margin:24px 4px 0">PD-93 · одна страница без сети и без встроенных шрифтов ·
+  весь собственный текст ≥ 16 px, тап-цели ≥ 44 pt · подписи внутри имитаций системного хрома 10–15 px
+  намеренно.</p>
+
+</main>
+
+<script>
+(function () {
+  var root = document.documentElement;
+
+  function replay() {
+    var els = document.querySelectorAll('.anim-sweep, .anim-fill, .anim-late, .anim-land');
+    for (var i = 0; i < els.length; i++) {
+      var el = els[i];
+      el.style.animation = 'none';
+      el.getBoundingClientRect();
+      el.style.animation = '';
+    }
+  }
+
+  var btns = document.querySelectorAll('.seg button[data-set]');
+  for (var i = 0; i < btns.length; i++) {
+    btns[i].addEventListener('click', function () {
+      var set = this.getAttribute('data-set');
+      var val = this.getAttribute('data-val');
+      root.setAttribute('data-' + set, val);
+      var peers = document.querySelectorAll('.seg button[data-set="' + set + '"]');
+      for (var j = 0; j < peers.length; j++) {
+        peers[j].setAttribute('aria-pressed', peers[j] === this ? 'true' : 'false');
+      }
+      if (set === 'motion') {
+        if (val === 'on') { root.classList.add('reduced'); } else { root.classList.remove('reduced'); }
+      }
+      replay();
+    });
+  }
+
+  document.getElementById('play').addEventListener('click', replay);
+})();
+</script>
+</body>
+</html>
