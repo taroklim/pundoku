@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024" role="img" aria-label="Pundoku app icon, direction D4 Overlap, dark appearance">
+  <title>Pundoku — D4 «Нахлёст» — dark</title>
+  <desc>Preview. Same geometry as the light icon, more subdued ground and lower cell opacity (app-icons.md › Appearances: dark icons are more subdued). No filters.</desc>
+  <defs>
+    <linearGradient id="d4d-bg" x1="0" y1="0" x2="0.3" y2="1">
+      <stop offset="0" stop-color="#2E3790"/>
+      <stop offset="0.45" stop-color="#141A5E"/>
+      <stop offset="1" stop-color="#05061F"/>
+    </linearGradient>
+    <linearGradient id="d4d-cell" gradientUnits="userSpaceOnUse" x1="203" y1="203" x2="820" y2="820">
+      <stop offset="0" stop-color="#FFFFFF" stop-opacity="0.46"/>
+      <stop offset="1" stop-color="#FFFFFF" stop-opacity="0.34"/>
+    </linearGradient>
+    <clipPath id="d4d-clipA">
+      <path d="M316 203H542A113 113 0 0 1 655 316V542A113 113 0 0 1 542 655H316A113 113 0 0 1 203 542V316A113 113 0 0 1 316 203Z"/>
+    </clipPath>
+  </defs>
+  <rect width="1024" height="1024" fill="url(#d4d-bg)"/>
+  <path fill="url(#d4d-cell)" d="M316 203H542A113 113 0 0 1 655 316V542A113 113 0 0 1 542 655H316A113 113 0 0 1 203 542V316A113 113 0 0 1 316 203Z"/>
+  <path fill="url(#d4d-cell)" d="M481 368H707A113 113 0 0 1 820 481V707A113 113 0 0 1 707 820H481A113 113 0 0 1 368 707V481A113 113 0 0 1 481 368Z"/>
+  <g clip-path="url(#d4d-clipA)">
+    <path fill="#FFFFFF" fill-opacity="0.46" d="M481 368H707A113 113 0 0 1 820 481V707A113 113 0 0 1 707 820H481A113 113 0 0 1 368 707V481A113 113 0 0 1 481 368Z"/>
+  </g>
+</svg>

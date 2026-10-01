@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024" role="img" aria-label="Pundoku mark, direction D4 Overlap">
+  <title>Pundoku — знак D4 «Нахлёст»</title>
+  <desc>Monochrome glyph in currentColor for Mark.tsx: two cell outlines plus the solid shared cell. Scaled to 0.945 of the icon geometry so the 56-wide stroke still stays inside the maskable circle (r=409.6).</desc>
+  <g transform="translate(512 512) scale(0.945) translate(-512 -512)" fill="none" stroke="currentColor" stroke-width="56">
+    <path d="M316 203H542A113 113 0 0 1 655 316V542A113 113 0 0 1 542 655H316A113 113 0 0 1 203 542V316A113 113 0 0 1 316 203Z"/>
+    <path d="M481 368H707A113 113 0 0 1 820 481V707A113 113 0 0 1 707 820H481A113 113 0 0 1 368 707V481A113 113 0 0 1 481 368Z"/>
+  </g>
+  <clipPath id="d4m-clipA">
+    <path transform="translate(512 512) scale(0.945) translate(-512 -512)" d="M316 203H542A113 113 0 0 1 655 316V542A113 113 0 0 1 542 655H316A113 113 0 0 1 203 542V316A113 113 0 0 1 316 203Z"/>
+  </clipPath>
+  <g clip-path="url(#d4m-clipA)">
+    <path transform="translate(512 512) scale(0.945) translate(-512 -512)" fill="currentColor" d="M481 368H707A113 113 0 0 1 820 481V707A113 113 0 0 1 707 820H481A113 113 0 0 1 368 707V481A113 113 0 0 1 481 368Z"/>
+  </g>
+</svg>

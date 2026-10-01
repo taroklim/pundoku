@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 588 116" width="588" height="116" role="img" aria-label="Pundoku">
+  <title>Pundoku — вордмарк D5</title>
+  <desc>Same drawn letters as D4 (monoline 22, cap 104, x-height 76, spurred u). "Pun" takes the ink colour of the carried cell; "doku" takes the graphite of the ground, so the wordmark repeats the icon's two materials and nothing else. No letter modifications.</desc>
+  <g transform="translate(2 -94)" fill="none" stroke-width="22" stroke-linecap="butt" stroke-linejoin="round">
+    <g style="stroke:var(--pun,#3B48B0)">
+      <path d="M11 96V200M11 107H40A26 26 0 0 1 40 159H11"/>
+      <path transform="translate(83 0)" d="M11 124V167A23 22 0 0 0 57 167M57 124V200"/>
+      <path transform="translate(165 0)" d="M11 200V157A23 22 0 0 1 57 157V200"/>
+    </g>
+    <g style="stroke:var(--doku,#43474F)">
+      <path transform="translate(247 0)" d="M11 162A28 27 0 0 1 67 162A28 27 0 0 1 11 162M67 96V200"/>
+      <path transform="translate(339 0)" d="M11 162A28 27 0 0 1 67 162A28 27 0 0 1 11 162"/>
+      <path transform="translate(431 0)" d="M11 96V200M58 124L26 168L62 200"/>
+      <path transform="translate(516 0)" d="M11 124V167A23 22 0 0 0 57 167M57 124V200"/>
+    </g>
+  </g>
+</svg>

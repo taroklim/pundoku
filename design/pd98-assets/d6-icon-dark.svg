@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024" role="img" aria-label="Pundoku app icon, direction D6 One Move, dark appearance">
+  <title>Pundoku — D6 «Один ход» — dark</title>
+  <desc>Preview. Same stroke, deeper iron-gall ground, slightly warmer and dimmer paper so the icon is subdued next to system dark icons. No filters.</desc>
+  <defs>
+    <linearGradient id="d6d-bg" x1="0" y1="0" x2="0.3" y2="1">
+      <stop offset="0" stop-color="#4A3626"/>
+      <stop offset="0.45" stop-color="#221711"/>
+      <stop offset="1" stop-color="#0C0805"/>
+    </linearGradient>
+    <linearGradient id="d6d-nib" gradientUnits="userSpaceOnUse" x1="218" y1="197" x2="777" y2="813">
+      <stop offset="0" stop-color="#F4E8D6"/>
+      <stop offset="1" stop-color="#CBB79A"/>
+    </linearGradient>
+  </defs>
+  <rect width="1024" height="1024" fill="url(#d6d-bg)"/>
+  <path fill="url(#d6d-nib)" d="M218.7 310.9L459.6 197.9A34 34 0 0 1 502.9 210.8L791.7 678.1A34 34 0 0 1 777.2 726.8L593.6 812.9A34 34 0 0 1 552.5 803.2L206.4 362.6A34 34 0 0 1 218.7 310.9Z"/>
+</svg>

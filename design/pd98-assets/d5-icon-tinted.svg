@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024" role="img" aria-label="Pundoku app icon, direction D5 The Carry, tinted mono map">
+  <title>Pundoku — D5 «Унос» — tinted / mono map</title>
+  <desc>Luminance map iOS tints, not a finished icon. The carried cell is full white and the field is grey, so the idea survives the mono conversion without hand-inverting anything (that was round 2's D3 problem).</desc>
+  <defs>
+    <linearGradient id="d5t-bg" x1="0" y1="0" x2="0.3" y2="1">
+      <stop offset="0" stop-color="#3A3A3C"/>
+      <stop offset="0.55" stop-color="#1C1C1E"/>
+      <stop offset="1" stop-color="#000000"/>
+    </linearGradient>
+  </defs>
+  <rect width="1024" height="1024" fill="url(#d5t-bg)"/>
+  <path fill="#FFFFFF" fill-opacity="0.58" d="M337 347H485A27 27 0 0 1 512 374V485A27 27 0 0 0 539 512H650A27 27 0 0 1 677 539V687A113 113 0 0 1 564 800H337A113 113 0 0 1 224 687V460A113 113 0 0 1 337 347Z"/>
+  <path fill="#FFFFFF" d="M677 224H759A41 41 0 0 1 800 265V347A41 41 0 0 1 759 388H677A41 41 0 0 1 636 347V265A41 41 0 0 1 677 224Z"/>
+</svg>

@@ -1,0 +1,1125 @@
+<!DOCTYPE html>
+<html lang="ru" data-dir="d4" data-appear="light" data-motion="system">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<title>Pundoku · PD-98 · логотип и иконка, раунд 3</title>
+<style>
+  * { box-sizing: border-box; -webkit-text-size-adjust: 100%; }
+  html, body { margin: 0; padding: 0; }
+
+  /* ── Page chrome: светлая база ────────────────────────────────── */
+  html {
+    --bg:#F2F2F7; --card:#FFFFFF; --card2:#FFFFFF; --lbl:#1C1C1E; --lbl2:#6E6E73;
+    --lbl3:#7C7C82; --sep:rgba(60,60,67,.29); --ctl:#E4E4EB; --ctlOn:#FFFFFF;
+    --wall:linear-gradient(160deg,#C9D2F2 0%,#E6DEF4 48%,#F3E9EE 100%);
+    --ok:#1F7A4D; --warn:#8A5A00;
+  }
+  html[data-dir="d4"] { --pun:#3B48B0; --doku:#6E6E73; }
+  html[data-dir="d5"] { --pun:#3B48B0; --doku:#43474F; }
+  html[data-dir="d6"] { --pun:#4F3A26; --doku:#6E6E73; }
+
+  /* ── Page chrome: тёмная ──────────────────────────────────────── */
+  html[data-appear="dark"], html[data-appear="tinted"] {
+    --bg:#000000; --card:#1C1C1E; --card2:#2C2C2E; --lbl:#F2F2F7; --lbl2:#98989D;
+    --lbl3:#8E8E93; --sep:rgba(84,84,88,.65); --ctl:#1C1C1E; --ctlOn:#3A3A3C;
+    --wall:linear-gradient(160deg,#141730 0%,#0A0B18 52%,#000000 100%);
+    --ok:#4FD08A; --warn:#F0B429;
+  }
+  html[data-appear="dark"][data-dir="d4"], html[data-appear="tinted"][data-dir="d4"] { --pun:#8C96FF; --doku:#98989D; }
+  html[data-appear="dark"][data-dir="d5"], html[data-appear="tinted"][data-dir="d5"] { --pun:#9AA3FF; --doku:#A7ABB5; }
+  html[data-appear="dark"][data-dir="d6"], html[data-appear="tinted"][data-dir="d6"] { --pun:#D8B08A; --doku:#98989D; }
+
+  /* Страница следует системной теме, когда выбрана светлая подача иконки.
+     Специфичность: (0,2,1) против (0,1,1) — перебивает блок светлой базы, не протекает. */
+  @media (prefers-color-scheme: dark) {
+    html[data-appear="light"] {
+      --bg:#000000; --card:#1C1C1E; --card2:#2C2C2E; --lbl:#F2F2F7; --lbl2:#98989D;
+      --lbl3:#8E8E93; --sep:rgba(84,84,88,.65); --ctl:#1C1C1E; --ctlOn:#3A3A3C;
+      --wall:linear-gradient(160deg,#141730 0%,#0A0B18 52%,#000000 100%);
+      --ok:#4FD08A; --warn:#F0B429;
+    }
+    html[data-appear="light"][data-dir="d4"] { --pun:#8C96FF; --doku:#98989D; }
+    html[data-appear="light"][data-dir="d5"] { --pun:#9AA3FF; --doku:#A7ABB5; }
+    html[data-appear="light"][data-dir="d6"] { --pun:#D8B08A; --doku:#98989D; }
+  }
+
+  body {
+    background: var(--bg); color: var(--lbl);
+    font: 400 17px/1.47 system-ui, -apple-system, "Segoe UI", sans-serif;
+    padding-bottom: calc(40px + env(safe-area-inset-bottom));
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ── Переключатели ────────────────────────────────────────────── */
+  header {
+    position: sticky; top: 0; z-index: 40; background: var(--bg);
+    border-bottom: 1px solid var(--sep);
+    padding: calc(8px + env(safe-area-inset-top)) 16px 8px;
+  }
+  header h1 { margin: 0; font-size: 17px; line-height: 1.25; font-weight: 700; letter-spacing: -.01em; }
+  .seg { display: flex; gap: 4px; background: var(--ctl); border-radius: 12px; padding: 4px; margin-top: 8px; }
+  .seg button {
+    flex: 1 1 0; min-height: 44px; border: 0; border-radius: 9px; background: transparent;
+    color: var(--lbl); font: 500 16px/1.2 system-ui, -apple-system, sans-serif;
+    padding: 6px 2px; cursor: pointer; -webkit-tap-highlight-color: transparent;
+  }
+  .seg button[aria-pressed="true"] { background: var(--ctlOn); box-shadow: 0 1px 3px rgba(0,0,0,.14); font-weight: 600; }
+  .seglab { font-size: 16px; color: var(--lbl2); margin: 0; }
+
+  /* ── Раскладка ────────────────────────────────────────────────── */
+  main { padding: 0 16px; }
+  section { margin: 26px 0 0; }
+  h2 { font-size: 16px; line-height: 1.3; letter-spacing: .04em; text-transform: uppercase;
+       color: var(--lbl2); margin: 0 0 8px 4px; font-weight: 600; }
+  .card { background: var(--card); border-radius: 18px; padding: 16px; }
+  .card + .card { margin-top: 12px; }
+  p { margin: 0 0 10px; }
+  p:last-child { margin-bottom: 0; }
+  .note { font-size: 16px; color: var(--lbl2); }
+  .note b { color: var(--lbl); font-weight: 600; }
+  .row { display: flex; flex-wrap: wrap; gap: 14px; align-items: flex-end; }
+  .center { display: flex; justify-content: center; }
+  ul { margin: 0 0 0 20px; padding: 0; }
+  li { margin: 0 0 8px; font-size: 16px; }
+  li:last-child { margin-bottom: 0; }
+  code { font: 500 16px/1.4 ui-monospace, "SF Mono", Menlo, monospace; }
+  .good { color: var(--ok); font-weight: 600; }
+  .bad { color: var(--warn); font-weight: 600; }
+
+  /* ── Плашки иконок ────────────────────────────────────────────── */
+  .sq { border-radius: 22.37%; overflow: hidden; display: block; flex: 0 0 auto;
+        box-shadow: 0 1px 2px rgba(0,0,0,.16); }
+  .sq svg { display: block; width: 100%; height: 100%; }
+  .raw { border-radius: 0; }
+  .cap { font-size: 16px; color: var(--lbl2); text-align: center; margin-top: 6px; }
+  .cap b { color: var(--lbl); font-weight: 600; }
+  .fine { font-size: 16px; color: var(--lbl3); }
+
+  .wallband { background: var(--wall); border-radius: 16px; padding: 18px 10px 12px;
+              display: flex; justify-content: space-around; gap: 6px; }
+  .wallband > span { text-align: center; }
+  .wallband .sq { margin: 0 auto; }
+  .wallband .lab { font-size: 16px; text-align: center; margin-top: 8px;
+                   color: rgba(255,255,255,.95); text-shadow: 0 1px 2px rgba(0,0,0,.55); }
+  html[data-appear="light"] .wallband .lab { color: #26262E; text-shadow: 0 1px 2px rgba(255,255,255,.65); }
+  @media (prefers-color-scheme: dark) {
+    html[data-appear="light"] .wallband .lab { color: rgba(255,255,255,.95); text-shadow: 0 1px 2px rgba(0,0,0,.55); }
+  }
+  @media (max-width: 380px) {
+    .wallband { padding: 18px 4px 12px; gap: 4px; }
+    .wallband .sq { width: 72px !important; height: 72px !important; }
+  }
+
+  .gs { filter: grayscale(1) contrast(1.02); }
+
+  /* ── Схематичный телефон ──────────────────────────────────────── */
+  .minirow { display: flex; flex-wrap: wrap; gap: 16px; justify-content: center; }
+  .mini { position: relative; overflow: hidden; flex: 0 0 auto;
+          width: calc(393px * var(--s)); height: calc(852px * var(--s));
+          border-radius: calc(48px * var(--s)); box-shadow: 0 2px 10px rgba(0,0,0,.22);
+          background: #000; }
+  .mini > .sc { position: absolute; top: 0; left: 0; width: 393px; height: 852px;
+                transform: scale(var(--s)); transform-origin: top left;
+                font: 400 15px/1.3 system-ui, -apple-system, sans-serif; }
+
+  .hs { background: var(--wall); width: 100%; height: 100%; padding: 60px 22px 0; }
+  .hs .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 26px 18px; }
+  .hs .app { text-align: center; }
+  .hs .app .sq { width: 62px; height: 62px; margin: 0 auto; }
+  .hs .app .nm { font-size: 11px; margin-top: 5px; color: rgba(255,255,255,.95);
+                 text-shadow: 0 1px 2px rgba(0,0,0,.45); }
+  html[data-appear="light"] .hs .app .nm { color: #2C2C33; text-shadow: 0 1px 2px rgba(255,255,255,.55); }
+  @media (prefers-color-scheme: dark) {
+    html[data-appear="light"] .hs .app .nm { color: rgba(255,255,255,.95); text-shadow: 0 1px 2px rgba(0,0,0,.45); }
+  }
+  .ph  { background: #D8D8DE; }
+  .ph2 { background: linear-gradient(160deg,#FFD66B,#F0892B); }
+  .ph3 { background: linear-gradient(160deg,#6ED0FF,#1A7AE0); }
+  .ph4 { background: linear-gradient(160deg,#FF8A9B,#D92B55); }
+  .ph5 { background: linear-gradient(160deg,#C9CCD2,#8A8F98); }
+  .ph6 { background: linear-gradient(160deg,#9BE88A,#2F9E44); }
+  .hs .dock { position: absolute; left: 14px; right: 14px; bottom: 26px; height: 92px;
+              border-radius: 30px; background: rgba(255,255,255,.26);
+              -webkit-backdrop-filter: blur(22px); backdrop-filter: blur(22px);
+              display: flex; align-items: center; justify-content: space-around; padding: 0 16px; }
+  html[data-appear="dark"] .hs .dock, html[data-appear="tinted"] .hs .dock { background: rgba(120,120,128,.3); }
+  .hs .dock .sq { width: 60px; height: 60px; }
+
+  /* ── Схемы экранов приложения ─────────────────────────────────── */
+  html[data-appear="light"] .sc { --appbg:#F2F2F7; --appsurf:#FFFFFF; --applbl:#1C1C1E; --applbl2:#6E6E73;
+                                  --appline:rgba(60,60,67,.18); --appsel:rgba(59,72,176,.16); --ink:#3B48B0; }
+  html[data-appear="dark"] .sc, html[data-appear="tinted"] .sc { --appbg:#000; --appsurf:#1C1C1E; --applbl:#F2F2F7;
+                                  --applbl2:#98989D; --appline:rgba(84,84,88,.5); --appsel:rgba(140,150,255,.22); --ink:#8C96FF; }
+  .app-sc { width: 100%; height: 100%; background: var(--appbg); color: var(--applbl);
+            display: flex; flex-direction: column; }
+  .statusbar { height: 54px; display: flex; align-items: flex-end; justify-content: space-between;
+               padding: 0 28px 6px; font-size: 15px; font-weight: 600; }
+  .scrtitle { font-size: 28px; font-weight: 700; padding: 10px 20px 0; color: var(--applbl); }
+  .daycap { text-align: center; font-size: 17px; color: var(--applbl2); padding: 8px 0 0; }
+  .daycap b { color: var(--applbl); font-weight: 600; }
+  .board { width: 351px; aspect-ratio: 1; margin: 10px auto 0; display: grid;
+           grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(3, 1fr); gap: 4px; }
+  .bx { background: var(--appsurf); border-radius: 10px; display: grid;
+        grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(3, 1fr); }
+  .bx span { display: flex; align-items: center; justify-content: center; font-size: 21px; }
+  .bx .g { font-family: ui-serif, Georgia, "Times New Roman", serif; font-weight: 600; }
+  .bx .p { color: var(--ink); font-weight: 500; }
+  .bx .sel { background: var(--appsel); border-radius: 4px; }
+  .pad { display: flex; gap: 6px; padding: 0 16px; margin-top: auto; }
+  .pad i { flex: 1; height: 54px; background: var(--appsurf); border-radius: 10px;
+           display: flex; align-items: center; justify-content: center;
+           font-style: normal; font-size: 22px; color: var(--ink); font-weight: 500; }
+  .tabbar { height: 84px; margin-top: 14px; display: flex; align-items: flex-start;
+            justify-content: space-around; padding-top: 10px; background: rgba(120,120,128,.14);
+            -webkit-backdrop-filter: blur(20px); backdrop-filter: blur(20px); }
+  .tabbar em { font-style: normal; font-size: 12px; color: var(--applbl2); text-align: center; }
+  .tabbar em.on { color: var(--ink); font-weight: 600; }
+  .tabbar em b { display: block; width: 26px; height: 26px; margin: 0 auto 4px; border-radius: 7px;
+                 background: currentColor; opacity: .85; }
+
+  .empty { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
+           padding: 0 40px; text-align: center; gap: 14px; }
+  .empty .mkbox { width: 56px; height: 56px; color: var(--applbl2); }
+  .empty .mkbox svg { display: block; width: 100%; height: 100%; }
+  .empty p { font-size: 17px; color: var(--applbl2); margin: 0; }
+
+  .list { background: var(--appsurf); border-radius: 12px; margin: 14px 16px 0; overflow: hidden; }
+  .list div { padding: 14px 16px; font-size: 17px; border-bottom: 1px solid var(--appline);
+              display: flex; justify-content: space-between; }
+  .list div:last-child { border-bottom: 0; }
+  .list div s { text-decoration: none; color: var(--applbl2); }
+  .about { background: var(--appsurf); border-radius: 12px; margin: 14px 16px 0;
+           padding: 26px 16px 20px; text-align: center; }
+  .about .mkbox { width: 60px; height: 60px; margin: 0 auto 14px; color: var(--pun); }
+  .about .mkbox svg { display: block; width: 100%; height: 100%; }
+  .about .wmbox { width: 190px; margin: 0 auto; }
+  .about .wmbox svg { display: block; width: 100%; height: auto; }
+  .about .ver { font-size: 15px; color: var(--applbl2); margin-top: 10px; }
+
+  .pngcard { margin: 16px 16px 0; background: #fff; border-radius: 14px; padding: 18px 16px 12px;
+             color: #1C1C1E; box-shadow: 0 2px 10px rgba(0,0,0,.16); }
+  .pngcard h4 { margin: 0 0 12px; font-size: 19px; font-weight: 600; }
+  .pngcard h4 s { text-decoration: none; display: block; font-size: 13px; color: #8A8A90; font-weight: 400; }
+  .pngcard .hm { display: grid; grid-template-columns: repeat(9, 1fr); gap: 3px; }
+  .pngcard .hm i { aspect-ratio: 1; border-radius: 3px; background: #E8EAF6; }
+  .pngcard .ft { display: flex; align-items: center; gap: 6px; margin-top: 14px;
+                 font-size: 11px; color: #8A8A90; }
+  .pngcard .ft .mk { width: 13px; height: 13px; color: #8A8A90; flex: 0 0 auto; }
+  .pngcard .ft .mk svg { display: block; width: 100%; height: 100%; }
+
+  /* ── Знак и вордмарк ──────────────────────────────────────────── */
+  .markplate { color: var(--pun); display: flex; justify-content: center; align-items: center; gap: 18px; }
+  .markplate .m { width: 104px; height: 104px; }
+  .markplate .m.s2 { width: 56px; height: 56px; color: var(--lbl2); }
+  .markplate .m.s3 { width: 30px; height: 30px; color: var(--lbl2); }
+  .markplate .m svg { display: block; width: 100%; height: 100%; }
+  .wmplate svg { display: block; width: 100%; height: auto; }
+  .wmplate.w1 { width: 100%; }
+  .wmplate.w2 { width: 68%; }
+  .wmplate.w3 { width: 46%; }
+  .lockup { display: flex; align-items: center; gap: 14px; }
+  .lockup .m { width: 62px; height: 62px; color: var(--pun); flex: 0 0 auto; }
+  .lockup .m svg { display: block; width: 100%; height: 100%; }
+  .lockup .w { flex: 1 1 auto; }
+  .lockup .w svg { display: block; width: 100%; height: auto; }
+
+  /* ── Видимость: только направление ────────────────────────────── */
+  .d4, .d5, .d6 { display: none; }
+  html[data-dir="d4"] .d4, html[data-dir="d5"] .d5, html[data-dir="d6"] .d6 { display: revert; }
+
+  /* ── Видимость: направление И подача, одним правилом ──────────── */
+  .v { display: none; }
+  html[data-dir="d4"][data-appear="light"]  .v.vd4l,
+  html[data-dir="d4"][data-appear="dark"]   .v.vd4d,
+  html[data-dir="d4"][data-appear="tinted"] .v.vd4t,
+  html[data-dir="d5"][data-appear="light"]  .v.vd5l,
+  html[data-dir="d5"][data-appear="dark"]   .v.vd5d,
+  html[data-dir="d5"][data-appear="tinted"] .v.vd5t,
+  html[data-dir="d6"][data-appear="light"]  .v.vd6l,
+  html[data-dir="d6"][data-appear="dark"]   .v.vd6d,
+  html[data-dir="d6"][data-appear="tinted"] .v.vd6t { display: revert; }
+
+  /* ── Движение ─────────────────────────────────────────────────── */
+  .moplate { display: flex; justify-content: center; }
+  .moplate svg { border-radius: 22.37%; box-shadow: 0 1px 3px rgba(0,0,0,.18); }
+  @keyframes mo-slide { from { transform: translate(150px,150px); opacity: .3; } to { transform: translate(0,0); opacity: 1; } }
+  @keyframes mo-core  { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes mo-carry { from { transform: translate(-124px,124px); } to { transform: translate(0,0); } }
+  /* mo-ink уезжает строго по оси росчерка: единичный вектор (0.573, 0.820) × 900. */
+  @keyframes mo-ink   { from { transform: translate(-516px,-738px); } to { transform: translate(0,0); } }
+  @keyframes mo-fade  { from { opacity: 0; } to { opacity: 1; } }
+  .anim-slide { animation: mo-slide 620ms cubic-bezier(.3,0,.2,1) both; }
+  .anim-core  { animation: mo-core 320ms linear 520ms both; }
+  .anim-carry { animation: mo-carry 700ms cubic-bezier(.33,0,.18,1) both; }
+  .anim-ink   { animation: mo-ink 560ms cubic-bezier(.2,.7,.3,1) both; }
+  .reduced .anim-slide, .reduced .anim-core, .reduced .anim-carry, .reduced .anim-ink {
+    animation: mo-fade 280ms linear both !important;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    html[data-motion="system"] .anim-slide, html[data-motion="system"] .anim-core,
+    html[data-motion="system"] .anim-carry, html[data-motion="system"] .anim-ink {
+      animation: mo-fade 280ms linear both !important;
+    }
+  }
+  .playbtn { display: block; width: 100%; min-height: 48px; margin-top: 14px; border: 0;
+             border-radius: 12px; background: var(--ctl); color: var(--lbl);
+             font: 600 17px/1.2 system-ui, -apple-system, sans-serif; cursor: pointer; }
+
+  table { width: 100%; border-collapse: collapse; font-size: 16px; table-layout: fixed; }
+  th, td { text-align: left; padding: 8px 6px; border-bottom: 1px solid var(--sep); vertical-align: top;
+           overflow-wrap: anywhere; hyphens: auto; }
+  th { font-size: 16px; color: var(--lbl2); font-weight: 600; }
+  td:first-child { font-weight: 600; }
+  .defs { position: absolute; width: 0; height: 0; overflow: hidden; }
+</style>
+</head>
+<body>
+
+<!-- ═════════════ Библиотека SVG ═════════════ -->
+<svg class="defs" aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg">
+<defs>
+  <!-- D4 · Нахлёст -->
+  <linearGradient id="g-d4l-bg" x1="0" y1="0" x2="0.3" y2="1">
+    <stop offset="0" stop-color="#7B86FF"/><stop offset="0.42" stop-color="#3B48B0"/><stop offset="1" stop-color="#1A2066"/>
+  </linearGradient>
+  <linearGradient id="g-d4l-cell" gradientUnits="userSpaceOnUse" x1="203" y1="203" x2="820" y2="820">
+    <stop offset="0" stop-color="#FFFFFF" stop-opacity="0.54"/><stop offset="1" stop-color="#FFFFFF" stop-opacity="0.40"/>
+  </linearGradient>
+  <linearGradient id="g-d4d-bg" x1="0" y1="0" x2="0.3" y2="1">
+    <stop offset="0" stop-color="#2E3790"/><stop offset="0.45" stop-color="#141A5E"/><stop offset="1" stop-color="#05061F"/>
+  </linearGradient>
+  <linearGradient id="g-d4d-cell" gradientUnits="userSpaceOnUse" x1="203" y1="203" x2="820" y2="820">
+    <stop offset="0" stop-color="#FFFFFF" stop-opacity="0.46"/><stop offset="1" stop-color="#FFFFFF" stop-opacity="0.34"/>
+  </linearGradient>
+  <linearGradient id="g-mono-bg" x1="0" y1="0" x2="0.3" y2="1">
+    <stop offset="0" stop-color="#3A3A3C"/><stop offset="0.55" stop-color="#1C1C1E"/><stop offset="1" stop-color="#000000"/>
+  </linearGradient>
+  <clipPath id="cp-d4a">
+    <path d="M316 203H542A113 113 0 0 1 655 316V542A113 113 0 0 1 542 655H316A113 113 0 0 1 203 542V316A113 113 0 0 1 316 203Z"/>
+  </clipPath>
+
+  <!-- D5 · Унос -->
+  <linearGradient id="g-d5l-bg" x1="0" y1="0" x2="0.3" y2="1">
+    <stop offset="0" stop-color="#5A616E"/><stop offset="0.45" stop-color="#2B2F38"/><stop offset="1" stop-color="#14161B"/>
+  </linearGradient>
+  <linearGradient id="g-d5l-paper" gradientUnits="userSpaceOnUse" x1="224" y1="347" x2="677" y2="800">
+    <stop offset="0" stop-color="#FFFFFF" stop-opacity="0.92"/><stop offset="1" stop-color="#FFFFFF" stop-opacity="0.82"/>
+  </linearGradient>
+  <linearGradient id="g-d5l-ink" gradientUnits="userSpaceOnUse" x1="636" y1="224" x2="800" y2="388">
+    <stop offset="0" stop-color="#A7B0FF"/><stop offset="1" stop-color="#5F6DF2"/>
+  </linearGradient>
+  <linearGradient id="g-d5d-bg" x1="0" y1="0" x2="0.3" y2="1">
+    <stop offset="0" stop-color="#3A404C"/><stop offset="0.45" stop-color="#1B1E25"/><stop offset="1" stop-color="#0A0B0E"/>
+  </linearGradient>
+  <linearGradient id="g-d5d-paper" gradientUnits="userSpaceOnUse" x1="224" y1="347" x2="677" y2="800">
+    <stop offset="0" stop-color="#FFFFFF" stop-opacity="0.76"/><stop offset="1" stop-color="#FFFFFF" stop-opacity="0.64"/>
+  </linearGradient>
+  <linearGradient id="g-d5d-ink" gradientUnits="userSpaceOnUse" x1="636" y1="224" x2="800" y2="388">
+    <stop offset="0" stop-color="#9AA3FF"/><stop offset="1" stop-color="#4D59D6"/>
+  </linearGradient>
+
+  <!-- D6 · Один ход -->
+  <linearGradient id="g-d6l-bg" x1="0" y1="0" x2="0.3" y2="1">
+    <stop offset="0" stop-color="#6B4F36"/><stop offset="0.45" stop-color="#33241A"/><stop offset="1" stop-color="#170F09"/>
+  </linearGradient>
+  <linearGradient id="g-d6l-nib" gradientUnits="userSpaceOnUse" x1="218" y1="197" x2="777" y2="813">
+    <stop offset="0" stop-color="#FFFAF2"/><stop offset="1" stop-color="#E8D9C2"/>
+  </linearGradient>
+  <linearGradient id="g-d6d-bg" x1="0" y1="0" x2="0.3" y2="1">
+    <stop offset="0" stop-color="#4A3626"/><stop offset="0.45" stop-color="#221711"/><stop offset="1" stop-color="#0C0805"/>
+  </linearGradient>
+  <linearGradient id="g-d6d-nib" gradientUnits="userSpaceOnUse" x1="218" y1="197" x2="777" y2="813">
+    <stop offset="0" stop-color="#F4E8D6"/><stop offset="1" stop-color="#CBB79A"/>
+  </linearGradient>
+</defs>
+
+<!-- иконки 1024 -->
+<symbol id="ic-d4-l" viewBox="0 0 1024 1024">
+  <rect width="1024" height="1024" fill="url(#g-d4l-bg)"/>
+  <path fill="url(#g-d4l-cell)" d="M316 203H542A113 113 0 0 1 655 316V542A113 113 0 0 1 542 655H316A113 113 0 0 1 203 542V316A113 113 0 0 1 316 203Z"/>
+  <path fill="url(#g-d4l-cell)" d="M481 368H707A113 113 0 0 1 820 481V707A113 113 0 0 1 707 820H481A113 113 0 0 1 368 707V481A113 113 0 0 1 481 368Z"/>
+  <g clip-path="url(#cp-d4a)"><path fill="#FFFFFF" fill-opacity="0.50" d="M481 368H707A113 113 0 0 1 820 481V707A113 113 0 0 1 707 820H481A113 113 0 0 1 368 707V481A113 113 0 0 1 481 368Z"/></g>
+</symbol>
+<symbol id="ic-d4-d" viewBox="0 0 1024 1024">
+  <rect width="1024" height="1024" fill="url(#g-d4d-bg)"/>
+  <path fill="url(#g-d4d-cell)" d="M316 203H542A113 113 0 0 1 655 316V542A113 113 0 0 1 542 655H316A113 113 0 0 1 203 542V316A113 113 0 0 1 316 203Z"/>
+  <path fill="url(#g-d4d-cell)" d="M481 368H707A113 113 0 0 1 820 481V707A113 113 0 0 1 707 820H481A113 113 0 0 1 368 707V481A113 113 0 0 1 481 368Z"/>
+  <g clip-path="url(#cp-d4a)"><path fill="#FFFFFF" fill-opacity="0.46" d="M481 368H707A113 113 0 0 1 820 481V707A113 113 0 0 1 707 820H481A113 113 0 0 1 368 707V481A113 113 0 0 1 481 368Z"/></g>
+</symbol>
+<symbol id="ic-d4-t" viewBox="0 0 1024 1024">
+  <rect width="1024" height="1024" fill="url(#g-mono-bg)"/>
+  <path fill="#FFFFFF" fill-opacity="0.62" d="M316 203H542A113 113 0 0 1 655 316V542A113 113 0 0 1 542 655H316A113 113 0 0 1 203 542V316A113 113 0 0 1 316 203Z"/>
+  <path fill="#FFFFFF" fill-opacity="0.62" d="M481 368H707A113 113 0 0 1 820 481V707A113 113 0 0 1 707 820H481A113 113 0 0 1 368 707V481A113 113 0 0 1 481 368Z"/>
+  <g clip-path="url(#cp-d4a)"><path fill="#FFFFFF" d="M481 368H707A113 113 0 0 1 820 481V707A113 113 0 0 1 707 820H481A113 113 0 0 1 368 707V481A113 113 0 0 1 481 368Z"/></g>
+</symbol>
+
+<symbol id="ic-d5-l" viewBox="0 0 1024 1024">
+  <rect width="1024" height="1024" fill="url(#g-d5l-bg)"/>
+  <path fill="url(#g-d5l-paper)" d="M337 347H485A27 27 0 0 1 512 374V485A27 27 0 0 0 539 512H650A27 27 0 0 1 677 539V687A113 113 0 0 1 564 800H337A113 113 0 0 1 224 687V460A113 113 0 0 1 337 347Z"/>
+  <path fill="url(#g-d5l-ink)" d="M677 224H759A41 41 0 0 1 800 265V347A41 41 0 0 1 759 388H677A41 41 0 0 1 636 347V265A41 41 0 0 1 677 224Z"/>
+</symbol>
+<symbol id="ic-d5-d" viewBox="0 0 1024 1024">
+  <rect width="1024" height="1024" fill="url(#g-d5d-bg)"/>
+  <path fill="url(#g-d5d-paper)" d="M337 347H485A27 27 0 0 1 512 374V485A27 27 0 0 0 539 512H650A27 27 0 0 1 677 539V687A113 113 0 0 1 564 800H337A113 113 0 0 1 224 687V460A113 113 0 0 1 337 347Z"/>
+  <path fill="url(#g-d5d-ink)" d="M677 224H759A41 41 0 0 1 800 265V347A41 41 0 0 1 759 388H677A41 41 0 0 1 636 347V265A41 41 0 0 1 677 224Z"/>
+</symbol>
+<symbol id="ic-d5-t" viewBox="0 0 1024 1024">
+  <rect width="1024" height="1024" fill="url(#g-mono-bg)"/>
+  <path fill="#FFFFFF" fill-opacity="0.58" d="M337 347H485A27 27 0 0 1 512 374V485A27 27 0 0 0 539 512H650A27 27 0 0 1 677 539V687A113 113 0 0 1 564 800H337A113 113 0 0 1 224 687V460A113 113 0 0 1 337 347Z"/>
+  <path fill="#FFFFFF" d="M677 224H759A41 41 0 0 1 800 265V347A41 41 0 0 1 759 388H677A41 41 0 0 1 636 347V265A41 41 0 0 1 677 224Z"/>
+</symbol>
+
+<symbol id="ic-d6-l" viewBox="0 0 1024 1024">
+  <rect width="1024" height="1024" fill="url(#g-d6l-bg)"/>
+  <path fill="url(#g-d6l-nib)" d="M218.7 310.9L459.6 197.9A34 34 0 0 1 502.9 210.8L791.7 678.1A34 34 0 0 1 777.2 726.8L593.6 812.9A34 34 0 0 1 552.5 803.2L206.4 362.6A34 34 0 0 1 218.7 310.9Z"/>
+</symbol>
+<symbol id="ic-d6-d" viewBox="0 0 1024 1024">
+  <rect width="1024" height="1024" fill="url(#g-d6d-bg)"/>
+  <path fill="url(#g-d6d-nib)" d="M218.7 310.9L459.6 197.9A34 34 0 0 1 502.9 210.8L791.7 678.1A34 34 0 0 1 777.2 726.8L593.6 812.9A34 34 0 0 1 552.5 803.2L206.4 362.6A34 34 0 0 1 218.7 310.9Z"/>
+</symbol>
+<symbol id="ic-d6-t" viewBox="0 0 1024 1024">
+  <rect width="1024" height="1024" fill="url(#g-mono-bg)"/>
+  <path fill="#FFFFFF" d="M218.7 310.9L459.6 197.9A34 34 0 0 1 502.9 210.8L791.7 678.1A34 34 0 0 1 777.2 726.8L593.6 812.9A34 34 0 0 1 552.5 803.2L206.4 362.6A34 34 0 0 1 218.7 310.9Z"/>
+</symbol>
+
+<!-- знаки, currentColor -->
+<symbol id="mk-d4" viewBox="0 0 1024 1024">
+  <g transform="translate(512 512) scale(0.945) translate(-512 -512)">
+    <g fill="none" stroke="currentColor" stroke-width="56">
+      <path d="M316 203H542A113 113 0 0 1 655 316V542A113 113 0 0 1 542 655H316A113 113 0 0 1 203 542V316A113 113 0 0 1 316 203Z"/>
+      <path d="M481 368H707A113 113 0 0 1 820 481V707A113 113 0 0 1 707 820H481A113 113 0 0 1 368 707V481A113 113 0 0 1 481 368Z"/>
+    </g>
+    <g clip-path="url(#cp-d4a)"><path fill="currentColor" d="M481 368H707A113 113 0 0 1 820 481V707A113 113 0 0 1 707 820H481A113 113 0 0 1 368 707V481A113 113 0 0 1 481 368Z"/></g>
+  </g>
+</symbol>
+<symbol id="mk-d5" viewBox="0 0 1024 1024">
+  <g fill="currentColor">
+    <path d="M337 347H485A27 27 0 0 1 512 374V485A27 27 0 0 0 539 512H650A27 27 0 0 1 677 539V687A113 113 0 0 1 564 800H337A113 113 0 0 1 224 687V460A113 113 0 0 1 337 347Z"/>
+    <path d="M677 224H759A41 41 0 0 1 800 265V347A41 41 0 0 1 759 388H677A41 41 0 0 1 636 347V265A41 41 0 0 1 677 224Z"/>
+  </g>
+</symbol>
+<symbol id="mk-d6" viewBox="0 0 1024 1024">
+  <path fill="currentColor" d="M218.7 310.9L459.6 197.9A34 34 0 0 1 502.9 210.8L791.7 678.1A34 34 0 0 1 777.2 726.8L593.6 812.9A34 34 0 0 1 552.5 803.2L206.4 362.6A34 34 0 0 1 218.7 310.9Z"/>
+</symbol>
+
+<!-- вордмарки. Нарисованы на базовой линии y=200; группа сдвинута translate(2 -94), чтобы
+     viewBox символа начинался с 0 0: <use> ставит вьюпорт символа в точку (0,0) пользовательского
+     пространства, а не в начало его viewBox (находка PD-93 §10.2). -->
+<symbol id="wm-d4" viewBox="0 0 588 116">
+  <g transform="translate(2 -94)" fill="none" stroke-width="22" stroke-linecap="butt" stroke-linejoin="round">
+    <g style="stroke:var(--pun,#3B48B0)">
+      <path d="M11 96V200M11 107H40A26 26 0 0 1 40 159H11"/>
+      <path transform="translate(83 0)" d="M11 124V167A23 22 0 0 0 57 167M57 124V200"/>
+      <path transform="translate(165 0)" d="M11 200V157A23 22 0 0 1 57 157V200"/>
+    </g>
+    <g style="stroke:var(--doku,#6E6E73)">
+      <path transform="translate(247 0)" d="M11 162A28 27 0 0 1 67 162A28 27 0 0 1 11 162M67 96V200"/>
+      <path transform="translate(339 0)" d="M11 162A28 27 0 0 1 67 162A28 27 0 0 1 11 162"/>
+      <path transform="translate(431 0)" d="M11 96V200M58 124L26 168L62 200"/>
+      <path transform="translate(516 0)" d="M11 124V167A23 22 0 0 0 57 167M57 124V200"/>
+    </g>
+  </g>
+</symbol>
+<symbol id="wm-d5" viewBox="0 0 588 116">
+  <g transform="translate(2 -94)" fill="none" stroke-width="22" stroke-linecap="butt" stroke-linejoin="round">
+    <g style="stroke:var(--pun,#3B48B0)">
+      <path d="M11 96V200M11 107H40A26 26 0 0 1 40 159H11"/>
+      <path transform="translate(83 0)" d="M11 124V167A23 22 0 0 0 57 167M57 124V200"/>
+      <path transform="translate(165 0)" d="M11 200V157A23 22 0 0 1 57 157V200"/>
+    </g>
+    <g style="stroke:var(--doku,#43474F)">
+      <path transform="translate(247 0)" d="M11 162A28 27 0 0 1 67 162A28 27 0 0 1 11 162M67 96V200"/>
+      <path transform="translate(339 0)" d="M11 162A28 27 0 0 1 67 162A28 27 0 0 1 11 162"/>
+      <path transform="translate(431 0)" d="M11 96V200M58 124L26 168L62 200"/>
+      <path transform="translate(516 0)" d="M11 124V167A23 22 0 0 0 57 167M57 124V200"/>
+    </g>
+  </g>
+</symbol>
+<symbol id="wm-d6" viewBox="0 0 588 116">
+  <g transform="translate(2 -94)" fill="none" stroke-linecap="butt" stroke-linejoin="round">
+    <g stroke-width="26" style="stroke:var(--pun,#4F3A26)">
+      <path d="M11 96V200M11 109H40A25 25 0 0 1 40 159H11"/>
+      <path transform="translate(83 0)" d="M11 124V166A22 21 0 0 0 57 166M57 124V200"/>
+      <path transform="translate(165 0)" d="M11 200V158A22 21 0 0 1 57 158V200"/>
+    </g>
+    <g stroke-width="22" style="stroke:var(--doku,#6E6E73)">
+      <path transform="translate(247 0)" d="M11 162A28 27 0 0 1 67 162A28 27 0 0 1 11 162M67 96V200"/>
+      <path transform="translate(339 0)" d="M11 162A28 27 0 0 1 67 162A28 27 0 0 1 11 162"/>
+      <path transform="translate(431 0)" d="M11 96V200M58 124L26 168L62 200"/>
+      <path transform="translate(516 0)" d="M11 124V167A23 22 0 0 0 57 167M57 124V200"/>
+    </g>
+  </g>
+</symbol>
+</svg>
+
+<!-- ═════════════ Переключатели ═════════════ -->
+<header>
+  <h1>Pundoku · логотип и иконка · PD-98, раунд 3</h1>
+  <div class="seg" role="group" aria-label="Направление">
+    <button type="button" data-set="dir" data-val="d4" aria-pressed="true">D4 Нахлёст</button>
+    <button type="button" data-set="dir" data-val="d5" aria-pressed="false">D5 Унос</button>
+    <button type="button" data-set="dir" data-val="d6" aria-pressed="false">D6 Один ход</button>
+  </div>
+  <div class="seg" role="group" aria-label="Подача иконки">
+    <button type="button" data-set="appear" data-val="light" aria-pressed="true">Светлая</button>
+    <button type="button" data-set="appear" data-val="dark" aria-pressed="false">Тёмная</button>
+    <button type="button" data-set="appear" data-val="tinted" aria-pressed="false">Tinted</button>
+  </div>
+</header>
+
+<main>
+
+<!-- 0 ─────────────────────────────────────────────── Направление -->
+<section>
+  <h2>Направление</h2>
+  <div class="card">
+    <div class="d4">
+      <p><b>D4 · «Нахлёст».</b> Две одинаковые клетки заходят одна на другую; общая часть — самая светлая.
+      Сетка дня общая для всех, личная бесконечная сетка — только ваша, и одна клетка принадлежит обеим.</p>
+      <p class="note">Приём: <b>слои и прозрачность</b> — глубина возникает из наложения, а не из
+      нарисованного блика. Якорь — индиго #3B48B0.</p>
+    </div>
+    <div class="d5">
+      <p><b>D5 · «Унос».</b> Поле дня, из которого выкушена одна клетка, и эта клетка уже снаружи.
+      Ровно механика, которую придумал владелец: последняя клетка дня уходит в личную сетку.</p>
+      <p class="note">Приём: <b>негативное пространство</b> — главное здесь вырез. Якорь —
+      <b>графит, не индиго</b>; чернила остаются одним пятном цвета: унесённой клеткой.</p>
+    </div>
+    <div class="d6">
+      <p><b>D6 · «Один ход».</b> Один росчерк пера: плоское перо под −25°, широко там, где оно
+      коснулось, уже́ там, где его подняли. Жест, который игрок делает 81 раз за сетку.</p>
+      <p class="note">Приём: <b>материал и рука вместо геометрии</b>. Якорь — <b>железо-галловые
+      чернила, тёплые, не индиго</b>: чернила рукописи, а не экрана.</p>
+    </div>
+  </div>
+  <div class="card">
+    <p class="note"><b>Чего нет ни в одном из трёх:</b> сетки 3×3, точки, буквы (раунд 1), кольца,
+      цифры 9, кляксы (раунд 2). <b>И ни одного SVG-фильтра:</b> никаких запечённых бликов, теней и
+      размытий — только фон-градиент и заливки с постоянной прозрачностью. Поэтому превью на этой
+      странице и будущий PNG совпадают пиксель в пиксель, а система сама рисует стекло
+      (<code>app-icons.md › Visual effects</code>).</p>
+  </div>
+</section>
+
+<!-- 1 ───────────────────────────────────────── Иконка 1024 × 1024 -->
+<section>
+  <h2>Иконка 1024 × 1024</h2>
+  <div class="card">
+    <div class="center">
+      <span class="sq" style="width:300px;height:300px">
+        <svg viewBox="0 0 1024 1024" role="img" aria-label="Иконка Pundoku">
+          <use class="v vd4l" href="#ic-d4-l"/><use class="v vd4d" href="#ic-d4-d"/><use class="v vd4t" href="#ic-d4-t"/>
+          <use class="v vd5l" href="#ic-d5-l"/><use class="v vd5d" href="#ic-d5-d"/><use class="v vd5t" href="#ic-d5-t"/>
+          <use class="v vd6l" href="#ic-d6-l"/><use class="v vd6d" href="#ic-d6-d"/><use class="v vd6t" href="#ic-d6-t"/>
+        </svg>
+      </span>
+    </div>
+    <p class="cap">Маску iOS наложила <b>страница</b>, а не файл</p>
+    <p class="fine" style="text-align:center">Скругление здесь — CSS 22.37 %, то есть круговое; у iOS
+      это непрерывная суперэллипса. Приближение, а не точная форма.</p>
+  </div>
+  <div class="card">
+    <p class="note">Файл поставляется <b>без скругления</b>, полем во весь квадрат. Слева — как в файле,
+      справа — безопасные зоны: квадрат 86 % (срез углов) и круг 80 % (круглая маска
+      <code>maskable</code>).</p>
+    <div class="row" style="justify-content:center">
+      <span>
+        <span class="sq raw" style="width:150px;height:150px">
+          <svg viewBox="0 0 1024 1024" aria-hidden="true">
+            <use class="v vd4l" href="#ic-d4-l"/><use class="v vd4d" href="#ic-d4-d"/><use class="v vd4t" href="#ic-d4-t"/>
+            <use class="v vd5l" href="#ic-d5-l"/><use class="v vd5d" href="#ic-d5-d"/><use class="v vd5t" href="#ic-d5-t"/>
+            <use class="v vd6l" href="#ic-d6-l"/><use class="v vd6d" href="#ic-d6-d"/><use class="v vd6t" href="#ic-d6-t"/>
+          </svg>
+        </span>
+        <span class="cap" style="display:block">как в файле</span>
+      </span>
+      <span>
+        <span style="display:block;width:150px;height:150px;background:var(--card2);border:1px solid var(--sep)">
+          <svg viewBox="0 0 1024 1024" style="display:block;width:100%;height:100%" aria-hidden="true">
+            <g style="color:var(--lbl)" opacity="0.85">
+              <use class="d4" href="#mk-d4"/><use class="d5" href="#mk-d5"/><use class="d6" href="#mk-d6"/>
+            </g>
+            <rect x="71.7" y="71.7" width="880.6" height="880.6" fill="none" stroke="#FF375F" stroke-width="7" stroke-dasharray="26 18"/>
+            <circle cx="512" cy="512" r="409.6" fill="none" stroke="#FF9F0A" stroke-width="7" stroke-dasharray="26 18"/>
+          </svg>
+        </span>
+        <span class="cap" style="display:block">86 % · 80 %</span>
+      </span>
+    </div>
+    <p class="note" style="margin-top:12px">Самая далёкая закрашенная точка от центра (расчёт по
+      геометрии, developer перепроверяет по пикселям):
+      <span class="d4"><b>390.2</b> из 409.6 — угол верхней клетки (центр углового радиуса на 277.2 + 113). Знак от канвы <b>60 %</b>.</span>
+      <span class="d5"><b>390.3</b> из 409.6 — верхний правый угол унесённой клетки (349.3 + 41). Знак от канвы <b>56 %</b>: композиция идёт по диагонали, а круг по диагонали и режет.</span>
+      <span class="d6"><b>≈365</b> из 409.6 — скруглённый угол пера у начала росчерка (острый угол дал бы 379). Знак от канвы <b>65 %</b>.</span>
+      Квадрат 86 % не нарушен нигде, значит переиспользование <code>icon-512</code> как
+      <code>maskable</code> (<code>vite.config.ts:27</code>) остаётся корректным.</p>
+  </div>
+</section>
+
+<!-- 2 ──────────────────────────────────────────── Домашний экран -->
+<section>
+  <h2>Домашний экран</h2>
+  <div class="card">
+    <div class="center">
+      <div class="mini" style="--s:.52">
+        <div class="sc">
+          <div class="hs">
+            <div class="grid">
+              <div class="app">
+                <span class="sq">
+                  <svg viewBox="0 0 1024 1024" aria-hidden="true">
+                    <use class="v vd4l" href="#ic-d4-l"/><use class="v vd4d" href="#ic-d4-d"/><use class="v vd4t" href="#ic-d4-t"/>
+                    <use class="v vd5l" href="#ic-d5-l"/><use class="v vd5d" href="#ic-d5-d"/><use class="v vd5t" href="#ic-d5-t"/>
+                    <use class="v vd6l" href="#ic-d6-l"/><use class="v vd6d" href="#ic-d6-d"/><use class="v vd6t" href="#ic-d6-t"/>
+                  </svg>
+                </span>
+                <div class="nm">Pundoku</div>
+              </div>
+              <div class="app"><span class="sq ph2"></span><div class="nm">Заметки</div></div>
+              <div class="app"><span class="sq ph3"></span><div class="nm">Погода</div></div>
+              <div class="app"><span class="sq ph4"></span><div class="nm">Музыка</div></div>
+              <div class="app"><span class="sq ph5"></span><div class="nm">Настройки</div></div>
+              <div class="app"><span class="sq ph6"></span><div class="nm">Здоровье</div></div>
+              <div class="app"><span class="sq ph"></span><div class="nm">Файлы</div></div>
+              <div class="app"><span class="sq ph2"></span><div class="nm">Календарь</div></div>
+            </div>
+            <div class="dock">
+              <span class="sq ph3"></span><span class="sq ph4"></span><span class="sq ph6"></span><span class="sq ph5"></span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <p class="cap">Обои, подписи и док — имитация системного хрома</p>
+  </div>
+  <div class="card">
+    <p class="note">Три подачи рядом, на одних обоях:</p>
+    <div class="wallband">
+      <span>
+        <span class="sq" style="width:92px;height:92px">
+          <svg viewBox="0 0 1024 1024" aria-hidden="true"><use class="d4" href="#ic-d4-l"/><use class="d5" href="#ic-d5-l"/><use class="d6" href="#ic-d6-l"/></svg>
+        </span><div class="lab">light</div>
+      </span>
+      <span>
+        <span class="sq" style="width:92px;height:92px">
+          <svg viewBox="0 0 1024 1024" aria-hidden="true"><use class="d4" href="#ic-d4-d"/><use class="d5" href="#ic-d5-d"/><use class="d6" href="#ic-d6-d"/></svg>
+        </span><div class="lab">dark</div>
+      </span>
+      <span>
+        <span class="sq" style="width:92px;height:92px">
+          <svg viewBox="0 0 1024 1024" aria-hidden="true"><use class="d4" href="#ic-d4-t"/><use class="d5" href="#ic-d5-t"/><use class="d6" href="#ic-d6-t"/></svg>
+        </span><div class="lab">tinted / mono</div>
+      </span>
+    </div>
+    <p class="note" style="margin-top:12px"><b>Честно про tinted.</b> Это не файл, который мы поставляем:
+      iOS генерирует подачу сама из карты светлоты, а третий квадрат показывает именно карту. Во всех
+      трёх направлениях знак в моно-карте <b>светлее фона</b>, поэтому переполюсовывать руками ничего не
+      нужно (в раунде 2 у «Капли» приходилось). Для PWA этих подач вообще нет — см. ниже.</p>
+  </div>
+</section>
+
+<!-- 3 ──────────────────────────────────────────────────── Размеры -->
+<section>
+  <h2>Размеры: 180 / 120 / 60 / 29</h2>
+  <div class="card">
+    <div class="row" style="justify-content:center">
+      <span><span class="sq" style="width:180px;height:180px"><svg viewBox="0 0 1024 1024" aria-hidden="true">
+        <use class="v vd4l" href="#ic-d4-l"/><use class="v vd4d" href="#ic-d4-d"/><use class="v vd4t" href="#ic-d4-t"/>
+        <use class="v vd5l" href="#ic-d5-l"/><use class="v vd5d" href="#ic-d5-d"/><use class="v vd5t" href="#ic-d5-t"/>
+        <use class="v vd6l" href="#ic-d6-l"/><use class="v vd6d" href="#ic-d6-d"/><use class="v vd6t" href="#ic-d6-t"/>
+      </svg></span><span class="cap" style="display:block">180 — apple-touch-icon</span></span>
+      <span><span class="sq" style="width:120px;height:120px"><svg viewBox="0 0 1024 1024" aria-hidden="true">
+        <use class="v vd4l" href="#ic-d4-l"/><use class="v vd4d" href="#ic-d4-d"/><use class="v vd4t" href="#ic-d4-t"/>
+        <use class="v vd5l" href="#ic-d5-l"/><use class="v vd5d" href="#ic-d5-d"/><use class="v vd5t" href="#ic-d5-t"/>
+        <use class="v vd6l" href="#ic-d6-l"/><use class="v vd6d" href="#ic-d6-d"/><use class="v vd6t" href="#ic-d6-t"/>
+      </svg></span><span class="cap" style="display:block">120</span></span>
+    </div>
+    <div class="row" style="justify-content:center;margin-top:16px">
+      <span><span class="sq" style="width:60px;height:60px"><svg viewBox="0 0 1024 1024" aria-hidden="true">
+        <use class="v vd4l" href="#ic-d4-l"/><use class="v vd4d" href="#ic-d4-d"/><use class="v vd4t" href="#ic-d4-t"/>
+        <use class="v vd5l" href="#ic-d5-l"/><use class="v vd5d" href="#ic-d5-d"/><use class="v vd5t" href="#ic-d5-t"/>
+        <use class="v vd6l" href="#ic-d6-l"/><use class="v vd6d" href="#ic-d6-d"/><use class="v vd6t" href="#ic-d6-t"/>
+      </svg></span><span class="cap" style="display:block">60</span></span>
+      <span><span class="sq" style="width:29px;height:29px"><svg viewBox="0 0 1024 1024" aria-hidden="true">
+        <use class="v vd4l" href="#ic-d4-l"/><use class="v vd4d" href="#ic-d4-d"/><use class="v vd4t" href="#ic-d4-t"/>
+        <use class="v vd5l" href="#ic-d5-l"/><use class="v vd5d" href="#ic-d5-d"/><use class="v vd5t" href="#ic-d5-t"/>
+        <use class="v vd6l" href="#ic-d6-l"/><use class="v vd6d" href="#ic-d6-d"/><use class="v vd6t" href="#ic-d6-t"/>
+      </svg></span><span class="cap" style="display:block">29 — Настройки</span></span>
+    </div>
+    <p class="note" style="margin-top:14px"><b>29 pt — главный размер</b> (Настройки и поиск).
+      Что здесь остаётся от знака:
+      <span class="d4">две плашки по 13 px и общая клетка 8.1 px — различимы все три тона.</span>
+      <span class="d5">поле 13 px, унесённая клетка 4.6 px, коридор между ними 3.5 px — <b>самое узкое место
+        всего раунда</b>: если коридор схлопнется, знак прочтётся одним пятном с шишкой.</span>
+      <span class="d6">полоса шириной 9.5 px — самый читаемый из трёх и самый бедный по смыслу.</span></p>
+  </div>
+</section>
+
+<!-- 4 ──────────────────────────────────────────────── Чёрно-белое -->
+<section>
+  <h2>Чёрно-белое: проверка силуэта</h2>
+  <div class="card">
+    <div class="row gs" style="justify-content:center">
+      <span class="sq" style="width:120px;height:120px"><svg viewBox="0 0 1024 1024" aria-hidden="true">
+        <use class="v vd4l" href="#ic-d4-l"/><use class="v vd4d" href="#ic-d4-d"/><use class="v vd4t" href="#ic-d4-t"/>
+        <use class="v vd5l" href="#ic-d5-l"/><use class="v vd5d" href="#ic-d5-d"/><use class="v vd5t" href="#ic-d5-t"/>
+        <use class="v vd6l" href="#ic-d6-l"/><use class="v vd6d" href="#ic-d6-d"/><use class="v vd6t" href="#ic-d6-t"/>
+      </svg></span>
+      <span class="sq" style="width:60px;height:60px"><svg viewBox="0 0 1024 1024" aria-hidden="true">
+        <use class="v vd4l" href="#ic-d4-l"/><use class="v vd4d" href="#ic-d4-d"/><use class="v vd4t" href="#ic-d4-t"/>
+        <use class="v vd5l" href="#ic-d5-l"/><use class="v vd5d" href="#ic-d5-d"/><use class="v vd5t" href="#ic-d5-t"/>
+        <use class="v vd6l" href="#ic-d6-l"/><use class="v vd6d" href="#ic-d6-d"/><use class="v vd6t" href="#ic-d6-t"/>
+      </svg></span>
+      <span class="sq" style="width:29px;height:29px"><svg viewBox="0 0 1024 1024" aria-hidden="true">
+        <use class="v vd4l" href="#ic-d4-l"/><use class="v vd4d" href="#ic-d4-d"/><use class="v vd4t" href="#ic-d4-t"/>
+        <use class="v vd5l" href="#ic-d5-l"/><use class="v vd5d" href="#ic-d5-d"/><use class="v vd5t" href="#ic-d5-t"/>
+        <use class="v vd6l" href="#ic-d6-l"/><use class="v vd6d" href="#ic-d6-d"/><use class="v vd6t" href="#ic-d6-t"/>
+      </svg></span>
+    </div>
+    <p class="note" style="margin-top:14px">Grayscale сохраняет светлоту, поэтому контраст в ч/б равен
+      цветному. Проверять тут надо <b>узнаваемость силуэта</b>, а не читаемость.
+      <span class="d5">Для D5 это ещё и проверка, что индиговая клетка не превращается в тёмное пятно:
+        она взята светлого конца чернил (#A7B0FF→#5F6DF2) именно поэтому.</span></p>
+  </div>
+</section>
+
+<!-- 5 ────────────────────────────────────────────── Знак отдельно -->
+<section>
+  <h2>Знак отдельно</h2>
+  <div class="card">
+    <div class="markplate">
+      <span class="m"><svg viewBox="0 0 1024 1024" aria-hidden="true"><use class="d4" href="#mk-d4"/><use class="d5" href="#mk-d5"/><use class="d6" href="#mk-d6"/></svg></span>
+      <span class="m s2"><svg viewBox="0 0 1024 1024" aria-hidden="true"><use class="d4" href="#mk-d4"/><use class="d5" href="#mk-d5"/><use class="d6" href="#mk-d6"/></svg></span>
+      <span class="m s3"><svg viewBox="0 0 1024 1024" aria-hidden="true"><use class="d4" href="#mk-d4"/><use class="d5" href="#mk-d5"/><use class="d6" href="#mk-d6"/></svg></span>
+    </div>
+    <p class="cap" style="margin-top:12px">104 / 56 / 30 pt — <code>currentColor</code>, одна фигура в файле</p>
+    <p class="note" style="margin-top:12px">
+      <span class="d4"><b>D4:</b> в один цвет наложение не передашь прозрачностью, поэтому глиф —
+        два контура и залитая общая клетка. Геометрия уменьшена до 0.945, иначе обводка 56 вылезала бы
+        за круг maskable.</span>
+      <span class="d5"><b>D5:</b> обе фигуры просто залиты — идею несут вырез и коридор, а не тон.
+        Единственный из трёх, кто в один цвет не теряет ничего.</span>
+      <span class="d6"><b>D6:</b> без своего поля росчерк — просто жирная диагональ. Это самый слабый
+        из трёх как отдельный глиф, и это записано в слабостях.</span></p>
+  </div>
+</section>
+
+<!-- 6 ──────────────────────────────────────────────────── Вордмарк -->
+<section>
+  <h2>Вордмарк</h2>
+  <div class="card">
+    <div class="wmplate w1"><svg viewBox="0 0 588 116" role="img" aria-label="Pundoku"><use class="d4" href="#wm-d4"/><use class="d5" href="#wm-d5"/><use class="d6" href="#wm-d6"/></svg></div>
+    <div class="wmplate w2" style="margin-top:18px"><svg viewBox="0 0 588 116" aria-hidden="true"><use class="d4" href="#wm-d4"/><use class="d5" href="#wm-d5"/><use class="d6" href="#wm-d6"/></svg></div>
+    <div class="wmplate w3" style="margin-top:18px"><svg viewBox="0 0 588 116" aria-hidden="true"><use class="d4" href="#wm-d4"/><use class="d5" href="#wm-d5"/><use class="d6" href="#wm-d6"/></svg></div>
+    <p class="note" style="margin-top:16px"><b>Это не шрифт.</b> Семь букв нарисованы монолинейно:
+      штрих 22, рост прописных 104, рост строчных <b>76 у всех без исключения</b>, контрформы —
+      окружности. Ни одного чужого глифа в файле, значит лицензионного вопроса нет ни к системным
+      шрифтам Apple, ни к OFL.</p>
+    <p class="note"><b>Что исправлено против раунда 2.</b> Во-первых, <b>ни одна буква не изменена</b> ни
+      в одном направлении: хвост «n» ниже базовой линии читался как «ŋ/g» — такого приёма здесь нет
+      вообще. Во-вторых, у «u» правая стойка доведена до базовой линии (шпора), поэтому «u» и «n» больше
+      не зеркальные близнецы. В-третьих, у «u» и «n» рост строчных теперь 76, как у «o» и «d» (в раунде 2
+      стойки были на 11 единиц короче круглых букв).</p>
+    <p class="note"><b>«Pun» выделен</b>
+      <span class="d4">цветом: чернила против нейтрального серого.</span>
+      <span class="d5">цветом: «Pun» — чернила унесённой клетки, «doku» — графит фона. Вордмарк повторяет
+        два материала иконки и ничего больше.</span>
+      <span class="d6">цветом и весом: «Pun» штрихом 26 тёплыми чернилами, «doku» — 22 нейтральным.
+        Написанное против напечатанного — та же пара, что в иконке. Радиусы дуг тяжёлого начертания
+        скомпенсированы на единицу, поэтому базовая линия и рост строчных совпадают с лёгким.</span></p>
+    <p class="note">Проверить глазами: <b>n</b> — только арка, без хвоста; <b>u</b> — со шпорой;
+      <b>d</b> — стойка справа от круга; <b>k</b> — колено не ниже базовой линии; <b>o</b> — круг с
+      овершутом 1 единица.</p>
+  </div>
+  <div class="card">
+    <p class="note">Локап: знак слева, название справа. Ставить его можно <b>только там, где о
+      приложении и спрашивают</b> — внутри приложения логотип не повторяется
+      (<code>branding.md › Best practices</code>: «Resist the temptation to display your logo throughout
+      your app»).</p>
+    <div class="lockup" style="margin-top:12px">
+      <span class="m"><svg viewBox="0 0 1024 1024" aria-hidden="true"><use class="d4" href="#mk-d4"/><use class="d5" href="#mk-d5"/><use class="d6" href="#mk-d6"/></svg></span>
+      <span class="w"><svg viewBox="0 0 588 116" aria-hidden="true"><use class="d4" href="#wm-d4"/><use class="d5" href="#wm-d5"/><use class="d6" href="#wm-d6"/></svg></span>
+    </div>
+  </div>
+</section>
+
+<!-- 7 ───────────────────────────────────── Где знак появляется -->
+<section>
+  <h2>Где знак появляется — и где нет</h2>
+  <div class="card">
+    <p class="note">Правило без изменений с раунда 1: знак появляется только там, где <b>контекста
+      приложения нет</b> (экспортируемый PNG), где <b>контента нет</b> (пустое состояние) или где
+      <b>о приложении и спрашивают</b> (Settings → About). На рабочем экране — никогда.</p>
+    <div class="minirow" style="margin-top:14px">
+      <div>
+        <div class="mini" style="--s:.42"><div class="sc"><div class="app-sc">
+          <div class="statusbar"><span>9:41</span><span>▮▮▮</span></div>
+          <div class="scrtitle">Today</div>
+          <div class="daycap"><b>Ср 1 окт</b> · Средняя</div>
+          <div class="board">
+            <div class="bx"><span class="g">5</span><span></span><span class="p">3</span><span></span><span class="g">7</span><span></span><span></span><span></span><span class="g">1</span></div>
+            <div class="bx"><span></span><span class="g">9</span><span></span><span class="p sel">4</span><span></span><span></span><span class="g">2</span><span></span><span></span></div>
+            <div class="bx"><span class="g">8</span><span></span><span></span><span></span><span></span><span class="g">6</span><span></span><span class="p">7</span><span></span></div>
+            <div class="bx"><span></span><span class="g">2</span><span></span><span></span><span class="p">5</span><span></span><span class="g">9</span><span></span><span></span></div>
+            <div class="bx"><span class="g">4</span><span></span><span></span><span></span><span class="g">8</span><span></span><span></span><span></span><span class="p">6</span></div>
+            <div class="bx"><span></span><span></span><span class="g">1</span><span></span><span></span><span class="p">3</span><span></span><span class="g">5</span><span></span></div>
+            <div class="bx"><span class="p">7</span><span></span><span></span><span class="g">3</span><span></span><span></span><span></span><span></span><span class="g">4</span></div>
+            <div class="bx"><span></span><span class="g">6</span><span></span><span></span><span class="p">1</span><span></span><span></span><span class="g">8</span><span></span></div>
+            <div class="bx"><span></span><span></span><span class="g">9</span><span></span><span></span><span class="g">2</span><span class="p">5</span><span></span><span></span></div>
+          </div>
+          <div class="pad"><i>1</i><i>2</i><i>3</i><i>4</i><i>5</i></div>
+          <div class="tabbar"><em class="on"><b></b>Today</em><em><b></b>Play</em><em><b></b>Year</em></div>
+        </div></div></div>
+        <div class="cap">Шапка Today — <b>знака нет</b></div>
+      </div>
+      <div>
+        <div class="mini" style="--s:.42"><div class="sc"><div class="app-sc">
+          <div class="statusbar"><span>9:41</span><span>▮▮▮</span></div>
+          <div class="scrtitle">Year</div>
+          <div class="empty">
+            <span class="mkbox"><svg viewBox="0 0 1024 1024" aria-hidden="true"><use class="d4" href="#mk-d4"/><use class="d5" href="#mk-d5"/><use class="d6" href="#mk-d6"/></svg></span>
+            <p>Год ещё пустой. Решите сетку дня — появится первая отметка.</p>
+          </div>
+          <div class="tabbar"><em><b></b>Today</em><em><b></b>Play</em><em class="on"><b></b>Year</em></div>
+        </div></div></div>
+        <div class="cap">Пустое состояние Year — знак 56 pt, <b>нейтральным</b></div>
+      </div>
+      <div>
+        <div class="mini" style="--s:.42"><div class="sc"><div class="app-sc">
+          <div class="statusbar"><span>9:41</span><span>▮▮▮</span></div>
+          <div class="scrtitle">Настройки</div>
+          <div class="list">
+            <div><span>Язык</span><s>Русский</s></div>
+            <div><span>Ключ восстановления</span><s>создан</s></div>
+            <div><span>О приложении</span><s>›</s></div>
+          </div>
+          <div class="about">
+            <span class="mkbox"><svg viewBox="0 0 1024 1024" aria-hidden="true"><use class="d4" href="#mk-d4"/><use class="d5" href="#mk-d5"/><use class="d6" href="#mk-d6"/></svg></span>
+            <span class="wmbox"><svg viewBox="0 0 588 116" aria-hidden="true"><use class="d4" href="#wm-d4"/><use class="d5" href="#wm-d5"/><use class="d6" href="#wm-d6"/></svg></span>
+            <div class="ver">Версия 1.1 (7)</div>
+          </div>
+          <div class="tabbar"><em><b></b>Today</em><em><b></b>Play</em><em><b></b>Year</em></div>
+        </div></div></div>
+        <div class="cap">Settings → About — <b>единственный дом логотипа</b></div>
+      </div>
+      <div>
+        <div class="mini" style="--s:.42"><div class="sc"><div class="app-sc">
+          <div class="statusbar"><span>9:41</span><span>▮▮▮</span></div>
+          <div class="scrtitle">Решено</div>
+          <div class="pngcard">
+            <h4>1 октября<s>8:14 · 51 ход · чисто</s></h4>
+            <div class="hm">
+              <i style="background:#C3C9F0"></i><i style="background:#E8EAF6"></i><i style="background:#8D97E0"></i><i style="background:#E8EAF6"></i><i style="background:#AEB6EA"></i><i style="background:#E8EAF6"></i><i style="background:#E8EAF6"></i><i style="background:#6C78D6"></i><i style="background:#E8EAF6"></i>
+              <i style="background:#E8EAF6"></i><i style="background:#9AA3E6"></i><i style="background:#E8EAF6"></i><i style="background:#C3C9F0"></i><i style="background:#E8EAF6"></i><i style="background:#7E89DB"></i><i style="background:#E8EAF6"></i><i style="background:#E8EAF6"></i><i style="background:#AEB6EA"></i>
+              <i style="background:#8D97E0"></i><i style="background:#E8EAF6"></i><i style="background:#E8EAF6"></i><i style="background:#9AA3E6"></i><i style="background:#E8EAF6"></i><i style="background:#E8EAF6"></i><i style="background:#C3C9F0"></i><i style="background:#E8EAF6"></i><i style="background:#6C78D6"></i>
+              <i style="background:#E8EAF6"></i><i style="background:#C3C9F0"></i><i style="background:#AEB6EA"></i><i style="background:#E8EAF6"></i><i style="background:#8D97E0"></i><i style="background:#E8EAF6"></i><i style="background:#E8EAF6"></i><i style="background:#9AA3E6"></i><i style="background:#E8EAF6"></i>
+            </div>
+            <div class="ft">
+              <span class="mk"><svg viewBox="0 0 1024 1024" aria-hidden="true"><use class="d4" href="#mk-d4"/><use class="d5" href="#mk-d5"/><use class="d6" href="#mk-d6"/></svg></span>
+              <span>Pundoku · 1 окт 2026 · путь без цифр</span>
+            </div>
+          </div>
+          <div class="tabbar"><em class="on"><b></b>Today</em><em><b></b>Play</em><em><b></b>Year</em></div>
+        </div></div></div>
+        <div class="cap">Карточка дня / PNG — знак ~11 pt, нейтральным</div>
+      </div>
+    </div>
+  </div>
+  <p class="fine" style="margin:12px 4px 0">Экраны уменьшены до 42 %: это схемы размещения знака, а не
+    макеты на утверждение. Весь мелкий текст внутри них — имитация интерфейса, не интерфейс этой страницы.</p>
+</section>
+
+<!-- 8 ──────────────────────────────────────────────────── Движение -->
+<section>
+  <h2>Движение</h2>
+  <div class="card">
+    <div class="moplate">
+      <svg class="d4" viewBox="0 0 1024 1024" width="240" height="240" aria-hidden="true">
+        <rect width="1024" height="1024" fill="url(#g-d4l-bg)"/>
+        <path fill="url(#g-d4l-cell)" d="M316 203H542A113 113 0 0 1 655 316V542A113 113 0 0 1 542 655H316A113 113 0 0 1 203 542V316A113 113 0 0 1 316 203Z"/>
+        <g class="anim-slide"><path fill="url(#g-d4l-cell)" d="M481 368H707A113 113 0 0 1 820 481V707A113 113 0 0 1 707 820H481A113 113 0 0 1 368 707V481A113 113 0 0 1 481 368Z"/></g>
+        <g class="anim-core" clip-path="url(#cp-d4a)"><path fill="#FFFFFF" fill-opacity="0.50" d="M481 368H707A113 113 0 0 1 820 481V707A113 113 0 0 1 707 820H481A113 113 0 0 1 368 707V481A113 113 0 0 1 481 368Z"/></g>
+      </svg>
+      <svg class="d5" viewBox="0 0 1024 1024" width="240" height="240" aria-hidden="true">
+        <rect width="1024" height="1024" fill="url(#g-d5l-bg)"/>
+        <path fill="url(#g-d5l-paper)" d="M337 347H485A27 27 0 0 1 512 374V485A27 27 0 0 0 539 512H650A27 27 0 0 1 677 539V687A113 113 0 0 1 564 800H337A113 113 0 0 1 224 687V460A113 113 0 0 1 337 347Z"/>
+        <g class="anim-carry"><path fill="url(#g-d5l-ink)" d="M677 224H759A41 41 0 0 1 800 265V347A41 41 0 0 1 759 388H677A41 41 0 0 1 636 347V265A41 41 0 0 1 677 224Z"/></g>
+      </svg>
+      <svg class="d6" viewBox="0 0 1024 1024" width="240" height="240" aria-hidden="true">
+        <rect width="1024" height="1024" fill="url(#g-d6l-bg)"/>
+        <g class="anim-ink"><path fill="url(#g-d6l-nib)" d="M218.7 310.9L459.6 197.9A34 34 0 0 1 502.9 210.8L791.7 678.1A34 34 0 0 1 777.2 726.8L593.6 812.9A34 34 0 0 1 552.5 803.2L206.4 362.6A34 34 0 0 1 218.7 310.9Z"/></g>
+      </svg>
+    </div>
+    <button class="playbtn" type="button" id="play">Проиграть заново</button>
+    <p class="seglab" style="margin-top:16px">Уменьшение движения:</p>
+    <div class="seg" role="group" aria-label="Уменьшение движения">
+      <button type="button" data-set="motion" data-val="system" aria-pressed="true">Система</button>
+      <button type="button" data-set="motion" data-val="on" aria-pressed="false">Reduce вкл</button>
+      <button type="button" data-set="motion" data-val="off" aria-pressed="false">Reduce выкл</button>
+    </div>
+    <p class="note" style="margin-top:14px">
+      <span class="d4"><b>D4:</b> вторая клетка приходит по диагонали, 620 мс, и общая клетка вспыхивает
+        на 520-й — «две сетки сошлись».</span>
+      <span class="d5"><b>D5:</b> клетка уходит из выреза наружу, 700 мс. Это буквально механика
+        продукта, а не абстрактное оживление.</span>
+      <span class="d6"><b>D6:</b> росчерк проезжает по своей же оси, 560 мс — перо проводит линию.</span></p>
+    <p class="note"><b>Фолбэк.</b> При «Уменьшении движения» все три превращаются в кроссфейд 280 мс:
+      ни сдвига, ни масштаба (<code>accessibility.md</code>: движение опционально и никогда не
+      единственный носитель смысла). Правило одно и то же и для системной настройки, и для кнопки
+      «Reduce вкл» — второго блока кода нет.</p>
+    <p class="note"><b>Где это живёт.</b> Только Settings → About при открытии и первое появление
+      пустого состояния. На заставке PWA — <b>технически невозможно</b>:
+      <code>apple-touch-startup-image</code> это статический PNG (и в
+      <code>gen-startup-images.mjs</code> уже записано решение «только фон»).</p>
+    <p class="fine">Демо движения всегда в светлой подаче, независимо от переключателя — чтобы не держать
+      в файле девять копий иконки.</p>
+  </div>
+</section>
+
+<!-- 9 ───────────────────────────────────── Слои для Icon Composer -->
+<section>
+  <h2>Слои для Icon Composer</h2>
+  <div class="card">
+    <p class="note">Превью выше — не имитация стекла: <b>в этом раунде мы стекло не рисуем вообще</b>.
+      Глубина у D4 возникает из наложения полупрозрачных слоёв — ровно того приёма, который Apple и
+      советует («Consider basing your icon design around filled, overlapping shapes… paired with
+      transparency», «Vary opacity in foreground layers»), а блики, рефракцию и тени система рисует
+      сама (<code>app-icons.md › Visual effects</code>). Поэтому поставляемые слои плоские и белые, и
+      <b>PNG для PWA выглядит так же, как эта страница</b>.</p>
+    <table>
+      <thead><tr><th>Слой</th><th>Что в нём</th></tr></thead>
+      <tbody class="d4">
+        <tr><td>Фон</td><td>градиент <b>внутри</b> Icon Composer: #7B86FF → #3B48B0 (42 %) → #1A2066</td></tr>
+        <tr><td>FG 1</td><td><code>#cellA</code> из <code>d4-layer-fg.svg</code>, прозрачность ~46 %</td></tr>
+        <tr><td>FG 2</td><td><code>#cellB</code>, прозрачность ~46 % — наложение даёт общую клетку бесплатно</td></tr>
+        <tr><td>FG 3</td><td><code>#core</code>, ~50 % — усиливает общую клетку. <b>Первый кандидат на удаление</b>, если Icon Composer и так высветлит пересечение</td></tr>
+      </tbody>
+      <tbody class="d5">
+        <tr><td>Фон</td><td>градиент внутри Icon Composer: #5A616E → #2B2F38 (45 %) → #14161B</td></tr>
+        <tr><td>FG 1</td><td><code>#field</code> из <code>d5-layer-fg.svg</code>, ~88 %, нейтральный белый</td></tr>
+        <tr><td>FG 2</td><td><code>#cell</code>, 100 %, тонируется чернилами в Icon Composer — единственный цветной элемент</td></tr>
+      </tbody>
+      <tbody class="d6">
+        <tr><td>Фон</td><td>градиент внутри Icon Composer: #6B4F36 → #33241A (45 %) → #170F09</td></tr>
+        <tr><td>FG 1</td><td><code>#stroke</code> из <code>d6-layer-fg.svg</code>, 100 %. Один слой, одна фигура</td></tr>
+      </tbody>
+    </table>
+    <p class="note" style="margin-top:12px">Во всех трёх: углы скруглены (по острым свет идёт хуже),
+      тонких линий нет, текста нет, фон не чисто белый и не чисто чёрный, прозрачного фона в итоговом
+      PNG нет.</p>
+  </div>
+</section>
+
+<!-- 10 ────────────────────────────────────── Стоимость реализации -->
+<section>
+  <h2>Стоимость реализации</h2>
+  <div class="card">
+    <p class="note"><code>apps/web/scripts/gen-icons.mjs</code> пишет PNG попиксельно через
+      <code>node:zlib</code>, без зависимостей: <b>truecolor RGB (тип 2), без альфа-канала</b>, и в
+      нынешнем коде всего два цвета (<code>INK</code>/<code>WHITE</code>), без градиента и без
+      сглаживания. Формат при этом позволяет любой цвет в каждом пикселе — ограничение в коде, а не в
+      PNG. Нужно дописать один раз на любое направление:
+      интерполяция цвета вдоль оси (~10 строк), композит постоянной прозрачности поверх фона (~6 строк,
+      альфы в файле нет и не нужно — иконка обязана быть непрозрачной), сглаживание суперсэмплингом 4×
+      (~15 строк). По-прежнему ноль зависимостей.</p>
+    <table>
+      <thead><tr><th>Что нужно сверх общего</th><th>Оценка</th></tr></thead>
+      <tbody class="d4">
+        <tr><td>Два SDF скруглённого прямоугольника + пересечение как <code>max(a,b)</code>, три композита — ~35 строк. Точное совпадение с SVG</td><td><b>S</b>, ≈1 день</td></tr>
+      </tbody>
+      <tbody class="d5">
+        <tr><td>SDF скруглённого прямоугольника, вычитание выреза и второй прямоугольник — ~45 строк. <b>Нюанс:</b> вогнутые скругления 27 у выреза точно считаются не через <code>max</code>, а отдельной дугой (+~15 строк), иначе PNG отличается от SVG на несколько пикселей в двух местах</td><td><b>S/M</b>, ≈1–1.5 дня</td></tr>
+      </tbody>
+      <tbody class="d6">
+        <tr><td>Выпуклый четырёхугольник = <code>max</code> четырёх полуплоскостей, скругление — вдув на r и вычитание r. ~25 строк, точно совпадает с SVG. Самый дешёвый</td><td><b>S</b>, ≈0.5–1 день</td></tr>
+      </tbody>
+    </table>
+    <p class="note" style="margin-top:12px">Все три дешевле любого варианта раунда 2: там каждому
+      требовалась эмуляция размытых бликов, а «Капле» — ещё и растеризатор кривых Безье.</p>
+  </div>
+  <div class="card">
+    <p class="note"><b>Затрагиваемые файлы</b> (одинаково для трёх направлений):</p>
+    <table>
+      <thead><tr><th>Файл</th><th>Что делаем</th></tr></thead>
+      <tbody>
+        <tr><td><code>apps/web/public/icons/icon.svg</code></td><td>заменить плейсхолдер (он же favicon)</td></tr>
+        <tr><td><code>apps/web/scripts/gen-icons.mjs</code></td><td>градиент + композит + сглаживание + <code>render()</code> под выбранную фигуру</td></tr>
+        <tr><td><code>icon-192.png</code>, <code>icon-512.png</code>, <code>apple-touch-icon-180.png</code></td><td>перегенерировать</td></tr>
+        <tr><td><code>apps/web/src/brand/Mark.tsx</code> (новый)</td><td>inline SVG, <code>currentColor</code>, размер пропом. Папка <code>brand/</code> — по конвенции репозитория (<code>shell/</code>, <code>play/</code>, <code>today/</code>…), отдельного <code>components/</code> в проекте нет</td></tr>
+        <tr><td><code>apps/web/src/brand/Wordmark.tsx</code> (новый)</td><td>inline SVG с нарисованными буквами, не текст</td></tr>
+        <tr><td><code>apps/web/src/recovery/SettingsScreen.tsx</code> + тест</td><td>строка «О приложении» и панель About</td></tr>
+        <tr><td><code>apps/web/src/year/YearScreen.tsx</code>, пустые состояния Today</td><td>вставить <code>&lt;Mark&gt;</code> туда, где пустое состояние уже есть</td></tr>
+        <tr><td><code>apps/web/src/play/fingerprint.ts</code></td><td><i>необязательно, +2 ч:</i> знак в строке подписи PNG-отпечатка (<code>FP_CAPTION_Y</code>)</td></tr>
+        <tr><td><code>apps/web/src/i18n/locales/{en,uk,ru}.json</code></td><td>новые ключи <code>settings.about.*</code> — секции <code>about</code> сейчас нет</td></tr>
+        <tr><td><code>apps/web/index.html</code></td><td>пути иконок те же. <code>theme-color</code> менять <b>не нужно</b>: он описывает цвет интерфейса (#F2F2F7 / #000000), а не иконки</td></tr>
+        <tr><td><code>apps/web/src/styles/tokens.css</code></td><td><span class="d4">без изменений — приложение и иконка на одном индиго</span><span class="d5">без изменений: графит живёт только в иконке, <code>--ink</code> тот же</span><span class="d6">без изменений, <b>если</b> владелец оставляет приложение на индиго. Если тёплые чернила переезжают в интерфейс — это отдельный тикет и пересчёт контрастов</span></td></tr>
+        <tr><td><code>apps/web/vite.config.ts</code></td><td>без изменений; <code>maskable</code> на <code>icon-512</code> остаётся корректным</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- 11 ─────────────────────────────────────────────────── Слабости -->
+<section>
+  <h2>Слабости — честно, по каждому</h2>
+  <div class="card d4">
+    <ul class="note">
+      <li><b>Две плашки читаются как «копировать» или «объединить».</b> Нахлёст — знакомый интерфейсный
+        жест (дубликат файла, пересечение множеств), и на 29 pt идея «общая клетка» не считывается без
+        подписи.</li>
+      <li><b>Смысл требует объяснения.</b> «Сетка дня и ваша сетка делят одну клетку» — это надо
+        рассказать; сам по себе знак об этом не говорит.</li>
+      <li><b>Самый мягкий контраст из трёх.</b> Клетка против фона в середине градиента — 3.7:1,
+        общая клетка против клетки — всего ~1.6:1 без слоя <code>#core</code>. Если Icon Composer
+        подсветит слои иначе, разница тонов может сесть.</li>
+      <li><b>Диагональ вниз-вправо</b> — та же ось, что у D6; если владельцу не нравится диагональ как
+        таковая, D4 и D6 падают вместе.</li>
+    </ul>
+  </div>
+  <div class="card d5">
+    <ul class="note">
+      <li><b>Унесённая клетка на 29 pt — 4.6 px, коридор 3.5 px.</b> Это худшее место раунда и прямой
+        аналог «капельки» раунда 2. Если коридор схлопнется, знак прочтётся одним пятном.</li>
+      <li><b>Читается как «поделиться» или «экспорт».</b> Квадрат, из которого что-то вылетает, —
+        распространённый интерфейсный символ.</li>
+      <li><b>Композиция диагональная и потому мелкая:</b> 56 % канвы против 60–65 % у соседей — круг
+        maskable режет именно по диагонали.</li>
+      <li><b>Графит + одно цветное пятно</b> — ровно тот силуэт шаблона, о котором предупреждает
+        собственный чек-лист («near-black with one accent»). Спасает только то, что акцент — чернила
+        продукта, а не произвольный кислотный цвет. Нейтральный вариант без цвета возможен, но тогда
+        уходит мысль «то, что вы поставили».</li>
+    </ul>
+  </div>
+  <div class="card d6">
+    <ul class="note">
+      <li><b>Это диагональная полоса.</b> Самая абстрактная форма раунда: ни жанра, ни предмета, ни
+        числа. Про судоку она не говорит ничего — её смысл держится на подписи и на цвете.</li>
+      <li><b>Как отдельный глиф слабее всех:</b> в About и в пустом состоянии, без своего тёплого поля,
+        это просто жирная черта.</li>
+      <li><b>Инверсия смысла.</b> Задумано «чернила», нарисовано наоборот: поле — чернила, росчерк —
+        бумага. Так лучше технически (моно-карта не инвертируется, иконка держится на светлых обоях),
+        но буквально это след, снятый с чернил, а не положенный на бумагу.</li>
+      <li><b>Тёплая палитра тянет за собой вопрос бренда:</b> приложение живёт на индиго, и два якоря
+        сразу — это решение владельца, а не деталь иконки.</li>
+    </ul>
+  </div>
+</section>
+
+<!-- 12 ───────────────────────────── Сравнение и рекомендация -->
+<section>
+  <h2>D4 · D5 · D6 рядом</h2>
+  <div class="card">
+    <table>
+      <thead><tr><th></th><th>D4 Нахлёст</th><th>D5 Унос</th><th>D6 Один ход</th></tr></thead>
+      <tbody>
+        <tr><td>Идея</td><td>общая клетка двух сеток</td><td>клетка уходит из дня в вашу сетку</td><td>жест руки, один ход</td></tr>
+        <tr><td>Приём</td><td>слои и прозрачность</td><td>негативное пространство</td><td>материал вместо геометрии</td></tr>
+        <tr><td>Якорь</td><td>индиго</td><td><b>графит</b> + чернила пятном</td><td><b>железо-галл, тёплый</b></td></tr>
+        <tr><td>Знак от канвы</td><td>60 %</td><td>56 %</td><td>65 %</td></tr>
+        <tr><td>Запас до круга 80 %</td><td>19.4</td><td>19.3</td><td>≈44</td></tr>
+        <tr><td>На 29 pt</td><td class="good">хорошо</td><td class="bad">риск: коридор 3.5 px</td><td class="good">лучше всех</td></tr>
+        <tr><td>Моно-карта</td><td>да</td><td>да, клетка — самая светлая</td><td>да, тривиальная</td></tr>
+        <tr><td>Фигур в знаке</td><td>2 (+1 производная)</td><td>2</td><td>1</td></tr>
+        <tr><td>Правка букв</td><td>нет</td><td>нет</td><td>нет (только вес «Pun»)</td></tr>
+        <tr><td>Стоимость</td><td>S</td><td>S/M</td><td>S</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="card">
+    <p><b>Рекомендация — D4 «Нахлёст».</b> Он единственный, у кого глубина получается из конструкции,
+      а не из отделки: два полупрозрачных слоя — это тот самый приём, который Apple называет в
+      <code>app-icons.md</code> дважды, и именно его Icon Composer усилит сам. Он же лучше всех держит
+      29 pt среди «смысловых» вариантов и не несёт решения о палитре бренда.</p>
+    <p class="note"><b>Если важнее читаемость и другой цвет</b> — D6: самый сильный силуэт, самый
+      высокий контраст, самая дешёвая реализация, и он даёт настоящую альтернативу индиго. Цена —
+      знак ни о чём не рассказывает.</p>
+    <p class="note"><b>Если важнее смысл</b> — D5: единственный, кто показывает механику, которую
+      придумал владелец, и ни одно судоку в сторе так не выглядит. Цена — 4.6 px на 29 pt.</p>
+    <p class="note"><b>Палитру никто не навязывает.</b> И D5, и D6 переводятся на индиго одной заменой
+      стопов градиента, без правки геометрии (значения — в <code>pd98-logo-round3.md</code> §2.4). Но
+      смысл при этом беднеет: у D5 чернила перестают означать «то, что поставили вы», у D6 исчезает
+      причина тёплой палитры. Если индиго обязателен, честнее брать D4 — он на индиго и задуман.</p>
+    <p class="note"><b>И допустимый ответ — «ни одно».</b> Три раунда по три варианта — это девять
+      попыток угадать. Если ни один не цепляет, дешевле не рисовать десятый, а назвать одно слово,
+      которым иконка должна ощущаться (например «тихо», «строго», «тепло», «умно»), и одно приложение,
+      чья иконка нравится. Дальше делается <b>один</b> вариант, а не три.</p>
+  </div>
+</section>
+
+<!-- 13 ───────────────────────────────── PWA и чего не проверить -->
+<section>
+  <h2>Что доедет до PWA и чего без iPhone не проверить</h2>
+  <div class="card">
+    <table>
+      <thead><tr><th>Часть</th><th>PWA, как сейчас</th></tr></thead>
+      <tbody>
+        <tr><td>Форма, цвет, градиент</td><td><b>Да.</b> Один PNG 180×180 — рисунок доезжает полностью</td></tr>
+        <tr><td>Слои, живое стекло, блик по гироскопу</td><td><b>Нет.</b> Веб-клип — плоская картинка. Поэтому ни одно направление на стекло не опирается</td></tr>
+        <tr><td>Dark / tinted / clear</td><td><b>Нет официально.</b> Ни в манифесте, ни в мета-тегах варианта иконки не существует; подмена <code>apple-touch-icon</code> через JS срабатывает только в момент установки</td></tr>
+        <tr><td>Заставка</td><td>Статический PNG, 26 файлов. Анимации невозможны</td></tr>
+        <tr><td>Анимация знака</td><td><b>Да</b>, но только внутри приложения: About и пустое состояние</td></tr>
+      </tbody>
+    </table>
+    <p class="note" style="margin-top:12px">Отсюда проектное решение: <b>единственный поставляемый PNG
+      обязан выжить без вариантов</b> — знак держится на светлоте и силуэте. Файлы dark и tinted
+      нарисованы на случай нативной оболочки и ничего не стоят.</p>
+    <p class="note">И практическое: iOS <b>кэширует</b> иконку веб-клипа. Чтобы увидеть новую, приложение
+      надо удалить с домашнего экрана и добавить заново. Это не баг сборки.</p>
+  </div>
+  <div class="card">
+    <ul class="note">
+      <li>Читается ли знак на <b>29 pt на настоящем экране</b>. Для D5 это вопрос существования варианта.</li>
+      <li>Как Icon Composer осветит слои D4: расчёт на то, что он усилит пересечение, а не сгладит его.</li>
+      <li>Применяет ли конкретная версия iOS моно-подачу к иконке веб-клипа — в форумах разработчиков
+        поведение описывают как непоследовательное.</li>
+      <li>Как тёплый железо-галл D6 смотрится рядом с системными иконками на живых обоях: тёплых
+        тёмно-коричневых иконок в системе почти нет, и это может быть как достоинством, так и чужеродностью.</li>
+      <li>Не выглядит ли шпора у «u» в вордмарке лишней на маленьком размере.</li>
+    </ul>
+  </div>
+</section>
+
+<p class="fine" style="margin:24px 4px 0">PD-98 · одна страница без сети и без встроенных шрифтов ·
+  весь собственный текст ≥ 16 px, тап-цели ≥ 44 pt · подписи внутри имитаций системного хрома 11–15 px
+  намеренно · в <code>apps/</code> не внесено ничего.</p>
+
+</main>
+
+<script>
+(function () {
+  var root = document.documentElement;
+
+  function replay() {
+    var els = document.querySelectorAll('.anim-slide, .anim-core, .anim-carry, .anim-ink');
+    for (var i = 0; i < els.length; i++) {
+      var el = els[i];
+      el.style.animation = 'none';
+      el.getBoundingClientRect();
+      el.style.animation = '';
+    }
+  }
+
+  var btns = document.querySelectorAll('.seg button[data-set]');
+  for (var i = 0; i < btns.length; i++) {
+    btns[i].addEventListener('click', function () {
+      var set = this.getAttribute('data-set');
+      var val = this.getAttribute('data-val');
+      root.setAttribute('data-' + set, val);
+      var peers = document.querySelectorAll('.seg button[data-set="' + set + '"]');
+      for (var j = 0; j < peers.length; j++) {
+        peers[j].setAttribute('aria-pressed', peers[j] === this ? 'true' : 'false');
+      }
+      if (set === 'motion') {
+        if (val === 'on') { root.classList.add('reduced'); } else { root.classList.remove('reduced'); }
+      }
+      replay();
+    });
+  }
+
+  document.getElementById('play').addEventListener('click', replay);
+})();
+</script>
+</body>
+</html>

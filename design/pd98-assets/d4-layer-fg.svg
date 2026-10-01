@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
+  <title>Pundoku — D4 foreground layers for Icon Composer</title>
+  <desc>Production layers. Flat, opaque, full white, transparent background, no platform mask, no baked shadows/blurs/highlights — the system draws specular highlights and refraction (app-icons.md › Visual effects). Three groups to split into three layers: #cellA and #cellB at ~46 % opacity, #core at ~50 % on top. Background gradient is defined inside Icon Composer (see pd98-logo-round3.md § layers). Dropping #core is the sanctioned simplification.</desc>
+  <defs>
+    <clipPath id="d4f-clipA">
+      <path d="M316 203H542A113 113 0 0 1 655 316V542A113 113 0 0 1 542 655H316A113 113 0 0 1 203 542V316A113 113 0 0 1 316 203Z"/>
+    </clipPath>
+  </defs>
+  <g id="cellA" fill="#FFFFFF">
+    <path d="M316 203H542A113 113 0 0 1 655 316V542A113 113 0 0 1 542 655H316A113 113 0 0 1 203 542V316A113 113 0 0 1 316 203Z"/>
+  </g>
+  <g id="cellB" fill="#FFFFFF">
+    <path d="M481 368H707A113 113 0 0 1 820 481V707A113 113 0 0 1 707 820H481A113 113 0 0 1 368 707V481A113 113 0 0 1 481 368Z"/>
+  </g>
+  <g id="core" fill="#FFFFFF" clip-path="url(#d4f-clipA)">
+    <path d="M481 368H707A113 113 0 0 1 820 481V707A113 113 0 0 1 707 820H481A113 113 0 0 1 368 707V481A113 113 0 0 1 481 368Z"/>
+  </g>
+</svg>

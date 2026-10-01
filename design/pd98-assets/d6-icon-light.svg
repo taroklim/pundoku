@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024" role="img" aria-label="Pundoku app icon, direction D6 One Move, light appearance">
+  <title>Pundoku — D6 «Один ход» — light</title>
+  <desc>Preview. One nib stroke: a trapezoid swept by a flat nib held at -25 degrees, wide where the pen lands and narrower where it lifts. Iron-gall ground, paper stroke. No filters, no baked effects.</desc>
+  <defs>
+    <linearGradient id="d6l-bg" x1="0" y1="0" x2="0.3" y2="1">
+      <stop offset="0" stop-color="#6B4F36"/>
+      <stop offset="0.45" stop-color="#33241A"/>
+      <stop offset="1" stop-color="#170F09"/>
+    </linearGradient>
+    <linearGradient id="d6l-nib" gradientUnits="userSpaceOnUse" x1="218" y1="197" x2="777" y2="813">
+      <stop offset="0" stop-color="#FFFAF2"/>
+      <stop offset="1" stop-color="#E8D9C2"/>
+    </linearGradient>
+  </defs>
+  <rect width="1024" height="1024" fill="url(#d6l-bg)"/>
+  <path fill="url(#d6l-nib)" d="M218.7 310.9L459.6 197.9A34 34 0 0 1 502.9 210.8L791.7 678.1A34 34 0 0 1 777.2 726.8L593.6 812.9A34 34 0 0 1 552.5 803.2L206.4 362.6A34 34 0 0 1 218.7 310.9Z"/>
+</svg>

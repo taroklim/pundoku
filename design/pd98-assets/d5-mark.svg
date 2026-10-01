@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024" role="img" aria-label="Pundoku mark, direction D5 The Carry">
+  <title>Pundoku — знак D5 «Унос»</title>
+  <desc>Monochrome glyph in currentColor for Mark.tsx: two filled shapes, exactly the icon geometry. The notch and the 124-wide corridor carry the idea without any tonal difference, so the glyph works in one colour.</desc>
+  <g fill="currentColor">
+    <path d="M337 347H485A27 27 0 0 1 512 374V485A27 27 0 0 0 539 512H650A27 27 0 0 1 677 539V687A113 113 0 0 1 564 800H337A113 113 0 0 1 224 687V460A113 113 0 0 1 337 347Z"/>
+    <path d="M677 224H759A41 41 0 0 1 800 265V347A41 41 0 0 1 759 388H677A41 41 0 0 1 636 347V265A41 41 0 0 1 677 224Z"/>
+  </g>
+</svg>

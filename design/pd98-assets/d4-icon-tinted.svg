@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024" role="img" aria-label="Pundoku app icon, direction D4 Overlap, tinted mono map">
+  <title>Pundoku — D4 «Нахлёст» — tinted / mono map</title>
+  <desc>This is the luminance map iOS tints, not a finished icon: shared cell full white, the two cells grey. For a web clip iOS has no appearance variant at all — see pd98-logo-round3.md, “what reaches the PWA”.</desc>
+  <defs>
+    <linearGradient id="d4t-bg" x1="0" y1="0" x2="0.3" y2="1">
+      <stop offset="0" stop-color="#3A3A3C"/>
+      <stop offset="0.55" stop-color="#1C1C1E"/>
+      <stop offset="1" stop-color="#000000"/>
+    </linearGradient>
+    <clipPath id="d4t-clipA">
+      <path d="M316 203H542A113 113 0 0 1 655 316V542A113 113 0 0 1 542 655H316A113 113 0 0 1 203 542V316A113 113 0 0 1 316 203Z"/>
+    </clipPath>
+  </defs>
+  <rect width="1024" height="1024" fill="url(#d4t-bg)"/>
+  <path fill="#FFFFFF" fill-opacity="0.62" d="M316 203H542A113 113 0 0 1 655 316V542A113 113 0 0 1 542 655H316A113 113 0 0 1 203 542V316A113 113 0 0 1 316 203Z"/>
+  <path fill="#FFFFFF" fill-opacity="0.62" d="M481 368H707A113 113 0 0 1 820 481V707A113 113 0 0 1 707 820H481A113 113 0 0 1 368 707V481A113 113 0 0 1 481 368Z"/>
+  <g clip-path="url(#d4t-clipA)">
+    <path fill="#FFFFFF" d="M481 368H707A113 113 0 0 1 820 481V707A113 113 0 0 1 707 820H481A113 113 0 0 1 368 707V481A113 113 0 0 1 481 368Z"/>
+  </g>
+</svg>

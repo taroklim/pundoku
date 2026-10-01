@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024" role="img" aria-label="Pundoku app icon, direction D6 One Move, tinted mono map">
+  <title>Pundoku — D6 «Один ход» — tinted / mono map</title>
+  <desc>Luminance map iOS tints, not a finished icon. One shape at full white on a grey ground — the simplest mono map of the three directions.</desc>
+  <defs>
+    <linearGradient id="d6t-bg" x1="0" y1="0" x2="0.3" y2="1">
+      <stop offset="0" stop-color="#3A3A3C"/>
+      <stop offset="0.55" stop-color="#1C1C1E"/>
+      <stop offset="1" stop-color="#000000"/>
+    </linearGradient>
+  </defs>
+  <rect width="1024" height="1024" fill="url(#d6t-bg)"/>
+  <path fill="#FFFFFF" d="M218.7 310.9L459.6 197.9A34 34 0 0 1 502.9 210.8L791.7 678.1A34 34 0 0 1 777.2 726.8L593.6 812.9A34 34 0 0 1 552.5 803.2L206.4 362.6A34 34 0 0 1 218.7 310.9Z"/>
+</svg>

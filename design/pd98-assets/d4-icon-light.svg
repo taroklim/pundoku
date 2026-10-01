@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024" role="img" aria-label="Pundoku app icon, direction D4 Overlap, light appearance">
+  <title>Pundoku — D4 «Нахлёст» — light</title>
+  <desc>Preview. Two equal cells overlap; the shared cell is the brightest. No filters, no baked blurs or specular highlights — only a background gradient and constant-alpha fills, so the generated PNG matches this file pixel for pixel.</desc>
+  <defs>
+    <linearGradient id="d4l-bg" x1="0" y1="0" x2="0.3" y2="1">
+      <stop offset="0" stop-color="#7B86FF"/>
+      <stop offset="0.42" stop-color="#3B48B0"/>
+      <stop offset="1" stop-color="#1A2066"/>
+    </linearGradient>
+    <linearGradient id="d4l-cell" gradientUnits="userSpaceOnUse" x1="203" y1="203" x2="820" y2="820">
+      <stop offset="0" stop-color="#FFFFFF" stop-opacity="0.54"/>
+      <stop offset="1" stop-color="#FFFFFF" stop-opacity="0.40"/>
+    </linearGradient>
+    <clipPath id="d4l-clipA">
+      <path d="M316 203H542A113 113 0 0 1 655 316V542A113 113 0 0 1 542 655H316A113 113 0 0 1 203 542V316A113 113 0 0 1 316 203Z"/>
+    </clipPath>
+  </defs>
+  <rect width="1024" height="1024" fill="url(#d4l-bg)"/>
+  <path fill="url(#d4l-cell)" d="M316 203H542A113 113 0 0 1 655 316V542A113 113 0 0 1 542 655H316A113 113 0 0 1 203 542V316A113 113 0 0 1 316 203Z"/>
+  <path fill="url(#d4l-cell)" d="M481 368H707A113 113 0 0 1 820 481V707A113 113 0 0 1 707 820H481A113 113 0 0 1 368 707V481A113 113 0 0 1 481 368Z"/>
+  <g clip-path="url(#d4l-clipA)">
+    <path fill="#FFFFFF" fill-opacity="0.50" d="M481 368H707A113 113 0 0 1 820 481V707A113 113 0 0 1 707 820H481A113 113 0 0 1 368 707V481A113 113 0 0 1 481 368Z"/>
+  </g>
+</svg>

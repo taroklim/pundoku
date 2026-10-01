@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024" role="img" aria-label="Pundoku mark, direction D6 One Move">
+  <title>Pundoku — знак D6 «Один ход»</title>
+  <desc>Monochrome glyph in currentColor for Mark.tsx: the nib stroke alone, exactly the icon geometry. Weakest of the three as a standalone glyph — without its ground it is a bold diagonal; see pd98-logo-round3.md § weaknesses.</desc>
+  <path fill="currentColor" d="M218.7 310.9L459.6 197.9A34 34 0 0 1 502.9 210.8L791.7 678.1A34 34 0 0 1 777.2 726.8L593.6 812.9A34 34 0 0 1 552.5 803.2L206.4 362.6A34 34 0 0 1 218.7 310.9Z"/>
+</svg>

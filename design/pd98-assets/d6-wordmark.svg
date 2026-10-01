@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 588 116" width="588" height="116" role="img" aria-label="Pundoku">
+  <title>Pundoku — вордмарк D6</title>
+  <desc>Same drawn letters, but "Pun" is one weight heavier (stroke 26 against 22) as well as warmer in colour: written against printed, the same opposition the icon's nib stroke carries. Arc radii of the heavy u and n are compensated by one unit so cap height, x-height and baseline stay identical across the two weights. No letter modifications.</desc>
+  <g transform="translate(2 -94)" fill="none" stroke-linecap="butt" stroke-linejoin="round">
+    <g stroke-width="26" style="stroke:var(--pun,#4F3A26)">
+      <path d="M11 96V200M11 109H40A25 25 0 0 1 40 159H11"/>
+      <path transform="translate(83 0)" d="M11 124V166A22 21 0 0 0 57 166M57 124V200"/>
+      <path transform="translate(165 0)" d="M11 200V158A22 21 0 0 1 57 158V200"/>
+    </g>
+    <g stroke-width="22" style="stroke:var(--doku,#6E6E73)">
+      <path transform="translate(247 0)" d="M11 162A28 27 0 0 1 67 162A28 27 0 0 1 11 162M67 96V200"/>
+      <path transform="translate(339 0)" d="M11 162A28 27 0 0 1 67 162A28 27 0 0 1 11 162"/>
+      <path transform="translate(431 0)" d="M11 96V200M58 124L26 168L62 200"/>
+      <path transform="translate(516 0)" d="M11 124V167A23 22 0 0 0 57 167M57 124V200"/>
+    </g>
+  </g>
+</svg>

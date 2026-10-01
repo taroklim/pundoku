@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024" role="img" aria-label="Pundoku app icon, direction D5 The Carry, light appearance">
+  <title>Pundoku — D5 «Унос» — light</title>
+  <desc>Preview. The day's field with one cell bitten out of it, and that cell outside, already gone. Graphite ground, paper field, the carried cell is the only colour. No filters, no baked effects.</desc>
+  <defs>
+    <linearGradient id="d5l-bg" x1="0" y1="0" x2="0.3" y2="1">
+      <stop offset="0" stop-color="#5A616E"/>
+      <stop offset="0.45" stop-color="#2B2F38"/>
+      <stop offset="1" stop-color="#14161B"/>
+    </linearGradient>
+    <linearGradient id="d5l-paper" gradientUnits="userSpaceOnUse" x1="224" y1="347" x2="677" y2="800">
+      <stop offset="0" stop-color="#FFFFFF" stop-opacity="0.92"/>
+      <stop offset="1" stop-color="#FFFFFF" stop-opacity="0.82"/>
+    </linearGradient>
+    <linearGradient id="d5l-ink" gradientUnits="userSpaceOnUse" x1="636" y1="224" x2="800" y2="388">
+      <stop offset="0" stop-color="#A7B0FF"/>
+      <stop offset="1" stop-color="#5F6DF2"/>
+    </linearGradient>
+  </defs>
+  <rect width="1024" height="1024" fill="url(#d5l-bg)"/>
+  <path fill="url(#d5l-paper)" d="M337 347H485A27 27 0 0 1 512 374V485A27 27 0 0 0 539 512H650A27 27 0 0 1 677 539V687A113 113 0 0 1 564 800H337A113 113 0 0 1 224 687V460A113 113 0 0 1 337 347Z"/>
+  <path fill="url(#d5l-ink)" d="M677 224H759A41 41 0 0 1 800 265V347A41 41 0 0 1 759 388H677A41 41 0 0 1 636 347V265A41 41 0 0 1 677 224Z"/>
+</svg>

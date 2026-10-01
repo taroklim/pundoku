@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
+  <title>Pundoku — D5 foreground layers for Icon Composer</title>
+  <desc>Production layers. Flat, opaque, full white, transparent background, no platform mask, no baked effects (app-icons.md › Visual effects). Two groups to split into two layers: #field at ~88 % opacity, #cell at 100 % and tinted with the ink colour inside Icon Composer. Background gradient defined in Icon Composer (see pd98-logo-round3.md § layers).</desc>
+  <g id="field" fill="#FFFFFF">
+    <path d="M337 347H485A27 27 0 0 1 512 374V485A27 27 0 0 0 539 512H650A27 27 0 0 1 677 539V687A113 113 0 0 1 564 800H337A113 113 0 0 1 224 687V460A113 113 0 0 1 337 347Z"/>
+  </g>
+  <g id="cell" fill="#FFFFFF">
+    <path d="M677 224H759A41 41 0 0 1 800 265V347A41 41 0 0 1 759 388H677A41 41 0 0 1 636 347V265A41 41 0 0 1 677 224Z"/>
+  </g>
+</svg>
