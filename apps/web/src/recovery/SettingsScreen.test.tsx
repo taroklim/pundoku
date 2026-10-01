@@ -317,4 +317,11 @@ describe("SettingsScreen: язык и навигация", () => {
     expect(formatCreated("2026-09-30T10:00:00.000Z", "uk")).not.toMatch(/\sр\./);
     expect(formatCreated(null, "en")).toBe("—");
   });
+
+  it("дата ключа — как в макете PD-27: «30 Sep 2026» / «30 вер. 2026» / «30 сент. 2026»", () => {
+    const iso = "2026-09-30T10:00:00.000Z";
+    expect(formatCreated(iso, "en")).toBe("30 Sep 2026");
+    expect(formatCreated(iso, "uk")).toBe("30 вер. 2026");
+    expect(formatCreated(iso, "ru")).toBe("30 сент. 2026");
+  });
 });
