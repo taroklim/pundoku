@@ -270,7 +270,7 @@ export async function run(R, browser) {
   const old = await api("/api/recovery/redeem", { method: "POST", headers: auth(tokenB), body: JSON.stringify({ key: K1 }) });
   R.add(36, old.status === 400, `старый ключ после перевыпуска перестал работать: redeem -> HTTP ${old.status} ${old.json?.error?.code ?? ""}`);
   const bStatus = await api("/api/recovery", { headers: auth(tokenB) });
-  R.add(36, bStatus.json?.hasKey === false, `ДЕФЕКТ (текст шита обещает: "другие устройства по нему будут отвязаны"): после перевыпуска другое устройство B осталось в группе, GET /api/recovery -> hasKey=${bStatus.json?.hasKey}, devices=${bStatus.json?.devices} (так и описано в docs/pd-27-recovery-key.md: перевыпуск меняет только ключ)`);
+  R.add(36, bStatus.json?.hasKey === true, `после перевыпуска другое устройство B осталось подключённым (как и сказано в шите: уже подключённые устройства остаются подключёнными), GET /api/recovery -> hasKey=${bStatus.json?.hasKey}, devices=${bStatus.json?.devices}`);
   const fresh2 = await api("/api/recovery/redeem", { method: "POST", headers: auth(tokenB), body: JSON.stringify({ key: K2 }) });
   R.add(36, fresh2.status === 200, `новый ключ работает: redeem -> HTTP ${fresh2.status}`);
 

@@ -7,6 +7,7 @@ import type { ReactNode } from "react";
 import { useEffect, useId, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
+import { useSheetSwipe } from "../shell/useSheetSwipe";
 import { NotesIcon, UndoIcon } from "./icons";
 import { ChevronIcon, LockIcon, NibIcon, WarnIcon } from "./inkIcons";
 
@@ -72,6 +73,7 @@ export function InkRuleSheet({ onStart, onCancel }: { onStart: () => void; onCan
   const root = useRef<HTMLElement>(null);
   const cancelRef = useRef(onCancel);
   cancelRef.current = onCancel;
+  const swipe = useSheetSwipe(root, onCancel);
   const titleId = useId();
   const leadId = useId();
 
@@ -123,8 +125,8 @@ export function InkRuleSheet({ onStart, onCancel }: { onStart: () => void; onCan
         onClick={(e) => e.stopPropagation()}
         data-testid="ink-sheet"
       >
-        <div className="grabber" aria-hidden="true" />
-        <h2 id={titleId} className="ink-sheet-title">
+        <div className="grabber sheet-handle" aria-hidden="true" {...swipe} />
+        <h2 id={titleId} className="ink-sheet-title sheet-handle" {...swipe}>
           {t("ink.rule.title")}
         </h2>
         <p id={leadId} className="ink-sheet-lead">

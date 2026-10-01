@@ -200,6 +200,9 @@ describe("SettingsScreen: action sheets", () => {
     expect(dlg.getAttribute("role")).toBe("dialog");
     expect(dlg.getAttribute("aria-modal")).toBe("true");
     expect(dlg.textContent).toContain("Replace the recovery key?");
+    // PD-88: текст не обещает отвязку других устройств (сервер при перевыпуске меняет только ключ)
+    expect(dlg.textContent).toContain("stay connected");
+    expect(dlg.textContent).not.toMatch(/is unlinked|will be unlinked/);
     expect(q("action-sheet-go")!.className).toContain("destructive");
     await act(async () => void dlg.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true })));
     expect(q("action-sheet")).toBeNull();

@@ -53,13 +53,13 @@ export function BlotsRow({ count }: { count: number }) {
   );
 }
 
-/** Строка Year «Mode · Ink · N blots» (шит дня). */
+/** Строка Year «Mode · Ink · N blots» / «Ink · clean» без клякс (шит дня; как «clean» в карточке и PNG, PD-86). */
 export function InkModeValueRow({ count }: { count: number }) {
   const { t } = useTranslation();
   return (
     <div className="row" data-testid="ink-mode-row">
       <dt>{t("ink.rowMode")}</dt>
-      <dd>{t("ink.yearValue", { count })}</dd>
+      <dd>{count > 0 ? t("ink.yearValue", { count }) : t("ink.yearClean")}</dd>
     </div>
   );
 }
