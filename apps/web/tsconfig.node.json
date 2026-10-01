@@ -13,6 +13,7 @@
   },
   "include": [
     "vite.config.ts",
+    "pwa.config.ts",
     "vitest.config.ts"
   ]
 }
