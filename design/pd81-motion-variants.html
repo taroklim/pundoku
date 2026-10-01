@@ -1,0 +1,1876 @@
+<!DOCTYPE html>
+<html lang="ru" data-variant="V2" data-mode="pencil" data-state="solving">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<title>Pundoku · PD-81 — три направления «живости»</title>
+<!--
+  PD-81 — Варианты движения и эффектов. Самодостаточный файл, ни одной сетевой зависимости.
+
+  Что это НЕ: не новый визуальный язык. Поле — утверждённый вариант B Boxes, те же токены,
+  те же шрифты (только CSS-генерики), чернила #3B48B0 / #8C96FF, сургуч #B3261E / #FF6B5E,
+  стекло только на таб-баре. Ни одного нового цвета. Меняется ТОЛЬКО движение.
+
+  Три направления:
+    V1 «Тихо»     — только микро-подтверждения; поле никогда не двигается само.
+    V2 «Ритм»     — отвечает собранная структура: ряд / столбец / блок / закрытая цифра.
+    V3 «Событие»  — всё из «Ритма» плюс три срежиссированные сцены: финал, клякса, вход в таймлапс.
+
+  Техника: только transform и opacity. Единственный filter в файле — статичный backdrop-filter
+  таб-бара из утверждённого макета; он никогда не анимируется.
+
+  prefers-reduced-motion: все амплитуды домножены на --mo (1 / 0), длительности на --mk, поэтому
+  фолбэк — это то же правило с нулевой амплитудой, а не отдельная копия правил. Поведенческие
+  отличия (полёт цифры, каскады, автостарт плеера, стаггер) выключаются в JS по эффективному
+  значению --mo. Переключатель «Reduce Motion: Как в системе / Включено / Выключено» внутри
+  страницы — чтобы фолбэк можно было увидеть, не меняя настройки телефона.
+-->
+<style>
+/* ==================================================================
+   0. RESET
+   ================================================================== */
+*,*::before,*::after{ box-sizing:border-box; }
+html,body{ margin:0; padding:0; height:100%; }
+button,input{ font:inherit; color:inherit; }
+button{ margin:0; border:0; background:none; cursor:pointer; -webkit-tap-highlight-color:transparent; }
+:focus-visible{ outline:2px solid var(--ink); outline-offset:2px; border-radius:4px; }
+html{ -webkit-text-size-adjust:100%; }
+code{ font-family:ui-monospace, "SF Mono", Menlo, monospace; font-size:.95em; }
+
+/* ==================================================================
+   1. ТОКЕНЫ — ровно те же, что в утверждённых pd7-board-variants.html и pd69
+   ================================================================== */
+:root{
+  /* Шрифты: только CSS-генерики, ничего не встраивается (typography.md › Developer note) */
+  --font-sans: system-ui, -apple-system, "SF Pro Text", "Helvetica Neue", Arial, sans-serif;
+  --font-serif: ui-serif, "New York", Charter, Georgia, serif;
+
+  --sa-top: env(safe-area-inset-top, 0px);
+  --sa-bot: env(safe-area-inset-bottom, 0px);
+  --sa-l:   env(safe-area-inset-left, 0px);
+  --sa-r:   env(safe-area-inset-right, 0px);
+
+  --bg-grouped: #F2F2F7;
+  --elev:       #FFFFFF;
+
+  --label:      #1C1C1E;
+  --label-2:    #6E6E73;
+  --notes:      #6E6E73;
+  --notes-fill: #5A5A5F;
+
+  --ink:        #3B48B0;
+  --on-ink:     #FFFFFF;
+  --wax:        #B3261E;
+
+  --rule-thin:  rgba(60,60,67,.29);
+  --rule-thin-w:.5px;
+
+  --fill-same:  .10;
+  --fill-sel:   .16;
+
+  /* Клякса — доли существующего сургуча (pd69 §4), не новые цвета */
+  --stain:      .14;
+  --stain-edge: rgba(179,38,30,.38);
+
+  --key-bg:   #F2F2F7;
+  --card:     #F2F2F7;
+  --hairline: rgba(60,60,67,.29);
+  --ink-tint: rgba(59,72,176,.12);
+  --box-shadow: 0 1px 2px rgba(0,0,0,.04);
+
+  --glass-fill: rgba(255,255,255,.72);
+  --glass-solid:#F6F6F9;
+
+  --page-bg:  #8A8A8E;
+
+  /* Производные варианта B Boxes */
+  --bg: var(--bg-grouped);
+  --surface: var(--elev);
+
+  /* --- ДВИЖЕНИЕ --------------------------------------------------
+     --mo  амплитуда: 1 = движение есть, 0 = только прозрачность
+     --mk  множитель длительности
+     Каждая анимация в файле умножена на эти два числа. */
+  --mo: 1;
+  --mk: 1;
+
+  --e-out:    cubic-bezier(.2,.7,.3,1);
+  --e-spring: cubic-bezier(.22,1,.36,1);
+  --e-ring:   cubic-bezier(.32,.72,0,1);
+  --e-over:   cubic-bezier(.16,1.04,.3,1);
+}
+
+/* Тёмная тема — системная плюс явный переключатель */
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg-grouped:#000000; --elev:#1C1C1E;
+    --label:#FFFFFF; --label-2:#98989D; --notes:#98989D; --notes-fill:#AEAEB2;
+    --ink:#8C96FF; --on-ink:#000000; --wax:#FF6B5E;
+    --rule-thin:rgba(235,235,245,.22);
+    --stain:.16; --stain-edge:rgba(255,107,94,.42);
+    --key-bg:#1C1C1E; --card:#1C1C1E; --hairline:rgba(235,235,245,.22);
+    --ink-tint:rgba(140,150,255,.18);
+    --box-shadow:none;
+    --glass-fill:rgba(28,28,30,.72); --glass-solid:#141416;
+    --page-bg:#2C2C2E;
+  }
+}
+:root[data-theme="dark"]{
+  --bg-grouped:#000000; --elev:#1C1C1E;
+  --label:#FFFFFF; --label-2:#98989D; --notes:#98989D; --notes-fill:#AEAEB2;
+  --ink:#8C96FF; --on-ink:#000000; --wax:#FF6B5E;
+  --rule-thin:rgba(235,235,245,.22);
+  --stain:.16; --stain-edge:rgba(255,107,94,.42);
+  --key-bg:#1C1C1E; --card:#1C1C1E; --hairline:rgba(235,235,245,.22);
+  --ink-tint:rgba(140,150,255,.18);
+  --box-shadow:none;
+  --glass-fill:rgba(28,28,30,.72); --glass-solid:#141416;
+  --page-bg:#2C2C2E;
+}
+
+/* Контраст только поднимаем, никогда не понижаем */
+@media (prefers-contrast: more){
+  :root{
+    --label-2:#3C3C43; --notes:#3C3C43; --notes-fill:#3C3C43;
+    --rule-thin:rgba(60,60,67,.55); --rule-thin-w:1px;
+    --hairline:rgba(60,60,67,.6);
+    --fill-same:.14; --fill-sel:.22;
+    --stain:.20; --stain-edge:rgba(179,38,30,.6);
+    --box-shadow:none;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --label-2:#EBEBF5; --notes:#EBEBF5; --notes-fill:#EBEBF5;
+      --rule-thin:rgba(235,235,245,.45); --hairline:rgba(235,235,245,.5);
+      --stain:.24; --stain-edge:rgba(255,107,94,.65);
+    }
+  }
+}
+
+/* Уменьшение движения: системное и имитированное меняют одни и те же два числа */
+@media (prefers-reduced-motion: reduce){
+  :root:not([data-motion="full"]){ --mo:0; --mk:.72; }
+}
+:root[data-motion="reduced"]{ --mo:0; --mk:.72; }
+
+/* ==================================================================
+   2. СТРАНИЦА И РАМКА ТЕЛЕФОНА
+   ================================================================== */
+body{
+  background:var(--page-bg);
+  font-family:var(--font-sans);
+  color:var(--label);
+  display:flex; align-items:center; justify-content:center;
+  min-height:100dvh;
+}
+.phone{
+  position:relative;
+  width:100%; max-width:393px; height:100dvh; max-height:852px;
+  background:var(--bg);
+  overflow:hidden;
+  display:flex; flex-direction:column;
+}
+@media (min-width:460px) and (min-height:900px){
+  .phone{ border-radius:44px; box-shadow:0 24px 70px rgba(0,0,0,.42); }
+  /* На десктопе имитируем вырез и домашний индикатор, чтобы safe-area была видна */
+  :root{ --sa-top: max(env(safe-area-inset-top, 0px), 59px); --sa-bot: max(env(safe-area-inset-bottom, 0px), 34px); }
+}
+.app{
+  position:relative; z-index:1;
+  flex:1 1 auto; min-height:0;
+  display:flex; flex-direction:column;
+  background:var(--bg);
+  overflow:hidden;
+}
+
+/* ==================================================================
+   3. ТУЛБАР
+   ================================================================== */
+.toolbar{
+  flex:none;
+  padding: calc(var(--sa-top) + 6px) calc(var(--sa-r) + 10px) 4px calc(var(--sa-l) + 16px);
+  display:flex; align-items:center; gap:6px;
+}
+.toolbar h1{ margin:0; font-size:1.0625rem; font-weight:600; letter-spacing:-.01em; flex:1 1 auto; }
+.tb-btn{
+  min-width:44px; min-height:44px;
+  display:flex; align-items:center; justify-content:center;
+  border-radius:11px; color:var(--ink); font-size:.8125rem; font-weight:600;
+  padding:0 10px; background:var(--ink-tint); white-space:nowrap;
+  transition: transform calc(160ms * var(--mk)) var(--e-spring), opacity 120ms linear;
+}
+.tb-btn.plain{ background:none; padding:0; }
+.tb-btn:active{ transform:scale(calc(1 - .05 * var(--mo))); opacity:.7; }
+.tb-btn svg{ width:22px; height:22px; }
+
+/* ==================================================================
+   4. ПАНЕЛИ-ВКЛАДКИ (M10)
+   V1 — мгновенно. V2 — кроссфейд с подъёмом 6 px. V3 — направленный слайд + переезд пилюли.
+   ================================================================== */
+.panes{ position:relative; flex:1 1 auto; min-height:0; overflow:hidden; }
+.track{
+  display:flex; width:300%; height:100%;
+  transform: translateX(calc(var(--pi, 0) * -33.33333%));
+}
+:root[data-variant="V3"] .track{ transition: transform calc(260ms * var(--mo) + 1ms) var(--e-over); }
+.pane{
+  flex:0 0 33.33333%; min-width:0; height:100%;
+  display:flex; flex-direction:column; overflow-y:auto; overflow-x:hidden;
+  -webkit-overflow-scrolling:touch;
+}
+:root[data-variant="V2"] .pane.enter{ animation: fadeRise calc(200ms * var(--mk)) var(--e-out) both; }
+
+/* ==================================================================
+   5. ПОЛЕ — вариант B Boxes, не переизобретено
+   ================================================================== */
+.daycap{
+  flex:none; margin:0;
+  padding: 2px calc(var(--sa-r) + 16px) 0 calc(var(--sa-l) + 16px);
+  font-size:.8125rem; color:var(--label-2); letter-spacing:-.005em;
+}
+.daycap .ink-word{ color:var(--ink); font-weight:600; }
+
+.board-wrap{ flex:none; padding:12px 16px 0; container-type:inline-size; }
+.board{
+  position:relative;
+  display:grid; grid-template-columns:repeat(3,1fr); gap:4px;
+  --cell-r:3px;
+}
+.box{
+  position:relative; display:grid; grid-template-columns:repeat(3,1fr);
+  border-radius:10px; overflow:hidden;
+  background:var(--surface); box-shadow:var(--box-shadow);
+}
+.box.settle { animation: boxSettle calc(300ms * var(--mk)) var(--e-out) both; animation-delay:var(--bd,0ms); }
+.box.breathe{ animation: breathe  calc(320ms * var(--mk)) var(--e-out) both; }
+
+.rules{ position:absolute; inset:0; width:100%; height:100%; z-index:3; pointer-events:none; }
+.rules path{ fill:none; stroke:var(--rule-thin); stroke-width:var(--rule-thin-w); opacity:.5; vector-effect:non-scaling-stroke; }
+
+.cell{
+  position:relative; aspect-ratio:1; min-width:0; min-height:0;
+  display:grid; place-items:center; overflow:hidden; padding:0;
+  background:var(--surface);
+}
+.cell > .fl, .cell > .wv, .cell > .sk, .cell > .st{ position:absolute; inset:0; pointer-events:none; }
+.fl{ background:var(--ink); opacity:0; transition: opacity calc(160ms * var(--mo) + 1ms) linear; }
+.wv{ background:var(--ink); opacity:0; }
+.sk{ background:var(--ink); opacity:0; border-radius:50%; }
+.st{ background:var(--wax); opacity:0; box-shadow: inset 0 0 0 1px var(--stain-edge); }
+.st::before{
+  content:""; position:absolute; inset:9%;
+  background:var(--wax); opacity:.45;
+  border-radius:46% 58% 42% 54% / 54% 44% 58% 46%;
+}
+
+.cell.same > .fl{ opacity:var(--fill-same); }
+.cell.sel  > .fl{ opacity:var(--fill-sel); }
+.cell.blot > .fl{ opacity:0 !important; }     /* клетка с кляксой инертна (pd69 §2.4) */
+
+.cell .d{ position:relative; z-index:2; line-height:1; font-size:6.5cqi; }
+.cell .d.given { font-family:var(--font-serif); font-weight:600; color:var(--label); }
+.cell .d.player{ font-family:var(--font-sans);  font-weight:500; color:var(--ink);   }
+.cell .d.wrong { color:var(--wax); }
+
+/* Клякса: срез правого верхнего угла — тот же канал, которым Year помечает исправления */
+.cell.blot{ clip-path: polygon(0 0, calc(100% - 10px) 0, 100% 10px, 100% 100%, 0 100%); }
+
+/* M4 — ошибка в обычном режиме: кольцо сургуч, без тряски */
+.cell.err::after{
+  content:""; position:absolute; inset:0; z-index:3; pointer-events:none;
+  box-shadow: inset 0 0 0 2px var(--wax); border-radius:var(--cell-r);
+  animation: fadeIn calc(120ms * var(--mk)) linear both;
+}
+
+/* M2 — кольцо выбора: один элемент, который переезжает */
+.ring{
+  position:absolute; left:0; top:0; z-index:4; pointer-events:none;
+  border:2px solid var(--ink); border-radius:var(--cell-r);
+  opacity:0;
+  transition: transform calc(160ms * var(--mo) + 1ms) var(--e-ring), opacity 120ms linear;
+}
+:root[data-variant="V3"] .ring{ transition-timing-function: var(--e-over); }
+@media (prefers-contrast: more){ .ring{ border-width:3px; } }
+
+/* Поле таймлапса — только для чтения */
+#tlBoard{ pointer-events:none; }
+
+/* ==================================================================
+   6. СТРОКА СТАТУСА (M9) + ПАНЕЛЬ ЦИФР (M6)
+   ================================================================== */
+.gap{ flex:1 1 auto; min-height:16px; display:flex; align-items:center; justify-content:center; padding:0 16px; }
+.statusline{ font-size:.8125rem; color:var(--label-2); }
+.statusline.roll{ animation: fadeRise calc(220ms * var(--mk)) var(--e-out) both; }
+
+.pad-wrap{ flex:none; padding:0 calc(var(--sa-r) + 16px) 10px calc(var(--sa-l) + 16px); }
+.pad{ display:grid; grid-template-columns:repeat(9,1fr); gap:5px; }
+.key{
+  min-width:0; min-height:56px;
+  border-radius:9px; background:var(--key-bg); color:var(--label);
+  display:flex; flex-direction:column; align-items:center; justify-content:center; gap:1px;
+  transition: background-color 120ms linear, color 120ms linear,
+              transform calc(220ms * var(--mk)) cubic-bezier(.34,1.36,.52,1), opacity 160ms linear;
+}
+.key .kd{ font-size:1.125rem; font-weight:500; line-height:1; }
+.key .kc{ font-size:.625rem; line-height:1; color:var(--label-2); font-variant-numeric:tabular-nums; }
+/* M6 — нажатая клавиша; .pressed — та же картинка для программных демо */
+.key:active, .key.pressed{ background:var(--ink-tint); transform:scale(calc(1 - .04 * var(--mo))); }
+.key.done{ opacity:.42; }
+.key.closing{ animation: keyClose calc(300ms * var(--mk)) var(--e-out) both; }
+.key .kc.out{ animation: countOut calc(220ms * var(--mk)) var(--e-out) both; }
+
+.actions{ display:grid; grid-template-columns:repeat(3,1fr); gap:5px; margin-top:5px; }
+:root[data-mode="ink"] .actions{ grid-template-columns:repeat(2,1fr); }
+:root[data-mode="ink"] .actions .act-undo{ display:none; }
+.act{
+  min-height:46px; border-radius:9px; background:var(--key-bg); color:var(--ink);
+  font-size:.8125rem; font-weight:500;
+  display:flex; align-items:center; justify-content:center;
+  transition: background-color 120ms linear, transform calc(220ms * var(--mk)) cubic-bezier(.34,1.36,.52,1);
+}
+.act:active{ background:var(--ink-tint); transform:scale(calc(1 - .04 * var(--mo))); }
+
+/* ==================================================================
+   7. ПОСЛЕ РЕШЕНИЯ — карточка дня и постоянная сетка (цель полёта M5 / E1)
+   ================================================================== */
+.after{ display:none; flex:none; padding:0 calc(var(--sa-r) + 16px) 16px calc(var(--sa-l) + 16px); }
+:root[data-state="solved"] .after{ display:block; }
+:root[data-state="solved"] .pad-wrap{ display:none; }
+:root[data-state="solved"] .gap{ min-height:10px; flex:0 0 auto; }
+
+.card{ background:var(--card); border-radius:14px; padding:12px 14px; display:flex; gap:12px; align-items:center; }
+:root[data-state="solved"] .card{ animation: cardUp calc(300ms * var(--mk)) var(--e-spring) both; }
+.card .ttl{ font-size:.9375rem; font-weight:600; margin:0 0 2px; }
+.card .sub{ font-size:.75rem; color:var(--label-2); margin:0; }
+.heat{ flex:none; display:grid; grid-template-columns:repeat(9,1fr); gap:1px; width:72px; }
+.heat i{ aspect-ratio:1; border-radius:1px; background:var(--ink); }
+
+.ginf{ margin-top:10px; display:flex; gap:12px; align-items:center; }
+.ginf .mini{
+  flex:none; display:grid; grid-template-columns:repeat(9,1fr); gap:1px;
+  width:108px; padding:4px; background:var(--card); border-radius:8px;
+}
+.ginf .mini i{ aspect-ratio:1; border-radius:1px; position:relative; box-shadow: inset 0 0 0 .5px var(--hairline); }
+.ginf .mini i.on{ background:var(--ink); box-shadow:none; }
+.ginf .mini i.target{ box-shadow: inset 0 0 0 1.5px var(--ink); }
+.ginf .mini i.target.landed{ background:var(--ink); animation: landPulse calc(300ms * var(--mk)) var(--e-out) both; }
+.ginf .cap{ font-size:.75rem; color:var(--label-2); margin:0; }
+
+.btnrow{ margin-top:12px; display:grid; gap:8px; }
+.btn{
+  min-height:46px; border-radius:12px; font-size:.9375rem; font-weight:600;
+  display:flex; align-items:center; justify-content:center; gap:6px;
+  transition: transform calc(200ms * var(--mk)) var(--e-spring), opacity 140ms linear;
+}
+.btn:active{ transform:scale(calc(1 - .03 * var(--mo))); opacity:.85; }
+.btn.filled{ background:var(--ink); color:var(--on-ink); }
+.btn.tinted{ background:var(--ink-tint); color:var(--ink); }
+
+/* Летящая цифра (M5 / E1) */
+.flyer{
+  position:absolute; z-index:40; pointer-events:none;
+  display:grid; place-items:center;
+  font-family:var(--font-sans); font-weight:500; color:var(--ink); line-height:1;
+  will-change:transform;
+}
+
+/* ==================================================================
+   8. PLAY / YEAR — упрощённые заглушки, нужны только для демонстрации M10
+   ================================================================== */
+.plate{ padding:14px calc(var(--sa-r) + 16px) 16px calc(var(--sa-l) + 16px); }
+.list{ background:var(--card); border-radius:14px; overflow:hidden; }
+.row{
+  min-height:46px; display:flex; align-items:center; gap:10px;
+  padding:0 14px; font-size:.9375rem;
+  box-shadow: inset 0 -.5px 0 var(--hairline);
+  width:100%; text-align:left;
+}
+.row:last-child{ box-shadow:none; }
+.row .val{ margin-left:auto; color:var(--label-2); font-size:.875rem; }
+.row[aria-selected="true"] .val{ color:var(--ink); font-weight:600; }
+.sect{ font-size:.75rem; color:var(--label-2); margin:16px 0 6px; text-transform:uppercase; letter-spacing:.04em; }
+
+.year{ display:grid; grid-template-columns:repeat(26,1fr); gap:2px; }
+.year i{ aspect-ratio:1; border-radius:2px; box-shadow: inset 0 0 0 .5px var(--hairline); }
+.year i.s{ background:var(--ink); box-shadow:none; }
+.year i.h{ background:var(--ink); opacity:.62; box-shadow:none; }
+.year i.c{ background:var(--wax); box-shadow:none; clip-path: polygon(0 0, 62% 0, 100% 38%, 100% 100%, 0 100%); }
+.year i.t{ box-shadow: inset 0 0 0 1.5px var(--ink); }
+
+/* ==================================================================
+   9. ТАБ-БАР — стекло с фолбэками (из утверждённого макета, не анимируется)
+   ================================================================== */
+.tabbar{
+  flex:none; position:relative; z-index:6;
+  display:grid; grid-template-columns:repeat(3,1fr);
+  padding: 6px calc(var(--sa-r) + 8px) calc(var(--sa-bot) + 6px) calc(var(--sa-l) + 8px);
+  background:var(--glass-fill);
+  -webkit-backdrop-filter:blur(24px) saturate(1.4);
+          backdrop-filter:blur(24px) saturate(1.4);
+  box-shadow: inset 0 .5px 0 var(--hairline);
+}
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))){
+  .tabbar{ background:var(--glass-solid); }
+}
+@media (prefers-reduced-transparency: reduce){
+  .tabbar{ background:var(--glass-solid); -webkit-backdrop-filter:none !important; backdrop-filter:none !important; }
+}
+@media (prefers-contrast: more){
+  .tabbar{ background:var(--glass-solid); -webkit-backdrop-filter:none !important; backdrop-filter:none !important; }
+}
+.pill{
+  position:absolute; z-index:0; top:6px; left:0;
+  border-radius:11px; background:var(--ink-tint);
+  opacity:0; pointer-events:none;
+}
+:root[data-variant="V3"] .pill{ transition: transform calc(260ms * var(--mo) + 1ms) var(--e-over); }
+.tab{
+  position:relative; z-index:1;
+  min-height:49px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px;
+  color:var(--label-2); border-radius:11px;
+  transition: color 140ms linear, background-color 140ms linear;
+}
+.tab svg{ width:25px; height:25px; }
+.tab .lab{ font-size:clamp(11px, .65rem, 13px); }
+.tab[aria-selected="true"]{ color:var(--ink); }
+.tab[aria-selected="true"] .lab{ font-weight:600; }
+/* В V1/V2 подложка принадлежит самой вкладке; в V3 её роль берёт переезжающая пилюля */
+:root:not([data-variant="V3"]) .tab[aria-selected="true"]{ background:var(--ink-tint); }
+
+/* ==================================================================
+   10. ШИТЫ — таймлапс и панель макета
+   ================================================================== */
+.scrim{
+  position:absolute; inset:0; z-index:20; background:rgba(0,0,0,.34);
+  opacity:0; visibility:hidden;
+  transition: opacity 240ms linear, visibility 0s linear 240ms;
+}
+.scrim.on{ opacity:1; visibility:visible; transition-delay:0s; }
+.sheet{
+  position:absolute; z-index:21; left:0; right:0; bottom:0;
+  max-height:94%; display:flex; flex-direction:column;
+  background:var(--elev); border-radius:16px 16px 0 0;
+  box-shadow:0 -6px 30px rgba(0,0,0,.18);
+  transform: translateY(calc(var(--mo) * 100%));
+  opacity:0; visibility:hidden;
+  transition: transform calc(320ms * var(--mk)) var(--e-spring),
+              opacity calc(220ms * var(--mk)) linear,
+              visibility 0s linear calc(320ms * var(--mk));
+}
+.sheet.on{ transform:translateY(0); opacity:1; visibility:visible; transition-delay:0s; }
+.sheet-hd{
+  flex:none; display:flex; align-items:center; gap:8px;
+  padding:10px 14px 6px; box-shadow: inset 0 -.5px 0 var(--hairline);
+}
+.sheet-hd h2{ margin:0; font-size:1.0625rem; font-weight:600; flex:1 1 auto; }
+.sheet-bd{ overflow-y:auto; -webkit-overflow-scrolling:touch; padding:12px 14px calc(var(--sa-bot) + 16px); }
+.sheet-done{
+  min-height:44px; min-width:64px; display:flex; align-items:center; justify-content:center;
+  color:var(--ink); font-weight:600; font-size:.9375rem;
+}
+
+/* Таймлапс */
+.tl-board-wrap{ container-type:inline-size; padding:0 22px; }
+.tl-meta{ text-align:center; font-size:.8125rem; color:var(--label-2); margin:10px 0 4px; font-variant-numeric:tabular-nums; }
+.scrub{ display:flex; align-items:center; min-height:44px; padding:0 4px; }
+.scrub input[type=range]{ width:100%; height:44px; accent-color:var(--ink); background:none; }
+.transport{ display:flex; align-items:center; justify-content:center; gap:4px; margin-top:2px; }
+.tbtn{
+  min-width:44px; min-height:44px; border-radius:11px; color:var(--ink);
+  display:flex; align-items:center; justify-content:center;
+  transition: background-color 120ms linear, transform calc(200ms * var(--mk)) var(--e-spring);
+}
+.tbtn:active{ background:var(--ink-tint); transform:scale(calc(1 - .06 * var(--mo))); }
+.tbtn[aria-pressed="true"]{ background:var(--ink-tint); }
+.tbtn svg{ width:22px; height:22px; }
+.seg{
+  display:grid; grid-auto-flow:column; grid-auto-columns:1fr; gap:2px;
+  background:var(--key-bg); border-radius:9px; padding:2px; margin:10px auto 0; max-width:280px;
+}
+.seg button{
+  min-height:40px; border-radius:7px; font-size:.8125rem; color:var(--label); padding:0 4px;
+  transition: background-color 140ms linear, color 140ms linear;
+}
+.seg button[aria-pressed="true"]{ background:var(--elev); color:var(--ink); font-weight:600; box-shadow:var(--box-shadow); }
+.tl-note{ font-size:.75rem; color:var(--label-2); text-align:center; margin:10px 0 0; line-height:1.45; }
+
+/* --- Панель макета ---------------------------------------------
+   Два размера. Док (по умолчанию после запуска демо) оставляет поле видимым;
+   развёрнутый вид показывает всё. Размер меняется мгновенно: анимировать высоту
+   значило бы анимировать layout, а в этом файле движение только на transform/opacity. */
+.ctl{ z-index:31; }
+.ctl.full{ max-height:80%; }
+/* Док: высота по содержимому (переключатель варианта + ряд демо) — так карточка дня,
+   постоянная сетка и строка статуса остаются видны, пока демо играет. */
+.ctl:not(.full){ max-height:none; }
+.ctl:not(.full) .only-full{ display:none; }
+.ctl:not(.full) .sheet-bd{ padding-top:0; }
+.ctl-exp{
+  min-width:44px; min-height:44px; display:flex; align-items:center; justify-content:center;
+  color:var(--ink); font-size:1rem; font-weight:700; border-radius:11px;
+}
+.ctl-exp:active{ background:var(--ink-tint); }
+.seg.wide{ max-width:none; margin-top:6px; }
+.vdesc{
+  margin:10px 0 0; padding:10px 12px; border-radius:12px; background:var(--card);
+  font-size:.8125rem; line-height:1.45; color:var(--label);
+}
+.vdesc b{ color:var(--ink); }
+.vdesc ul{ margin:6px 0 0; padding-left:18px; }
+.vdesc li{ margin:4px 0; color:var(--label-2); }
+
+/* Демо-чипы: горизонтальный ряд, чтобы остались в доке и не съедали высоту */
+.chips{
+  display:flex; gap:6px; margin-top:6px; padding-bottom:4px;
+  overflow-x:auto; -webkit-overflow-scrolling:touch; scrollbar-width:none;
+}
+.chips::-webkit-scrollbar{ display:none; }
+.chip{
+  flex:none; min-height:46px; padding:0 13px; border-radius:11px;
+  background:var(--card); color:var(--label); font-size:.8125rem; white-space:nowrap;
+  display:flex; align-items:center; gap:6px;
+  transition: background-color 120ms linear, transform calc(200ms * var(--mk)) var(--e-spring);
+}
+.chip:active{ background:var(--ink-tint); transform:scale(calc(1 - .03 * var(--mo))); }
+.chip .mn{ font-size:.625rem; font-weight:700; color:var(--ink); font-variant-numeric:tabular-nums; }
+.chip[aria-pressed="true"]{ background:var(--ink-tint); color:var(--ink); font-weight:600; }
+.chip.rep{ font-size:1rem; min-width:46px; justify-content:center; }
+.hint{ font-size:.75rem; color:var(--label-2); line-height:1.45; margin:0; }
+
+.sr{ position:absolute; width:1px; height:1px; overflow:hidden; clip-path:inset(50%); white-space:nowrap; }
+
+/* ==================================================================
+   11. КЛЮЧЕВЫЕ КАДРЫ
+   Все амплитуды через --mo, все длительности через --mk. При --mo:0 каждая
+   превращается в чистый кроссфейд — фолбэк не отдельная копия правил.
+   ================================================================== */
+@keyframes fadeIn   { from{ opacity:0 } to{ opacity:1 } }
+@keyframes fadeOut  { from{ opacity:1 } to{ opacity:0 } }
+@keyframes fadeRise { from{ transform:translateY(calc(var(--mo) * 6px)); opacity:0 } to{ transform:none; opacity:1 } }
+
+/* M1 — цифра впитывается */
+@keyframes inkSet   { from{ transform:scale(calc(1 + .25 * var(--mo))); opacity:0 } to{ transform:scale(1); opacity:1 } }
+/* M1+ (V2/V3) — «впитывание»: кольцо чернил расходится в клетке и гаснет */
+@keyframes soak     { from{ transform:scale(.34); opacity:.20 } to{ transform:scale(1.5); opacity:0 } }
+
+/* M3 — волна по собранному юниту (V2/V3) и плоский тинт (V1 / reduced) */
+@keyframes unitWave { 0%{ opacity:0 } 40%{ opacity:.15 } 100%{ opacity:0 } }
+@keyframes unitTint { 0%{ opacity:0 } 45%{ opacity:.12 } 100%{ opacity:0 } }
+@keyframes lift     { 0%{ transform:translateY(0) } 45%{ transform:translateY(calc(var(--mo) * -1.6px)) } 100%{ transform:translateY(0) } }
+@keyframes breathe  { 0%{ transform:scale(1) } 45%{ transform:scale(calc(1 - .014 * var(--mo))) } 100%{ transform:scale(1) } }
+@keyframes boxSettle{ 0%{ transform:scale(1) } 50%{ transform:scale(calc(1 - .016 * var(--mo))) } 100%{ transform:scale(1) } }
+
+/* M5 / E1 */
+@keyframes cardUp   { from{ transform:translateY(calc(var(--mo) * 22px)); opacity:0 } to{ transform:none; opacity:1 } }
+@keyframes landPulse{ from{ transform:scale(calc(1 + .35 * var(--mo))); opacity:.35 } to{ transform:scale(1); opacity:1 } }
+
+/* M7 — клякса */
+@keyframes stainIn  { from{ transform:scale(calc(.35 + .65 * (1 - var(--mo)))); opacity:0 }
+                      60% { opacity:var(--stain) }
+                      to  { transform:scale(1); opacity:var(--stain) } }
+@keyframes press    { 0%{ transform:scale(1) } 40%{ transform:scale(calc(1 - .03 * var(--mo))) } 100%{ transform:scale(1) } }
+
+/* M8 — цифра закрыта (9 из 9) */
+@keyframes keyClose { 0%{ transform:scale(1) } 40%{ transform:scale(calc(1 - .06 * var(--mo))) } 100%{ transform:scale(1) } }
+@keyframes countOut { from{ transform:translateY(0); opacity:1 } to{ transform:translateY(calc(var(--mo) * -5px)); opacity:0 } }
+
+/* Применение */
+.d.anim-in{ animation: inkSet calc(180ms * var(--mk)) var(--e-out) both; }
+.d.fade-out{ animation: fadeOut calc(150ms * var(--mk)) linear both; }
+.cell.soak > .sk{ animation: soak calc(280ms * var(--mk)) var(--e-out) both; }
+.cell.wave > .wv{ animation: unitWave calc(200ms * var(--mk)) var(--e-out) both; animation-delay: calc(var(--wi, 0) * 26ms * var(--mo)); }
+.cell.tint > .wv{ animation: unitTint calc(140ms * var(--mk)) linear both; }
+:root[data-variant="V2"] .cell.wave .d,
+:root[data-variant="V3"] .cell.wave .d{ animation: lift calc(240ms * var(--mk)) var(--e-out) both; animation-delay: calc(var(--wi, 0) * 26ms * var(--mo)); }
+.cell.blot > .st{ animation: stainIn calc(190ms * var(--mk)) var(--e-out) both; transform-origin: var(--ox, 50%) var(--oy, 50%); }
+:root[data-variant="V3"] .cell.blot{ animation: press calc(260ms * var(--mk)) var(--e-out) both; }
+.board .d.given{ transition: opacity calc(260ms * var(--mk)) linear; }
+.board.dim .d.given{ opacity:.6; }
+
+/* Страховка: если браузер неожиданно не подставит --mo внутрь задержки, стаггер всё равно
+   обнуляется при эффективном reduced. */
+:root[data-motion-eff="reduced"] .cell.wave > .wv,
+:root[data-motion-eff="reduced"] .cell.wave .d,
+:root[data-motion-eff="reduced"] .box.settle{ animation-delay:0ms !important; }
+</style>
+</head>
+<body>
+
+<div class="phone" id="phone">
+  <div class="app" id="app">
+
+    <header class="toolbar">
+      <h1 id="screenTitle">Сегодня</h1>
+      <button class="tb-btn" id="openCtl" aria-label="Демо движения и переключатели макета">
+        <span id="ctlBtnLabel">V2 · Демо</span>
+      </button>
+      <button class="tb-btn plain" aria-label="Настройки">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+          <circle cx="12" cy="12" r="3.2"/>
+          <path d="M12 3v2.2M12 18.8V21M3 12h2.2M18.8 12H21M5.6 5.6l1.6 1.6M16.8 16.8l1.6 1.6M18.4 5.6l-1.6 1.6M7.2 16.8l-1.6 1.6"/>
+        </svg>
+      </button>
+    </header>
+
+    <div class="panes">
+      <div class="track" id="track">
+
+        <!-- ================= СЕГОДНЯ ================= -->
+        <section class="pane" role="tabpanel" aria-label="Сегодня">
+          <p class="daycap" id="daycap">Чт 1 окт · Средняя · 4:12</p>
+
+          <div class="board-wrap"><div class="board" id="board"></div></div>
+
+          <div class="gap"><span class="statusline" id="statusline">26 клеток осталось</span></div>
+
+          <div class="pad-wrap">
+            <div class="pad" id="pad"></div>
+            <div class="actions">
+              <button class="act">Заметки</button>
+              <button class="act act-undo">Отмена</button>
+              <button class="act" id="eraseBtn">Стереть</button>
+            </div>
+          </div>
+
+          <div class="after" id="after">
+            <div class="card">
+              <div class="heat" id="heat" aria-hidden="true"></div>
+              <div>
+                <p class="ttl">Решено за 6:41</p>
+                <p class="sub">чисто · hidden single ×4 · 61 % решают этот день</p>
+              </div>
+            </div>
+            <div class="ginf">
+              <div class="mini" id="mini" aria-hidden="true"></div>
+              <p class="cap">Постоянная сетка<br>Последняя клетка дня открыла подсказку.</p>
+            </div>
+            <div class="btnrow">
+              <button class="btn tinted" id="openTl">Посмотреть своё решение</button>
+              <button class="btn filled">Поделиться</button>
+            </div>
+          </div>
+        </section>
+
+        <!-- ================= ИГРА ================= -->
+        <section class="pane" role="tabpanel" aria-label="Игра">
+          <div class="plate">
+            <p class="sect">Новая сетка</p>
+            <div class="list">
+              <button class="row">Лёгкая<span class="val">2:10 среднее</span></button>
+              <button class="row" aria-selected="true">Средняя<span class="val">Выбрано</span></button>
+              <button class="row">Сложная<span class="val">—</span></button>
+              <button class="row">Экспертная<span class="val">—</span></button>
+            </div>
+            <p class="sect">Режим</p>
+            <div class="list">
+              <button class="row" id="inkRow">Чернильный режим<span class="val" id="inkVal">Выкл</span></button>
+            </div>
+            <div class="btnrow"><button class="btn filled">Начать</button></div>
+            <p class="hint" style="margin-top:14px">
+              Экран-заглушка: нужен только для демонстрации перехода между вкладками (M10).
+            </p>
+          </div>
+        </section>
+
+        <!-- ================= ГОД ================= -->
+        <section class="pane" role="tabpanel" aria-label="Год">
+          <div class="plate">
+            <p class="sect">2026</p>
+            <div class="year" id="yearGrid" aria-hidden="true"></div>
+            <p class="hint" style="margin-top:14px">
+              Экран-заглушка по мотивам утверждённого полотна (PD-24, вариант C Blocks): нужен
+              только для демонстрации перехода между вкладками (M10).
+            </p>
+          </div>
+        </section>
+
+      </div>
+    </div>
+
+    <nav class="tabbar" role="tablist" aria-label="Разделы">
+      <span class="pill" id="pill" aria-hidden="true"></span>
+      <button class="tab" role="tab" data-i="0" aria-selected="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true">
+          <rect x="3.5" y="4.5" width="17" height="16" rx="3.2"/><path d="M3.5 9.2h17M8 3v3M16 3v3"/>
+        </svg><span class="lab">Сегодня</span>
+      </button>
+      <button class="tab" role="tab" data-i="1" aria-selected="false">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true">
+          <rect x="3.5" y="3.5" width="17" height="17" rx="3.2"/><path d="M9.17 3.5v17M14.83 3.5v17M3.5 9.17h17M3.5 14.83h17"/>
+        </svg><span class="lab">Игра</span>
+      </button>
+      <button class="tab" role="tab" data-i="2" aria-selected="false">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true">
+          <rect x="3.5" y="5.5" width="17" height="14" rx="2.6"/><path d="M7 9h3M13 9h4M7 13h6M7 16.5h8"/>
+        </svg><span class="lab">Год</span>
+      </button>
+    </nav>
+
+    <p class="sr" role="status" aria-live="polite" id="live"></p>
+  </div>
+
+  <div class="scrim" id="scrim"></div>
+
+  <!-- ================= ТАЙМЛАПС ================= -->
+  <div class="sheet" id="tlSheet" role="dialog" aria-modal="true" aria-label="Повтор решения">
+    <div class="sheet-hd">
+      <h2>Повтор решения</h2>
+      <button class="sheet-done" id="tlDone">Готово</button>
+    </div>
+    <div class="sheet-bd">
+      <div class="tl-board-wrap"><div class="board" id="tlBoard"></div></div>
+      <p class="tl-meta" id="tlMeta">Ход 0 из 51 · 0:00 / 6:41</p>
+      <div class="scrub">
+        <input type="range" id="tlScrub" min="0" max="51" step="1" value="0" aria-label="Ход">
+      </div>
+      <div class="transport">
+        <button class="tbtn" id="tlLoop" aria-pressed="false" aria-label="Повтор">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+            <path d="M4 9a5 5 0 015-5h10M20 15a5 5 0 01-5 5H5"/><path d="M17 1.5L20 4.5 17 7.5M7 16.5L4 19.5 7 22.5"/>
+          </svg>
+        </button>
+        <button class="tbtn" id="tlPrev" aria-label="Предыдущий ход">
+          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5h2v14H8zM19 5v14l-9-7z"/></svg>
+        </button>
+        <button class="tbtn" id="tlPlay" aria-label="Играть">
+          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" id="tlPlayIcon"><path d="M7 4l13 8-13 8z"/></svg>
+        </button>
+        <button class="tbtn" id="tlNext" aria-label="Следующий ход">
+          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M16 5h-2v14h2zM5 5v14l9-7z"/></svg>
+        </button>
+      </div>
+      <div class="seg" role="group" aria-label="Скорость">
+        <button data-sp="slow" aria-pressed="false">Медленно</button>
+        <button data-sp="norm" aria-pressed="true">Обычно</button>
+        <button data-sp="fast" aria-pressed="false">Быстро</button>
+      </div>
+      <p class="tl-note" id="tlNote">Настоящий ритм, длинные паузы сокращены.</p>
+    </div>
+  </div>
+
+  <!-- ================= ПАНЕЛЬ МАКЕТА ================= -->
+  <div class="sheet ctl on full" id="ctl" role="dialog" aria-label="Демо движения и переключатели макета">
+    <div class="sheet-hd">
+      <button class="ctl-exp" id="ctlExp" aria-expanded="true" aria-label="Свернуть панель">⌄</button>
+      <h2>Демо движения</h2>
+      <button class="sheet-done" id="ctlDone">Готово</button>
+    </div>
+    <div class="sheet-bd">
+
+      <p class="sect only-full" style="margin-top:0">Вид</p>
+      <div class="seg wide only-full" role="group" aria-label="Вид">
+        <button data-theme=""      aria-pressed="true">Авто</button>
+        <button data-theme="light" aria-pressed="false">Светлая</button>
+        <button data-theme="dark"  aria-pressed="false">Тёмная</button>
+      </div>
+
+      <p class="sect">Направление «живости»</p>
+      <div class="seg wide" role="group" aria-label="Направление">
+        <button data-variant="V1" aria-pressed="false">1 · Тихо</button>
+        <button data-variant="V2" aria-pressed="true">2 · Ритм</button>
+        <button data-variant="V3" aria-pressed="false">3 · Событие</button>
+      </div>
+
+      <p class="sect">Проиграть — тап повторяет</p>
+      <div class="chips" id="chips">
+        <button class="chip rep" id="repeat" aria-label="Повторить последнее">↺</button>
+        <button class="chip" data-demo="digit"><span class="mn">M1</span>Цифра</button>
+        <button class="chip" data-demo="row"><span class="mn">M3</span>Ряд</button>
+        <button class="chip" data-demo="block"><span class="mn">M3</span>Блок</button>
+        <button class="chip" data-demo="nine"><span class="mn">M8</span>9 из 9</button>
+        <button class="chip" data-demo="solve"><span class="mn">M5</span>Финал</button>
+        <button class="chip" data-demo="tabs"><span class="mn">M10</span>Вкладки</button>
+        <button class="chip" data-demo="blot"><span class="mn">M7</span>Клякса</button>
+        <button class="chip" data-demo="timelapse"><span class="mn">M11</span>Таймлапс</button>
+      </div>
+
+      <p class="sect only-full">Reduce Motion</p>
+      <div class="seg wide only-full" role="group" aria-label="Уменьшение движения">
+        <button data-motion=""        aria-pressed="true">Как в системе</button>
+        <button data-motion="reduced" aria-pressed="false">Включено</button>
+        <button data-motion="full"    aria-pressed="false">Выключено</button>
+      </div>
+
+      <div class="vdesc only-full" id="vdesc"></div>
+
+      <div class="btnrow only-full"><button class="btn tinted" id="reset">Сбросить поле</button></div>
+
+      <p class="hint only-full" style="margin-top:14px">
+        Поле, токены и шрифты — утверждённый вариант <b>B Boxes</b> (PD-7). Ни одного нового цвета;
+        меняется только движение. Тап по экрану во время долгой сцены завершает её мгновенно.
+        Можно играть и вручную: тап по пустой клетке, затем по цифре — в обычном режиме неверная
+        цифра даёт кольцо сургучом (M4), а если включить «Чернильный режим» на вкладке Игра —
+        кляксу (M7). Всё собрано на <code>transform</code> и <code>opacity</code>; статичное стекло
+        таб-бара не анимируется. Амплитуды и длительности умножены на <code>--mo</code> /
+        <code>--mk</code>, поэтому «Reduce Motion: Включено» даёт ровно тот же фолбэк, что
+        системная настройка телефона. Чтобы увидеть таб-бар целиком (переезд выделения в
+        варианте 3) — закройте панель кнопкой «Готово» и переключайте вкладки сами;
+        открыть обратно — кнопкой в тулбаре.
+      </p>
+    </div>
+  </div>
+</div>
+
+<script>
+/* Страховка макета: если скрипт где-то упадёт, это должно быть видно глазом, а не
+   выглядеть как «просто ничего не анимируется». Баннер поверх всего, с текстом ошибки. */
+window.addEventListener("error", function(ev){
+  var b = document.getElementById("pd81-err");
+  if (!b){
+    b = document.createElement("div");
+    b.id = "pd81-err";
+    b.style.cssText = "position:fixed;z-index:999;left:0;right:0;top:0;padding:10px 12px;" +
+      "background:#B3261E;color:#fff;font:600 12px/1.4 system-ui,sans-serif;white-space:pre-wrap";
+    document.body.appendChild(b);
+  }
+  b.textContent = "Ошибка макета PD-81: " + (ev.message || ev.error) +
+    "\n" + (ev.filename || "") + ":" + (ev.lineno || "?");
+});
+
+(function(){
+"use strict";
+
+/* ==================================================================
+   ДАННЫЕ
+   ================================================================== */
+var SOL = "534678912672195348198342567859761423426853791713924856961537284287419635345286179";
+var GIV = "530070000600195000098000060800060003400803001700020006060000280000419005000080079";
+
+var root = document.documentElement;
+var app = document.getElementById("app");
+var boardEl = document.getElementById("board");
+var tlBoardEl = document.getElementById("tlBoard");
+var padEl = document.getElementById("pad");
+var statusEl = document.getElementById("statusline");
+var liveEl = document.getElementById("live");
+var trackEl = document.getElementById("track");
+var pillEl = document.getElementById("pill");
+var daycapEl = document.getElementById("daycap");
+var ctlEl = document.getElementById("ctl");
+var tlSheetEl = document.getElementById("tlSheet");
+
+var val = new Array(81), src = new Array(81), seq = new Array(81);
+var cells = [], tlCells = [], ring = null;
+var selIdx = -1, moveCounter = 0, paneIdx = 0;
+var timers = [], anims = [], busy = null, lastDemo = null;
+
+/* Детерминированный генератор — чтобы снимки были одинаковыми в двух браузерах */
+function lcg(seed){ var s = seed; return function(){ s = (s * 1103515245 + 12345) & 0x7fffffff; return s / 0x7fffffff; }; }
+
+/* ==================================================================
+   СЛУЖЕБНОЕ
+   ================================================================== */
+function later(fn, ms){ var id = setTimeout(fn, ms); timers.push(id); return id; }
+function clearTimers(){ for (var i=0;i<timers.length;i++) clearTimeout(timers[i]); timers = []; }
+function cancelAnims(){ for (var i=0;i<anims.length;i++){ try{ anims[i].cancel(); }catch(e){} } anims = []; }
+function stopAll(){ clearTimers(); cancelAnims(); busy = null; }
+
+/* Эффективное состояние движения читаем из самой CSS-переменной —
+   один источник правды и для системной настройки, и для имитации. */
+function reduced(){
+  var v = getComputedStyle(root).getPropertyValue("--mo").trim();
+  return parseFloat(v) === 0;
+}
+function syncMotionAttr(){ root.setAttribute("data-motion-eff", reduced() ? "reduced" : "full"); }
+function variant(){ return root.getAttribute("data-variant"); }
+function say(t){ liveEl.textContent = t; }
+
+/* Перезапуск CSS-анимации: снимаем класс, вызываем reflow, возвращаем */
+function replay(el, cls){
+  if (!el) return;
+  el.classList.remove(cls);
+  void el.offsetWidth;
+  el.classList.add(cls);
+}
+
+/* ==================================================================
+   ПОСТРОЕНИЕ ПОЛЯ
+   ================================================================== */
+function buildBoard(host, store){
+  host.textContent = "";
+  store.length = 0;
+  for (var b=0; b<9; b++){
+    var box = document.createElement("div");
+    box.className = "box";
+    for (var p=0; p<9; p++){
+      var r = Math.floor(b/3)*3 + Math.floor(p/3);
+      var c = (b%3)*3 + (p%3);
+      var i = r*9 + c;
+      var cell = document.createElement("button");
+      cell.className = "cell";
+      cell.type = "button";
+      cell.dataset.i = i;
+      cell.innerHTML = '<span class="fl"></span><span class="wv"></span><span class="sk"></span><span class="st"></span>';
+      box.appendChild(cell);
+      store[i] = cell;
+    }
+    var svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    svg.setAttribute("class", "rules");
+    svg.setAttribute("viewBox", "0 0 30 30");
+    svg.setAttribute("preserveAspectRatio", "none");
+    svg.setAttribute("aria-hidden", "true");
+    svg.innerHTML = '<path d="M10 0V30M20 0V30M0 10H30M0 20H30"/>';
+    box.appendChild(svg);
+    host.appendChild(box);
+  }
+}
+
+function ensureRing(){
+  if (ring && ring.parentNode === boardEl) return ring;
+  ring = document.createElement("span");
+  ring.className = "ring";
+  boardEl.appendChild(ring);
+  return ring;
+}
+
+/* ==================================================================
+   РЕНДЕР
+   ================================================================== */
+function cellLabel(i){
+  var r = Math.floor(i/9) + 1, c = i%9 + 1;
+  var what = !val[i] ? "пусто" : (src[i] === "g" ? "подсказка " + val[i] : val[i]);
+  if (cells[i] && cells[i].classList.contains("blot")) what = "клякса, " + val[i];
+  return "r" + r + "c" + c + ", " + what;
+}
+
+function paint(i, anim){
+  var cell = cells[i];
+  if (!cell) return null;
+  var old = cell.querySelectorAll(".d");
+  for (var k=0;k<old.length;k++) old[k].remove();
+  cell.setAttribute("aria-label", cellLabel(i));
+  if (!val[i]) return null;
+  var d = document.createElement("span");
+  d.className = "d " + (src[i] === "g" ? "given" : "player");
+  d.textContent = val[i];
+  cell.appendChild(d);
+  if (anim) replay(d, "anim-in");
+  return d;
+}
+
+function paintTl(i){
+  var cell = tlCells[i];
+  if (!cell) return null;
+  var old = cell.querySelectorAll(".d");
+  for (var k=0;k<old.length;k++) old[k].remove();
+  if (!tlState[i]) return null;
+  var d = document.createElement("span");
+  d.className = "d " + (GIV[i] !== "0" ? "given" : "player");
+  d.textContent = tlState[i];
+  cell.appendChild(d);
+  return d;
+}
+
+function clearCell(i){
+  val[i] = 0; src[i] = ""; seq[i] = 0;
+  cells[i].className = "cell";
+  cells[i].style.removeProperty("--wi");
+  paint(i);
+}
+
+/* ==================================================================
+   СОСТОЯНИЕ
+   ================================================================== */
+function resetState(){
+  stopAll();
+  root.setAttribute("data-state", "solving");
+  setInk(false);
+  moveCounter = 0;
+  var rnd = lcg(7);
+  for (var i=0; i<81; i++){
+    cells[i].className = "cell";
+    cells[i].style.removeProperty("--wi");
+    cells[i].style.removeProperty("--ox");
+    cells[i].style.removeProperty("--oy");
+    if (GIV[i] !== "0"){ val[i] = +GIV[i]; src[i] = "g"; }
+    else { val[i] = 0; src[i] = ""; }
+    seq[i] = 0;
+  }
+  /* середина партии — детерминированная половина пустых клеток */
+  for (var j=0; j<81; j++){
+    if (!val[j] && rnd() < 0.5){ val[j] = +SOL[j]; src[j] = "p"; seq[j] = ++moveCounter; }
+  }
+  boardEl.classList.remove("dim");
+  for (var m=0; m<81; m++) paint(m);
+  var t = document.querySelector("#mini i.target");
+  if (t) t.classList.remove("landed");
+  selIdx = -1;
+  if (ring) ring.style.opacity = 0;
+  renderPad();
+  updateStatus(true);
+}
+
+function setInk(on){
+  root.setAttribute("data-mode", on ? "ink" : "pencil");
+  document.getElementById("inkVal").textContent = on ? "Вкл" : "Выкл";
+  document.getElementById("eraseBtn").textContent = on ? "Стереть заметки" : "Стереть";
+  daycapEl.innerHTML = on
+    ? 'Чт 1 окт · Средняя · <span class="ink-word">чернила</span>'
+    : "Чт 1 окт · Средняя · 4:12";
+}
+
+function emptyCount(){ var n=0; for (var i=0;i<81;i++) if (!val[i]) n++; return n; }
+
+function plural(n){
+  var m10 = n % 10, m100 = n % 100;
+  if (m10 === 1 && m100 !== 11) return n + " клетка осталась";
+  if (m10 >= 2 && m10 <= 4 && (m100 < 12 || m100 > 14)) return n + " клетки осталось";
+  return n + " клеток осталось";
+}
+
+/* M9 — число не подменяется молча, а перекатывается (V2/V3) */
+function updateStatus(silent){
+  var n = emptyCount();
+  statusEl.textContent = n === 0 ? "Решено · 6:41" : plural(n);
+  if (!silent && variant() !== "V1") replay(statusEl, "roll");
+}
+
+/* ==================================================================
+   ПАНЕЛЬ ЦИФР
+   ================================================================== */
+function digitCount(d){ var n=0; for (var i=0;i<81;i++) if (val[i] === d) n++; return n; }
+function keyEl(d){ return padEl.querySelector('.key[data-d="' + d + '"]'); }
+
+function renderPad(){
+  padEl.textContent = "";
+  for (var d=1; d<=9; d++){
+    var left = 9 - digitCount(d);
+    var k = document.createElement("button");
+    k.className = "key" + (left === 0 ? " done" : "");
+    k.type = "button";
+    k.dataset.d = d;
+    k.innerHTML = '<span class="kd">' + d + '</span><span class="kc">' + (left === 0 ? "·" : left) + '</span>';
+    k.setAttribute("aria-label", d + ", осталось " + left);
+    padEl.appendChild(k);
+  }
+}
+
+/* Обновляем счётчики на месте, не пересобирая панель: иначе клавиша, которая
+   только что закрылась, теряет старое число раньше, чем успеет его отдать (M8). */
+function updatePad(skipDigit){
+  for (var d=1; d<=9; d++){
+    if (d === skipDigit) continue;
+    var k = keyEl(d); if (!k) continue;
+    var left = 9 - digitCount(d);
+    if (left === 0) k.classList.add("done"); else k.classList.remove("done");
+    k.querySelector(".kc").textContent = left === 0 ? "·" : left;
+    k.setAttribute("aria-label", d + ", осталось " + left);
+  }
+}
+
+/* ==================================================================
+   M2 — ВЫБОР: кольцо переезжает
+   ================================================================== */
+function select(i, instant){
+  if (selIdx >= 0 && cells[selIdx]) cells[selIdx].classList.remove("sel");
+  for (var j=0;j<81;j++) cells[j].classList.remove("same");
+  var prev = selIdx;
+  selIdx = i;
+  var r = ensureRing();
+  if (i < 0){ r.style.opacity = 0; return; }
+  var cell = cells[i];
+  cell.classList.add("sel");
+  var br = boardEl.getBoundingClientRect(), cr = cell.getBoundingClientRect();
+  r.style.width = cr.width + "px";
+  r.style.height = cr.height + "px";
+  var tx = "translate(" + (cr.left - br.left) + "px," + (cr.top - br.top) + "px)";
+  if (instant || prev < 0){
+    var keep = r.style.transition;
+    r.style.transition = "none";
+    r.style.transform = tx;
+    void r.offsetWidth;
+    r.style.transition = keep;
+  } else {
+    r.style.transform = tx;
+  }
+  r.style.opacity = 1;
+  var v = val[i];
+  if (v) for (var m=0;m<81;m++){
+    if (m !== i && val[m] === v && !cells[m].classList.contains("blot")) cells[m].classList.add("same");
+  }
+}
+
+/* ==================================================================
+   M1 — ПОСТАНОВКА ЦИФРЫ (+ M6 для программных демо)
+   ================================================================== */
+function flashKey(d){
+  var k = keyEl(d);
+  if (!k) return;
+  k.classList.add("pressed");
+  later(function(){ k.classList.remove("pressed"); }, 130);
+}
+
+function place(i, v, opts){
+  opts = opts || {};
+  val[i] = v; src[i] = "p"; seq[i] = ++moveCounter;
+  paint(i, true);
+  /* M1+ «впитывание» — только V2/V3 и только при разрешённом движении */
+  if ((variant() === "V2" || variant() === "V3") && !reduced()){
+    replay(cells[i], "soak");
+    later(function(){ cells[i].classList.remove("soak"); }, 420);
+  }
+  var closing = digitCount(v) === 9;
+  updatePad(closing ? v : null);
+  updateStatus();
+  say("Поставлено " + v);
+  if (!opts.noUnits) checkUnits(i, v, closing);
+}
+
+/* ==================================================================
+   M3 — СОБРАННЫЙ ЮНИТ, M8 — ЗАКРЫТАЯ ЦИФРА
+   ================================================================== */
+function unitCells(kind, i){
+  var r = Math.floor(i/9), c = i%9, out = [], k;
+  if (kind === "row") for (k=0;k<9;k++) out.push(r*9+k);
+  if (kind === "col") for (k=0;k<9;k++) out.push(k*9+c);
+  if (kind === "box"){
+    var br = Math.floor(r/3)*3, bc = Math.floor(c/3)*3;
+    for (var a=0;a<3;a++) for (var b=0;b<3;b++) out.push((br+a)*9 + bc+b);
+  }
+  return out;
+}
+function unitFull(list){ for (var k=0;k<list.length;k++) if (!val[list[k]]) return false; return true; }
+
+/* V1 / reduced — плоский тинт по всему юниту сразу.
+   V2 / V3     — стаггер 26 мс ОТ поставленной клетки наружу + подъём цифр.
+   V3          — плюс «выдох» самого блока. */
+function wave(list, origin, kind){
+  var flat = (variant() === "V1") || reduced();
+  var oi = list.indexOf(origin);
+  for (var k=0;k<list.length;k++){
+    var cell = cells[list[k]];
+    if (flat){
+      cell.style.removeProperty("--wi");
+      replay(cell, "tint");
+    } else {
+      cell.style.setProperty("--wi", Math.abs(k - oi));
+      replay(cell, "wave");
+    }
+  }
+  later(function(){
+    for (var n=0;n<list.length;n++) cells[list[n]].classList.remove("wave", "tint");
+  }, flat ? 220 : 580);
+  if (variant() === "V3" && kind === "box" && !reduced()){
+    var box = cells[origin].parentNode;
+    replay(box, "breathe");
+    later(function(){ box.classList.remove("breathe"); }, 420);
+  }
+}
+
+function checkUnits(i, v, closing){
+  var names = [];
+  var kinds = ["row", "col", "box"];
+  for (var n=0;n<kinds.length;n++){
+    var list = unitCells(kinds[n], i);
+    if (unitFull(list)){
+      names.push(kinds[n] === "row" ? "ряд" : kinds[n] === "col" ? "столбец" : "блок");
+      wave(list, i, kinds[n]);
+    }
+  }
+  if (names.length) say("Собран " + names.join(", "));
+  if (closing) later(function(){ digitComplete(v); }, names.length ? 180 : 60);
+  if (emptyCount() === 0) later(function(){ finale(i); }, 260);
+}
+
+/* M8 — НОВОЕ относительно утверждённых M1–M7.
+   V1: клавиша просто приглушается — информация без движения.
+   V2: девять клеток этой цифры отвечают в порядке постановки, счётчик уезжает.
+   V3: то же плюс клавиша «складывается». */
+function digitComplete(v){
+  var k = keyEl(v);
+  if (k){
+    var kc = k.querySelector(".kc");
+    if (variant() === "V1"){
+      k.classList.add("done");
+      if (kc) kc.textContent = "·";
+    } else {
+      if (kc){
+        replay(kc, "out");
+        later(function(){ kc.classList.remove("out"); kc.textContent = "·"; }, 230);
+      }
+      k.classList.add("done");
+      if (variant() === "V3" && !reduced()) replay(k, "closing");
+    }
+    k.setAttribute("aria-label", v + ", осталось 0");
+  }
+  say("Цифра " + v + " закрыта: все девять на месте");
+  if (variant() === "V1") return;
+
+  var list = [];
+  for (var i=0;i<81;i++) if (val[i] === v) list.push(i);
+  list.sort(function(a,b){ return (seq[a]||0) - (seq[b]||0); });
+  for (var n=0;n<list.length;n++){
+    var cell = cells[list[n]];
+    cell.style.setProperty("--wi", reduced() ? 0 : (n * 0.85).toFixed(2));
+    replay(cell, "wave");
+  }
+  later(function(){
+    for (var m=0;m<list.length;m++) cells[list[m]].classList.remove("wave");
+  }, 620);
+}
+
+/* ==================================================================
+   M5 / E1 — ФИНАЛ
+   V1: данные гаснут, карточка проявляется кроссфейдом. Ничего не летает.
+   V2: утверждённый M5 — гаснут, карточка выезжает, последняя цифра садится в Grid ∞. ≤600 мс.
+   V3: E1 — девять боксов «оседают» по антидиагонали, затем полёт по дуге. ~1050 мс.
+   Везде: тап по экрану завершает мгновенно (motion.md: let people cancel motion).
+   ================================================================== */
+function finaleEnd(){
+  root.setAttribute("data-state", "solved");
+  boardEl.classList.add("dim");
+  var boxes = boardEl.querySelectorAll(".box");
+  for (var n=0;n<boxes.length;n++){ boxes[n].classList.remove("settle"); boxes[n].style.removeProperty("--bd"); }
+  var fl = app.querySelector(".flyer"); if (fl) fl.remove();
+  var t = document.querySelector("#mini i.target"); if (t) t.classList.add("landed");
+  updateStatus(true);
+  busy = null;
+}
+
+function finale(lastIdx){
+  busy = "finale";
+  select(-1);
+  boardEl.classList.add("dim");
+  say("Сетка решена");
+
+  function reveal(){ root.setAttribute("data-state", "solved"); updateStatus(true); }
+  function land(){
+    var target = document.querySelector("#mini i.target");
+    if (!target) return;
+    if (reduced() || variant() === "V1"){ target.classList.add("landed"); return; }
+    fly(cells[lastIdx], target, String(val[lastIdx]), variant() === "V3" ? 460 : 300,
+        function(){ target.classList.add("landed"); });
+  }
+
+  if (variant() === "V1" || reduced()){
+    later(function(){ reveal(); later(land, 60); busy = null; }, 200);
+    return;
+  }
+  if (variant() === "V2"){
+    later(reveal, 260);
+    later(land, 420);
+    later(function(){ busy = null; }, 780);
+    return;
+  }
+
+  /* V3 — поставленный финал: девять боксов оседают по антидиагонали */
+  var order = [2,1,5,0,4,8,3,7,6];
+  var boxes = boardEl.querySelectorAll(".box");
+  for (var n=0;n<order.length;n++){
+    var box = boxes[order[n]];
+    box.style.setProperty("--bd", (n * 36) + "ms");
+    replay(box, "settle");
+  }
+  later(function(){
+    for (var m=0;m<boxes.length;m++){ boxes[m].classList.remove("settle"); boxes[m].style.removeProperty("--bd"); }
+  }, 780);
+  later(reveal, 520);
+  later(land, 600);
+  later(function(){ busy = null; }, 1120);
+}
+
+/* Полёт цифры: WAAPI, только transform */
+function fly(fromEl, toEl, text, dur, done){
+  var ar = app.getBoundingClientRect();
+  var fr = fromEl.getBoundingClientRect();
+  var tr = toEl.getBoundingClientRect();
+  if (!fr.width || !tr.width){ if (done) done(); return; }
+  var f = document.createElement("div");
+  f.className = "flyer";
+  f.textContent = text;
+  f.style.width = fr.width + "px";
+  f.style.height = fr.height + "px";
+  f.style.left = (fr.left - ar.left) + "px";
+  f.style.top = (fr.top - ar.top) + "px";
+  var inner = fromEl.querySelector(".d");
+  f.style.fontSize = inner ? getComputedStyle(inner).fontSize : "20px";
+  app.appendChild(f);
+  var dx = (tr.left - fr.left) + (tr.width - fr.width) / 2;
+  var dy = (tr.top - fr.top) + (tr.height - fr.height) / 2;
+  var sc = Math.max(0.12, tr.width / fr.width);
+  var a;
+  try{
+    a = f.animate([
+      { transform: "translate(0px,0px) scale(1)", opacity: 1, offset: 0 },
+      { transform: "translate(" + (dx*0.52).toFixed(1) + "px," + (dy*0.30).toFixed(1) + "px) scale(" + (1 + (sc-1)*0.35).toFixed(3) + ")", opacity: 1, offset: 0.55 },
+      { transform: "translate(" + dx.toFixed(1) + "px," + dy.toFixed(1) + "px) scale(" + sc.toFixed(3) + ")", opacity: 0.9, offset: 1 }
+    ], { duration: dur, easing: "cubic-bezier(.3,0,.2,1)", fill: "forwards" });
+  }catch(e){
+    f.remove(); if (done) done(); return;
+  }
+  anims.push(a);
+  a.finished.then(
+    function(){ if (f.parentNode) f.remove(); if (done) done(); },
+    function(){ if (f.parentNode) f.remove(); }
+  );
+}
+
+/* ==================================================================
+   M7 — КЛЯКСА (чернильный режим)
+   V1 / reduced: только прозрачность — пятно проявляется, неверная гаснет, верная проявляется.
+   V2: утверждённый M7 — пятно расползается из центра, ≤460 мс.
+   V3: 620 мс — пятно расползается из точки касания, клетка вжимается, верная пишется после паузы.
+   ================================================================== */
+function blotEnd(i){
+  var cell = cells[i];
+  cell.classList.add("blot");
+  cell.classList.remove("same", "sel", "soak");
+  val[i] = +SOL[i]; src[i] = "p"; seq[i] = ++moveCounter;
+  paint(i);
+  updatePad(null);
+  updateStatus(true);
+  busy = null;
+}
+
+function blot(i, wrongV, ox, oy){
+  var cell = cells[i];
+  busy = "blot";
+  busyBlotIdx = i;
+  cell.style.setProperty("--ox", (ox == null ? 42 : ox) + "%");
+  cell.style.setProperty("--oy", (oy == null ? 58 : oy) + "%");
+  select(-1);
+
+  /* 1. неверная цифра держится чернилами — она была написана всерьёз */
+  val[i] = wrongV; src[i] = "p";
+  var d = paint(i, true);
+  flashKey(wrongV);
+
+  var slow = (variant() === "V1") || reduced();
+  var hold = slow ? 60 : (variant() === "V3" ? 150 : 110);
+  var answerAt = slow ? hold + 300 : (variant() === "V3" ? hold + 470 : hold + 350);
+
+  later(function(){
+    cell.classList.add("blot");
+    cell.classList.remove("same", "sel");
+    if (d) d.classList.add("fade-out");
+    say("Неверная цифра. Клетка запечатана кляксой.");
+  }, hold);
+
+  later(function(){
+    val[i] = +SOL[i]; src[i] = "p"; seq[i] = ++moveCounter;
+    paint(i, true);
+    updatePad(null);
+    updateStatus();
+    say("Неверная цифра. Клетка запечатана кляксой. " + SOL[i]);
+    busy = null;
+  }, answerAt);
+}
+var busyBlotIdx = -1;
+
+/* ==================================================================
+   M10 — ВКЛАДКИ
+   ================================================================== */
+var TITLES = ["Сегодня", "Игра", "Год"];
+function movePill(i){
+  var tabs = document.querySelectorAll(".tab");
+  if (!tabs.length) return;
+  var bar = document.querySelector(".tabbar").getBoundingClientRect();
+  var t = tabs[i].getBoundingClientRect();
+  if (!t.width) return;
+  pillEl.style.width = t.width + "px";
+  pillEl.style.height = t.height + "px";
+  pillEl.style.transform = "translateX(" + (t.left - bar.left) + "px)";
+  pillEl.style.opacity = variant() === "V3" ? 1 : 0;
+}
+function goPane(i){
+  paneIdx = i;
+  trackEl.style.setProperty("--pi", i);
+  document.getElementById("screenTitle").textContent = TITLES[i];
+  var tabs = document.querySelectorAll(".tab");
+  for (var k=0;k<tabs.length;k++) tabs[k].setAttribute("aria-selected", k === i ? "true" : "false");
+  var panes = document.querySelectorAll(".pane");
+  for (var p=0;p<panes.length;p++){
+    panes[p].setAttribute("aria-hidden", p === i ? "false" : "true");
+    panes[p].classList.remove("enter");
+  }
+  if (variant() === "V2"){ void panes[i].offsetWidth; panes[i].classList.add("enter"); }
+  movePill(i);
+  say(TITLES[i]);
+}
+
+/* ==================================================================
+   M11 — ТАЙМЛАПС
+   ================================================================== */
+var tlState = new Array(81);
+var tlMoves = [], tlPos = 0, tlPlaying = false, tlSpeed = "norm", tlLoop = false, tlTimer = null;
+var SPEED = { slow: 210, norm: 120, fast: 55 };
+
+function tlBuildMoves(){
+  var empties = [];
+  for (var i=0;i<81;i++) if (GIV[i] === "0") empties.push(i);
+  var rnd = lcg(21);
+  for (var k=empties.length-1;k>0;k--){
+    var j = Math.floor(rnd() * (k+1));
+    var t = empties[k]; empties[k] = empties[j]; empties[j] = t;
+  }
+  tlMoves = empties.map(function(idx){ return { i: idx, w: 0.45 + rnd() * 1.75 }; });
+  document.getElementById("tlScrub").max = tlMoves.length;
+  for (var m=0;m<81;m++) tlState[m] = -1;        /* заставим первый рендер нарисовать всё */
+}
+
+/* Рендерим только изменившиеся клетки: 81 перерисовка на кадр была бы джанком */
+function tlRender(pos, animate){
+  var next = new Array(81);
+  for (var i=0;i<81;i++) next[i] = GIV[i] !== "0" ? +GIV[i] : 0;
+  for (var k=0;k<pos;k++) next[tlMoves[k].i] = +SOL[tlMoves[k].i];
+  for (var m=0;m<81;m++){
+    if (next[m] !== tlState[m]){ tlState[m] = next[m]; paintTl(m); }
+  }
+  if (animate && pos > 0){
+    var d = tlCells[tlMoves[pos-1].i].querySelector(".d");
+    if (d) replay(d, "anim-in");
+  }
+  var total = tlMoves.length || 1;
+  var secs = Math.round(401 * pos / total);
+  document.getElementById("tlMeta").textContent =
+    "Ход " + pos + " из " + total + " · " + Math.floor(secs/60) + ":" + ("0" + (secs%60)).slice(-2) + " / 6:41";
+  document.getElementById("tlScrub").value = pos;
+  tlPos = pos;
+}
+
+function tlStep(){
+  if (tlPos >= tlMoves.length){
+    if (tlLoop) tlRender(0, false);
+    else { tlPause(); return; }
+  }
+  tlRender(tlPos + 1, true);
+  var w = tlMoves[Math.min(tlPos, tlMoves.length - 1)].w;
+  tlTimer = setTimeout(tlStep, SPEED[tlSpeed] * w);
+  timers.push(tlTimer);
+}
+function tlPlay(){
+  if (reduced()) return;            /* при Reduce Motion плеер живёт только на паузе */
+  tlPlaying = true;
+  document.getElementById("tlPlayIcon").innerHTML = '<path d="M7 4h4v16H7zM13 4h4v16h-4z"/>';
+  document.getElementById("tlPlay").setAttribute("aria-label", "Пауза");
+  tlStep();
+}
+function tlPause(){
+  tlPlaying = false;
+  if (tlTimer) clearTimeout(tlTimer);
+  document.getElementById("tlPlayIcon").innerHTML = '<path d="M7 4l13 8-13 8z"/>';
+  document.getElementById("tlPlay").setAttribute("aria-label", "Играть");
+}
+
+function openSheet(el, modal){
+  if (modal) document.getElementById("scrim").classList.add("on");
+  el.classList.add("on");
+}
+function closeSheet(el){
+  el.classList.remove("on");
+  if (!tlSheetEl.classList.contains("on")) document.getElementById("scrim").classList.remove("on");
+}
+
+function openTimelapse(){
+  closeSheet(ctlEl);               /* панель макета не должна лежать поверх плеера */
+  tlBuildMoves();
+  tlRender(0, false);
+  tlPause();
+  openSheet(tlSheetEl, true);
+  var note = document.getElementById("tlNote");
+  if (reduced()){
+    note.textContent = "Включено «Уменьшение движения», поэтому повтор открывается покадрово: ‹ и › листают ходы, ничего не анимируется.";
+    return;
+  }
+  if (variant() === "V3"){
+    /* E3 — поле просыпается каскадом до начала проигрывания */
+    note.textContent = "Настоящий ритм, длинные паузы сокращены. Поле собирается каскадом перед проигрыванием. В макете время сжато ещё примерно в пять раз.";
+    var boxes = tlBoardEl.querySelectorAll(".box");
+    for (var n=0;n<boxes.length;n++){
+      boxes[n].style.setProperty("--bd", (n * 34) + "ms");
+      replay(boxes[n], "settle");
+    }
+    later(function(){
+      for (var m=0;m<boxes.length;m++){ boxes[m].classList.remove("settle"); boxes[m].style.removeProperty("--bd"); }
+      tlPlay();
+    }, 440);
+    return;
+  }
+  note.textContent = "Настоящий ритм, длинные паузы сокращены. В макете время сжато ещё примерно в пять раз.";
+  if (variant() === "V2") later(tlPlay, 300);
+  /* V1 — открывается на паузе и ждёт решения человека */
+}
+
+/* ==================================================================
+   ВСПОМОГАТЕЛЬНОЕ СОДЕРЖИМОЕ
+   ================================================================== */
+function buildAux(){
+  var heat = document.getElementById("heat");
+  heat.textContent = "";
+  var r1 = lcg(5);
+  for (var i=0;i<81;i++){
+    var s = document.createElement("i");
+    s.style.opacity = (0.14 + r1() * 0.8).toFixed(2);
+    heat.appendChild(s);
+  }
+  var mini = document.getElementById("mini");
+  mini.textContent = "";
+  var r2 = lcg(11);
+  for (var k=0;k<81;k++){
+    var c = document.createElement("i");
+    var on = r2() < 0.17;
+    c.className = (k === 31) ? "target" : (on ? "on" : "");
+    mini.appendChild(c);
+  }
+  var yg = document.getElementById("yearGrid");
+  yg.textContent = "";
+  var r3 = lcg(29);
+  for (var y=0;y<273;y++){
+    var e = document.createElement("i");
+    var v = r3();
+    if (y === 243) e.className = "t";
+    else if (y > 243) e.className = "";
+    else if (v < 0.08) e.className = "c";
+    else if (v < 0.28) e.className = "h";
+    else e.className = "s";
+    yg.appendChild(e);
+  }
+}
+
+/* ==================================================================
+   ОПИСАНИЯ ВАРИАНТОВ
+   ================================================================== */
+var VD = {
+  V1: {
+    name: "1 · Тихо",
+    cost: "Стоимость S",
+    body: "<b>Только микро-подтверждения.</b> Поле никогда не двигается само: движение существует лишь там, где палец только что коснулся экрана.",
+    items: [
+      "Оставляет как есть: M1 цифра впитывается (scale 1.25→1, 180 мс), M2 кольцо переезжает, M4 кольцо сургучом, M6 нажатие клавиши",
+      "<b>Заменяет M3:</b> собранный ряд или блок получает плоский тинт 140 мс — без волны и без стаггера",
+      "<b>Заменяет M5:</b> данные гаснут до 60 %, карточка проявляется кроссфейдом; цифра никуда не летит, клетка в Grid ∞ просто подсвечивается",
+      "<b>Сужает M7:</b> клякса целиком на прозрачности — то, что в утверждённой спецификации было фолбэком для reduced motion",
+      "M8 / M9 не вводит: закрытая цифра — это приглушённая клавиша, счётчик меняется молча",
+      "M10 вкладки переключаются мгновенно"
+    ]
+  },
+  V2: {
+    name: "2 · Ритм",
+    cost: "Стоимость M",
+    body: "<b>Отвечает структура, а не декор.</b> Движение возникает ровно тогда, когда в сетке что-то <i>стало верным</i>: собрался ряд, столбец, блок, закрылась цифра.",
+    items: [
+      "Оставляет M1–M7 как утверждено; M5 остаётся единственным оркестрованным моментом партии",
+      "<b>Расширяет M1:</b> «впитывание» — кольцо чернил расходится в клетке и гаснет (280 мс, opacity ≤ .20)",
+      "<b>Расширяет M3:</b> волна направленная — стаггер 26 мс от поставленной клетки наружу, цифры юнита приподнимаются на 1.6 px",
+      "<b>M8 (новое):</b> девятая цифра закрывает себя — её девять клеток отвечают в порядке постановки, счётчик на клавише уезжает вверх",
+      "<b>M9 (новое):</b> «26 клеток осталось» перекатывается, а не подменяется молча",
+      "<b>M10 (новое):</b> вкладки — кроссфейд с подъёмом 6 px, 200 мс",
+      "<b>M11 (новое):</b> таймлапс стартует сам через 300 мс; скраббер всегда мгновенный"
+    ]
+  },
+  V3: {
+    name: "3 · Событие",
+    cost: "Стоимость L",
+    body: "<b>Три срежиссированные сцены.</b> Всё из «Ритма», плюс финал, клякса и вход в таймлапс становятся поставленными моментами. Самое заметное и самое дорогое.",
+    items: [
+      "<b>Заменяет M5 (E1):</b> девять боксов оседают по антидиагонали (стаггер 36 мс, scale .984), затем цифра летит по дуге в Grid ∞ — ~1050 мс, тап прерывает",
+      "<b>Расширяет M3:</b> волна как в «Ритме» плюс «выдох» самого блока (scale .986, 320 мс)",
+      "<b>Заменяет M7:</b> 620 мс — пятно расползается из точки касания, клетка вжимается в бумагу, верная цифра пишется после паузы",
+      "<b>Расширяет M8:</b> клавиша складывается (scale .94) одновременно с ответом клеток",
+      "<b>Расширяет M10:</b> вкладки — направленный слайд на всю ширину плюс переезжающая пилюля выделения",
+      "<b>Расширяет M11 (E3):</b> поле таймлапса собирается каскадом 440 мс до начала проигрывания",
+      "Цена: до ~12 одновременных анимаций в финале, обязательный tap-to-skip, will-change на девяти боксах"
+    ]
+  }
+};
+/* Длительности по вариантам — показываем в описании, чтобы не дублировать их в чипах */
+var TIMES = {
+  V1: "Цифра 180 мс · ряд плоский тинт 140 мс · 9 из 9 только клавиша · финал 200 мс · вкладки мгновенно · клякса 420 мс · таймлапс открывается на паузе",
+  V2: "Цифра 180 + впитывание 280 мс · волна 200 мс со стаггером 26 мс · 9 из 9 девять клеток · финал ≈600 мс · вкладки кроссфейд 200 мс · клякса 460 мс · таймлапс автостарт",
+  V3: "Цифра 180 + 280 мс · волна + выдох блока 320 мс · 9 из 9 с клавишей · финал ≈1050 мс · вкладки слайд 260 мс · клякса 620 мс · таймлапс каскад 440 мс"
+};
+function renderVD(){
+  var v = variant();
+  var d = VD[v];
+  document.getElementById("vdesc").innerHTML =
+    "<p style='margin:0'>" + d.body + " <span style='color:var(--label-2)'>" + d.cost + ".</span></p><ul>" +
+    d.items.map(function(x){ return "<li>" + x + "</li>"; }).join("") +
+    "</ul><p style='margin:8px 0 0; color:var(--label-2)'>" + TIMES[v] + "</p>";
+  document.getElementById("ctlBtnLabel").textContent = v + " · Демо";
+}
+
+/* ==================================================================
+   ДЕМО-СЦЕНАРИИ
+   ================================================================== */
+function firstEmpty(){ for (var i=0;i<81;i++) if (!val[i]) return i; return -1; }
+
+/* Готовим юнит: сносим игровые цифры внутри него и возвращаем все, кроме одной */
+function prepUnit(list){
+  for (var k=0;k<list.length;k++) if (src[list[k]] === "p") clearCell(list[k]);
+  var e = [];
+  for (var m=0;m<list.length;m++) if (!val[list[m]]) e.push(list[m]);
+  var last = e.pop();
+  for (var n=0;n<e.length;n++){
+    val[e[n]] = +SOL[e[n]]; src[e[n]] = "p"; seq[e[n]] = ++moveCounter; paint(e[n]);
+  }
+  renderPad();
+  updateStatus(true);
+  return last;
+}
+
+var DEMOS = {
+  digit: function(){
+    resetState();
+    var i = firstEmpty();
+    later(function(){ select(i); }, 140);
+    later(function(){ flashKey(+SOL[i]); place(i, +SOL[i]); }, 520);
+  },
+  row: function(){
+    resetState();
+    var last = prepUnit(unitCells("row", 20));       /* третий ряд */
+    later(function(){ select(last); }, 180);
+    later(function(){ flashKey(+SOL[last]); place(last, +SOL[last]); }, 560);
+  },
+  block: function(){
+    resetState();
+    var last = prepUnit(unitCells("box", 40));       /* центральный блок */
+    later(function(){ select(last); }, 180);
+    later(function(){ flashKey(+SOL[last]); place(last, +SOL[last]); }, 560);
+  },
+  nine: function(){
+    resetState();
+    var list = [];
+    for (var i=0;i<81;i++) if (+SOL[i] === 7) list.push(i);
+    for (var k=0;k<list.length;k++) if (src[list[k]] === "p") clearCell(list[k]);
+    var e = [];
+    for (var m=0;m<list.length;m++) if (!val[list[m]]) e.push(list[m]);
+    var last = e.pop();
+    for (var n=0;n<e.length;n++){
+      val[e[n]] = 7; src[e[n]] = "p"; seq[e[n]] = ++moveCounter; paint(e[n]);
+    }
+    renderPad();
+    updateStatus(true);
+    later(function(){ select(last); }, 180);
+    later(function(){ flashKey(7); place(last, 7); }, 560);
+  },
+  solve: function(){
+    resetState();
+    var e = [];
+    for (var i=0;i<81;i++) if (!val[i]) e.push(i);
+    var last = e.pop();
+    for (var k=0;k<e.length;k++){
+      val[e[k]] = +SOL[e[k]]; src[e[k]] = "p"; seq[e[k]] = ++moveCounter; paint(e[k]);
+    }
+    renderPad();
+    updateStatus(true);
+    later(function(){ select(last); }, 220);
+    later(function(){ flashKey(+SOL[last]); place(last, +SOL[last]); }, 640);
+  },
+  tabs: function(){
+    goPane(0);
+    later(function(){ goPane(1); }, 520);
+    later(function(){ goPane(2); }, 1420);
+    later(function(){ goPane(0); }, 2320);
+  },
+  blot: function(){
+    resetState();
+    setInk(true);
+    var i = firstEmpty();
+    var wrong = (+SOL[i] % 9) + 1;
+    later(function(){ select(i); }, 160);
+    later(function(){ blot(i, wrong, 42, 58); }, 560);
+  },
+  timelapse: function(){
+    stopAll();
+    openTimelapse();
+  }
+};
+
+var DEMO_NAMES = {
+  digit:"цифра", row:"ряд", block:"блок", nine:"цифра 9/9",
+  solve:"финал", tabs:"вкладки", blot:"клякса", timelapse:"таймлапс"
+};
+
+function runDemo(name){
+  stopAll();
+  tlPause();
+  closeSheet(tlSheetEl);
+  if (name !== "tabs" && name !== "timelapse") goPane(0);
+  lastDemo = name;
+  /* Панель не должна закрывать то, что показывает демо. Обычно хватает дока; для вкладок
+     нужен весь таб-бар, а шит таймлапса иначе оказался бы под панелью. */
+  if (name === "tabs" || name === "timelapse") closeSheet(ctlEl);
+  else setCtlFull(false);
+  var chips = document.querySelectorAll(".chip[data-demo]");
+  for (var k=0;k<chips.length;k++){
+    chips[k].setAttribute("aria-pressed", chips[k].getAttribute("data-demo") === name ? "true" : "false");
+  }
+  document.getElementById("repeat").setAttribute("aria-label", "Повторить: " + DEMO_NAMES[name]);
+  DEMOS[name]();
+}
+
+function setCtlFull(on){
+  if (on) ctlEl.classList.add("full"); else ctlEl.classList.remove("full");
+  var b = document.getElementById("ctlExp");
+  b.textContent = on ? "⌄" : "⌃";
+  b.setAttribute("aria-expanded", on ? "true" : "false");
+  b.setAttribute("aria-label", on ? "Свернуть панель" : "Развернуть панель");
+}
+
+/* ==================================================================
+   СОБЫТИЯ
+   ================================================================== */
+document.addEventListener("click", function(e){
+  var t = e.target;
+  if (!t || !t.closest) return;
+
+  /* Переключатели панели обрабатываем раньше прерывания анимации */
+  var seg = t.closest(".seg button");
+  if (seg){
+    var btns = seg.parentNode.querySelectorAll("button");
+    for (var k=0;k<btns.length;k++) btns[k].setAttribute("aria-pressed", btns[k] === seg ? "true" : "false");
+    if (seg.hasAttribute("data-theme")){
+      var th = seg.getAttribute("data-theme");
+      if (th) root.setAttribute("data-theme", th); else root.removeAttribute("data-theme");
+    }
+    if (seg.hasAttribute("data-motion")){
+      var mo = seg.getAttribute("data-motion");
+      if (mo) root.setAttribute("data-motion", mo); else root.removeAttribute("data-motion");
+      syncMotionAttr();
+    }
+    if (seg.hasAttribute("data-variant")){
+      root.setAttribute("data-variant", seg.getAttribute("data-variant"));
+      renderVD();
+      movePill(paneIdx);
+    }
+    if (seg.hasAttribute("data-sp")) tlSpeed = seg.getAttribute("data-sp");
+    return;
+  }
+
+  if (t.closest("#repeat")){ if (lastDemo) runDemo(lastDemo); return; }
+
+  var demo = t.closest(".chip[data-demo]");
+  if (demo){ runDemo(demo.getAttribute("data-demo")); return; }
+
+  if (t.closest("#reset")){ stopAll(); resetState(); goPane(0); return; }
+  if (t.closest("#openCtl")){ setCtlFull(true); openSheet(ctlEl, false); return; }
+  if (t.closest("#ctlDone")){ closeSheet(ctlEl); return; }
+  if (t.closest("#ctlExp")){ setCtlFull(!ctlEl.classList.contains("full")); return; }
+  if (t.closest("#openTl")){ openTimelapse(); return; }
+  if (t.closest("#tlDone")){ tlPause(); closeSheet(tlSheetEl); return; }
+  if (t.closest("#scrim")){ tlPause(); closeSheet(tlSheetEl); return; }
+
+  if (t.closest("#tlPlay")){ if (tlPlaying) tlPause(); else tlPlay(); return; }
+  if (t.closest("#tlPrev")){ tlPause(); tlRender(Math.max(0, tlPos - 1), true); return; }
+  if (t.closest("#tlNext")){ tlPause(); tlRender(Math.min(tlMoves.length, tlPos + 1), true); return; }
+  if (t.closest("#tlLoop")){
+    var lb = t.closest("#tlLoop");
+    tlLoop = !tlLoop;
+    lb.setAttribute("aria-pressed", tlLoop ? "true" : "false");
+    return;
+  }
+  if (t.closest(".sheet")) return;      /* остальное внутри шитов не трогаем */
+
+  /* Тап по экрану во время долгой сцены — мгновенное завершение
+     (motion.md: «Let people cancel motion»). */
+  if (busy === "finale"){ stopAll(); finaleEnd(); return; }
+  if (busy === "blot"){ stopAll(); blotEnd(busyBlotIdx); return; }
+
+  /* Панель макета не модальная. Развёрнутая закрывает содержимое — тап по экрану
+     сворачивает её в док; док тапы пропускает, чтобы можно было играть вручную. */
+  if (ctlEl.classList.contains("on") && ctlEl.classList.contains("full")){ setCtlFull(false); return; }
+
+  var tab = t.closest(".tab");
+  if (tab){ goPane(+tab.getAttribute("data-i")); return; }
+
+  var cell = t.closest("#board .cell");
+  if (cell){
+    var ci = +cell.getAttribute("data-i");
+    if (src[ci] !== "g" && !cell.classList.contains("blot")) select(ci);
+    return;
+  }
+
+  var key = t.closest(".key");
+  if (key && selIdx >= 0 && !val[selIdx]){
+    var d = +key.getAttribute("data-d");
+    var si = selIdx;
+    if (d === +SOL[si]){
+      place(si, d);
+      select(-1);
+    } else if (root.getAttribute("data-mode") === "ink"){
+      blot(si, d, 42, 58);
+    } else {
+      cells[si].classList.add("err");          /* M4 — кольцо сургучом, без тряски */
+      say("Неверная цифра");
+      later(function(){ if (cells[si]) cells[si].classList.remove("err"); }, 900);
+    }
+    return;
+  }
+});
+
+document.getElementById("tlScrub").addEventListener("input", function(){
+  /* Прямое управление никогда не анимируется */
+  tlPause();
+  tlRender(+this.value, false);
+});
+
+document.getElementById("inkRow").addEventListener("click", function(){
+  setInk(document.getElementById("inkVal").textContent === "Выкл");
+});
+
+window.addEventListener("resize", function(){
+  if (selIdx >= 0) select(selIdx, true);
+  movePill(paneIdx);
+});
+
+try{
+  var mq = window.matchMedia("(prefers-reduced-motion: reduce)");
+  if (mq && mq.addEventListener) mq.addEventListener("change", syncMotionAttr);
+}catch(e){}
+
+/* ==================================================================
+   СТАРТ
+   ================================================================== */
+buildBoard(boardEl, cells);
+buildBoard(tlBoardEl, tlCells);
+ensureRing();
+buildAux();
+tlBuildMoves();
+resetState();
+renderVD();
+syncMotionAttr();
+goPane(0);
+requestAnimationFrame(function(){ movePill(0); });
+
+/* Крючок для Playwright: pd81.variant('V3'); pd81.closeCtl(); pd81.run('solve') */
+window.pd81 = {
+  run: runDemo,
+  variant: function(v){ root.setAttribute("data-variant", v); renderVD(); movePill(paneIdx); syncSegs(); },
+  theme: function(v){ if (v) root.setAttribute("data-theme", v); else root.removeAttribute("data-theme"); syncSegs(); },
+  motion: function(v){ if (v) root.setAttribute("data-motion", v); else root.removeAttribute("data-motion"); syncMotionAttr(); syncSegs(); },
+  closeCtl: function(){ closeSheet(ctlEl); },
+  openCtl: function(){ setCtlFull(true); openSheet(ctlEl, false); },
+  dockCtl: function(){ setCtlFull(false); openSheet(ctlEl, false); },
+  closeTl: function(){ tlPause(); closeSheet(tlSheetEl); },
+  tlFrame: function(n){ tlPause(); tlRender(n, false); },
+  solved: function(){
+    stopAll();
+    for (var i=0;i<81;i++){ if (!val[i]){ val[i] = +SOL[i]; src[i] = "p"; seq[i] = ++moveCounter; paint(i); } }
+    renderPad(); finaleEnd(); select(-1);
+  },
+  reset: function(){ stopAll(); resetState(); goPane(0); },
+  pane: goPane,
+  reduced: reduced
+};
+
+/* Держим сегментированные контролы в согласии с атрибутами root (нужно,
+   когда их меняют из консоли/Playwright, а не тапом) */
+function syncSegs(){
+  var groups = document.querySelectorAll(".seg.wide");
+  for (var g=0; g<groups.length; g++){
+    var btns = groups[g].querySelectorAll("button");
+    for (var k=0; k<btns.length; k++){
+      var on = false;
+      if (btns[k].hasAttribute("data-theme"))   on = (btns[k].getAttribute("data-theme")   === (root.getAttribute("data-theme")   || ""));
+      if (btns[k].hasAttribute("data-motion"))  on = (btns[k].getAttribute("data-motion")  === (root.getAttribute("data-motion")  || ""));
+      if (btns[k].hasAttribute("data-variant")) on = (btns[k].getAttribute("data-variant") === root.getAttribute("data-variant"));
+      btns[k].setAttribute("aria-pressed", on ? "true" : "false");
+    }
+  }
+}
+
+})();
+</script>
+</body>
+</html>
