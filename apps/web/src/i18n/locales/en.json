@@ -48,7 +48,7 @@
       "retry": "Try again",
       "statusFailed": "Couldn’t check the recovery key. Check the connection.",
       "sheetReTitle": "Replace the recovery key?",
-      "sheetReMsg": "The current key stops working straight away, and any other device using it is unlinked.",
+      "sheetReMsg": "The new key replaces the current one, which stops working straight away. Devices that are already connected stay connected. To disconnect them, use “Unlink this device” or “Delete key and unlink all devices”.",
       "sheetReGo": "Replace Key",
       "sheetUnTitle": "Unlink this device?",
       "sheetUnMsg": "It keeps everything already on it and stops syncing with the key.",
