@@ -272,6 +272,7 @@
            overflow-wrap: anywhere; hyphens: auto; }
   th { font-size: 16px; color: var(--lbl2); font-weight: 600; }
   td:first-child { font-weight: 600; }
+  td code { overflow-wrap: anywhere; word-break: break-all; } /* WebKit не режет длинные пути одним overflow-wrap */
   .defs { position: absolute; width: 0; height: 0; overflow: hidden; }
 </style>
 </head>
