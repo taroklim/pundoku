@@ -14,7 +14,6 @@
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "lint": "eslint src",
     "test": "vitest run",
-    "icons": "node scripts/gen-icons.mjs",
     "splash": "node scripts/gen-startup-images.mjs",
     "predev": "pnpm --filter @pundoku/engine build",
     "prebuild": "pnpm --filter @pundoku/engine build",

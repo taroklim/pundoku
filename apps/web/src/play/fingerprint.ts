@@ -8,6 +8,7 @@
  * даёт Blob; `shareFingerprint` отдаёт файл системному листу (`navigator.share`), иначе скачивание.
  */
 import type { TimelapseFingerprint } from "@pundoku/engine";
+import { MARK_SMALL_CELL, MARK_SMALL_FIELD } from "../brand/markPaths";
 import { HEAT_MAX, HEAT_MIN } from "./heat";
 import { dwellScales, rhythmScale } from "./timelapseModel";
 
@@ -112,6 +113,27 @@ function roundRectPath(ctx: CanvasRenderingContext2D, x: number, y: number, s: n
 
 const RADIUS = 6;
 
+/** Знак D5 в строке подписи (PD-102, §18.5д): 44 px (≈ высота прописных левой подписи), нейтральный --label-2. */
+export const FP_MARK = 44;
+export const FP_MARK_GAP = 16;
+
+/**
+ * Знак — малая геометрия (16-сетка: в ленте PNG ≈ 16 px на экране), нейтральным цветом, не чернилами: в отпечатке
+ * чернила несут данные пути, и знак не должен выглядеть поставленной клеткой. Нижний край — на базовой линии подписи.
+ * Возвращает `false`, если `Path2D` недоступен (тогда макет подписи не меняется).
+ */
+function drawBrandMark(ctx: CanvasRenderingContext2D): boolean {
+  if (typeof Path2D === "undefined") return false;
+  ctx.save();
+  ctx.translate(FP_PAD, FP_CAPTION_Y - FP_MARK);
+  ctx.scale(FP_MARK / 16, FP_MARK / 16);
+  ctx.fillStyle = FP_COLORS.label2;
+  ctx.fill(new Path2D(MARK_SMALL_FIELD));
+  ctx.fill(new Path2D(MARK_SMALL_CELL));
+  ctx.restore();
+  return true;
+}
+
 export function drawFingerprint(ctx: CanvasRenderingContext2D, layout: FpLayout, caption: FpCaption): void {
   ctx.fillStyle = FP_COLORS.paper;
   ctx.fillRect(0, 0, layout.width, layout.height);
@@ -135,10 +157,13 @@ export function drawFingerprint(ctx: CanvasRenderingContext2D, layout: FpLayout,
   ctx.fillStyle = FP_COLORS.label;
   ctx.font = `600 44px ${SERIF}`;
   ctx.textAlign = "left";
+  const markDrawn = drawBrandMark(ctx);
+  // Знак 44 px + 16 px отступ сдвигают левую подпись (PD-102, §18.5д); без Path2D всё как раньше.
+  const shift = markDrawn ? FP_MARK + FP_MARK_GAP : 0;
   const leftW = ctx.measureText(caption.left).width;
-  ctx.fillText(caption.left, FP_PAD, FP_CAPTION_Y);
+  ctx.fillText(caption.left, FP_PAD + shift, FP_CAPTION_Y);
   // Правая часть: по возможности 32 px; не влезает — уменьшаем, но не ниже 22.
-  const room = FP_GRID - leftW - 32;
+  const room = FP_GRID - shift - leftW - 32;
   let px = 32;
   ctx.font = `400 ${px}px ${SANS}`;
   while (px > 22 && ctx.measureText(caption.right).width > room) {

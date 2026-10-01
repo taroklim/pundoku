@@ -363,6 +363,41 @@ button.settings-row:active {
   background: var(--wax-tint);
 }
 
+/* ---------- About (PD-102, §18.5в): знак D5 + вордмарк + версия ---------- */
+/* Графит вордмарка в токены не входит (токены = интерфейс, графит = цвет иконки): задаётся только здесь.
+   #43474F на #FFFFFF 9.32:1; #A7ABB5 на #1C1C1E 7.40:1. «Pun» берёт --ink (7.7:1 / 6.9:1). */
+.settings-about {
+  --doku-color: #43474f;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px 16px;
+  text-align: center;
+}
+@media (prefers-color-scheme: dark) {
+  .settings-about {
+    --doku-color: #a7abb5;
+  }
+}
+.settings-about-mark {
+  display: block;
+  flex: none;
+  color: var(--ink);
+}
+.settings-about-word {
+  display: block;
+  flex: none;
+  max-width: 100%;
+  margin-top: 14px;
+}
+.settings-about-ver {
+  margin: 8px 0 0;
+  font-size: max(13px, 0.82rem);
+  color: var(--label-2-grouped);
+  /* Dynamic Type до AX3: версия переносится, колонка одна, ничего не обрезается. */
+  overflow-wrap: anywhere;
+}
+
 /* Шестерёнка в тулбаре Today: действие тулбара, не вкладка (макет §3). */
 .gear-btn {
   width: 44px;
@@ -477,6 +512,13 @@ button.settings-row:active {
 
 /* Forced colors: смысл, который несли чернила и сургуч, держат иконки и слова. */
 @media (forced-colors: active) {
+  /* Знак/вордмарк: цвет по системной палитре (fill/stroke из переменных система отбрасывает сама, явно — надёжнее). */
+  .settings-about-mark {
+    color: CanvasText;
+  }
+  .settings-about-word path {
+    stroke: CanvasText;
+  }
   .settings-card,
   .st-agrp {
     border: 1px solid CanvasText;

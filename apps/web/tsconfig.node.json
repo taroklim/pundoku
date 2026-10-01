@@ -9,10 +9,12 @@
     "types": [
       "node"
     ],
+    "allowImportingTsExtensions": true,
     "noEmit": true
   },
   "include": [
     "vite.config.ts",
+    "pwa.config.ts",
     "vitest.config.ts"
   ]
 }
