@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 78 78" width="256" height="256" role="img" aria-label="Pundoku mark C">
+  <title>Pundoku — знак C «Литера»: P серифом New York</title>
+  <!-- ВНИМАНИЕ: это живой текст, а не контур. `ui-serif` -> New York только на macOS/iOS;
+       в другом браузере увидите фолбэчный сериф (Charter/Georgia). Контур глифа системного
+       шрифта в этом файле сознательно НЕ зашит — см. pd92-logo-variants.md § «Лицензия». -->
+  <text x="39" y="63" text-anchor="middle" font-size="72" font-weight="600"
+        font-family="ui-serif, 'New York', Charter, Georgia, serif" fill="#3B48B0">P</text>
+</svg>

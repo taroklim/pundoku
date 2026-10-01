@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 472 112" width="472" height="112" role="img" aria-label="Pundoku">
+  <title>Pundoku — вордмарк A «Разрыв»: Pun | doku, разрыв в одну клетку</title>
+  <!-- Живой текст, системные гарнитуры, ничего не встроено.
+       «Pun» — system-ui (SF) чернилами: так же, как рисуются цифры игрока.
+       «doku» — ui-serif (New York) нейтральным: так же, как рисуются подсказки (givens).
+       В браузере без New York увидите фолбэчный сериф — это ожидаемо, см. .md.
+       Разрыв фиксирован геометрией (anchor end / anchor start), а не метриками шрифта. -->
+  <text x="204" y="76" text-anchor="end" font-size="72" font-weight="590" letter-spacing="-1"
+        font-family="system-ui, -apple-system, 'SF Pro Text', 'Helvetica Neue', Arial, sans-serif"
+        fill="#3B48B0">Pun</text>
+  <rect x="212" y="28" width="48" height="48" rx="5" fill="none" stroke="#6E6E73" stroke-width="3.5" opacity="0.55"/>
+  <text x="268" y="76" text-anchor="start" font-size="72" font-weight="600" letter-spacing="-1"
+        font-family="ui-serif, 'New York', Charter, Georgia, serif"
+        fill="#1C1C1E">doku</text>
+</svg>

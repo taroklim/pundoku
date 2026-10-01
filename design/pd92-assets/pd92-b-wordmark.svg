@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 472 112" width="472" height="112" role="img" aria-label="Pundoku">
+  <title>Pundoku — вордмарк B «Точка»: Pun·doku, разделитель — чернильная точка</title>
+  <!-- Живой текст, системные гарнитуры, ничего не встроено.
+       «Pun» — system-ui (SF) чернилами = гарнитура и цвет цифр игрока.
+       «doku» — ui-serif (New York) нейтральным = гарнитура подсказок.
+       Точка между ними — тот же средний разделитель, который уже стоит в подписи дня
+       («Ср 1 окт · Средняя · 4:12»), и тот же объект, что внутри знака. -->
+  <text x="196" y="76" text-anchor="end" font-size="72" font-weight="590" letter-spacing="-1"
+        font-family="system-ui, -apple-system, 'SF Pro Text', 'Helvetica Neue', Arial, sans-serif"
+        fill="#3B48B0">Pun</text>
+  <circle cx="218" cy="58" r="9" fill="#3B48B0"/>
+  <text x="240" y="76" text-anchor="start" font-size="72" font-weight="600" letter-spacing="-1"
+        font-family="ui-serif, 'New York', Charter, Georgia, serif"
+        fill="#1C1C1E">doku</text>
+</svg>

@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024" role="img" aria-label="Pundoku app icon B, dark">
+  <title>Pundoku — иконка B «Точка», тёмный режим</title>
+  <!-- Поле — приподнятая поверхность тёмной темы, клетка — чернила тёмной темы,
+       точка — снова поле. Ни одного нового цвета. -->
+  <rect width="1024" height="1024" fill="#1C1C1E"/>
+  <rect x="220" y="220" width="584" height="584" rx="56" fill="#8C96FF"/>
+  <circle cx="366" cy="660" r="60" fill="#1C1C1E"/>
+</svg>

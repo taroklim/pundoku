@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024" role="img" aria-label="Pundoku app icon C, light">
+  <title>Pundoku — иконка C «Литера», светлый режим</title>
+  <!-- ВНИМАНИЕ: живой текст, а не контур. `ui-serif` -> New York только на macOS/iOS;
+       в другом браузере будет фолбэчный сериф, и это НЕ финальная форма буквы.
+       Чтобы получить PNG, этот файл надо растрировать в Safari на macOS/iOS, либо
+       человек с New York должен один раз перевести «P» в контур — см. .md § «Лицензия».
+       Одна крупная литера — не «мелкий текст», но это единственный из трёх вариантов,
+       который вообще вносит буквы в иконку. -->
+  <rect width="1024" height="1024" fill="#3B48B0"/>
+  <text x="512" y="736" text-anchor="middle" font-size="640" font-weight="600"
+        font-family="ui-serif, 'New York', Charter, Georgia, serif" fill="#FFFFFF">P</text>
+</svg>

@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024" role="img" aria-label="Pundoku app icon C, dark">
+  <title>Pundoku — иконка C «Литера», тёмный режим</title>
+  <!-- Живой текст, см. оговорку в …-light.svg. -->
+  <rect width="1024" height="1024" fill="#1C1C1E"/>
+  <text x="512" y="736" text-anchor="middle" font-size="640" font-weight="600"
+        font-family="ui-serif, 'New York', Charter, Georgia, serif" fill="#8C96FF">P</text>
+</svg>

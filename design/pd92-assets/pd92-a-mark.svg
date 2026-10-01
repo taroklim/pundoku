@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 78 78" width="256" height="256" role="img" aria-label="Pundoku mark A">
+  <title>Pundoku — знак A «Разрыв»: восемь клеток вокруг пустой</title>
+  <!-- Монохромное исполнение: восемь залитых клеток, центральная отсутствует.
+       Цвет — один (#3B48B0 светлая / #8C96FF тёмная); в приложении заменяется на currentColor. -->
+  <g fill="#3B48B0">
+    <rect x="0" y="0" width="22" height="22" rx="2.5"/>
+    <rect x="28" y="0" width="22" height="22" rx="2.5"/>
+    <rect x="56" y="0" width="22" height="22" rx="2.5"/>
+    <rect x="0" y="28" width="22" height="22" rx="2.5"/>
+    <rect x="56" y="28" width="22" height="22" rx="2.5"/>
+    <rect x="0" y="56" width="22" height="22" rx="2.5"/>
+    <rect x="28" y="56" width="22" height="22" rx="2.5"/>
+    <rect x="56" y="56" width="22" height="22" rx="2.5"/>
+  </g>
+</svg>

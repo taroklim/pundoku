@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024" role="img" aria-label="Pundoku app icon A, tinted">
+  <title>Pundoku — иконка A «Разрыв», режим «с оттенком» (grayscale-подача)</title>
+  <!-- Подача для tinted-режима iOS 18: только светлота. Тёмное поле, светлый знак;
+       оттенок накладывает система по светлоте. Своего цвета здесь быть не должно. -->
+  <rect width="1024" height="1024" fill="#000000"/>
+  <g fill="#FFFFFF">
+    <rect x="218" y="218" width="170" height="170" rx="18"/>
+    <rect x="427" y="218" width="170" height="170" rx="18"/>
+    <rect x="636" y="218" width="170" height="170" rx="18"/>
+    <rect x="218" y="427" width="170" height="170" rx="18"/>
+    <rect x="636" y="427" width="170" height="170" rx="18"/>
+    <rect x="218" y="636" width="170" height="170" rx="18"/>
+    <rect x="427" y="636" width="170" height="170" rx="18"/>
+    <rect x="636" y="636" width="170" height="170" rx="18"/>
+  </g>
+</svg>

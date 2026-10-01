@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024" role="img" aria-label="Pundoku app icon A, dark">
+  <title>Pundoku — иконка A «Разрыв», тёмный режим</title>
+  <!-- Тёмный вариант: поле — приподнятая поверхность тёмной темы (#1C1C1E),
+       знак — чернила тёмной темы (#8C96FF). Ни одного нового цвета. -->
+  <rect width="1024" height="1024" fill="#1C1C1E"/>
+  <g fill="#8C96FF">
+    <rect x="218" y="218" width="170" height="170" rx="18"/>
+    <rect x="427" y="218" width="170" height="170" rx="18"/>
+    <rect x="636" y="218" width="170" height="170" rx="18"/>
+    <rect x="218" y="427" width="170" height="170" rx="18"/>
+    <rect x="636" y="427" width="170" height="170" rx="18"/>
+    <rect x="218" y="636" width="170" height="170" rx="18"/>
+    <rect x="427" y="636" width="170" height="170" rx="18"/>
+    <rect x="636" y="636" width="170" height="170" rx="18"/>
+  </g>
+</svg>

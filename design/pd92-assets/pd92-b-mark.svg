@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 78 78" width="256" height="256" role="img" aria-label="Pundoku mark B">
+  <title>Pundoku — знак B «Точка»: клетка с чернильной точкой</title>
+  <!-- Монохромное (контурное) исполнение знака: клетка — контур, точка — залита.
+       Та же геометрия, что в иконке, другая полярность. Один цвет, в приложении — currentColor. -->
+  <g fill="none" stroke="#3B48B0" stroke-width="7">
+    <rect x="3.5" y="3.5" width="71" height="71" rx="7"/>
+  </g>
+  <circle cx="26" cy="55" r="8.5" fill="#3B48B0"/>
+</svg>
