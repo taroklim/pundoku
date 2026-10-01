@@ -520,12 +520,11 @@ body{
 .vdesc ul{ margin:6px 0 0; padding-left:18px; }
 .vdesc li{ margin:4px 0; color:var(--label-2); }
 
-/* Демо-чипы: горизонтальный ряд, чтобы остались в доке и не съедали высоту */
+/* Демо-чипы: переносятся на следующую строку, а не прячутся за правым краем (PD-83 п.1:
+   горизонтальная прокрутка без подсказки обрезала «Таймлапс» на 390 px) */
 .chips{
-  display:flex; gap:6px; margin-top:6px; padding-bottom:4px;
-  overflow-x:auto; -webkit-overflow-scrolling:touch; scrollbar-width:none;
+  display:flex; flex-wrap:wrap; gap:6px; margin-top:6px; padding-bottom:4px;
 }
-.chips::-webkit-scrollbar{ display:none; }
 .chip{
   flex:none; min-height:46px; padding:0 13px; border-radius:11px;
   background:var(--card); color:var(--label); font-size:.8125rem; white-space:nowrap;
