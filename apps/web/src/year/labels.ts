@@ -48,8 +48,8 @@ export function dayStateKey(mark: DayMark, ctx: { today: string; archiveStart: s
     case "void":
       if (mark.date === ctx.today) return "today";
       if (mark.date > ctx.today) return "future";
-      // Прошедший день без метки (PD-51). С записями пропуск начинается с самой ранней записи, так что безымянными
-      // остаются только дни ДО неё: «before your first entry». Без записей пропусков нет вообще: дни с границы архива —
+      // Прошедший день без метки (PD-51). С решённым днём пропуск начинается с самого раннего из них (PD-54), так что безымянными
+      // остаются только дни ДО него: «before your first entry». Без решённых дней пропусков нет вообще: дни с границы архива —
       // нейтральное «нет записи» (не «не играно»: это слово пропуска), раньше неё — тоже «before».
       return !ctx.hasRecords && mark.date >= ctx.archiveStart ? "noRecord" : "before";
   }

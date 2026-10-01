@@ -735,3 +735,37 @@
     outline-offset: -1px;
   }
 }
+
+/* ---------- PD-87: карточка «решено» на малой высоте (iPhone SE 1-го поколения, 320x568) ----------
+   Без уплотнения карточка (~640 px) уходила под сгиб, и Share оказывался ниже таб-бара. Только низкие узкие экраны:
+   портрет 375x667 и выше, 390/430 и ландшафт (шире 430) не затрагивает. Логика и состав карточки те же; уменьшаются
+   отступы, высота кнопок/строк и тепловая карта (центрируется, тап по ней — как раньше, на всю карту). */
+@media (max-height: 600px) and (max-width: 430px) {
+  .card {
+    margin-top: 6px;
+    padding: 12px 14px;
+  }
+  .card .sub {
+    margin-bottom: 8px;
+  }
+  .card .heat {
+    max-width: 128px;
+    margin-inline: auto;
+  }
+  .card .legend {
+    margin-top: 6px;
+  }
+  .card .rows {
+    margin-top: 10px;
+  }
+  .card .row {
+    padding: 4px 0;
+  }
+  .card .share,
+  .card .newgame {
+    min-height: 40px;
+  }
+  .card .share {
+    margin-top: 8px;
+  }
+}

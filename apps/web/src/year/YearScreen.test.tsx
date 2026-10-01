@@ -197,6 +197,27 @@ describe("пустой год", () => {
     expect(document.querySelector('[data-testid="play-day"]')).toBeNull();
   });
 
+  it("PD-54: ход на «пустом» дне (unfinished) до первой решённой партии год не стартует и пропусков не плодит", () => {
+    // firstUse 09-01, единственная запись — брошенный день 09-10: старт года не сдвинут, пропусков нет, день рисуется как есть
+    render([progressOf("2026-09-10", { solved: false, moves: 5 })], "2026-09-29", "2026-09-01");
+    expect(mark("2026-09-10").className).toBe("ymark is-unfinished");
+    expect(mark("2026-09-11").className).toBe("ymark is-void");
+    expect(mark("2026-09-28").className).toBe("ymark is-void");
+    expect(host.querySelector(".year-month .ymark.is-missed")).toBeNull();
+    // граница архива не двигается: с 09-01 по-прежнему можно играть
+    click(month(8));
+    click(document.querySelector('.ycell[data-date="2026-09-05"]'));
+    expect(document.querySelector('[data-testid="play-day"]')).not.toBeNull();
+  });
+
+  it("PD-54: решённый день позже брошенного стартует год; брошенный до него остаётся unfinished, пропуски — от решённого", () => {
+    render([progressOf("2026-09-10", { solved: false, moves: 5 }), progressOf("2026-09-25")], "2026-09-29", "2026-09-01");
+    expect(mark("2026-09-10").className).toBe("ymark is-unfinished");
+    expect(mark("2026-09-20").className).toBe("ymark is-void");
+    expect(mark("2026-09-25").className).toBe("ymark is-solved");
+    expect(mark("2026-09-26").className).toBe("ymark is-missed");
+  });
+
   it("PD-51: запись раньше firstUse (восстановленная) — старт года на ней, архив тоже с неё", () => {
     render([progressOf("2026-09-03")], "2026-09-29", "2026-09-20");
     expect(mark("2026-09-02").className).toBe("ymark is-void");
@@ -477,6 +498,21 @@ describe("PD-52 / PD-55: прошлый год без записей", () => {
     expect(host.querySelectorAll(".year-month")).toHaveLength(12);
     // Играбельные дни (от 2025-11-20) видны: месяц открывается, дни до границы не «пропуск».
     expect(month(10).getAttribute("aria-label")).toContain("nothing yet");
+  });
+
+  it("PD-60: ветка `year < текущий`: пояснялка только у прошлого года — текущий и будущий год без записей получают обычные итоги", () => {
+    // Записи в 2025 и 2027 (будущее), сегодня 2026: у 2026 и у будущего «пустого» года нет записи, но они не «прошлый год».
+    render([progressOf("2025-06-05"), progressOf("2027-02-03")], "2026-03-06", "2025-06-01");
+    expect(line()).toBeNull(); // текущий 2026 — без записей, но не прошлый
+    expect(host.querySelector('[data-testid="year-totals"]')).not.toBeNull();
+    pickYear("2025");
+    expect(line()).toBeNull(); // в 2025 запись есть
+    act(() => root.unmount());
+    root = createRoot(host);
+    render([progressOf("2025-06-05"), progressOf("2028-02-03")], "2026-03-06", "2025-06-01");
+    pickYear("2027"); // дыра между текущим годом и будущей записью: список без дыр, записей в 2027 нет
+    expect(line()).toBeNull();
+    expect(host.querySelector('[data-testid="year-totals"]')).not.toBeNull();
   });
 
   it("год с записью пояснялки не получает; wholly-empty состояние — прежнее приглашение", () => {

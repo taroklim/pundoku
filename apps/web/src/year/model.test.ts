@@ -6,6 +6,7 @@ import { availableYears, buildYear, daysInMonth, entryFromProgress, markOf, arch
 
 const ctx: YearContext = { today: "2026-09-29", start: "2026-09-10", archiveStart: "2026-09-10", hasRecords: true };
 const solved: YearEntry = { status: "solved", hadCorrections: false, assisted: false, late: false };
+const unfinished: YearEntry = { status: "unfinished", hadCorrections: false, assisted: false, late: false };
 
 describe("метка дня: форма и цвет (решения владельца по Year)", () => {
   it("решён чисто — полный квадрат без исправлений и без помощи", () => {
@@ -101,7 +102,7 @@ describe("нулевые записи: пропусков нет, даже ес�
     const missed = withRecord.months.flatMap((m) => m.days).filter((d) => d.kind === "missed").map((d) => d.date);
     expect(missed).toEqual(["2026-09-28"]); // между firstUse (09-20) и записью — void, не пропуски
   });
-  it("yearContext: hasRecords по числу записей; start — самая ранняя запись (нет записей — сегодня), archiveStart — прежняя граница", () => {
+  it("yearContext: hasRecords — есть решённый день; start — самый ранний решённый (нет — сегодня), archiveStart — прежняя граница", () => {
     expect(yearContext("2026-09-20", new Map(), "2026-09-29")).toEqual(empty);
     expect(yearContext("2026-09-20", new Map([["2026-09-27", solved]]), "2026-09-29")).toEqual({
       today: "2026-09-29",
@@ -114,14 +115,29 @@ describe("нулевые записи: пропусков нет, даже ес�
 
 describe("PD-51: старт года = самая ранняя запись", () => {
   const today = "2026-09-29";
-  it("yearStart: минимум по датам записей, включая late и unfinished; нет записей — сегодня", () => {
+  it("yearStart: минимум по датам РЕШЁННЫХ дней, включая late; unfinished год не стартует (PD-54); решённых нет — сегодня", () => {
     expect(yearStart(new Map(), today)).toBe(today);
     const e = new Map<string, YearEntry>([
       ["2026-09-20", solved],
       ["2026-09-05", { ...solved, late: true }],
-      ["2026-09-12", { status: "unfinished", hadCorrections: false, assisted: false, late: false }],
+      ["2026-09-03", { status: "unfinished", hadCorrections: false, assisted: false, late: false }],
     ]);
     expect(yearStart(e, today)).toBe("2026-09-05");
+    expect(yearStart(new Map([["2026-09-03", unfinished]]), today)).toBe(today);
+  });
+  it("PD-54: единственный ход на «пустом» дне не сдвигает старт и не даёт пропусков; граница архива — прежняя", () => {
+    const e = new Map<string, YearEntry>([["2026-09-10", unfinished]]);
+    const c = yearContext("2026-09-01", e, today);
+    expect(c).toEqual({ today, start: today, archiveStart: "2026-09-01", hasRecords: false });
+    expect(markOf("2026-09-10", e.get("2026-09-10"), c).kind).toBe("unfinished");
+    expect(markOf("2026-09-11", undefined, c).kind).toBe("void");
+    expect(markOf("2026-09-28", undefined, c).kind).toBe("void");
+    // решённый день позже брошенного стартует год: пропуски от него
+    e.set("2026-09-25", solved);
+    const c2 = yearContext("2026-09-01", e, today);
+    expect(c2).toMatchObject({ start: "2026-09-25", hasRecords: true });
+    expect(markOf("2026-09-20", undefined, c2).kind).toBe("void");
+    expect(markOf("2026-09-26", undefined, c2).kind).toBe("missed");
   });
   it("первая запись задним числом (позже firstUse): пропуски от неё, раньше — void", () => {
     const e = new Map<string, YearEntry>([["2026-09-22", { ...solved, late: true }]]);

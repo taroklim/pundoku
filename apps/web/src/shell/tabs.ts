@@ -82,7 +82,8 @@ export function useRoute(guard?: LeaveGuard): [Route, (target: Target) => void] 
       const next = parseRoute(window.location.hash);
       if (routeRef.current.settings === true && next.settings !== true && guardRef.current?.(() => window.history.back())) {
         // Уход перехвачен: возвращаем адрес на Settings, пока висит шит. Подтверждённый уход — history.back().
-        window.history.pushState({ pdSettings: true }, "", hashOf({ settings: true }));
+        // `pdHeading` — куда шёл пользователь: по нему «‹ Today» после «Остаться» отличает «назад» от правки адреса (PD-60).
+        window.history.pushState({ pdSettings: true, pdHeading: window.location.hash }, "", hashOf({ settings: true }));
         return;
       }
       routeRef.current = next;
@@ -108,9 +109,16 @@ export function useRoute(guard?: LeaveGuard): [Route, (target: Target) => void] 
   return [route, go];
 }
 
-/** Уйти с Settings назад: по истории, если в неё нас поставило приложение, иначе — на вкладку Today. */
+/**
+ * Уйти с Settings назад: по истории, если в неё нас поставило приложение, иначе — на вкладку Today.
+ * PD-60: запись, которую поставил перехват ухода (`pdHeading`), ведёт `history.back()` туда, куда шёл пользователь. Это
+ * Today только при «назад»; при правке адреса на другой маршрут (`#/year`) «‹ Today» после «Остаться» должен привести
+ * на Today, а не на набранный адрес, — тогда идём на Today напрямую.
+ */
 export function leaveSettings(go: (target: Target) => void): void {
-  const state = window.history.state as { pdSettings?: unknown } | null;
-  if (state?.pdSettings === true) window.history.back();
+  const state = window.history.state as { pdSettings?: unknown; pdHeading?: unknown } | null;
+  const heading = typeof state?.pdHeading === "string" ? parseRoute(state.pdHeading) : null;
+  const backToToday = heading === null || (heading.tab === "today" && heading.settings !== true);
+  if (state?.pdSettings === true && backToToday) window.history.back();
   else go({ tab: "today" });
 }
