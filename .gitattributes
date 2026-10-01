@@ -1,0 +1,2 @@
+# PD-66: shell-скрипты исполняются внутри Linux-контейнеров (docker cp с Windows-раннера) - CRLF их ломает.
+*.sh text eol=lf

@@ -2,8 +2,9 @@ name: Backup (postgres)
 
 # PD-61. Минимальный ночной бэкап Postgres по образцу SUMMON (products/game-rooms/.github/workflows/backup.yml,
 # без uploads, локальной ротации и сверки счётчиков): pg_dump из уже работающего контейнера ->
-# gzip на раннере -> проверка, что дамп РАЗВОРАЧИВАЕТСЯ в одноразовом контейнере postgres ->
-# артефакт GitHub Actions (14 дней, физически вне ноута).
+# gzip на раннере -> проверка, что дамп РАЗВОРАЧИВАЕТСЯ в одноразовом контейнере postgres (PD-66: схема + число строк
+# в ключевых таблицах сверяется с продом до и после дампа, scripts/verify-dump.sh) -> артефакт GitHub Actions (14 дней,
+# физически вне ноута).
 #
 # Ограничение: раннер на ноуте должен быть онлайн в момент cron; иначе GitHub молча пропустит запуск.
 # Что НЕ покрыто и как восстанавливать — DEPLOY.md, «Бэкапы».
@@ -59,8 +60,24 @@ jobs:
           if (-not $id) { throw "postgres container of compose project pundoku is not running" }
           Write-Host "postgres container: $id"
 
+          # PD-66: production row counts of the key tables BEFORE and AFTER the dump (scripts/table-counts.sql).
+          # The restore-check step requires the restored copy to land between these two values.
+          $countsSql = (Resolve-Path "scripts/table-counts.sql").ProviderPath
+          docker cp $countsSql "${id}:/tmp/pd-counts.sql"
+          if ($LASTEXITCODE -ne 0) { throw "docker cp of table-counts.sql failed" }
+          $before = docker exec $id sh -c 'PGPASSWORD="$POSTGRES_PASSWORD" psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -At -v ON_ERROR_STOP=1 -f /tmp/pd-counts.sql'
+          if ($LASTEXITCODE -ne 0) { throw "row counts before the dump failed with exit code $LASTEXITCODE" }
+          Set-Content -Path backup-out/counts-before.txt -Value $before -Encoding ascii
+          Write-Host "production rows before the dump: $($before -join ' ')"
+
           docker exec $id sh -c 'PGPASSWORD="$POSTGRES_PASSWORD" pg_dump -U "$POSTGRES_USER" --no-owner --no-privileges -f /tmp/pd-backup.sql "$POSTGRES_DB"'
           if ($LASTEXITCODE -ne 0) { throw "pg_dump inside the postgres container failed with exit code $LASTEXITCODE" }
+
+          $after = docker exec $id sh -c 'PGPASSWORD="$POSTGRES_PASSWORD" psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -At -v ON_ERROR_STOP=1 -f /tmp/pd-counts.sql'
+          if ($LASTEXITCODE -ne 0) { throw "row counts after the dump failed with exit code $LASTEXITCODE" }
+          Set-Content -Path backup-out/counts-after.txt -Value $after -Encoding ascii
+          Write-Host "production rows after the dump: $($after -join ' ')"
+          docker exec $id rm -f /tmp/pd-counts.sql
 
           docker cp "${id}:/tmp/pd-backup.sql" backup-out/postgres.sql
           if ($LASTEXITCODE -ne 0) { throw "docker cp of the dump failed" }
@@ -80,27 +97,36 @@ jobs:
           Remove-Item "backup-out/postgres.sql"
           Write-Host "postgres.sql.gz: $((Get-Item backup-out/postgres.sql.gz).Length) bytes"
 
-      # Бэкап, который ни разу не разворачивали, бэкапом не считается: распаковываем ИМЕННО .gz, который
-      # уедет в артефакт, разворачиваем в одноразовый postgres:16-alpine (не в прод-контейнер) и проверяем
-      # минимум - таблицы схемы на месте и журнал миграций непуст. Это НЕ сверка данных строка в строку
-      # (у SUMMON она есть, здесь осознанно нет - см. DEPLOY.md).
+      # Бэкап, который ни разу не разворачивали, бэкапом не считается: берём ИМЕННО .gz, который уедет в артефакт, и
+      # разворачиваем в одноразовый postgres:16-alpine (не в прод-контейнер). Саму проверку делает scripts/verify-dump.sh
+      # (он же запускается локально на любом Postgres): маркер завершения дампа, psql ON_ERROR_STOP в чистую временную БД,
+      # 6 ключевых таблиц на месте, schema_migrations непуста и ЧИСЛО СТРОК devices/snapshots/daily_puzzles/sync_groups/
+      # device_links/schema_migrations в копии лежит между значениями прода до и после pg_dump (потерянные данные или
+      # оборванный дамп - красный шаг). Это сверка числа строк, а не содержимого построчно - см. DEPLOY.md.
       - name: Проверить восстановление дампа в одноразовой БД
         timeout-minutes: 15
         run: |
           $ErrorActionPreference = 'Stop'
           $container = "pd-restore-check-$($env:GITHUB_RUN_ID)"
-          $plain = Join-Path (Get-Location).ProviderPath "restore-check.sql"
 
-          Add-Type -AssemblyName System.IO.Compression
-          $src = [System.IO.File]::OpenRead((Resolve-Path "backup-out/postgres.sql.gz"))
-          $gz = New-Object System.IO.Compression.GZipStream($src, [System.IO.Compression.CompressionMode]::Decompress)
-          $dst = [System.IO.File]::Create($plain)
-          $gz.CopyTo($dst)
-          $dst.Dispose(); $gz.Dispose(); $src.Dispose()
-
-          # pg_dump ends a plain dump with this marker; its absence means the file was cut off.
-          $tail = (Get-Content $plain -Tail 30) -join "`n"
-          if ($tail -notmatch "PostgreSQL database dump complete") { throw "dump has no completion trailer - file is truncated" }
+          function Read-Counts($path) {
+            $h = @{}
+            foreach ($line in (Get-Content $path)) {
+              if ($line -match '^([a-z_]+)=(\d+)$') { $h[$Matches[1]] = [long]$Matches[2] }
+            }
+            return $h
+          }
+          $before = Read-Counts "backup-out/counts-before.txt"
+          $after = Read-Counts "backup-out/counts-after.txt"
+          if ($before.Count -lt 1) { throw "no production row counts were recorded" }
+          $expect = @()
+          foreach ($name in $before.Keys) {
+            if (-not $after.ContainsKey($name)) { throw "table $name has no row count after the dump" }
+            $lo = [Math]::Min($before[$name], $after[$name])
+            $hi = [Math]::Max($before[$name], $after[$name])
+            $expect += ("{0}={1}:{2}" -f $name, $lo, $hi)
+          }
+          Write-Host "expectations: $($expect -join ' ')"
 
           $leftover = docker ps -a --format "{{.Names}}" --filter "name=$container"
           if ($leftover -contains $container) { docker rm -f $container | Out-Null }
@@ -125,22 +151,18 @@ jobs:
             }
             if ($streak -lt $needed) { throw "throwaway postgres was never ready" }
 
-            docker cp $plain "${container}:/tmp/dump.sql"
+            $gzPath = (Resolve-Path "backup-out/postgres.sql.gz").ProviderPath
+            $scriptsPath = (Resolve-Path "scripts").ProviderPath
+            docker cp $gzPath "${container}:/tmp/postgres.sql.gz"
             if ($LASTEXITCODE -ne 0) { throw "docker cp of the dump into the throwaway container failed" }
+            docker cp $scriptsPath "${container}:/tmp/pd-scripts"
+            if ($LASTEXITCODE -ne 0) { throw "docker cp of scripts into the throwaway container failed" }
 
-            docker exec -e PGPASSWORD=restore-check $container psql -U pundoku -d pundoku -v ON_ERROR_STOP=1 -q -f /tmp/dump.sql
-            if ($LASTEXITCODE -ne 0) { throw "psql failed to restore the dump into a clean database" }
-
-            $tables = docker exec -e PGPASSWORD=restore-check $container psql -U pundoku -d pundoku -At -c "select count(*) from information_schema.tables where table_schema = 'public' and table_name in ('devices','snapshots','daily_puzzles','sync_groups','device_links','schema_migrations')"
-            Write-Host "key tables restored: $tables of 6 expected"
-            if ([int]$tables -ne 6) { throw "restored database is missing key tables ($tables of 6)" }
-            $migrations = docker exec -e PGPASSWORD=restore-check $container psql -U pundoku -d pundoku -At -c "select count(*) from schema_migrations"
-            Write-Host "schema_migrations rows: $migrations"
-            if ([int]$migrations -lt 1) { throw "restored schema_migrations is empty" }
+            docker exec -e PGUSER=pundoku -e PGPASSWORD=restore-check $container sh /tmp/pd-scripts/verify-dump.sh /tmp/postgres.sql.gz @expect
+            if ($LASTEXITCODE -ne 0) { throw "restore verification failed (verify-dump.sh exit code $LASTEXITCODE)" }
           }
           finally {
             try { docker rm -f $container | Out-Null } catch { Write-Host "cleanup: $($_.Exception.Message)" }
-            Remove-Item $plain -Force -ErrorAction SilentlyContinue
           }
 
       # If the step above was killed by its timeout, its own "finally" did not run: remove the leftover.
