@@ -22,6 +22,20 @@
 }
 
 /* ---------- Grid ∞ ---------- */
+/* PD-95: секция лежит ниже сгиба (под карточкой). При reduced motion полёта нет, цель не измеряется — браузер может не
+   считать раскладку/отрисовку секции, пока она вне экрана (`--cv-grid: auto`, tokens.css; `auto` в contain-intrinsic-size
+   запоминает реальную высоту после первого показа). При движении секция — цель «улёта» последней клетки (M5): её замеры
+   принудительно раскрыли бы пропущенное поддерево, выгоды нет, а риск (WebKit) есть — остаётся `visible`. Для скринридера
+   секция доступна (auto, не hidden); в печати показывается целиком. */
+[data-testid="grid-inf-section"] {
+  content-visibility: var(--cv-grid);
+  contain-intrinsic-size: auto 26rem;
+}
+@media print {
+  [data-testid="grid-inf-section"] {
+    content-visibility: visible;
+  }
+}
 .section-head {
   display: flex;
   align-items: baseline;

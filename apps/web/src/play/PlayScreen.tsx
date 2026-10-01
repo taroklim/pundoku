@@ -1,8 +1,9 @@
 import type { Difficulty } from "@pundoku/engine";
 import { DIFFICULTIES } from "@pundoku/engine";
 import type { ChangeEvent } from "react";
-import { useEffect, useRef, useState, useSyncExternalStore } from "react";
+import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { useTranslation } from "react-i18next";
+import { useDeferredFocus } from "../shell/afterPaint";
 import { swallowGhostClick } from "../shell/ghostClick";
 import { Board } from "./Board";
 import {
@@ -69,10 +70,9 @@ export function PlayScreen() {
     };
   }, [phase]);
 
+  // Фокус на карточку (a11y) — после кадра, а не в задаче монтажа: focus() сразу после записи форсирует style+layout (PD-95).
   const cardRef = useRef<HTMLElement>(null);
-  useEffect(() => {
-    if (cardShown) cardRef.current?.focus({ preventScroll: true });
-  }, [cardShown]);
+  useDeferredFocus(cardRef, cardShown);
 
   const locale = i18n.resolvedLanguage ?? "en";
   const interactive = phase === "playing" && play !== null;
@@ -87,7 +87,9 @@ export function PlayScreen() {
     playStore.toSetup(e.target.value as Difficulty);
   };
 
-  const dayLabel = formatDay(snap.startedOn, locale);
+  // Подпись дня не пересчитывается на каждый тик часов/кадр финала: Intl.DateTimeFormat на каждый рендер дорог при CPU 4x (PD-95).
+  const startedMs = snap.startedOn.getTime();
+  const dayLabel = useMemo(() => formatDay(new Date(startedMs), locale), [startedMs, locale]);
   const diffLabel = t(`difficulty.${difficulty}`);
   const showClock = phase === "playing" || phase === "solved";
   const ink = play?.ink === true;

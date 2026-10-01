@@ -24,6 +24,17 @@ describe("CSS движения", () => {
     for (const k of ["--e-out", "--e-spring", "--e-ring"]) expect(css).toContain(k);
   });
 
+  it("PD-95: content-visibility секции Grid ∞ — только при reduced (цель полёта при движении не пропускается), печать — visible", () => {
+    const tokens = read("tokens.css");
+    expect(tokens).toMatch(/:root\s*\{[^}]*--cv-grid:\s*visible;/);
+    expect(tokens).toMatch(/prefers-reduced-motion:\s*reduce\)\s*\{\s*:root\s*\{[^}]*--cv-grid:\s*auto;/);
+    const today = read("today.css");
+    expect(today).toMatch(/\[data-testid="grid-inf-section"\]\s*\{[^}]*content-visibility:\s*var\(--cv-grid\);[^}]*contain-intrinsic-size:\s*auto\s/);
+    expect(today).toMatch(/@media print\s*\{\s*\[data-testid="grid-inf-section"\]\s*\{\s*content-visibility:\s*visible;/);
+    // ни одного безусловного auto/hidden на цели полёта и на карточке
+    expect(files.map(read).join("\n")).not.toMatch(/content-visibility:\s*(auto|hidden)/);
+  });
+
   it("forced-colors и reduced-transparency не потеряны", () => {
     expect(files.some((f) => read(f).includes("forced-colors: active"))).toBe(true);
     expect(files.some((f) => read(f).includes("prefers-reduced-transparency"))).toBe(true);

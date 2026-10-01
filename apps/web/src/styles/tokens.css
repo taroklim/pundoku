@@ -102,6 +102,9 @@
 :root {
   --mo: 1;
   --mk: 1;
+  /* PD-95: content-visibility секции Grid ∞ (today.css). `visible` — при движении секция цель «улёта» и измеряется
+     (getBoundingClientRect/scrollIntoView раскрыли бы пропущенное поддерево); при reduced полёта нет — `auto`. */
+  --cv-grid: visible;
   /* Кривые: e-out — выход, e-spring — пружина карточек/панелей, e-ring — переезд кольца выбора. */
   --e-out: cubic-bezier(0.2, 0.7, 0.3, 1);
   --e-spring: cubic-bezier(0.22, 1, 0.36, 1);
@@ -111,6 +114,7 @@
   :root {
     --mo: 0;
     --mk: 0.72;
+    --cv-grid: auto;
   }
 }
 

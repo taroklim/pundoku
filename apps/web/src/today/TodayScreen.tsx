@@ -15,6 +15,7 @@ import { InkEntry } from "../play/InkEntry";
 import { cellsLeft } from "../play/logic";
 import { ResultCard } from "../play/ResultCard";
 import { Subline } from "../play/Subline";
+import { useDeferredFocus } from "../shell/afterPaint";
 import type { DayStore } from "./dayStore";
 import { dayStore } from "./dayStore";
 import { MiniBoard } from "./MiniBoard";
@@ -79,12 +80,11 @@ export function DayView({ store, archive, onOpenSettings }: { store: DayStore; a
   // QA PD-23, Low 1: возврат на вкладку не проигрывает стухшие M1/M3.
   useClearEffectsOnUnmount(store);
 
-  const { cardShown, flown } = useSolveSequence(phase, store, root);
+  const { cardShown, gridShown, finaleDone, flown } = useSolveSequence(phase, store, root);
 
+  // Фокус на карточку (a11y) — после конца финала и после кадра, не посреди анимации и не в задаче монтажа (PD-95).
   const cardRef = useRef<HTMLElement>(null);
-  useEffect(() => {
-    if (cardShown && phase === "solved") cardRef.current?.focus({ preventScroll: true });
-  }, [cardShown, phase]);
+  useDeferredFocus(cardRef, cardShown && finaleDone && phase === "solved");
 
   const locale = i18n.resolvedLanguage ?? "en";
   const interactive = phase === "playing" && play !== null;
@@ -96,7 +96,8 @@ export function DayView({ store, archive, onOpenSettings }: { store: DayStore; a
   // Чернильный режим (PD-74): строка входа в зазоре — только до первого хода и не в архиве (там ink запрещён).
   const inkEntry = interactive && store.inkChoosable();
 
-  const dayLabel = isRealDate(snap.date) ? formatDay(dateOf(snap.date), locale) : "";
+  // Не на каждый тик часов/кадр финала: Intl.DateTimeFormat на каждый рендер дорог при CPU 4x (PD-95).
+  const dayLabel = useMemo(() => (isRealDate(snap.date) ? formatDay(dateOf(snap.date), locale) : ""), [snap.date, locale]);
   const showClock = phase === "playing" || (phase === "solved" && !cardShown);
   const diffLabel = snap.difficultyKnown && phase !== "loading" && !snap.unavailable ? t(`difficulty.${difficulty}`) : null;
 
@@ -154,7 +155,7 @@ export function DayView({ store, archive, onOpenSettings }: { store: DayStore; a
               )}
             </ResultCard>
           )}
-          {!archive && gridView && (
+          {!archive && gridShown && gridView && (
             <section aria-labelledby="grid-inf-title" data-testid="grid-inf-section">
               <div className="section-head">
                 <h2 id="grid-inf-title">{t("today.gridTitle")}</h2>

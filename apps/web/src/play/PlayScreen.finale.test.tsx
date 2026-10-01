@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 // QA PD-91: финал в Play (PD-89) — dim-фаза 240 мс (140 при reduced motion), затем карточка; тап (pointerdown) в dim-фазе
 // показывает карточку сразу; без тапа карточка появляется ровно по таймеру; слушатель снимается (нет утечки).
+// PD-95: фокус на карточку — после кадра, а не в задаче монтажа; отложенный фокус не возвращает ghost-click (PD-94).
 import { act } from "react";
 import { createRoot } from "react-dom/client";
 import type { Root } from "react-dom/client";
@@ -57,6 +58,9 @@ function startAlmostSolved() {
 
 beforeEach(() => {
   vi.useFakeTimers();
+  // rAF под управлением fake-таймеров: один кадр = 16 мс (afterPaint: rAF → setTimeout 0).
+  vi.stubGlobal("requestAnimationFrame", (cb: FrameRequestCallback) => window.setTimeout(() => cb(performance.now()), 16));
+  vi.stubGlobal("cancelAnimationFrame", (id: number) => window.clearTimeout(id));
   setReduced(false);
   host = document.createElement("div");
   document.body.append(host);
@@ -65,6 +69,7 @@ beforeEach(() => {
 afterEach(() => {
   act(() => root.unmount());
   host.remove();
+  vi.unstubAllGlobals();
   vi.useRealTimers();
 });
 
@@ -192,5 +197,46 @@ describe("финал Play: dim-фаза и тап-прерывание (PD-89)",
     });
     act(() => tap(newGame()));
     expect(playStore.getSnapshot().phase).not.toBe("solved");
+  });
+
+  // PD-95: фокус (a11y) — после ближайшего кадра, не в задаче монтажа карточки (форсированный style+layout).
+  const cardEl = () => host.querySelector<HTMLElement>('[data-testid="result-card"]')!;
+
+  it("PD-95: фокус на карточке появляется после кадра, а не синхронно с монтажом", () => {
+    startAlmostSolved();
+    act(() => void vi.advanceTimersByTime(240));
+    expect(card()).not.toBeNull();
+    expect(document.activeElement).not.toBe(cardEl());
+    act(() => void vi.advanceTimersByTime(17));
+    expect(document.activeElement).toBe(cardEl());
+  });
+
+  it("PD-95: тап-прерывание — карточка сразу, фокус на ней после кадра", () => {
+    startAlmostSolved();
+    act(() => void vi.advanceTimersByTime(50));
+    act(() => void document.body.dispatchEvent(new Event("pointerdown", { bubbles: true })));
+    expect(cardEl()).not.toBeNull();
+    expect(document.activeElement).not.toBe(cardEl());
+    act(() => void vi.advanceTimersByTime(17));
+    expect(document.activeElement).toBe(cardEl());
+  });
+
+  it("PD-95: ghost-click не возвращается — click по «New game» после перевода фокуса (тот же тап) по-прежнему гасится", () => {
+    startAlmostSolved();
+    act(() => void vi.advanceTimersByTime(50));
+    act(() => void document.body.dispatchEvent(new Event("pointerdown", { bubbles: true })));
+    act(() => void vi.advanceTimersByTime(40)); // кадр прошёл, фокус уже на карточке
+    expect(document.activeElement).toBe(cardEl());
+    act(() => tap(newGame()));
+    expect(playStore.getSnapshot().phase).toBe("solved");
+    expect(card()).not.toBeNull();
+  });
+
+  it("PD-95: уход из solved до кадра отменяет отложенный фокус (нет ошибок и кражи фокуса)", () => {
+    startAlmostSolved();
+    act(() => void vi.advanceTimersByTime(240));
+    act(() => playStore.toSetup());
+    act(() => void vi.advanceTimersByTime(500));
+    expect(host.querySelector('[data-testid="result-card"]')).toBeNull();
   });
 });
