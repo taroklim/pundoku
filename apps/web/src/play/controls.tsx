@@ -3,17 +3,39 @@
  * «N cells left», панель 1–9 с остатками + Notes/Undo/Erase, клавиатурный ввод, сброс анимаций.
  * Экраны отличаются шапкой и тем, откуда берётся сетка; всё остальное — одно и то же.
  */
-import type { KeyboardEvent } from "react";
-import { useEffect, useRef, useState } from "react";
+import type { CSSProperties, KeyboardEvent } from "react";
+import { memo, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { formatClock } from "./format";
 import type { GameStore, PlaySnapshot } from "./gameStore";
 import { EraseIcon, NotesIcon, UndoIcon } from "./icons";
 import { remaining } from "./logic";
+import { MOTION_FLAGS, MOTION_MS } from "./motion";
 
 const DIGITS = [1, 2, 3, 4, 5, 6, 7, 8, 9] as const;
 
 export const prefersReducedMotion = (): boolean => window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+/**
+ * Строка статуса «N cells left» (M9): при смене числа перекатывается (translateY 6 px + opacity, 220 мс). Узел
+ * пересоздаётся по `key`, чтобы CSS-анимация запустилась заново; первый показ и возврат на вкладку не анимируются
+ * (анимирует только смена числа в этой же жизни компонента). Отключается флагом `MOTION_FLAGS.statusRoll` (motion.ts):
+ * тогда класс `roll` не ставится вовсе — число меняется молча. Озвучка не затронута: это не live-регион.
+ * `memo`: перерисовка по тику таймера не должна снимать класс посреди анимации.
+ */
+export const StatusLine = memo(function StatusLine({ left }: { left: number }) {
+  const { t } = useTranslation();
+  const prev = useRef(left);
+  const rolled = MOTION_FLAGS.statusRoll && prev.current !== left;
+  useEffect(() => {
+    prev.current = left;
+  }, [left]);
+  return (
+    <p key={MOTION_FLAGS.statusRoll ? left : "static"} className={rolled ? "status roll" : "status"} data-testid="status-line">
+      {t("play.cellsLeft", { count: left })}
+    </p>
+  );
+});
 
 /** Тихий таймер: перечитывает часы хранилища; ставится на паузу самим хранилищем. */
 export function useClock(store: Pick<GameStore, "getElapsedMs">): string {
@@ -127,6 +149,18 @@ export function handleGameKey(
   }
 }
 
+/** Событие M8 живёт, пока уезжает счётчик клавиши (пауза до ответа + 220 мс); потом клавиша показывает «·». */
+function useEchoKey(echo: PlaySnapshot["echo"]): NonNullable<PlaySnapshot["echo"]> | null {
+  const [done, setDone] = useState(0);
+  const id = echo?.id ?? 0;
+  useEffect(() => {
+    if (id === 0) return;
+    const timer = window.setTimeout(() => setDone(id), MOTION_MS.keyOut);
+    return () => window.clearTimeout(timer);
+  }, [id]);
+  return echo && echo.id !== done ? echo : null;
+}
+
 /**
  * Панель 1–9 в один ряд с остатками + Notes / Undo / Erase (утверждённый макет, вариант «1 row + left»).
  * Чернильный режим (PD-74): Undo исчезает целиком (не приглушён), ластик цифр заменён на «Erase notes» — ряд из двух
@@ -139,6 +173,8 @@ export function GamePad({ snap, store }: { snap: PlaySnapshot; store: GameStore 
   const ink = play?.ink === true;
   const rem = play ? remaining(play) : null;
   const canUndo = interactive && (play?.undoStack.length ?? 0) > 0;
+  // M8: пока идёт ответ закрытой цифры, её счётчик ещё показывает последний остаток и уезжает вверх (220 мс), затем «·».
+  const echo = useEchoKey(snap.echo ?? null);
   return (
     <div className="pad-wrap">
       <div className="pad" role="group" aria-label={t("pad.label")}>
@@ -156,8 +192,12 @@ export function GamePad({ snap, store }: { snap: PlaySnapshot; store: GameStore 
               <span className="kd" aria-hidden="true">
                 {d}
               </span>
-              <span className="kr" aria-hidden="true">
-                {rem ? n : ""}
+              <span
+                className={echo && echo.digit === d ? "kr out" : "kr"}
+                style={echo && echo.digit === d ? ({ "--ed": echo.delay } as CSSProperties) : undefined}
+                aria-hidden="true"
+              >
+                {rem ? (echo && echo.digit === d ? 1 : n === 0 ? "·" : n) : ""}
               </span>
             </button>
           );

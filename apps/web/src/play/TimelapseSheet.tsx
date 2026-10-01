@@ -122,10 +122,12 @@ export function TimelapseSheet({ play, date, difficulty, onClose }: TimelapseShe
     .filter(Boolean)
     .join(" · ");
 
+  // M11 (решение владельца 2026-10-01): плеер НЕ стартует сам — открывается на паузе на первом кадре,
+  // проигрывание запускает только кнопка ▶. Так и при обычном движении, и при Reduce Motion.
   const start = () => {
     setMode("player");
     go(0, false);
-    setPlaying(!reduced);
+    setPlaying(false);
   };
   const toggle = () => {
     if (playing) {

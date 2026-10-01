@@ -3,6 +3,7 @@ import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { blotsIn, digitAt, isGiven, isWrong, notesOf } from "./logic";
 import type { GameStore, PlaySnapshot } from "./gameStore";
+import { MOTION_MS } from "./motion";
 
 /** Индекс клетки по номеру блока и позиции в блоке (DOM идёт блок за блоком, как в макете). */
 const idxOf = (b: number, k: number): number =>
@@ -39,12 +40,20 @@ interface CellProps {
   wrongDigit: number;
   /** Ненулевой id — цифра только что поставлена (M1). */
   popId: number;
-  /** Позиция в волне M3 (−1 — клетка не в волне) и id волны. */
+  /** Расстояние от поставленной клетки в волне M3 (−1 — клетка не в волне) и id волны. */
   waveIdx: number;
   waveId: number;
+  /** Позиция клетки в ответе M8 «цифра закрыта» (−1 — не участвует), пауза до ответа (мс) и id. */
+  echoIdx: number;
+  echoDelay: number;
+  echoId: number;
+  /** M7: точка касания клетки, % от её размера (откуда расходится пятно), если известна. */
+  blotOrigin: { x: number; y: number } | null;
   tabStop: boolean;
   label: string;
   onPick: (cell: number) => void;
+  /** Нажатие на клетку: запоминаем точку касания для M7. */
+  onTouch: (cell: number, x: number, y: number) => void;
 }
 
 const Cell = memo(function Cell(p: CellProps) {
@@ -58,7 +67,21 @@ const Cell = memo(function Cell(p: CellProps) {
   // span цифры и накапливался в DOM). Чётность id даёт два имени анимации подряд: смежные
   // волны перезапускают анимацию, не создавая ни одного узла.
   if (p.waveIdx >= 0) cls.push("wave", p.waveId % 2 ? "wave-a" : "wave-b");
-  const style = p.waveIdx >= 0 ? ({ "--wi": p.waveIdx } as CSSProperties) : undefined;
+  // M8: ответ закрытой цифры — тот же приём (чётность id → имя анимации), но на другом слое клетки (::after).
+  if (p.echoIdx >= 0) cls.push("echo", p.echoId % 2 ? "echo-a" : "echo-b");
+  // M7: клетка на миг вжимается в бумагу, пока идёт момент кляксы.
+  if (p.blotId !== 0) cls.push("blotting");
+  const vars: Record<string, string | number> = {};
+  if (p.waveIdx >= 0) vars["--wi"] = p.waveIdx;
+  if (p.echoIdx >= 0) {
+    vars["--ei"] = p.echoIdx;
+    vars["--ed"] = p.echoDelay;
+  }
+  if (p.blotId !== 0 && p.blotOrigin) {
+    vars["--ox"] = `${p.blotOrigin.x}%`;
+    vars["--oy"] = `${p.blotOrigin.y}%`;
+  }
+  const style = Object.keys(vars).length > 0 ? (vars as CSSProperties) : undefined;
   return (
     <button
       type="button"
@@ -68,6 +91,13 @@ const Cell = memo(function Cell(p: CellProps) {
       tabIndex={p.tabStop ? 0 : -1}
       aria-label={p.label}
       aria-current={p.selected ? "true" : undefined}
+      onPointerDown={(e) => {
+        const r = e.currentTarget.getBoundingClientRect();
+        if (r.width > 0 && r.height > 0) {
+          const pct = (v: number) => Math.round(Math.min(100, Math.max(0, v)));
+          p.onTouch(p.index, pct(((e.clientX - r.left) / r.width) * 100), pct(((e.clientY - r.top) / r.height) * 100));
+        }
+      }}
       onFocus={() => p.onPick(p.index)}
       onClick={() => p.onPick(p.index)}
     >
@@ -97,29 +127,37 @@ const Cell = memo(function Cell(p: CellProps) {
   );
 });
 
-/** Длина момента M7 (мс): 110 неверная цифра · 110–300 пятно · 300–460 верная цифра; к 470 классы анимации снимаются. */
-export const BLOT_MOMENT_MS = 470;
+/**
+ * Длина момента M7 (мс), PD-89: 0–150 неверная цифра · 150–340 пятно из точки касания · пауза 150 · 460–620 верная
+ * цифра. К концу классы анимации снимаются (и стухшее событие не проигрывается заново при перерисовке).
+ */
+export const BLOT_MOMENT_MS = 620;
 
 /**
- * Момент кляксы (M7): пока он идёт, возвращает кляксу — клетка играет анимацию; тап или клавиша в любой точке страницы
- * завершают момент сразу (motion.md: движение можно прервать), иначе он гаснет сам через `BLOT_MOMENT_MS`.
+ * Одноразовый момент движения: пока он идёт, возвращает событие (клетки несут классы анимации); через `ms` гаснет сам —
+ * иначе стухший снапшот (волна давно прошла) при любой пересборке клетки проиграл бы анимацию заново. `interruptible` —
+ * тап или клавиша в любой точке страницы завершают момент сразу (motion.md: движение можно прервать; нужно кляксе).
  */
-function useBlotMoment(blot: { cell: number; digit: number; id: number } | null): { cell: number; digit: number; id: number } | null {
+function useMoment<T extends { id: number }>(effect: T | null | undefined, ms: number, interruptible = false): T | null {
   const [done, setDone] = useState(0);
-  const id = blot?.id ?? 0;
+  const id = effect?.id ?? 0;
   useEffect(() => {
     if (id === 0) return;
     const finish = () => setDone(id);
-    const timer = window.setTimeout(finish, BLOT_MOMENT_MS);
-    window.addEventListener("pointerdown", finish, true);
-    window.addEventListener("keydown", finish, true);
+    const timer = window.setTimeout(finish, ms);
+    if (interruptible) {
+      window.addEventListener("pointerdown", finish, true);
+      window.addEventListener("keydown", finish, true);
+    }
     return () => {
       window.clearTimeout(timer);
-      window.removeEventListener("pointerdown", finish, true);
-      window.removeEventListener("keydown", finish, true);
+      if (interruptible) {
+        window.removeEventListener("pointerdown", finish, true);
+        window.removeEventListener("keydown", finish, true);
+      }
     };
-  }, [id]);
-  return blot && blot.id !== done ? blot : null;
+  }, [id, ms, interruptible]);
+  return effect && effect.id !== done ? effect : null;
 }
 
 const ARROWS: Record<string, [number, number]> = {
@@ -144,12 +182,18 @@ interface BoardProps {
 export function Board({ snap, store, dim }: BoardProps) {
   const { t } = useTranslation();
   const ref = useRef<HTMLDivElement>(null);
-  const { play, selected, pop, wave } = snap;
+  const { play, selected, pop } = snap;
+  // M3/M8/M7: события живут ровно столько, сколько играет анимация.
+  const wave = useMoment(snap.wave, MOTION_MS.wave);
+  const echo = useMoment(snap.echo, MOTION_MS.echo);
+  // M7: точка касания последней нажатой клетки — откуда пятно расходится.
+  const [touch, setTouch] = useState<{ cell: number; x: number; y: number } | null>(null);
+  const onTouch = useCallback((cell: number, x: number, y: number) => setTouch({ cell, x, y }), []);
   const ready = snap.phase === "playing" && play !== null;
   // Ink (PD-74): клетки-кляксы — из лога (единственный источник); клякса инертна — «той же цифры» из неё не берём.
   const blotCells = useMemo(() => new Set(play?.ink === true ? blotsIn(play).map((b) => b.cell) : []), [play]);
   const selDigit = play && selected !== null && !blotCells.has(selected) ? digitAt(play, selected) : 0;
-  const blotNow = useBlotMoment(snap.blot ?? null);
+  const blotNow = useMoment(snap.blot ?? null, BLOT_MOMENT_MS, true);
   // Roving: клетка-«единственная остановка» — выбранная (или первая, пока ничего не выбрано).
   const stop = selected ?? 0;
 
@@ -196,7 +240,9 @@ export function Board({ snap, store, dim }: BoardProps) {
   } as CSSProperties;
 
   const waveIndex = new Map<number, number>();
-  wave?.cells.forEach((c, n) => waveIndex.set(c, n));
+  wave?.cells.forEach((c, n) => waveIndex.set(c, wave.steps?.[n] ?? n));
+  const echoIndex = new Map<number, number>();
+  echo?.cells.forEach((c, n) => echoIndex.set(c, n));
 
   return (
     <div className="board-wrap">
@@ -231,9 +277,14 @@ export function Board({ snap, store, dim }: BoardProps) {
                   popId={pop && pop.cell === i ? pop.id : 0}
                   waveIdx={wave ? (waveIndex.get(i) ?? -1) : -1}
                   waveId={wave && waveIndex.has(i) ? wave.id : 0}
+                  echoIdx={echo ? (echoIndex.get(i) ?? -1) : -1}
+                  echoDelay={echo?.delay ?? 0}
+                  echoId={echo && echoIndex.has(i) ? echo.id : 0}
+                  blotOrigin={blotNow && blotNow.cell === i && touch && touch.cell === i ? touch : null}
                   tabStop={i === stop}
                   label={cellLabel(i)}
                   onPick={pick}
+                  onTouch={onTouch}
                 />
               );
             })}

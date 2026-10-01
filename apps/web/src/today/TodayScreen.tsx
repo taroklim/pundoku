@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { Board } from "../play/Board";
 import {
   GamePad,
+  StatusLine,
   handleGameKey,
   useBlotAnnouncement,
   useCellsLeftAnnouncement,
@@ -208,7 +209,7 @@ export function DayView({ store, archive, onOpenSettings }: { store: DayStore; a
             {inkEntry && <InkEntry on={play?.ink === true} setOn={(on) => store.setInk(on)} />}
             {!inkEntry && (phase === "playing" || phase === "solved") && (
               <div className="today-status">
-                <p className="status">{t("play.cellsLeft", { count: left })}</p>
+                <StatusLine left={left} />
                 {sourceLabel && (
                   <p className="source" data-testid="source">
                     {sourceLabel}

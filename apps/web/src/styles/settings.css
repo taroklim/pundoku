@@ -322,7 +322,8 @@ button.settings-row:active {
   border-radius: 50%;
   border: 2px solid currentColor;
   border-top-color: transparent;
-  animation: settings-spin 0.8s linear infinite;
+  /* Индикатор прогресса не гасим: при reduced он крутится втрое медленнее (0.8 с → 2.4 с). */
+  animation: settings-spin calc(0.8s * (1 + 2 * (1 - var(--mo)))) linear infinite;
 }
 @keyframes settings-spin {
   to {
@@ -390,14 +391,14 @@ button.settings-row:active {
   background: var(--scrim);
   display: flex;
   align-items: flex-end;
-  animation: st-fade 0.22s linear;
+  animation: st-fade calc(220ms * var(--mk)) linear;
 }
 .st-asheet {
   width: 100%;
   max-height: 92%;
   overflow-y: auto;
   padding: 0 max(8px, var(--sa-l)) calc(8px + var(--sa-bot)) max(8px, var(--sa-r));
-  animation: st-rise 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+  animation: st-rise calc(300ms * var(--mk)) var(--e-spring) both;
 }
 .st-asheet:focus {
   outline: none;
@@ -455,10 +456,12 @@ button.settings-row:active {
 }
 @keyframes st-rise {
   from {
-    transform: translateY(110%);
+    transform: translateY(calc(var(--mo) * 110%));
+    opacity: 0;
   }
   to {
     transform: none;
+    opacity: 1;
   }
 }
 @keyframes st-fade {
@@ -470,15 +473,7 @@ button.settings-row:active {
   }
 }
 
-/* Reduced motion: шит появляется кроссфейдом, без подъёма; спиннер медленнее. */
-@media (prefers-reduced-motion: reduce) {
-  .st-asheet {
-    animation: st-fade 0.16s linear;
-  }
-  .settings-spin {
-    animation-duration: 2.4s;
-  }
-}
+/* Reduced motion — множителями --mo/--mk в самих keyframes (tokens.css), отдельного блока нет. */
 
 /* Forced colors: смысл, который несли чернила и сургуч, держат иконки и слова. */
 @media (forced-colors: active) {

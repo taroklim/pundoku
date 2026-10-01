@@ -153,6 +153,23 @@ describe("TimelapseSheet", () => {
     expect(document.querySelectorAll(".tl-field .cell")).toHaveLength(81);
   });
 
+  it("M11: плеер стартует на паузе и сам не идёт; запускается только кнопкой Play", () => {
+    vi.useFakeTimers();
+    try {
+      sheet();
+      click(q("tl-start"));
+      expect(q("tl-play")!.getAttribute("aria-label")).toBe("Play");
+      act(() => void vi.advanceTimersByTime(10_000));
+      expect(q("tl-move")!.textContent).toBe(`Move 0 of ${MOVES}`);
+      click(q("tl-play"));
+      expect(q("tl-play")!.getAttribute("aria-label")).toBe("Pause");
+      act(() => void vi.advanceTimersByTime(10_000));
+      expect(q("tl-move")!.textContent).not.toBe(`Move 0 of ${MOVES}`);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
   it("‹ › шагают на один ход и ставят на паузу; кольцо — на последней поставленной клетке; ‹ на нуле не уходит", () => {
     sheet();
     click(q("tl-start"));
