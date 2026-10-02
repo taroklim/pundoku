@@ -15,6 +15,7 @@ import {
   enterDigit,
   eraseCell,
   firstOpenCell,
+  hasPlacedDigit,
   isDigitClosed,
   isGiven,
   setInkMode,
@@ -243,7 +244,7 @@ export abstract class GameStore<S extends PlaySnapshot = PlaySnapshot> {
   }
 
   /**
-   * Чернильный режим (PD-71): включить/выключить. Только до первого хода (после — режим неизменен) и только
+   * Чернильный режим (PD-71): включить/выключить. Только до первой цифры (после — режим неизменен; заметки не в счёт) и только
    * там, где он разрешён (`inkAllowed`). Возвращает `true`, если режим теперь ровно такой, как запрошено.
    */
   setInk(on: boolean): boolean {
@@ -256,12 +257,13 @@ export abstract class GameStore<S extends PlaySnapshot = PlaySnapshot> {
   }
 
   /**
-   * Можно ли сейчас выбрать режим (PD-74): партия идёт, в логе нет ни одного хода (заметка — тоже ход) и экран
-   * допускает чернила. Строка «Ink mode» на Today показывается ровно пока это так и исчезает с первым ходом.
+   * Можно ли сейчас выбрать режим (PD-74): партия идёт, не поставлено ни одной цифры (заметка не считается ходом,
+   * PD-121/C3) и экран допускает чернила. Строка «Ink mode» на Today показывается ровно пока это так и исчезает
+   * с первой цифрой.
    */
   inkChoosable(): boolean {
     const { play, phase } = this.snap;
-    return phase === "playing" && play !== null && !play.solved && play.log.length === 0 && this.inkAllowed();
+    return phase === "playing" && play !== null && !play.solved && !hasPlacedDigit(play) && this.inkAllowed();
   }
 
   /** Разрешён ли Чернильный режим на этом экране: Today и Play — да; архивный `DayStore` переопределяет. */

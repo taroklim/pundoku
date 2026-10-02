@@ -67,6 +67,19 @@ describe("RecoveryStore: состояние блока", () => {
     await vi.waitFor(() => expect(snap(store).phase).toBe("none"));
   });
 
+  it("PD-121d: ввод ключа открывается и из unavailable; «Отмена» возвращает в unavailable и перепроверяет статус", async () => {
+    const status = vi.fn<RecoveryApi["status"]>().mockResolvedValueOnce({ kind: "network" }).mockResolvedValue({ kind: "network" });
+    const { store } = setup({ status });
+    store.open();
+    await vi.waitFor(() => expect(snap(store).phase).toBe("unavailable"));
+    store.startEntry();
+    expect(snap(store).phase).toBe("enter");
+    store.cancelEntry();
+    expect(snap(store).phase).toBe("loading");
+    await vi.waitFor(() => expect(snap(store).phase).toBe("unavailable"));
+    expect(status).toHaveBeenCalledTimes(2);
+  });
+
   it("создание: ключ показан один раз; «Ключ сохранён» стирает его из памяти", async () => {
     const { store } = setup();
     store.open();

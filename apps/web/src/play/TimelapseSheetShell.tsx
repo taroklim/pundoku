@@ -9,19 +9,17 @@ interface ShellProps {
   sub?: string;
   onClose: () => void;
   testId: string;
-  /** Подпись кнопки Cancel/Back слева (HIG sheets.md: «Done» не бывает без пары). Нет — кнопки слева нет. */
-  cancelLabel?: string;
   children: ReactNode;
 }
 
 /**
- * Шит Таймлапса/экспорта (макет PD-69 §9): один за раз, понятный выход («Done» + при необходимости Cancel слева;
- * закрытие жестом вниз по grabber/заголовку — `useSheetSwipe`), модальный. Рисуется порталом в
+ * Шит Таймлапса/экспорта (макет PD-69 §9): один за раз, понятный выход (одна кнопка «Done» — «Cancel», дублирующей её,
+ * нет, PD-121/E2; закрытие жестом вниз по grabber/заголовку — `useSheetSwipe`), модальный. Рисуется порталом в
  * `body` — поверх шита Year, если открыт из него. Пока открыт: остальное содержимое `body` — `inert` (снимается при
  * закрытии; то, что уже было `inert`, не трогаем), Escape закрывает ТОЛЬКО этот шит (перехват на `window` в фазе
  * захвата, до слушателя Year), фокус уходит на заголовок и возвращается на то, что открыло шит.
  */
-export function TimelapseSheetShell({ title, sub, onClose, testId, cancelLabel, children }: ShellProps) {
+export function TimelapseSheetShell({ title, sub, onClose, testId, children }: ShellProps) {
   const { t } = useTranslation();
   const rootRef = useRef<HTMLDivElement>(null);
   const headRef = useRef<HTMLHeadingElement>(null);
@@ -59,12 +57,7 @@ export function TimelapseSheetShell({ title, sub, onClose, testId, cancelLabel, 
       <div className="tl-scrim" onClick={() => closeRef.current()} aria-hidden="true" />
       <section ref={sheetRef} className="tl-sheet" role="dialog" aria-modal="true" aria-labelledby={titleId}>
         <div className="tl-grabber sheet-handle" aria-hidden="true" {...swipe} />
-        <header className={`tl-head sheet-handle${cancelLabel ? " has-cancel" : ""}`} {...swipe}>
-          {cancelLabel && (
-            <button type="button" className="tl-cancel" data-testid="tl-cancel" onClick={() => closeRef.current()}>
-              {cancelLabel}
-            </button>
-          )}
+        <header className="tl-head sheet-handle" {...swipe}>
           <h2 id={titleId} ref={headRef} tabIndex={-1}>
             {title}
           </h2>

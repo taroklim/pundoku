@@ -18,6 +18,8 @@
     },
     "open": "Settings",
     "backLabel": "Back to Today",
+    "backLabelPlay": "Back to Play",
+    "backLabelYear": "Back to Year",
     "about": {
       "head": "About",
       "name": "Pundoku",
@@ -70,10 +72,50 @@
       "sheetLeaveMsg": "It is shown only once. If you leave now, it disappears; a new one can be made with Replace key.",
       "sheetLeaveGo": "Leave",
       "sheetLeaveStay": "Stay"
-    }
+    },
+    "helpHead": "Help",
+    "helpRow": "How Pundoku works"
   },
   "screens": {
     "soon": "Coming soon"
+  },
+  "help": {
+    "title": "How Pundoku works",
+    "backLabel": "Back to Settings",
+    "whatsThis": "What’s this?",
+    "grid": {
+      "title": "Grid ∞",
+      "p1": "Your own grid that never resets. Every day you solve adds one clue to it: the cell you filled last.",
+      "p2": "Once the clues are enough for a single answer, it says “{{enough}}”. That usually takes 30 to 60 clues, one a day.",
+      "p3": "You can’t play it yet. For now it only fills up, one clue per solved day."
+    },
+    "fixes": {
+      "title": "Fixes",
+      "p1": "How many times you erased a digit, replaced it or took it back with Undo. Pencil notes don’t count.",
+      "p2": "A solve with no fixes is “clean”. In ink mode, blots are counted instead."
+    },
+    "technique": {
+      "title": "Technique reached",
+      "p1": "The hardest technique that any digit of your solve needed.",
+      "p2": "From easiest: Naked Single, a cell that fits only one digit. Hidden Single, a digit that fits only one cell in its row, column or box. Then Locked Candidates and Pairs, which rule digits out by looking at several cells together.",
+      "p3": "“Advanced” means harder still."
+    },
+    "year": {
+      "title": "Year marks",
+      "lead": "One square per day.",
+      "lateName": "Late",
+      "solved": "Finished that day’s puzzle on the day.",
+      "fixes": "Solved, with at least one fix.",
+      "help": "Solved using a hint.",
+      "late": "Solved after that day. The year keeps it as missed, so it looks the same.",
+      "unfinished": "Started, not finished.",
+      "missed": "Not played that day."
+    },
+    "counter": {
+      "title": "Numbers on the pad",
+      "p1": "The small number under a digit is how many more of it fit on the grid: nine minus the ones already placed, right or wrong.",
+      "p2": "“N cells left” counts the empty cells. A wrong digit still fills its cell, so a full grid can be unsolved."
+    }
   },
   "board": {
     "label": "Sudoku grid",
@@ -121,7 +163,7 @@
   "solved": {
     "title": "Solved",
     "time": "Time",
-    "corrections": "Corrections",
+    "corrections": "Fixes",
     "clean": "clean",
     "technique": "Technique reached",
     "share": "Share",
@@ -155,12 +197,13 @@
     "gridTitle": "Grid ∞",
     "gridCells_one": "{{count}} cell",
     "gridCells_other": "{{count}} cells",
-    "gridNotSolvable": "not yet solvable",
-    "gridSolvable": "now solvable",
+    "gridNotSolvable": "needs more clues",
+    "gridSolvable": "enough clues",
     "gridLabel_one": "Your permanent grid: {{count}} clue so far, {{state}}",
     "gridLabel_other": "Your permanent grid: {{count}} clues so far, {{state}}",
     "gridHint": "Today’s last cell lands here.",
-    "gridTap": "Every day you solve adds a clue here."
+    "gridTap": "Every day you solve adds a clue here.",
+    "gridExplain": "Each day you solve adds one clue. It usually takes 30 to 60 before the grid has a single answer."
   },
   "archive": {
     "title": "Archive",
@@ -175,12 +218,12 @@
     "totalsDays_one": "{{count}} day",
     "totalsDays_other": "{{count}} days",
     "totalsClean": "{{n}} clean",
-    "totalsCorrections": "{{n}} with corrections",
+    "totalsCorrections": "{{n}} with fixes",
     "legendLabel": "What the marks mean",
     "legend": {
       "solved": "Solved",
       "help": "With help",
-      "corrections": "Corrections",
+      "corrections": "Fixes",
       "unfinished": "Unfinished",
       "missed": "Missed"
     },
@@ -190,18 +233,18 @@
     "openToday": "Open today’s puzzle",
     "continueToday": "Continue today’s puzzle",
     "monthNothing": "nothing yet",
-    "monthSummary_one": "{{solved}} of {{count}} day solved, {{corrections}} with corrections",
-    "monthSummary_other": "{{solved}} of {{count}} days solved, {{corrections}} with corrections",
+    "monthSummary_one": "{{solved}} of {{count}} day solved, {{corrections}} with fixes",
+    "monthSummary_other": "{{solved}} of {{count}} days solved, {{corrections}} with fixes",
     "monthUnfinished": "{{n}} unfinished",
     "sheetDone": "Done",
     "sheetBack": "Back to {{month}}",
     "state": {
       "solved": "solved",
-      "solvedCorrections": "solved with corrections",
+      "solvedCorrections": "solved with fixes",
       "solvedHelp": "solved with help",
-      "solvedHelpCorrections": "solved with help and corrections",
+      "solvedHelpCorrections": "solved with help and fixes",
       "unfinished": "started, not finished",
-      "unfinishedCorrections": "started with corrections, not finished",
+      "unfinishedCorrections": "started with fixes, not finished",
       "missed": "not played",
       "late": "played late, counts as missed",
       "today": "today, not played yet",
@@ -229,7 +272,7 @@
     "row": "Ink mode",
     "off": "Off",
     "on": "On",
-    "foot": "Choose before your first move. Not available once you have placed a digit.",
+    "foot": "Choose before you place your first digit. Notes don’t count.",
     "footPlay": "In ink mode there is no undo and no eraser for digits.",
     "eraseNotes": "Erase notes",
     "rule": {
@@ -277,7 +320,6 @@
     "startPlayer": "Play the replay",
     "backToStages": "Nine stages",
     "done": "Done",
-    "cancel": "Cancel",
     "fpTitle": "Fingerprint",
     "fpSub": "No digits from the solution — safe to post.",
     "fpLabel": "Your fingerprint for this day",
@@ -291,7 +333,7 @@
     "fpMoves_other": "{{count}} moves",
     "fpBlots_one": "{{count}} blot",
     "fpBlots_other": "{{count}} blots",
-    "fpCorrections_one": "{{count}} correction",
-    "fpCorrections_other": "{{count}} corrections"
+    "fpCorrections_one": "{{count}} fix",
+    "fpCorrections_other": "{{count}} fixes"
   }
 }

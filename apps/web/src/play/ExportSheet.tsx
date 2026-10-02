@@ -11,7 +11,7 @@ import { timelapseOf } from "./timelapse";
 import { blotCount, moveIndex } from "./timelapseModel";
 import { TimelapseSheetShell } from "./TimelapseSheetShell";
 
-/** «30 Sep 2026 · 8:14 · 51 moves · clean» — подпись под сеткой PNG (owner: `clean` либо `N blots`; правки без кляксы — `N corrections`). */
+/** «30 Sep 2026 · 8:14 · 51 moves · clean» — подпись под сеткой PNG (owner: `clean` либо `N blots`; правки без кляксы — `N fixes`). */
 export function fingerprintCaption(
   t: TFunction,
   locale: string,

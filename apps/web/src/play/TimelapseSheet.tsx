@@ -144,7 +144,7 @@ export function TimelapseSheet({ play, date, difficulty, onClose }: TimelapseShe
   };
 
   return (
-    <TimelapseSheetShell title={t("timelapse.title")} sub={dayLine} onClose={onClose} testId="timelapse-sheet" cancelLabel={mode === "contact" ? t("timelapse.cancel") : undefined}>
+    <TimelapseSheetShell title={t("timelapse.title")} sub={dayLine} onClose={onClose} testId="timelapse-sheet">
       {mode === "contact" ? (
         <div data-testid="tl-contact">
           <div className="tl-contact" role="group" aria-label={t("timelapse.contactNote")}>

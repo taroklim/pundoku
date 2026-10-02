@@ -65,11 +65,11 @@ describe("Year: день в чернилах", () => {
     expect(mark("2026-09-11").className).toBe("ymark is-solved has-corr");
   });
 
-  it("шит дня: «Mode · Ink · 2 blots» вместо «Corrections», кляксы в карте, подпись", () => {
+  it("шит дня: «Mode · Ink · 2 blots» вместо «Fixes», кляксы в карте, подпись", () => {
     render([inkDay("2026-09-11", 2)]);
     openDay("2026-09-11");
     expect(rows()).toContainEqual(["Mode", "Ink · 2 blots"]);
-    expect(rows().map((r) => r[0])).not.toContain("Corrections");
+    expect(rows().map((r) => r[0])).not.toContain("Fixes");
     expect(card().querySelectorAll(".heat i.b")).toHaveLength(2);
     expect(card().querySelector(".ink-caption")!.textContent).toBe("Notched cells are blots.");
   });
@@ -93,10 +93,10 @@ describe("Year: день в чернилах", () => {
     expect(card().querySelector('[data-testid="ink-mode-row"] dd')!.textContent).toBe(i18n.t("ink.yearValue", { count: 1 }));
   });
 
-  it("обычный день не меняется: «Corrections», без строки режима", () => {
+  it("обычный день не меняется: «Fixes», без строки режима", () => {
     render([progressOf("2026-09-10")]);
     openDay("2026-09-10");
-    expect(rows().map((r) => r[0])).toContain("Corrections");
+    expect(rows().map((r) => r[0])).toContain("Fixes");
     expect(card().querySelector('[data-testid="ink-mode-row"]')).toBeNull();
     expect(card().querySelector(".ink-caption")).toBeNull();
   });

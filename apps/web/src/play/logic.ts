@@ -38,7 +38,7 @@ export interface PlayState {
   readonly undoStack: readonly UndoEntry[];
   readonly solved: boolean;
   /**
-   * Чернильный режим (PD-71): включён на входе до первого хода и после первого хода неизменен (`setInkMode`).
+   * Чернильный режим (PD-71): включён на входе до первой цифры и после неё неизменен (`setInkMode`; заметки не в счёт, PD-121/C3).
    * Поле опциональное: `undefined`/`false` — обычная партия (старые записи читаются как раньше).
    */
   readonly ink?: boolean;
@@ -101,12 +101,20 @@ export const blotsIn = (s: PlayState): Blot[] => blotsOf(s.log);
 export const isBlotCell = (s: PlayState, cell: number): boolean => s.ink === true && s.log.some((m) => m.cell === cell && m.blot === true);
 
 /**
- * Включить/выключить Чернильный режим. Допустимо только пока в логе нет ни одного хода (включая заметки) и
- * партия не решена; после первого хода режим не меняется ни в какую сторону. Иначе возвращает `s` как есть.
- * Разрешён ли режим для этого экрана (архив) — решает хранилище (`GameStore.setInk`), не логика.
+ * Поставлена ли в партии хотя бы одна цифра (PD-121, C3). Заметки (`note_*`) и их откат ходом для режима не считаются:
+ * чернила обещают «цифра необратима», а пометка карандашом остаётся стираемой и в ink (`allowNotes`), `undo` заметки
+ * не добавляет правок (`replay` движка). Любой `place` — даже снятый потом `undo` — закрывает выбор: его следы в логе
+ * уже были бы «стёртыми чернилами».
+ */
+export const hasPlacedDigit = (s: Pick<PlayState, "log">): boolean => s.log.some((m) => m.kind === "place");
+
+/**
+ * Включить/выключить Чернильный режим. Допустимо только пока в партии не поставлено ни одной цифры (заметки — не ход
+ * для этого выбора, C3) и она не решена; после первой цифры режим не меняется ни в какую сторону. Иначе возвращает `s`
+ * как есть. Разрешён ли режим для этого экрана (архив) — решает хранилище (`GameStore.setInk`), не логика.
  */
 export function setInkMode(s: PlayState, on: boolean): PlayState {
-  if (s.log.length > 0 || s.solved || isInk(s) === on) return s;
+  if (hasPlacedDigit(s) || s.solved || isInk(s) === on) return s;
   if (!on) {
     const rest = { ...s };
     delete rest.ink;

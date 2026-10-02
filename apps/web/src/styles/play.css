@@ -144,6 +144,12 @@
   pointer-events: none;
   border: 2px solid var(--wax);
   border-radius: var(--r-tl) var(--r-tr) var(--r-br) var(--r-bl);
+  /* PD-122 (AX-02): признак «неверно» не держится на цвете — залитый уголок в правом верхнем углу (форма, как
+     сколотый угол «были исправления» в Year и клякса в чернилах). Цифра не затронута: уголок ≈ 30 % стороны клетки,
+     цифра занимает середину. Работает в ахроматопсии: уголок есть/нет — разница по яркости (wax на поверхности 6.5:1),
+     а от индиго-кольца выбора (квадратная рамка) он отличается формой. Рисуется только вместе с `.err`, то есть
+     при включённой «Highlight mistakes» (PD-112) или в чернилах; выключено — ничего нового. */
+  background: linear-gradient(225deg, var(--wax) 0 15%, transparent 15%);
   animation: ringIn calc(120ms * var(--mk)) linear;
 }
 
@@ -723,6 +729,7 @@
   }
   .cell.err::after {
     border-color: Mark;
+    background: linear-gradient(225deg, Mark 0 15%, transparent 15%);
   }
   .cell.same .d {
     text-decoration: underline;

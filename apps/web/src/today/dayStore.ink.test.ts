@@ -96,14 +96,21 @@ describe("вход в режим", () => {
     expect(inkStore.getSnapshot().play!.ink).toBe(true);
   });
 
-  it("заметка — тоже ход: после неё режим фиксируется", async () => {
+  it("PD-121 (C3): заметка не ход для выбора — строка «Ink mode» остаётся, режим включается; после цифры фиксируется", async () => {
     const store = new DayStore(deps(new InMemoryProgressRepository()));
     await started(store);
-    store.select(emptyCells(store)[0]!);
+    const [a, b] = emptyCells(store) as [number, number];
+    store.select(a);
     store.toggleNotesMode();
     store.input(3);
     expect(store.getSnapshot().play!.log).toHaveLength(1);
-    expect(store.setInk(true)).toBe(false);
+    expect(store.inkChoosable()).toBe(true);
+    expect(store.setInk(true)).toBe(true);
+    expect(store.getSnapshot().play!.log).toHaveLength(1);
+    store.toggleNotesMode(); // обратно в режим цифр
+    enter(store, b);
+    expect(store.inkChoosable()).toBe(false);
+    expect(store.setInk(false)).toBe(false);
   });
 
   it("архив: режим не включается (INK_RULES.allowInArchive = false)", async () => {
