@@ -311,7 +311,7 @@ describe("шит месяца и карточка дня", () => {
     expect(cell("2026-09-12").getAttribute("aria-label")).toContain("solved with help");
     expect(cell("2026-09-13").getAttribute("aria-label")).toContain("started, not finished");
     expect(cell("2026-09-14").getAttribute("aria-label")).toContain("solved late");
-    expect(cell("2026-09-17").getAttribute("aria-label")).toBe("Thu 17 September, solved late, with corrections");
+    expect(cell("2026-09-17").getAttribute("aria-label")).toBe("Thu 17 September, solved late, with fixes");
     expect(cell("2026-09-14").getAttribute("aria-label")).not.toContain("missed");
     expect(cell("2026-09-15").getAttribute("aria-label")).toContain("not played");
     expect(cell("2026-09-05").getAttribute("aria-label")).toContain("before your first entry");
