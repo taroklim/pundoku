@@ -1,0 +1,1200 @@
+<!DOCTYPE html>
+<html lang="ru" data-var="p4" data-appear="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<title>Pundoku · PD-141 · буква P из клеток, раунд 4</title>
+<style>
+  * { box-sizing: border-box; -webkit-text-size-adjust: 100%; }
+  html, body { margin: 0; padding: 0; }
+
+  /* ── Хром страницы: светлая база ──────────────────────────────── */
+  html {
+    --bg:#F2F2F7; --card:#FFFFFF; --card2:#FFFFFF; --lbl:#1C1C1E; --lbl2:#6E6E73;
+    --lbl3:#7C7C82; --sep:rgba(60,60,67,.29); --ctl:#E4E4EB; --ctlOn:#FFFFFF;
+    --wall:linear-gradient(160deg,#C9D2F2 0%,#E6DEF4 48%,#F3E9EE 100%);
+    --ok:#1F7A4D; --warn:#8A5A00;
+    --pun:#3B48B0; --doku:#43474F;
+  }
+  html[data-appear="dark"], html[data-appear="tinted"] {
+    --bg:#000000; --card:#1C1C1E; --card2:#2C2C2E; --lbl:#F2F2F7; --lbl2:#98989D;
+    --lbl3:#8E8E93; --sep:rgba(84,84,88,.65); --ctl:#1C1C1E; --ctlOn:#3A3A3C;
+    --wall:linear-gradient(160deg,#141730 0%,#0A0B18 52%,#000000 100%);
+    --ok:#4FD08A; --warn:#F0B429;
+    --pun:#9AA3FF; --doku:#A7ABB5;
+  }
+  /* Страница следует системной теме, когда выбрана светлая подача иконки.
+     Специфичность (0,2,0) против (0,1,0) — перебивает светлую базу и не протекает. */
+  @media (prefers-color-scheme: dark) {
+    html[data-appear="light"] {
+      --bg:#000000; --card:#1C1C1E; --card2:#2C2C2E; --lbl:#F2F2F7; --lbl2:#98989D;
+      --lbl3:#8E8E93; --sep:rgba(84,84,88,.65); --ctl:#1C1C1E; --ctlOn:#3A3A3C;
+      --wall:linear-gradient(160deg,#141730 0%,#0A0B18 52%,#000000 100%);
+      --ok:#4FD08A; --warn:#F0B429;
+      --pun:#9AA3FF; --doku:#A7ABB5;
+    }
+  }
+
+  /* ── Материалы иконки. Ровно палитра D5 «Унос», ни одного нового цвета.
+     Плашка — CSS-градиент НА ПЛАШКЕ-обёртке, а не <rect> внутри SVG:
+     стопы SVG-градиента, лежащего в общем <defs>, наследуют переменные от
+     своего места в документе, а не от того <svg>, который на них ссылается,
+     поэтому полоса «три подачи рядом» через var() в <stop> не заработала бы.
+     Внутри SVG остались только плоские заливки — и это заодно то, что
+     PD-98 §18.2 уже выбрал для малой оптики. ─────────────────────────── */
+  /* Двойной класс .ap-x.ap-x даёт специфичность (0,2,0) — она перебивает
+     html[data-appear="dark"] (0,1,1), поэтому полоса «три подачи рядом»
+     не подчиняется верхнему переключателю. Та же ошибка специфичности,
+     что исправляли в PD-93 §10.3. */
+  html, .ap-light.ap-light {
+    --plate: linear-gradient(163deg, #5A616E 0%, #2B2F38 45%, #14161B 100%);
+    --paper:#E3E3E4; --inkflat:#838EF9; --plmid:#2B2F38;
+    --dgt:#2B2F38; --dgtq:#7E838C;
+    --key:rgba(255,255,255,.24); --keyb:rgba(255,255,255,.42);
+  }
+  html[data-appear="dark"], .ap-dark.ap-dark {
+    --plate: linear-gradient(163deg, #3A404C 0%, #1B1E25 45%, #0A0B0E 100%);
+    --paper:#B9BABB; --inkflat:#747EEB; --plmid:#1B1E25;
+    --dgt:#1B1E25; --dgtq:#6E737C;
+    --key:rgba(255,255,255,.20); --keyb:rgba(255,255,255,.36);
+  }
+  html[data-appear="tinted"], .ap-tinted.ap-tinted {
+    --plate: linear-gradient(163deg, #3A3A3C 0%, #1C1C1E 55%, #000000 100%);
+    --paper:#9D9D9E; --inkflat:#FFFFFF; --plmid:#1C1C1E;
+    --dgt:#1C1C1E; --dgtq:#6E6E70;
+    --key:rgba(255,255,255,.26); --keyb:rgba(255,255,255,.46);
+  }
+
+  body {
+    background: var(--bg); color: var(--lbl);
+    font: 400 17px/1.47 system-ui, -apple-system, "Segoe UI", sans-serif;
+    padding-bottom: calc(40px + env(safe-area-inset-bottom));
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ── Переключатели ────────────────────────────────────────────── */
+  header {
+    position: sticky; top: 0; z-index: 40; background: var(--bg);
+    border-bottom: 1px solid var(--sep);
+    padding: calc(8px + env(safe-area-inset-top)) 16px 8px;
+  }
+  header h1 { margin: 0; font-size: 17px; line-height: 1.25; font-weight: 700; letter-spacing: -.01em; }
+  .seg { display: flex; gap: 4px; background: var(--ctl); border-radius: 12px; padding: 4px; margin-top: 8px; }
+  .seg button {
+    flex: 1 1 0; min-height: 44px; border: 0; border-radius: 9px; background: transparent;
+    color: var(--lbl); font: 500 16px/1.2 system-ui, -apple-system, sans-serif;
+    padding: 6px 2px; cursor: pointer; -webkit-tap-highlight-color: transparent;
+  }
+  .seg button[aria-pressed="true"] { background: var(--ctlOn); box-shadow: 0 1px 3px rgba(0,0,0,.14); font-weight: 600; }
+
+  /* ── Раскладка ────────────────────────────────────────────────── */
+  main { padding: 0 16px; }
+  section { margin: 26px 0 0; }
+  h2 { font-size: 16px; line-height: 1.3; letter-spacing: .04em; text-transform: uppercase;
+       color: var(--lbl2); margin: 0 0 8px 4px; font-weight: 600; }
+  .card { background: var(--card); border-radius: 18px; padding: 16px; }
+  .card + .card { margin-top: 12px; }
+  p { margin: 0 0 10px; }
+  p:last-child { margin-bottom: 0; }
+  .note { font-size: 16px; color: var(--lbl2); }
+  .note b { color: var(--lbl); font-weight: 600; }
+  .row { display: flex; flex-wrap: wrap; gap: 14px; align-items: flex-end; }
+  .center { display: flex; justify-content: center; }
+  ul { margin: 0 0 0 20px; padding: 0; }
+  li { margin: 0 0 8px; font-size: 16px; }
+  li:last-child { margin-bottom: 0; }
+  code { font: 500 16px/1.4 ui-monospace, "SF Mono", Menlo, monospace; overflow-wrap: anywhere; }
+  .good { color: var(--ok); font-weight: 600; }
+  .bad { color: var(--warn); font-weight: 600; }
+
+  /* ── Плашки иконок ────────────────────────────────────────────── */
+  /* Плашка иконки — фон обёртки; SVG поверх неё прозрачен и несёт только знак. */
+  .sq { border-radius: 22.37%; overflow: hidden; display: block; flex: 0 0 auto;
+        background: var(--plate); box-shadow: 0 1px 2px rgba(0,0,0,.16); }
+  .sq svg { display: block; width: 100%; height: 100%; }
+  .raw { border-radius: 0; }
+  .cap { font-size: 16px; color: var(--lbl2); text-align: center; margin-top: 6px; }
+  .cap b { color: var(--lbl); font-weight: 600; }
+  .fine { font-size: 16px; color: var(--lbl3); }
+
+  .wallband { background: var(--wall); border-radius: 16px; padding: 18px 10px 12px;
+              display: flex; justify-content: space-around; gap: 6px; }
+  .wallband > span { text-align: center; }
+  .wallband .sq { margin: 0 auto; }
+  .wallband .lab { font-size: 16px; text-align: center; margin-top: 8px;
+                   color: rgba(255,255,255,.95); text-shadow: 0 1px 2px rgba(0,0,0,.55); }
+  html[data-appear="light"] .wallband .lab { color: #26262E; text-shadow: 0 1px 2px rgba(255,255,255,.65); }
+  @media (prefers-color-scheme: dark) {
+    html[data-appear="light"] .wallband .lab { color: rgba(255,255,255,.95); text-shadow: 0 1px 2px rgba(0,0,0,.55); }
+  }
+  @media (max-width: 380px) {
+    .wallband { padding: 18px 4px 12px; gap: 4px; }
+    .wallband .sq { width: 72px !important; height: 72px !important; }
+  }
+
+  .gs { filter: grayscale(1) contrast(1.02); }
+
+  /* ── Диаграммы раскладок (CSS-сетка, не SVG) ──────────────────── */
+  .lays { display: flex; flex-wrap: wrap; gap: 18px; }
+  .lay { flex: 1 1 148px; min-width: 140px; }
+  .pg { display: inline-grid; grid-template-columns: repeat(3, 20px); grid-auto-rows: 20px; gap: 3px; }
+  .pg i { display: block; width: 20px; height: 20px; border-radius: 4px; background: var(--lbl); }
+  .pg i.o { background: transparent; box-shadow: inset 0 0 0 2px var(--sep); }
+  .pg i.k { background: var(--pun); }
+  .laycap { font-size: 16px; color: var(--lbl2); margin-top: 8px; }
+  .laycap b { color: var(--lbl); font-weight: 600; display: block; }
+
+  /* ── Знак (currentColor) и вордмарк ───────────────────────────── */
+  .markplate { color: var(--pun); display: flex; justify-content: center; align-items: center; gap: 18px; }
+  .markplate .m { width: 104px; height: 104px; }
+  .markplate .m.s2 { width: 56px; height: 56px; color: var(--lbl2); }
+  .markplate .m.s3 { width: 30px; height: 30px; color: var(--lbl2); }
+  .markplate .m svg { display: block; width: 100%; height: 100%; }
+  .wmplate svg { display: block; width: 100%; height: auto; }
+  .wmplate.w1 { width: 100%; }
+  .wmplate.w2 { width: 68%; }
+  .wmplate.w3 { width: 46%; }
+
+  /* ── Имитации интерфейса ──────────────────────────────────────── */
+  .hdrmock { background: var(--card2); border: 1px solid var(--sep); border-radius: 14px;
+             padding: 14px 16px 12px; }
+  .hdrmock .wm { width: 150px; }
+  .hdrmock .wm svg { display: block; width: 100%; height: auto; }
+  .hdrmock .day { font-size: 16px; color: var(--lbl2); margin-top: 8px; }
+  .aboutmock { background: var(--card2); border: 1px solid var(--sep); border-radius: 14px;
+               padding: 24px 16px 18px; text-align: center; }
+  .aboutmock .mk { width: 60px; height: 60px; margin: 0 auto 14px; color: var(--pun); }
+  .aboutmock .mk svg { display: block; width: 100%; height: 100%; }
+  .aboutmock .wm { width: 150px; margin: 0 auto; }
+  .aboutmock .wm svg { display: block; width: 100%; height: auto; }
+  .aboutmock .ver { font-size: 16px; color: var(--lbl2); margin-top: 10px; }
+
+  /* ── Видимость по выбранному варианту ─────────────────────────── */
+  .p1, .p2, .p3, .p4, .p5, .p6 { display: none; }
+  html[data-var="p1"] .p1, html[data-var="p2"] .p2, html[data-var="p3"] .p3,
+  html[data-var="p4"] .p4, html[data-var="p5"] .p5, html[data-var="p6"] .p6 { display: revert; }
+
+  table { width: 100%; border-collapse: collapse; font-size: 16px; table-layout: fixed; }
+  th, td { text-align: left; padding: 8px 6px; border-bottom: 1px solid var(--sep); vertical-align: top;
+           overflow-wrap: anywhere; hyphens: auto; }
+  th { font-size: 16px; color: var(--lbl2); font-weight: 600; }
+  td:first-child { font-weight: 600; }
+  td code { overflow-wrap: anywhere; word-break: break-all; }
+  .defs { position: absolute; width: 0; height: 0; overflow: hidden; }
+</style>
+</head>
+<body>
+
+<!-- ═════════════ Библиотека SVG ═════════════
+     Подача (светлая / тёмная / tinted) переключается CSS-переменными,
+     поэтому на каждый вариант ровно ОДИН символ иконки, а не три.
+     Ни одного SVG-фильтра: заливки плоские, градиент только у плашки
+     и у чернильной клетки — превью равно будущему PNG.
+     app-icons.md › Visual effects: «there's no need to include specular
+     highlights, drop shadows between layers, beveled edges, blurs, glows». -->
+<svg class="defs" aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg">
+
+<!-- ── P1 · Блок. Решётка 3×3: клетка 178, зазор 24, радиус 40, начало 221 ── -->
+<symbol id="ic-p1" viewBox="0 0 1024 1024">
+  <g fill="var(--paper)">
+    <rect x="221" y="221" width="178" height="178" rx="40"/>
+    <rect x="423" y="221" width="178" height="178" rx="40"/>
+    <rect x="625" y="221" width="178" height="178" rx="40"/>
+    <rect x="221" y="423" width="178" height="178" rx="40"/>
+    <rect x="423" y="423" width="178" height="178" rx="40"/>
+    <rect x="625" y="423" width="178" height="178" rx="40"/>
+  </g>
+  <rect x="221" y="625" width="178" height="178" rx="40" fill="var(--inkflat)"/>
+</symbol>
+
+<!-- ── P2 · Девять цифр. Та же решётка, цифры 1–9 ровно по разу (законный блок) ── -->
+<symbol id="ic-p2" viewBox="0 0 1024 1024">
+  <g fill="var(--paper)">
+    <rect x="221" y="221" width="178" height="178" rx="40"/>
+    <rect x="423" y="221" width="178" height="178" rx="40"/>
+    <rect x="625" y="221" width="178" height="178" rx="40"/>
+    <rect x="221" y="423" width="178" height="178" rx="40"/>
+    <rect x="423" y="423" width="178" height="178" rx="40"/>
+    <rect x="625" y="423" width="178" height="178" rx="40"/>
+  </g>
+  <rect x="221" y="625" width="178" height="178" rx="40" fill="var(--inkflat)"/>
+  <g font-family="ui-serif, Georgia, 'Times New Roman', serif" font-size="112" font-weight="600" text-anchor="middle">
+    <g fill="var(--dgt)">
+      <text x="310" y="349">5</text><text x="512" y="349">3</text><text x="714" y="349">1</text>
+      <text x="310" y="551">7</text><text x="512" y="551">4</text><text x="714" y="551">6</text>
+    </g>
+    <text x="310" y="753" fill="var(--plmid)">9</text>
+    <g fill="var(--dgtq)"><text x="512" y="753">8</text><text x="714" y="753">2</text></g>
+  </g>
+</symbol>
+
+<!-- ── P3 · Поле. Сетка 9×9: клетка 62, начало 233, конец 791.
+     Буква занимает средний блок по ширине и пересекает горизонтальную
+     границу полос: столбцы 4–6, строки 3–6. ── -->
+<symbol id="ic-p3" viewBox="0 0 1024 1024">
+  <g fill="var(--paper)">
+    <rect x="419" y="357" width="62" height="62"/>
+    <rect x="481" y="357" width="62" height="62"/>
+    <rect x="543" y="357" width="62" height="62"/>
+    <rect x="419" y="419" width="62" height="62"/>
+    <rect x="543" y="419" width="62" height="62"/>
+    <rect x="419" y="481" width="62" height="62"/>
+    <rect x="481" y="481" width="62" height="62"/>
+    <rect x="543" y="481" width="62" height="62"/>
+  </g>
+  <rect x="419" y="543" width="62" height="62" fill="var(--inkflat)"/>
+  <g fill="none" stroke="var(--key)" stroke-width="3">
+    <path d="M295 233V791M357 233V791M481 233V791M543 233V791M667 233V791M729 233V791"/>
+    <path d="M233 295H791M233 357H791M233 481H791M233 543H791M233 667H791M233 729H791"/>
+  </g>
+  <g fill="none" stroke="var(--keyb)" stroke-width="7">
+    <path d="M233 233V791M419 233V791M605 233V791M791 233V791"/>
+    <path d="M233 233H791M233 419H791M233 605H791M233 791H791"/>
+  </g>
+</symbol>
+
+<!-- ── P4 · Девять клеток. Решётка 3×4: клетка 146, зазор 21, радиус 30.
+     Столбцы 272/439/606, строки 189/356/523/690. Ровно девять клеток. ── -->
+<symbol id="ic-p4" viewBox="0 0 1024 1024">
+  <g fill="var(--paper)">
+    <rect x="272" y="189" width="146" height="146" rx="30"/>
+    <rect x="439" y="189" width="146" height="146" rx="30"/>
+    <rect x="606" y="189" width="146" height="146" rx="30"/>
+    <rect x="272" y="356" width="146" height="146" rx="30"/>
+    <rect x="606" y="356" width="146" height="146" rx="30"/>
+    <rect x="272" y="523" width="146" height="146" rx="30"/>
+    <rect x="439" y="523" width="146" height="146" rx="30"/>
+    <rect x="606" y="523" width="146" height="146" rx="30"/>
+    <rect x="272" y="690" width="146" height="146" rx="30"/>
+  </g>
+</symbol>
+
+<!-- ── P5 · Унос-P. Та же логика, клетка 132, зазор 20, радиус 27.
+     Столбцы 238/390/542, строки 218/370/522/674.
+     Правая стенка чаши (стр. 2, стлб. 3) вынута и улетела на 112 вверх-вправо:
+     без неё фигура — «F», с ней — «P». ── -->
+<symbol id="ic-p5" viewBox="0 0 1024 1024">
+  <g fill="var(--paper)">
+    <rect x="238" y="218" width="132" height="132" rx="27"/>
+    <rect x="390" y="218" width="132" height="132" rx="27"/>
+    <rect x="542" y="218" width="132" height="132" rx="27"/>
+    <rect x="238" y="370" width="132" height="132" rx="27"/>
+    <rect x="238" y="522" width="132" height="132" rx="27"/>
+    <rect x="390" y="522" width="132" height="132" rx="27"/>
+    <rect x="542" y="522" width="132" height="132" rx="27"/>
+    <rect x="238" y="674" width="132" height="132" rx="27"/>
+  </g>
+  <rect x="654" y="258" width="132" height="132" rx="27" fill="var(--inkflat)"/>
+</symbol>
+
+<!-- ── P6 · Лигатура. Иконка = геометрия P4 с одной чернильной клеткой
+     (ножка) — показывает необязательную перекличку с D5. ── -->
+<symbol id="ic-p6" viewBox="0 0 1024 1024">
+  <g fill="var(--paper)">
+    <rect x="272" y="189" width="146" height="146" rx="30"/>
+    <rect x="439" y="189" width="146" height="146" rx="30"/>
+    <rect x="606" y="189" width="146" height="146" rx="30"/>
+    <rect x="272" y="356" width="146" height="146" rx="30"/>
+    <rect x="606" y="356" width="146" height="146" rx="30"/>
+    <rect x="272" y="523" width="146" height="146" rx="30"/>
+    <rect x="439" y="523" width="146" height="146" rx="30"/>
+    <rect x="606" y="523" width="146" height="146" rx="30"/>
+  </g>
+  <rect x="272" y="690" width="146" height="146" rx="30" fill="var(--inkflat)"/>
+</symbol>
+
+<!-- ── Знаки без плашки, currentColor ── -->
+<symbol id="mk-p1" viewBox="0 0 1024 1024">
+  <g fill="currentColor">
+    <rect x="221" y="221" width="178" height="178" rx="40"/>
+    <rect x="423" y="221" width="178" height="178" rx="40"/>
+    <rect x="625" y="221" width="178" height="178" rx="40"/>
+    <rect x="221" y="423" width="178" height="178" rx="40"/>
+    <rect x="423" y="423" width="178" height="178" rx="40"/>
+    <rect x="625" y="423" width="178" height="178" rx="40"/>
+    <rect x="221" y="625" width="178" height="178" rx="40"/>
+  </g>
+</symbol>
+<symbol id="mk-p2" viewBox="0 0 1024 1024">
+  <g fill="currentColor">
+    <rect x="221" y="221" width="178" height="178" rx="40"/>
+    <rect x="423" y="221" width="178" height="178" rx="40"/>
+    <rect x="625" y="221" width="178" height="178" rx="40"/>
+    <rect x="221" y="423" width="178" height="178" rx="40"/>
+    <rect x="423" y="423" width="178" height="178" rx="40"/>
+    <rect x="625" y="423" width="178" height="178" rx="40"/>
+    <rect x="221" y="625" width="178" height="178" rx="40"/>
+  </g>
+</symbol>
+<symbol id="mk-p3" viewBox="0 0 1024 1024">
+  <g fill="currentColor">
+    <rect x="419" y="357" width="62" height="62"/>
+    <rect x="481" y="357" width="62" height="62"/>
+    <rect x="543" y="357" width="62" height="62"/>
+    <rect x="419" y="419" width="62" height="62"/>
+    <rect x="543" y="419" width="62" height="62"/>
+    <rect x="419" y="481" width="62" height="62"/>
+    <rect x="481" y="481" width="62" height="62"/>
+    <rect x="543" y="481" width="62" height="62"/>
+    <rect x="419" y="543" width="62" height="62"/>
+  </g>
+  <g fill="none" stroke="currentColor" stroke-opacity="0.4" stroke-width="3">
+    <path d="M295 233V791M357 233V791M481 233V791M543 233V791M667 233V791M729 233V791"/>
+    <path d="M233 295H791M233 357H791M233 481H791M233 543H791M233 667H791M233 729H791"/>
+  </g>
+  <g fill="none" stroke="currentColor" stroke-opacity="0.75" stroke-width="7">
+    <path d="M233 233V791M419 233V791M605 233V791M791 233V791"/>
+    <path d="M233 233H791M233 419H791M233 605H791M233 791H791"/>
+  </g>
+</symbol>
+<symbol id="mk-p4" viewBox="0 0 1024 1024">
+  <g fill="currentColor">
+    <rect x="272" y="189" width="146" height="146" rx="30"/>
+    <rect x="439" y="189" width="146" height="146" rx="30"/>
+    <rect x="606" y="189" width="146" height="146" rx="30"/>
+    <rect x="272" y="356" width="146" height="146" rx="30"/>
+    <rect x="606" y="356" width="146" height="146" rx="30"/>
+    <rect x="272" y="523" width="146" height="146" rx="30"/>
+    <rect x="439" y="523" width="146" height="146" rx="30"/>
+    <rect x="606" y="523" width="146" height="146" rx="30"/>
+    <rect x="272" y="690" width="146" height="146" rx="30"/>
+  </g>
+</symbol>
+<symbol id="mk-p5" viewBox="0 0 1024 1024">
+  <g fill="currentColor">
+    <rect x="238" y="218" width="132" height="132" rx="27"/>
+    <rect x="390" y="218" width="132" height="132" rx="27"/>
+    <rect x="542" y="218" width="132" height="132" rx="27"/>
+    <rect x="238" y="370" width="132" height="132" rx="27"/>
+    <rect x="238" y="522" width="132" height="132" rx="27"/>
+    <rect x="390" y="522" width="132" height="132" rx="27"/>
+    <rect x="542" y="522" width="132" height="132" rx="27"/>
+    <rect x="238" y="674" width="132" height="132" rx="27"/>
+    <rect x="654" y="258" width="132" height="132" rx="27"/>
+  </g>
+</symbol>
+<symbol id="mk-p6" viewBox="0 0 1024 1024">
+  <g fill="currentColor">
+    <rect x="272" y="189" width="146" height="146" rx="30"/>
+    <rect x="439" y="189" width="146" height="146" rx="30"/>
+    <rect x="606" y="189" width="146" height="146" rx="30"/>
+    <rect x="272" y="356" width="146" height="146" rx="30"/>
+    <rect x="606" y="356" width="146" height="146" rx="30"/>
+    <rect x="272" y="523" width="146" height="146" rx="30"/>
+    <rect x="439" y="523" width="146" height="146" rx="30"/>
+    <rect x="606" y="523" width="146" height="146" rx="30"/>
+    <rect x="272" y="690" width="146" height="146" rx="30"/>
+  </g>
+</symbol>
+
+<!-- ── Знаки на целочисленной сетке 16 (favicon, Mark ≤ 60 px) ── -->
+<!-- P4 на 16: клетки 3×3 с зазором ровно 1 px -->
+<symbol id="fv-p4cells" viewBox="0 0 16 16">
+  <g fill="currentColor">
+    <rect x="3" y="1" width="3" height="3"/><rect x="7" y="1" width="3" height="3"/><rect x="11" y="1" width="3" height="3"/>
+    <rect x="3" y="5" width="3" height="3"/><rect x="11" y="5" width="3" height="3"/>
+    <rect x="3" y="9" width="3" height="3"/><rect x="7" y="9" width="3" height="3"/><rect x="11" y="9" width="3" height="3"/>
+    <rect x="3" y="13" width="3" height="3"/>
+  </g>
+</symbol>
+<!-- то же, но зазоры убраны: ровно в это P4 вырождается на 29 pt -->
+<symbol id="fv-p4solid" viewBox="0 0 16 16">
+  <g fill="currentColor">
+    <rect x="3" y="1" width="3" height="14"/>
+    <rect x="3" y="1" width="11" height="3"/>
+    <rect x="11" y="1" width="3" height="9"/>
+    <rect x="3" y="7" width="11" height="3"/>
+  </g>
+</symbol>
+<!-- D5 «Унос» на 16 — для честного сравнения (pd98 §18.3) -->
+<symbol id="fv-d5" viewBox="0 0 16 16">
+  <g fill="currentColor">
+    <path d="M3 3H9V7H13V13A2 2 0 0 1 11 15H3A2 2 0 0 1 1 13V5A2 2 0 0 1 3 3Z"/>
+    <path d="M12 1H14A1 1 0 0 1 15 2V4A1 1 0 0 1 14 5H12A1 1 0 0 1 11 4V2A1 1 0 0 1 12 1Z"/>
+  </g>
+</symbol>
+
+<!-- ── Утверждённая иконка D5 «Унос» для сравнения (геометрия PD-98 §2.2).
+     Нарисована теми же переменными, что и варианты раунда 4 (плоская бумага
+     вместо градиента прозрачности) — сравнение идёт о геометрии, не о заливке. ── -->
+<symbol id="ic-d5ref" viewBox="0 0 1024 1024">
+  <path fill="var(--paper)" d="M337 347H485A27 27 0 0 1 512 374V485A27 27 0 0 0 539 512H650A27 27 0 0 1 677 539V687A113 113 0 0 1 564 800H337A113 113 0 0 1 224 687V460A113 113 0 0 1 337 347Z"/>
+  <path fill="var(--inkflat)" d="M677 224H759A41 41 0 0 1 800 265V347A41 41 0 0 1 759 388H677A41 41 0 0 1 636 347V265A41 41 0 0 1 677 224Z"/>
+</symbol>
+
+<!-- ── Вордмарки. База — утверждённый d5-wordmark (PD-98 §5):
+     монолиния, штрих 22, рост прописных 104, базовая линия y=200,
+     шаги P 83 · u 82 · n 82 · d 92 · o 92 · k 85.
+     Группа сдвинута translate(2 -94), чтобы viewBox начинался с 0 0
+     (<use> ставит вьюпорт символа в (0,0), а не в начало viewBox — PD-93 §10.2). ── -->
+<symbol id="wm-d5" viewBox="0 0 588 116">
+  <g transform="translate(2 -94)" fill="none" stroke-width="22" stroke-linecap="butt" stroke-linejoin="round">
+    <g style="stroke:var(--pun,#3B48B0)">
+      <path d="M11 96V200M11 107H40A26 26 0 0 1 40 159H11"/>
+      <path transform="translate(83 0)" d="M11 124V167A23 22 0 0 0 57 167M57 124V200"/>
+      <path transform="translate(165 0)" d="M11 200V157A23 22 0 0 1 57 157V200"/>
+    </g>
+    <g style="stroke:var(--doku,#43474F)">
+      <path transform="translate(247 0)" d="M11 162A28 27 0 0 1 67 162A28 27 0 0 1 11 162M67 96V200"/>
+      <path transform="translate(339 0)" d="M11 162A28 27 0 0 1 67 162A28 27 0 0 1 11 162"/>
+      <path transform="translate(431 0)" d="M11 96V200M58 124L26 168L62 200"/>
+      <path transform="translate(516 0)" d="M11 124V167A23 22 0 0 0 57 167M57 124V200"/>
+    </g>
+  </g>
+</symbol>
+<!-- P6: «P» заменена клеточной, остальные шесть букв — те же, что в d5-wordmark.
+     Клетка 23, зазор 4, четыре строки от y=96 до y=200 — рост прописных 104 совпадает,
+     внешняя ширина 77 совпадает с нарисованной «P», отбивка до «u» те же 6. -->
+<symbol id="wm-p6" viewBox="0 0 588 116">
+  <g transform="translate(2 -94)">
+    <g style="fill:var(--pun,#3B48B0)">
+      <rect x="0" y="96" width="23" height="23" rx="4"/>
+      <rect x="27" y="96" width="23" height="23" rx="4"/>
+      <rect x="54" y="96" width="23" height="23" rx="4"/>
+      <rect x="0" y="123" width="23" height="23" rx="4"/>
+      <rect x="54" y="123" width="23" height="23" rx="4"/>
+      <rect x="0" y="150" width="23" height="23" rx="4"/>
+      <rect x="27" y="150" width="23" height="23" rx="4"/>
+      <rect x="54" y="150" width="23" height="23" rx="4"/>
+      <rect x="0" y="177" width="23" height="23" rx="4"/>
+    </g>
+    <g fill="none" stroke-width="22" stroke-linecap="butt" stroke-linejoin="round">
+      <g style="stroke:var(--pun,#3B48B0)">
+        <path transform="translate(83 0)" d="M11 124V167A23 22 0 0 0 57 167M57 124V200"/>
+        <path transform="translate(165 0)" d="M11 200V157A23 22 0 0 1 57 157V200"/>
+      </g>
+      <g style="stroke:var(--doku,#43474F)">
+        <path transform="translate(247 0)" d="M11 162A28 27 0 0 1 67 162A28 27 0 0 1 11 162M67 96V200"/>
+        <path transform="translate(339 0)" d="M11 162A28 27 0 0 1 67 162A28 27 0 0 1 11 162"/>
+        <path transform="translate(431 0)" d="M11 96V200M58 124L26 168L62 200"/>
+        <path transform="translate(516 0)" d="M11 124V167A23 22 0 0 0 57 167M57 124V200"/>
+      </g>
+    </g>
+  </g>
+</symbol>
+</svg>
+
+<!-- ═════════════ Переключатели ═════════════ -->
+<header>
+  <h1>Pundoku · буква «P» из клеток · PD-141, раунд 4</h1>
+  <div class="seg" role="group" aria-label="Вариант, часть 1">
+    <button type="button" data-set="var" data-val="p1" aria-pressed="false">P1 Блок</button>
+    <button type="button" data-set="var" data-val="p2" aria-pressed="false">P2 Цифры</button>
+    <button type="button" data-set="var" data-val="p3" aria-pressed="false">P3 Поле</button>
+  </div>
+  <div class="seg" role="group" aria-label="Вариант, часть 2">
+    <button type="button" data-set="var" data-val="p4" aria-pressed="true">P4 Девять</button>
+    <button type="button" data-set="var" data-val="p5" aria-pressed="false">P5 Унос-P</button>
+    <button type="button" data-set="var" data-val="p6" aria-pressed="false">P6 Лигатура</button>
+  </div>
+  <div class="seg" role="group" aria-label="Подача иконки">
+    <button type="button" data-set="appear" data-val="light" aria-pressed="true">Светлая</button>
+    <button type="button" data-set="appear" data-val="dark" aria-pressed="false">Тёмная</button>
+    <button type="button" data-set="appear" data-val="tinted" aria-pressed="false">Tinted</button>
+  </div>
+</header>
+
+<main>
+
+<!-- 0 ────────────────────────────────────────────── Рамка раунда -->
+<section>
+  <h2>Рамка раунда</h2>
+  <div class="card">
+    <p class="note"><b>Это не замена D5 «Унос».</b> D5 утверждён и реализован; раунд 4 отвечает на
+      отдельный вопрос владельца — <b>можно ли сложить букву «P» из клеток судоку</b> и получить
+      знак для второй линии: favicon, значок в About и пустых состояниях, штамп на экспортируемом
+      PNG, «P» в самом названии.</p>
+    <p class="note"><b>Ни одного нового цвета.</b> Палитра целиком из D5: графит плашки, бумага
+      клетки, чернила — градиент светлого конца. Поэтому любой из вариантов ниже стоит рядом с
+      утверждённой иконкой как родственник, а не как второй бренд.</p>
+    <p class="note"><b>Ни одного SVG-фильтра, ни одной полупрозрачной заливки, ни одного градиента
+      внутри знака.</b> Все клетки — плоская заливка (решение «малой оптики» из PD-98 §18.2,
+      распространённое здесь на весь раунд); градиент остался только у плашки, то есть у фона.
+      Следствие практическое: растеризатору не нужны ни альфа-композит, ни интерполяция цвета
+      внутри фигур — ровно та работа, которую PD-98 §18.4 называл дорогой, — и превью на этой
+      странице равно будущему PNG. Плата названа вслух: плашка тише, чем у D5, где бумага —
+      градиент прозрачности, а не плоский тон.</p>
+  </div>
+  <div class="card">
+    <p class="note"><b>Чего здесь нет — потому что это уже отвергали:</b> точка в клетке и «P»
+      гарнитурой New York (раунд 1, A/B/C); кольцо-клетка, цифра 9, клякса (раунд 2, D1/D2/D3);
+      нахлёст и росчерк пера (раунд 3, D4/D6). Ни одного встроенного чужого глифа: буквы вордмарка
+      нарисованы, цифры в P2 — живой текст <code>ui-serif</code>, и именно поэтому P2 не является
+      кандидатом в иконку (PNG из него не экспортируется).</p>
+    <p class="note"><b>Что HIG прямо разрешает, и это новость по сравнению с раундом 1.</b>
+      <code>app-icons.md › Design</code>: «Although displaying a mnemonic like the first letter of
+      your app's name can help people recognize your app or game, avoid including nonessential
+      words…». То есть первая литера названия — <b>названное исключение</b> из запрета на текст в
+      иконке. В раунде 1 вариант C отвергли в том числе из-за лицензии на системный глиф; литера,
+      <b>построенная из клеток</b>, этого вопроса не создаёт вообще.</p>
+  </div>
+</section>
+
+<!-- 1 ─────────────────────────────────────────────────── Вариант -->
+<section>
+  <h2>Вариант</h2>
+  <div class="card">
+    <div class="p1">
+      <p><b>P1 · «Блок».</b> Буквальный ответ на идею владельца: блок 3×3, заполнено семь клеток из
+        девяти — верхние две строки целиком плюс левая нижняя. Ножка — чернилами: именно она
+        превращает блок в букву.</p>
+      <p class="note">Это единственная раскладка «P» в чистом 3×3, которая вообще держится.
+        Её цена названа в разделе «Где буква теряется»: <b>у неё нет контрформы</b>, а от «F» она
+        отличается одной клеткой из девяти.</p>
+    </div>
+    <div class="p2">
+      <p><b>P2 · «Девять цифр».</b> Тот же блок 3×3, но в клетках стоят цифры 1–9, каждая ровно по
+        разу — законный блок судоку. Семь клеток буквы лежат на бумаге, две оставшиеся — голый
+        графит с тихими цифрами. «Блок, в котором спряталась буква».</p>
+      <p class="note"><b>Важная поправка к исходной идее.</b> Если «контур P выделить чернилами», а
+        остальные цифры оставить серыми, буква держится <b>только цветом</b> — светлота чернил и
+        тихого серого почти совпадают (<b>1.3:1</b>), и в ч/б и tinted буква исчезает совсем. Поэтому
+        здесь букву несёт <b>площадь</b> (бумажные плашки), а цифры — текстура поверх.</p>
+    </div>
+    <div class="p3">
+      <p><b>P3 · «Поле».</b> Целая сетка 9×9 тонкими линиями, буква выложена девятью клетками в
+        области 3 клетки в ширину × 4 в высоту: средний блок по горизонтали, строки 3–6 по
+        вертикали — то есть <b>буква пересекает границу полос</b>, а не сидит внутри одного блока.</p>
+      <p class="note">Это и есть причина, по которой P3 вообще читается: в 3×3 места на контрформу
+        нет, а в 3×4 — есть. Цена — 81 клетка и 20 линий, которые ниже ~200 px превращаются в кашу.</p>
+    </div>
+    <div class="p4">
+      <p><b>P4 · «Девять клеток».</b> Мой вариант. Буква без сетки и без блока: девять клеток на
+        решётке 3×4, зазоры — настоящие, контрформа — ровно одна клетка. <b>Девять клеток</b> — не
+        совпадение, которое я подогнал: «P» в этой решётке требует 3+2+3+1, и это число судоку.</p>
+      <p class="note">Главное свойство — <b>то, как он портится</b>. На 29 pt зазоры уходят под
+        пиксель, клетки сливаются, и остаётся чистая сплошная «P» с контрформой в один квадрат.
+        Крупно — клетки, мелко — буква; деградация идёт <b>в сторону идеи</b>, а не в кашу.</p>
+    </div>
+    <div class="p5">
+      <p><b>P5 · «Унос-P».</b> Та же решётка 3×4, но правая стенка чаши вынута из буквы и уже летит
+        вверх-вправо, в чернилах. Без неё фигура — это <b>«F»</b>; улетевшая клетка и есть разница
+        между «F» и «P».</p>
+      <p class="note">Перекличка с D5 прямая: там из поля дня уносится последняя клетка, здесь —
+        последняя клетка буквы. Цена честная и большая: на 29 pt клетка 3.7 px, коридор 3.2 px,
+        и читается это как «F и точка». Подробности — в «Слабостях».</p>
+    </div>
+    <div class="p6">
+      <p><b>P6 · «Лигатура».</b> Не иконка, а <b>название</b>: «P» сложена из клеток и встроена в
+        утверждённый вордмарк D5 на место нарисованной «P». Рост прописных 104, внешняя ширина 77,
+        отбивка до «u» — всё совпадает с нарисованной буквой до единицы, остальные шесть букв не
+        тронуты.</p>
+      <p class="note">Иконка в этом варианте — геометрия P4 с одной чернильной клеткой (ножкой):
+        показывает необязательную добавку, которой у P4 по умолчанию нет.</p>
+    </div>
+  </div>
+</section>
+
+<!-- 2 ───────────────────────────────────────── Иконка 1024 × 1024 -->
+<section>
+  <h2>Иконка 1024 × 1024</h2>
+  <div class="card">
+    <div class="center">
+      <span class="sq" style="width:min(300px,100%);height:auto;aspect-ratio:1/1">
+        <svg viewBox="0 0 1024 1024" role="img" aria-label="Иконка Pundoku, вариант раунда 4">
+          <use class="p1" href="#ic-p1"/><use class="p2" href="#ic-p2"/><use class="p3" href="#ic-p3"/>
+          <use class="p4" href="#ic-p4"/><use class="p5" href="#ic-p5"/><use class="p6" href="#ic-p6"/>
+        </svg>
+      </span>
+    </div>
+    <p class="cap">Маску iOS наложила <b>страница</b>, а не файл</p>
+    <p class="fine" style="text-align:center">Скругление здесь — CSS 22.37 %, то есть круговое;
+      у iOS это непрерывная суперэллипса. Приближение, а не точная форма.</p>
+  </div>
+  <div class="card">
+    <p class="note">Файл поставлялся бы <b>без скругления</b>, плашкой во весь квадрат. Слева — как в
+      файле, справа — безопасные зоны: квадрат 86 % (срез углов) и круг 80 % (круглая маска
+      <code>maskable</code>; <code>icon-512</code> переиспользуется как maskable —
+      <code>vite.config.ts:27</code>).</p>
+    <div class="row" style="justify-content:center">
+      <span>
+        <span class="sq raw" style="width:150px;height:150px">
+          <svg viewBox="0 0 1024 1024" aria-hidden="true">
+            <use class="p1" href="#ic-p1"/><use class="p2" href="#ic-p2"/><use class="p3" href="#ic-p3"/>
+            <use class="p4" href="#ic-p4"/><use class="p5" href="#ic-p5"/><use class="p6" href="#ic-p6"/>
+          </svg>
+        </span>
+        <span class="cap" style="display:block">как в файле</span>
+      </span>
+      <span>
+        <span style="display:block;width:150px;height:150px;background:var(--card2);border:1px solid var(--sep)">
+          <svg viewBox="0 0 1024 1024" style="display:block;width:100%;height:100%" aria-hidden="true">
+            <g style="color:var(--lbl)" opacity="0.85">
+              <use class="p1" href="#mk-p1"/><use class="p2" href="#mk-p2"/><use class="p3" href="#mk-p3"/>
+              <use class="p4" href="#mk-p4"/><use class="p5" href="#mk-p5"/><use class="p6" href="#mk-p6"/>
+            </g>
+            <rect x="71.7" y="71.7" width="880.6" height="880.6" fill="none" stroke="#FF375F" stroke-width="7" stroke-dasharray="26 18"/>
+            <circle cx="512" cy="512" r="409.6" fill="none" stroke="#FF9F0A" stroke-width="7" stroke-dasharray="26 18"/>
+          </svg>
+        </span>
+        <span class="cap" style="display:block">86 % · 80 %</span>
+      </span>
+    </div>
+    <p class="note" style="margin-top:12px">Самая далёкая закрашенная точка от центра —
+      <b>расчёт по геометрии</b>, пиксельную проверку делает developer:
+      <span class="p1"><b>394.9</b> из 409.6 (угол клетки: 291·√2 от центра, минус/плюс радиус 40). Знак от канвы <b>57 %</b>.</span>
+      <span class="p2"><b>394.9</b> из 409.6 — та же решётка, что у P1. Знак от канвы <b>57 %</b>.</span>
+      <span class="p3"><b>399.5</b> из 409.6 — угол рамки сетки (394.6 плюс половина штриха 7). Запас <b>10.1</b>, самый тонкий в раунде. Знак от канвы <b>55 %</b>.</span>
+      <span class="p4"><b>390.5</b> из 409.6 — верхний правый угол клетки (240, −323) со скруглением 30. Запас <b>19.1</b>, ровно как у D5 (19.2). Знак <b>47 % × 63 %</b> канвы.</span>
+      <span class="p5"><b>390.7</b> из 409.6 — нижний левый угол ножки (−274, 294). Запас <b>18.9</b>. Знак <b>54 % × 57 %</b> канвы.</span>
+      <span class="p6"><b>390.5</b> из 409.6 — геометрия P4. Запас <b>19.1</b>.</span>
+      Квадрат 86 % не нарушен нигде.</p>
+  </div>
+</section>
+
+<!-- 3 ──────────────────────────────── Размеры 180 / 120 / 60 / 29 -->
+<section>
+  <h2>Размеры: 180 / 120 / 60 / 29</h2>
+  <div class="card">
+    <div class="row" style="justify-content:center">
+      <span><span class="sq" style="width:180px;height:180px"><svg viewBox="0 0 1024 1024" aria-hidden="true">
+        <use class="p1" href="#ic-p1"/><use class="p2" href="#ic-p2"/><use class="p3" href="#ic-p3"/>
+        <use class="p4" href="#ic-p4"/><use class="p5" href="#ic-p5"/><use class="p6" href="#ic-p6"/>
+      </svg></span><span class="cap" style="display:block">180 — apple-touch-icon</span></span>
+      <span><span class="sq" style="width:120px;height:120px"><svg viewBox="0 0 1024 1024" aria-hidden="true">
+        <use class="p1" href="#ic-p1"/><use class="p2" href="#ic-p2"/><use class="p3" href="#ic-p3"/>
+        <use class="p4" href="#ic-p4"/><use class="p5" href="#ic-p5"/><use class="p6" href="#ic-p6"/>
+      </svg></span><span class="cap" style="display:block">120</span></span>
+    </div>
+    <div class="row" style="justify-content:center;margin-top:16px">
+      <span><span class="sq" style="width:60px;height:60px"><svg viewBox="0 0 1024 1024" aria-hidden="true">
+        <use class="p1" href="#ic-p1"/><use class="p2" href="#ic-p2"/><use class="p3" href="#ic-p3"/>
+        <use class="p4" href="#ic-p4"/><use class="p5" href="#ic-p5"/><use class="p6" href="#ic-p6"/>
+      </svg></span><span class="cap" style="display:block">60</span></span>
+      <span><span class="sq" style="width:29px;height:29px"><svg viewBox="0 0 1024 1024" aria-hidden="true">
+        <use class="p1" href="#ic-p1"/><use class="p2" href="#ic-p2"/><use class="p3" href="#ic-p3"/>
+        <use class="p4" href="#ic-p4"/><use class="p5" href="#ic-p5"/><use class="p6" href="#ic-p6"/>
+      </svg></span><span class="cap" style="display:block">29 — Настройки</span></span>
+    </div>
+    <p class="note" style="margin-top:14px"><b>29 pt — главный размер</b> (Настройки и поиск).
+      Что остаётся от знака:
+      <span class="p1">клетка 5.0 px, зазор <b>0.68 px</b> — клетки сливаются, остаётся сплошной силуэт
+        «прямоугольник 2×3 плюс квадратик снизу слева». Форма видна отлично; <b>буквой она не читается</b> —
+        скорее флажок или вымпел.</span>
+      <span class="p2">клетка 5.0 px, <b>цифра 2.2 px</b> — цифр нет вообще. Ниже ~105 px P2 перестаёт
+        существовать как идея и вырождается в P1.</span>
+      <span class="p3">клетка 1.8 px, тонкая линия <b>0.14 px</b> — сетки нет. Остаются девять клеток буквы,
+        то есть ровно P4. P3 и P4 — <b>одна и та же буква на двух уровнях детализации</b>.</span>
+      <span class="p4">клетка 4.1 px, зазор 0.59 px — зазоры уходят, остаётся сплошная «P»; <b>контрформа
+        4.1 px при контрасте 10.5:1</b> — единственное, что должно выжить, и оно самое контрастное в знаке.</span>
+      <span class="p5">клетка 3.7 px, коридор 3.2 px, контрформа 3.7 px. Тело без улетевшей клетки —
+        «F»; итог читается как <b>«F и точка»</b>. Худшее место раунда.</span>
+      <span class="p6">как P4 (4.1 px), плюс чернильная ножка 4.1 px при 4.66:1 к плашке.</span></p>
+  </div>
+  <div class="card">
+    <p class="note"><b>Почему 3×4, а не 3×3.</b> Контрформа — то, по чему глаз узнаёт «P». В решётке
+      3×3 на неё нет места: либо контрформы нет (P1/P2), либо вместе с ней разваливается чаша.
+      В 3×4 контрформа — целая клетка, и это <b>самый контрастный элемент знака</b>: не чернила на
+      бумаге (2.27:1), а графит плашки против бумаги (<b>10.5:1</b>). Ровно та пара, которая у D5 —
+      слабое место (унесённая клетка к полю 1.90:1 в тёмной подаче, PD-98 §16).</p>
+  </div>
+</section>
+
+<!-- 4 ──────────────────────────────────────────── Домашний экран -->
+<section>
+  <h2>Домашний экран</h2>
+  <div class="card">
+    <p class="note">Три подачи на одних обоях. Подача переключается переменными, геометрия одна:
+      <code>app-icons.md › Appearances</code> — «Keep your icon's features consistent across
+      appearances».</p>
+    <div class="wallband">
+      <span>
+        <span class="sq ap-light" style="width:92px;height:92px">
+          <svg viewBox="0 0 1024 1024" aria-hidden="true">
+            <use class="p1" href="#ic-p1"/><use class="p2" href="#ic-p2"/><use class="p3" href="#ic-p3"/>
+            <use class="p4" href="#ic-p4"/><use class="p5" href="#ic-p5"/><use class="p6" href="#ic-p6"/>
+          </svg>
+        </span><div class="lab">light</div>
+      </span>
+      <span>
+        <span class="sq ap-dark" style="width:92px;height:92px">
+          <svg viewBox="0 0 1024 1024" aria-hidden="true">
+            <use class="p1" href="#ic-p1"/><use class="p2" href="#ic-p2"/><use class="p3" href="#ic-p3"/>
+            <use class="p4" href="#ic-p4"/><use class="p5" href="#ic-p5"/><use class="p6" href="#ic-p6"/>
+          </svg>
+        </span><div class="lab">dark</div>
+      </span>
+      <span>
+        <span class="sq ap-tinted" style="width:92px;height:92px">
+          <svg viewBox="0 0 1024 1024" aria-hidden="true">
+            <use class="p1" href="#ic-p1"/><use class="p2" href="#ic-p2"/><use class="p3" href="#ic-p3"/>
+            <use class="p4" href="#ic-p4"/><use class="p5" href="#ic-p5"/><use class="p6" href="#ic-p6"/>
+          </svg>
+        </span><div class="lab">tinted / mono</div>
+      </span>
+    </div>
+    <p class="note" style="margin-top:12px"><b>Честно про tinted.</b> Третий квадрат — не файл,
+      который мы поставляем, а <b>карта светлоты</b>, из которой iOS выводит подачу сама. Во всех
+      шести вариантах знак в карте светлее плашки, переполюсовывать руками ничего не нужно.
+      Для PWA ни тёмной, ни tinted-подачи иконки не существует вовсе — вывод PD-98 §18.6 в силе.</p>
+  </div>
+  <div class="card">
+    <p class="note"><b>Рядом с D5.</b> Слева утверждённая иконка, справа выбранный вариант —
+      так видно, родственники они или два разных бренда. Оговорка: D5 здесь перерисован теми же
+      плоскими заливками, что и варианты раунда (в оригинале бумага и чернила — градиенты).
+      Сравнение честное по геометрии и палитре и чуть беднее оригинала по материалу.</p>
+    <div class="wallband">
+      <span>
+        <span class="sq" style="width:92px;height:92px">
+          <svg viewBox="0 0 1024 1024" aria-hidden="true"><use href="#ic-d5ref"/></svg>
+        </span><div class="lab">D5 «Унос»</div>
+      </span>
+      <span>
+        <span class="sq" style="width:92px;height:92px">
+          <svg viewBox="0 0 1024 1024" aria-hidden="true">
+            <use class="p1" href="#ic-p1"/><use class="p2" href="#ic-p2"/><use class="p3" href="#ic-p3"/>
+            <use class="p4" href="#ic-p4"/><use class="p5" href="#ic-p5"/><use class="p6" href="#ic-p6"/>
+          </svg>
+        </span><div class="lab">раунд 4</div>
+      </span>
+    </div>
+  </div>
+</section>
+
+<!-- 5 ───────────────────────────────────────── Favicon 32 и 16 -->
+<section>
+  <h2>Favicon: 32 и 16</h2>
+  <div class="card">
+    <p class="note">Здесь растр <b>наш</b>, а не системный, поэтому можно дать отдельную
+      целочисленную геометрию — и это единственное место, где мелкий размер под нашим контролем.
+      Показаны: клеточная «P» на сетке 16 (зазоры ровно 1 px), она же без зазоров (то, во что она
+      вырождается на 29 pt), и для сравнения — favicon D5 из PD-98 §18.3.</p>
+    <div class="row" style="justify-content:center;align-items:flex-start;gap:22px">
+      <span style="text-align:center">
+        <span style="display:block;width:32px;height:32px;margin:0 auto;color:var(--pun)">
+          <svg viewBox="0 0 16 16" shape-rendering="crispEdges" style="display:block;width:100%;height:100%" aria-hidden="true"><use href="#fv-p4cells"/></svg>
+        </span>
+        <span style="display:block;width:16px;height:16px;margin:8px auto 0;color:var(--pun)">
+          <svg viewBox="0 0 16 16" shape-rendering="crispEdges" style="display:block;width:100%;height:100%" aria-hidden="true"><use href="#fv-p4cells"/></svg>
+        </span>
+        <span class="cap" style="display:block">клетки<br>32 · 16</span>
+      </span>
+      <span style="text-align:center">
+        <span style="display:block;width:32px;height:32px;margin:0 auto;color:var(--pun)">
+          <svg viewBox="0 0 16 16" shape-rendering="crispEdges" style="display:block;width:100%;height:100%" aria-hidden="true"><use href="#fv-p4solid"/></svg>
+        </span>
+        <span style="display:block;width:16px;height:16px;margin:8px auto 0;color:var(--pun)">
+          <svg viewBox="0 0 16 16" shape-rendering="crispEdges" style="display:block;width:100%;height:100%" aria-hidden="true"><use href="#fv-p4solid"/></svg>
+        </span>
+        <span class="cap" style="display:block">сплошная<br>32 · 16</span>
+      </span>
+      <span style="text-align:center">
+        <span style="display:block;width:32px;height:32px;margin:0 auto;color:var(--pun)">
+          <svg viewBox="0 0 16 16" shape-rendering="crispEdges" style="display:block;width:100%;height:100%" aria-hidden="true"><use href="#fv-d5"/></svg>
+        </span>
+        <span style="display:block;width:16px;height:16px;margin:8px auto 0;color:var(--pun)">
+          <svg viewBox="0 0 16 16" shape-rendering="crispEdges" style="display:block;width:100%;height:100%" aria-hidden="true"><use href="#fv-d5"/></svg>
+        </span>
+        <span class="cap" style="display:block">D5<br>32 · 16</span>
+      </span>
+    </div>
+    <p class="note" style="margin-top:14px"><b>Числа.</b> Клеточная версия на 16 px: штрихи 3 px,
+      зазоры 1 px, контрформа <b>5 × 3 px</b> — на 16 это уже шумно, на 32 (все размеры ×2) чисто.
+      Сплошная версия: штрих 3 px, контрформа 5 × 3 px, ни одного сглаженного пикселя — все края
+      лежат на границах. <b>Рекомендация по favicon: сплошная на 16, клеточная от 24 и выше.</b></p>
+    <p class="note"><b>Цвет favicon.</b> Берётся решение PD-98 §18.5(з) без изменений:
+      <code>#5F6DF2</code> — 4.24:1 на белой вкладке и 4.02:1 на тёмной, единственный из чернильных
+      тонов, который проходит обе. Здесь он показан токеном <code>--ink</code> страницы, чтобы
+      значок был виден в обеих темах макета.</p>
+  </div>
+</section>
+
+<!-- 6 ──────────────────────────── Ч/б и одноцветный знак -->
+<section>
+  <h2>Ч/б и одноцветный знак</h2>
+  <div class="card">
+    <p class="note">Grayscale сохраняет светлоту, поэтому контраст в ч/б равен цветному: здесь
+      проверяется <b>узнаваемость силуэта</b>, а не читаемость. Слева цвет, справа то же в ч/б.</p>
+    <div class="row" style="justify-content:center">
+      <span><span class="sq" style="width:116px;height:116px"><svg viewBox="0 0 1024 1024" aria-hidden="true">
+        <use class="p1" href="#ic-p1"/><use class="p2" href="#ic-p2"/><use class="p3" href="#ic-p3"/>
+        <use class="p4" href="#ic-p4"/><use class="p5" href="#ic-p5"/><use class="p6" href="#ic-p6"/>
+      </svg></span><span class="cap" style="display:block">цвет</span></span>
+      <span><span class="sq gs" style="width:116px;height:116px"><svg viewBox="0 0 1024 1024" aria-hidden="true">
+        <use class="p1" href="#ic-p1"/><use class="p2" href="#ic-p2"/><use class="p3" href="#ic-p3"/>
+        <use class="p4" href="#ic-p4"/><use class="p5" href="#ic-p5"/><use class="p6" href="#ic-p6"/>
+      </svg></span><span class="cap" style="display:block">ч/б</span></span>
+      <span><span class="sq gs" style="width:29px;height:29px"><svg viewBox="0 0 1024 1024" aria-hidden="true">
+        <use class="p1" href="#ic-p1"/><use class="p2" href="#ic-p2"/><use class="p3" href="#ic-p3"/>
+        <use class="p4" href="#ic-p4"/><use class="p5" href="#ic-p5"/><use class="p6" href="#ic-p6"/>
+      </svg></span><span class="cap" style="display:block">ч/б 29</span></span>
+    </div>
+    <p class="note" style="margin-top:14px">
+      <span class="p1">Силуэт в ч/б тот же, что в цвете — чернильная ножка теряет цвет, но остаётся клеткой. Буквы как не было, так и нет.</span>
+      <span class="p2">В ч/б остаётся P1 с цифрами; тихие цифры (3.52:1) различимы, чернильная ножка становится просто тёмной клеткой.</span>
+      <span class="p3">В ч/б линии сетки (2.16:1) почти исчезают — и это, как ни странно, улучшает букву: остаётся то, что в P4.</span>
+      <span class="p4"><b>Ничего не теряется вообще.</b> Единственный вариант раунда, где буква не зависит от цвета: её несёт площадь, а контрформа — та же плашка. Это главный технический довод за него.</span>
+      <span class="p5">Улетевшая клетка в ч/б перестаёт быть «чернилами» и становится просто квадратом рядом с «F». Связь с D5 держалась на цвете — в ч/б её нет.</span>
+      <span class="p6">Как P4; чернильная ножка в ч/б сливается с остальными клетками — добавка бесплатна и в ч/б незаметна.</span></p>
+  </div>
+  <div class="card">
+    <p class="note"><b>Знак без плашки</b> (<code>currentColor</code>, то, что получит
+      <code>Mark.tsx</code>): 104 · 56 · 30 px.</p>
+    <div class="markplate">
+      <span class="m"><svg viewBox="0 0 1024 1024" aria-hidden="true">
+        <use class="p1" href="#mk-p1"/><use class="p2" href="#mk-p2"/><use class="p3" href="#mk-p3"/>
+        <use class="p4" href="#mk-p4"/><use class="p5" href="#mk-p5"/><use class="p6" href="#mk-p6"/>
+      </svg></span>
+      <span class="m s2"><svg viewBox="0 0 1024 1024" aria-hidden="true">
+        <use class="p1" href="#mk-p1"/><use class="p2" href="#mk-p2"/><use class="p3" href="#mk-p3"/>
+        <use class="p4" href="#mk-p4"/><use class="p5" href="#mk-p5"/><use class="p6" href="#mk-p6"/>
+      </svg></span>
+      <span class="m s3"><svg viewBox="0 0 1024 1024" aria-hidden="true">
+        <use class="p1" href="#mk-p1"/><use class="p2" href="#mk-p2"/><use class="p3" href="#mk-p3"/>
+        <use class="p4" href="#mk-p4"/><use class="p5" href="#mk-p5"/><use class="p6" href="#mk-p6"/>
+      </svg></span>
+    </div>
+    <p class="note" style="margin-top:14px">
+      <span class="p1">Без плашки и без цвета от P1 остаётся семь квадратов. На 30 px — пятно.</span>
+      <span class="p2"><b>Одноцветной версии у P2 не существует.</b> Цифры можно было бы только выбить дырками, а дырка показывает фон, которого у знака в <code>currentColor</code> нет. Показана геометрия P1 — это и есть всё, что от P2 остаётся.</span>
+      <span class="p3">На 56 и 30 px сетка 9×9 — серый прямоугольник. P3 живёт только крупно.</span>
+      <span class="p4">На 56 px зазоры 8 px, на 30 px — 4.3 px; буква держится на обоих. Это тот размер, который стоит в пустом состоянии Year (PD-98 §18.5б).</span>
+      <span class="p5">На 30 px улетевшая клетка — 3.9 px и коридор 3.3 px; на одноцветном знаке без плашки это предел.</span>
+      <span class="p6">Геометрия P4: одноцветный знак у них общий.</span></p>
+  </div>
+</section>
+
+<!-- 7 ──────────────────────────────── Где буква теряется -->
+<section>
+  <h2>Где буква теряется</h2>
+  <div class="card">
+    <p class="note"><b>Девять клеток — это мало.</b> «P» состоит из стойки, верхней перекладины,
+      правой стенки чаши, донца чаши и ножки — пять элементов. В 3×3 на них приходится три столбца
+      и три строки, и контрформе (дырке в чаше) места уже не остаётся. Ниже — все раскладки,
+      которые имеет смысл обсуждать, и что каждая читает.</p>
+    <div class="lays">
+      <div class="lay">
+        <div class="pg"><i></i><i></i><i></i><i></i><i></i><i></i><i class="k"></i><i class="o"></i><i class="o"></i></div>
+        <div class="laycap"><b>7 клеток, P1</b>Лучшая из 3×3. Контрформы нет. От «F» отличается <b>одной</b> клеткой (правой средней). Читается флажком.</div>
+      </div>
+      <div class="lay">
+        <div class="pg"><i></i><i></i><i></i><i></i><i class="o"></i><i></i><i></i><i class="o"></i><i class="o"></i></div>
+        <div class="laycap"><b>7 клеток, контрформа</b>Контрформа есть, но донце чаши исчезло: правая клетка повисла. Читается «Г» с оторванной точкой.</div>
+      </div>
+      <div class="lay">
+        <div class="pg"><i></i><i></i><i></i><i></i><i class="o"></i><i class="o"></i><i></i><i class="o"></i><i class="o"></i></div>
+        <div class="laycap"><b>5 клеток</b>Чаши нет совсем. Это «Г» или «7», ни при каком размере не «P».</div>
+      </div>
+      <div class="lay">
+        <div class="pg"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i class="o"></i></div>
+        <div class="laycap"><b>8 клеток</b>Квадрат с выкусом. Не буква — это D5 с другой стороны.</div>
+      </div>
+      <div class="lay">
+        <div class="pg"><i></i><i></i><i></i><i></i><i></i><i class="o"></i><i></i><i class="o"></i><i class="o"></i></div>
+        <div class="laycap"><b>«F», 6 клеток</b>Показано для сравнения: вот насколько P1 близок к «F». Разница — правая средняя клетка.</div>
+      </div>
+      <div class="lay">
+        <div class="pg pg4"><i></i><i></i><i></i><i></i><i class="o"></i><i></i><i></i><i></i><i></i><i></i><i class="o"></i><i class="o"></i></div>
+        <div class="laycap"><b>3×4, девять клеток</b>Контрформа — целая клетка, донце чаши на месте, ножка отдельно. <b>Это и есть «P».</b> Цена — выход за один блок.</div>
+      </div>
+    </div>
+    <p class="note" style="margin-top:16px"><b>Вывод, который стоит сказать прямо.</b> Просьба
+      «сложить P в блоке 3×3» не имеет хорошего решения: не потому, что раскладку плохо искали, а
+      потому, что в девяти клетках нет места контрформе. Варианты P1 и P2 — это честный максимум
+      буквального ответа, и оба читаются <b>формой, а не буквой</b>. Как только добавляется
+      четвёртая строка, буква появляется сразу и без усилий — P3, P4, P5, P6.</p>
+    <p class="note"><b>И это не обман блока.</b> Область 3 × 4 существует в настоящей сетке 9×9:
+      три клетки по ширине — это ровно один блок, четыре по высоте — это переход через границу
+      полос. То есть «P» не выдумана поверх судоку, она <b>вырезана из сетки</b>, просто не
+      по блоку. В P3 это видно буквально.</p>
+  </div>
+</section>
+
+<!-- 8 ──────────────────────────────── Название, шапка, About -->
+<section>
+  <h2>Название: «P» внутри слова</h2>
+  <div class="card">
+    <p class="note">Сверху — утверждённый вордмарк D5, снизу — тот же вордмарк с клеточной «P»
+      (вариант P6). Три размера: 100 %, 68 %, 46 % ширины колонки.</p>
+    <div class="wmplate w1" style="margin-top:8px"><svg viewBox="0 0 588 116" aria-hidden="true"><use href="#wm-d5"/></svg></div>
+    <div class="wmplate w1" style="margin-top:10px"><svg viewBox="0 0 588 116" role="img" aria-label="Pundoku, P из клеток"><use href="#wm-p6"/></svg></div>
+    <div class="wmplate w2" style="margin-top:14px"><svg viewBox="0 0 588 116" aria-hidden="true"><use href="#wm-d5"/></svg></div>
+    <div class="wmplate w2" style="margin-top:10px"><svg viewBox="0 0 588 116" aria-hidden="true"><use href="#wm-p6"/></svg></div>
+    <div class="wmplate w3" style="margin-top:14px"><svg viewBox="0 0 588 116" aria-hidden="true"><use href="#wm-d5"/></svg></div>
+    <div class="wmplate w3" style="margin-top:10px"><svg viewBox="0 0 588 116" aria-hidden="true"><use href="#wm-p6"/></svg></div>
+    <p class="note" style="margin-top:14px"><b>Что здесь посчитано.</b> Клетка 23, зазор 4, четыре
+      строки от y=96 до y=200 — рост прописных ровно 104, как у нарисованной «P»; внешняя ширина 77
+      и отбивка до «u» 6 — тоже как у неё. Поэтому заменой одной буквы ничего в слове не поехало.
+      Штрих клеточной «P» — 23 против монолинейных 22: разница в одну единицу, вес совпадает.</p>
+    <p class="note"><b>Как это портится.</b> Зазор 4 единицы становится меньше пикселя, когда
+      вордмарк ниже <b>29 px</b> (ширина ~147 px): ниже этого клеточная «P» схлопывается в сплошную
+      монолинейную «P» и слово выглядит ровно как сейчас. Это не поломка, а потолок эффекта —
+      шутка видна в About и на карточке, и не мешает в шапке.</p>
+    <p class="note"><b>Про «остальное набрать шрифтом».</b> В брифе предложено набрать «undoku»
+      системной гарнитурой. Я этого <b>не делаю</b>: вордмарк продукта нарисован начиная с PD-93
+      именно для того, чтобы ни один чужой глиф не попал в экспортируемый PNG, а живой системный
+      текст в отпечатке стал бы фолбэчным серифом на любой не-Apple машине. Клеточная «P» рядом с
+      уже нарисованными буквами даёт тот же результат без этого риска.</p>
+  </div>
+  <div class="card">
+    <p class="note"><b>Шапка.</b> Напоминание, которое важнее макета: по правилу продукта
+      (PD-92 §1.3, подтверждено PD-98 §18.5а) <b>на рабочем экране Today знака и логотипа нет</b> —
+      <code>branding.md › Best practices</code>: «Resist the temptation to display your logo
+      throughout your app or game unless it's essential for providing context». Шапка ниже — это
+      то, как выглядел бы вордмарк, <b>если</b> владелец решит правило изменить.</p>
+    <div class="hdrmock" style="margin-top:10px">
+      <div class="wm"><svg viewBox="0 0 588 116" aria-hidden="true"><use href="#wm-p6"/></svg></div>
+      <div class="day">Пт 2 окт · Средняя · 4:12</div>
+    </div>
+    <p class="cap">вордмарк 150 px — клеточная «P» уже почти сплошная (зазор 1.03 px)</p>
+  </div>
+  <div class="card">
+    <p class="note"><b>Settings → About</b> — штатный дом логотипа: знак 60 px + вордмарк + версия.</p>
+    <div class="aboutmock" style="margin-top:10px">
+      <div class="mk"><svg viewBox="0 0 1024 1024" aria-hidden="true">
+        <use class="p1" href="#mk-p1"/><use class="p2" href="#mk-p2"/><use class="p3" href="#mk-p3"/>
+        <use class="p4" href="#mk-p4"/><use class="p5" href="#mk-p5"/><use class="p6" href="#mk-p6"/>
+      </svg></div>
+      <div class="wm"><svg viewBox="0 0 588 116" aria-hidden="true"><use href="#wm-p6"/></svg></div>
+      <div class="ver">v1.1.0</div>
+    </div>
+    <p class="note" style="margin-top:12px"><b>Осторожно: здесь буква стоит дважды.</b> Знак-«P»
+      над вордмарком, где первая буква тоже «P» из клеток, — это повтор, против которого
+      <code>branding.md</code> и предупреждает. Если берём P6, в About надо оставить <b>или</b> знак,
+      <b>или</b> вордмарк. Моё предложение — только вордмарк: он несёт и имя, и знак сразу.</p>
+  </div>
+</section>
+
+<!-- 9 ───────────────────────────────── Читаемость по размерам -->
+<section>
+  <h2>Читаемость по размерам</h2>
+  <div class="card">
+    <p class="note">Числа — <b>расчёт по геометрии</b> (размер элемента × размер иконки / 1024).
+      Реальную растеризацию и контраст на 29 px меряет developer, как в PD-98 §16. «Буква» —
+      моя оценка того, читается ли на этом размере именно «P», а не просто фигура.</p>
+    <table>
+      <thead><tr><th>Размер</th><th>Главный элемент</th><th>Зазор / коридор</th><th>Буква</th></tr></thead>
+      <tbody class="p1">
+        <tr><td>180</td><td>клетка 31.3</td><td>4.2</td><td class="bad">нет</td></tr>
+        <tr><td>120</td><td>клетка 20.9</td><td>2.8</td><td class="bad">нет</td></tr>
+        <tr><td>60</td><td>клетка 10.4</td><td>1.41</td><td class="bad">нет</td></tr>
+        <tr><td>29</td><td>клетка 5.04</td><td>0.68 — клетки слились</td><td class="bad">нет</td></tr>
+        <tr><td>16</td><td>клетка 2.78</td><td>0.38</td><td class="bad">нет</td></tr>
+      </tbody>
+      <tbody class="p2">
+        <tr><td>180</td><td>цифра 13.7</td><td>зазор 4.2</td><td class="bad">нет</td></tr>
+        <tr><td>120</td><td>цифра 9.1</td><td>2.8</td><td class="bad">нет</td></tr>
+        <tr><td>105</td><td>цифра 8.0 — порог</td><td>2.5</td><td class="bad">нет</td></tr>
+        <tr><td>60</td><td>цифра 4.6 — нечитаема</td><td>1.41</td><td class="bad">нет</td></tr>
+        <tr><td>29</td><td>цифра 2.2 — исчезла</td><td>0.68</td><td class="bad">нет</td></tr>
+      </tbody>
+      <tbody class="p3">
+        <tr><td>340</td><td>клетка 20.6</td><td>тонкая линия 1.0 — порог</td><td class="good">да</td></tr>
+        <tr><td>180</td><td>клетка 10.9</td><td>тонкая 0.53, блочная 1.23</td><td>на пределе</td></tr>
+        <tr><td>146</td><td>клетка 8.8</td><td>блочная 1.0 — порог</td><td>на пределе</td></tr>
+        <tr><td>120</td><td>клетка 7.3</td><td>тонкая 0.35</td><td class="bad">сетки нет</td></tr>
+        <tr><td>60</td><td>клетка 3.6</td><td>0.18</td><td>остаётся P4</td></tr>
+        <tr><td>29</td><td>клетка 1.76</td><td>0.14</td><td>остаётся P4</td></tr>
+      </tbody>
+      <tbody class="p4">
+        <tr><td>180</td><td>клетка 25.7</td><td>зазор 3.7</td><td class="good">да, видны клетки</td></tr>
+        <tr><td>120</td><td>клетка 17.1</td><td>2.46</td><td class="good">да, видны клетки</td></tr>
+        <tr><td>87 (29 pt @3x)</td><td>клетка 12.4</td><td>1.78</td><td class="good">да</td></tr>
+        <tr><td>60</td><td>клетка 8.56</td><td>1.23</td><td class="good">да</td></tr>
+        <tr><td>32</td><td>клетка 4.56</td><td>0.66 — слились</td><td class="good">да, сплошная</td></tr>
+        <tr><td>29</td><td>контрформа 4.13</td><td>0.59 — слились</td><td class="good">да, сплошная</td></tr>
+        <tr><td>16</td><td>клетка 2.28</td><td>0.33</td><td>только отдельной 16-сеткой</td></tr>
+      </tbody>
+      <tbody class="p5">
+        <tr><td>180</td><td>клетка 23.2</td><td>коридор 19.7</td><td class="good">да</td></tr>
+        <tr><td>120</td><td>клетка 15.5</td><td>коридор 13.1</td><td class="good">да</td></tr>
+        <tr><td>60</td><td>клетка 7.73</td><td>коридор 6.56</td><td>на пределе</td></tr>
+        <tr><td>29</td><td>клетка 3.74</td><td>коридор 3.17</td><td class="bad">«F и точка»</td></tr>
+        <tr><td>16</td><td>клетка 2.06</td><td>коридор 1.75</td><td class="bad">нет</td></tr>
+      </tbody>
+      <tbody class="p6">
+        <tr><td>вордмарк 190 px шир.</td><td>клетка 7.4</td><td>зазор 1.29</td><td class="good">клетки видны</td></tr>
+        <tr><td>вордмарк 150 px</td><td>клетка 5.8</td><td>зазор 1.03</td><td>на пределе</td></tr>
+        <tr><td>вордмарк 147 px — порог</td><td>клетка 5.7</td><td>зазор 1.0</td><td>порог</td></tr>
+        <tr><td>вордмарк 100 px</td><td>клетка 3.9</td><td>зазор 0.68</td><td>сплошная «P»</td></tr>
+        <tr><td>иконка 29</td><td>как P4: 4.13</td><td>0.59</td><td class="good">да, сплошная</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- 10 ───────────────────────────────────────────────── Контраст -->
+<section>
+  <h2>Контраст</h2>
+  <div class="card">
+    <p class="note">Посчитано из hex по WCAG. У иконок приложения порога в HIG нет — это ориентир,
+      а не зачёт. Светлая подача, плоские заливки, плашка взята в средней точке градиента (#2B2F38).</p>
+    <table>
+      <thead><tr><th>Пара</th><th>Светлая</th><th>Где это важно</th></tr></thead>
+      <tbody>
+        <tr><td>бумажная клетка #E3E3E4 / плашка</td><td><b>10.5</b></td><td>видимость всего знака</td></tr>
+        <tr><td><b>контрформа (плашка) / клетка</b></td><td><b>10.5</b></td><td><b>читается ли «P»</b> — у P3/P4/P5/P6</td></tr>
+        <tr><td>чернильная клетка #838EF9 / плашка</td><td>4.66</td><td>P1, P2, P5, P6</td></tr>
+        <tr><td>чернильная клетка / бумажная</td><td>2.27</td><td>то же слабое место, что у D5</td></tr>
+        <tr><td>цифра #2B2F38 / бумага</td><td>10.5</td><td>P2</td></tr>
+        <tr><td>цифра #2B2F38 / чернильная клетка</td><td>4.60</td><td>P2, цифра «9» на ножке</td></tr>
+        <tr><td>тихая цифра #7E838C / плашка</td><td>3.52</td><td>P2, две клетки вне буквы</td></tr>
+        <tr><td>тонкая линия сетки / плашка</td><td>2.16</td><td>P3 — намеренно ниже 3:1, это текстура</td></tr>
+        <tr><td>блочная линия / плашка</td><td>3.70</td><td>P3</td></tr>
+      </tbody>
+    </table>
+    <p class="note" style="margin-top:12px"><b>Главное число раунда.</b> У D5 пара, от которой
+      зависит идея — «унесённая клетка против поля» — это <b>2.32:1 в светлой и 1.90:1 в тёмной</b>
+      подаче (замер developer, PD-98 §16), и держится всё на коридоре в 3.5 px. У P4 пара, от
+      которой зависит идея, — «контрформа против клетки», и это <b>10.5:1</b>. Там, где растр наш
+      (favicon, <code>Mark</code>, штамп в PNG), это разница между «надо проверить на устройстве»
+      и «проверять нечего».</p>
+    <p class="note"><b>Что найдено счётом и изменено по ходу.</b> Первая версия P2 была ровно такой,
+      как в брифе: цифры на контуре «P» — чернилами, остальные — тихим серым. Светлота чернил
+      #838EF9 и серого #7E838C почти совпадает: <b>1.31:1</b>. То есть в ч/б и в tinted буква
+      исчезала бы полностью, а это нарушение правила «ничего не передаётся только цветом»
+      (<code>accessibility.md</code>, Lens 1 скилла). Поэтому в P2 букву несут бумажные плашки,
+      а цифры стали текстурой. На глаз в цвете первая версия выглядела нормально — поэтому записано.</p>
+  </div>
+</section>
+
+<!-- 11 ───────────────────────────────────────────────── Слабости -->
+<section>
+  <h2>Слабости — по каждому</h2>
+  <div class="card p1">
+    <ul class="note">
+      <li><b>Контрформы нет — значит буквы нет.</b> Семь клеток дают силуэт «прямоугольник 2×3 плюс квадрат», и это флажок, вымпел, кнопка «поделиться». «P» в нём видит только тот, кому сказали.</li>
+      <li><b>Одна клетка до «F».</b> Разница между P1 и «F» — правая средняя клетка; на 29 pt это 5 px из 29. Знак, который меняет букву от одного квадрата, — хрупкий знак.</li>
+      <li><b>Сетка 3×3 — мотив жанра и наш же прежний плейсхолдер.</b> Это ровно то, за что отвергли вариант A раунда 1 (PD-92 §2.1, PD-98 §9.1). P1 возвращает его.</li>
+      <li><b>Чернильная ножка повторяет приём D5</b> (одна клетка цвета), но без его смысла: в D5 чернила означают «то, что поставили вы», здесь — просто «эта клетка другая».</li>
+    </ul>
+  </div>
+  <div class="card p2">
+    <ul class="note">
+      <li><b>Ниже ~105 px варианта не существует.</b> Цифра 8 px — порог; на 60 это 4.6 px, на 29 — 2.2 px. То есть в иконку он не годится вообще, только в шапку, About и штамп.</li>
+      <li><b>Одноцветной версии нет.</b> Цифры можно выбить только дыркой, а у знака в <code>currentColor</code> фона нет. P2 не даёт <code>Mark.tsx</code> ничего.</li>
+      <li><b>Буква всё равно P1.</b> Цифры — красивая текстура поверх той же семиклеточной фигуры; они не чинят отсутствие контрформы, а маскируют его.</li>
+      <li><b>Живой текст.</b> Цифры — <code>ui-serif</code>, в экспортируемом PNG это был бы фолбэчный сериф. Для иконки пришлось бы рисовать девять цифр контурами — это отдельная работа и отдельный риск.</li>
+    </ul>
+  </div>
+  <div class="card p3">
+    <ul class="note">
+      <li><b>Самый узкий запас до круга maskable в раунде</b> — 10.1 против 19.1 у P4: рамку сетки некуда двигать, она и есть композиция.</li>
+      <li><b>Ниже ~146 px читается как серый прямоугольник</b>, ниже ~60 — как P4 без сетки. То есть две трети размеров этот вариант просто не свой.</li>
+      <li><b>Линии 2.16:1</b> — намеренно тихие, но это значит, что «сетка» держится на почти незаметном. Поднять их — и иконка станет сеткой, а не буквой.</li>
+      <li><b>Самый «жанровый» силуэт из всех.</b> Квадрат, расчерченный на 81 клетку, — это то, чем выглядит половина судоку в App Store.</li>
+    </ul>
+  </div>
+  <div class="card p4">
+    <ul class="note">
+      <li><b>Это буква, а буква — слабое отличие.</b> Монограммных иконок в сторе очень много; «P» занята крупными брендами. Отличает нас <b>конструкция</b> (клетки с настоящими зазорами и контрформой-клеткой), а она видна только от 60 px. На 29 pt мы — просто «P».</li>
+      <li><b>Знак ничего не говорит о продукте.</b> D5 показывает механику, P4 показывает название. Для приложения с одним пользователем, который название и так знает, это меньше информации, а не больше.</li>
+      <li><b>Девять клеток — факт, который никто не заметит.</b> Он настоящий (3+2+3+1), но как «смысл, который увидят» продавать его нечестно. Это причина не стыдиться варианта, а не причина его выбрать.</li>
+      <li><b>Вертикальный силуэт.</b> 47 % × 63 % канвы — знак выше, чем шире, и в квадратной плашке это выглядит слегка тесно сверху и снизу. Увеличить нельзя: мешает круг maskable.</li>
+      <li><b>Чернил нет.</b> Это плата за независимость от цвета. Если хочется переклички с D5 — одна клетка (ножка) в чернила, геометрия не меняется, в ч/б ничего не теряется; это и есть P6.</li>
+    </ul>
+  </div>
+  <div class="card p5">
+    <ul class="note">
+      <li><b>На 29 pt читается «F и точка».</b> Клетка 3.7 px, коридор 3.2 px — тоньше, чем у D5 (4.65 и 3.5), а у D5 это и так было «самое узкое место раунда» (PD-98 §2.2).</li>
+      <li><b>Отлетевший квадрат читается как бейдж.</b> Квадратик в правом верхнем углу иконки — это место счётчика уведомлений; на домашнем экране он будет спорить с настоящим бейджем.</li>
+      <li><b>Связь с D5 держится на цвете.</b> В ч/б и tinted улетевшая клетка перестаёт быть чернилами, и остаётся просто «F плюс квадрат».</li>
+      <li><b>Повтор идеи, а не её развитие.</b> У D5 унос означает механику дня; здесь он означает «буква не дособрана». Второе слабее и объясняется дольше.</li>
+    </ul>
+  </div>
+  <div class="card p6">
+    <ul class="note">
+      <li><b>Две логики построения в одном слове.</b> Клеточная «P» рядом с монолинейными «undoku» — это два разных способа рисовать буквы. Спасает то, что на размерах ниже 147 px «P» схлопывается в монолинейную и расхождение исчезает; но на карточке и в About оно видно.</li>
+      <li><b>Логотип дважды в About</b>, если ставить и знак, и вордмарк (<code>branding.md › Best practices</code>). Нужно выбрать одно.</li>
+      <li><b>Шутка односторонняя.</b> «P из клеток» объясняет, что это судоку, тому, кто уже видит слово «Pundoku». Самостоятельной работы она не делает.</li>
+      <li><b>Трогает утверждённый артефакт.</b> <code>d5-wordmark.svg</code> уже зафиксирован в PD-98 §18.2 как «правка не нужна». Это первая правка в нём.</li>
+    </ul>
+  </div>
+</section>
+
+<!-- 12 ────────────────────────── Отличие от чужих иконок -->
+<section>
+  <h2>Отличие от чужих иконок — что проверено, а что нет</h2>
+  <div class="card">
+    <p class="note"><b>Чего я не смог проверить, и это надо знать прежде всего.</b> Я искал иконки
+      судоку-приложений в App Store поиском и прямой загрузкой страниц приложений. Страницы App
+      Store отдают картинки плейсхолдерами, описаний графики в них нет, а <b>видеть изображения
+      я в этом режиме не могу</b>. Поэтому ниже нет ни одного утверждения вида «у такого-то
+      приложения такая-то иконка» — это была бы выдумка.</p>
+    <p class="note"><b>Что можно утверждать по нашим же прежним разборам (а не по чужим иконкам):</b>
+      сетка 3×3 и 9×9 — самый общий мотив жанра, и это было зафиксировано как причина отвергнуть
+      вариант A ещё в раунде 1 (PD-92 §2) и подтверждено в PD-98 §9.1; наш собственный плейсхолдер
+      <code>icon.svg</code> тоже был сеткой 3×3. Значит <b>P1, P2 и P3 садятся в самое людное
+      место категории</b> — это следует из нашей истории, а не из обзора конкурентов.</p>
+    <p class="note"><b>Что я предполагаю и помечаю как непроверенное:</b> монограмма из одной
+      латинской буквы — очень распространённый тип иконки вообще (не в жанре судоку), и «P» в
+      частности занята несколькими крупными продуктами. Проверить это глазами я не смог, поэтому
+      отношусь к этому как к риску, а не как к факту. <b>Практический вывод тот же при любом
+      ответе:</b> если брать букву, отличать нас должна её конструкция — клетки, зазоры,
+      контрформа размером в клетку — а не сама «P».</p>
+    <p class="note"><b>Что проверять владельцу за минуту.</b> Открыть App Store, поиск «sudoku»,
+      посмотреть первые два экрана выдачи и сказать: есть ли там иконки-буквы вообще, и есть ли
+      тёмные иконки с графитовой плашкой. Это единственная проверка в тикете, которую не может
+      сделать агент и может сделать человек.</p>
+  </div>
+</section>
+
+<!-- 13 ───────────────────────────────────────── Рекомендация -->
+<section>
+  <h2>Рекомендация</h2>
+  <div class="card">
+    <p><b>Иконку не менять. D5 «Унос» остаётся.</b></p>
+    <p class="note">Причина не в качестве вариантов, а в том, что они отвечают на другой вопрос.
+      Иконка D5 говорит <b>что приложение делает</b>; «P» говорит <b>как оно называется</b>.
+      У продукта один пользователь, который название знает наизусть, — значит буква несёт ему
+      меньше, чем механика. Ни один из шести вариантов не даёт того, чего у D5 нет.</p>
+    <p class="note"><b>Что всё-таки стоит взять: P6 — клеточную «P» в вордмарке.</b> Это
+      единственное место, где буква уместна по определению: в названии буквам и положено быть.
+      Стоимость — правка одного SVG, ноль новых цветов, ноль решений о палитре, геометрия слова
+      не меняется ни на единицу, и ниже 147 px эффект сам выключается.</p>
+    <p class="note"><b>Если нужен отдельный мелкий знак — P4, но только там, где растр наш.</b>
+      Favicon 16/32, <code>Mark</code> 56 px в пустом состоянии Year, штамп 44 px в экспортируемом
+      PNG. Довод числовой: у D5 решающая пара 1.90–2.32:1 при коридоре 3.5 px, у P4 — 10.5:1.
+      В слоты иконки iOS P4 не ставить: там один <code>apple-touch-icon</code>, и два знака на
+      домашнем экране и в About — это ровно тот повтор, от которого предостерегает
+      <code>branding.md</code>.</p>
+    <p class="note"><b>Чего я бы не делал.</b> P1 и P2 — потому что буква в них не читается, а
+      сетка 3×3 уже отвергнута дважды. P3 — потому что он живёт только крупно и это самый жанровый
+      силуэт раунда. P5 — потому что он хуже D5 ровно в том, в чём D5 уже на пределе.</p>
+    <p class="note"><b>И допустимый ответ — «ничего из этого».</b> Это четвёртый раунд и
+      пятнадцатый вариант. Если ни «P» в вордмарке, ни P4 в favicon не цепляют — правильный ход
+      закрыть тему логотипа совсем: утверждённая иконка есть, вордмарк есть, оба работают.</p>
+  </div>
+  <div class="card">
+    <p class="note"><b>Что просить у владельца на iPhone</b> (агенты этого не могут):</p>
+    <ul class="note">
+      <li>Открыть эту страницу в Safari, пройти P1…P6 × светлая/тёмная/tinted. Смотреть прежде всего полосу <b>29 pt</b>.</li>
+      <li>На P4 на 29 pt: видно ли <b>дырку в чаше</b> — или буква превратилась в сплошной прямоугольник с ножкой.</li>
+      <li>На P1 на любом размере: читается это как «P» или как флажок? Если как флажок — буквальная идея «P в блоке 3×3» закрыта, и это нормальный результат.</li>
+      <li>В разделе «Название»: не выглядит ли клеточная «P» чужой рядом с монолинейными «undoku».</li>
+      <li>App Store, поиск «sudoku», первые два экрана: есть ли там иконки-буквы и тёмные графитовые плашки (см. раздел выше).</li>
+    </ul>
+  </div>
+  <div class="card">
+    <p class="note"><b>Чего не проверить без устройства и без рендера.</b> (1) Реальная
+      растеризация на 29 px — все числа выше посчитаны из геометрии, пиксельный замер делает
+      developer, как в PD-98 §16. (2) Как <code>ui-serif</code> покажет цифры P2 на iPhone — на
+      этой машине это фолбэчный сериф, не New York. (3) Применяет ли конкретная версия iOS
+      моно-подачу к иконке веб-клипа — вывод PD-98 §18.6 («никак не включается») не перепроверялся.
+      (4) Иконки конкурентов — см. раздел выше. (5) Сама эта страница ни разу не отрендерена:
+      у дизайнера в этом тикете нет возможности запустить браузер, кадры снимает developer.</p>
+  </div>
+</section>
+
+</main>
+
+<script>
+(function () {
+  var root = document.documentElement;
+  var btns = document.querySelectorAll('.seg button[data-set]');
+  for (var i = 0; i < btns.length; i++) {
+    btns[i].addEventListener('click', function () {
+      var set = this.getAttribute('data-set');
+      var val = this.getAttribute('data-val');
+      root.setAttribute('data-' + set, val);
+      var peers = document.querySelectorAll('.seg button[data-set="' + set + '"]');
+      for (var j = 0; j < peers.length; j++) {
+        peers[j].setAttribute('aria-pressed', peers[j] === this ? 'true' : 'false');
+      }
+    });
+  }
+})();
+</script>
+</body>
+</html>
