@@ -73,8 +73,8 @@ export class PgRecoveryRepo implements RecoveryRepo {
     return this.tx(deviceId, async (db): Promise<ConfirmRotationResult> => {
       // FOR UPDATE по группе: параллельные redeem (ищет по key_hmac с той же блокировкой), start/cancel и второй confirm
       // ждут нас; после коммита старый ключ уже не находится, а новый находится — переключение атомарно.
-      const { rows } = await db.query<{ id: string; pending_key_hmac: Buffer | null; pending_id: string | null; pending_expires_at: Date | null }>(
-        `SELECT g.id, g.pending_key_hmac, g.pending_id, g.pending_expires_at
+      const { rows } = await db.query<{ id: string; key_hmac: Buffer; confirmed_id: string | null; pending_key_hmac: Buffer | null; pending_id: string | null; pending_expires_at: Date | null }>(
+        `SELECT g.id, g.key_hmac, g.confirmed_id, g.pending_key_hmac, g.pending_id, g.pending_expires_at
            FROM device_links l JOIN sync_groups g ON g.id = l.group_id
           WHERE l.device_id = $1
           FOR UPDATE OF g`,
@@ -82,17 +82,21 @@ export class PgRecoveryRepo implements RecoveryRepo {
       );
       const group = rows[0];
       if (!group) return { ok: false, reason: "no_key" };
-      if (!group.pending_key_hmac || !group.pending_id || !group.pending_expires_at) return { ok: false, reason: "no_pending" };
-      if (group.pending_id !== pendingId) return { ok: false, reason: "replaced" };
+      // Метка, сделавшая рабочим ТЕКУЩИЙ ключ (confirmed_id меняется только вместе с key_hmac), — повтор после потерянного
+      // ответа. Сравнение uuid в нижнем регистре (Postgres отдаёт его так же, роутер приводит вход к нижнему).
+      const replay = (): ConfirmRotationResult | null =>
+        group.confirmed_id === pendingId ? { ok: true, groupId: group.id, keyHmac: group.key_hmac, alreadyConfirmed: true } : null;
+      if (!group.pending_key_hmac || !group.pending_id || !group.pending_expires_at) return replay() ?? { ok: false, reason: "no_pending" };
+      if (group.pending_id !== pendingId) return replay() ?? { ok: false, reason: "replaced" };
       if (group.pending_expires_at.getTime() <= now.getTime()) return { ok: false, reason: "expired" };
       await db.query(
         `UPDATE sync_groups
-            SET key_hmac = pending_key_hmac, key_created_at = $2,
+            SET key_hmac = pending_key_hmac, key_created_at = $2, confirmed_id = pending_id,
                 pending_key_hmac = NULL, pending_id = NULL, pending_expires_at = NULL
           WHERE id = $1`,
         [group.id, now],
       );
-      return { ok: true, groupId: group.id, keyHmac: group.pending_key_hmac };
+      return { ok: true, groupId: group.id, keyHmac: group.pending_key_hmac, alreadyConfirmed: false };
     });
   }
 

@@ -152,15 +152,16 @@ describe.skipIf(unavailable !== null)("recovery integration (Postgres)", () => {
       }
     });
 
-    it("параллельные confirm одной замены (двойной тап, две вкладки): ровно один 200, остальные 409 no_pending; ключ один", async () => {
+    it("параллельные confirm одной замены (двойной тап, две вкладки): все 200, но переключила ровно одна (alreadyConfirmed у остальных); ключ один", async () => {
       for (let i = 0; i < 3; i++) {
         const { app } = pgHarness();
         const a = await newDevice(app);
         await createKey(app, a);
         const rotated = (await rotateKey(app, a)).body;
         const results = await Promise.all(Array.from({ length: 5 }, () => confirmRotation(app, a, rotated.pendingId)));
-        expect(results.filter((r) => r.status === 200)).toHaveLength(1);
-        for (const r of results.filter((x) => x.status !== 200)) expect([r.status, r.body.error.code]).toEqual([409, "no_pending"]);
+        for (const r of results) expect(r.status).toBe(200);
+        expect(results.filter((r) => r.body.alreadyConfirmed !== true)).toHaveLength(1);
+        expect((await status(app, a)).body.pendingRotation).toBeNull();
         expect((await redeem(app, await newDevice(app), rotated.key)).status).toBe(200);
       }
     });

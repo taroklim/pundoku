@@ -14,7 +14,8 @@ export interface PendingRotation {
 }
 
 export type ConfirmRotationResult =
-  | { ok: true; groupId: string; keyHmac: Buffer }
+  /** `alreadyConfirmed` — повтор подтверждения уже сработавшей замены (ответ потерян): рабочий ключ тот самый, ничего не менялось. */
+  | { ok: true; groupId: string; keyHmac: Buffer; alreadyConfirmed: boolean }
   /** `no_key` — устройство не в группе; `no_pending` — ожидающей замены нет; `replaced` — на другом устройстве начата новая замена (метка не совпала); `expired` — срок вышел. */
   | { ok: false; reason: "no_key" | "no_pending" | "replaced" | "expired" };
 
@@ -35,7 +36,11 @@ export interface RecoveryRepo {
    * меняется и продолжает приниматься в redeem. `null` — устройство не в группе.
    */
   startRotation(deviceId: string, pending: PendingRotation): Promise<{ groupId: string } | null>;
-  /** Атомарно делает ожидающий ключ рабочим (старый перестаёт работать), если метка и срок совпали. */
+  /**
+   * Атомарно делает ожидающий ключ рабочим (старый перестаёт работать), если метка и срок совпали. Идемпотентно: метка
+   * замены, которая уже сделала текущий ключ рабочим, подтверждается повторно (`alreadyConfirmed`) — иначе потерянный
+   * ответ confirm выглядел бы как «замены нет», хотя новый ключ уже действует. Проверяется после ожидающей замены.
+   */
   confirmRotation(deviceId: string, pendingId: string, now: Date): Promise<ConfirmRotationResult>;
   /** Отбрасывает ожидающую замену (идемпотентно; рабочий ключ не трогает). */
   cancelRotation(deviceId: string): Promise<void>;

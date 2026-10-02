@@ -20,8 +20,10 @@ export interface RecoveryLimits {
   redeemFailuresPerDevice?: number;
   /** Создание + перевыпуск ключа на устройство в час (общий счётчик). */
   issuePerDevice?: number;
-  /** Подтверждений и отмен замены ключа на устройство в час (общий счётчик). */
+  /** Подтверждений замены ключа на устройство в час. */
   confirmPerDevice?: number;
+  /** Отмен замены ключа на устройство в час — отдельный счётчик: исчерпанный лимит confirm не должен мешать отменить (PD-126). */
+  cancelPerDevice?: number;
 }
 
 export interface RecoveryRouterDeps {
@@ -57,6 +59,8 @@ export function recoveryRouter(deps: RecoveryRouterDeps): Router {
   const issueLimit = rateLimit({ windowMs: HOUR_MS, max: deps.limits?.issuePerDevice ?? 5, now: clock, key: byDevice });
 
   const confirmLimit = rateLimit({ windowMs: HOUR_MS, max: deps.limits?.confirmPerDevice ?? 30, now: clock, key: byDevice });
+  // Отдельный экземпляр (свои корзины): после 429 на confirm игрок всё равно может отменить замену.
+  const cancelLimit = rateLimit({ windowMs: HOUR_MS, max: deps.limits?.cancelPerDevice ?? 30, now: clock, key: byDevice });
 
   router.post("/key", auth, issueLimit, async (_req, res) => {
     const key = generateRecoveryKey();
@@ -82,7 +86,7 @@ export function recoveryRouter(deps: RecoveryRouterDeps): Router {
     res.json({ key, pendingId, expiresAt: expiresAt.toISOString() });
   });
 
-  // «Ключ сохранён»: атомарно делает ожидающий ключ рабочим. Метка `pendingId` из ответа rotate обязательна — без неё
+  // «Ключ сохранён»: идемпотентно (повтор с меткой уже сработавшей замены — 200), атомарно делает ожидающий ключ рабочим. Метка `pendingId` из ответа rotate обязательна — без неё
   // устройство подтвердило бы замену, начатую на другом устройстве группы (ключ которой ему не показывали).
   router.post("/key/rotate/confirm", auth, confirmLimit, async (req, res) => {
     const pendingId = (req.body as { pendingId?: unknown } | undefined)?.pendingId;
@@ -101,12 +105,13 @@ export function recoveryRouter(deps: RecoveryRouterDeps): Router {
           throw new HttpError(409, "pending_expired", "Срок ожидающего ключа вышел; начни замену заново");
       }
     }
-    logger.info({ groupId: done.groupId, keyHmacPrefix: keyHmacPrefix(done.keyHmac) }, "recovery: key rotation confirmed");
-    res.json({ confirmed: true });
+    logger.info({ groupId: done.groupId, keyHmacPrefix: keyHmacPrefix(done.keyHmac), alreadyConfirmed: done.alreadyConfirmed }, "recovery: key rotation confirmed");
+    // Повтор уже сработавшего confirm (ответ потерялся): тот же 200, `alreadyConfirmed` — для диагностики, клиент его не требует.
+    res.json(done.alreadyConfirmed ? { confirmed: true, alreadyConfirmed: true } : { confirmed: true });
   });
 
   // «Отменить замену»: ожидающий ключ отброшен, рабочий не тронут (идемпотентно).
-  router.delete("/key/rotate", auth, confirmLimit, async (_req, res) => {
+  router.delete("/key/rotate", auth, cancelLimit, async (_req, res) => {
     await recovery.cancelRotation(deviceIdOf(res));
     res.setHeader("Cache-Control", "no-store");
     res.json({ pending: false });

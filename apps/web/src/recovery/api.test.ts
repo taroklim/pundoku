@@ -80,6 +80,8 @@ describe("клиент /api/recovery/*", () => {
   it("confirm: метка уходит только в теле; успех/устаревшая замена/ошибки", async () => {
     const { fetchFn, api: a } = api(json(200, { confirmed: true }));
     expect(await a.confirmRotation("tok", PENDING)).toEqual({ kind: "ok", value: true });
+    // Повтор уже сработавшего confirm (F1): сервер отвечает 200 с alreadyConfirmed — для клиента это тот же успех.
+    expect(await api(json(200, { confirmed: true, alreadyConfirmed: true })).api.confirmRotation("tok", PENDING)).toEqual({ kind: "ok", value: true });
     const [url, init] = callOf(fetchFn);
     expect(url).not.toContain(PENDING);
     expect(JSON.parse(init.body as string)).toEqual({ pendingId: PENDING });

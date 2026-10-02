@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { RecoveryApi, RecoveryResult, RecoveryStatus } from "./api";
+import { httpRecoveryApi } from "./api";
 import type { RecoverySync } from "./store";
 import { COPIED_MS, RecoveryStore } from "./store";
 
@@ -179,6 +180,63 @@ describe("RecoveryStore: отложенная замена ключа (PD-126)",
     expect(snap(store)).toMatchObject({ phase: "shown", shownKey: KEY2, error: { kind: "limit", minutes: 2 } });
     await store.confirmSaved();
     expect(snap(store)).toMatchObject({ phase: "created", shownKey: null, replaced: true, error: null });
+  });
+
+  it("потерянный ответ confirm (F1): сервер переключил ключ, ответа нет → повтор получает 200 already confirmed → успех, не «замена устарела»", async () => {
+    // Мини-сервер с настоящей семантикой confirm: первый вызов переключает ключ, но ответ «теряется» (обрыв сети);
+    // повтор той же метки — 200 (идемпотентно), любая другая — 409 no_pending. Клиент — настоящий httpRecoveryApi.
+    let confirmed: string | null = null;
+    let serverCalls = 0;
+    let dropNextResponse = true;
+    const json = (status: number, body: unknown) => new Response(JSON.stringify(body), { status, headers: { "content-type": "application/json" } });
+    const fetchFn = vi.fn(async (url: string, init?: RequestInit) => {
+      const path = new URL(url).pathname;
+      if (path === "/api/recovery/key/rotate/confirm") {
+        serverCalls++;
+        const id = (JSON.parse(String(init?.body)) as { pendingId: string }).pendingId;
+        const body = confirmed === id ? { confirmed: true, alreadyConfirmed: true } : { confirmed: true };
+        const res = confirmed === id || (confirmed === null && id === PENDING) ? json(200, body) : json(409, { error: { code: "no_pending" } });
+        if (res.ok) confirmed = id;
+        if (dropNextResponse) {
+          dropNextResponse = false;
+          throw new TypeError("network"); // запрос дошёл и выполнился, ответ потерян
+        }
+        return res;
+      }
+      if (path === "/api/recovery") return json(200, { hasKey: true, devices: 2, keyCreatedAt: "2026-09-30T10:00:00.000Z", pendingRotation: confirmed ? null : { expiresAt: EXPIRES } });
+      throw new Error(`unexpected ${path}`);
+    });
+    const api = httpRecoveryApi({ fetchFn: fetchFn as unknown as typeof fetch, base: "http://api.test" });
+    const { store } = await replacing({ confirmRotation: api.confirmRotation, status: api.status });
+    await store.confirmSaved();
+    expect(snap(store)).toMatchObject({ phase: "shown", shownKey: KEY2, error: { kind: "offline" } }); // «нет соединения»
+    expect(confirmed).toBe(PENDING); // а на сервере ключ уже переключён
+    await store.confirmSaved(); // повтор
+    expect(serverCalls).toBe(2);
+    expect(snap(store)).toMatchObject({ phase: "created", shownKey: null, pendingId: null, replaced: true, error: null });
+    expect(JSON.stringify(snap(store))).not.toContain(COMPACT2);
+  });
+
+  it("после неопределённой ошибки confirm «Leave» перечитывает статус с сервера (confirm мог пройти), без неё — нет", async () => {
+    const status = vi.fn<RecoveryApi["status"]>().mockResolvedValue(ok<RecoveryStatus>({ hasKey: true, devices: 2, keyCreatedAt: "2026-09-30T11:00:00.000Z", pendingRotation: null }));
+    const { store } = await replacing({ confirmRotation: vi.fn(async () => ({ kind: "network" }) as const), status });
+    status.mockClear();
+    await store.confirmSaved();
+    store.requestLeave(() => {});
+    await store.confirmSheet(); // sheet "leave" → осознанный уход
+    await vi.waitFor(() => expect(snap(store)).toMatchObject({ phase: "created", pending: null, createdAt: "2026-09-30T11:00:00.000Z" }));
+    expect(status).toHaveBeenCalledTimes(1);
+  });
+
+  it("лимит (429) при confirm не считается неопределённым: после «Leave» статус заново не читается", async () => {
+    const status = vi.fn<RecoveryApi["status"]>().mockResolvedValue(ok<RecoveryStatus>({ hasKey: true, devices: 2, keyCreatedAt: null, pendingRotation: { expiresAt: EXPIRES } }));
+    const { store } = await replacing({ confirmRotation: vi.fn(async () => ({ kind: "rate_limited", retryAfterSec: 60 }) as const), status });
+    status.mockClear();
+    await store.confirmSaved();
+    store.requestLeave(() => {});
+    await store.confirmSheet();
+    await Promise.resolve();
+    expect(status).not.toHaveBeenCalled();
   });
 
   it("замена уже недействительна (отменена/затёрта/истекла): ключ стёрт, объяснение, рабочий ключ не менялся", async () => {

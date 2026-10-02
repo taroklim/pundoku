@@ -87,6 +87,8 @@ interface MemGroup {
   snapshotDeviceId: string;
   keyCreatedAt: Date;
   pending: PendingRotation | null;
+  /** Метка замены, сделавшей рабочим текущий ключ (зеркало sync_groups.confirmed_id). */
+  confirmedId: string | null;
 }
 
 /** In-memory зеркало PgRecoveryRepo (та же семантика redeem/unlink/deleteGroup) для unit-тестов без Postgres. */
@@ -109,7 +111,7 @@ export class MemoryRecoveryRepo implements RecoveryRepo {
   }
   async createGroup(deviceId: string, keyHmac: Buffer, now: Date): Promise<{ groupId: string } | null> {
     if (this.links.has(deviceId)) return null;
-    const group: MemGroup = { id: `90000000-0000-4000-8000-${String(++this.seq).padStart(12, "0")}`, keyHmac, snapshotDeviceId: deviceId, keyCreatedAt: now, pending: null };
+    const group: MemGroup = { id: `90000000-0000-4000-8000-${String(++this.seq).padStart(12, "0")}`, keyHmac, snapshotDeviceId: deviceId, keyCreatedAt: now, pending: null, confirmedId: null };
     this.groups.set(group.id, group);
     this.links.set(deviceId, { groupId: group.id, seq: ++this.seq });
     this.orphans.delete(deviceId);
@@ -124,14 +126,17 @@ export class MemoryRecoveryRepo implements RecoveryRepo {
   async confirmRotation(deviceId: string, pendingId: string, now: Date): Promise<ConfirmRotationResult> {
     const group = this.groupOf(deviceId);
     if (!group) return { ok: false, reason: "no_key" };
-    if (!group.pending) return { ok: false, reason: "no_pending" };
-    if (group.pending.id !== pendingId) return { ok: false, reason: "replaced" };
+    const replay = (): ConfirmRotationResult | null =>
+      group.confirmedId === pendingId ? { ok: true, groupId: group.id, keyHmac: group.keyHmac, alreadyConfirmed: true } : null;
+    if (!group.pending) return replay() ?? { ok: false, reason: "no_pending" };
+    if (group.pending.id !== pendingId) return replay() ?? { ok: false, reason: "replaced" };
     if (group.pending.expiresAt.getTime() <= now.getTime()) return { ok: false, reason: "expired" };
     const keyHmac = group.pending.keyHmac;
     group.keyHmac = keyHmac;
     group.keyCreatedAt = now;
+    group.confirmedId = group.pending.id;
     group.pending = null;
-    return { ok: true, groupId: group.id, keyHmac };
+    return { ok: true, groupId: group.id, keyHmac, alreadyConfirmed: false };
   }
   async cancelRotation(deviceId: string): Promise<void> {
     const group = this.groupOf(deviceId);

@@ -544,8 +544,10 @@ Year строятся из `days` (`listDays`), а Play лежит в `kv`. Би
 - Шит «Replace the recovery key?» не деструктивный (кнопка «Make new key»): `rotate` возвращает `{key, pendingId, expiresAt}`, стор
   входит в фазу `shown` в режиме `replace` (заголовок «Your new key», текст «current key keeps working until you tap “Key saved”»).
 - «Key saved» в режиме замены — запрос `POST /key/rotate/confirm` с `pendingId` (busy, `aria-busy`). Успех → ключ и метка стираются,
-  статус «New key is active. The old one no longer works.» (`role="status"`). Сеть/лимит → ключ остаётся на экране, ошибка с
-  `role="alert"`, можно нажать снова. `409` (отменена/перезапущена/истекла) → ключ стирается, текст «That replacement is no longer valid».
+  статус «New key is active. The old one no longer works.» (`role="status"`). Сеть/сбой/лимит → ключ остаётся на экране, ошибка с
+  `role="alert"`, можно нажать снова. После сети/сбоя результат считается неизвестным (ответ мог потеряться уже после переключения):
+  текст «can’t tell yet whether the new key is already active… repeating is safe», повтор безопасен — сервер идемпотентен по
+  `pendingId` и ответит успехом (F1); «Leave» после такой ошибки перечитывает статус, чтобы карточка не врала. `409` (отменена/перезапущена/истекла) → ключ стирается, текст «That replacement is no longer valid».
   В режиме создания «Key saved» по-прежнему только стирает ключ из памяти.
 - Уход без подтверждения («Leave» в шите про *новый* ключ, закрытие приложения, перезагрузка): ключ и `pendingId` стираются (в IDB и
   `localStorage` не пишутся), рабочий ключ жив. После возврата `GET /api/recovery` отдаёт `pendingRotation` → карточка «New key not

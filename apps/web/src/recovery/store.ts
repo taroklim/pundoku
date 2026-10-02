@@ -93,7 +93,14 @@ export class RecoveryStore {
   private limitTimer: ReturnType<typeof setTimeout> | null = null;
   private pendingLeave: (() => void) | null = null;
   /** Откуда открыт ввод ключа: «Отмена» возвращает туда же (PD-121d). */
-  private entryFrom: "none" | "unavailable" = "none";  private readonly now: () => number;
+  private entryFrom: "none" | "unavailable" = "none";
+  /**
+   * Последний confirm не получил ответа (сеть/сервер): сервер мог его выполнить, а ответ потеряться. Пока флаг стоит,
+   * неизвестно, действует ли новый ключ. Повтор confirm безопасен (сервер идемпотентен по `pendingId`, PD-126/F1) и
+   * приводит к успеху; при уходе с экрана состояние перечитывается с сервера, чтобы карточка не врала.
+   */
+  private confirmUncertain = false;
+  private readonly now: () => number;
   private readonly writeClipboard: (text: string) => Promise<void>;
 
   constructor(private readonly deps: RecoveryDeps) {
@@ -152,6 +159,7 @@ export class RecoveryStore {
     this.copyTimer = null;
     this.clearLimitTimer();
     this.pendingLeave = null;
+    this.confirmUncertain = false;
     this.set({ ...initial });
   }
 
@@ -252,7 +260,9 @@ export class RecoveryStore {
   /**
    * «Ключ сохранён». Первый ключ: стирается из памяти, дальше — карточка «Ключ создан». Замена (PD-126): сначала сервер
    * подтверждает переключение (старый ключ → мёртв, новый → рабочий), и только потом ключ стирается; при ошибке сети
-   * или лимите ключ остаётся на экране, чтобы нажать ещё раз — старый ключ всё это время жив.
+   * или лимите ключ остаётся на экране, чтобы нажать ещё раз. Ответ мог потеряться уже ПОСЛЕ переключения на сервере
+   * (F1): повтор с той же меткой сервер подтверждает как «уже подтверждено» (200), и игрок видит успех, а не «замена
+   * устарела». 409 после такой ошибки означает, что именно эта замена действительно не действует.
    */
   async confirmSaved(): Promise<void> {
     const { phase, shownMode, pendingId, busy } = this.snap;
@@ -263,6 +273,9 @@ export class RecoveryStore {
     }
     this.set({ busy: true, error: null });
     const r = await this.call((t) => this.deps.api.confirmRotation(t, pendingId));
+    // Результат неизвестен, если ответа нет (сеть) или сервер ответил сбоем: запрос мог дойти и выполниться.
+    // Лимит (429) и «не авторизован» отсекаются до обработчика — там confirm точно не выполнялся.
+    if (r.kind === "network" || r.kind === "error") this.confirmUncertain = true;
     if (r.kind === "ok") {
       this.eraseShown({ busy: false, pending: null, replaced: true, createdAt: new Date(this.now()).toISOString() });
       void this.refresh(); // число устройств и «Создан» — как их видит сервер
@@ -282,6 +295,7 @@ export class RecoveryStore {
   private eraseShown(patch: Partial<RecoveryState>): void {
     if (this.copyTimer) clearTimeout(this.copyTimer);
     this.copyTimer = null;
+    this.confirmUncertain = false;
     this.set({ phase: "created", shownKey: null, pendingId: null, copied: false, ...patch });
   }
 
@@ -448,7 +462,9 @@ export class RecoveryStore {
     this.pendingLeave = null;
     // Осознанный уход без подтверждения: ключ стирается. Первый ключ — перевыпустить можно из карточки «Ключ создан».
     // Замена — старый ключ жив, а `pending` остаётся: в карточке виден статус «Новый ключ не подтверждён».
+    const uncertain = this.confirmUncertain;
     this.eraseShown({ sheet: null });
+    if (uncertain) void this.refresh(); // confirm мог пройти: показать карточку по данным сервера, а не по памяти
     proceed?.();
   }
 }

@@ -199,7 +199,7 @@ export function defineRecoveryScenarios(label: string, harness: HarnessFactory):
       expect(created).toBe("2026-10-02T10:00:00.000Z");
     });
 
-    it("confirm: повтор → 409 no_pending; чужая/кривая метка; новая замена затирает прежнюю (старую метку подтвердить нельзя)", async () => {
+    it("confirm: повтор той же метки → 200 (идемпотентно); чужая/кривая метка; новая замена затирает прежнюю (старую метку подтвердить нельзя)", async () => {
       const { app } = harness();
       const { a, key } = await seeded(app);
       const first = (await rotateKey(app, a)).body;
@@ -219,11 +219,68 @@ export function defineRecoveryScenarios(label: string, harness: HarnessFactory):
         expect(res.body.error.code).toBe("invalid_pending");
       }
       expect((await confirmRotation(app, a, second.pendingId.toUpperCase())).status).toBe(200); // регистр метки не важен
-      const again = await confirmRotation(app, a, second.pendingId);
-      expect(again.status).toBe(409);
-      expect(again.body.error.code).toBe("no_pending");
+      const again = await confirmRotation(app, a, second.pendingId); // повтор после потерянного ответа
+      expect(again.status).toBe(200);
+      expect(again.body).toEqual({ confirmed: true, alreadyConfirmed: true });
       expect((await redeem(app, await newDevice(app), first.key)).status).toBe(400);
       expect((await redeem(app, await newDevice(app), second.key)).status).toBe(200);
+    });
+
+    it("потерянный ответ confirm (F1): повтор после успеха — 200 already confirmed, ключ не перевыпускается; чужая метка и метки прошлых замен — по-прежнему 409", async () => {
+      const { app } = harness();
+      const { a, key: oldKey } = await seeded(app);
+      const first = (await rotateKey(app, a)).body;
+      expect((await confirmRotation(app, a, first.pendingId)).status).toBe(200); // сервер переключил, ответ «потерян»
+      const createdAfter = (await status(app, a)).body.keyCreatedAt;
+      const retry = await confirmRotation(app, a, first.pendingId);
+      expect(retry.status).toBe(200);
+      expect(retry.body.confirmed).toBe(true);
+      expect(retry.headers["cache-control"]).toBe("no-store");
+      // Повтор ничего не меняет: тот же рабочий ключ, «Создан» не сдвинулся, старый мёртв.
+      expect((await status(app, a)).body.keyCreatedAt).toBe(createdAfter);
+      expect((await redeem(app, await newDevice(app), first.key)).status).toBe(200);
+      expect((await redeem(app, await newDevice(app), oldKey)).status).toBe(400);
+      // Повтор переживает начало новой замены (ожидающая Y не мешает «X уже подтверждён»), но Y он не подтверждает.
+      const second = (await rotateKey(app, a)).body;
+      expect((await confirmRotation(app, a, first.pendingId)).status).toBe(200);
+      expect((await status(app, a)).body.pendingRotation).not.toBeNull();
+      expect((await redeem(app, await newDevice(app), second.key)).status).toBe(400); // Y по-прежнему ждёт подтверждения
+      // Метка, не принадлежащая группе, и метка вообще не подтверждавшейся замены — 409 как раньше.
+      const stranger = (await seeded(app)).a;
+      const strangerRot = (await rotateKey(app, stranger)).body;
+      expect((await confirmRotation(app, stranger, strangerRot.pendingId)).status).toBe(200);
+      const foreign = await confirmRotation(app, a, strangerRot.pendingId); // метка чужой группы
+      expect(foreign.status).toBe(409);
+      expect(foreign.body.error.code).toBe("pending_replaced");
+      // После подтверждения следующей замены метка X уже не описывает рабочий ключ → 409.
+      expect((await confirmRotation(app, a, second.pendingId)).status).toBe(200);
+      const old = await confirmRotation(app, a, first.pendingId);
+      expect(old.status).toBe(409);
+      expect(old.body.error.code).toBe("no_pending");
+    });
+
+    it("повтор подтверждения не работает после удаления ключа и для устройства без группы (404 no_key)", async () => {
+      const { app } = harness();
+      const { a } = await seeded(app);
+      const r = (await rotateKey(app, a)).body;
+      expect((await confirmRotation(app, a, r.pendingId)).status).toBe(200);
+      expect((await deleteKey(app, a)).status).toBe(200);
+      expect((await confirmRotation(app, a, r.pendingId)).status).toBe(404);
+      const outsider = await newDevice(app);
+      expect((await confirmRotation(app, outsider, r.pendingId)).status).toBe(404);
+    });
+
+    it("cancel не делит лимит с confirm: после 429 на confirm замену всё равно можно отменить", async () => {
+      const { app } = harness({ limits: { confirmPerDevice: 1, cancelPerDevice: 2 } });
+      const { a } = await seeded(app);
+      const r = (await rotateKey(app, a)).body;
+      expect((await confirmRotation(app, a, "00000000-0000-4000-8000-000000000000")).status).toBe(409);
+      expect((await confirmRotation(app, a, r.pendingId)).status).toBe(429);
+      expect((await cancelRotation(app, a)).status).toBe(200);
+      expect((await status(app, a)).body.pendingRotation).toBeNull();
+      expect((await cancelRotation(app, a)).status).toBe(200);
+      expect((await cancelRotation(app, a)).status).toBe(429); // у отмены свой лимит
+      expect((await confirmRotation(app, a, r.pendingId)).status).toBe(429); // и confirm счёт не сбросило
     });
 
     it("confirm без начатой замены → 409 no_pending, рабочий ключ не тронут", async () => {
@@ -413,11 +470,12 @@ export function defineRecoveryScenarios(label: string, harness: HarnessFactory):
         expect((await redeem(app, d3, "nope")).status).toBe(429); // d3 чист, но IP исчерпан
       });
 
-      it("confirm/cancel замены: свой лимит на устройство, не мешает rotate", async () => {
+      it("confirm замены: свой лимит на устройство, не мешает rotate", async () => {
         const { app } = harness({ limits: { confirmPerDevice: 2 } });
         const { a } = await seeded(app);
         const r = (await rotateKey(app, a)).body;
-        expect((await cancelRotation(app, a)).status).toBe(200);
+        expect((await cancelRotation(app, a)).status).toBe(200); // отмена в счёт confirm не идёт
+        expect((await confirmRotation(app, a, r.pendingId)).status).toBe(409);
         expect((await confirmRotation(app, a, r.pendingId)).status).toBe(409);
         const over = await confirmRotation(app, a, r.pendingId);
         expect(over.status).toBe(429);

@@ -371,7 +371,8 @@ describe("SettingsScreen: отложенная замена ключа (PD-126)"
     await startReplace();
     await click("key-saved");
     expect(q("key-error")!.getAttribute("role")).toBe("alert");
-    expect(q("key-error")!.textContent).toContain("current key still works");
+    expect(q("key-error")!.textContent).toContain("can’t tell yet whether the new key is already active");
+    expect(q("key-error")!.textContent).toContain("repeating is safe");
     expect(q("key-shown")).not.toBeNull();
     await click("key-saved");
     expect(q("key-shown")).toBeNull();
