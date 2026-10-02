@@ -42,6 +42,25 @@ const type = async (value: string) => {
     ta.dispatchEvent(new Event("input", { bubbles: true }));
   });
 };
+/** Поля проверки записи (PD-142): какие группы спросили — читаем по подписям «Group N of 8». */
+const checkInputs = () => [0, 1].map((i) => q<HTMLInputElement>(`key-check-${i}`)!);
+const askedGroups = () => checkInputs().map((el) => Number(host.querySelector(`label[for="${el.id}"]`)!.textContent!.match(/Group (\d)/)![1]) - 1);
+const typeCheck = async (i: number, value: string) => {
+  const el = checkInputs()[i]!;
+  await act(async () => {
+    Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")!.set!.call(el, value);
+    el.dispatchEvent(new Event("input", { bubbles: true }));
+  });
+};
+const groupsOf = (key: string) => key.split("-");
+/** «I’ve written it down» → верные группы → «Check». */
+async function writeAndCheck(key: string) {
+  await click("key-saved");
+  const asked = askedGroups();
+  await typeCheck(0, groupsOf(key)[asked[0]!]!);
+  await typeCheck(1, groupsOf(key)[asked[1]!]!);
+  await click("key-check-go");
+}
 async function mount(status: RecoveryStatus = { hasKey: false }, over: Partial<RecoveryApi> = {}) {
   resetCalls = 0;
   api = {
@@ -88,7 +107,7 @@ describe("SettingsScreen: состояния блока «Recovery key»", () =>
     expect(q("key-error")).toBeNull();
   });
 
-  it("2. ключ показан один раз: 8 плашек с озвучкой по знакам, копирование, предупреждение, «Key saved»", async () => {
+  it("2. ключ показан один раз: 8 плашек с озвучкой по знакам, копирование, предупреждение, «I’ve written it down» → проверка записи", async () => {
     await mount();
     await click("key-create");
     const chips = [...host.querySelectorAll(".settings-chip")];
@@ -101,7 +120,7 @@ describe("SettingsScreen: состояния блока «Recovery key»", () =>
     await click("key-copy");
     expect(q("key-copy")!.textContent).toBe("Copied");
     expect(q("key-copy")!.getAttribute("aria-live")).toBe("polite");
-    await click("key-saved");
+    await writeAndCheck(KEY);
     expect(q("key-shown")).toBeNull();
     expect(host.textContent).not.toContain("K7QP");
   });
@@ -230,17 +249,17 @@ describe("SettingsScreen: action sheets", () => {
     // PD-126: замена больше ничего не ломает до подтверждения, шит не деструктивный
     expect(q("action-sheet-go")!.className).not.toContain("destructive");
     expect(q("action-sheet-go")!.textContent).toBe("Make new key");
-    expect(dlg.textContent).toContain("keeps working until you tap");
+    expect(dlg.textContent).toContain("keeps working until you check and confirm");
     await act(async () => void dlg.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true })));
     expect(q("action-sheet")).toBeNull();
     expect(document.activeElement).toBe(q("key-reissue"));
     expect(api.rotate).not.toHaveBeenCalled();
   });
 
-  it("PD-121 (F9): в разрушающем шите (Replace/Delete) начальный фокус на «Cancel», в обычном (Unlink) — на самом шите", async () => {
+  it("PD-121 (F9): в разрушающем шите (Delete) начальный фокус на «Cancel», в обычном (Replace после PD-126, Unlink) — на самом шите", async () => {
     await mount(created);
     await click("key-reissue");
-    expect(document.activeElement).toBe(q("action-sheet-cancel"));
+    expect(document.activeElement).toBe(q("action-sheet")); // PD-126: замена не теряет старый ключ, шит не деструктивный
     await click("action-sheet-cancel");
     await click("key-delete");
     expect(document.activeElement).toBe(q("action-sheet-cancel"));
@@ -343,18 +362,18 @@ describe("SettingsScreen: отложенная замена ключа (PD-126)"
     expect(api.rotate).toHaveBeenCalledWith("tok");
     expect(host.querySelector("#settings-h-key")).not.toBeNull();
     expect(host.textContent).toContain("Your new key");
-    expect(host.textContent).toContain("Your current key keeps working until you tap");
+    expect(host.textContent).toContain("Your current key keeps working until you check and confirm it");
     expect([...host.querySelectorAll(".settings-chip")].map((c) => c.textContent).join("-")).toBe(KEY2);
     expect(document.activeElement).toBe(q("key-shown"));
     expect(api.confirmRotation).not.toHaveBeenCalled();
   });
 
-  it("«Key saved»: busy → confirm с pendingId → «New key is active», ключа на экране нет, pending-карточки нет", async () => {
+  it("«Check and activate»: busy → confirm с pendingId → «New key is active», ключа на экране нет, pending-карточки нет", async () => {
     let release!: (r: RecoveryResult<true>) => void;
     await mount(created, { confirmRotation: vi.fn(() => new Promise<RecoveryResult<true>>((r) => (release = r))) });
     await startReplace();
-    await click("key-saved");
-    expect(q("key-saved")!.getAttribute("aria-busy")).toBe("true");
+    await writeAndCheck(KEY2);
+    expect(q("key-check-go")!.getAttribute("aria-busy")).toBe("true");
     await act(async () => release(ok(true as const)));
     await flush();
     expect(api.confirmRotation).toHaveBeenCalledWith("tok", PENDING);
@@ -365,16 +384,16 @@ describe("SettingsScreen: отложенная замена ключа (PD-126)"
     expect(q("key-pending")).toBeNull();
   });
 
-  it("ошибка сети при confirm: alert с понятным текстом, ключ остаётся, «Key saved» можно нажать снова", async () => {
+  it("ошибка сети при confirm: alert с понятным текстом, ключ остаётся, «Check and activate» можно нажать снова", async () => {
     const confirmRotation = vi.fn<RecoveryApi["confirmRotation"]>().mockResolvedValueOnce({ kind: "network" }).mockResolvedValue(ok(true as const));
     await mount(created, { confirmRotation });
     await startReplace();
-    await click("key-saved");
+    await writeAndCheck(KEY2);
     expect(q("key-error")!.getAttribute("role")).toBe("alert");
     expect(q("key-error")!.textContent).toContain("can’t tell yet whether the new key is already active");
     expect(q("key-error")!.textContent).toContain("repeating is safe");
-    expect(q("key-shown")).not.toBeNull();
-    await click("key-saved");
+    expect(q("key-check-0")).not.toBeNull(); // поля проверки остались заполненными, повтор — той же кнопкой
+    await click("key-check-go");
     expect(q("key-shown")).toBeNull();
     expect(q("key-replaced")).not.toBeNull();
   });
@@ -382,7 +401,7 @@ describe("SettingsScreen: отложенная замена ключа (PD-126)"
   it("замена устарела (409): ключ стёрт, сказано, что рабочий ключ не менялся", async () => {
     await mount(created, { confirmRotation: async () => ({ kind: "stale_rotation" }) });
     await startReplace();
-    await click("key-saved");
+    await writeAndCheck(KEY2);
     expect(q("key-shown")).toBeNull();
     expect(q("key-error")!.getAttribute("data-kind")).toBe("stale");
     expect(q("key-error")!.textContent).toContain("no longer valid");
@@ -556,5 +575,184 @@ describe("SettingsScreen: «Подсвечивать неверные цифры
     await click("lang-ru");
     expect(host.querySelector("#settings-h-game")!.textContent).toBe("Игра");
     expect(sw().closest("label")!.textContent).toBe("Подсвечивать неверные цифры");
+  });
+});
+
+describe("SettingsScreen: проверка записи ключа (PD-142)", () => {
+  const created = { hasKey: true, devices: 2, keyCreatedAt: "2026-09-30T10:00:00.000Z", pendingRotation: null } as const;
+  const keyOf = (i: number, key = KEY) => key.split("-")[askedGroups()[i]!]!;
+  const fillRight = async (key = KEY) => {
+    await typeCheck(0, keyOf(0, key));
+    await typeCheck(1, keyOf(1, key));
+  };
+  const pressKey = async (el: Element, key: string) => {
+    const ev = new KeyboardEvent("keydown", { key, bubbles: true, cancelable: true });
+    await act(async () => void el.dispatchEvent(ev));
+    await flush();
+    return ev;
+  };
+  const toCheck = async () => {
+    await mount();
+    await click("key-create");
+    await click("key-saved");
+  };
+
+  it("«I’ve written it down» вместо «Key saved»: сначала проверка, ключ с экрана уходит, фокус в первом поле", async () => {
+    await mount();
+    await click("key-create");
+    expect(q("key-saved")!.textContent).toBe("I’ve written it down");
+    expect(q("key-check-0")).toBeNull();
+    await click("key-saved");
+    expect(q("key-shown")).toBeNull();
+    expect(host.querySelectorAll(".settings-chip")).toHaveLength(0);
+    for (const g of KEY.split("-")) expect(host.textContent).not.toContain(g); // ключ не светится рядом с полями
+    expect(document.activeElement).toBe(q("key-check-0"));
+    expect(api.confirmRotation).not.toHaveBeenCalled();
+  });
+
+  it("поля: две разные группы по возрастанию; label с номером группы; атрибуты ввода без автоисправления, iOS-зума и подсказок", async () => {
+    await toCheck();
+    const [a, b] = askedGroups();
+    expect(a).toBeLessThan(b!);
+    const inputs = checkInputs();
+    inputs.forEach((el, i) => {
+      const label = host.querySelector(`label[for="${el.id}"]`)!;
+      expect(label.textContent).toBe(`Group ${askedGroups()[i]! + 1} of 8`);
+      expect(el.type).toBe("text");
+      expect(el.getAttribute("autocapitalize")).toBe("characters");
+      expect(el.getAttribute("autocorrect")).toBe("off");
+      expect(el.getAttribute("autocomplete")).toBe("off");
+      expect(el.getAttribute("spellcheck")).toBe("false");
+      expect(el.getAttribute("enterkeyhint")).toBe(i === 0 ? "next" : "done");
+      expect(el.getAttribute("aria-describedby")).toBe("settings-check-hint");
+      expect(el.hasAttribute("aria-invalid")).toBe(false);
+    });
+    expect(host.querySelector('[role="group"][aria-labelledby="settings-check-cap"]')).not.toBeNull();
+    expect(host.querySelector("#settings-check-intro")!.textContent).toContain("enter two of its groups");
+  });
+
+  it("«Check» неактивна, пока обе группы не набраны целиком; ввод нормализуется на лету", async () => {
+    await toCheck();
+    const go = () => q("key-check-go")!;
+    expect(go().getAttribute("aria-disabled")).toBe("true");
+    await typeCheck(0, ` ${keyOf(0).toLowerCase().slice(0, 2)}-${keyOf(0).toLowerCase().slice(2)} `);
+    expect(checkInputs()[0]!.value).toBe(keyOf(0));
+    expect(go().getAttribute("aria-disabled")).toBe("true");
+    await click("key-check-go"); // неактивна — тап ничего не делает
+    expect(q("key-error")).toBeNull();
+    await typeCheck(1, keyOf(1));
+    expect(go().getAttribute("aria-disabled")).toBe("false");
+  });
+
+  it("неверный ввод: мягкий alert, помечено только неверное поле (aria-invalid), ключа нет, шаг не закрыт; правка снимает ошибку", async () => {
+    await toCheck();
+    await typeCheck(0, keyOf(0));
+    await typeCheck(1, keyOf(1) === "AAAA" ? "BBBB" : "AAAA");
+    await click("key-check-go");
+    const err = q("key-error")!;
+    expect(err.getAttribute("role")).toBe("alert");
+    expect(err.getAttribute("data-kind")).toBe("mismatch");
+    expect(err.textContent).toContain("That doesn’t match");
+    expect(checkInputs().map((el) => el.getAttribute("aria-invalid"))).toEqual([null, "true"]);
+    expect(checkInputs().every((el) => el.getAttribute("aria-describedby")!.includes("settings-check-err"))).toBe(true);
+    expect(host.querySelector("#settings-check-err")).toBe(err);
+    expect(q("key-created")).toBeNull();
+    await typeCheck(1, keyOf(1));
+    expect(q("key-error")).toBeNull();
+    expect(checkInputs()[1]!.hasAttribute("aria-invalid")).toBe(false);
+    await click("key-check-go");
+    expect(q("key-created")).not.toBeNull();
+    expect(host.textContent).not.toContain("K7QP");
+  });
+
+  it("«Show the key again»: плашки на месте, фокус на ключе, введённое стёрто; в проверку можно вернуться и пройти", async () => {
+    await toCheck();
+    await typeCheck(0, "ZZZZ");
+    await click("key-check-back");
+    expect(q("key-check-0")).toBeNull();
+    expect([...host.querySelectorAll(".settings-chip")].map((c) => c.textContent).join("-")).toBe(KEY);
+    expect(document.activeElement).toBe(q("key-shown"));
+    await click("key-saved");
+    expect(checkInputs().map((el) => el.value)).toEqual(["", ""]);
+    await fillRight();
+    await click("key-check-go");
+    expect(q("key-created")).not.toBeNull();
+  });
+
+  it("Enter: в первом поле — к следующему, в последнем — «Check» (при неверном — ошибка, не отправка)", async () => {
+    await toCheck();
+    await fillRight();
+    checkInputs()[0]!.focus();
+    const ev = await pressKey(checkInputs()[0]!, "Enter");
+    expect(ev.defaultPrevented).toBe(true);
+    expect(document.activeElement).toBe(checkInputs()[1]);
+    expect(q("key-created")).toBeNull();
+    await pressKey(checkInputs()[1]!, "Enter");
+    expect(q("key-created")).not.toBeNull();
+  });
+
+  it("пропуск есть, но с честным предупреждением: строка под кнопкой, шит с фокусом на «Check the key»; «Stay» не пропускает", async () => {
+    await toCheck();
+    expect(host.textContent).toContain("without a written-down key progress can’t be restored on another device");
+    await click("key-check-skip");
+    const sheet = q("action-sheet")!;
+    expect(sheet.textContent).toContain("Skip the check?");
+    expect(sheet.textContent).toContain("can’t be restored on another device");
+    expect(sheet.textContent).toContain("this key can’t be shown again");
+    expect(document.activeElement).toBe(q("action-sheet-cancel"));
+    expect(q("action-sheet-cancel")!.textContent).toBe("Check the key");
+    await click("action-sheet-cancel");
+    expect(q("action-sheet")).toBeNull();
+    expect(q("key-check-0")).not.toBeNull();
+    await click("key-check-skip");
+    await click("action-sheet-go");
+    expect(q("key-created")).not.toBeNull();
+    expect(host.textContent).not.toContain("K7QP");
+  });
+
+  it("замена, пропуск: шит предупреждает, что старый ключ перестанет работать; confirm уходит только после «Skip the check»", async () => {
+    await mount(created);
+    await click("key-reissue");
+    await click("action-sheet-go");
+    await click("key-saved");
+    expect(q("key-check-go")!.textContent).toBe("Check and activate");
+    expect(api.confirmRotation).not.toHaveBeenCalled();
+    await click("key-check-skip");
+    expect(q("action-sheet")!.textContent).toContain("the old one will stop working");
+    expect(api.confirmRotation).not.toHaveBeenCalled();
+    await click("action-sheet-go");
+    expect(api.confirmRotation).toHaveBeenCalledWith("tok", PENDING);
+    expect(q("key-replaced")).not.toBeNull();
+  });
+
+  it("замена: неверный ввод не трогает сервер (старый ключ жив), верный — confirm один раз", async () => {
+    await mount(created);
+    await click("key-reissue");
+    await click("action-sheet-go");
+    await click("key-saved");
+    await typeCheck(0, "AAAA");
+    await typeCheck(1, "BBBB");
+    await click("key-check-go");
+    expect(api.confirmRotation).not.toHaveBeenCalled();
+    expect(checkInputs().map((el) => el.getAttribute("aria-invalid"))).toEqual(["true", "true"]);
+    await fillRight(KEY2);
+    await click("key-check-go");
+    expect(api.confirmRotation).toHaveBeenCalledTimes(1);
+  });
+
+  it("uk и ru: подписи полей, кнопки и предупреждение пропуска переведены", async () => {
+    await toCheck();
+    await click("key-check-back");
+    await click("lang-uk");
+    await click("key-saved");
+    expect(host.querySelector(`label[for="settings-check-0"]`)!.textContent).toMatch(/^Група \d з 8$/);
+    expect(q("key-check-go")!.textContent).toBe("Перевірити");
+    expect(host.textContent).toContain("не відновити на іншому пристрої");
+    await click("key-check-back");
+    await click("lang-ru");
+    await click("key-saved");
+    expect(host.querySelector(`label[for="settings-check-0"]`)!.textContent).toMatch(/^Группа \d из 8$/);
+    expect(q("key-check-go")!.textContent).toBe("Проверить");
+    expect(host.textContent).toContain("не восстановить на другом устройстве");
   });
 });

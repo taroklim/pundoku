@@ -4,26 +4,38 @@
  *
  * Правила безопасности:
  *  - ключ (показанный или вводимый) живёт ТОЛЬКО в памяти этого объекта: не в IndexedDB/localStorage, не в адресе,
- *    не в логах (модуль не пишет в консоль). Показанный ключ стирается по «Ключ сохранён» или при уходе с экрана
- *    через подтверждение; вводимый — при закрытии экрана и после успеха;
+ *    не в логах (модуль не пишет в консоль). Показанный ключ стирается после проверки записи (PD-142: две случайные
+ *    группы, либо явный «Пропустить проверку») или при уходе с экрана через подтверждение; вводимый — при закрытии
+ *    экрана и после успеха; введённые группы проверки — там же, где ключ;
  *  - замена ключа отложенная (PD-126): «Перевыпустить» кладёт на сервер НОВЫЙ ключ как ожидающий, старый продолжает
- *    работать; новый вступает в силу только по «Ключ сохранён» (confirm). `pendingId` (метка подтверждения) — тоже
+ *    работать; новый вступает в силу только после проверки записи (или пропуска) и confirm. Проверка — локальная и идёт
+ *    ДО confirm: пока она не пройдена, на сервере ничего не меняется. `pendingId` (метка подтверждения) — тоже
  *    только в памяти. Закрыли/ушли/пропала сеть до подтверждения — ничего не потеряно: старый ключ жив, а в карточке
  *    «Ключ создан» остаётся статус «Новый ключ не подтверждён» (`pending`) с действиями «начать заново»/«отменить»;
  *  - токен устройства не меняется. После redeem/unlink/удаления вызывается `resetAfterLinkChange()` менеджера
  *    синхронизации (сброс серверного состояния и новая первая синхронизация), а не `adoptToken`.
  */
 import type { RecoveryApi, RecoveryResult } from "./api";
-import { compactKey, isCompleteKey, normalizeKeyInput } from "./key";
+import { compactKey, groupMatches, isCompleteKey, normalizeGroupInput, normalizeKeyInput, pickCheckGroups } from "./key";
 
 export type KeyPhase = "loading" | "unavailable" | "none" | "shown" | "created" | "enter";
-export type SheetId = "reissue" | "unlink" | "delete" | "leave";
-export type ErrorKind = "invalid" | "limit" | "offline" | "generic" | "stale";
+export type SheetId = "reissue" | "unlink" | "delete" | "leave" | "skip";
+export type ErrorKind = "invalid" | "limit" | "offline" | "generic" | "stale" | "mismatch";
 
 export interface RecoveryError {
   kind: ErrorKind;
   /** Для `limit`: сколько минут ждать (округлено вверх, минимум 1). */
   minutes?: number;
+}
+
+/** Проверка записи ключа (PD-142): какие группы спрашиваем и что введено. Только в памяти, как и сам ключ. */
+export interface KeyCheck {
+  /** Индексы спрашиваемых групп (0..7), по возрастанию. */
+  groups: number[];
+  /** Введённое (нормализованное, по 4 символа) — в том же порядке, что `groups`. */
+  values: string[];
+  /** Последняя проверка не совпала именно в этом поле (снимается правкой). */
+  wrong: boolean[];
 }
 
 export interface RecoveryState {
@@ -35,6 +47,12 @@ export interface RecoveryState {
   shownKey: string | null;
   /** Что за ключ показан: первый (`create`) или замена (`replace`, ещё не подтверждена на сервере). */
   shownMode: "create" | "replace";
+  /**
+   * Шаг «проверьте запись» (PD-142): пока не `null`, вместо плашек ключа — поля для 2 его групп. Подтверждение
+   * (создание — стирание ключа из памяти, замена — confirm на сервере) возможно только отсюда: после совпадения групп или
+   * явного «Пропустить проверку» (шит `skip`).
+   */
+  check: KeyCheck | null;
   /** Метка подтверждения показанной замены (только `replace`, только в памяти). */
   pendingId: string | null;
   /** Неподтверждённая замена на сервере: старый ключ ещё работает. `expiresAt` — ISO-время, когда она протухнет. */
@@ -63,6 +81,8 @@ export interface RecoveryDeps {
   api: RecoveryApi;
   sync: RecoverySync;
   now?: () => number;
+  /** Источник случайности для выбора групп проверки; по умолчанию `Math.random`. */
+  random?: () => number;
   /** Копирование в буфер; по умолчанию `navigator.clipboard.writeText`. Отказ — «Скопировано» не показывается. */
   writeClipboard?: (text: string) => Promise<void>;
 }
@@ -75,6 +95,7 @@ const initial: RecoveryState = {
   createdAt: null,
   shownKey: null,
   shownMode: "create",
+  check: null,
   pendingId: null,
   pending: null,
   replaced: false,
@@ -101,10 +122,12 @@ export class RecoveryStore {
    */
   private confirmUncertain = false;
   private readonly now: () => number;
+  private readonly random: () => number;
   private readonly writeClipboard: (text: string) => Promise<void>;
 
   constructor(private readonly deps: RecoveryDeps) {
     this.now = deps.now ?? Date.now;
+    this.random = deps.random ?? Math.random;
     this.writeClipboard =
       deps.writeClipboard ??
       ((text) => (typeof navigator !== "undefined" && navigator.clipboard ? navigator.clipboard.writeText(text) : Promise.reject(new Error("no clipboard"))));
@@ -149,6 +172,7 @@ export class RecoveryStore {
     this.pendingLeave = null;
     this.clearLimitTimer();
     const patch: Partial<RecoveryState> = { sheet: null, error: null, restored: false, replaced: false, entry: "" };
+    if (this.snap.check) patch.check = null; // введённые группы стираются; ключ (если показан) остаётся и откроется снова
     if (this.snap.phase === "enter") patch.phase = this.entryFrom;
     this.set(patch);
   }
@@ -244,6 +268,7 @@ export class RecoveryStore {
         phase: "shown",
         shownKey: r.value.key,
         shownMode: "create",
+        check: null,
         pendingId: null,
         pending: null,
         copied: false,
@@ -257,14 +282,70 @@ export class RecoveryStore {
     if (r.kind === "key_exists") await this.refresh(); // ключ у устройства уже есть (другая вкладка) — показать как есть
   }
 
+  // ---- проверка записи ключа (PD-142) ------------------------------------------------------------
+
   /**
-   * «Ключ сохранён». Первый ключ: стирается из памяти, дальше — карточка «Ключ создан». Замена (PD-126): сначала сервер
+   * «Я записал ключ» → шаг проверки: спрашиваем две случайные группы. Ничего не уходит на сервер, ключ остаётся в памяти;
+   * для замены это значит, что СТАРЫЙ ключ продолжает работать, пока проверка не пройдена (или не пропущена явно) и не
+   * выполнен confirm (PD-126).
+   */
+  startCheck(): void {
+    const { phase, busy, shownKey } = this.snap;
+    if (phase !== "shown" || busy || shownKey === null) return;
+    const groups = pickCheckGroups(this.random);
+    this.set({ check: { groups, values: groups.map(() => ""), wrong: groups.map(() => false) }, error: null });
+  }
+
+  /** «Показать ключ ещё раз»: вернуться к плашкам; введённое стирается, следующая проверка спросит заново. */
+  backToKey(): void {
+    if (this.snap.busy || this.snap.check === null) return;
+    this.set({ check: null, error: null });
+  }
+
+  /** Ввод в поле `i` (0 или 1): нормализация как у ключа; правка снимает «не совпало» и ошибку проверки. */
+  setCheckValue(i: number, raw: string): void {
+    const check = this.snap.check;
+    if (check === null || this.snap.busy || i < 0 || i >= check.groups.length) return;
+    const values = check.values.map((v, k) => (k === i ? normalizeGroupInput(raw, check.groups[i]!) : v));
+    const keep = this.snap.error?.kind === "mismatch" ? null : this.snap.error;
+    this.set({ check: { ...check, values, wrong: check.wrong.map((w, k) => (k === i ? false : w)) }, error: keep });
+  }
+
+  /**
+   * «Проверить»: обе группы совпали — завершаем (создание: ключ стирается из памяти; замена: confirm на сервере, при
+   * сбое сети поля остаются как есть и повтор безопасен). Не совпало — мягкая ошибка, поля с ошибкой помечены, ключ на
+   * экран не возвращается сам: человек решает, сверить ли запись или вернуться к ключу.
+   */
+  async submitCheck(): Promise<void> {
+    const { check, shownKey, busy, phase } = this.snap;
+    if (phase !== "shown" || busy || check === null || shownKey === null) return;
+    const wrong = check.groups.map((g, i) => !groupMatches(shownKey, g, check.values[i] ?? ""));
+    if (wrong.some(Boolean)) {
+      this.set({ check: { ...check, wrong }, error: { kind: "mismatch" } });
+      return;
+    }
+    this.set({ check: { ...check, wrong }, error: null });
+    await this.finish();
+  }
+
+  /**
+   * «Пропустить проверку» — только через шит `skip` (честное предупреждение), из шага проверки. Дальше как после
+   * успешной проверки.
+   */
+  private async confirmSkip(): Promise<void> {
+    this.set({ sheet: null });
+    if (this.snap.phase !== "shown" || this.snap.check === null) return;
+    await this.finish();
+  }
+
+  /**
+   * Завершение показа ключа (вызывается только после совпавшей проверки или явного пропуска). Первый ключ: стирается из памяти, дальше — карточка «Ключ создан». Замена (PD-126): сначала сервер
    * подтверждает переключение (старый ключ → мёртв, новый → рабочий), и только потом ключ стирается; при ошибке сети
    * или лимите ключ остаётся на экране, чтобы нажать ещё раз. Ответ мог потеряться уже ПОСЛЕ переключения на сервере
    * (F1): повтор с той же меткой сервер подтверждает как «уже подтверждено» (200), и игрок видит успех, а не «замена
    * устарела». 409 после такой ошибки означает, что именно эта замена действительно не действует.
    */
-  async confirmSaved(): Promise<void> {
+  private async finish(): Promise<void> {
     const { phase, shownMode, pendingId, busy } = this.snap;
     if (phase !== "shown" || busy) return;
     if (shownMode === "create" || pendingId === null) {
@@ -296,7 +377,7 @@ export class RecoveryStore {
     if (this.copyTimer) clearTimeout(this.copyTimer);
     this.copyTimer = null;
     this.confirmUncertain = false;
-    this.set({ phase: "created", shownKey: null, pendingId: null, copied: false, ...patch });
+    this.set({ phase: "created", shownKey: null, check: null, pendingId: null, copied: false, ...patch });
   }
 
   /** «Отменить замену»: ожидающий ключ отброшен на сервере, рабочий не тронут. */
@@ -391,6 +472,7 @@ export class RecoveryStore {
 
   openSheet(sheet: Exclude<SheetId, "leave">): void {
     if (this.snap.busy) return;
+    if (sheet === "skip" && (this.snap.phase !== "shown" || this.snap.check === null)) return; // пропуск — только из шага проверки
     this.set({ sheet });
   }
 
@@ -404,6 +486,7 @@ export class RecoveryStore {
     const { sheet } = this.snap;
     if (sheet === null) return;
     if (sheet === "leave") return this.confirmLeave();
+    if (sheet === "skip") return this.confirmSkip();
     this.set({ sheet: null, busy: true, error: null });
     if (sheet === "reissue") {
       const r = await this.call((t) => this.deps.api.rotate(t));
@@ -413,6 +496,7 @@ export class RecoveryStore {
           phase: "shown",
           shownKey: r.value.key,
           shownMode: "replace",
+          check: null,
           pendingId: r.value.pendingId,
           pending: { expiresAt: r.value.expiresAt },
           copied: false,

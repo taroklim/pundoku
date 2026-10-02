@@ -23,7 +23,7 @@ describe("i18n: блок settings.* (PD-49)", () => {
   it("в en есть все ключи, которые использует экран", () => {
     for (const k of [
       "title", "language", "game.head", "game.highlightWrong", "game.highlightWrongFoot", "open", "backLabel", "about.head", "about.name", "about.version", "key.head", "key.create", "key.haveKey", "key.yourKey", "key.keyLabel", "key.keyGroup",
-      "key.shownOnce", "key.copy", "key.copied", "key.warn", "key.saved", "key.rowCreated", "key.rowDevices", "key.reissue", "key.unlink",
+      "key.shownOnce", "key.copy", "key.copied", "key.warn", "key.written", "key.rowCreated", "key.rowDevices", "key.reissue", "key.unlink",
       "key.deleteKey", "key.footNone", "key.footCreated", "key.footDanger", "key.footEnter", "key.enterLabel", "key.enterPlaceholder",
       "key.enterHint", "key.restore", "key.checking", "key.cancel", "key.restored", "key.errKey", "key.errLimit", "key.errOffline",
       "key.errGeneric", "key.retry", "key.statusFailed", "key.sheetReTitle", "key.sheetReMsg", "key.sheetReGo", "key.sheetUnTitle",
@@ -32,6 +32,9 @@ describe("i18n: блок settings.* (PD-49)", () => {
       "key.yourNewKey", "key.shownOnceReplace", "key.warnReplace", "key.footReplace", "key.replacedOk", "key.pendingTitle",
       "key.pendingBody", "key.pendingAgain", "key.pendingCancel", "key.errConfirmOffline", "key.errConfirmGeneric", "key.errStale",
       "key.sheetReAgainMsg", "key.sheetLeaveReTitle", "key.sheetLeaveReMsg",
+      "key.verifyCap", "key.verifyIntro", "key.verifyField", "key.verifyPlaceholder", "key.verifyHint", "key.verifyGo", "key.verifyGoReplace",
+      "key.verifyBack", "key.verifyMismatch", "key.verifySkip", "key.verifySkipNote", "key.sheetSkipTitle", "key.sheetSkipMsg",
+      "key.sheetSkipReMsg", "key.sheetSkipGo", "key.sheetSkipBack",
     ]) {
       expect(e[k], k).toBeTruthy();
     }
@@ -52,15 +55,32 @@ describe("i18n: блок settings.* (PD-49)", () => {
     expect(placeholders(e["key.errLimit"]!)).toBe("minutes");
     expect(placeholders(e["key.keyGroup"]!)).toBe("chars,n,total");
     expect(placeholders(e["key.pendingBody"]!)).toBe("when"); // PD-126: срок действия подставляется
+    expect(placeholders(e["key.verifyField"]!)).toBe("n,total"); // PD-142: номер спрашиваемой группы
   });
 
   it("uk и ru переведены, а не скопированы из en (кроме образца ключа)", () => {
     for (const l of [uk, ru]) {
       const t = settings(l);
       for (const k of Object.keys(e)) {
-        if (k === "key.enterPlaceholder" || k === "about.name") continue; // имя продукта не переводится
+        if (k === "key.enterPlaceholder" || k === "key.verifyPlaceholder" || k === "about.name") continue; // имя продукта не переводится
         expect(t[k], k).not.toBe(e[k]);
       }
+    }
+  });
+
+  it("PD-142: ни один текст не отсылает к кнопке «Key saved», которой больше нет, и пропуск честно говорит о невосстановимости", () => {
+    for (const l of [en, uk, ru]) {
+      const t = settings(l);
+      for (const [k, v] of Object.entries(t)) expect(v, k).not.toMatch(/Key saved|Ключ сохранён|Ключ збережено/);
+    }
+    // «без записанного ключа прогресс не восстановить на другом устройстве» — и в строке под кнопкой, и в шите
+    expect(en["settings"]["key"]["verifySkipNote"]).toMatch(/can’t be restored on another device/);
+    expect(ru["settings"]["key"]["verifySkipNote"]).toMatch(/не восстановить на другом устройстве/);
+    expect(uk["settings"]["key"]["verifySkipNote"]).toMatch(/не відновити на іншому пристрої/);
+    for (const l of [en, uk, ru]) {
+      const t = settings(l);
+      expect(t["key.sheetSkipMsg"]).toBeTruthy();
+      expect(t["key.sheetSkipReMsg"]!.length).toBeGreaterThan(t["key.sheetSkipMsg"]!.length); // замена предупреждает ещё и про старый ключ
     }
   });
 
