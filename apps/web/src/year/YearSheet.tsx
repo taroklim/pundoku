@@ -7,7 +7,7 @@ import { formatClock } from "../play/format";
 import { useSheetSwipe } from "../shell/useSheetSwipe";
 import { heatLegend, heatOpacities } from "../play/heat";
 import { blotCellSet, HeatCells, InkModeValueRow } from "../play/inkCard";
-import { cellsLeft } from "../play/logic";
+import { unsettledCells } from "../play/logic";
 import { WatchRow, useTimelapseEntry } from "../play/TimelapseEntry";
 import type { DayProgress } from "../today/repository";
 import { dayLong, leadingBlanks, monthName, monthTitle, weekdayInitials } from "./format";
@@ -278,7 +278,7 @@ function DayCard({
         </>
       ) : progress ? (
         <>
-          <p className="emptyday" data-testid="unfinished-note">{t("year.card.unfinishedNote", { n: toFill - cellsLeft(progress.play), total: toFill })}</p>
+          <p className="emptyday" data-testid="unfinished-note">{t("year.card.unfinishedNote", { n: toFill - unsettledCells(progress.play), total: toFill })}</p>
           {mark.today && (
             <button type="button" className="ghost" onClick={onOpenToday}>
               {t("year.continueToday")}

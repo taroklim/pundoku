@@ -17,22 +17,28 @@ const DIGITS = [1, 2, 3, 4, 5, 6, 7, 8, 9] as const;
 export const prefersReducedMotion = (): boolean => window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
 /**
- * Строка статуса «N cells left» (M9): при смене числа перекатывается (translateY 6 px + opacity, 220 мс). Узел
- * пересоздаётся по `key`, чтобы CSS-анимация запустилась заново; первый показ и возврат на вкладку не анимируются
- * (анимирует только смена числа в этой же жизни компонента). Отключается флагом `MOTION_FLAGS.statusRoll` (motion.ts):
- * тогда класс `roll` не ставится вовсе — число меняется молча. Озвучка не затронута: это не live-регион.
+ * Строка статуса (M9): «N cells left» — по ПОСТАВЛЕННЫМ цифрам (PD-118). При смене текста перекатывается (translateY
+ * 6 px + opacity, 220 мс). Узел пересоздаётся по `key`, чтобы CSS-анимация запустилась заново; первый показ и возврат
+ * на вкладку не анимируются (анимирует только смена в этой же жизни компонента). Отключается флагом
+ * `MOTION_FLAGS.statusRoll` (motion.ts): тогда класс `roll` не ставится вовсе — текст меняется молча. Под reduced motion
+ * анимации нет (единый reduced-блок). Озвучка не затронута: это не live-регион.
+ *
+ * Два состояния вместо счёта: `full` — сетка заполнена, но не решена (PD-117a): честная фраза без числа неверных клеток
+ * (счёт «N cells left = 0» на непустой ошибке врал бы); `hint` — отклик на отказ (PD-117b), на `HINT_MS` вместо счёта.
  * `memo`: перерисовка по тику таймера не должна снимать класс посреди анимации.
  */
-export const StatusLine = memo(function StatusLine({ left }: { left: number }) {
+export const StatusLine = memo(function StatusLine({ left, full = false, hint = null }: { left: number; full?: boolean; hint?: PlaySnapshot["hint"] }) {
   const { t } = useTranslation();
-  const prev = useRef(left);
-  const rolled = MOTION_FLAGS.statusRoll && prev.current !== left;
+  const state = hint ? `h${hint.id}` : full ? "full" : String(left);
+  const prev = useRef(state);
+  const rolled = MOTION_FLAGS.statusRoll && prev.current !== state;
   useEffect(() => {
-    prev.current = left;
-  }, [left]);
+    prev.current = state;
+  }, [state]);
+  const text = hint ? t(`play.hint.${hint.kind}`) : full ? t("play.gridFull") : t("play.cellsLeft", { count: left });
   return (
-    <p key={MOTION_FLAGS.statusRoll ? left : "static"} className={rolled ? "status roll" : "status"} data-testid="status-line">
-      {t("play.cellsLeft", { count: left })}
+    <p key={MOTION_FLAGS.statusRoll ? state : "static"} className={rolled ? "status roll" : "status"} data-testid="status-line">
+      {text}
     </p>
   );
 });
@@ -57,17 +63,20 @@ export const ANNOUNCE_DEBOUNCE_MS = 600;
 
 /**
  * Объявление «N cells left» для скринридера — не на каждую цифру: только на порогах
- * (кратно 10 и последние 5), с debounce 600 мс и без повтора уже озвученного значения.
+ * (кратно 10 и последние 5 — по поставленным цифрам, PD-118), с debounce 600 мс и без повтора уже озвученного значения.
+ * Заполненная, но не решённая сетка (`full`, PD-117a) озвучивается один раз: «Grid full — something doesn’t match».
  * Возвращает текст для live-региона. Когда партия перестаёт играться (решена/загрузка) —
  * текст очищается: иначе после решения в регионе остаётся «1 cell left» (QA PD-23, Low 2).
  */
-export function useCellsLeftAnnouncement(left: number, active: boolean, startedAt: number): string {
+export function useCellsLeftAnnouncement(left: number, active: boolean, startedAt: number, full = false): string {
   const { t } = useTranslation();
   const [text, setText] = useState("");
   const last = useRef<number | null>(null);
+  const saidFull = useRef(false);
   useEffect(() => {
     // Новая партия — сбрасываем, чтобы пороги озвучивались заново.
     last.current = null;
+    saidFull.current = false;
     setText("");
   }, [startedAt]);
   useEffect(() => {
@@ -75,13 +84,41 @@ export function useCellsLeftAnnouncement(left: number, active: boolean, startedA
       setText("");
       return;
     }
+    if (full) {
+      if (saidFull.current) return;
+      const id = window.setTimeout(() => {
+        saidFull.current = true;
+        last.current = null; // после исправления пороги остатка озвучиваются заново
+        setText(t("play.gridFull"));
+      }, ANNOUNCE_DEBOUNCE_MS);
+      return () => window.clearTimeout(id);
+    }
+    saidFull.current = false; // сетка снова не полна — при следующем заполнении скажем снова
     if (!isMilestone(left) || last.current === left) return;
     const id = window.setTimeout(() => {
       last.current = left;
       setText(t("play.cellsLeft", { count: left }));
     }, ANNOUNCE_DEBOUNCE_MS);
     return () => window.clearTimeout(id);
-  }, [left, active, t]);
+  }, [left, active, full, t]);
+  return text;
+}
+
+/**
+ * Озвучка отклика на отказ (PD-117b): тот же `role="status"`, что «N cells left»; текст держится `HINT_MS`.
+ * Регион сначала очищается, чтобы два подряд одинаковых отклика озвучились оба.
+ */
+export function useHintAnnouncement(hint: PlaySnapshot["hint"]): string {
+  const { t } = useTranslation();
+  const [text, setText] = useState("");
+  const id = hint?.id ?? 0;
+  const kind = hint?.kind;
+  useEffect(() => {
+    setText("");
+    if (id === 0 || !kind) return;
+    const say = window.setTimeout(() => setText(t(`play.hint.${kind}`)), 50);
+    return () => window.clearTimeout(say);
+  }, [id, kind, t]);
   return text;
 }
 
@@ -128,7 +165,8 @@ export function handleGameKey(
   store: Pick<GameStore, "undo" | "erase" | "input" | "toggleNotesMode">,
 ): void {
   const target = e.target as HTMLElement;
-  if (target.closest("select, input, textarea")) return;
+  // Шит поверх экрана (PD-116: «Discard current puzzle?») — его клавиши не ввод в клетку.
+  if (target.closest('select, input, textarea, [role="dialog"]')) return;
   if ((e.ctrlKey || e.metaKey) && e.code === "KeyZ") {
     e.preventDefault();
     store.undo();

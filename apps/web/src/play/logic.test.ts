@@ -9,11 +9,14 @@ import {
   enterDigit,
   eraseCell,
   firstOpenCell,
+  isDigitClosed,
+  isGridFull,
   isWrong,
   notesOf,
   remaining,
   toggleNote,
   undo,
+  unsettledCells,
   waveOf,
 } from "./logic";
 
@@ -44,11 +47,28 @@ describe("ввод", () => {
     expect(summary(s.log).mistakes).toBe(1);
   });
 
-  it("повторная та же цифра стирает клетку (как в макете)", () => {
-    let s = enterDigit(fresh(), EMPTY_CELL, 4, 100);
-    s = enterDigit(s, EMPTY_CELL, 4, 200);
-    expect(s.values[EMPTY_CELL]).toBe(0);
-    expect(s.log.map((m) => m.kind)).toEqual(["place", "erase"]);
+  it("PD-115: повторная/двойная та же цифра в клетке — no-op (не стирает), стирает только eraseCell", () => {
+    const s1 = enterDigit(fresh(), EMPTY_CELL, 4, 100);
+    const s2 = enterDigit(s1, EMPTY_CELL, 4, 200);
+    expect(s2).toBe(s1); // ни значения, ни лога, ни undo-записи
+    expect(s2.values[EMPTY_CELL]).toBe(4);
+    expect(s2.log.map((m) => m.kind)).toEqual(["place"]);
+    // «нервный» тап: чётное число касаний больше не оставляет пустую клетку
+    let s = s1;
+    for (let k = 0; k < 6; k++) s = enterDigit(s, EMPTY_CELL, 4, 300 + k);
+    expect(s.values[EMPTY_CELL]).toBe(4);
+    // неверная цифра тоже не стирается повтором
+    const w1 = enterDigit(fresh(), EMPTY_CELL, 1, 100);
+    expect(enterDigit(w1, EMPTY_CELL, 1, 200)).toBe(w1);
+    // а явное стирание работает
+    const erased = eraseCell(s1, EMPTY_CELL, 400);
+    expect(erased.values[EMPTY_CELL]).toBe(0);
+    expect(erased.log.map((m) => m.kind)).toEqual(["place", "erase"]);
+  });
+
+  it("PD-115: другая цифра заменяет поставленную (замена, не стирание)", () => {
+    const s = enterDigit(enterDigit(fresh(), EMPTY_CELL, 4, 100), EMPTY_CELL, 7, 200);
+    expect(s.values[EMPTY_CELL]).toBe(7);
   });
 
   it("цифра в клетке стирает её заметки; заметки в клетке с цифрой не ставятся", () => {
@@ -92,20 +112,61 @@ describe("остатки и cells left", () => {
     }
   });
 
-  it("верная цифра уменьшает оба счётчика, неверная — ни один", () => {
+  it("PD-118: любая поставленная цифра (и верная, и неверная) уменьшает оба счётчика — счёт по доске, не по решению", () => {
     const s0 = fresh();
     const s1 = enterDigit(s0, EMPTY_CELL, 4, 1);
     expect(cellsLeft(s1)).toBe(cellsLeft(s0) - 1);
     expect(remaining(s1)[4]).toBe(remaining(s0)[4]! - 1);
+    // неверная единица: пустых клеток меньше на одну, у цифры 1 остаток меньше, у верной 4 — прежний
     const s2 = enterDigit(s0, EMPTY_CELL, 1, 1);
-    expect(cellsLeft(s2)).toBe(cellsLeft(s0));
-    expect(remaining(s2)).toEqual(remaining(s0));
+    expect(cellsLeft(s2)).toBe(cellsLeft(s0) - 1);
+    expect(remaining(s2)[1]).toBe(remaining(s0)[1]! - 1);
+    expect(remaining(s2)[4]).toBe(remaining(s0)[4]);
   });
 
-  it("исправление неверной цифры на верную возвращает счёт", () => {
+  it("PD-118: замена цифры в клетке переносит остаток с одной цифры на другую, cells left не меняется", () => {
+    const s1 = enterDigit(fresh(), EMPTY_CELL, 1, 1);
+    const s2 = enterDigit(s1, EMPTY_CELL, 4, 2); // исправили ошибку
+    expect(cellsLeft(s2)).toBe(cellsLeft(s1));
+    expect(remaining(s2)[1]).toBe(remaining(fresh())[1]);
+    expect(remaining(s2)[4]).toBe(remaining(fresh())[4]! - 1);
+    expect(cellsLeft(s2)).toBe(cellsLeft(fresh()) - 1);
+  });
+
+  it("PD-118: стирание возвращает счёт; остаток не уходит ниже нуля", () => {
     let s = enterDigit(fresh(), EMPTY_CELL, 1, 1);
-    s = enterDigit(s, EMPTY_CELL, 4, 2);
-    expect(cellsLeft(s)).toBe(cellsLeft(fresh()) - 1);
+    s = eraseCell(s, EMPTY_CELL, 2);
+    expect(cellsLeft(s)).toBe(cellsLeft(fresh()));
+    // десятая «1» (две лишние в разных юнитах): остаток зажат на 0
+    let p = fresh();
+    const open = [...Array(81).keys()].filter((i) => MISSION[i] === "0");
+    for (const i of open.slice(0, 12)) p = enterDigit(p, i, 1, 5);
+    expect(Math.min(...remaining(p).slice(1))).toBeGreaterThanOrEqual(0);
+  });
+
+  it("PD-118/117: cells left = 0 при заполненной сетке с ошибкой; решено — только при всех верных", () => {
+    let s = fresh();
+    const open = [...Array(81).keys()].filter((i) => MISSION[i] === "0");
+    for (const i of open) s = enterDigit(s, i, i === EMPTY_CELL ? 1 : (s.solution[i] as number), 10);
+    expect(cellsLeft(s)).toBe(0);
+    expect(s.solved).toBe(false);
+    expect(isGridFull(s)).toBe(true);
+    expect(unsettledCells(s)).toBe(1); // «верность» считает отдельная функция (Year)
+    s = enterDigit(s, EMPTY_CELL, 4, 20);
+    expect(s.solved).toBe(true);
+    expect(isGridFull(s)).toBe(false);
+  });
+
+  it("M8: цифра «закрыта» только когда все девять верны (isDigitClosed), даже если остаток уже 0", () => {
+    let s = fresh();
+    const open = [...Array(81).keys()].filter((i) => MISSION[i] === "0" && SOLUTION[i] === "4");
+    for (const i of open) s = enterDigit(s, i, 4, 5);
+    expect(isDigitClosed(s, 4)).toBe(true);
+    // ставим четвёрку и в чужую клетку: остаток 0 остаётся, но «закрыта верно» — нет только если стоящие неверны
+    const wrongOne = [...Array(81).keys()].find((i) => MISSION[i] === "0" && SOLUTION[i] !== "4")!;
+    const w = enterDigit(fresh(), wrongOne, 4, 5);
+    expect(remaining(w)[4]).toBe(remaining(fresh())[4]! - 1);
+    expect(isDigitClosed(w, 4)).toBe(false);
   });
 });
 

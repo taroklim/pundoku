@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useSyncExternalStore } from "react";
+import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { useTranslation } from "react-i18next";
 import { Board } from "../play/Board";
 import {
@@ -9,10 +9,11 @@ import {
   useCellsLeftAnnouncement,
   useClearEffectsOnUnmount,
   useClock,
+  useHintAnnouncement,
 } from "../play/controls";
 import { formatDay } from "../play/format";
 import { InkEntry } from "../play/InkEntry";
-import { cellsLeft } from "../play/logic";
+import { cellsLeft, isGridFull } from "../play/logic";
 import { ResultCard } from "../play/ResultCard";
 import { Subline } from "../play/Subline";
 import { useDeferredFocus } from "../shell/afterPaint";
@@ -90,12 +91,16 @@ export function DayView({ store, archive, onOpenSettings }: { store: DayStore; a
   const locale = i18n.resolvedLanguage ?? "en";
   const interactive = phase === "playing" && play !== null;
   const left = play ? cellsLeft(play) : 81;
-  const cellsAnnouncement = useCellsLeftAnnouncement(left, interactive, snap.startedOn.getTime());
+  // PD-117a: сетка заполнена, но не решена — вместо «0 cells left» честная фраза без числа неверных клеток.
+  const full = interactive && play !== null && isGridFull(play);
+  const cellsAnnouncement = useCellsLeftAnnouncement(left, interactive, snap.startedOn.getTime(), full);
   const blotAnnouncement = useBlotAnnouncement(snap);
-  // Клякса (PD-74) вытесняет «N cells left» на время озвучивания — один live-регион.
-  const announcement = blotAnnouncement || cellsAnnouncement;
+  const hintAnnouncement = useHintAnnouncement(snap.hint);
+  // Клякса (PD-74) и отклик на отказ (PD-117b) вытесняют «N cells left» на время озвучивания — один live-регион.
+  const announcement = blotAnnouncement || hintAnnouncement || cellsAnnouncement;
   // Чернильный режим (PD-74): строка входа в зазоре — только до первого хода и не в архиве (там ink запрещён).
-  const inkEntry = interactive && store.inkChoosable();
+  // Пока показан отклик на отказ (PD-117b), на его 2,6 с вместо строки входа стоит строка статуса.
+  const inkEntry = interactive && store.inkChoosable() && !snap.hint;
 
   // Не на каждый тик часов/кадр финала: Intl.DateTimeFormat на каждый рендер дорог при CPU 4x (PD-95).
   const dayLabel = useMemo(() => (isRealDate(snap.date) ? formatDay(dateOf(snap.date), locale) : ""), [snap.date, locale]);
@@ -113,6 +118,14 @@ export function DayView({ store, archive, onOpenSettings }: { store: DayStore; a
     const todayCell = snap.landing?.cell ?? permanent.cells.find((c) => c.date === snap.date)?.cell ?? null;
     return { clues, todayCell };
   }, [permanent, snap.landing, snap.date]);
+
+  // PD-117b: тап по Grid ∞ (он не играбельный) — тихая строка-пояснение вместо молчания, на 4 с.
+  const [gridTapped, setGridTapped] = useState(false);
+  useEffect(() => {
+    if (!gridTapped) return;
+    const id = window.setTimeout(() => setGridTapped(false), 4000);
+    return () => window.clearTimeout(id);
+  }, [gridTapped]);
 
   const sourceLabel = snap.source === null ? null : t(`today.source.${snap.source}`);
   const winRate = snap.serverVerified === false ? null : snap.winRate;
@@ -167,15 +180,16 @@ export function DayView({ store, archive, onOpenSettings }: { store: DayStore; a
                 target={gridView.todayCell}
                 landed={gridView.todayCell !== null && !pending}
                 pulse={flown}
+                onTap={() => setGridTapped(true)}
                 label={t("today.gridLabel", {
                   count: gridView.clues.size,
                   state: t(snap.permanentSolvable && !pending ? "today.gridSolvable" : "today.gridNotSolvable"),
                 })}
               />
               {gridView.todayCell !== null && (
-                <p className="hint">
+                <p className="hint" role="status" data-testid="grid-hint">
                   <span className="chip" aria-hidden="true" />
-                  {t("today.gridHint")}
+                  {t(gridTapped ? "today.gridTap" : "today.gridHint")}
                 </p>
               )}
             </section>
@@ -208,7 +222,7 @@ export function DayView({ store, archive, onOpenSettings }: { store: DayStore; a
             {inkEntry && <InkEntry on={play?.ink === true} setOn={(on) => store.setInk(on)} />}
             {!inkEntry && (phase === "playing" || phase === "solved") && (
               <div className="today-status">
-                <StatusLine left={left} />
+                <StatusLine left={left} full={full} hint={snap.hint} />
                 {sourceLabel && (
                   <p className="source" data-testid="source">
                     {sourceLabel}

@@ -10,16 +10,18 @@ interface MiniBoardProps {
   /** Показать M5-«толчок» приземления (кольцо 260 мс); иначе кольцо просто сплошное. */
   pulse: boolean;
   label: string;
+  /** Тап по полю (PD-117b): поле не играбельное — экран отвечает тихой строкой, а не молчанием. */
+  onTap?: () => void;
 }
 
 /**
  * Grid ∞ на экране Today (макет `#board-infinite`): то же поле B, только статичное — открытые
  * клетки как подсказки, остальное пусто. Не интерактивно, читается скринридером как одна картинка.
  */
-export function MiniBoard({ clues, target, landed, pulse, label }: MiniBoardProps) {
+export function MiniBoard({ clues, target, landed, pulse, label, onTap }: MiniBoardProps) {
   return (
     <div className="board-wrap">
-      <div className="board" role="img" aria-label={label} data-testid="grid-inf" data-clues={clues.size}>
+      <div className="board" role="img" aria-label={label} data-testid="grid-inf" data-clues={clues.size} onClick={onTap}>
         {BOXES.map((cells, b) => (
           <div className="box" key={b}>
             {cells.map((i) => {

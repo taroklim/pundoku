@@ -116,20 +116,41 @@ export function setInkMode(s: PlayState, on: boolean): PlayState {
 }
 
 /**
- * Сколько клеток ещё не стоят на своём месте. Неверная цифра считается «осталась»:
- * ошибки подсвечиваются сразу, и «0 cells left» при нерешённой сетке был бы ложью.
+ * Сколько клеток ещё пусты (PD-118, решение 6.5): счёт по ПОСТАВЛЕННЫМ цифрам, не по решению — иначе «N cells left»
+ * с неверной цифрой выдавал бы подсказку «эта клетка неверна» (оракул), а на полной сетке с ошибкой врал бы.
+ * Неверная цифра уменьшает счётчик как любая другая; об ошибке говорит подсветка («сургуч») и фраза «Grid full».
+ * «Решено» от счётчика не зависит: его определяет `solved` (`finish`, все клетки верны).
  */
 export function cellsLeft(s: PlayState): number {
+  let n = 0;
+  for (let i = 0; i < CELLS; i++) if (digitAt(s, i) === 0) n++;
+  return n;
+}
+
+/**
+ * Сколько клеток ещё не верны (по решению; в ink заполненная клетка считается закрытой). Это НЕ счётчик экрана
+ * (тот — `cellsLeft`, по поставленным цифрам, PD-118), а «сколько осталось довести до верного»: нужен там, где
+ * важна правильность, — карточка брошенного дня в Year («N cells filled in correctly»).
+ */
+export function unsettledCells(s: PlayState): number {
   let n = 0;
   for (let i = 0; i < CELLS; i++) if (!isSettled(s, i)) n++;
   return n;
 }
 
-/** Остаток по цифрам: индекс 1..9 — сколько раз цифра ещё не поставлена верно (индекс 0 не используется). */
+/** Сетка заполнена целиком, но не решена: где-то стоит неверная цифра (PD-117a). */
+export const isGridFull = (s: PlayState): boolean => !s.solved && cellsLeft(s) === 0;
+
+/**
+ * Остаток по цифрам (PD-118): индекс 1..9 — 9 минус число клеток, где СТОИТ эта цифра (заданные и игрока,
+ * верные и неверные); индекс 0 не используется. Не зависит от решения. Не уходит ниже 0: цифра, поставленная
+ * в десятый раз (в разные юниты, ошибочно), даёт 0, а не отрицательное число.
+ */
 export function remaining(s: PlayState): number[] {
   const left = [0, 9, 9, 9, 9, 9, 9, 9, 9, 9];
   for (let i = 0; i < CELLS; i++) {
-    if (isSettled(s, i)) left[s.solution[i] as number]!--;
+    const d = digitAt(s, i);
+    if (d !== 0 && left[d]! > 0) left[d]!--;
   }
   return left;
 }
@@ -172,15 +193,16 @@ function techniqueOf(s: PlayState, cell: number): TechniqueOrBeyond | undefined 
 }
 
 /**
- * Цифра с панели/клавиатуры (режим цифр): повторное нажатие той же цифры стирает её (как в макете).
- * Ink: клетка с цифрой заблокирована (и повторное нажатие не стирает); неверная цифра — клякса
+ * Цифра с панели/клавиатуры (режим цифр). Повторное нажатие той же цифры в клетке — no-op (PD-115, решение владельца):
+ * двойной тап по паду раньше стирал только что поставленную цифру. Стирание — только `eraseCell` (кнопка Erase,
+ * Backspace/Delete). Ink: клетка с цифрой заблокирована; неверная цифра — клякса
  * (`inkBlot`): по `rules.autoReplaceBlot` клетка тут же получает верную цифру.
  */
 export function enterDigit(s: PlayState, cell: number, digit: number, t: number, rules: InkRules = INK_RULES): PlayState {
   if (s.solved || isGiven(s, cell) || digit < 1 || digit > 9) return s;
   const ink = s.ink === true;
   if (ink && !inkAllows("place", (s.values[cell] ?? 0) !== 0, rules)) return s;
-  if (!ink && s.values[cell] === digit) return eraseCell(s, cell, t);
+  if (s.values[cell] === digit) return s;
   const d = digit as Digit;
   const correct = s.solution[cell] === digit;
   if (ink && !correct) return finish(inkBlot(s, cell, d, t, rules));
@@ -325,6 +347,12 @@ export function digitCells(s: PlayState, digit: number): number[] {
   for (let i = 0; i < CELLS; i++) if (s.solution[i] === digit && isSettled(s, i)) out.push(i);
   return out.sort((a, b) => (lastPlace.get(a) ?? -1) - (lastPlace.get(b) ?? -1) || a - b);
 }
+
+/**
+ * M8 (PD-118): цифра «закрыта» — все девять её клеток стоят верно. Не то же, что остаток 0 на паде: остаток считается
+ * по поставленным цифрам (в т.ч. неверным), а ответ M8 — «цифра собрана правильно» — подтверждает только верность.
+ */
+export const isDigitClosed = (s: PlayState, digit: number): boolean => digitCells(s, digit).length === 9;
 
 /** Первая пустая клетка (для стартового выбора), иначе 0. */
 export function firstOpenCell(s: PlayState): number {

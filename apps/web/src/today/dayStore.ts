@@ -523,6 +523,11 @@ export class DayStore extends GameStore<DaySnapshot> {
     this.persist();
   }
 
+  /** Отклик на отказ (PD-117b) — не прогресс: ни записи дня, ни события синхронизации. */
+  protected override setTransient(patch: Partial<DaySnapshot>): void {
+    this.patchQuiet(patch);
+  }
+
   /** Обновить снапшот, не трогая запись дня в хранилище (данные пришли из него же). */
   private patchQuiet(patch: Partial<DaySnapshot>): void {
     super.set(patch);

@@ -95,6 +95,17 @@
     "preparing": "Preparing a puzzle…",
     "failed": "Couldn’t prepare a puzzle.",
     "retry": "Try again",
+    "newPuzzle": "New puzzle",
+    "discardTitle": "Discard current puzzle?",
+    "discardMessage": "Your progress on this puzzle will be lost.",
+    "discard": "Discard",
+    "keepPlaying": "Keep playing",
+    "gridFull": "Grid full — something doesn’t match",
+    "hint": {
+      "pickCell": "Pick an empty cell first",
+      "noteFilled": "Notes go in empty cells only",
+      "inkFilled": "This cell is filled — ink doesn’t lift"
+    },
     "cellsLeft_one": "{{count}} cell left",
     "cellsLeft_other": "{{count}} cells left"
   },
@@ -148,7 +159,8 @@
     "gridSolvable": "now solvable",
     "gridLabel_one": "Your permanent grid: {{count}} clue so far, {{state}}",
     "gridLabel_other": "Your permanent grid: {{count}} clues so far, {{state}}",
-    "gridHint": "Today’s last cell lands here."
+    "gridHint": "Today’s last cell lands here.",
+    "gridTap": "Every day you solve adds a clue here."
   },
   "archive": {
     "title": "Archive",
