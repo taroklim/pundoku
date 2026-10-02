@@ -18,6 +18,8 @@
     },
     "open": "Settings",
     "backLabel": "Back to Today",
+    "backLabelPlay": "Back to Play",
+    "backLabelYear": "Back to Year",
     "about": {
       "head": "About",
       "name": "Pundoku",
@@ -70,10 +72,50 @@
       "sheetLeaveMsg": "It is shown only once. If you leave now, it disappears; a new one can be made with Replace key.",
       "sheetLeaveGo": "Leave",
       "sheetLeaveStay": "Stay"
-    }
+    },
+    "helpHead": "Help",
+    "helpRow": "How Pundoku works"
   },
   "screens": {
     "soon": "Coming soon"
+  },
+  "help": {
+    "title": "How Pundoku works",
+    "backLabel": "Back to Settings",
+    "whatsThis": "What’s this?",
+    "grid": {
+      "title": "Grid ∞",
+      "p1": "Your own grid that never resets. Every day you solve adds one clue to it: the cell you filled last.",
+      "p2": "Once the clues are enough for a single answer, it says “{{enough}}”. That usually takes 30 to 60 clues, one a day.",
+      "p3": "You can’t play it yet — for now it only grows."
+    },
+    "fixes": {
+      "title": "Fixes",
+      "p1": "How many times you erased a digit, replaced it or took it back with Undo. Pencil notes don’t count.",
+      "p2": "A solve with no fixes is “clean”. In ink mode, blots are counted instead."
+    },
+    "technique": {
+      "title": "Technique reached",
+      "p1": "The hardest technique that any digit of your solve needed.",
+      "p2": "From easiest: Naked Single, a cell that fits only one digit. Hidden Single, a digit that fits only one cell in its row, column or box. Then Locked Candidates and Pairs, which rule digits out by looking at several cells together.",
+      "p3": "“Advanced” means harder still."
+    },
+    "year": {
+      "title": "Year marks",
+      "lead": "One square per day.",
+      "lateName": "Late",
+      "solved": "Finished that day’s puzzle on the day.",
+      "fixes": "Solved, with at least one fix.",
+      "help": "Solved using a hint.",
+      "late": "Solved after that day. The year keeps it as missed, so it looks the same.",
+      "unfinished": "Started, not finished.",
+      "missed": "Not played that day."
+    },
+    "counter": {
+      "title": "Numbers on the pad",
+      "p1": "The small number under a digit is how many of that digit you still have to place.",
+      "p2": "“N cells left” counts every cell that doesn’t hold the right digit yet."
+    }
   },
   "board": {
     "label": "Sudoku grid",
@@ -155,12 +197,13 @@
     "gridTitle": "Grid ∞",
     "gridCells_one": "{{count}} cell",
     "gridCells_other": "{{count}} cells",
-    "gridNotSolvable": "not yet solvable",
-    "gridSolvable": "now solvable",
+    "gridNotSolvable": "needs more clues",
+    "gridSolvable": "enough clues",
     "gridLabel_one": "Your permanent grid: {{count}} clue so far, {{state}}",
     "gridLabel_other": "Your permanent grid: {{count}} clues so far, {{state}}",
     "gridHint": "Today’s last cell lands here.",
-    "gridTap": "Every day you solve adds a clue here."
+    "gridTap": "Every day you solve adds a clue here.",
+    "gridExplain": "Each day you solve adds one clue. It usually takes 30 to 60 before the grid has a single answer."
   },
   "archive": {
     "title": "Archive",

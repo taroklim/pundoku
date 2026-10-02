@@ -122,7 +122,7 @@ describe("YearTab: загрузка и перечитывание данных",
     expect(isEmpty()).toBe(false);
     expect(marks("is-solved")).toBe(2);
     expect(marks("has-corr")).toBe(1);
-    expect(host.querySelector('[data-testid="year-totals"]')!.textContent).toBe("2 days · 1 clean · 1 with corrections");
+    expect(host.querySelector('[data-testid="year-totals"]')!.textContent).toBe("2 days · 1 clean · 1 with fixes");
   });
 
   it("при размонтировании отписывается от subscribeRemote и visibilitychange", async () => {

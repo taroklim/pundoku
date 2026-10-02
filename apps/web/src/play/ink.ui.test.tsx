@@ -285,7 +285,7 @@ describe("ResultCard: чернильный день", () => {
   const card = (play: PlayState) => act(() => root.render(<ResultCard play={play} cardRef={createRef()} title="Your path" winRate={61} />));
   const rows = () => [...host.querySelectorAll(".rows .row")].map((r) => [r.querySelector("dt")!.textContent, r.querySelector("dd")!.textContent]);
 
-  it("чип «Ink», строка «Blots — N» вместо «Corrections», кляксы в тепловой карте, подпись, win rate на месте", () => {
+  it("чип «Ink», строка «Blots — N» вместо «Fixes», кляксы в тепловой карте, подпись, win rate на месте", () => {
     const play = solvedInk(2);
     expect(play.solved).toBe(true);
     card(play);
@@ -306,7 +306,7 @@ describe("ResultCard: чернильный день", () => {
     expect(host.querySelector('[data-testid="ink-chip"]')).not.toBeNull();
   });
 
-  it("обычная партия: без чипа, «Corrections» как раньше", () => {
+  it("обычная партия: без чипа, «Fixes» как раньше", () => {
     let p = fresh();
     let t = 0;
     for (let i = 0; i < 81; i++) {

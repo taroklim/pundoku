@@ -69,3 +69,14 @@ describe("маршрут #/settings (PD-49)", () => {
     });
   });
 });
+
+describe("маршрут #/help (PD-120)", () => {
+  it("адрес с блоком и без; неизвестный блок → без якоря; вкладка до метки — Today", () => {
+    expect(parseRoute("#/help")).toEqual({ tab: "today", archiveDate: null, yearDate: null, help: { block: null, via: "tab" } });
+    expect(parseRoute("#/help/technique").help).toEqual({ block: "technique", via: "tab" });
+    expect(parseRoute("#/help/nope").help).toEqual({ block: null, via: "tab" });
+    expect(hashOf({ help: null })).toBe("#/help");
+    expect(hashOf({ help: "grid" })).toBe("#/help/grid");
+    expect(parseRoute("#/today").help).toBeUndefined();
+  });
+});

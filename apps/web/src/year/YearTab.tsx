@@ -15,11 +15,13 @@ export function YearTab({
   onPlayDay,
   initialDate,
   onInitialDateConsumed,
+  onOpenSettings,
 }: {
   onOpenToday: () => void;
   onPlayDay: (date: string) => void;
   initialDate?: string | null;
   onInitialDateConsumed?: () => void;
+  onOpenSettings?: () => void;
 }) {
   const [days, setDays] = useState<DayProgress[] | null>(null);
   const [firstUse, setFirstUse] = useState<string | null>(null);
@@ -62,6 +64,7 @@ export function YearTab({
       onPlayDay={onPlayDay}
       initialDate={initialDate}
       onInitialDateConsumed={onInitialDateConsumed}
+      onOpenSettings={onOpenSettings}
     />
   );
 }

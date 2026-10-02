@@ -325,7 +325,7 @@ describe("шит месяца и карточка дня", () => {
     expect(card.querySelectorAll(".heat i")).toHaveLength(81);
     const rows = [...card.querySelectorAll(".row")].map((r) => r.textContent);
     expect(rows).toHaveLength(3);
-    expect(rows[1]).toBe("Correctionsclean");
+    expect(rows[1]).toBe("Fixesclean");
     expect(card.querySelector('[data-testid="late-note"]')).toBeNull();
     expect(card.querySelector('[data-testid="assisted-row"]')).toBeNull();
   });
@@ -563,4 +563,17 @@ describe("локали", () => {
       expect(document.querySelector('[data-testid="assisted-row"]')).not.toBeNull();
     });
   }
+});
+
+describe("шапка Year: шестерёнка настроек (PD-123)", () => {
+  it("с onOpenSettings в шапке есть шестерёнка и нажатие её вызывает; без пропа — нет", () => {
+    const open = vi.fn<() => void>();
+    act(() => root.render(<YearScreen days={DAYS} firstUse={FIRST_USE} today={TODAY} onOpenToday={openToday} onPlayDay={playDay} onOpenSettings={open} />));
+    const gear = host.querySelector<HTMLButtonElement>('header [data-testid="open-settings"]');
+    expect(gear?.getAttribute("aria-label")).toBe("Settings");
+    click(gear);
+    expect(open).toHaveBeenCalledTimes(1);
+    render();
+    expect(host.querySelector('[data-testid="open-settings"]')).toBeNull();
+  });
 });

@@ -1,8 +1,10 @@
 import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { useTranslation } from "react-i18next";
+import type { HelpBlockId } from "../help/blocks";
 import { ActionSheet } from "../recovery/ActionSheet";
 import { useDeferredFocus } from "../shell/afterPaint";
 import { swallowGhostClick } from "../shell/ghostClick";
+import { TabHeader } from "../shell/TabHeader";
 import { localDate } from "../today/dayResolver";
 import { Board } from "./Board";
 import {
@@ -30,7 +32,7 @@ import { Subline } from "./Subline";
  * PD-116: партия переживает перезагрузку (`store.ts`); сложность меняется только явной кнопкой «New puzzle» в
  * тулбаре — при наличии ходов за шитом подтверждения «Discard current puzzle?», затем шаг выбора.
  */
-export function PlayScreen() {
+export function PlayScreen({ onOpenSettings, onOpenHelp }: { onOpenSettings?: () => void; onOpenHelp?: (block: HelpBlockId) => void } = {}) {
   const { t, i18n } = useTranslation();
   const snap = useSyncExternalStore(playStore.subscribe, playStore.getSnapshot);
   const clock = useClock(playStore);
@@ -111,14 +113,18 @@ export function PlayScreen() {
       <p className="sr-only" role="status" aria-live="polite" aria-atomic="true">
         {announcement}
       </p>
-      <header className="toolbar">
-        <h1 className="title">{t("tabs.play")}</h1>
-        {!snap.setup && !snap.restoring && (
-          <button type="button" className="newpuzzle-btn" onClick={onNewPuzzle} data-testid="new-puzzle">
-            {t("play.newPuzzle")}
-          </button>
-        )}
-      </header>
+      <TabHeader
+        title={<h1 className="title">{t("tabs.play")}</h1>}
+        onOpenSettings={onOpenSettings}
+        actions={
+          !snap.setup &&
+          !snap.restoring && (
+            <button type="button" className="newpuzzle-btn" onClick={onNewPuzzle} data-testid="new-puzzle">
+              {t("play.newPuzzle")}
+            </button>
+          )
+        }
+      />
       {snap.setup ? (
         snap.restoring ? null : <p className="subline">{t("ink.playSub")}</p>
       ) : (
@@ -140,6 +146,7 @@ export function PlayScreen() {
             cardRef={cardRef}
             title={t("solved.title")}
             timelapse={{ date: localDate(snap.startedOn), difficulty }}
+            onOpenHelp={onOpenHelp}
           >
             {/* ПРОВИЗОРНО (PD-11): «New game» — минимум, чтобы из «решено» можно было выйти; в макете нет. */}
             <button type="button" className="newgame" onClick={() => playStore.toSetup()}>

@@ -2,6 +2,7 @@ import { heatmap, summary } from "@pundoku/engine";
 import type { ReactNode, RefObject } from "react";
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
+import type { HelpBlockId } from "../help/blocks";
 import { formatClock } from "./format";
 import { heatLegend, heatOpacities } from "./heat";
 import { ShareIcon } from "./icons";
@@ -22,6 +23,8 @@ interface ResultCardProps {
    * тихая строка, если ходы не сохранились), Share открывает экспорт отпечатка. Не задан (Play) — карточка как раньше.
    */
   timelapse?: { date: string; difficulty: string | null };
+  /** «What's this?» у строки «Technique reached» (PD-120): открывает справку на нужном блоке. Нет — ссылки нет. */
+  onOpenHelp?: (block: HelpBlockId) => void;
   /** Доп. кнопки под Share (Play: «New game»). */
   children?: ReactNode;
 }
@@ -31,7 +34,7 @@ interface ResultCardProps {
  * заполнения (`heatmap(moveLog)` движка), легенда Early/Late, время, «clean»/правки, достигнутая
  * техника (`summary`), «N % solved today» и Share. Общая для Today и Play.
  */
-export function ResultCard({ play, cardRef, title, winRate, winRateScope = "today", timelapse, children }: ResultCardProps) {
+export function ResultCard({ play, cardRef, title, winRate, winRateScope = "today", timelapse, onOpenHelp, children }: ResultCardProps) {
   const { t } = useTranslation();
   const tl = useTimelapseEntry(play, timelapse?.date ?? null, timelapse?.difficulty ?? null);
   const sum = useMemo(() => summary(play.log), [play.log]);
@@ -85,7 +88,20 @@ export function ResultCard({ play, cardRef, title, winRate, winRateScope = "toda
         )}
         <div className="row">
           <dt>{t("solved.technique")}</dt>
-          <dd>{sum.maxTechnique ? t(`technique.${sum.maxTechnique}`) : "—"}</dd>
+          <dd>
+            {sum.maxTechnique ? t(`technique.${sum.maxTechnique}`) : "—"}
+            {onOpenHelp && (
+              <button
+                type="button"
+                className="help-link inline"
+                onClick={() => onOpenHelp("technique")}
+                aria-label={`${t("help.whatsThis")} ${t("solved.technique")}`}
+                data-testid="technique-help"
+              >
+                {t("help.whatsThis")}
+              </button>
+            )}
+          </dd>
         </div>
       </dl>
       {winRate != null && (

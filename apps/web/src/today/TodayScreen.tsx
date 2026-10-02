@@ -13,11 +13,12 @@ import {
 } from "../play/controls";
 import { formatDay } from "../play/format";
 import { InkEntry } from "../play/InkEntry";
+import type { HelpBlockId } from "../help/blocks";
 import { cellsLeft, isGridFull } from "../play/logic";
 import { ResultCard } from "../play/ResultCard";
 import { Subline } from "../play/Subline";
 import { useDeferredFocus } from "../shell/afterPaint";
-import { GearIcon } from "../shell/icons";
+import { TabHeader } from "../shell/TabHeader";
 import type { DayStore } from "./dayStore";
 import { dayStore } from "./dayStore";
 import { MiniBoard } from "./MiniBoard";
@@ -42,8 +43,8 @@ function isRealDate(ymd: string): boolean {
  * панель 1–9. После решения — карточка дня («Your path»: heatmap, время, техника, win rate) и
  * Grid ∞ с посадкой последней клетки дня (M5). Источник сетки — `DayStore`: API либо фолбэк.
  */
-export function TodayScreen({ onOpenSettings }: { onOpenSettings?: () => void } = {}) {
-  return <DayView store={dayStore} onOpenSettings={onOpenSettings} />;
+export function TodayScreen({ onOpenSettings, onOpenHelp }: { onOpenSettings?: () => void; onOpenHelp?: (block: HelpBlockId) => void } = {}) {
+  return <DayView store={dayStore} onOpenSettings={onOpenSettings} onOpenHelp={onOpenHelp} />;
 }
 
 /** Архив (PD-33): режим экрана для прошлой даты — заголовок «Archive», кнопка «‹ Year», без Grid ∞. */
@@ -57,7 +58,7 @@ export interface ArchiveProps {
  * Одно поле и одна карточка результата на два экрана: сегодняшний день (`dayStore`) и архивный (`archiveStore`,
  * `archive` задан). Компонент поля/панели/карточки общие — различаются только шапка, тексты состояний и Grid ∞.
  */
-export function DayView({ store, archive, onOpenSettings }: { store: DayStore; archive?: ArchiveProps; onOpenSettings?: () => void }) {
+export function DayView({ store, archive, onOpenSettings, onOpenHelp }: { store: DayStore; archive?: ArchiveProps; onOpenSettings?: () => void; onOpenHelp?: (block: HelpBlockId) => void }) {
   const { t, i18n } = useTranslation();
   const rawSnap = useSyncExternalStore(store.subscribe, store.getSnapshot);
   // Архив: стор мог ещё держать другую дату (первый кадр до эффекта) — показываем «загрузку», а не чужую партию.
@@ -135,29 +136,26 @@ export function DayView({ store, archive, onOpenSettings }: { store: DayStore; a
       <p className="sr-only" role="status" aria-live="polite" aria-atomic="true">
         {announcement}
       </p>
-      <header className={`toolbar${archive ? " toolbar-archive" : ""}`}>
-        {archive && (
+      {archive ? (
+        <header className="toolbar toolbar-archive">
           <button type="button" className="archive-back" onClick={archive.onBack} aria-label={t("archive.backLabel")} data-testid="archive-back">
             <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
               <path d="m15 6-6 6 6 6" />
             </svg>
             <span>{t("tabs.year")}</span>
           </button>
-        )}
-        <h1 className="title">{archive ? t("archive.title") : t("tabs.today")}</h1>
-        {/* Шестерёнка (PD-49): действие тулбара, а не четвёртая вкладка; ведёт на `#/settings`. */}
-        {!archive && onOpenSettings && (
-          <button type="button" className="gear-btn" onClick={onOpenSettings} aria-label={t("settings.open")} data-testid="open-settings">
-            <GearIcon />
-          </button>
-        )}
-      </header>
+          <h1 className="title">{t("archive.title")}</h1>
+        </header>
+      ) : (
+        // Шестерёнка (PD-49/PD-123): действие шапки вкладки, а не четвёртая вкладка; ведёт на `#/settings`.
+        <TabHeader title={<h1 className="title">{t("tabs.today")}</h1>} onOpenSettings={onOpenSettings} />
+      )}
       <Subline day={dayLabel} difficulty={diffLabel} ink={play?.ink === true} clock={showClock ? clock : null} />
 
       {phase === "solved" && cardShown ? (
         <>
           {play && (
-            <ResultCard play={play} cardRef={cardRef} title={t("today.cardTitle")} winRate={winRate} winRateScope={archive ? "day" : "today"} timelapse={isRealDate(snap.date) ? { date: snap.date, difficulty: snap.difficultyKnown ? difficulty : null } : undefined}>
+            <ResultCard play={play} cardRef={cardRef} title={t("today.cardTitle")} winRate={winRate} winRateScope={archive ? "day" : "today"} timelapse={isRealDate(snap.date) ? { date: snap.date, difficulty: snap.difficultyKnown ? difficulty : null } : undefined} onOpenHelp={onOpenHelp}>
               {sourceLabel && <p className="source">{sourceLabel}</p>}
               {archive && snap.late && (
                 <p className="source" data-testid="late-note">
@@ -192,6 +190,15 @@ export function DayView({ store, archive, onOpenSettings }: { store: DayStore; a
                   {t(gridTapped ? "today.gridTap" : "today.gridHint")}
                 </p>
               )}
+              {/* PD-120: что такое эта сетка и почему «needs more clues» — без языка решателя; подробнее — в справке. */}
+              <p className="hint grid-explain" data-testid="grid-explain">
+                {t("today.gridExplain")}
+                {onOpenHelp && (
+                  <button type="button" className="help-link" onClick={() => onOpenHelp("grid")} aria-label={`${t("help.whatsThis")} ${t("today.gridTitle")}`} data-testid="grid-help">
+                    {t("help.whatsThis")}
+                  </button>
+                )}
+              </p>
             </section>
           )}
         </>

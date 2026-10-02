@@ -621,3 +621,72 @@ button.settings-row:active {
     color: LinkText;
   }
 }
+
+/* ---------- Справка «How Pundoku works» (PD-120): те же навбар/заголовок/карточки, что у Settings ---------- */
+.help-head:focus-visible,
+.help .settings-large:focus-visible {
+  outline-offset: 2px;
+}
+.help-card {
+  padding: 4px 16px 12px;
+}
+.help-card p {
+  margin: 8px 0 0;
+  font-size: 1rem;
+  line-height: 1.4;
+  color: var(--label);
+  overflow-wrap: break-word;
+  hyphens: auto;
+}
+.help-marks {
+  margin: 6px 0 0;
+}
+.help-mark {
+  padding: 8px 0 0;
+}
+.help-mark dt {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+.help-mark dd {
+  margin: 2px 0 0 24px;
+  font-size: 0.95rem;
+  line-height: 1.35;
+  color: var(--label-2);
+  overflow-wrap: break-word;
+}
+.help-mark .ymark {
+  width: 16px;
+  height: 16px;
+  flex: none;
+}
+/* Ссылка «What's this?» (карточка дня, блок Grid ∞): тихая текстовая, цель ≥ 44 pt. */
+.help-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 4px;
+  color: var(--ink);
+  font-size: 0.9rem;
+  border-radius: 8px;
+  white-space: nowrap; /* ссылка переносится целиком, а не рвётся на «What’s / this?» */
+  margin-inline-start: 4px;
+}
+.help-link:active {
+  background: var(--ink-tint);
+}
+/* Строка-переход «How Pundoku works ›» в Settings. */
+.settings-rowbtn.nav {
+  justify-content: space-between;
+  text-align: left;
+  color: var(--label);
+}
+.settings-rowbtn.nav .chev {
+  width: 0.7em;
+  height: 1.1em;
+  color: var(--label-2);
+}

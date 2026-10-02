@@ -8,6 +8,7 @@ import { setLocale, SUPPORTED_LOCALES } from "../i18n";
 import { setHighlightWrong, useHighlightWrong } from "../settings/prefs";
 import { ActionSheet } from "./ActionSheet";
 import { KEY_GROUP, keyGroups, isCompleteKey, spellGroup } from "./key";
+import type { TabId } from "../shell/tabs";
 import type { RecoveryError, RecoveryStore } from "./store";
 
 /** Названия языков — на самих языках (не переводятся: человек ищет свой язык глазами). */
@@ -37,6 +38,11 @@ const CopyIcon = () => (
   <svg {...svg} strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
     <rect x="8.6" y="3.4" width="12" height="14" rx="2.6" />
     <path d="M15.4 20.6H5.8a2.4 2.4 0 0 1-2.4-2.4V7.6" />
+  </svg>
+);
+const ChevronIcon = () => (
+  <svg {...svg} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className="chev">
+    <path d="m9 5 7 7-7 7" />
   </svg>
 );
 const BackIcon = () => (
@@ -69,7 +75,18 @@ export function formatCreated(iso: string | null, locale: string): string {
 /** Позиция курсора в отформатированном ключе после `n` значащих символов (дефис ставится между группами). */
 const caretAfter = (n: number): number => (n === 0 ? 0 : n + Math.floor((n - 1) / KEY_GROUP));
 
-export function SettingsScreen({ store, onBack }: { store: RecoveryStore; onBack: () => void }) {
+interface SettingsScreenProps {
+  store: RecoveryStore;
+  onBack: () => void;
+  /** Куда вернёт «‹» (PD-123: вкладка, с которой открыли Settings). По умолчанию — Today. */
+  origin?: TabId;
+  /** Открыть «How Pundoku works» (PD-120). Нет — строки справки нет (изолированные тесты экрана). */
+  onOpenHelp?: () => void;
+}
+
+export const BACK_LABEL: Record<TabId, string> = { today: "settings.backLabel", play: "settings.backLabelPlay", year: "settings.backLabelYear" };
+
+export function SettingsScreen({ store, onBack, origin = "today", onOpenHelp }: SettingsScreenProps) {
   const { t, i18n } = useTranslation();
   const s = useSyncExternalStore(store.subscribe, store.getSnapshot);
   const locale = (i18n.resolvedLanguage ?? "en") as Locale;
@@ -343,9 +360,9 @@ export function SettingsScreen({ store, onBack }: { store: RecoveryStore; onBack
   return (
     <div className="settings" data-testid="settings-screen">
       <header className="settings-navbar">
-        <button type="button" className="settings-back" onClick={onBack} aria-label={t("settings.backLabel")} data-testid="settings-back">
+        <button type="button" className="settings-back" onClick={onBack} aria-label={t(BACK_LABEL[origin])} data-testid="settings-back">
           <BackIcon />
-          <span>{t("tabs.today")}</span>
+          <span>{t(`tabs.${origin}`)}</span>
         </button>
       </header>
 
@@ -409,6 +426,20 @@ export function SettingsScreen({ store, onBack }: { store: RecoveryStore; onBack
         </h2>
         {keyBlock}
       </section>
+
+      {onOpenHelp && (
+        <section className="settings-sec" aria-labelledby="settings-h-help">
+          <h2 className="settings-head" id="settings-h-help">
+            {t("settings.helpHead")}
+          </h2>
+          <div className="settings-card">
+            <button type="button" className="settings-rowbtn nav" onClick={onOpenHelp} data-testid="open-help">
+              <span>{t("settings.helpRow")}</span>
+              <ChevronIcon />
+            </button>
+          </div>
+        </section>
+      )}
 
       {/* About (PD-102, §18.5в): знак + вордмарк + версия — там, где о приложении спрашивают. Всё статично и декоративно. */}
       <section className="settings-sec" aria-labelledby="settings-h-about">

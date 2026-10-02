@@ -2,6 +2,7 @@ import type { KeyboardEvent } from "react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Mark } from "../brand/Mark";
+import { TabHeader } from "../shell/TabHeader";
 import type { DayProgress } from "../today/repository";
 import { monthName } from "./format";
 import { markClass, monthAriaLabel } from "./labels";
@@ -25,6 +26,8 @@ export interface YearScreenProps {
   initialDate?: string | null;
   /** Вызывается после применения `initialDate` — адрес возвращается к обычному `#/year`. */
   onInitialDateConsumed?: () => void;
+  /** Шестерёнка настроек в шапке (PD-123); нет — без неё. */
+  onOpenSettings?: () => void;
 }
 
 const MONTH_SLOTS = 35; // 7 × 5: дни месяца идут подряд, без привязки к дням недели (ритма недели в продукте нет)
@@ -34,7 +37,7 @@ const MONTH_SLOTS = 35; // 7 × 5: дни месяца идут подряд, б
  * тап по месяцу → шит месяца с клетками ~46 pt → тап по дню → карточка дня (вторая страница шита).
  * Формы и цвет меток — `year/model.ts` и `styles/year.css`. Никаких серий и процентов: только нейтральные итоги.
  */
-export function YearScreen({ days, firstUse, today, onOpenToday, onPlayDay, initialDate = null, onInitialDateConsumed }: YearScreenProps) {
+export function YearScreen({ days, firstUse, today, onOpenToday, onPlayDay, initialDate = null, onInitialDateConsumed, onOpenSettings }: YearScreenProps) {
   const { t, i18n } = useTranslation();
   const locale = i18n.resolvedLanguage ?? "en";
   const root = useRef<HTMLDivElement>(null);
@@ -114,15 +117,18 @@ export function YearScreen({ days, firstUse, today, onOpenToday, onPlayDay, init
 
   return (
     <div className="year" ref={root} data-testid="year-screen" data-empty={empty ? "true" : "false"}>
-      <header className="toolbar">
-        {years.length > 1 ? (
-          <YearPicker year={year} years={years} onPick={setPicked} />
-        ) : (
-          <h1 className="title" data-testid="year-title">
-            {title}
-          </h1>
-        )}
-      </header>
+      <TabHeader
+        title={
+          years.length > 1 ? (
+            <YearPicker year={year} years={years} onPick={setPicked} />
+          ) : (
+            <h1 className="title" data-testid="year-title">
+              {title}
+            </h1>
+          )
+        }
+        onOpenSettings={onOpenSettings}
+      />
       {yearEmpty ? (
         <p className="subline year-totals" data-testid="year-empty-year">
           {t("year.emptyYear", { year })}

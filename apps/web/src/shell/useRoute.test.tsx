@@ -5,7 +5,7 @@ import { createRoot } from "react-dom/client";
 import type { Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { LeaveGuard, Route, Target } from "./tabs";
-import { leaveSettings, useRoute } from "./tabs";
+import { leaveHelp, leaveSettings, useRoute } from "./tabs";
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
@@ -139,5 +139,70 @@ describe("leaveSettings после перехвата (PD-60)", () => {
     expect(route.tab).toBe("today");
     expect(route.settings).toBeUndefined();
     expect(window.location.hash).toBe("#/today");
+  });
+});
+
+describe("Settings и справка помнят вкладку-источник (PD-123/PD-120)", () => {
+  it.each(["today", "play", "year"] as const)("Settings с вкладки %s: вкладка маршрута — источник, «назад» возвращает на неё", async (tab) => {
+    await mount();
+    await act(async () => go({ tab }));
+    await act(async () => go({ settings: true }));
+    expect(route.settings).toBe(true);
+    expect(route.tab).toBe(tab);
+    expect(window.location.hash).toBe("#/settings");
+    await act(async () => leaveSettings(go));
+    await settle();
+    expect(route.settings).toBeUndefined();
+    expect(route.tab).toBe(tab);
+    expect(window.location.hash).toBe(`#/${tab}`);
+  });
+
+  it("перезагрузка на #/settings без метки — Today", async () => {
+    window.history.replaceState(null, "", "#/settings");
+    await mount();
+    expect(route.settings).toBe(true);
+    expect(route.tab).toBe("today");
+  });
+
+  it("справка из Settings: via=settings, «назад» ведёт обратно в Settings той же вкладки, оттуда — на вкладку", async () => {
+    await mount();
+    await act(async () => go({ tab: "year" }));
+    await act(async () => go({ settings: true }));
+    await act(async () => go({ help: null }));
+    expect(route.help).toEqual({ block: null, via: "settings" });
+    expect(route.tab).toBe("year");
+    expect(window.location.hash).toBe("#/help");
+    await act(async () => leaveHelp(go));
+    await settle();
+    expect(route.help).toBeUndefined();
+    expect(route.settings).toBe(true);
+    expect(route.tab).toBe("year");
+    await act(async () => leaveSettings(go));
+    await settle();
+    expect(route.tab).toBe("year");
+    expect(route.settings).toBeUndefined();
+  });
+
+  it("справка по ссылке «What\u2019s this?» с карточки: via=tab, блок в адресе, «назад» — на вкладку", async () => {
+    await mount();
+    await act(async () => go({ tab: "play" }));
+    await act(async () => go({ help: "technique" }));
+    expect(route.help).toEqual({ block: "technique", via: "tab" });
+    expect(route.tab).toBe("play");
+    expect(window.location.hash).toBe("#/help/technique");
+    await act(async () => leaveHelp(go));
+    await settle();
+    expect(route.help).toBeUndefined();
+    expect(route.tab).toBe("play");
+    expect(window.location.hash).toBe("#/play");
+  });
+
+  it("справка без предыдущей записи (глубокая ссылка): «назад» — replace на Today", async () => {
+    window.history.replaceState(null, "", "#/help/grid");
+    await mount();
+    expect(route.help?.block).toBe("grid");
+    await act(async () => leaveHelp(go));
+    expect(route.help).toBeUndefined();
+    expect(route.tab).toBe("today");
   });
 });
