@@ -113,8 +113,8 @@
     },
     "counter": {
       "title": "Numbers on the pad",
-      "p1": "The small number under a digit is how many of that digit you still have to place.",
-      "p2": "“N cells left” counts every cell that doesn’t hold the right digit yet."
+      "p1": "The small number under a digit is how many more of it fit on the grid: nine minus the ones already placed, right or wrong.",
+      "p2": "“N cells left” counts the empty cells. A wrong digit still fills its cell, so a full grid can be unsolved."
     }
   },
   "board": {

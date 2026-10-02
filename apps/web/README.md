@@ -536,7 +536,7 @@ Settings → секция «Game» (между языком и ключом во
 Settings → секция «Help» → строка «How Pundoku works ›» (push-экран, `help/HelpScreen.tsx`, адрес `#/help[/<блок>]`). Пять блоков по
 2–3 строки, без картинок и туториала поверх игры: **Grid ∞** (что это и почему «needs more clues»), **Fixes**, **Technique reached**
 (Naked/Hidden Single, Locked Candidates, Pairs — по возрастанию), **Year marks** (образцы меток из легенды + «Late»), **Numbers on the
-pad** (число под цифрой — сколько таких цифр осталось поставить; «N cells left» — клетки без верной цифры). Тексты — `help.*` в трёх
+pad** (число под цифрой — 9 минус поставленные такие цифры, верные или нет; «N cells left» — пустые клетки; PD-118: неверная цифра клетку заполняет). Тексты — `help.*` в трёх
 локалях, проверка паритета ключей и плейсхолдеров — `help/i18n.test.ts`.
 
 - **Ссылка «What’s this?»**: у строки «Technique reached» на карточке дня (Today, архив, Play) и у строки-объяснения под Grid ∞ на Today.
