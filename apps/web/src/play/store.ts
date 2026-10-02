@@ -162,7 +162,7 @@ export class PlayStore extends GameStore<PlayScreenSnapshot> {
     const { deps } = this;
     if (!deps || this.snap.restoring !== true) return;
     this.listen();
-    let saved: SavedPlay | null = null;
+    let saved: SavedPlay | null;
     try {
       saved = parseSavedPlay(await deps.storage.getMeta(PLAY_META_KEY));
     } catch {
