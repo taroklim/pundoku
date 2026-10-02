@@ -85,7 +85,7 @@
     "whatsThis": "What’s this?",
     "grid": {
       "title": "Grid ∞",
-      "p1": "Your own grid that never resets. Every day you solve adds one clue to it: the cell you filled last.",
+      "p1": "Your own grid that never resets. Each daily puzzle you solve on Today adds one clue to it: the cell you filled last. Archive days and Play don’t add clues.",
       "p2": "Once the clues are enough for a single answer, it says “{{enough}}”. That usually takes 30 to 60 clues, one a day.",
       "p3": "You can’t play it yet. For now it only fills up, one clue per solved day."
     },
@@ -202,8 +202,8 @@
     "gridLabel_one": "Your permanent grid: {{count}} clue so far, {{state}}",
     "gridLabel_other": "Your permanent grid: {{count}} clues so far, {{state}}",
     "gridHint": "Today’s last cell lands here.",
-    "gridTap": "Every day you solve adds a clue here.",
-    "gridExplain": "Each day you solve adds one clue. It usually takes 30 to 60 before the grid has a single answer."
+    "gridTap": "Each daily puzzle you solve adds a clue here.",
+    "gridExplain": "Each daily puzzle you solve adds one clue. It usually takes 30 to 60 before the grid has a single answer."
   },
   "archive": {
     "title": "Archive",
