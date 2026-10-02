@@ -16,6 +16,7 @@ import { cellsLeft } from "../play/logic";
 import { ResultCard } from "../play/ResultCard";
 import { Subline } from "../play/Subline";
 import { useDeferredFocus } from "../shell/afterPaint";
+import { GearIcon } from "../shell/icons";
 import type { DayStore } from "./dayStore";
 import { dayStore } from "./dayStore";
 import { MiniBoard } from "./MiniBoard";
@@ -134,10 +135,7 @@ export function DayView({ store, archive, onOpenSettings }: { store: DayStore; a
         {/* Шестерёнка (PD-49): действие тулбара, а не четвёртая вкладка; ведёт на `#/settings`. */}
         {!archive && onOpenSettings && (
           <button type="button" className="gear-btn" onClick={onOpenSettings} aria-label={t("settings.open")} data-testid="open-settings">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
-              <circle cx="12" cy="12" r="3.4" />
-              <path d="M12 2.9v2.4M12 18.7v2.4M21.1 12h-2.4M5.3 12H2.9M18.4 5.6l-1.7 1.7M7.3 16.7l-1.7 1.7M18.4 18.4l-1.7-1.7M7.3 7.3 5.6 5.6" />
-            </svg>
+            <GearIcon />
           </button>
         )}
       </header>
