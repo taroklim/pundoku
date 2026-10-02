@@ -395,7 +395,7 @@ Gates: build → typecheck, lint, тесты web/engine/api (api с TEST_DATABAS
 | PD-144 | Play по IA-варианту C (решение владельца 2026-10-02): строка «Продолжить» с независимыми незавершёнными играми (день и свободная), сложность списком, Ink как строка «Режим» + чип в шапке; нужен точный макет-проработка (design/pd140-ia-variants.html — основа) и затем реализация после пакетов A/B/D/E/C; место под отдельный раздел режимов релиза 2 заложить, не реализовывать. Включить: select сложности на экране настройки Play 13 px → ≥16 px (QA PD-135 L3); убрать дубль «New puzzle» и «New game» на карточке Play (Info) | designer+developer | P1 | pending | PD-135, PD-143 |
 | PD-145 | Логотип R4: отрендерить design/pd141-logo-round4.html в Chromium+WebKit, PNG-кадры, копия ~/Desktop/Pundoku-iPhone/logo-round4.html (+PNG), коммит в main pundoku | developer | P2 | completed (рендер design/pd141-shots, копия ~/Desktop/Pundoku-iPhone/logo-round4.html + logo-round4-shots; коммит в main, не запушен) | PD-141 |
 | PD-146 | S1/S2: ~1 из 10 холодных загрузок WebKit вкладка Year роняет приложение в пустой экран (`TypeError … e.solved`); корневая причина + фикс + ErrorBoundary + циклы ≥30 холодных загрузок webkit/chromium; ветка pd-year-blank; затем QA-перепроверка | developer | P0 | in_progress | — |
-| PD-147 | Повторный QA pd-key: миграции 0007→0008 на БД с данными, идемпотентный повтор confirm, гонка двух устройств, cancel-лимит, UI-путь потерянного ответа, полные прогоны api/web/engine после rebase (--testTimeout=60000) | qa-tester | P1 | pending | PD-126 |
+| PD-147 | Повторный QA pd-key: миграции 0007→0008 на БД с данными, идемпотентный повтор confirm, гонка двух устройств, cancel-лимит, UI-путь потерянного ответа, полные прогоны api/web/engine после rebase (--testTimeout=60000) | qa-tester | P1 | in_progress (pd-key @ 972ad59) | PD-126 |
 | PD-20 | QA PD-14 (pd-14 @ 0026b2a): PASS с оговорками, блокеров и Medium нет; 4 Low + решение по слиянию → PD-31 | qa-tester | P1 | completed | PD-14 |
 | PD-31 | Фикс-проход pd-14 по QA PD-20 (pd-14 @ c574f13; gates зелёные: web 213, engine 105, api 77+2 skipped, интеграционные 7/7 на живой БД) | developer | P1 | completed | PD-20 |
 | PD-32 | PASS с оговорками (слияние 409 по источникам, 1500 дней без лишних PUT, gates, интеграционные 7/7); Low → PD-37. QA-регресс pd-14 @ c574f13 (перезапуск после сбоя контейнера; worktree /tmp/pundoku-qa/qa-pd32, БД pundoku_qa5, порты 3320/5320): слияние 409 по источникам, отсутствие лишних PUT при 1500 днях, сокращённый регресс PD-20, gates + интеграционные api-тесты | qa-tester | P1 | completed | PD-31 |
@@ -486,7 +486,7 @@ Gates: build → typecheck, lint, тесты web/engine/api (api с `TEST_DATABA
 | Dev-Pundoku-YB | developer | working | PD-146 (pd-year-blank) | 2026-10-02 |
 | Dev-Pundoku-D2 | developer | working | PD-125 доработка (pd-late) | 2026-10-02 |
 | QA-Pundoku-E | qa-tester | done | PD-138 | 2026-10-02 |
-| Dev-Pundoku-E3 | developer | working | PD-126 правка текста ошибки обрыва (pd-key) | 2026-10-02 |
+| QA-Pundoku-E2 | qa-tester | working | PD-147 (pd-key @ 972ad59) | 2026-10-02 |
 
 ## Чек-пойнт 2026-10-01 (конец сессии PM-Pundoku-7)
 - **Сделано:** решения владельца по релизу 1.1 зафиксированы; PD-74 (UI ink, pd-74 @ 73444b2), PD-75 (UI таймлапса/PNG Rhythm, pd-75 @ bfeedbf), PD-80 (счёт ходов в ink, pd-80 @ de5a52d) смержены в локальный main; gates на слитом: build/typecheck/lint, web 624, engine 178 (api не затронут, 174+3). PD-78 сделан в PD-74. PD-79 закрыт: не дефект.
