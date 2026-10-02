@@ -13,6 +13,7 @@
  *   (подсказки × техника) — `difficulty.ts`: `DIFFICULTIES`, `DIFFICULTY_PROFILES`;
  * - лог ходов и метрики карточки дня (`movelog.ts`): `heatmap`, `summary`, `solvingStyle`;
  * - Чернильный режим (`ink.ts`): правила `INK_RULES`/`inkAllows`, кляксы лога, проверка лога.
+ * - лесенка подсказок (`hint.ts`): `nextHint`.
  * - таймлапс и отпечаток прохождения (`timelapse.ts`): `timelapseFrames`, `timelapseFingerprint`.
  */
 export type {
@@ -76,6 +77,23 @@ export {
 } from "./generator.js";
 export { DIFFICULTIES, DIFFICULTY_PROFILES, EASY_MIN_CLUES } from "./difficulty.js";
 export type { GenerateOptions } from "./generator.js";
+
+export { nextHint } from "./hint.js";
+export type {
+  Hint,
+  HintCells,
+  HintExplanation,
+  HintExplanationId,
+  HintLead,
+  HintPlacement,
+  HintRegion,
+  HintRegionKind,
+  HintState,
+  MistakeHint,
+  NoHint,
+  NoHintReason,
+  StepHint,
+} from "./hint.js";
 
 export { Rng } from "./prng.js";
 
