@@ -87,7 +87,7 @@
       "title": "Grid ∞",
       "p1": "Your own grid that never resets. Every day you solve adds one clue to it: the cell you filled last.",
       "p2": "Once the clues are enough for a single answer, it says “{{enough}}”. That usually takes 30 to 60 clues, one a day.",
-      "p3": "You can’t play it yet — for now it only grows."
+      "p3": "You can’t play it yet. For now it only fills up, one clue per solved day."
     },
     "fixes": {
       "title": "Fixes",

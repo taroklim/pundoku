@@ -12,6 +12,9 @@ const YEAR_ROWS = [
   { id: "missed", mark: "is-missed", name: "year.legend.missed" },
 ] as const;
 
+/** События, по которым понятно, что человек сам прокручивает: подравнивание блока прекращается. */
+const USER_SCROLL = ["wheel", "touchstart", "keydown", "pointerdown"] as const;
+
 const BackIcon = () => (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" width="19" height="19">
     <path d="M15 5l-7 7 7 7" />
@@ -38,11 +41,35 @@ export function HelpScreen({ block, backName, backLabel, onBack }: HelpScreenPro
   const root = useRef<HTMLDivElement>(null);
 
   // Ссылка из карточки: прокрутить к блоку и поставить на него фокус (скринридер читает заголовок блока); иначе — на h1.
+  // Отступ сверху даёт `scroll-margin-top` у `.help-head` (кольцо фокуса и заголовок не срезаются краем области прокрутки).
   useEffect(() => {
-    const target = block ? root.current?.querySelector<HTMLElement>(`#help-h-${block}`) : root.current?.querySelector<HTMLElement>("h1");
-    if (!target) return;
+    const el = root.current;
+    const target = block ? el?.querySelector<HTMLElement>(`#help-h-${block}`) : el?.querySelector<HTMLElement>("h1");
+    if (!el || !target) return;
     target.focus({ preventScroll: true });
-    if (block) target.scrollIntoView?.({ block: "start" }); // в jsdom метода нет
+    if (!block) return;
+    const align = () => target.scrollIntoView?.({ block: "start" }); // в jsdom метода нет
+    align();
+    // Прокрутка первого кадра считает по ещё не осевшей раскладке: (1) панель входит с подъёмом 6 px (`.panel.enter`, M10) — без
+    // повтора после animationend блок оставался на 6 px выше, чем надо (заголовок и кольцо фокуса срезались); (2) WebKit
+    // перекладывает текст уже после первой прокрутки (hyphens: auto / смена lang). Пока раскладка оседает (≤ 2 с), подравниваем,
+    // но стоит человеку самому тронуть прокрутку — отпускаем.
+    if (typeof ResizeObserver === "undefined") return;
+    const scroller = el.closest(".scroll") ?? el;
+    const panel = el.closest(".panel");
+    const ro = new ResizeObserver(align);
+    const onPanelAnim = (e: Event) => e.target === panel && align();
+    const stop = () => {
+      ro.disconnect();
+      clearTimeout(timer);
+      panel?.removeEventListener("animationend", onPanelAnim);
+      for (const ev of USER_SCROLL) scroller.removeEventListener(ev, stop);
+    };
+    const timer = setTimeout(stop, 2000);
+    ro.observe(el);
+    panel?.addEventListener("animationend", onPanelAnim);
+    for (const ev of USER_SCROLL) scroller.addEventListener(ev, stop, { passive: true });
+    return stop;
   }, [block]);
 
   return (

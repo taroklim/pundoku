@@ -627,6 +627,12 @@ button.settings-row:active {
 .help .settings-large:focus-visible {
   outline-offset: 2px;
 }
+/* Переход «What’s this?» / с пояснения Grid ∞ (HelpScreen: scrollIntoView block:start): заголовок блока не должен упираться в верхний край
+   прокручиваемой области — иначе его срезает кольцо фокуса (2 px + offset 2 px) и в standalone он уходит под строку состояния.
+   Зазор = safe-area сверху + 16 px (Dynamic Type не меняет: единица px, как у кольца). */
+.help-head {
+  scroll-margin-top: calc(var(--sa-top) + 16px);
+}
 .help-card {
   padding: 4px 16px 12px;
 }
