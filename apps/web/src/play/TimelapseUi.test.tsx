@@ -70,13 +70,16 @@ describe("вход в Таймлапс из карточки дня", () => {
   const card = (play: PlayState, timelapse = { date: "2026-09-30", difficulty: "medium" as string | null }) =>
     act(() => root.render(<ResultCard play={play} cardRef={createRef()} title="Your path" timelapse={timelapse} />));
 
-  it("есть лог: тонированная кнопка над Share, Share активна, строки «нет повтора» нет", () => {
+  it("есть лог: главная кнопка над Share, Share активна, строки «нет повтора» нет", () => {
     card(solvedPlay());
     const watch = q("tl-watch")!;
     expect(watch.textContent).toContain("Watch your solve");
     expect(q("tl-nolog")).toBeNull();
     const share = [...host.querySelectorAll("button")].find((b) => b.textContent?.includes("Share"))!;
     expect(share.hasAttribute("disabled")).toBe(false);
+    // PD-129: «Watch your solve» — главная (залитая, `.tl-watch`), Share — вторичная (`.share`, тонированная), и она ниже.
+    expect(watch.className).toBe("tl-watch");
+    expect(share.className).toBe("share");
     expect(watch.compareDocumentPosition(share) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   });
 
@@ -85,8 +88,9 @@ describe("вход в Таймлапс из карточки дня", () => {
     expect(q("tl-watch")).toBeNull();
     expect(q("tl-nolog")!.textContent).toBe("Replay isn’t available for this day — moves weren’t kept.");
     expect(q("tl-nolog")!.querySelector("svg")).toBeNull();
-    const share = [...host.querySelectorAll("button")].find((b) => b.textContent?.includes("Share"))!;
-    expect(share.hasAttribute("disabled")).toBe(true);
+    // PD-129: у дня без лога делиться нечем — Share нет вовсе (а не серой кнопкой).
+    expect([...host.querySelectorAll("button")].find((b) => b.textContent?.includes("Share"))).toBeUndefined();
+    expect(host.querySelector(".share")).toBeNull();
   });
 
   it("Play (без prop timelapse): входа нет вообще", () => {

@@ -19,8 +19,8 @@ interface ResultCardProps {
   /** О каком дне «N % solved»: `today` — сегодняшняя сетка, `day` — прошлый (архивный) день: «solved that day». */
   winRateScope?: "today" | "day";
   /**
-   * Таймлапс дня (PD-75): дата `YYYY-MM-DD` и ключ сложности. Задан — над Share появляется «Watch your solve» (или
-   * тихая строка, если ходы не сохранились), Share открывает экспорт отпечатка. Не задан (Play) — карточка как раньше.
+   * Таймлапс дня (PD-75): дата `YYYY-MM-DD` и ключ сложности. Задан — на карточке «Watch your solve» (главная кнопка) и
+   * Share под ней (тонированная; открывает экспорт отпечатка); если ходы не сохранились — тихая строка и без Share.
    */
   timelapse?: { date: string; difficulty: string | null };
   /** «What's this?» у строки «Technique reached» (PD-120): открывает справку на нужном блоке. Нет — ссылки нет. */
@@ -110,12 +110,15 @@ export function ResultCard({ play, cardRef, title, winRate, winRateScope = "toda
         </p>
       )}
       {tl.enabled && <WatchRow available={tl.available} onWatch={() => tl.open("player")} />}
-      {/* Share — PNG-отпечаток без цифр (PD-75): доступен там, где есть цельный лог (Today/архив); в Play и у дней
-          без лога — как раньше, неактивен. */}
-      <button type="button" className="share" disabled={!tl.available} onClick={() => tl.open("export")}>
-        <ShareIcon />
-        {t("solved.share")}
-      </button>
+      {/* Share — PNG-отпечаток без цифр (PD-75), вторичное действие (PD-129): главное на карточке — «Watch your solve».
+          Нет цельного лога — нечем делиться, и кнопки нет вовсе (не серая: мёртвая кнопка путает; у дня без лога
+          вместо Watch — тихая строка). */}
+      {tl.available && (
+        <button type="button" className="share" data-testid="share" onClick={() => tl.open("export")}>
+          <ShareIcon />
+          {t("solved.share")}
+        </button>
+      )}
       {children}
       {tl.sheets}
     </section>
