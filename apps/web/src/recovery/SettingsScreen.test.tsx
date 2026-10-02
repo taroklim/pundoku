@@ -7,6 +7,7 @@ import pkg from "../../package.json";
 import i18n from "../i18n";
 import type { RecoveryApi, RecoveryResult, RecoveryStatus } from "./api";
 import { formatCreated, SettingsScreen } from "./SettingsScreen";
+import { HIGHLIGHT_WRONG_KEY, getHighlightWrong, setHighlightWrong } from "../settings/prefs";
 import { RecoveryStore } from "./store";
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
@@ -62,6 +63,7 @@ async function mount(status: RecoveryStatus = { hasKey: false }, over: Partial<R
 beforeEach(async () => {
   await i18n.changeLanguage("en");
   localStorage.clear();
+  setHighlightWrong(false);
   host = document.createElement("div");
   document.body.append(host);
   root = createRoot(host);
@@ -357,5 +359,55 @@ describe("SettingsScreen: язык и навигация", () => {
     await click("lang-ru");
     expect(host.querySelector("#settings-h-about")!.textContent).toBe("О приложении");
     expect(q("about-version")!.querySelector(".sr-only")!.textContent).toContain("Версия");
+  });
+});
+
+describe("SettingsScreen: «Подсвечивать неверные цифры» (PD-112)", () => {
+  const sw = () => q<HTMLInputElement>("highlight-wrong")!;
+
+  it("секция «Game»: нативный switch, выкл по умолчанию, подпись-футер связана через aria-describedby", async () => {
+    await mount();
+    expect(host.querySelector("#settings-h-game")!.textContent).toBe("Game");
+    expect(sw().tagName).toBe("INPUT");
+    expect(sw().type).toBe("checkbox");
+    expect(sw().getAttribute("role")).toBe("switch");
+    expect(sw().checked).toBe(false);
+    expect(sw().closest("label")!.textContent).toBe("Highlight wrong digits"); // доступное имя — текст строки
+    const foot = host.querySelector("#" + sw().getAttribute("aria-describedby"))!;
+    expect(foot.textContent).toContain("doesn’t match the solution");
+    expect(foot.textContent).toContain("Off by default");
+  });
+
+  it("клик по строке (label) переключает и пишет в localStorage; повторный клик возвращает выкл и убирает ключ", async () => {
+    await mount();
+    const label = sw().closest("label")!;
+    await act(async () => label.dispatchEvent(new MouseEvent("click", { bubbles: true })));
+    expect(sw().checked).toBe(true);
+    expect(localStorage.getItem(HIGHLIGHT_WRONG_KEY)).toBe("1");
+    expect(getHighlightWrong()).toBe(true);
+    await act(async () => label.dispatchEvent(new MouseEvent("click", { bubbles: true })));
+    expect(sw().checked).toBe(false);
+    expect(localStorage.getItem(HIGHLIGHT_WRONG_KEY)).toBeNull();
+  });
+
+  it("профиль со старым состоянием (язык сохранён, ключа настройки нет) — switch выкл; сохранённое «1» — вкл", async () => {
+    localStorage.setItem("pundoku.locale", "en");
+    await mount();
+    expect(sw().checked).toBe(false);
+    act(() => root.unmount());
+    root = createRoot(host);
+    setHighlightWrong(true);
+    await mount();
+    expect(sw().checked).toBe(true);
+  });
+
+  it("подписи переводятся (uk, ru)", async () => {
+    await mount();
+    await click("lang-uk");
+    expect(host.querySelector("#settings-h-game")!.textContent).toBe("Гра");
+    expect(sw().closest("label")!.textContent).toBe("Підсвічувати неправильні цифри");
+    await click("lang-ru");
+    expect(host.querySelector("#settings-h-game")!.textContent).toBe("Игра");
+    expect(sw().closest("label")!.textContent).toBe("Подсвечивать неверные цифры");
   });
 });

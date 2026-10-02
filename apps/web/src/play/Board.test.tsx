@@ -7,6 +7,7 @@ import "../i18n";
 import { Board, BLOT_MOMENT_MS } from "./Board";
 import { MOTION_MS } from "./motion";
 import { createPlay } from "./logic";
+import { HIGHLIGHT_WRONG_KEY, setHighlightWrong } from "../settings/prefs";
 import type { PlaySnapshot } from "./gameStore";
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
@@ -37,6 +38,8 @@ const col = (c: number): number[] => Array.from({ length: 9 }, (_, r) => r * 9 +
 let host: HTMLDivElement;
 let root: Root;
 beforeEach(() => {
+  localStorage.clear();
+  setHighlightWrong(false);
   host = document.createElement("div");
   document.body.append(host);
   root = createRoot(host);
@@ -103,13 +106,77 @@ describe("фокус следует за выбором", () => {
   });
 });
 
-describe("выбранная неверная клетка", () => {
+describe("выбранная неверная клетка (подсветка включена)", () => {
   it("кольцо выбора получает класс err (сургуч снаружи), у верной клетки — нет", () => {
+    setHighlightWrong(true);
     const wrong = { ...play, values: play.values.map((v, i) => (i === 2 ? 1 : v)) }; // решение клетки 2 — 4
     render(snapOf({ play: wrong, selected: 2 }));
     expect(document.querySelector(".ring")!.classList.contains("err")).toBe(true);
     render(snapOf({ selected: 2 }));
     expect(document.querySelector(".ring")!.classList.contains("err")).toBe(false);
+  });
+});
+
+describe("PD-112: «Подсвечивать неверные цифры»", () => {
+  const wrongPlay = { ...play, values: play.values.map((v, i) => (i === 2 ? 1 : v)) }; // решение клетки 2 — 4, поставлена 1
+  const c2 = () => document.querySelector<HTMLElement>('.cell[data-i="2"]')!;
+
+  it("по умолчанию выкл (чистый профиль): ни класса err, ни кольца err, ни «wrong» в подписи/title/live-регионе", () => {
+    expect(localStorage.getItem(HIGHLIGHT_WRONG_KEY)).toBeNull();
+    render(snapOf({ play: wrongPlay, selected: 2 }));
+    expect(document.querySelector(".err")).toBeNull();
+    expect(c2().classList.contains("err")).toBe(false);
+    expect(c2().getAttribute("aria-label")).toBe("Row 1, column 3, your 1");
+    expect(document.querySelector(".board")!.innerHTML).not.toMatch(/wrong|err\b|title=/i);
+    expect(document.querySelector('[role="status"], [aria-live]')).toBeNull();
+  });
+
+  it("профиль со «старым состоянием» (любые чужие ключи, нет нашего) — тоже выкл; только значение «1» включает", () => {
+    localStorage.setItem("pundoku.locale", "ru");
+    localStorage.setItem("pundoku.something", "1");
+    render(snapOf({ play: wrongPlay, selected: 2 }));
+    expect(document.querySelector(".err")).toBeNull();
+    localStorage.setItem(HIGHLIGHT_WRONG_KEY, "true");
+    act(() => window.dispatchEvent(new StorageEvent("storage", { key: HIGHLIGHT_WRONG_KEY })));
+    expect(document.querySelector(".err")).toBeNull();
+  });
+
+  it("вкл возвращает подсветку (клетка, цифра, кольцо, подпись) и подхватывается на открытом поле без перерисовки снаружи", () => {
+    render(snapOf({ play: wrongPlay, selected: 2 }));
+    expect(document.querySelector(".err")).toBeNull();
+    act(() => setHighlightWrong(true));
+    expect(c2().classList.contains("err")).toBe(true);
+    expect(c2().querySelector(".d")!.classList.contains("err")).toBe(true);
+    expect(document.querySelector(".ring")!.classList.contains("err")).toBe(true);
+    expect(c2().getAttribute("aria-label")).toBe("Row 1, column 3, your 1, wrong");
+    act(() => setHighlightWrong(false));
+    expect(document.querySelector(".err")).toBeNull();
+    expect(c2().getAttribute("aria-label")).toBe("Row 1, column 3, your 1");
+  });
+
+  it("изменение в другой вкладке (событие storage) подхватывается", () => {
+    render(snapOf({ play: wrongPlay, selected: 2 }));
+    localStorage.setItem(HIGHLIGHT_WRONG_KEY, "1");
+    act(() => window.dispatchEvent(new StorageEvent("storage", { key: HIGHLIGHT_WRONG_KEY })));
+    expect(c2().classList.contains("err")).toBe(true);
+  });
+
+  it("выкл не мешает остальному: «та же цифра», выбор, заданные клетки", () => {
+    render(snapOf({ play: wrongPlay, selected: 2 }));
+    expect(c2().classList.contains("sel")).toBe(true);
+    expect(document.querySelector('.cell[data-i="0"]')!.getAttribute("aria-label")).toBe("Row 1, column 1, clue 5");
+    // другая клетка с такой же неверной цифрой подсвечивается как «та же», а не как ошибка
+    const two = { ...wrongPlay, values: wrongPlay.values.map((v, i) => (i === 3 ? 1 : v)) };
+    render(snapOf({ play: two, selected: 2 }));
+    expect(document.querySelector('.cell[data-i="3"]')!.classList.contains("same")).toBe(true);
+    expect(document.querySelector(".err")).toBeNull();
+  });
+
+  it("Ink не затронут: неверная цифра в ink-партии (правило «не заменять») подсвечена при выкл", () => {
+    const ink = { ...wrongPlay, ink: true as const };
+    render(snapOf({ play: ink, selected: 2 }));
+    expect(c2().classList.contains("err")).toBe(true);
+    expect(document.querySelector(".ring")!.classList.contains("err")).toBe(true);
   });
 });
 
