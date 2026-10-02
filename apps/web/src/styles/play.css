@@ -11,7 +11,7 @@
 
 /* ---------- «New puzzle» в тулбаре Play (PD-116): явная кнопка вместо нативного select сложности ---------- */
 .newpuzzle-btn {
-  /* Цель ≥ 44 pt (HIG), шрифт 1rem = 16 px: читается без зума. Отрицательные поля — как у .gear-btn: тулбар не растёт. */
+  /* Цель ≥ 44 pt (HIG), шрифт не меньше 16 px: читается без зума. Отрицательные поля — как у .gear-btn: тулбар не растёт. */
   flex: none;
   min-height: 44px;
   margin: -6px -4px -6px 0;
@@ -20,7 +20,7 @@
   color: var(--ink);
   background: var(--ink-tint);
   font: inherit;
-  font-size: 1rem;
+  font-size: max(1rem, 16px); /* на iPhone 1rem = Dynamic Type (≥17 px); пол 16 px — на системах без него (webkit macOS даёт 13 px) */
   font-weight: 600;
   white-space: nowrap;
 }
