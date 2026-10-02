@@ -24,7 +24,7 @@ import {
 } from "./dayResolver";
 import type { Landing, PermanentGridState } from "./permanent";
 import { initialPermanent, isSolvable, landDay, newInstallSeed } from "./permanent";
-import type { DayProgress, ProgressRepository } from "./repository";
+import type { DayProgress, ProgressRepository, SyncStorage } from "./repository";
 import { sync as syncRuntime } from "../sync/runtime";
 import type { RemoteApplied, SyncHooks } from "../sync/manager";
 import { readUseStart } from "../year/firstUse";
@@ -178,6 +178,20 @@ export class DayStore extends GameStore<DaySnapshot> {
     super(initialDaySnapshot(localDate(deps.now())));
     this.deps = deps;
     this.archive = options.archive === true;
+  }
+
+  /**
+   * PD-139: были ли на устройстве дни, помеченные «с помощью» (в т.ч. после смены/очистки флагов) — тогда шит правила
+   * подсказки уже не нужен. Хранилище без списка дней или с ошибкой чтения — «нет».
+   */
+  async anyAssisted(): Promise<boolean> {
+    const repo = this.deps.repo as Partial<SyncStorage>;
+    if (typeof repo.listDays !== "function") return false;
+    try {
+      return (await repo.listDays()).some((d) => d.assisted);
+    } catch {
+      return false;
+    }
   }
 
   /** Ink (PD-71): на Today — да; в архиве — только если правила (`INK_RULES.allowInArchive`) это разрешают. */

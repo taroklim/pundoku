@@ -300,12 +300,14 @@
       "assumes": "Part of this relies on candidates you already struck in your notes."
     },
     "bad": {
+      "step": "Before the next step",
       "title": "Something here doesn’t add up",
       "dup": "Two of your digits {{region}} are the same, so the grid can’t be finished as it stands. Pundoku won’t point at the cell — hints come back once it works again.",
       "generic": "The grid can’t be finished with what’s {{region}}. Pundoku won’t point at the cell — hints come back once it works again.",
       "key": "the region of the disagreement"
     },
     "none": {
+      "step": "No step",
       "title": "Nothing Pundoku can explain",
       "body": "This position needs a technique Pundoku doesn’t teach yet — an X-Wing or beyond. Nothing on your board is wrong.",
       "foot": "Nothing was revealed, so the day keeps a clean mark."

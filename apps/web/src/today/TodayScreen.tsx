@@ -12,6 +12,10 @@ import {
   useHintAnnouncement,
 } from "../play/controls";
 import { formatDay } from "../play/format";
+import { HintButton } from "../play/HintButton";
+import { HintDock, HINT_DOCK_ID } from "../play/HintDock";
+import { HintRuleSheet, boldParts } from "../play/HintRuleSheet";
+import { useHintLadder } from "../play/hintStore";
 import { InkEntry } from "../play/InkEntry";
 import type { HelpBlockId } from "../help/blocks";
 import { cellsLeft, isGridFull } from "../play/logic";
@@ -66,6 +70,8 @@ export function DayView({ store, archive, onOpenSettings, onOpenHelp }: { store:
   const stale = archive !== undefined && rawSnap.date !== archive.date;
   const snap = stale ? { ...rawSnap, phase: "loading" as const, play: null, unavailable: false } : rawSnap;
   const clock = useClock(store);
+  // PD-139: лесенка подсказок — Today и архив (late разрешён); в Ink и на Grid ∞ её нет. Шит правила не нужен, если на устройстве уже были дни «с помощью».
+  const { ladder, state: hint } = useHintLadder(store, { assistedBefore: () => store.anyAssisted() });
   const root = useRef<HTMLDivElement>(null);
   const { phase, play, difficulty } = snap;
   const archiveDate = archive?.date;
@@ -102,7 +108,8 @@ export function DayView({ store, archive, onOpenSettings, onOpenHelp }: { store:
   const announcement = blotAnnouncement || hintAnnouncement || cellsAnnouncement;
   // Чернильный режим (PD-74): строка входа в зазоре — только до первого хода и не в архиве (там ink запрещён).
   // Пока показан отклик на отказ (PD-117b), на его 2,6 с вместо строки входа стоит строка статуса.
-  const inkEntry = interactive && store.inkChoosable() && !snap.hint;
+  const inkEntry = interactive && store.inkChoosable() && !snap.hint && !hint.open && !hint.nudge;
+  const hintButton = store.hintAllowed() ? <HintButton open={hint.open} used={snap.hints ?? 0} onPress={() => ladder.toggle()} controls={HINT_DOCK_ID} /> : null;
 
   // Не на каждый тик часов/кадр финала: Intl.DateTimeFormat на каждый рендер дорог при CPU 4x (PD-95).
   const dayLabel = useMemo(() => (isRealDate(snap.date) ? formatDay(dateOf(snap.date), locale) : ""), [snap.date, locale]);
@@ -133,7 +140,7 @@ export function DayView({ store, archive, onOpenSettings, onOpenHelp }: { store:
   const winRate = snap.serverVerified === false ? null : snap.winRate;
 
   return (
-    <div ref={root} className={`play today${archive ? " archive" : ""}`} onKeyDown={(e) => handleGameKey(e, store)} data-testid={archive ? "archive-screen" : undefined} data-date={archive ? archive.date : undefined}>
+    <div ref={root} className={`play today${archive ? " archive" : ""}`} onKeyDown={(e) => handleGameKey(e, store, ladder)} data-testid={archive ? "archive-screen" : undefined} data-date={archive ? archive.date : undefined}>
       <p className="sr-only" role="status" aria-live="polite" aria-atomic="true">
         {announcement}
       </p>
@@ -146,10 +153,11 @@ export function DayView({ store, archive, onOpenSettings, onOpenHelp }: { store:
             <span>{t("tabs.year")}</span>
           </button>
           <h1 className="title">{t("archive.title")}</h1>
+          {hintButton}
         </header>
       ) : (
         // Шестерёнка (PD-49/PD-123): действие шапки вкладки, а не четвёртая вкладка; ведёт на `#/settings`.
-        <TabHeader title={<h1 className="title">{t("tabs.today")}</h1>} onOpenSettings={onOpenSettings} />
+        <TabHeader title={<h1 className="title">{t("tabs.today")}</h1>} actions={hintButton} onOpenSettings={onOpenSettings} />
       )}
       <Subline day={dayLabel} difficulty={diffLabel} ink={play?.ink === true} clock={showClock ? clock : null} />
 
@@ -206,7 +214,7 @@ export function DayView({ store, archive, onOpenSettings, onOpenHelp }: { store:
         </>
       ) : (
         <>
-          {!unavailable && <Board snap={snap} store={store} dim={phase === "solved"} />}
+          {!unavailable && <Board snap={snap} store={store} dim={phase === "solved"} hintMarks={hint.marks} />}
 
           {/* Свободное место — МЕЖДУ полем и панелью (макет, находка 1); в зазоре — статус. */}
           <div className="gap">
@@ -229,9 +237,15 @@ export function DayView({ store, archive, onOpenSettings, onOpenHelp }: { store:
               </p>
             )}
             {inkEntry && <InkEntry on={play?.ink === true} setOn={(on) => store.setInk(on)} />}
-            {!inkEntry && (phase === "playing" || phase === "solved") && (
+            {!inkEntry && !hint.open && (phase === "playing" || phase === "solved") && (
               <div className="today-status">
-                <StatusLine left={left} full={full} hint={snap.hint} />
+                {hint.nudge ? (
+                  <p className="status nudge" data-testid="hint-nudge">
+                    {boldParts(t("hint.nudge"))}
+                  </p>
+                ) : (
+                  <StatusLine left={left} full={full} hint={snap.hint} />
+                )}
                 {sourceLabel && (
                   <p className="source" data-testid="source">
                     {sourceLabel}
@@ -241,9 +255,10 @@ export function DayView({ store, archive, onOpenSettings, onOpenHelp }: { store:
             )}
           </div>
 
-          {!unavailable && <GamePad snap={snap} store={store} />}
+          {!unavailable && (hint.open ? <HintDock ladder={ladder} state={hint} /> : <GamePad snap={snap} store={store} />)}
         </>
       )}
+      {hint.rule && <HintRuleSheet onGo={() => ladder.confirmRule()} onCancel={() => ladder.dismissRule()} />}
     </div>
   );
 }

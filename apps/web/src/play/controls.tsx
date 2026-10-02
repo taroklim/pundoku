@@ -10,6 +10,7 @@ import type { TFunction } from "i18next";
 import { ActionSheet } from "../recovery/ActionSheet";
 import { formatClock } from "./format";
 import type { GameStore, PlaySnapshot } from "./gameStore";
+import type { HintLadder } from "./hintStore";
 import { EraseIcon, NotesIcon, UndoIcon } from "./icons";
 import { remaining } from "./logic";
 import { MOTION_FLAGS, MOTION_MS } from "./motion";
@@ -169,10 +170,14 @@ export function useClearEffectsOnUnmount(store: Pick<GameStore, "clearEffects">)
   useEffect(() => () => store.clearEffects(), [store]);
 }
 
-/** Клавиатурный ввод игрового экрана (цифры, Backspace, Ctrl+Z, N). */
+/**
+ * Клавиатурный ввод игрового экрана (цифры, Backspace, Ctrl+Z, N). PD-139: третий аргумент — лесенка подсказок:
+ * `H` (без модификаторов) открывает/закрывает док, `Esc` закрывает открытый док. Нет лесенки (Ink, Grid ∞) — клавиш нет.
+ */
 export function handleGameKey(
   e: KeyboardEvent<HTMLElement>,
   store: Pick<GameStore, "undo" | "erase" | "input" | "toggleNotesMode" | "fillCandidates">,
+  hint?: Pick<HintLadder, "toggle" | "close" | "getState"> | null,
 ): void {
   const target = e.target as HTMLElement;
   // Шит поверх экрана (PD-116: «Discard current puzzle?») — его клавиши не ввод в клетку.
@@ -197,6 +202,12 @@ export function handleGameKey(
   } else if (e.code === "KeyF" && !e.altKey && !e.shiftKey) {
     // PD-119: «Fill candidates» — отдельное действие (как долгий тап по Notes), без подтверждения: откатывается одним Undo.
     store.fillCandidates();
+  } else if (hint && e.code === "KeyH" && !e.altKey && !e.shiftKey) {
+    e.preventDefault();
+    hint.toggle();
+  } else if (hint && e.key === "Escape" && hint.getState().open) {
+    e.preventDefault();
+    hint.close();
   }
 }
 

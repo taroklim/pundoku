@@ -5,6 +5,8 @@ import { useHighlightPeers, useHighlightWrong } from "../settings/prefs";
 import { blotsIn, digitAt, isGiven, isWrong, notesOf, peersOf } from "./logic";
 import type { GameStore, PlaySnapshot } from "./gameStore";
 import { MOTION_MS } from "./motion";
+import type { HintMarks } from "./hintModel";
+import { hintRoleOf, regionCells, regionRect } from "./hintModel";
 
 /** Индекс клетки по номеру блока и позиции в блоке (DOM идёт блок за блоком, как в макете). */
 const idxOf = (b: number, k: number): number =>
@@ -52,6 +54,10 @@ interface CellProps {
   echoId: number;
   /** M7: точка касания клетки, % от её размера (откуда расходится пятно), если известна. */
   blotOrigin: { x: number; y: number } | null;
+  /** PD-139: метки подсказки на клетке — «где происходит» (полоса) и «почему» (кольцо); `struck` — маска вычеркнутых заметок. */
+  hintStrip: boolean;
+  hintRing: boolean;
+  struck: number;
   tabStop: boolean;
   label: string;
   onPick: (cell: number) => void;
@@ -106,6 +112,8 @@ const Cell = memo(function Cell(p: CellProps) {
       onClick={() => p.onPick(p.index)}
     >
       <i className="fl" aria-hidden="true" />
+      {p.hintStrip && <i className="hint-strip" aria-hidden="true" />}
+      {p.hintRing && <i className="hint-ring" aria-hidden="true" />}
       {p.blot && <i key={`s${p.blotId}`} className={`stain${p.blotId ? " anim" : ""}`} aria-hidden="true" />}
       {p.blotId !== 0 && p.wrongDigit !== 0 && (
         <span className="d player wrong leaving" aria-hidden="true">
@@ -123,7 +131,9 @@ const Cell = memo(function Cell(p: CellProps) {
       ) : p.notes ? (
         <span className="marks" aria-hidden="true">
           {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((d) => (
-            <span key={d}>{p.notes & (1 << d) ? d : ""}</span>
+            <span key={d} className={p.struck & (1 << d) ? "struck" : undefined}>
+              {p.notes & (1 << d) ? d : ""}
+            </span>
           ))}
         </span>
       ) : null}
@@ -171,11 +181,26 @@ const ARROWS: Record<string, [number, number]> = {
   ArrowRight: [0, 1],
 };
 
+/** Слой области подсказки: геометрия — через те же переменные, что у кольца выбора (`--s`, `--box-gap`). */
+function HintArea({ region, tone }: { region: NonNullable<HintMarks["region"]>; tone: HintMarks["tone"] }) {
+  const g = regionRect(region);
+  const style = { "--r": g.r, "--c": g.c, "--br": g.br, "--bc": g.bc, "--w": g.w, "--h": g.h, "--gx": g.gx, "--gy": g.gy } as CSSProperties;
+  return (
+    <div className={`hint-area ${tone}`} style={style} aria-hidden="true" data-testid="hint-area" data-kind={region.kind} data-index={region.index}>
+      <svg>
+        <rect x="0" y="0" width="100%" height="100%" rx="6" ry="6" />
+      </svg>
+    </div>
+  );
+}
+
 interface BoardProps {
   snap: PlaySnapshot;
   store: Pick<GameStore, "select" | "moveSelection">;
   /** Данные гаснут до 60 % перед карточкой «решено» (M5-прелюдия, 240 мс). */
   dim: boolean;
+  /** PD-139: метки открытой подсказки (область, клетки шага, вычёркивания); нет — поле как обычно. */
+  hintMarks?: HintMarks | null;
 }
 
 /**
@@ -184,7 +209,7 @@ interface BoardProps {
  * заливаются» — решение владельца 6.4 это пересмотрело); «та же цифра» — чернила 10 %, выбор — 16 % + кольцо (M2 — кольцо едет).
  * Доступность: одна точка табуляции (roving tabindex), стрелки двигают выбор и фокус.
  */
-export function Board({ snap, store, dim }: BoardProps) {
+export function Board({ snap, store, dim, hintMarks = null }: BoardProps) {
   const { t } = useTranslation();
   const ref = useRef<HTMLDivElement>(null);
   const { play, selected, pop } = snap;
@@ -231,7 +256,8 @@ export function Board({ snap, store, dim }: BoardProps) {
     if (next !== null) ref.current?.querySelector<HTMLElement>(`[data-i="${next}"]`)?.focus();
   };
 
-  const cellLabel = (i: number): string => {
+  const hintRegion = useMemo(() => (hintMarks?.region ? new Set(regionCells(hintMarks.region)) : new Set<number>()), [hintMarks?.region]);
+  const baseLabel = (i: number): string => {
     const where = { row: Math.floor(i / 9) + 1, col: (i % 9) + 1 };
     if (!play) return t("board.cellEmpty", where);
     if (isGiven(play, i)) return t("board.cellClue", { ...where, digit: play.mission[i] });
@@ -241,6 +267,11 @@ export function Board({ snap, store, dim }: BoardProps) {
     const nn = notesOf(play.notes[i] ?? 0);
     if (nn.length) return t("board.cellNotes", { ...where, notes: nn.join(", ") });
     return t("board.cellEmpty", where);
+  };
+  // PD-139: хвост подписи — роль клетки в подсказке; координаты и значение читаются первыми.
+  const cellLabel = (i: number): string => {
+    const role = hintRoleOf(hintMarks, i, hintRegion);
+    return role ? `${baseLabel(i)}, ${t(`hint.cellTail.${role}`)}` : baseLabel(i);
   };
 
   const sr = selected !== null ? Math.floor(selected / 9) : 0;
@@ -295,6 +326,9 @@ export function Board({ snap, store, dim }: BoardProps) {
                   echoDelay={echo?.delay ?? 0}
                   echoId={echo && echoIndex.has(i) ? echo.id : 0}
                   blotOrigin={blotNow && blotNow.cell === i && touch && touch.cell === i ? touch : null}
+                  hintStrip={hintMarks?.strip.has(i) ?? false}
+                  hintRing={hintMarks?.ring.has(i) ?? false}
+                  struck={hintMarks?.struck.get(i) ?? 0}
                   tabStop={i === stop}
                   label={cellLabel(i)}
                   onPick={pick}
@@ -305,6 +339,8 @@ export function Board({ snap, store, dim }: BoardProps) {
             <BoxRules />
           </div>
         ))}
+        {/* PD-139: область подсказки — пунктир по периметру дома (SVG-rect), не анимируется никогда; ниже цифр и колец. */}
+        {ready && hintMarks?.region && <HintArea region={hintMarks.region} tone={hintMarks.tone} />}
         {/* Одно кольцо, которое переезжает (M2). Монтируется сразу на месте (key по партии),
             поэтому при старте не «прилетает» из угла. */}
         {ready && selected !== null && (

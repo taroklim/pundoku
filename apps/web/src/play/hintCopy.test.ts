@@ -93,7 +93,7 @@ describe("тексты лесенки: полнота и форма", () => {
   it("с заметками-допущениями у одиночки отдельная формулировка, у паттерна — приписка", async () => {
     const t = await tOf("en");
     const single = computeHint(playOf("nakedSingle")) as StepHint;
-    const assumes = [{ cell: 0, digit: 1 }];
+    const assumes = [{ cell: 0, digit: 1 as const }];
     expect(hintStepCopy(t, { ...single, assumes }, 4).body).toMatch(/struck in your notes/);
     expect(hintStepCopy(t, { ...single, assumes }, 4).body).not.toMatch(/eight of the nine/);
     const pattern = computeHint(playOf("pointing")) as StepHint;

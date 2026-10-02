@@ -9,6 +9,7 @@ import "./styles/year.css";
 import "./styles/settings.css";
 import "./styles/ink.css";
 import "./styles/timelapse.css";
+import "./styles/hint.css";
 import { App } from "./App";
 import { ErrorBoundary } from "./shell/ErrorBoundary";
 import { startSync, sync } from "./sync/runtime";

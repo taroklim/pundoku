@@ -1,0 +1,329 @@
+/*
+ * Лесенка подсказок (PD-139) — по макету design/pd133-hint-ladder.html (§3 вход, §4 док, §5 метки, §11 a11y).
+ * Цвета — только токены (--ink, --wax, --elev …); новые величины — две доли существующих токенов: --fill-hint и
+ * --hint-dash (tokens.css). Пунктир области НЕ анимируется никогда (ни «бегущих муравьёв», ни появления по Reduce Motion).
+ * Шит правила переиспользует классы шита чернил (`ink-*`, ink.css).
+ *
+ * Слои поля (все в стеке `.board`): заливка клеток < область (1) < цифры/заметки (2) < полоса/кольцо подсказки (2, внутри клетки)
+ * < линии блока/кольцо ошибки (3) < кольцо выбора (4). Всё `pointer-events: none` — тапы идут в клетки.
+ */
+
+/* ---------- Лампочка в шапке ---------- */
+.hint-btn {
+  width: 44px;
+  height: 44px;
+  /* Зоны лампочки и шестерёнки смежные и не перекрываются (между боксами 2 px: gap 8 − 6). Высота шапки не растёт. */
+  margin: -8px -6px -8px 0;
+  flex: none;
+  display: grid;
+  place-items: center;
+  color: var(--label-2);
+  border-radius: 22px;
+}
+.hint-btn svg {
+  width: 23px;
+  height: 23px;
+}
+.hint-btn:active,
+.hint-btn.on {
+  background: var(--ink-tint);
+  color: var(--ink);
+}
+.hint-btn:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: -2px;
+}
+
+/* Архивный день: шапки вкладки нет (над заголовком «‹ Year»), лампочка встаёт в правый край на уровне кнопки возврата. */
+.toolbar-archive {
+  position: relative;
+}
+.toolbar-archive .hint-btn {
+  position: absolute;
+  top: var(--sa-top);
+  right: max(6px, calc(var(--sa-r) + 6px));
+  margin: 0;
+}
+
+/* ---------- Метки на поле ---------- */
+/* 1. Область: пунктир по периметру дома + заливка. Геометрия — те же переменные, что у кольца выбора. */
+.hint-area {
+  position: absolute;
+  left: 0;
+  top: 0;
+  z-index: 1;
+  pointer-events: none;
+  width: calc(var(--w) * var(--s) + var(--gx) * var(--box-gap));
+  height: calc(var(--h) * var(--s) + var(--gy) * var(--box-gap));
+  transform: translate(
+    calc(var(--c) * var(--s) + var(--bc) * var(--box-gap)),
+    calc(var(--r) * var(--s) + var(--br) * var(--box-gap))
+  );
+}
+.hint-area svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+.hint-area rect {
+  fill: var(--ink);
+  fill-opacity: var(--fill-hint);
+  stroke: var(--ink);
+  stroke-width: var(--hint-dash);
+  stroke-dasharray: 5 4;
+}
+/* Ветка «ошибка»: тот же рисунок сургучом, 2 px, без заливки — область расхождения, клетки не называются. */
+.hint-area.wax rect {
+  fill: none;
+  stroke: var(--wax);
+  stroke-width: max(2px, var(--hint-dash));
+}
+
+/* 2. «Где происходит»: полоса 3 px у нижней кромки клетки, отступ 16 % по бокам — внутри клетки. */
+.hint-strip {
+  position: absolute;
+  z-index: 2;
+  left: 16%;
+  right: 16%;
+  bottom: 3px;
+  height: 3px;
+  border-radius: 1.5px;
+  background: var(--ink);
+  pointer-events: none;
+}
+/* 3. «Почему»: полое кольцо 9 px, обводка 1.5 px, верхний левый угол клетки. */
+.hint-ring {
+  position: absolute;
+  z-index: 2;
+  left: 3px;
+  top: 3px;
+  box-sizing: border-box;
+  width: 9px;
+  height: 9px;
+  border: 1.5px solid var(--ink);
+  border-radius: 50%;
+  pointer-events: none;
+}
+/* 4. Вычеркнутый кандидат — только там, где заметка есть: глиф цветом чернил + линия по нему. */
+.cell .marks span.struck,
+.cell.same .marks span.struck,
+.cell.sel .marks span.struck {
+  color: var(--ink);
+  text-decoration: line-through;
+  text-decoration-color: var(--ink);
+  text-decoration-thickness: 1px;
+}
+
+/* ---------- Док: на месте панели 1–9, поле не двигается ---------- */
+.hint-dock {
+  margin: 0 max(16px, var(--sa-r)) 14px max(16px, var(--sa-l));
+  padding: 11px 14px 12px;
+  background: var(--elev);
+  border-radius: 16px;
+  box-shadow: var(--box-shadow);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  /* 248 < панель 126 + зазор 135 (390 pt): поле на месте. Больше — скролл внутри дока (AX3). */
+  min-height: 176px;
+  max-height: 248px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  animation: fadeRise calc(220ms * var(--mk)) var(--e-out) both;
+}
+.hint-dock h2:focus {
+  outline: none;
+}
+.hint-top {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0 10px;
+}
+.hint-step {
+  font-size: 0.76rem;
+  color: var(--label-2-grouped);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.01em;
+}
+.hint-close {
+  /* Зона 44 pt при видимо более мелком тексте; отрицательные поля — док не растёт. */
+  min-height: 44px;
+  margin: -11px -6px -11px 0;
+  padding: 0 6px;
+  color: var(--ink);
+  font: inherit;
+  font-size: 0.88rem;
+  margin-left: auto;
+}
+.hint-title {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--label);
+}
+.hint-body {
+  margin: 0;
+  font-size: 0.92rem;
+  color: var(--label-2);
+}
+.hint-key {
+  margin: 2px 0 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 14px;
+  font-size: 0.74rem;
+  color: var(--label-2-grouped);
+}
+.hint-key span {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+/* Значки ключа — те же формы, что на поле. */
+.hint-key .g-where {
+  width: 14px;
+  height: 3px;
+  border-radius: 1.5px;
+  background: var(--ink);
+}
+.hint-key .g-why {
+  box-sizing: border-box;
+  width: 9px;
+  height: 9px;
+  border: 1.5px solid var(--ink);
+  border-radius: 50%;
+}
+.hint-key .g-region {
+  box-sizing: border-box;
+  width: 16px;
+  height: 10px;
+  border: var(--hint-dash) dashed var(--ink);
+  border-radius: 3px;
+}
+.hint-dock.bad .hint-key .g-region {
+  border-color: var(--wax);
+  border-width: 2px;
+}
+.hint-more {
+  margin-top: auto;
+  flex: none;
+  min-height: 44px;
+  border-radius: 11px;
+  background: var(--ink-tint);
+  color: var(--ink);
+  font: inherit;
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+.hint-more.quiet {
+  background: transparent;
+}
+.hint-dock.bad .hint-title {
+  color: var(--wax);
+}
+.hint-dock.bad .hint-more {
+  background: var(--wax-tint);
+  color: var(--wax);
+}
+.hint-more:focus-visible,
+.hint-close:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 1px;
+}
+.hint-foot {
+  margin: 0;
+  padding-top: 2px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.74rem;
+  color: var(--label-2-grouped);
+}
+/* Квадрат Year «с помощью» как значок в подвале: мягкий тон + срез левого нижнего угла (форма, не только оттенок). */
+.hint-mark {
+  flex: none;
+  width: 11px;
+  height: 11px;
+  border-radius: 2px;
+  background: var(--mark-ink-soft);
+  clip-path: polygon(0 0, 100% 0, 100% 100%, 38% 100%, 0 62%);
+}
+
+/* Одноразовая строка-намёк на месте «N cells left» (не кнопка, только текст). */
+.status.nudge b {
+  color: var(--ink);
+  font-weight: 600;
+}
+
+@media (max-height: 640px) {
+  .hint-dock {
+    max-height: 200px;
+    min-height: 0;
+  }
+}
+
+/* ---------- prefers-contrast: more — пунктир 2 px (в tokens.css), кольцо 2 px ---------- */
+@media (prefers-contrast: more) {
+  .hint-ring {
+    border-width: 2px;
+  }
+  .hint-key .g-why {
+    border-width: 2px;
+  }
+}
+
+/* ---------- forced-colors: пунктир и кольцо — Highlight, полоса и вычёркивание — CanvasText; док — рамка ---------- */
+@media (forced-colors: active) {
+  .hint-area rect {
+    forced-color-adjust: none;
+    fill: none;
+    stroke: Highlight;
+  }
+  .hint-area.wax rect {
+    stroke: Mark;
+  }
+  .hint-strip {
+    forced-color-adjust: none;
+    background: CanvasText;
+  }
+  .hint-ring {
+    forced-color-adjust: none;
+    border-color: Highlight;
+  }
+  .cell .marks span.struck,
+  .cell.same .marks span.struck,
+  .cell.sel .marks span.struck {
+    forced-color-adjust: none;
+    color: CanvasText;
+    text-decoration-color: CanvasText;
+  }
+  .hint-dock {
+    border: 1px solid CanvasText;
+  }
+  .hint-key .g-where {
+    forced-color-adjust: none;
+    background: CanvasText;
+  }
+  .hint-key .g-why {
+    forced-color-adjust: none;
+    border-color: Highlight;
+  }
+  .hint-key .g-region {
+    forced-color-adjust: none;
+    border-color: Highlight;
+  }
+  .hint-mark {
+    forced-color-adjust: none;
+    background: CanvasText;
+  }
+  .hint-btn.on {
+    outline: 2px solid Highlight;
+  }
+  .hint-more {
+    border: 1px solid ButtonText;
+  }
+}
