@@ -1,0 +1,1105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>Pundoku — information architecture, variants A–D (PD-140)</title>
+<!--
+  PD-140 — navigation / information-architecture variants, for comparison by eye.
+  Question from the owner: is it right that the first tabs open straight on the board,
+  or should there be a mode-choosing hub, and should Ink be its own place?
+
+  Design only. Nothing here is wired into the app, nothing here is approved.
+  Every screen is drawn at 390x844 with simulated safe areas (50 / 34 pt).
+
+  Visual language is inherited verbatim from the APPROVED board mockup
+  design/pd7-board-variants.html (variant B "Boxes") and design/pd24-year-variants.html:
+  the same tokens, the same ink #3B48B0 / #8C96FF, grouped background + elevated
+  surfaces, glass tab bar with fallbacks, system-ui / ui-serif only. No new hues.
+
+  DELIBERATE DIFFERENCE FROM THE OTHER MOCKUPS: light and dark are shown side by side on
+  one page, so the theme is forced per phone (.ph.light / .ph.dark) and
+  prefers-color-scheme is intentionally NOT used for the phones. The page chrome around
+  them does follow the system.
+
+  Variants on this page (details, tap counts and the verdict are in
+  research/usability-2026-10/ia-review.md):
+    A  as today — 3 tabs, Today = board, Play = "New puzzle" list
+    B  one hub tab "Play" instead of the board; the board becomes a pushed screen
+    C  Today stays a board; Play becomes a real hub (Continue / New puzzle / Mode / Past days)
+    D  the board is always on screen; the title is a pull-down that chooses the game
+-->
+<style>
+/* ==================================================================
+   1. TOKENS — copied from pd24-year-variants.html / pd7-board-variants.html.
+   Scoped to .ph so that light and dark can coexist on one page.
+   ================================================================== */
+.ph{
+  --font-sans: system-ui, -apple-system, "SF Pro Text", "Helvetica Neue", Arial, sans-serif;
+  --font-serif: ui-serif, "New York", Charter, Georgia, serif;
+
+  --sa-top: 50px;            /* simulated: 390x844 with a notch */
+  --sa-bot: 34px;
+
+  --bg:        #F2F2F7;      /* systemGroupedBackground */
+  --elev:      #FFFFFF;      /* secondarySystemGroupedBackground */
+  --label:     #1C1C1E;      /* 17.0:1 on #FFFFFF */
+  --label-2:   #6E6E73;      /* 5.1:1 on #FFFFFF */
+  --ink:       #3B48B0;      /* 7.7:1 on #FFFFFF */
+  --on-ink:    #FFFFFF;
+  --wax:       #B3261E;
+
+  --hairline:  rgba(60,60,67,.29);
+  --grid-hair: rgba(60,60,67,.24);
+  --grid-bold: rgba(60,60,67,.55);
+  --ink-tint:  rgba(59,72,176,.12);
+  --ink-sel:   rgba(59,72,176,.16);
+  --box-shadow: 0 1px 2px rgba(0,0,0,.04);
+
+  --glass-fill: rgba(255,255,255,.72);
+  --glass-solid:#F6F6F9;
+  --scrim: rgba(0,0,0,.28);
+}
+.ph.dark{
+  --bg:#000000; --elev:#1C1C1E;
+  --label:#FFFFFF; --label-2:#98989D;
+  --ink:#8C96FF; --on-ink:#000000; --wax:#FF6B5E;
+  --hairline:rgba(235,235,245,.22);
+  --grid-hair:rgba(235,235,245,.20);
+  --grid-bold:rgba(235,235,245,.45);
+  --ink-tint:rgba(140,150,255,.18);
+  --ink-sel:rgba(140,150,255,.22);
+  --box-shadow:none;
+  --glass-fill:rgba(28,28,30,.72); --glass-solid:#141416;
+  --scrim: rgba(0,0,0,.5);
+}
+
+/* ==================================================================
+   2. PAGE CHROME (review only, not part of the design)
+   ================================================================== */
+*{ box-sizing:border-box; }
+html{ -webkit-text-size-adjust:100%; }
+body{
+  margin:0; padding:28px 24px 80px;
+  background:#8A8A8E; color:#15151A;
+  font-family: system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
+  line-height:1.4;
+}
+@media (prefers-color-scheme: dark){
+  body{ background:#2C2C2E; color:#F2F2F7; }
+}
+h1{ font-size:21px; margin:0 0 6px; letter-spacing:-.01em; }
+h2{ font-size:18px; margin:40px 0 4px; letter-spacing:-.01em; }
+.page-note{ max-width:92ch; font-size:13.5px; opacity:.92; margin:0 0 4px; }
+.page-note code{ font-size:12.5px; }
+.rail{ display:flex; flex-wrap:wrap; gap:22px; margin-top:14px; align-items:flex-start; }
+.unit{ width:390px; }
+.cap{ font-size:12.5px; margin:8px 2px 0; opacity:.95; }
+.cap b{ font-weight:600; }
+.tags{ font-size:12px; margin:10px 0 0; opacity:.9; }
+.tags span{
+  display:inline-block; margin:0 6px 6px 0; padding:2px 8px;
+  border:1px solid currentColor; border-radius:999px; opacity:.85;
+}
+
+/* ==================================================================
+   3. THE PHONE
+   ================================================================== */
+.ph{
+  position:relative; width:390px; height:844px; flex:none;
+  border-radius:44px; overflow:hidden;
+  background:var(--bg); color:var(--label);
+  font-family:var(--font-sans); font-size:16px; line-height:1.3;
+  display:flex; flex-direction:column;
+  box-shadow:0 18px 50px rgba(0,0,0,.35);
+}
+.ph .body{ flex:1; min-height:0; display:flex; flex-direction:column; overflow:hidden; }
+
+/* toolbar */
+.toolbar{
+  display:flex; align-items:flex-end; justify-content:space-between; gap:12px;
+  padding: calc(var(--sa-top) + 8px) 16px 0 16px;
+}
+.title{ font-size:26px; font-weight:700; letter-spacing:-.02em; }
+.title-pd{ display:inline-flex; align-items:center; gap:5px; }
+.title-pd svg{ width:15px; height:15px; color:var(--label-2); }
+.gear{ width:30px; height:30px; color:var(--label-2); }
+.gear svg{ width:22px; height:22px; display:block; }
+.back{ display:inline-flex; align-items:center; gap:2px; color:var(--ink); font-size:16px; }
+.back svg{ width:17px; height:17px; }
+.subline{ margin:3px 0 0; padding:0 16px; color:var(--label-2); font-size:14px; }
+.subline .dot{ opacity:.6; }
+.chip-ink{
+  display:inline-flex; align-items:center; gap:4px;
+  margin-left:8px; padding:1px 7px; border-radius:999px;
+  background:var(--ink-tint); color:var(--ink); font-size:12px; font-weight:600;
+}
+
+/* ---- board ----------------------------------------------------- */
+.board{
+  position:relative; margin:12px 16px 0; aspect-ratio:1;
+  background:var(--elev); border-radius:8px;
+  display:grid; grid-template-columns:repeat(9,1fr); grid-template-rows:repeat(9,1fr);
+  box-shadow: inset 0 0 0 1.6px var(--grid-bold);
+  background-image:
+    repeating-linear-gradient(to right,  var(--grid-bold) 0 1.6px, transparent 1.6px 33.3333%),
+    repeating-linear-gradient(to bottom, var(--grid-bold) 0 1.6px, transparent 1.6px 33.3333%),
+    repeating-linear-gradient(to right,  var(--grid-hair) 0 1px,   transparent 1px 11.1111%),
+    repeating-linear-gradient(to bottom, var(--grid-hair) 0 1px,   transparent 1px 11.1111%);
+}
+.board span{
+  display:flex; align-items:center; justify-content:center;
+  font-size:21px; line-height:1;
+}
+.board .g{ font-family:var(--font-serif); font-weight:600; color:var(--label); }
+.board .u{ font-family:var(--font-sans); font-weight:500; color:var(--ink); }
+.board .sel{ background:var(--ink-sel); box-shadow: inset 0 0 0 2px var(--ink); border-radius:4px; }
+.board.dimmed{ opacity:.6; }
+
+/* mini board glyph, used inside hub cards */
+.mini{
+  width:46px; height:46px; flex:none; border-radius:5px;
+  background:var(--elev);
+  box-shadow: inset 0 0 0 1.2px var(--grid-bold);
+  background-image:
+    repeating-linear-gradient(to right,  var(--grid-bold) 0 1.2px, transparent 1.2px 33.3333%),
+    repeating-linear-gradient(to bottom, var(--grid-bold) 0 1.2px, transparent 1.2px 33.3333%),
+    repeating-linear-gradient(to right,  var(--grid-hair) 0 .6px,  transparent .6px 11.1111%),
+    repeating-linear-gradient(to bottom, var(--grid-hair) 0 .6px,  transparent .6px 11.1111%);
+}
+
+/* ---- gap + status ---------------------------------------------- */
+.gap{
+  flex:1; min-height:28px;
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  gap:6px; padding:8px 16px;
+}
+.status{ color:var(--label-2); font-size:14px; margin:0; }
+.source{ color:var(--label-2); font-size:12.5px; margin:0; opacity:.9; }
+.inkrow{
+  display:flex; align-items:center; gap:8px;
+  width:100%; padding:10px 14px; border-radius:12px;
+  background:var(--elev); box-shadow:var(--box-shadow);
+  font-size:14px;
+}
+.inkrow .t{ flex:1; }
+.inkrow .v{ color:var(--label-2); }
+
+/* ---- number pad ------------------------------------------------- */
+.pad{ display:grid; grid-template-columns:repeat(9,1fr); gap:6px; padding:0 14px; }
+.key{
+  height:56px; border-radius:10px; background:var(--elev);
+  box-shadow: inset 0 0 0 1px var(--hairline);
+  display:flex; flex-direction:column; align-items:center; justify-content:center; gap:1px;
+}
+.key .n{ font-size:22px; font-weight:500; color:var(--ink); line-height:1; }
+.key .r{ font-size:10px; color:var(--label-2); line-height:1; }
+.key.done .n{ color:var(--label-2); opacity:.45; }
+.actions{ display:grid; grid-template-columns:repeat(3,1fr); gap:8px; padding:10px 14px 0; }
+.act{
+  height:44px; border-radius:11px; background:var(--elev);
+  box-shadow: inset 0 0 0 1px var(--hairline);
+  display:flex; align-items:center; justify-content:center; gap:6px;
+  font-size:14px; color:var(--label);
+}
+.act.off{ color:var(--label-2); opacity:.55; }
+.padwrap{ padding-bottom:14px; }
+
+/* ---- lists (hub) ------------------------------------------------ */
+.sect-head{
+  margin:18px 16px 6px; color:var(--label-2);
+  font-size:12.5px; text-transform:uppercase; letter-spacing:.04em;
+}
+.list{
+  margin:0 16px; background:var(--elev); border-radius:12px;
+  box-shadow:var(--box-shadow); overflow:hidden;
+}
+.row{
+  display:flex; align-items:center; gap:10px;
+  min-height:52px; padding:9px 14px;
+  box-shadow: inset 0 1px 0 var(--hairline);
+}
+.list .row:first-child{ box-shadow:none; }
+.row .t{ flex:1; min-width:0; font-size:16px; }
+.row .t small{ display:block; color:var(--label-2); font-size:12.5px; margin-top:2px; }
+.row .v{ color:var(--label-2); font-size:15px; }
+.row .chev{ width:9px; height:15px; color:var(--label-2); opacity:.6; flex:none; }
+.row .chev svg{ width:9px; height:15px; display:block; }
+.row.sel{ background:var(--ink-tint); }
+.row.sel .t{ font-weight:600; color:var(--ink); }
+.row .tick{ width:16px; color:var(--ink); flex:none; font-weight:700; }
+.row.muted .t{ color:var(--label-2); }
+.row.tall{ min-height:66px; }
+.foot{ margin:7px 20px 0; color:var(--label-2); font-size:12.5px; }
+.primary{
+  display:block; margin:16px 16px 0; height:50px; border-radius:12px;
+  background:var(--ink); color:var(--on-ink);
+  font-size:16px; font-weight:600;
+  display:flex; align-items:center; justify-content:center;
+}
+.grow{ flex:1; min-height:0; }
+
+/* ---- pull-down menu (variant D) --------------------------------- */
+.scrim{ position:absolute; inset:0; background:var(--scrim); z-index:30; }
+.menu{
+  position:absolute; z-index:40; left:16px; top:calc(var(--sa-top) + 48px);
+  width:262px; border-radius:14px; overflow:hidden;
+  background:var(--glass-solid);
+  box-shadow:0 12px 34px rgba(0,0,0,.28), inset 0 0 0 .5px var(--hairline);
+}
+.menu .row{ min-height:48px; background:transparent; }
+.menu .sep{ height:7px; background:var(--hairline); opacity:.35; }
+
+/* ---- tab bar ---------------------------------------------------- */
+.tabbar{
+  display:grid; gap:2px;
+  padding:6px 10px calc(6px + var(--sa-bot)) 10px;
+  background:var(--glass-fill);
+  -webkit-backdrop-filter:blur(24px) saturate(1.4);
+          backdrop-filter:blur(24px) saturate(1.4);
+  border-top:1px solid var(--hairline);
+}
+.tabbar.t3{ grid-template-columns:repeat(3,1fr); }
+.tabbar.t2{ grid-template-columns:repeat(2,1fr); }
+.tab{
+  min-height:50px; border-radius:14px; padding:4px 2px;
+  display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px;
+  color:var(--label-2);
+}
+.tab svg{ width:26px; height:26px; flex:none; }
+.tab .lab{ font-size:12px; letter-spacing:.01em; }
+.tab.on{ color:var(--ink); background:var(--ink-tint); }
+.tab.on .lab{ font-weight:600; }
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))){
+  .tabbar{ background:var(--glass-solid); }
+}
+@media (prefers-reduced-transparency: reduce){
+  .tabbar{ background:var(--glass-solid); -webkit-backdrop-filter:none !important; backdrop-filter:none !important; }
+}
+
+/* ---- thumb-reach overlay (review aid, switchable off by deleting) --
+   designing-for-ios.md > Best practices: "it tends to be easier and more
+   comfortable for people to reach a control when it's located in the middle
+   or bottom area of the display". Drawn as a hairline at 55% height. */
+.reach{
+  position:absolute; left:0; right:0; top:55%; z-index:25; pointer-events:none;
+  border-top:1px dashed rgba(179,38,30,.55);
+}
+.reach::after{
+  content:"comfortable thumb reach below this line";
+  position:absolute; right:10px; top:3px;
+  font-size:9.5px; color:var(--wax); opacity:.9;
+}
+</style>
+</head>
+<body>
+
+<h1>Pundoku — information architecture, variants A–D (PD-140)</h1>
+<p class="page-note">
+  Four ways to arrange the same product. Light and dark side by side, 390&times;844, simulated safe
+  areas 50 / 34&nbsp;pt. Tap counts, sources and the verdict live in
+  <code>research/usability-2026-10/ia-review.md</code>. Nothing on this page is approved;
+  the dashed red line marks the comfortable thumb-reach boundary (lower 45&nbsp;% of the display).
+</p>
+
+<!-- ============================================================= A -->
+<h2>A — as today: 3 tabs, Today = board, Play = “New puzzle” list</h2>
+<p class="page-note">
+  The way the app works right now. Note that <b>Play does not open a board</b> — it opens a list
+  (<code>play/store.ts</code> starts in <code>setup: true</code>). Daily puzzle: one tap to the first
+  move. Free game: six taps, and the difficulty hides in a wheel picker.
+</p>
+<div class="rail">
+
+  <!-- A1 light -->
+  <div class="unit">
+    <div class="ph light">
+      <div class="body">
+        <div class="toolbar">
+          <div class="title">Today</div>
+          <div class="gear"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.2"/><circle cx="12" cy="12" r="8.4"/></svg></div>
+        </div>
+        <p class="subline">Fri 2 Oct <span class="dot">·</span> Medium <span class="dot">·</span> 4:12</p>
+        <div class="board">
+          <span class="g" style="grid-area:1/1">5</span><span class="g" style="grid-area:1/5">8</span><span class="g" style="grid-area:1/9">2</span>
+          <span class="sel" style="grid-area:2/1"></span><span class="g" style="grid-area:2/3">7</span><span class="g" style="grid-area:2/7">4</span>
+          <span class="g" style="grid-area:3/2">9</span><span class="g" style="grid-area:3/6">3</span>
+          <span class="g" style="grid-area:4/1">3</span><span class="u" style="grid-area:4/4">5</span><span class="g" style="grid-area:4/8">6</span>
+          <span class="u" style="grid-area:5/1">4</span><span class="g" style="grid-area:5/5">7</span><span class="g" style="grid-area:5/6">9</span>
+          <span class="g" style="grid-area:6/2">2</span><span class="g" style="grid-area:6/9">5</span>
+          <span class="g" style="grid-area:7/4">6</span><span class="u" style="grid-area:7/8">1</span>
+          <span class="g" style="grid-area:8/3">4</span><span class="g" style="grid-area:8/7">8</span>
+          <span class="g" style="grid-area:9/1">8</span><span class="g" style="grid-area:9/5">2</span><span class="g" style="grid-area:9/9">3</span>
+        </div>
+        <div class="gap">
+          <p class="status">46 cells left</p>
+          <p class="source">Puzzle from Sudoku.com</p>
+        </div>
+        <div class="padwrap">
+          <div class="pad">
+            <div class="key"><span class="n">1</span><span class="r">5</span></div>
+            <div class="key"><span class="n">2</span><span class="r">4</span></div>
+            <div class="key"><span class="n">3</span><span class="r">6</span></div>
+            <div class="key"><span class="n">4</span><span class="r">5</span></div>
+            <div class="key done"><span class="n">5</span><span class="r">·</span></div>
+            <div class="key"><span class="n">6</span><span class="r">7</span></div>
+            <div class="key"><span class="n">7</span><span class="r">4</span></div>
+            <div class="key"><span class="n">8</span><span class="r">6</span></div>
+            <div class="key"><span class="n">9</span><span class="r">5</span></div>
+          </div>
+          <div class="actions">
+            <div class="act">Notes</div><div class="act">Undo</div><div class="act">Erase</div>
+          </div>
+        </div>
+      </div>
+      <div class="reach"></div>
+      <nav class="tabbar t3">
+        <div class="tab on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="4.8" width="17" height="15.4" rx="3.4"/><path d="M3.5 9.2h17M8 3.2v2.8M16 3.2v2.8"/><circle cx="12" cy="14.7" r="1.9" fill="currentColor" stroke="none"/></svg><span class="lab">Today</span></div>
+        <div class="tab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="3.5" width="17" height="17" rx="3.4"/><path d="M9.2 3.5v17M14.8 3.5v17M3.5 9.2h17M3.5 14.8h17"/></svg><span class="lab">Play</span></div>
+        <div class="tab"><svg viewBox="0 0 24 24" fill="currentColor"><rect x="3.2" y="5.2" width="3.6" height="3.6" rx="1"/><rect x="8.6" y="5.2" width="3.6" height="3.6" rx="1"/><rect x="14" y="5.2" width="3.6" height="3.6" rx="1"/><rect x="3.2" y="10.2" width="3.6" height="3.6" rx="1"/><rect x="8.6" y="10.2" width="3.6" height="3.6" rx="1"/><rect x="14" y="10.2" width="3.6" height="3.6" rx="1"/><rect x="3.2" y="15.2" width="3.6" height="3.6" rx="1"/><rect x="8.6" y="15.2" width="3.6" height="3.6" rx="1"/><rect x="14" y="15.2" width="3.6" height="3.6" rx="1"/></svg><span class="lab">Year</span></div>
+      </nav>
+    </div>
+    <p class="cap"><b>A1 · Today, light.</b> Cold launch lands here; the first empty cell is already
+      selected, so the first move is one tap.</p>
+  </div>
+
+  <!-- A1 dark -->
+  <div class="unit">
+    <div class="ph dark">
+      <div class="body">
+        <div class="toolbar">
+          <div class="title">Today</div>
+          <div class="gear"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.2"/><circle cx="12" cy="12" r="8.4"/></svg></div>
+        </div>
+        <p class="subline">Fri 2 Oct <span class="dot">·</span> Medium <span class="dot">·</span> 4:12</p>
+        <div class="board">
+          <span class="g" style="grid-area:1/1">5</span><span class="g" style="grid-area:1/5">8</span><span class="g" style="grid-area:1/9">2</span>
+          <span class="sel" style="grid-area:2/1"></span><span class="g" style="grid-area:2/3">7</span><span class="g" style="grid-area:2/7">4</span>
+          <span class="g" style="grid-area:3/2">9</span><span class="g" style="grid-area:3/6">3</span>
+          <span class="g" style="grid-area:4/1">3</span><span class="u" style="grid-area:4/4">5</span><span class="g" style="grid-area:4/8">6</span>
+          <span class="u" style="grid-area:5/1">4</span><span class="g" style="grid-area:5/5">7</span><span class="g" style="grid-area:5/6">9</span>
+          <span class="g" style="grid-area:6/2">2</span><span class="g" style="grid-area:6/9">5</span>
+          <span class="g" style="grid-area:7/4">6</span><span class="u" style="grid-area:7/8">1</span>
+          <span class="g" style="grid-area:8/3">4</span><span class="g" style="grid-area:8/7">8</span>
+          <span class="g" style="grid-area:9/1">8</span><span class="g" style="grid-area:9/5">2</span><span class="g" style="grid-area:9/9">3</span>
+        </div>
+        <div class="gap">
+          <p class="status">46 cells left</p>
+          <p class="source">Puzzle from Sudoku.com</p>
+        </div>
+        <div class="padwrap">
+          <div class="pad">
+            <div class="key"><span class="n">1</span><span class="r">5</span></div>
+            <div class="key"><span class="n">2</span><span class="r">4</span></div>
+            <div class="key"><span class="n">3</span><span class="r">6</span></div>
+            <div class="key"><span class="n">4</span><span class="r">5</span></div>
+            <div class="key done"><span class="n">5</span><span class="r">·</span></div>
+            <div class="key"><span class="n">6</span><span class="r">7</span></div>
+            <div class="key"><span class="n">7</span><span class="r">4</span></div>
+            <div class="key"><span class="n">8</span><span class="r">6</span></div>
+            <div class="key"><span class="n">9</span><span class="r">5</span></div>
+          </div>
+          <div class="actions">
+            <div class="act">Notes</div><div class="act">Undo</div><div class="act">Erase</div>
+          </div>
+        </div>
+      </div>
+      <nav class="tabbar t3">
+        <div class="tab on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="4.8" width="17" height="15.4" rx="3.4"/><path d="M3.5 9.2h17M8 3.2v2.8M16 3.2v2.8"/><circle cx="12" cy="14.7" r="1.9" fill="currentColor" stroke="none"/></svg><span class="lab">Today</span></div>
+        <div class="tab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="3.5" width="17" height="17" rx="3.4"/><path d="M9.2 3.5v17M14.8 3.5v17M3.5 9.2h17M3.5 14.8h17"/></svg><span class="lab">Play</span></div>
+        <div class="tab"><svg viewBox="0 0 24 24" fill="currentColor"><rect x="3.2" y="5.2" width="3.6" height="3.6" rx="1"/><rect x="8.6" y="5.2" width="3.6" height="3.6" rx="1"/><rect x="14" y="5.2" width="3.6" height="3.6" rx="1"/><rect x="3.2" y="10.2" width="3.6" height="3.6" rx="1"/><rect x="8.6" y="10.2" width="3.6" height="3.6" rx="1"/><rect x="14" y="10.2" width="3.6" height="3.6" rx="1"/><rect x="3.2" y="15.2" width="3.6" height="3.6" rx="1"/><rect x="8.6" y="15.2" width="3.6" height="3.6" rx="1"/><rect x="14" y="15.2" width="3.6" height="3.6" rx="1"/></svg><span class="lab">Year</span></div>
+      </nav>
+    </div>
+    <p class="cap"><b>A1 · Today, dark.</b> Same screen, system dark appearance.</p>
+  </div>
+
+  <!-- A2 light -->
+  <div class="unit">
+    <div class="ph light">
+      <div class="body">
+        <div class="toolbar"><div class="title">Play</div></div>
+        <p class="subline">A puzzle of your own, any time.</p>
+        <p class="sect-head">New puzzle</p>
+        <div class="list">
+          <div class="row"><span class="t">Difficulty</span><span class="v">Medium</span><span class="chev"><svg viewBox="0 0 10 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m2.5 2 5 6-5 6"/></svg></span></div>
+          <div class="row"><span class="t">Ink mode</span><span class="v">Off</span><span class="chev"><svg viewBox="0 0 10 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m2.5 2 5 6-5 6"/></svg></span></div>
+        </div>
+        <p class="foot">In ink every digit is final. Choose before your first move.</p>
+        <div class="primary">Start</div>
+        <div class="grow"></div>
+      </div>
+      <div class="reach"></div>
+      <nav class="tabbar t3">
+        <div class="tab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="4.8" width="17" height="15.4" rx="3.4"/><path d="M3.5 9.2h17M8 3.2v2.8M16 3.2v2.8"/><circle cx="12" cy="14.7" r="1.9" fill="currentColor" stroke="none"/></svg><span class="lab">Today</span></div>
+        <div class="tab on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="3.5" width="17" height="17" rx="3.4"/><path d="M9.2 3.5v17M14.8 3.5v17M3.5 9.2h17M3.5 14.8h17"/></svg><span class="lab">Play</span></div>
+        <div class="tab"><svg viewBox="0 0 24 24" fill="currentColor"><rect x="3.2" y="5.2" width="3.6" height="3.6" rx="1"/><rect x="8.6" y="5.2" width="3.6" height="3.6" rx="1"/><rect x="14" y="5.2" width="3.6" height="3.6" rx="1"/><rect x="3.2" y="10.2" width="3.6" height="3.6" rx="1"/><rect x="8.6" y="10.2" width="3.6" height="3.6" rx="1"/><rect x="14" y="10.2" width="3.6" height="3.6" rx="1"/><rect x="3.2" y="15.2" width="3.6" height="3.6" rx="1"/><rect x="8.6" y="15.2" width="3.6" height="3.6" rx="1"/><rect x="14" y="15.2" width="3.6" height="3.6" rx="1"/></svg><span class="lab">Year</span></div>
+      </nav>
+    </div>
+    <p class="cap"><b>A2 · Play, light — this is what exists today.</b> Two rows and a button. No
+      “Continue”, no clue counts, no history; the difficulty row opens a system wheel picker.</p>
+  </div>
+
+  <!-- A2 dark -->
+  <div class="unit">
+    <div class="ph dark">
+      <div class="body">
+        <div class="toolbar"><div class="title">Play</div></div>
+        <p class="subline">A puzzle of your own, any time.</p>
+        <p class="sect-head">New puzzle</p>
+        <div class="list">
+          <div class="row"><span class="t">Difficulty</span><span class="v">Medium</span><span class="chev"><svg viewBox="0 0 10 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m2.5 2 5 6-5 6"/></svg></span></div>
+          <div class="row"><span class="t">Ink mode</span><span class="v">Off</span><span class="chev"><svg viewBox="0 0 10 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m2.5 2 5 6-5 6"/></svg></span></div>
+        </div>
+        <p class="foot">In ink every digit is final. Choose before your first move.</p>
+        <div class="primary">Start</div>
+        <div class="grow"></div>
+      </div>
+      <nav class="tabbar t3">
+        <div class="tab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="4.8" width="17" height="15.4" rx="3.4"/><path d="M3.5 9.2h17M8 3.2v2.8M16 3.2v2.8"/><circle cx="12" cy="14.7" r="1.9" fill="currentColor" stroke="none"/></svg><span class="lab">Today</span></div>
+        <div class="tab on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="3.5" width="17" height="17" rx="3.4"/><path d="M9.2 3.5v17M14.8 3.5v17M3.5 9.2h17M3.5 14.8h17"/></svg><span class="lab">Play</span></div>
+        <div class="tab"><svg viewBox="0 0 24 24" fill="currentColor"><rect x="3.2" y="5.2" width="3.6" height="3.6" rx="1"/><rect x="8.6" y="5.2" width="3.6" height="3.6" rx="1"/><rect x="14" y="5.2" width="3.6" height="3.6" rx="1"/><rect x="3.2" y="10.2" width="3.6" height="3.6" rx="1"/><rect x="8.6" y="10.2" width="3.6" height="3.6" rx="1"/><rect x="14" y="10.2" width="3.6" height="3.6" rx="1"/><rect x="3.2" y="15.2" width="3.6" height="3.6" rx="1"/><rect x="8.6" y="15.2" width="3.6" height="3.6" rx="1"/><rect x="14" y="15.2" width="3.6" height="3.6" rx="1"/></svg><span class="lab">Year</span></div>
+      </nav>
+    </div>
+    <p class="cap"><b>A2 · Play, dark.</b> The empty two thirds are finding H2 / H-33.</p>
+  </div>
+</div>
+<p class="tags"><span>daily: 1 tap</span><span>free game: 6 taps</span><span>cost: S</span><span>regression risk: low</span><span>no home for release-2 modes</span></p>
+
+<!-- ============================================================= B -->
+<h2>B — one hub tab “Play” instead of the board; the board is a pushed screen</h2>
+<p class="page-note">
+  Everything the product can do, on one page. The price: the daily puzzle costs two taps instead of
+  one, every day, and its card sits in the hardest part of the screen to reach.
+</p>
+<div class="rail">
+
+  <!-- B1 light -->
+  <div class="unit">
+    <div class="ph light">
+      <div class="body">
+        <div class="toolbar">
+          <div class="title">Play</div>
+          <div class="gear"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.2"/><circle cx="12" cy="12" r="8.4"/></svg></div>
+        </div>
+        <p class="subline">Fri 2 Oct</p>
+
+        <p class="sect-head">Continue</p>
+        <div class="list">
+          <div class="row tall"><div class="mini"></div><span class="t">Hard, free play<small>23 of 51 cells · 12:04</small></span><span class="chev"><svg viewBox="0 0 10 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m2.5 2 5 6-5 6"/></svg></span></div>
+        </div>
+
+        <p class="sect-head">Today</p>
+        <div class="list">
+          <div class="row tall"><div class="mini"></div><span class="t">Today’s puzzle<small>Medium · from Sudoku.com · not started</small></span><span class="chev"><svg viewBox="0 0 10 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m2.5 2 5 6-5 6"/></svg></span></div>
+        </div>
+
+        <p class="sect-head">Your own puzzle</p>
+        <div class="list">
+          <div class="row"><span class="t">Free play<small>Easy to Master</small></span><span class="chev"><svg viewBox="0 0 10 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m2.5 2 5 6-5 6"/></svg></span></div>
+          <div class="row"><span class="t">Ink<small>Every digit is final</small></span><span class="chev"><svg viewBox="0 0 10 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m2.5 2 5 6-5 6"/></svg></span></div>
+          <div class="row"><span class="t">Past days</span><span class="chev"><svg viewBox="0 0 10 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m2.5 2 5 6-5 6"/></svg></span></div>
+        </div>
+
+        <p class="sect-head">Later</p>
+        <div class="list">
+          <div class="row muted"><span class="t">Liar · Melody · Pet<small>Release 2</small></span></div>
+        </div>
+        <div class="grow"></div>
+      </div>
+      <div class="reach"></div>
+      <nav class="tabbar t2">
+        <div class="tab on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="3.5" width="17" height="17" rx="3.4"/><path d="M9.2 3.5v17M14.8 3.5v17M3.5 9.2h17M3.5 14.8h17"/></svg><span class="lab">Play</span></div>
+        <div class="tab"><svg viewBox="0 0 24 24" fill="currentColor"><rect x="3.2" y="5.2" width="3.6" height="3.6" rx="1"/><rect x="8.6" y="5.2" width="3.6" height="3.6" rx="1"/><rect x="14" y="5.2" width="3.6" height="3.6" rx="1"/><rect x="3.2" y="10.2" width="3.6" height="3.6" rx="1"/><rect x="8.6" y="10.2" width="3.6" height="3.6" rx="1"/><rect x="14" y="10.2" width="3.6" height="3.6" rx="1"/><rect x="3.2" y="15.2" width="3.6" height="3.6" rx="1"/><rect x="8.6" y="15.2" width="3.6" height="3.6" rx="1"/><rect x="14" y="15.2" width="3.6" height="3.6" rx="1"/></svg><span class="lab">Year</span></div>
+      </nav>
+    </div>
+    <p class="cap"><b>B1 · the hub, light.</b> Readable as a map of the product — but “Today’s
+      puzzle”, the one target used every single day, lands above the dashed line.</p>
+  </div>
+
+  <!-- B1 dark -->
+  <div class="unit">
+    <div class="ph dark">
+      <div class="body">
+        <div class="toolbar">
+          <div class="title">Play</div>
+          <div class="gear"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.2"/><circle cx="12" cy="12" r="8.4"/></svg></div>
+        </div>
+        <p class="subline">Fri 2 Oct</p>
+
+        <p class="sect-head">Continue</p>
+        <div class="list">
+          <div class="row tall"><div class="mini"></div><span class="t">Hard, free play<small>23 of 51 cells · 12:04</small></span><span class="chev"><svg viewBox="0 0 10 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m2.5 2 5 6-5 6"/></svg></span></div>
+        </div>
+
+        <p class="sect-head">Today</p>
+        <div class="list">
+          <div class="row tall"><div class="mini"></div><span class="t">Today’s puzzle<small>Medium · from Sudoku.com · not started</small></span><span class="chev"><svg viewBox="0 0 10 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m2.5 2 5 6-5 6"/></svg></span></div>
+        </div>
+
+        <p class="sect-head">Your own puzzle</p>
+        <div class="list">
+          <div class="row"><span class="t">Free play<small>Easy to Master</small></span><span class="chev"><svg viewBox="0 0 10 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m2.5 2 5 6-5 6"/></svg></span></div>
+          <div class="row"><span class="t">Ink<small>Every digit is final</small></span><span class="chev"><svg viewBox="0 0 10 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m2.5 2 5 6-5 6"/></svg></span></div>
+          <div class="row"><span class="t">Past days</span><span class="chev"><svg viewBox="0 0 10 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m2.5 2 5 6-5 6"/></svg></span></div>
+        </div>
+
+        <p class="sect-head">Later</p>
+        <div class="list">
+          <div class="row muted"><span class="t">Liar · Melody · Pet<small>Release 2</small></span></div>
+        </div>
+        <div class="grow"></div>
+      </div>
+      <nav class="tabbar t2">
+        <div class="tab on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="3.5" width="17" height="17" rx="3.4"/><path d="M9.2 3.5v17M14.8 3.5v17M3.5 9.2h17M3.5 14.8h17"/></svg><span class="lab">Play</span></div>
+        <div class="tab"><svg viewBox="0 0 24 24" fill="currentColor"><rect x="3.2" y="5.2" width="3.6" height="3.6" rx="1"/><rect x="8.6" y="5.2" width="3.6" height="3.6" rx="1"/><rect x="14" y="5.2" width="3.6" height="3.6" rx="1"/><rect x="3.2" y="10.2" width="3.6" height="3.6" rx="1"/><rect x="8.6" y="10.2" width="3.6" height="3.6" rx="1"/><rect x="14" y="10.2" width="3.6" height="3.6" rx="1"/><rect x="3.2" y="15.2" width="3.6" height="3.6" rx="1"/><rect x="8.6" y="15.2" width="3.6" height="3.6" rx="1"/><rect x="14" y="15.2" width="3.6" height="3.6" rx="1"/></svg><span class="lab">Year</span></div>
+      </nav>
+    </div>
+    <p class="cap"><b>B1 · the hub, dark.</b> Until release 2 the “Later” section is a promise with
+      nothing behind it — the same debt as “With help” in the Year legend.</p>
+  </div>
+
+  <!-- B2 light -->
+  <div class="unit">
+    <div class="ph light">
+      <div class="body">
+        <div class="toolbar">
+          <div class="back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m15 6-6 6 6 6"/></svg><span>Play</span></div>
+          <div class="gear"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.2"/><circle cx="12" cy="12" r="8.4"/></svg></div>
+        </div>
+        <p class="subline">Today <span class="dot">·</span> Fri 2 Oct <span class="dot">·</span> Medium <span class="dot">·</span> 0:00</p>
+        <div class="board">
+          <span class="g" style="grid-area:1/1">5</span><span class="g" style="grid-area:1/5">8</span><span class="g" style="grid-area:1/9">2</span>
+          <span class="sel" style="grid-area:2/1"></span><span class="g" style="grid-area:2/3">7</span><span class="g" style="grid-area:2/7">4</span>
+          <span class="g" style="grid-area:3/2">9</span><span class="g" style="grid-area:3/6">3</span>
+          <span class="g" style="grid-area:4/1">3</span><span class="g" style="grid-area:4/8">6</span>
+          <span class="g" style="grid-area:5/5">7</span><span class="g" style="grid-area:5/6">9</span>
+          <span class="g" style="grid-area:6/2">2</span><span class="g" style="grid-area:6/9">5</span>
+          <span class="g" style="grid-area:7/4">6</span>
+          <span class="g" style="grid-area:8/3">4</span><span class="g" style="grid-area:8/7">8</span>
+          <span class="g" style="grid-area:9/1">8</span><span class="g" style="grid-area:9/5">2</span><span class="g" style="grid-area:9/9">3</span>
+        </div>
+        <div class="gap">
+          <div class="inkrow"><span class="t">Ink mode</span><span class="v">Off</span><span class="chev"><svg viewBox="0 0 10 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m2.5 2 5 6-5 6"/></svg></span></div>
+        </div>
+        <div class="padwrap">
+          <div class="pad">
+            <div class="key"><span class="n">1</span><span class="r">8</span></div>
+            <div class="key"><span class="n">2</span><span class="r">6</span></div>
+            <div class="key"><span class="n">3</span><span class="r">7</span></div>
+            <div class="key"><span class="n">4</span><span class="r">8</span></div>
+            <div class="key"><span class="n">5</span><span class="r">7</span></div>
+            <div class="key"><span class="n">6</span><span class="r">7</span></div>
+            <div class="key"><span class="n">7</span><span class="r">7</span></div>
+            <div class="key"><span class="n">8</span><span class="r">6</span></div>
+            <div class="key"><span class="n">9</span><span class="r">7</span></div>
+          </div>
+          <div class="actions">
+            <div class="act">Notes</div><div class="act off">Undo</div><div class="act">Erase</div>
+          </div>
+        </div>
+      </div>
+      <!-- modality: a pushed screen keeps the tab bar visible (tab-bars.md) -->
+      <nav class="tabbar t2">
+        <div class="tab on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="3.5" width="17" height="17" rx="3.4"/><path d="M9.2 3.5v17M14.8 3.5v17M3.5 9.2h17M3.5 14.8h17"/></svg><span class="lab">Play</span></div>
+        <div class="tab"><svg viewBox="0 0 24 24" fill="currentColor"><rect x="3.2" y="5.2" width="3.6" height="3.6" rx="1"/><rect x="8.6" y="5.2" width="3.6" height="3.6" rx="1"/><rect x="14" y="5.2" width="3.6" height="3.6" rx="1"/><rect x="3.2" y="10.2" width="3.6" height="3.6" rx="1"/><rect x="8.6" y="10.2" width="3.6" height="3.6" rx="1"/><rect x="14" y="10.2" width="3.6" height="3.6" rx="1"/><rect x="3.2" y="15.2" width="3.6" height="3.6" rx="1"/><rect x="8.6" y="15.2" width="3.6" height="3.6" rx="1"/><rect x="14" y="15.2" width="3.6" height="3.6" rx="1"/></svg><span class="lab">Year</span></div>
+      </nav>
+    </div>
+    <p class="cap"><b>B2 · the day as a pushed screen, light.</b> The title line now has to say which
+      game this is, and the day loses its own tab — Grid&nbsp;∞ and the day card move one level down.</p>
+  </div>
+
+  <!-- B2 dark -->
+  <div class="unit">
+    <div class="ph dark">
+      <div class="body">
+        <div class="toolbar">
+          <div class="back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m15 6-6 6 6 6"/></svg><span>Play</span></div>
+          <div class="gear"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.2"/><circle cx="12" cy="12" r="8.4"/></svg></div>
+        </div>
+        <p class="subline">Today <span class="dot">·</span> Fri 2 Oct <span class="dot">·</span> Medium <span class="dot">·</span> 0:00</p>
+        <div class="board">
+          <span class="g" style="grid-area:1/1">5</span><span class="g" style="grid-area:1/5">8</span><span class="g" style="grid-area:1/9">2</span>
+          <span class="sel" style="grid-area:2/1"></span><span class="g" style="grid-area:2/3">7</span><span class="g" style="grid-area:2/7">4</span>
+          <span class="g" style="grid-area:3/2">9</span><span class="g" style="grid-area:3/6">3</span>
+          <span class="g" style="grid-area:4/1">3</span><span class="g" style="grid-area:4/8">6</span>
+          <span class="g" style="grid-area:5/5">7</span><span class="g" style="grid-area:5/6">9</span>
+          <span class="g" style="grid-area:6/2">2</span><span class="g" style="grid-area:6/9">5</span>
+          <span class="g" style="grid-area:7/4">6</span>
+          <span class="g" style="grid-area:8/3">4</span><span class="g" style="grid-area:8/7">8</span>
+          <span class="g" style="grid-area:9/1">8</span><span class="g" style="grid-area:9/5">2</span><span class="g" style="grid-area:9/9">3</span>
+        </div>
+        <div class="gap">
+          <div class="inkrow"><span class="t">Ink mode</span><span class="v">Off</span><span class="chev"><svg viewBox="0 0 10 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m2.5 2 5 6-5 6"/></svg></span></div>
+        </div>
+        <div class="padwrap">
+          <div class="pad">
+            <div class="key"><span class="n">1</span><span class="r">8</span></div>
+            <div class="key"><span class="n">2</span><span class="r">6</span></div>
+            <div class="key"><span class="n">3</span><span class="r">7</span></div>
+            <div class="key"><span class="n">4</span><span class="r">8</span></div>
+            <div class="key"><span class="n">5</span><span class="r">7</span></div>
+            <div class="key"><span class="n">6</span><span class="r">7</span></div>
+            <div class="key"><span class="n">7</span><span class="r">7</span></div>
+            <div class="key"><span class="n">8</span><span class="r">6</span></div>
+            <div class="key"><span class="n">9</span><span class="r">7</span></div>
+          </div>
+          <div class="actions">
+            <div class="act">Notes</div><div class="act off">Undo</div><div class="act">Erase</div>
+          </div>
+        </div>
+      </div>
+      <nav class="tabbar t2">
+        <div class="tab on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="3.5" width="17" height="17" rx="3.4"/><path d="M9.2 3.5v17M14.8 3.5v17M3.5 9.2h17M3.5 14.8h17"/></svg><span class="lab">Play</span></div>
+        <div class="tab"><svg viewBox="0 0 24 24" fill="currentColor"><rect x="3.2" y="5.2" width="3.6" height="3.6" rx="1"/><rect x="8.6" y="5.2" width="3.6" height="3.6" rx="1"/><rect x="14" y="5.2" width="3.6" height="3.6" rx="1"/><rect x="3.2" y="10.2" width="3.6" height="3.6" rx="1"/><rect x="8.6" y="10.2" width="3.6" height="3.6" rx="1"/><rect x="14" y="10.2" width="3.6" height="3.6" rx="1"/><rect x="3.2" y="15.2" width="3.6" height="3.6" rx="1"/><rect x="8.6" y="15.2" width="3.6" height="3.6" rx="1"/><rect x="14" y="15.2" width="3.6" height="3.6" rx="1"/></svg><span class="lab">Year</span></div>
+      </nav>
+    </div>
+    <p class="cap"><b>B2 · pushed board, dark.</b> A real back-stack also has to be built: tabs use
+      <code>replaceState</code> today, Settings uses <code>pushState</code>, archive is its own route.</p>
+  </div>
+</div>
+<p class="tags"><span>daily: 2 taps</span><span>free game: 4 taps</span><span>continue: 2 taps</span><span>cost: L</span><span>regression risk: high</span></p>
+
+<!-- ============================================================= C -->
+<h2>C — Today stays a board; Play becomes a real hub</h2>
+<p class="page-note">
+  The recommended shape. Today is untouched (one tap a day), and the second tab finally earns the
+  step it already makes you take: Continue, difficulty as a list with clue counts, a Mode row that
+  release-2 modes can move into, and a second door into the archive.
+</p>
+<div class="rail">
+
+  <!-- C1 light -->
+  <div class="unit">
+    <div class="ph light">
+      <div class="body">
+        <div class="toolbar">
+          <div class="title">Play</div>
+          <div class="gear"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.2"/><circle cx="12" cy="12" r="8.4"/></svg></div>
+        </div>
+        <p class="subline">A puzzle of your own, any time.</p>
+
+        <p class="sect-head">Continue</p>
+        <div class="list">
+          <div class="row tall"><div class="mini"></div><span class="t">Hard<small>23 of 51 cells · 12:04</small></span><span class="chev"><svg viewBox="0 0 10 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m2.5 2 5 6-5 6"/></svg></span></div>
+        </div>
+
+        <p class="sect-head">New puzzle</p>
+        <div class="list">
+          <div class="row"><span class="tick">&nbsp;</span><span class="t">Easy<small>38 clues · singles</small></span></div>
+          <div class="row"><span class="tick">&nbsp;</span><span class="t">Medium<small>30 clues · singles</small></span></div>
+          <div class="row sel"><span class="tick">✓</span><span class="t">Hard<small>26 clues · locked candidates</small></span></div>
+          <div class="row"><span class="tick">&nbsp;</span><span class="t">Expert<small>24 clues · pairs</small></span></div>
+          <div class="row"><span class="tick">&nbsp;</span><span class="t">Master<small>beyond the solver’s techniques</small></span></div>
+          <div class="row"><span class="tick">&nbsp;</span><span class="t">Mode</span><span class="v">Classic</span><span class="chev"><svg viewBox="0 0 10 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m2.5 2 5 6-5 6"/></svg></span></div>
+        </div>
+        <div class="primary">Start</div>
+        <p class="foot">Starting a new puzzle ends the one above.</p>
+
+        <div class="grow"></div>
+        <div class="list" style="margin-bottom:12px">
+          <div class="row"><span class="t">Past days<small>Also on the Year canvas</small></span><span class="chev"><svg viewBox="0 0 10 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m2.5 2 5 6-5 6"/></svg></span></div>
+        </div>
+      </div>
+      <div class="reach"></div>
+      <nav class="tabbar t3">
+        <div class="tab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="4.8" width="17" height="15.4" rx="3.4"/><path d="M3.5 9.2h17M8 3.2v2.8M16 3.2v2.8"/><circle cx="12" cy="14.7" r="1.9" fill="currentColor" stroke="none"/></svg><span class="lab">Today</span></div>
+        <div class="tab on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="3.5" width="17" height="17" rx="3.4"/><path d="M9.2 3.5v17M14.8 3.5v17M3.5 9.2h17M3.5 14.8h17"/></svg><span class="lab">Play</span></div>
+        <div class="tab"><svg viewBox="0 0 24 24" fill="currentColor"><rect x="3.2" y="5.2" width="3.6" height="3.6" rx="1"/><rect x="8.6" y="5.2" width="3.6" height="3.6" rx="1"/><rect x="14" y="5.2" width="3.6" height="3.6" rx="1"/><rect x="3.2" y="10.2" width="3.6" height="3.6" rx="1"/><rect x="8.6" y="10.2" width="3.6" height="3.6" rx="1"/><rect x="14" y="10.2" width="3.6" height="3.6" rx="1"/><rect x="3.2" y="15.2" width="3.6" height="3.6" rx="1"/><rect x="8.6" y="15.2" width="3.6" height="3.6" rx="1"/><rect x="14" y="15.2" width="3.6" height="3.6" rx="1"/></svg><span class="lab">Year</span></div>
+      </nav>
+    </div>
+    <p class="cap"><b>C1 · Play as a hub, light.</b> Difficulty is a list, not a wheel: one tap, 44 pt
+      targets, and the clue counts the generator already knows. “Start” and “Past days” sit in the
+      reachable half.</p>
+  </div>
+
+  <!-- C1 dark -->
+  <div class="unit">
+    <div class="ph dark">
+      <div class="body">
+        <div class="toolbar">
+          <div class="title">Play</div>
+          <div class="gear"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.2"/><circle cx="12" cy="12" r="8.4"/></svg></div>
+        </div>
+        <p class="subline">A puzzle of your own, any time.</p>
+
+        <p class="sect-head">Continue</p>
+        <div class="list">
+          <div class="row tall"><div class="mini"></div><span class="t">Hard<small>23 of 51 cells · 12:04</small></span><span class="chev"><svg viewBox="0 0 10 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m2.5 2 5 6-5 6"/></svg></span></div>
+        </div>
+
+        <p class="sect-head">New puzzle</p>
+        <div class="list">
+          <div class="row"><span class="tick">&nbsp;</span><span class="t">Easy<small>38 clues · singles</small></span></div>
+          <div class="row"><span class="tick">&nbsp;</span><span class="t">Medium<small>30 clues · singles</small></span></div>
+          <div class="row sel"><span class="tick">✓</span><span class="t">Hard<small>26 clues · locked candidates</small></span></div>
+          <div class="row"><span class="tick">&nbsp;</span><span class="t">Expert<small>24 clues · pairs</small></span></div>
+          <div class="row"><span class="tick">&nbsp;</span><span class="t">Master<small>beyond the solver’s techniques</small></span></div>
+          <div class="row"><span class="tick">&nbsp;</span><span class="t">Mode</span><span class="v">Ink</span><span class="chev"><svg viewBox="0 0 10 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m2.5 2 5 6-5 6"/></svg></span></div>
+        </div>
+        <div class="primary">Start in ink</div>
+        <p class="foot">In ink every digit is final. A wrong digit leaves a blot.</p>
+
+        <div class="grow"></div>
+        <div class="list" style="margin-bottom:12px">
+          <div class="row"><span class="t">Past days<small>Also on the Year canvas</small></span><span class="chev"><svg viewBox="0 0 10 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m2.5 2 5 6-5 6"/></svg></span></div>
+        </div>
+      </div>
+      <nav class="tabbar t3">
+        <div class="tab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="4.8" width="17" height="15.4" rx="3.4"/><path d="M3.5 9.2h17M8 3.2v2.8M16 3.2v2.8"/><circle cx="12" cy="14.7" r="1.9" fill="currentColor" stroke="none"/></svg><span class="lab">Today</span></div>
+        <div class="tab on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="3.5" width="17" height="17" rx="3.4"/><path d="M9.2 3.5v17M14.8 3.5v17M3.5 9.2h17M3.5 14.8h17"/></svg><span class="lab">Play</span></div>
+        <div class="tab"><svg viewBox="0 0 24 24" fill="currentColor"><rect x="3.2" y="5.2" width="3.6" height="3.6" rx="1"/><rect x="8.6" y="5.2" width="3.6" height="3.6" rx="1"/><rect x="14" y="5.2" width="3.6" height="3.6" rx="1"/><rect x="3.2" y="10.2" width="3.6" height="3.6" rx="1"/><rect x="8.6" y="10.2" width="3.6" height="3.6" rx="1"/><rect x="14" y="10.2" width="3.6" height="3.6" rx="1"/><rect x="3.2" y="15.2" width="3.6" height="3.6" rx="1"/><rect x="8.6" y="15.2" width="3.6" height="3.6" rx="1"/><rect x="14" y="15.2" width="3.6" height="3.6" rx="1"/></svg><span class="lab">Year</span></div>
+      </nav>
+    </div>
+    <p class="cap"><b>C1 · Play as a hub, dark, with Mode = Ink.</b> The mode changes the primary
+      button’s wording and the footnote, so the rule is stated where the choice is made. Release-2
+      modes join this row; no new tab, no new level.</p>
+  </div>
+
+  <!-- C2 light -->
+  <div class="unit">
+    <div class="ph light">
+      <div class="body">
+        <div class="toolbar">
+          <div class="title">Today</div>
+          <div class="gear"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.2"/><circle cx="12" cy="12" r="8.4"/></svg></div>
+        </div>
+        <p class="subline">Fri 2 Oct <span class="dot">·</span> Medium <span class="dot">·</span> 1:08<span class="chip-ink">Ink</span></p>
+        <div class="board">
+          <span class="g" style="grid-area:1/1">5</span><span class="g" style="grid-area:1/5">8</span><span class="g" style="grid-area:1/9">2</span>
+          <span class="u" style="grid-area:2/1">6</span><span class="g" style="grid-area:2/3">7</span><span class="g" style="grid-area:2/7">4</span>
+          <span class="g" style="grid-area:3/2">9</span><span class="sel" style="grid-area:3/4"></span><span class="g" style="grid-area:3/6">3</span>
+          <span class="g" style="grid-area:4/1">3</span><span class="g" style="grid-area:4/8">6</span>
+          <span class="g" style="grid-area:5/5">7</span><span class="g" style="grid-area:5/6">9</span>
+          <span class="g" style="grid-area:6/2">2</span><span class="g" style="grid-area:6/9">5</span>
+          <span class="g" style="grid-area:7/4">6</span><span class="u" style="grid-area:7/8">1</span>
+          <span class="g" style="grid-area:8/3">4</span><span class="g" style="grid-area:8/7">8</span>
+          <span class="g" style="grid-area:9/1">8</span><span class="g" style="grid-area:9/5">2</span><span class="g" style="grid-area:9/9">3</span>
+        </div>
+        <div class="gap">
+          <p class="status">49 cells left</p>
+          <p class="source">Puzzle from Sudoku.com</p>
+        </div>
+        <div class="padwrap">
+          <div class="pad">
+            <div class="key"><span class="n">1</span><span class="r">7</span></div>
+            <div class="key"><span class="n">2</span><span class="r">6</span></div>
+            <div class="key"><span class="n">3</span><span class="r">7</span></div>
+            <div class="key"><span class="n">4</span><span class="r">8</span></div>
+            <div class="key"><span class="n">5</span><span class="r">7</span></div>
+            <div class="key"><span class="n">6</span><span class="r">6</span></div>
+            <div class="key"><span class="n">7</span><span class="r">7</span></div>
+            <div class="key"><span class="n">8</span><span class="r">6</span></div>
+            <div class="key"><span class="n">9</span><span class="r">7</span></div>
+          </div>
+          <div class="actions">
+            <div class="act">Notes</div><div class="act off">Undo</div><div class="act">Erase notes</div>
+          </div>
+        </div>
+      </div>
+      <div class="reach"></div>
+      <nav class="tabbar t3">
+        <div class="tab on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="4.8" width="17" height="15.4" rx="3.4"/><path d="M3.5 9.2h17M8 3.2v2.8M16 3.2v2.8"/><circle cx="12" cy="14.7" r="1.9" fill="currentColor" stroke="none"/></svg><span class="lab">Today</span></div>
+        <div class="tab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="3.5" width="17" height="17" rx="3.4"/><path d="M9.2 3.5v17M14.8 3.5v17M3.5 9.2h17M3.5 14.8h17"/></svg><span class="lab">Play</span></div>
+        <div class="tab"><svg viewBox="0 0 24 24" fill="currentColor"><rect x="3.2" y="5.2" width="3.6" height="3.6" rx="1"/><rect x="8.6" y="5.2" width="3.6" height="3.6" rx="1"/><rect x="14" y="5.2" width="3.6" height="3.6" rx="1"/><rect x="3.2" y="10.2" width="3.6" height="3.6" rx="1"/><rect x="8.6" y="10.2" width="3.6" height="3.6" rx="1"/><rect x="14" y="10.2" width="3.6" height="3.6" rx="1"/><rect x="3.2" y="15.2" width="3.6" height="3.6" rx="1"/><rect x="8.6" y="15.2" width="3.6" height="3.6" rx="1"/><rect x="14" y="15.2" width="3.6" height="3.6" rx="1"/></svg><span class="lab">Year</span></div>
+      </nav>
+    </div>
+    <p class="cap"><b>C2 · Today in ink, light — unchanged structurally.</b> The only addition is the
+      “Ink” chip in the subtitle: the rule can be re-read at any time (B4), and the mode is no longer
+      invisible once the entry row disappears.</p>
+  </div>
+
+  <!-- C2 dark -->
+  <div class="unit">
+    <div class="ph dark">
+      <div class="body">
+        <div class="toolbar">
+          <div class="title">Today</div>
+          <div class="gear"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.2"/><circle cx="12" cy="12" r="8.4"/></svg></div>
+        </div>
+        <p class="subline">Fri 2 Oct <span class="dot">·</span> Medium <span class="dot">·</span> 1:08<span class="chip-ink">Ink</span></p>
+        <div class="board">
+          <span class="g" style="grid-area:1/1">5</span><span class="g" style="grid-area:1/5">8</span><span class="g" style="grid-area:1/9">2</span>
+          <span class="u" style="grid-area:2/1">6</span><span class="g" style="grid-area:2/3">7</span><span class="g" style="grid-area:2/7">4</span>
+          <span class="g" style="grid-area:3/2">9</span><span class="sel" style="grid-area:3/4"></span><span class="g" style="grid-area:3/6">3</span>
+          <span class="g" style="grid-area:4/1">3</span><span class="g" style="grid-area:4/8">6</span>
+          <span class="g" style="grid-area:5/5">7</span><span class="g" style="grid-area:5/6">9</span>
+          <span class="g" style="grid-area:6/2">2</span><span class="g" style="grid-area:6/9">5</span>
+          <span class="g" style="grid-area:7/4">6</span><span class="u" style="grid-area:7/8">1</span>
+          <span class="g" style="grid-area:8/3">4</span><span class="g" style="grid-area:8/7">8</span>
+          <span class="g" style="grid-area:9/1">8</span><span class="g" style="grid-area:9/5">2</span><span class="g" style="grid-area:9/9">3</span>
+        </div>
+        <div class="gap">
+          <p class="status">49 cells left</p>
+          <p class="source">Puzzle from Sudoku.com</p>
+        </div>
+        <div class="padwrap">
+          <div class="pad">
+            <div class="key"><span class="n">1</span><span class="r">7</span></div>
+            <div class="key"><span class="n">2</span><span class="r">6</span></div>
+            <div class="key"><span class="n">3</span><span class="r">7</span></div>
+            <div class="key"><span class="n">4</span><span class="r">8</span></div>
+            <div class="key"><span class="n">5</span><span class="r">7</span></div>
+            <div class="key"><span class="n">6</span><span class="r">6</span></div>
+            <div class="key"><span class="n">7</span><span class="r">7</span></div>
+            <div class="key"><span class="n">8</span><span class="r">6</span></div>
+            <div class="key"><span class="n">9</span><span class="r">7</span></div>
+          </div>
+          <div class="actions">
+            <div class="act">Notes</div><div class="act off">Undo</div><div class="act">Erase notes</div>
+          </div>
+        </div>
+      </div>
+      <nav class="tabbar t3">
+        <div class="tab on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="4.8" width="17" height="15.4" rx="3.4"/><path d="M3.5 9.2h17M8 3.2v2.8M16 3.2v2.8"/><circle cx="12" cy="14.7" r="1.9" fill="currentColor" stroke="none"/></svg><span class="lab">Today</span></div>
+        <div class="tab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="3.5" width="17" height="17" rx="3.4"/><path d="M9.2 3.5v17M14.8 3.5v17M3.5 9.2h17M3.5 14.8h17"/></svg><span class="lab">Play</span></div>
+        <div class="tab"><svg viewBox="0 0 24 24" fill="currentColor"><rect x="3.2" y="5.2" width="3.6" height="3.6" rx="1"/><rect x="8.6" y="5.2" width="3.6" height="3.6" rx="1"/><rect x="14" y="5.2" width="3.6" height="3.6" rx="1"/><rect x="3.2" y="10.2" width="3.6" height="3.6" rx="1"/><rect x="8.6" y="10.2" width="3.6" height="3.6" rx="1"/><rect x="14" y="10.2" width="3.6" height="3.6" rx="1"/><rect x="3.2" y="15.2" width="3.6" height="3.6" rx="1"/><rect x="8.6" y="15.2" width="3.6" height="3.6" rx="1"/><rect x="14" y="15.2" width="3.6" height="3.6" rx="1"/></svg><span class="lab">Year</span></div>
+      </nav>
+    </div>
+    <p class="cap"><b>C2 · Today in ink, dark.</b> Undo is off and the eraser says “Erase notes” —
+      the approved ink rules, unchanged.</p>
+  </div>
+</div>
+<p class="tags"><span>daily: 1 tap</span><span>free game: 4 taps</span><span>continue: 3 taps</span><span>cost: M</span><span>regression risk: medium-low</span><span>Today untouched</span></p>
+
+<!-- ============================================================= D -->
+<h2>D — the board is always on screen; the title is a pull-down that chooses the game</h2>
+<p class="page-note">
+  The iOS Calendar / Mail pattern. The board never leaves the first screen, the mode menu costs zero
+  permanent space, and release-2 modes just become more menu items. The price: “Play” disappears as a
+  word, and one tab now means two things. Worth revisiting when there are four or five modes.
+</p>
+<div class="rail">
+
+  <!-- D1 light -->
+  <div class="unit">
+    <div class="ph light">
+      <div class="body">
+        <div class="toolbar">
+          <div class="title title-pd"><span>Today</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></div>
+          <div class="gear"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.2"/><circle cx="12" cy="12" r="8.4"/></svg></div>
+        </div>
+        <p class="subline">Fri 2 Oct <span class="dot">·</span> Medium <span class="dot">·</span> 4:12</p>
+        <div class="board">
+          <span class="g" style="grid-area:1/1">5</span><span class="g" style="grid-area:1/5">8</span><span class="g" style="grid-area:1/9">2</span>
+          <span class="sel" style="grid-area:2/1"></span><span class="g" style="grid-area:2/3">7</span><span class="g" style="grid-area:2/7">4</span>
+          <span class="g" style="grid-area:3/2">9</span><span class="g" style="grid-area:3/6">3</span>
+          <span class="g" style="grid-area:4/1">3</span><span class="u" style="grid-area:4/4">5</span><span class="g" style="grid-area:4/8">6</span>
+          <span class="u" style="grid-area:5/1">4</span><span class="g" style="grid-area:5/5">7</span><span class="g" style="grid-area:5/6">9</span>
+          <span class="g" style="grid-area:6/2">2</span><span class="g" style="grid-area:6/9">5</span>
+          <span class="g" style="grid-area:7/4">6</span><span class="u" style="grid-area:7/8">1</span>
+          <span class="g" style="grid-area:8/3">4</span><span class="g" style="grid-area:8/7">8</span>
+          <span class="g" style="grid-area:9/1">8</span><span class="g" style="grid-area:9/5">2</span><span class="g" style="grid-area:9/9">3</span>
+        </div>
+        <div class="gap">
+          <p class="status">46 cells left</p>
+          <p class="source">Puzzle from Sudoku.com</p>
+        </div>
+        <div class="padwrap">
+          <div class="pad">
+            <div class="key"><span class="n">1</span><span class="r">5</span></div>
+            <div class="key"><span class="n">2</span><span class="r">4</span></div>
+            <div class="key"><span class="n">3</span><span class="r">6</span></div>
+            <div class="key"><span class="n">4</span><span class="r">5</span></div>
+            <div class="key done"><span class="n">5</span><span class="r">·</span></div>
+            <div class="key"><span class="n">6</span><span class="r">7</span></div>
+            <div class="key"><span class="n">7</span><span class="r">4</span></div>
+            <div class="key"><span class="n">8</span><span class="r">6</span></div>
+            <div class="key"><span class="n">9</span><span class="r">5</span></div>
+          </div>
+          <div class="actions">
+            <div class="act">Notes</div><div class="act">Undo</div><div class="act">Erase</div>
+          </div>
+        </div>
+      </div>
+      <div class="reach"></div>
+      <nav class="tabbar t2">
+        <div class="tab on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="3.5" width="17" height="17" rx="3.4"/><path d="M9.2 3.5v17M14.8 3.5v17M3.5 9.2h17M3.5 14.8h17"/></svg><span class="lab">Puzzle</span></div>
+        <div class="tab"><svg viewBox="0 0 24 24" fill="currentColor"><rect x="3.2" y="5.2" width="3.6" height="3.6" rx="1"/><rect x="8.6" y="5.2" width="3.6" height="3.6" rx="1"/><rect x="14" y="5.2" width="3.6" height="3.6" rx="1"/><rect x="3.2" y="10.2" width="3.6" height="3.6" rx="1"/><rect x="8.6" y="10.2" width="3.6" height="3.6" rx="1"/><rect x="14" y="10.2" width="3.6" height="3.6" rx="1"/><rect x="3.2" y="15.2" width="3.6" height="3.6" rx="1"/><rect x="8.6" y="15.2" width="3.6" height="3.6" rx="1"/><rect x="14" y="15.2" width="3.6" height="3.6" rx="1"/></svg><span class="lab">Year</span></div>
+      </nav>
+    </div>
+    <p class="cap"><b>D1 · closed, light.</b> Identical to today’s Today screen except for the chevron
+      next to the title. One tap to the first move in every scenario.</p>
+  </div>
+
+  <!-- D2 dark, menu open -->
+  <div class="unit">
+    <div class="ph dark">
+      <div class="body">
+        <div class="toolbar">
+          <div class="title title-pd"><span>Today</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></div>
+          <div class="gear"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.2"/><circle cx="12" cy="12" r="8.4"/></svg></div>
+        </div>
+        <p class="subline">Fri 2 Oct <span class="dot">·</span> Medium <span class="dot">·</span> 4:12</p>
+        <div class="board dimmed">
+          <span class="g" style="grid-area:1/1">5</span><span class="g" style="grid-area:1/5">8</span><span class="g" style="grid-area:1/9">2</span>
+          <span class="g" style="grid-area:2/3">7</span><span class="g" style="grid-area:2/7">4</span>
+          <span class="g" style="grid-area:3/2">9</span><span class="g" style="grid-area:3/6">3</span>
+          <span class="g" style="grid-area:4/1">3</span><span class="u" style="grid-area:4/4">5</span><span class="g" style="grid-area:4/8">6</span>
+          <span class="u" style="grid-area:5/1">4</span><span class="g" style="grid-area:5/5">7</span><span class="g" style="grid-area:5/6">9</span>
+          <span class="g" style="grid-area:6/2">2</span><span class="g" style="grid-area:6/9">5</span>
+          <span class="g" style="grid-area:7/4">6</span><span class="u" style="grid-area:7/8">1</span>
+          <span class="g" style="grid-area:8/3">4</span><span class="g" style="grid-area:8/7">8</span>
+          <span class="g" style="grid-area:9/1">8</span><span class="g" style="grid-area:9/5">2</span><span class="g" style="grid-area:9/9">3</span>
+        </div>
+        <div class="gap">
+          <p class="status">46 cells left</p>
+        </div>
+        <div class="padwrap">
+          <div class="pad">
+            <div class="key"><span class="n">1</span><span class="r">5</span></div>
+            <div class="key"><span class="n">2</span><span class="r">4</span></div>
+            <div class="key"><span class="n">3</span><span class="r">6</span></div>
+            <div class="key"><span class="n">4</span><span class="r">5</span></div>
+            <div class="key done"><span class="n">5</span><span class="r">·</span></div>
+            <div class="key"><span class="n">6</span><span class="r">7</span></div>
+            <div class="key"><span class="n">7</span><span class="r">4</span></div>
+            <div class="key"><span class="n">8</span><span class="r">6</span></div>
+            <div class="key"><span class="n">9</span><span class="r">5</span></div>
+          </div>
+          <div class="actions">
+            <div class="act">Notes</div><div class="act">Undo</div><div class="act">Erase</div>
+          </div>
+        </div>
+      </div>
+      <div class="scrim"></div>
+      <div class="menu">
+        <div class="row"><span class="tick">✓</span><span class="t">Today’s puzzle<small>Medium · 4:12</small></span></div>
+        <div class="row"><span class="tick">&nbsp;</span><span class="t">Continue<small>Hard · 23 of 51</small></span></div>
+        <div class="row"><span class="tick">&nbsp;</span><span class="t">New puzzle…</span><span class="chev"><svg viewBox="0 0 10 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m2.5 2 5 6-5 6"/></svg></span></div>
+        <div class="row"><span class="tick">&nbsp;</span><span class="t">Past day…</span><span class="chev"><svg viewBox="0 0 10 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m2.5 2 5 6-5 6"/></svg></span></div>
+        <div class="sep"></div>
+        <div class="row"><span class="tick">&nbsp;</span><span class="t">Mode</span><span class="v">Classic</span><span class="chev"><svg viewBox="0 0 10 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m2.5 2 5 6-5 6"/></svg></span></div>
+      </div>
+      <nav class="tabbar t2">
+        <div class="tab on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="3.5" width="17" height="17" rx="3.4"/><path d="M9.2 3.5v17M14.8 3.5v17M3.5 9.2h17M3.5 14.8h17"/></svg><span class="lab">Puzzle</span></div>
+        <div class="tab"><svg viewBox="0 0 24 24" fill="currentColor"><rect x="3.2" y="5.2" width="3.6" height="3.6" rx="1"/><rect x="8.6" y="5.2" width="3.6" height="3.6" rx="1"/><rect x="14" y="5.2" width="3.6" height="3.6" rx="1"/><rect x="3.2" y="10.2" width="3.6" height="3.6" rx="1"/><rect x="8.6" y="10.2" width="3.6" height="3.6" rx="1"/><rect x="14" y="10.2" width="3.6" height="3.6" rx="1"/><rect x="3.2" y="15.2" width="3.6" height="3.6" rx="1"/><rect x="8.6" y="15.2" width="3.6" height="3.6" rx="1"/><rect x="14" y="15.2" width="3.6" height="3.6" rx="1"/></svg><span class="lab">Year</span></div>
+      </nav>
+    </div>
+    <p class="cap"><b>D2 · menu open, dark.</b> Four destinations and the mode row. Release-2 modes
+      extend the list instead of the tab bar — but the menu sits at the very top of the screen, the
+      hardest place for a thumb, so it must stay a rare action.</p>
+  </div>
+
+  <!-- D1 dark + D2 light, mirrored -->
+  <div class="unit">
+    <div class="ph dark">
+      <div class="body">
+        <div class="toolbar">
+          <div class="title title-pd"><span>Hard</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></div>
+          <div class="gear"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.2"/><circle cx="12" cy="12" r="8.4"/></svg></div>
+        </div>
+        <p class="subline">Free play <span class="dot">·</span> 26 clues <span class="dot">·</span> 12:04</p>
+        <div class="board">
+          <span class="g" style="grid-area:1/2">4</span><span class="g" style="grid-area:1/6">1</span>
+          <span class="u" style="grid-area:2/1">9</span><span class="g" style="grid-area:2/4">3</span><span class="g" style="grid-area:2/8">7</span>
+          <span class="g" style="grid-area:3/3">6</span><span class="sel" style="grid-area:3/7"></span>
+          <span class="g" style="grid-area:4/2">8</span><span class="u" style="grid-area:4/5">2</span><span class="g" style="grid-area:4/9">4</span>
+          <span class="g" style="grid-area:5/1">1</span><span class="g" style="grid-area:5/4">7</span><span class="g" style="grid-area:5/7">5</span>
+          <span class="u" style="grid-area:6/3">3</span><span class="g" style="grid-area:6/8">9</span>
+          <span class="g" style="grid-area:7/2">5</span><span class="g" style="grid-area:7/6">8</span>
+          <span class="g" style="grid-area:8/1">7</span><span class="u" style="grid-area:8/5">4</span><span class="g" style="grid-area:8/9">6</span>
+          <span class="g" style="grid-area:9/4">9</span><span class="g" style="grid-area:9/8">2</span>
+        </div>
+        <div class="gap">
+          <p class="status">28 cells left</p>
+        </div>
+        <div class="padwrap">
+          <div class="pad">
+            <div class="key"><span class="n">1</span><span class="r">3</span></div>
+            <div class="key"><span class="n">2</span><span class="r">2</span></div>
+            <div class="key"><span class="n">3</span><span class="r">4</span></div>
+            <div class="key done"><span class="n">4</span><span class="r">·</span></div>
+            <div class="key"><span class="n">5</span><span class="r">3</span></div>
+            <div class="key"><span class="n">6</span><span class="r">4</span></div>
+            <div class="key"><span class="n">7</span><span class="r">3</span></div>
+            <div class="key"><span class="n">8</span><span class="r">5</span></div>
+            <div class="key"><span class="n">9</span><span class="r">4</span></div>
+          </div>
+          <div class="actions">
+            <div class="act">Notes</div><div class="act">Undo</div><div class="act">Erase</div>
+          </div>
+        </div>
+      </div>
+      <nav class="tabbar t2">
+        <div class="tab on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="3.5" width="17" height="17" rx="3.4"/><path d="M9.2 3.5v17M14.8 3.5v17M3.5 9.2h17M3.5 14.8h17"/></svg><span class="lab">Puzzle</span></div>
+        <div class="tab"><svg viewBox="0 0 24 24" fill="currentColor"><rect x="3.2" y="5.2" width="3.6" height="3.6" rx="1"/><rect x="8.6" y="5.2" width="3.6" height="3.6" rx="1"/><rect x="14" y="5.2" width="3.6" height="3.6" rx="1"/><rect x="3.2" y="10.2" width="3.6" height="3.6" rx="1"/><rect x="8.6" y="10.2" width="3.6" height="3.6" rx="1"/><rect x="14" y="10.2" width="3.6" height="3.6" rx="1"/><rect x="3.2" y="15.2" width="3.6" height="3.6" rx="1"/><rect x="8.6" y="15.2" width="3.6" height="3.6" rx="1"/><rect x="14" y="15.2" width="3.6" height="3.6" rx="1"/></svg><span class="lab">Year</span></div>
+      </nav>
+    </div>
+    <p class="cap"><b>D1′ · the same tab holding a free game, dark.</b> This is the weak spot: the
+      title and the subtitle are now the only thing telling you which game you are in. Get that
+      wording wrong and you repeat finding H-03 (“Play shows the date as if it were the daily”).</p>
+  </div>
+
+  <!-- D2 light, menu open -->
+  <div class="unit">
+    <div class="ph light">
+      <div class="body">
+        <div class="toolbar">
+          <div class="title title-pd"><span>Today</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></div>
+          <div class="gear"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.2"/><circle cx="12" cy="12" r="8.4"/></svg></div>
+        </div>
+        <p class="subline">Fri 2 Oct <span class="dot">·</span> Medium <span class="dot">·</span> 4:12</p>
+        <div class="board dimmed">
+          <span class="g" style="grid-area:1/1">5</span><span class="g" style="grid-area:1/5">8</span><span class="g" style="grid-area:1/9">2</span>
+          <span class="g" style="grid-area:2/3">7</span><span class="g" style="grid-area:2/7">4</span>
+          <span class="g" style="grid-area:3/2">9</span><span class="g" style="grid-area:3/6">3</span>
+          <span class="g" style="grid-area:4/1">3</span><span class="u" style="grid-area:4/4">5</span><span class="g" style="grid-area:4/8">6</span>
+          <span class="u" style="grid-area:5/1">4</span><span class="g" style="grid-area:5/5">7</span><span class="g" style="grid-area:5/6">9</span>
+          <span class="g" style="grid-area:6/2">2</span><span class="g" style="grid-area:6/9">5</span>
+          <span class="g" style="grid-area:7/4">6</span><span class="u" style="grid-area:7/8">1</span>
+          <span class="g" style="grid-area:8/3">4</span><span class="g" style="grid-area:8/7">8</span>
+          <span class="g" style="grid-area:9/1">8</span><span class="g" style="grid-area:9/5">2</span><span class="g" style="grid-area:9/9">3</span>
+        </div>
+        <div class="gap">
+          <p class="status">46 cells left</p>
+        </div>
+        <div class="padwrap">
+          <div class="pad">
+            <div class="key"><span class="n">1</span><span class="r">5</span></div>
+            <div class="key"><span class="n">2</span><span class="r">4</span></div>
+            <div class="key"><span class="n">3</span><span class="r">6</span></div>
+            <div class="key"><span class="n">4</span><span class="r">5</span></div>
+            <div class="key done"><span class="n">5</span><span class="r">·</span></div>
+            <div class="key"><span class="n">6</span><span class="r">7</span></div>
+            <div class="key"><span class="n">7</span><span class="r">4</span></div>
+            <div class="key"><span class="n">8</span><span class="r">6</span></div>
+            <div class="key"><span class="n">9</span><span class="r">5</span></div>
+          </div>
+          <div class="actions">
+            <div class="act">Notes</div><div class="act">Undo</div><div class="act">Erase</div>
+          </div>
+        </div>
+      </div>
+      <div class="scrim"></div>
+      <div class="menu">
+        <div class="row"><span class="tick">✓</span><span class="t">Today’s puzzle<small>Medium · 4:12</small></span></div>
+        <div class="row"><span class="tick">&nbsp;</span><span class="t">Continue<small>Hard · 23 of 51</small></span></div>
+        <div class="row"><span class="tick">&nbsp;</span><span class="t">New puzzle…</span><span class="chev"><svg viewBox="0 0 10 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m2.5 2 5 6-5 6"/></svg></span></div>
+        <div class="row"><span class="tick">&nbsp;</span><span class="t">Past day…</span><span class="chev"><svg viewBox="0 0 10 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m2.5 2 5 6-5 6"/></svg></span></div>
+        <div class="sep"></div>
+        <div class="row"><span class="tick">&nbsp;</span><span class="t">Mode</span><span class="v">Classic</span><span class="chev"><svg viewBox="0 0 10 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m2.5 2 5 6-5 6"/></svg></span></div>
+      </div>
+      <nav class="tabbar t2">
+        <div class="tab on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="3.5" width="17" height="17" rx="3.4"/><path d="M9.2 3.5v17M14.8 3.5v17M3.5 9.2h17M3.5 14.8h17"/></svg><span class="lab">Puzzle</span></div>
+        <div class="tab"><svg viewBox="0 0 24 24" fill="currentColor"><rect x="3.2" y="5.2" width="3.6" height="3.6" rx="1"/><rect x="8.6" y="5.2" width="3.6" height="3.6" rx="1"/><rect x="14" y="5.2" width="3.6" height="3.6" rx="1"/><rect x="3.2" y="10.2" width="3.6" height="3.6" rx="1"/><rect x="8.6" y="10.2" width="3.6" height="3.6" rx="1"/><rect x="14" y="10.2" width="3.6" height="3.6" rx="1"/><rect x="3.2" y="15.2" width="3.6" height="3.6" rx="1"/><rect x="8.6" y="15.2" width="3.6" height="3.6" rx="1"/><rect x="14" y="15.2" width="3.6" height="3.6" rx="1"/></svg><span class="lab">Year</span></div>
+      </nav>
+    </div>
+    <p class="cap"><b>D2′ · menu open, light.</b> The board stays visible behind the menu, so you
+      never lose your place — the main argument for this variant over a hub.</p>
+  </div>
+</div>
+<p class="tags"><span>daily: 1 tap</span><span>free game: 5 taps</span><span>continue: 1–3 taps</span><span>cost: M–L</span><span>regression risk: medium</span><span>best once there are 4–5 modes</span></p>
+
+<h2>Reading the four at once</h2>
+<p class="page-note">
+  A and D keep the daily ritual at one tap; B charges two taps a day forever to buy a map of the
+  product that is read once. C keeps A’s daily path and gives the second tab the things it is
+  missing anyway (Continue, clue counts, a Mode row, a second door to the archive), which is why
+  the review recommends it. The full argument, tap counts per scenario and the sources behind the
+  conventions are in <code>research/usability-2026-10/ia-review.md</code>.
+</p>
+
+</body>
+</html>
+</content>
