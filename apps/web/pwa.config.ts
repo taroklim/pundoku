@@ -19,3 +19,22 @@ export const manifestIcons: NonNullable<ManifestOptions["icons"]> = [
   // maskable = тот же icon-512: знак d5 целиком внутри круга 80 % (радиус 409.6 из 1024; замер 390.4 — тест проверяет по пикселям).
   { src: `icons/icon-512.png?v=${ICON_VERSION}`, sizes: "512x512", type: "image/png", purpose: "maskable" },
 ];
+
+/**
+ * Манифест PWA (PD-132: `orientation: "portrait"` — решение владельца, ландшафт запрещён). Android/Chrome-PWA этому следуют;
+ * iOS Safari/Home Screen — по MDN/BCD не поддерживает `orientation` и `screen.orientation.lock()` (см. README «Ориентация»),
+ * поэтому на iPhone соблюдение манифеста проверяет владелец (research/usability-2026-10/ios-owner-steps.md, п. 21).
+ */
+export const webManifest: Partial<ManifestOptions> = {
+  name: "Pundoku",
+  short_name: "Pundoku",
+  description: "Sudoku as a daily ritual.",
+  lang: "en",
+  display: "standalone",
+  orientation: "portrait",
+  start_url: "/",
+  scope: "/",
+  theme_color: "#F2F2F7",
+  background_color: "#F2F2F7",
+  icons: manifestIcons,
+};
