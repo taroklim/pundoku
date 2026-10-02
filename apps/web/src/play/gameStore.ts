@@ -15,7 +15,8 @@ import {
   enterDigit,
   eraseCell,
   firstOpenCell,
-  remaining,
+  isDigitClosed,
+  isGiven,
   setInkMode,
   toggleNote,
   undo as undoMove,
@@ -23,6 +24,15 @@ import {
 } from "./logic";
 
 export type Phase = "loading" | "playing" | "solved" | "error";
+
+/**
+ * Тихий отклик на отказ (PD-117b): что именно не получилось. Тексты — `play.hint.<kind>` (строка статуса вместо
+ * «N cells left» на `HINT_MS`, тот же aria-live; без модалки, без вибрации, без движения сверх обычного M9).
+ */
+export type HintKind = "pickCell" | "noteFilled" | "inkFilled";
+
+/** Сколько строка статуса показывает отклик, прежде чем вернуться к «N cells left», мс. */
+export const HINT_MS = 2600;
 
 export interface PlaySnapshot {
   readonly phase: Phase;
@@ -46,6 +56,8 @@ export interface PlaySnapshot {
   readonly echo?: { readonly digit: number; readonly cells: readonly number[]; readonly delay: number; readonly id: number } | null;
   /** Ink (PD-71): клякса, только что поставленная игроком (неверная цифра и клетка; id меняется на каждую). */
   readonly blot?: { readonly cell: number; readonly digit: number; readonly id: number } | null;
+  /** PD-117b: отклик на отказ (цифра без выбранной клетки, заметка в занятую клетку, цифра в чернильную клетку); id — на каждый. */
+  readonly hint?: { readonly kind: HintKind; readonly id: number } | null;
 }
 
 type Mutable<T> = { -readonly [K in keyof T]: T[K] };
@@ -71,6 +83,7 @@ export abstract class GameStore<S extends PlaySnapshot = PlaySnapshot> {
   protected snap: S;
   private listeners = new Set<() => void>();
   private effectId = 0;
+  private hintTimer: number | null = null;
   /** Счётчик волн M3: подряд идущие волны получают id разной чётности (см. Board, класс wave-a/b). */
   private waveSeq = 0;
   /** То же для M8: свой счётчик, чтобы чётность id волн и ответов не сбивали друг друга. */
@@ -96,6 +109,14 @@ export abstract class GameStore<S extends PlaySnapshot = PlaySnapshot> {
     this.snap = { ...this.snap, ...patch };
     this.syncClock();
     this.listeners.forEach((fn) => fn());
+  }
+
+  /**
+   * Чисто экранное изменение (отклик `hint`): не часть прогресса. По умолчанию — обычный `set`; наследники, пишущие
+   * прогресс на каждый `set` (Today), переопределяют, чтобы не писать/не синхронизировать из-за подсказки.
+   */
+  protected setTransient(patch: Partial<S>): void {
+    this.set(patch);
   }
 
   /** Подписка на видимость страницы для таймера; вызывают наследники при первом старте. */
@@ -124,6 +145,7 @@ export abstract class GameStore<S extends PlaySnapshot = PlaySnapshot> {
       wave: null,
       echo: null,
       blot: null,
+      hint: null,
       ...patch,
     } as Partial<S>);
     return play;
@@ -143,6 +165,7 @@ export abstract class GameStore<S extends PlaySnapshot = PlaySnapshot> {
       wave: null,
       echo: null,
       blot: null,
+      hint: null,
       ...patch,
     } as Partial<S>);
   }
@@ -160,6 +183,7 @@ export abstract class GameStore<S extends PlaySnapshot = PlaySnapshot> {
       wave: null,
       echo: null,
       blot: null,
+      hint: null,
       startedOn: new Date(),
       ...patch,
     } as Partial<S>);
@@ -184,7 +208,27 @@ export abstract class GameStore<S extends PlaySnapshot = PlaySnapshot> {
 
   select(cell: number | null): void {
     if (this.snap.phase !== "playing" || cell === this.snap.selected) return;
-    this.set({ selected: cell } as Partial<S>);
+    this.set({ selected: cell, ...this.dropHint() } as Partial<S>);
+  }
+
+  /** PD-117b: показать отклик на отказ; снимается сам через `HINT_MS`, новым ходом или выбором клетки. */
+  private showHint(kind: HintKind): void {
+    if (this.hintTimer !== null) window.clearTimeout(this.hintTimer);
+    const id = ++this.effectId;
+    this.setTransient({ hint: { kind, id } } as Partial<S>);
+    this.hintTimer = window.setTimeout(() => {
+      this.hintTimer = null;
+      if (this.snap.hint?.id === id) this.setTransient({ hint: null } as Partial<S>);
+    }, HINT_MS);
+  }
+
+  /** Патч «снять отклик» (пустой, если его нет) + остановка таймера: вливается в патч любого настоящего действия. */
+  private dropHint(): { hint?: null } {
+    if (this.hintTimer !== null) {
+      window.clearTimeout(this.hintTimer);
+      this.hintTimer = null;
+    }
+    return this.snap.hint ? { hint: null } : {};
   }
 
   /** Сдвиг выбора по стрелкам (без циклического перехода). */
@@ -233,13 +277,24 @@ export abstract class GameStore<S extends PlaySnapshot = PlaySnapshot> {
   /** Цифра с панели/клавиатуры. `invert` — временно противоположный режим (Alt/Shift на клавиатуре). */
   input(digit: number, invert = false): void {
     const { play, selected, phase, notesMode } = this.snap;
-    if (phase !== "playing" || !play || selected === null) return;
+    if (phase !== "playing" || !play) return;
+    // PD-117b: отказы не молчат. Нет выбранной клетки или выбрана заданная — «выберите пустую».
+    if (selected === null || isGiven(play, selected)) {
+      this.showHint("pickCell");
+      return;
+    }
     const t = this.getElapsedMs();
     const notes = notesMode !== invert;
     const next = notes ? toggleNote(play, selected, digit, t) : enterDigit(play, selected, digit, t);
-    if (next === play) return;
+    if (next === play) {
+      const occupied = (play.values[selected] ?? 0) !== 0;
+      // Повтор той же цифры в клетке — намеренный no-op (PD-115), без отклика: двойной тап не должен «ругаться».
+      if (notes && occupied) this.showHint("noteFilled");
+      else if (!notes && occupied && play.ink === true) this.showHint("inkFilled");
+      return;
+    }
     const placed = !notes && next.values[selected] === digit;
-    const patch: Mutable<Partial<PlaySnapshot>> = { play: next };
+    const patch: Mutable<Partial<PlaySnapshot>> = { play: next, ...this.dropHint() };
     // Ink: неверная цифра не остаётся в `values` (авто-замена) — клякса видна только в логе нового хода.
     const blot = notes ? undefined : next.log.slice(play.log.length).find(isBlotMistake);
     if (blot) patch.blot = { cell: blot.cell, digit: blot.digit ?? digit, id: ++this.effectId };
@@ -249,8 +304,9 @@ export abstract class GameStore<S extends PlaySnapshot = PlaySnapshot> {
         // M3: волна по ВСЕМ собранным ходом юнитам (ряд + столбец + блок), от поставленной клетки наружу.
         const units = closedUnits(next, selected);
         if (units.length > 0) patch.wave = { ...waveOf(units, selected), id: ++this.waveSeq };
-        // M8: цифра закрыта — её остаток был > 0, стал 0.
-        if (remaining(play)[digit]! > 0 && remaining(next)[digit] === 0) {
+        // M8: цифра закрыта ВЕРНО (все девять верны) этим ходом — не просто «остаток 0» (PD-118: остаток считает
+        // и неверные); исправление ошибочной девятой тоже закрывает цифру и даёт ответ.
+        if (!isDigitClosed(play, digit) && isDigitClosed(next, digit)) {
           patch.echo = { digit, cells: digitCells(next, digit), delay: units.length > 0 ? 180 : 60, id: ++this.echoSeq };
         }
       }
@@ -263,7 +319,7 @@ export abstract class GameStore<S extends PlaySnapshot = PlaySnapshot> {
     if (phase !== "playing" || !play || selected === null) return;
     const next = eraseCell(play, selected, this.getElapsedMs());
     // pop: null — восстановление/стирание не должно проигрывать M1 (устаревший popId).
-    if (next !== play) this.finishMove(next, { play: next, pop: null, echo: null });
+    if (next !== play) this.finishMove(next, { play: next, pop: null, echo: null, ...this.dropHint() });
   }
 
   undo(): void {
@@ -271,7 +327,7 @@ export abstract class GameStore<S extends PlaySnapshot = PlaySnapshot> {
     if (phase !== "playing" || !play) return;
     const top = play.undoStack[play.undoStack.length - 1];
     const next = undoMove(play, this.getElapsedMs());
-    if (next !== play) this.finishMove(next, { play: next, pop: null, echo: null, selected: top ? top.cell : this.snap.selected });
+    if (next !== play) this.finishMove(next, { play: next, pop: null, echo: null, selected: top ? top.cell : this.snap.selected, ...this.dropHint() });
   }
 
   /**
@@ -280,8 +336,8 @@ export abstract class GameStore<S extends PlaySnapshot = PlaySnapshot> {
    * стухшие «чернила впитались»/«волна». Экран зовёт это при размонтировании.
    */
   clearEffects(): void {
-    if (this.snap.pop === null && this.snap.wave === null && (this.snap.echo ?? null) === null && (this.snap.blot ?? null) === null) return;
-    this.set({ pop: null, wave: null, echo: null, blot: null } as Partial<S>);
+    if (this.snap.pop === null && this.snap.wave === null && (this.snap.echo ?? null) === null && (this.snap.blot ?? null) === null && (this.snap.hint ?? null) === null) return;
+    this.set({ pop: null, wave: null, echo: null, blot: null, ...this.dropHint() } as Partial<S>);
   }
 
   private finishMove(next: PlayState, patch: Partial<PlaySnapshot>): void {

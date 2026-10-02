@@ -9,19 +9,24 @@
   flex-direction: column;
 }
 
-/* ---------- Выбор сложности — ПРОВИЗОРНЫЙ нативный контрол (нет в макете, не утверждён) ---------- */
-.difficulty {
-  /* Нативный вид select, только токены v2. 1rem = 16px: iOS не приближает страницу при фокусе. */
-  font: inherit;
-  font-size: 1rem;
+/* ---------- «New puzzle» в тулбаре Play (PD-116): явная кнопка вместо нативного select сложности ---------- */
+.newpuzzle-btn {
+  /* Цель ≥ 44 pt (HIG), шрифт не меньше 16 px: читается без зума. Отрицательные поля — как у .gear-btn: тулбар не растёт. */
+  flex: none;
+  min-height: 44px;
+  margin: -6px -4px -6px 0;
+  padding: 0 14px;
+  border-radius: 12px;
   color: var(--ink);
   background: var(--ink-tint);
-  border: 0;
-  border-radius: 10px;
-  padding: 6px 10px;
-  min-height: 36px;
-  margin-bottom: 2px;
-  max-width: 45%;
+  font: inherit;
+  font-size: max(1rem, 16px); /* на iPhone 1rem = Dynamic Type (≥17 px); пол 16 px — на системах без него (webkit macOS даёт 13 px) */
+  font-weight: 600;
+  white-space: nowrap;
+}
+.newpuzzle-btn:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 1px;
 }
 
 .subline .clock {

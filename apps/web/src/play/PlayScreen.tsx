@@ -1,10 +1,9 @@
-import type { Difficulty } from "@pundoku/engine";
-import { DIFFICULTIES } from "@pundoku/engine";
-import type { ChangeEvent } from "react";
 import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { useTranslation } from "react-i18next";
+import { ActionSheet } from "../recovery/ActionSheet";
 import { useDeferredFocus } from "../shell/afterPaint";
 import { swallowGhostClick } from "../shell/ghostClick";
+import { localDate } from "../today/dayResolver";
 import { Board } from "./Board";
 import {
   GamePad,
@@ -15,9 +14,10 @@ import {
   useCellsLeftAnnouncement,
   useClearEffectsOnUnmount,
   useClock,
+  useHintAnnouncement,
 } from "./controls";
 import { formatDay } from "./format";
-import { cellsLeft } from "./logic";
+import { cellsLeft, isGridFull } from "./logic";
 import { PlaySetup } from "./PlaySetup";
 import { ResultCard } from "./ResultCard";
 import { playStore } from "./store";
@@ -27,6 +27,8 @@ import { Subline } from "./Subline";
  * Экран Play (PD-11): подпись дня с тихим таймером → поле B Boxes → строка статуса «N cells left»
  * → панель 1–9 в один ряд с остатками → Notes / Undo / Erase. Партия локальная, на движке.
  * PD-74: партия начинается шагом «New puzzle» (сложность / Ink mode / Start); в чернилах панель без Undo.
+ * PD-116: партия переживает перезагрузку (`store.ts`); сложность меняется только явной кнопкой «New puzzle» в
+ * тулбаре — при наличии ходов за шитом подтверждения «Discard current puzzle?», затем шаг выбора.
  */
 export function PlayScreen() {
   const { t, i18n } = useTranslation();
@@ -77,14 +79,23 @@ export function PlayScreen() {
   const locale = i18n.resolvedLanguage ?? "en";
   const interactive = phase === "playing" && play !== null;
   const left = play ? cellsLeft(play) : 81;
-  const cellsAnnouncement = useCellsLeftAnnouncement(left, interactive, snap.startedOn.getTime());
+  // PD-117a: заполнена, но не решена — честная фраза вместо «0 cells left» и без счёта неверных клеток.
+  const full = interactive && play !== null && isGridFull(play);
+  const cellsAnnouncement = useCellsLeftAnnouncement(left, interactive, snap.startedOn.getTime(), full);
   const blotAnnouncement = useBlotAnnouncement(snap);
-  // Клякса вытесняет «N cells left» на время озвучивания (один live-регион — фразы не перебивают друг друга).
-  const announcement = blotAnnouncement || cellsAnnouncement;
+  const hintAnnouncement = useHintAnnouncement(snap.hint);
+  // Клякса и отклик на отказ (PD-117b) вытесняют «N cells left» на время озвучивания (один live-регион — фразы не перебивают друг друга).
+  const announcement = blotAnnouncement || hintAnnouncement || cellsAnnouncement;
 
-  // Посреди партии смена сложности начинает новую — через шаг «New puzzle»: режим каждый раз выбирают заново.
-  const onDifficulty = (e: ChangeEvent<HTMLSelectElement>) => {
-    playStore.toSetup(e.target.value as Difficulty);
+  // «New puzzle» (PD-116): с ходами — сначала подтверждение (шит), без ходов и после решения — сразу к выбору.
+  const [confirming, setConfirming] = useState(false);
+  useEffect(() => {
+    if (phase !== "playing") setConfirming(false);
+  }, [phase]);
+  const hasMoves = phase === "playing" && play !== null && play.log.length > 0;
+  const onNewPuzzle = () => {
+    if (hasMoves) setConfirming(true);
+    else playStore.toSetup();
   };
 
   // Подпись дня не пересчитывается на каждый тик часов/кадр финала: Intl.DateTimeFormat на каждый рендер дорог при CPU 4x (PD-95).
@@ -102,30 +113,19 @@ export function PlayScreen() {
       </p>
       <header className="toolbar">
         <h1 className="title">{t("tabs.play")}</h1>
-        {/* ПРОВИЗОРНО (PD-11): выбор сложности — минимальный нативный контрол, которого нет в
-            утверждённом макете; владелец его не утверждал. Смена сложности начинает новую партию. */}
-        {!snap.setup && (
-          <select
-            className="difficulty"
-            aria-label={t("play.difficulty")}
-            value={difficulty}
-            onChange={onDifficulty}
-          >
-            {DIFFICULTIES.map((d) => (
-              <option key={d} value={d}>
-                {t(`difficulty.${d}`)}
-              </option>
-            ))}
-          </select>
+        {!snap.setup && !snap.restoring && (
+          <button type="button" className="newpuzzle-btn" onClick={onNewPuzzle} data-testid="new-puzzle">
+            {t("play.newPuzzle")}
+          </button>
         )}
       </header>
       {snap.setup ? (
-        <p className="subline">{t("ink.playSub")}</p>
+        snap.restoring ? null : <p className="subline">{t("ink.playSub")}</p>
       ) : (
         <Subline day={dayLabel} difficulty={diffLabel} ink={ink} clock={showClock ? clock : null} />
       )}
 
-      {snap.setup ? (
+      {snap.setup && snap.restoring ? null : snap.setup ? (
         <PlaySetup
           difficulty={difficulty}
           ink={snap.inkNext}
@@ -135,7 +135,12 @@ export function PlayScreen() {
         />
       ) : phase === "solved" && cardShown ? (
         play && (
-          <ResultCard play={play} cardRef={cardRef} title={t("solved.title")}>
+          <ResultCard
+            play={play}
+            cardRef={cardRef}
+            title={t("solved.title")}
+            timelapse={{ date: localDate(snap.startedOn), difficulty }}
+          >
             {/* ПРОВИЗОРНО (PD-11): «New game» — минимум, чтобы из «решено» можно было выйти; в макете нет. */}
             <button type="button" className="newgame" onClick={() => playStore.toSetup()}>
               {t("solved.newGame")}
@@ -162,12 +167,26 @@ export function PlayScreen() {
               </p>
             )}
             {(phase === "playing" || phase === "solved") && (
-              <StatusLine left={left} />
+              <StatusLine left={left} full={full} hint={snap.hint} />
             )}
           </div>
 
           <GamePad snap={snap} store={playStore} />
         </>
+      )}
+      {confirming && (
+        <ActionSheet
+          title={t("play.discardTitle")}
+          message={t("play.discardMessage")}
+          actionLabel={t("play.discard")}
+          destructive
+          cancelLabel={t("play.keepPlaying")}
+          onAction={() => {
+            setConfirming(false);
+            playStore.toSetup();
+          }}
+          onCancel={() => setConfirming(false)}
+        />
       )}
     </div>
   );

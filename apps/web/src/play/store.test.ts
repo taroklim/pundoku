@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
-import { describe, expect, it } from "vitest";
-import { createPlay } from "./logic";
+import { describe, expect, it, vi } from "vitest";
+import { HINT_MS } from "./gameStore";
+import { createPlay, remaining } from "./logic";
 import { PlayStore } from "./store";
 
 const SOLUTION =
@@ -105,4 +106,138 @@ describe("PD-89 M8: цифра закрыта (9 из 9)", () => {
     s.erase();
     expect(s.getSnapshot().echo ?? null).toBeNull();
   });
+});
+
+describe("PD-118 M8: ответ цифры — только когда все девять верны", () => {
+  it("девятая цифра на доске, но неверная: остаток на паде 0, а M8 молчит (цифра не собрана верно)", () => {
+    const s = playing();
+    const d = 5;
+    const open = [...Array(81).keys()].filter((i) => SOLUTION[i] === String(d) && MISSION[i] === "0");
+    for (const c of open.slice(0, -1)) {
+      s.select(c);
+      s.input(d);
+    }
+    const alien = [...Array(81).keys()].find((i) => MISSION[i] === "0" && SOLUTION[i] !== String(d))!;
+    s.select(alien);
+    s.input(d);
+    expect(remaining(s.getSnapshot().play!)[d]).toBe(0);
+    expect(s.getSnapshot().echo ?? null).toBeNull();
+    s.select(alien);
+    s.erase();
+    expect(s.getSnapshot().echo ?? null).toBeNull(); // стирание echo не даёт
+  });
+
+  it("неверная цифра в уже закрытой по счёту цифре: исправление другой клеткой даёт M8 ровно один раз", () => {
+    const s = playing();
+    const d = 5;
+    const open = [...Array(81).keys()].filter((i) => SOLUTION[i] === String(d) && MISSION[i] === "0");
+    const alien = [...Array(81).keys()].find((i) => MISSION[i] === "0" && SOLUTION[i] !== String(d))!;
+    // 8 верных пятёрок + 1 неверная = «0 left» на паде
+    for (const c of open.slice(0, -1)) {
+      s.select(c);
+      s.input(d);
+    }
+    s.select(alien);
+    s.input(d);
+    expect(s.getSnapshot().echo ?? null).toBeNull();
+    // ставим верную девятую в свою клетку: теперь девять верных есть (плюс чужая лишняя) — цифра закрыта верно
+    s.select(open[open.length - 1] as number);
+    s.input(d);
+    expect(s.getSnapshot().echo?.digit).toBe(d);
+  });
+});
+
+describe("PD-117b: отказ не молчит — тихий отклик в строке статуса", () => {
+  const withTimers = async (fn: () => void | Promise<void>) => {
+    vi.useFakeTimers();
+    try {
+      await fn();
+    } finally {
+      vi.useRealTimers();
+    }
+  };
+
+  it("цифра без выбранной клетки → pickCell; выбор клетки снимает отклик", () =>
+    withTimers(() => {
+      const s = playing();
+      s.select(null);
+      s.input(4);
+      expect(s.getSnapshot().hint?.kind).toBe("pickCell");
+      expect(s.getSnapshot().play!.log).toHaveLength(0); // ничего не поставлено
+      s.select(2);
+      expect(s.getSnapshot().hint ?? null).toBeNull();
+    }));
+
+  it("цифра/заметка при выбранной заданной клетке → pickCell", () =>
+    withTimers(() => {
+      const s = playing();
+      s.select(0); // given
+      s.input(4);
+      expect(s.getSnapshot().hint?.kind).toBe("pickCell");
+      s.toggleNotesMode();
+      s.input(4);
+      expect(s.getSnapshot().hint?.kind).toBe("pickCell");
+    }));
+
+  it("заметка в занятую клетку → noteFilled; снимается сама через HINT_MS", () =>
+    withTimers(() => {
+      const s = playing();
+      s.input(4); // клетка 2 занята
+      s.toggleNotesMode();
+      s.input(5);
+      const first = s.getSnapshot().hint;
+      expect(first?.kind).toBe("noteFilled");
+      vi.advanceTimersByTime(HINT_MS - 1);
+      expect(s.getSnapshot().hint).not.toBeNull();
+      vi.advanceTimersByTime(1);
+      expect(s.getSnapshot().hint ?? null).toBeNull();
+    }));
+
+  it("новый отказ получает новый id (озвучка/перекат повторяются); настоящий ход снимает отклик", () =>
+    withTimers(() => {
+      const s = playing();
+      s.select(null);
+      s.input(4);
+      const id1 = s.getSnapshot().hint!.id;
+      s.input(4);
+      expect(s.getSnapshot().hint!.id).toBeGreaterThan(id1);
+      s.select(2);
+      s.select(null);
+      s.input(4);
+      s.select(3);
+      s.input(6);
+      expect(s.getSnapshot().hint ?? null).toBeNull();
+    }));
+
+  it("повтор той же цифры в клетке (PD-115) — намеренный no-op БЕЗ отклика", () =>
+    withTimers(() => {
+      const s = playing();
+      s.input(4);
+      s.input(4);
+      expect(s.getSnapshot().play!.values[2]).toBe(4);
+      expect(s.getSnapshot().hint ?? null).toBeNull();
+    }));
+
+  it("Ink: цифра в заполненную клетку → inkFilled; обычная партия при замене цифры — без отклика", () =>
+    withTimers(() => {
+      const ink = playing();
+      ink.setInk(true);
+      ink.input(4);
+      ink.input(7); // клетка закрыта чернилами
+      expect(ink.getSnapshot().play!.values[2]).toBe(4);
+      expect(ink.getSnapshot().hint?.kind).toBe("inkFilled");
+      const plain = playing();
+      plain.input(4);
+      plain.input(7);
+      expect(plain.getSnapshot().hint ?? null).toBeNull();
+    }));
+
+  it("отклик — не прогресс: подписчики уведомляются, но таймер партии и лог не затронуты", () =>
+    withTimers(() => {
+      const s = playing();
+      s.select(null);
+      const log = s.getSnapshot().play!.log;
+      s.input(4);
+      expect(s.getSnapshot().play!.log).toBe(log);
+    }));
 });
