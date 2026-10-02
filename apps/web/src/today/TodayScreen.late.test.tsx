@@ -69,15 +69,17 @@ const finish = (store: DayStore) => {
 };
 
 const q = (sel: string) => host.querySelector<HTMLElement>(sel);
-const settle = () => act(async () => void (await new Promise((r) => setTimeout(r, 400))));
+const settle = () => act(async () => void (await new Promise((r) => setTimeout(r, 50))));
+/** Карточка результата появляется после финала (reduced motion — таймерами); ждём её, а не фиксированную паузу. */
+const cardShown = () => act(async () => vi.waitFor(() => expect(q('[data-testid="winrate"]')).not.toBeNull(), { timeout: 40000, interval: 25 }));
 
 async function openToday(store: DayStore) {
   await act(async () => root.render(<DayView store={store} />));
   await act(async () => store.ensureStarted());
-  await settle();
+  await act(async () => vi.waitFor(() => expect(store.getSnapshot().phase).toBe("playing"), { timeout: 40000, interval: 25 }));
 }
 
-describe("PD-137: карточка результата Today при смене суток в живой сессии", () => {
+describe("PD-137: карточка результата Today при смене суток в живой сессии", { timeout: 60000 }, () => {
   it("вчерашний день начат до полуночи, дорешан после (без перезагрузки): «solved late» со знаком, «solved that day», не «today»", async () => {
     const { store, setNow } = make();
     await openToday(store);
@@ -88,7 +90,7 @@ describe("PD-137: карточка результата Today при смене 
     await settle();
     expect(store.getSnapshot().date).toBe(D1);
     act(() => finish(store));
-    await settle();
+    await cardShown();
 
     expect(store.getSnapshot()).toMatchObject({ phase: "solved", late: true });
     const note = q('[data-testid="late-note"]')!;
@@ -103,7 +105,7 @@ describe("PD-137: карточка результата Today при смене 
     const { store } = make();
     await openToday(store);
     act(() => fill(store));
-    await settle();
+    await cardShown();
     expect(store.getSnapshot()).toMatchObject({ phase: "solved", late: false });
     expect(q('[data-testid="late-note"]')).toBeNull();
     expect(q('[data-testid="winrate"]')!.textContent).toBe("58 % solved today");
