@@ -3,13 +3,14 @@ import request from "supertest";
 import { Writable } from "node:stream";
 import { buildTestApp } from "../test/fakes.js";
 import { createLogger } from "../lib/logger.js";
-import { createKey, defineRecoveryScenarios, newDevice, redeem, rotateKey, type HarnessOptions } from "../test/recovery-scenarios.js";
+import { confirmRotation, createKey, defineRecoveryScenarios, newDevice, redeem, rotateKey, type HarnessOptions } from "../test/recovery-scenarios.js";
 
 function memoryHarness(options: HarnessOptions = {}) {
   const { app } = buildTestApp({
     rateLimits: { daily: 1000, devices: 1000 },
     recovery: { hmacSecret: Buffer.from("test-only-hmac-secret-0123456789abcdef-0123456789", "utf8"), ...(options.limits ? { limits: options.limits } : {}) },
     ...(options.clock ? { clock: options.clock } : {}),
+    ...(options.now ? { now: options.now } : {}),
     ...(options.logger ? { logger: options.logger } : {}),
   });
   return { app };
@@ -31,6 +32,7 @@ describe("recovery: логи не содержат ключей и токено�
     const a = await newDevice(app);
     const created = await createKey(app, a);
     const rotated = await rotateKey(app, a);
+    expect((await confirmRotation(app, a, rotated.body.pendingId)).status).toBe(200);
     const b = await newDevice(app);
     const wrong = "WRNG-KEY0-0000-1111-2222-3333-4444-5555";
     await redeem(app, b, wrong);
@@ -42,7 +44,7 @@ describe("recovery: логи не содержат ключей и токено�
     const log = lines.join("");
     expect(log.length).toBeGreaterThan(0);
     const raw = (k: string) => k.replace(/-/g, "");
-    for (const secret of [created.body.key, rotated.body.key, wrong, a.token, b.token]) {
+    for (const secret of [created.body.key, rotated.body.key, rotated.body.pendingId, wrong, a.token, b.token]) {
       expect(log).not.toContain(secret);
       expect(log).not.toContain(raw(secret));
     }

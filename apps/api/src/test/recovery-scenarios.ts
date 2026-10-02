@@ -15,6 +15,8 @@ export interface AppHarness {
 export interface HarnessOptions {
   limits?: RecoveryLimits;
   clock?: () => number;
+  /** Часы сервера (сроки ожидающей замены); по умолчанию — реальное время/фиксированное тестовое. */
+  now?: () => Date;
   logger?: Logger;
 }
 export type HarnessFactory = (options?: HarnessOptions) => AppHarness;
@@ -38,6 +40,16 @@ export const putSnapshot = (app: Express, d: Device, version: number, data: Reco
 export const getSnapshot = (app: Express, d: Device) => request(app).get("/api/snapshot").set("Authorization", d.auth);
 export const createKey = (app: Express, d: Device) => request(app).post("/api/recovery/key").set("Authorization", d.auth);
 export const rotateKey = (app: Express, d: Device) => request(app).post("/api/recovery/key/rotate").set("Authorization", d.auth);
+export const confirmRotation = (app: Express, d: Device, pendingId: unknown) =>
+  request(app).post("/api/recovery/key/rotate/confirm").set("Authorization", d.auth).send({ pendingId });
+export const cancelRotation = (app: Express, d: Device) => request(app).delete("/api/recovery/key/rotate").set("Authorization", d.auth);
+/** Полная замена: rotate + confirm. Возвращает новый ключ. */
+export async function rotateAndConfirm(app: Express, d: Device): Promise<string> {
+  const r = await rotateKey(app, d);
+  expect(r.status).toBe(200);
+  expect((await confirmRotation(app, d, r.body.pendingId)).status).toBe(200);
+  return r.body.key as string;
+}
 export const redeem = (app: Express, d: Device, key: unknown) => request(app).post("/api/recovery/redeem").set("Authorization", d.auth).send({ key });
 export const status = (app: Express, d: Device) => request(app).get("/api/recovery").set("Authorization", d.auth);
 export const unlink = (app: Express, d: Device) => request(app).delete("/api/recovery/link").set("Authorization", d.auth);
@@ -74,7 +86,7 @@ export function defineRecoveryScenarios(label: string, harness: HarnessFactory):
 
     it("без токена / с чужим токеном все эндпоинты — 401", async () => {
       const { app } = harness();
-      for (const [method, url] of [["post", "/api/recovery/key"], ["post", "/api/recovery/key/rotate"], ["post", "/api/recovery/redeem"], ["get", "/api/recovery"], ["delete", "/api/recovery/link"], ["delete", "/api/recovery"]] as const) {
+      for (const [method, url] of [["post", "/api/recovery/key"], ["post", "/api/recovery/key/rotate"], ["post", "/api/recovery/key/rotate/confirm"], ["delete", "/api/recovery/key/rotate"], ["post", "/api/recovery/redeem"], ["get", "/api/recovery"], ["delete", "/api/recovery/link"], ["delete", "/api/recovery"]] as const) {
         const res = await request(app)[method](url).send({ key: "x" });
         expect(res.status, `${method} ${url}`).toBe(401);
       }
@@ -122,7 +134,7 @@ export function defineRecoveryScenarios(label: string, harness: HarnessFactory):
       const { a, key } = await seeded(app);
       const b = await newDevice(app);
       const other = (await createKey(app, await newDevice(app))).body.key as string;
-      await rotateKey(app, a); // key устарел
+      await rotateAndConfirm(app, a); // key устарел
       const dead = (await createKey(app, await newDevice(app))).body.key as string;
       const gone = await newDevice(app);
       const goneKey = (await createKey(app, gone)).body.key as string;
@@ -143,24 +155,136 @@ export function defineRecoveryScenarios(label: string, harness: HarnessFactory):
       expect(dead).toMatch(KEY_RE);
     });
 
-    it("перевыпуск: старый ключ перестаёт работать, новый работает, состав группы не меняется; без группы — 404 no_key", async () => {
-      const { app } = harness();
+    it("перевыпуск отложенный: пока не подтверждён — старый ключ жив, новый не принимается; после confirm — наоборот; без группы — 404 no_key", async () => {
+      let t = Date.parse("2026-10-02T10:00:00Z");
+      const { app } = harness({ now: () => new Date(t) });
       const b = await newDevice(app);
       const none = await rotateKey(app, b);
       expect(none.status).toBe(404);
       expect(none.body.error.code).toBe("no_key");
+      expect((await confirmRotation(app, b, "00000000-0000-4000-8000-000000000000")).status).toBe(404);
 
       const { a, key } = await seeded(app);
+      const created = (await status(app, a)).body.keyCreatedAt as string;
       const c = await newDevice(app);
       expect((await redeem(app, c, key)).status).toBe(200);
-      const rotated = await rotateKey(app, c); // перевыпустить может любое устройство группы
+      const rotated = await rotateKey(app, c); // начать замену может любое устройство группы
       expect(rotated.status).toBe(200);
       expect(rotated.headers["cache-control"]).toBe("no-store");
       expect(rotated.body.key).toMatch(KEY_RE);
       expect(rotated.body.key).not.toBe(key);
-      expect((await redeem(app, b, key)).status).toBe(400);
+      expect(rotated.body.pendingId).toMatch(/^[0-9a-f-]{36}$/);
+      expect(Object.keys(rotated.body).sort()).toEqual(["expiresAt", "key", "pendingId"]);
+
+      // Ожидающая замена: статус её показывает, рабочий ключ не изменился.
+      const pending = (await status(app, a)).body;
+      expect(pending).toMatchObject({ hasKey: true, devices: 2, keyCreatedAt: created });
+      expect(pending.pendingRotation).toEqual({ expiresAt: rotated.body.expiresAt });
+      expect(pending.pendingRotation.id).toBeUndefined(); // метка подтверждения наружу в статусе не уходит
+      const d = await newDevice(app);
+      expect((await redeem(app, d, rotated.body.key)).status).toBe(400); // ожидающий ключ ещё не принимается
+      expect((await redeem(app, d, key)).status).toBe(200); // а старый — да
+      expect((await unlink(app, d)).status).toBe(200);
+
+      t += 3600_000;
+      const done = await confirmRotation(app, a, rotated.body.pendingId); // подтвердить может и другое устройство группы
+      expect(done.status).toBe(200);
+      expect(done.body).toEqual({ confirmed: true });
+      expect(done.headers["cache-control"]).toBe("no-store");
+      expect((await redeem(app, b, key)).status).toBe(400); // старый мёртв
       expect((await redeem(app, b, rotated.body.key)).status).toBe(200);
-      expect((await status(app, a)).body).toMatchObject({ hasKey: true, devices: 3 });
+      const after = (await status(app, a)).body;
+      expect(after).toMatchObject({ hasKey: true, devices: 3, pendingRotation: null });
+      expect(after.keyCreatedAt).toBe("2026-10-02T11:00:00.000Z"); // «Создан» — момент подтверждения, не начала замены
+      expect(created).toBe("2026-10-02T10:00:00.000Z");
+    });
+
+    it("confirm: повтор → 409 no_pending; чужая/кривая метка; новая замена затирает прежнюю (старую метку подтвердить нельзя)", async () => {
+      const { app } = harness();
+      const { a, key } = await seeded(app);
+      const first = (await rotateKey(app, a)).body;
+      const second = (await rotateKey(app, a)).body; // «Начать заново»
+      expect(second.pendingId).not.toBe(first.pendingId);
+      const stale = await confirmRotation(app, a, first.pendingId);
+      expect(stale.status).toBe(409);
+      expect(stale.body.error.code).toBe("pending_replaced");
+      const c = await newDevice(app);
+      expect((await redeem(app, c, key)).status).toBe(200); // до сих пор работает старый
+      expect((await redeem(app, await newDevice(app), first.key)).status).toBe(400);
+      expect((await redeem(app, await newDevice(app), second.key)).status).toBe(400);
+
+      for (const bad of [undefined, null, 123, "", "nope", { id: 1 }, "x".repeat(500)]) {
+        const res = await confirmRotation(app, a, bad);
+        expect(res.status, JSON.stringify(bad)).toBe(400);
+        expect(res.body.error.code).toBe("invalid_pending");
+      }
+      expect((await confirmRotation(app, a, second.pendingId.toUpperCase())).status).toBe(200); // регистр метки не важен
+      const again = await confirmRotation(app, a, second.pendingId);
+      expect(again.status).toBe(409);
+      expect(again.body.error.code).toBe("no_pending");
+      expect((await redeem(app, await newDevice(app), first.key)).status).toBe(400);
+      expect((await redeem(app, await newDevice(app), second.key)).status).toBe(200);
+    });
+
+    it("confirm без начатой замены → 409 no_pending, рабочий ключ не тронут", async () => {
+      const { app } = harness();
+      const { a, key } = await seeded(app);
+      const res = await confirmRotation(app, a, "00000000-0000-4000-8000-000000000000");
+      expect(res.status).toBe(409);
+      expect(res.body.error.code).toBe("no_pending");
+      expect((await redeem(app, await newDevice(app), key)).status).toBe(200);
+    });
+
+    it("срок ожидающей замены 24 ч: после него статус без pendingRotation, confirm → 409 pending_expired, старый ключ жив, новый мёртв", async () => {
+      let t = Date.parse("2026-10-02T10:00:00Z");
+      const { app } = harness({ now: () => new Date(t) });
+      const { a, key } = await seeded(app);
+      const rotated = (await rotateKey(app, a)).body;
+      expect(rotated.expiresAt).toBe("2026-10-03T10:00:00.000Z");
+      t += 24 * 3600_000 - 1000; // за секунду до срока
+      expect((await status(app, a)).body.pendingRotation).toEqual({ expiresAt: rotated.expiresAt });
+      t += 1000; // ровно срок: уже не действует
+      expect((await status(app, a)).body.pendingRotation).toBeNull();
+      const late = await confirmRotation(app, a, rotated.pendingId);
+      expect(late.status).toBe(409);
+      expect(late.body.error.code).toBe("pending_expired");
+      expect((await redeem(app, await newDevice(app), rotated.key)).status).toBe(400);
+      expect((await redeem(app, await newDevice(app), key)).status).toBe(200);
+      // Заново — можно: новая замена с новым сроком.
+      const again = (await rotateKey(app, a)).body;
+      expect(again.expiresAt).toBe("2026-10-04T10:00:00.000Z");
+      expect((await confirmRotation(app, a, again.pendingId)).status).toBe(200);
+    });
+
+    it("отмена замены: ожидающий ключ сброшен (confirm → no_pending), рабочий жив; идемпотентно; без группы — тоже 200", async () => {
+      const { app } = harness();
+      const { a, key } = await seeded(app);
+      const rotated = (await rotateKey(app, a)).body;
+      const res = await cancelRotation(app, a);
+      expect(res.status).toBe(200);
+      expect(res.body).toEqual({ pending: false });
+      expect((await status(app, a)).body.pendingRotation).toBeNull();
+      expect((await confirmRotation(app, a, rotated.pendingId)).body.error.code).toBe("no_pending");
+      expect((await redeem(app, await newDevice(app), key)).status).toBe(200);
+      expect((await cancelRotation(app, a)).status).toBe(200);
+      expect((await cancelRotation(app, await newDevice(app))).status).toBe(200);
+    });
+
+    it("ожидающая замена не переживает группу: отвязка последнего устройства и удаление ключа гасят и её", async () => {
+      const { app } = harness();
+      const g1 = await seeded(app);
+      const p1 = (await rotateKey(app, g1.a)).body;
+      await deleteKey(app, g1.a);
+      expect((await redeem(app, await newDevice(app), p1.key)).status).toBe(400);
+      expect((await confirmRotation(app, g1.a, p1.pendingId)).status).toBe(404);
+      // Отвязка НЕ последнего устройства ожидающую замену группы не трогает.
+      const g2 = await seeded(app);
+      const m = await newDevice(app);
+      await redeem(app, m, g2.key);
+      const p2 = (await rotateKey(app, g2.a)).body;
+      await unlink(app, m);
+      expect((await status(app, g2.a)).body.pendingRotation).not.toBeNull();
+      expect((await confirmRotation(app, g2.a, p2.pendingId)).status).toBe(200);
     });
 
     it("устройство из другой группы при redeem сначала выходит из неё; старая группа с оставшимся устройством живёт", async () => {
@@ -287,6 +411,18 @@ export function defineRecoveryScenarios(label: string, harness: HarnessFactory):
         const [d1, d2, d3] = [await newDevice(app), await newDevice(app), await newDevice(app)] as [Device, Device, Device];
         for (const d of [d1, d1, d2, d2]) expect((await redeem(app, d, "nope")).status).toBe(400);
         expect((await redeem(app, d3, "nope")).status).toBe(429); // d3 чист, но IP исчерпан
+      });
+
+      it("confirm/cancel замены: свой лимит на устройство, не мешает rotate", async () => {
+        const { app } = harness({ limits: { confirmPerDevice: 2 } });
+        const { a } = await seeded(app);
+        const r = (await rotateKey(app, a)).body;
+        expect((await cancelRotation(app, a)).status).toBe(200);
+        expect((await confirmRotation(app, a, r.pendingId)).status).toBe(409);
+        const over = await confirmRotation(app, a, r.pendingId);
+        expect(over.status).toBe(429);
+        expect(over.body.error.code).toBe("rate_limited");
+        expect((await rotateKey(app, a)).status).toBe(200);
       });
 
       it("создание+перевыпуск ключа: общий лимит на устройство, остальные устройства не затронуты", async () => {

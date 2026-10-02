@@ -12,7 +12,7 @@ import { PgDeviceRepo } from "../db/devices-repo.js";
 import { PgRecoveryRepo } from "../db/recovery-repo.js";
 import { PgSnapshotRepo } from "../db/snapshots-repo.js";
 import { FakeGenerator, FakeSource, TEST_HMAC_SECRET, silentLogger } from "../test/fakes.js";
-import { createKey, defineRecoveryScenarios, deleteKey, getSnapshot, newDevice, putSnapshot, redeem, rotateKey, status, unlink, type HarnessOptions } from "../test/recovery-scenarios.js";
+import { cancelRotation, confirmRotation, createKey, defineRecoveryScenarios, deleteKey, getSnapshot, newDevice, putSnapshot, redeem, rotateKey, status, unlink, type HarnessOptions } from "../test/recovery-scenarios.js";
 
 const databaseUrl = process.env.TEST_DATABASE_URL;
 
@@ -46,6 +46,7 @@ function pgHarness(options: HarnessOptions = {}) {
     webOrigins: [],
     rateLimits: { daily: 1000, devices: 1000 },
     ...(options.clock ? { clock: options.clock } : {}),
+    ...(options.now ? { now: options.now } : {}),
   });
   return { app };
 }
@@ -54,17 +55,43 @@ describe.skipIf(unavailable !== null)("recovery integration (Postgres)", () => {
   defineRecoveryScenarios("postgres", pgHarness);
 
   describe("гонки и SQL-инварианты", () => {
-    it("в БД лежит только HMAC (32 байта), а не сам ключ; перевыпуск меняет его", async () => {
+    it("в БД лежит только HMAC (32 байта), а не сам ключ; замена кладёт новый ключ в pending_*, рабочий меняется только при confirm", async () => {
       const { app } = pgHarness();
       const a = await newDevice(app);
       const key = (await createKey(app, a)).body.key as string;
       const row = async () =>
-        (await pool.query<{ key_hmac: Buffer }>(`SELECT g.key_hmac FROM sync_groups g JOIN device_links l ON l.group_id = g.id WHERE l.device_id = $1`, [a.id])).rows[0]!.key_hmac;
+        (
+          await pool.query<{ key_hmac: Buffer; pending_key_hmac: Buffer | null; pending_id: string | null; pending_expires_at: Date | null }>(
+            `SELECT g.key_hmac, g.pending_key_hmac, g.pending_id, g.pending_expires_at FROM sync_groups g JOIN device_links l ON l.group_id = g.id WHERE l.device_id = $1`,
+            [a.id],
+          )
+        ).rows[0]!;
       const first = await row();
-      expect(first).toHaveLength(32);
-      expect(first.toString("utf8")).not.toContain(key.replace(/-/g, ""));
-      await rotateKey(app, a);
-      expect((await row()).equals(first)).toBe(false);
+      expect(first.key_hmac).toHaveLength(32);
+      expect(first.key_hmac.toString("utf8")).not.toContain(key.replace(/-/g, ""));
+      expect([first.pending_key_hmac, first.pending_id, first.pending_expires_at]).toEqual([null, null, null]);
+
+      const rotated = await rotateKey(app, a);
+      const started = await row();
+      expect(started.key_hmac.equals(first.key_hmac)).toBe(true); // рабочий ключ не тронут
+      expect(started.pending_key_hmac).toHaveLength(32);
+      expect(started.pending_key_hmac!.equals(first.key_hmac)).toBe(false);
+      expect(started.pending_key_hmac!.toString("utf8")).not.toContain(String(rotated.body.key).replace(/-/g, ""));
+      expect(started.pending_id).toBe(rotated.body.pendingId);
+
+      expect((await confirmRotation(app, a, rotated.body.pendingId)).status).toBe(200);
+      const done = await row();
+      expect(done.key_hmac.equals(started.pending_key_hmac!)).toBe(true);
+      expect([done.pending_key_hmac, done.pending_id, done.pending_expires_at]).toEqual([null, null, null]);
+    });
+
+    it("CHECK-инвариант: pending_* заполняются/сбрасываются только вместе; HMAC ровно 32 байта", async () => {
+      const { app } = pgHarness();
+      const a = await newDevice(app);
+      await createKey(app, a);
+      const upd = (sql: string) => pool.query(`UPDATE sync_groups g SET ${sql} FROM device_links l WHERE l.group_id = g.id AND l.device_id = $1`, [a.id]);
+      await expect(upd(`pending_id = gen_random_uuid()`)).rejects.toThrow(/sync_groups_pending_all_or_none/);
+      await expect(upd(`pending_key_hmac = '\\x00'::bytea, pending_id = gen_random_uuid(), pending_expires_at = now()`)).rejects.toThrow(/pending_key_hmac_check/);
     });
 
     it("одновременный redeem одного ключа с разных устройств: оба присоединены, в группе ровно N", async () => {
@@ -91,22 +118,99 @@ describe.skipIf(unavailable !== null)("recovery integration (Postgres)", () => {
       expect((await status(app, a)).body.devices).toBe(2);
     });
 
-    it("redeem против rotate: устаревшим ключом не присоединиться после перевыпуска; итог согласован", async () => {
+    it("redeem старым ключом против confirm: пока confirm не прошёл — старый ключ работает, после — нет; итог согласован", async () => {
+      for (let i = 0; i < 5; i++) {
+        const { app } = pgHarness();
+        const a = await newDevice(app);
+        const key = (await createKey(app, a)).body.key as string;
+        const rotated = (await rotateKey(app, a)).body;
+        const b = await newDevice(app);
+        const [joined, confirmed] = await Promise.all([redeem(app, b, key), confirmRotation(app, a, rotated.pendingId)]);
+        expect(confirmed.status).toBe(200);
+        expect([200, 400]).toContain(joined.status);
+        // Если redeem выиграл — b в группе; проигравший получил 400 и не привязан. Никаких промежуточных состояний.
+        expect((await status(app, b)).body.hasKey as boolean).toBe(joined.status === 200);
+        // После confirm старый ключ мёртв в любом случае, новый жив.
+        const c = await newDevice(app);
+        expect((await redeem(app, c, key)).status).toBe(400);
+        expect((await redeem(app, c, rotated.key)).status).toBe(200);
+      }
+    });
+
+    it("redeem НОВЫМ (ожидающим) ключом против confirm: до confirm — 400, после — 200; не бывает «оба ключа мёртвы»", async () => {
+      for (let i = 0; i < 5; i++) {
+        const { app } = pgHarness();
+        const a = await newDevice(app);
+        const key = (await createKey(app, a)).body.key as string;
+        const rotated = (await rotateKey(app, a)).body;
+        const b = await newDevice(app);
+        const [joined, confirmed] = await Promise.all([redeem(app, b, rotated.key), confirmRotation(app, a, rotated.pendingId)]);
+        expect(confirmed.status).toBe(200);
+        expect([200, 400]).toContain(joined.status);
+        expect((await redeem(app, await newDevice(app), rotated.key)).status).toBe(200);
+        expect((await redeem(app, await newDevice(app), key)).status).toBe(400);
+      }
+    });
+
+    it("параллельные confirm одной замены (двойной тап, две вкладки): ровно один 200, остальные 409 no_pending; ключ один", async () => {
+      for (let i = 0; i < 3; i++) {
+        const { app } = pgHarness();
+        const a = await newDevice(app);
+        await createKey(app, a);
+        const rotated = (await rotateKey(app, a)).body;
+        const results = await Promise.all(Array.from({ length: 5 }, () => confirmRotation(app, a, rotated.pendingId)));
+        expect(results.filter((r) => r.status === 200)).toHaveLength(1);
+        for (const r of results.filter((x) => x.status !== 200)) expect([r.status, r.body.error.code]).toEqual([409, "no_pending"]);
+        expect((await redeem(app, await newDevice(app), rotated.key)).status).toBe(200);
+      }
+    });
+
+    it("confirm против новой замены (другое устройство группы): побеждает ровно один исход, подтвердить можно только свежую метку", async () => {
       for (let i = 0; i < 5; i++) {
         const { app } = pgHarness();
         const a = await newDevice(app);
         const key = (await createKey(app, a)).body.key as string;
         const b = await newDevice(app);
-        const [joined, rotated] = await Promise.all([redeem(app, b, key), rotateKey(app, a)]);
-        expect(rotated.status).toBe(200);
-        expect([200, 400]).toContain(joined.status);
-        // Если redeem выиграл — b в группе; проигравший получил 400 и не привязан. Никаких промежуточных состояний.
-        const linked = (await status(app, b)).body.hasKey as boolean;
-        expect(linked).toBe(joined.status === 200);
-        // После завершения перевыпуска старый ключ мёртв в любом случае.
+        await redeem(app, b, key);
+        const first = (await rotateKey(app, a)).body;
+        const [confirmed, second] = await Promise.all([confirmRotation(app, a, first.pendingId), rotateKey(app, b)]);
+        expect(second.status).toBe(200);
+        expect([200, 409]).toContain(confirmed.status);
+        if (confirmed.status === 200) {
+          // confirm выиграл: first.key рабочий, а вторая замена ждёт подтверждения поверх него.
+          expect((await redeem(app, await newDevice(app), first.key)).status).toBe(200);
+          expect((await confirmRotation(app, b, second.body.pendingId)).status).toBe(200);
+          expect((await redeem(app, await newDevice(app), second.body.key)).status).toBe(200);
+          expect((await redeem(app, await newDevice(app), first.key)).status).toBe(400);
+        } else {
+          // замена перезаписана раньше confirm: first не подтвердить, рабочий — исходный ключ.
+          expect(confirmed.body.error.code).toBe("pending_replaced");
+          expect((await redeem(app, await newDevice(app), key)).status).toBe(200);
+          expect((await confirmRotation(app, b, second.body.pendingId)).status).toBe(200);
+        }
+      }
+    });
+
+    it("confirm против отмены и против удаления ключа: нет 500, состояние согласовано", async () => {
+      const { app } = pgHarness();
+      for (const op of [cancelRotation, deleteKey]) {
+        const a = await newDevice(app);
+        const key = (await createKey(app, a)).body.key as string;
+        const rotated = (await rotateKey(app, a)).body;
+        const [confirmed, done] = await Promise.all([confirmRotation(app, a, rotated.pendingId), op(app, a)]);
+        expect(done.status).toBe(200);
+        expect([200, 404, 409]).toContain(confirmed.status);
         const c = await newDevice(app);
-        expect((await redeem(app, c, key)).status).toBe(400);
-        expect((await redeem(app, c, rotated.body.key)).status).toBe(200);
+        if (op === deleteKey) {
+          expect((await redeem(app, c, key)).status).toBe(400);
+          expect((await redeem(app, c, rotated.key)).status).toBe(400);
+        } else {
+          // Либо confirm успел (новый ключ рабочий), либо отмена (старый рабочий) — ровно один ключ жив.
+          const oldOk = (await redeem(app, c, key)).status === 200;
+          const newOk = (await redeem(app, await newDevice(app), rotated.key)).status === 200;
+          expect(oldOk).toBe(confirmed.status !== 200);
+          expect(newOk).toBe(confirmed.status === 200);
+        }
       }
     });
 

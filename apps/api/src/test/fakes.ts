@@ -3,7 +3,7 @@ import pino from "pino";
 import type { DailyPuzzle, DailyPuzzleRepo, DailyPuzzleSource, NewDailyPuzzle, PuzzleGenerator, SourceResult } from "../daily/types.js";
 import type { DeviceRepo } from "../devices/types.js";
 import type { Snapshot, SnapshotRepo, SnapshotWrite, UpsertResult } from "../snapshot/types.js";
-import type { GroupInfo, RecoveryRepo, RedeemResult } from "../recovery/types.js";
+import type { ConfirmRotationResult, GroupInfo, PendingRotation, RecoveryRepo, RedeemResult } from "../recovery/types.js";
 import { hmacEqual } from "../recovery/key.js";
 import { createApp, type AppDeps } from "../app.js";
 
@@ -86,6 +86,7 @@ interface MemGroup {
   keyHmac: Buffer;
   snapshotDeviceId: string;
   keyCreatedAt: Date;
+  pending: PendingRotation | null;
 }
 
 /** In-memory зеркало PgRecoveryRepo (та же семантика redeem/unlink/deleteGroup) для unit-тестов без Postgres. */
@@ -104,22 +105,37 @@ export class MemoryRecoveryRepo implements RecoveryRepo {
   async find(deviceId: string): Promise<GroupInfo | null> {
     const link = this.links.get(deviceId);
     const group = link && this.groups.get(link.groupId);
-    return group ? { devices: this.members(group.id).length, keyCreatedAt: group.keyCreatedAt } : null;
+    return group ? { devices: this.members(group.id).length, keyCreatedAt: group.keyCreatedAt, pendingExpiresAt: group.pending?.expiresAt ?? null } : null;
   }
   async createGroup(deviceId: string, keyHmac: Buffer, now: Date): Promise<{ groupId: string } | null> {
     if (this.links.has(deviceId)) return null;
-    const group: MemGroup = { id: `90000000-0000-4000-8000-${String(++this.seq).padStart(12, "0")}`, keyHmac, snapshotDeviceId: deviceId, keyCreatedAt: now };
+    const group: MemGroup = { id: `90000000-0000-4000-8000-${String(++this.seq).padStart(12, "0")}`, keyHmac, snapshotDeviceId: deviceId, keyCreatedAt: now, pending: null };
     this.groups.set(group.id, group);
     this.links.set(deviceId, { groupId: group.id, seq: ++this.seq });
     this.orphans.delete(deviceId);
     return { groupId: group.id };
   }
-  async rotateKey(deviceId: string, keyHmac: Buffer, now: Date): Promise<{ groupId: string } | null> {
+  async startRotation(deviceId: string, pending: PendingRotation): Promise<{ groupId: string } | null> {
     const group = this.groupOf(deviceId);
     if (!group) return null;
+    group.pending = pending;
+    return { groupId: group.id };
+  }
+  async confirmRotation(deviceId: string, pendingId: string, now: Date): Promise<ConfirmRotationResult> {
+    const group = this.groupOf(deviceId);
+    if (!group) return { ok: false, reason: "no_key" };
+    if (!group.pending) return { ok: false, reason: "no_pending" };
+    if (group.pending.id !== pendingId) return { ok: false, reason: "replaced" };
+    if (group.pending.expiresAt.getTime() <= now.getTime()) return { ok: false, reason: "expired" };
+    const keyHmac = group.pending.keyHmac;
     group.keyHmac = keyHmac;
     group.keyCreatedAt = now;
-    return { groupId: group.id };
+    group.pending = null;
+    return { ok: true, groupId: group.id, keyHmac };
+  }
+  async cancelRotation(deviceId: string): Promise<void> {
+    const group = this.groupOf(deviceId);
+    if (group) group.pending = null;
   }
   async redeem(deviceId: string, keyHmac: Buffer, _now: Date): Promise<RedeemResult> {
     const group = [...this.groups.values()].find((g) => hmacEqual(g.keyHmac, keyHmac));

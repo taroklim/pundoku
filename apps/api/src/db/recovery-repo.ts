@@ -1,5 +1,5 @@
 import type pg from "pg";
-import type { GroupInfo, RecoveryRepo, RedeemResult } from "../recovery/types.js";
+import type { ConfirmRotationResult, GroupInfo, PendingRotation, RecoveryRepo, RedeemResult } from "../recovery/types.js";
 import { hmacEqual } from "../recovery/key.js";
 
 type Tx = pg.PoolClient;
@@ -27,15 +27,15 @@ export class PgRecoveryRepo implements RecoveryRepo {
   }
 
   async find(deviceId: string): Promise<GroupInfo | null> {
-    const { rows } = await this.pool.query<{ key_created_at: Date; devices: string }>(
-      `SELECT g.key_created_at,
+    const { rows } = await this.pool.query<{ key_created_at: Date; pending_expires_at: Date | null; devices: string }>(
+      `SELECT g.key_created_at, g.pending_expires_at,
               (SELECT count(*) FROM device_links x WHERE x.group_id = g.id) AS devices
          FROM device_links l JOIN sync_groups g ON g.id = l.group_id
         WHERE l.device_id = $1`,
       [deviceId],
     );
     const row = rows[0];
-    return row ? { devices: Number(row.devices), keyCreatedAt: row.key_created_at } : null;
+    return row ? { devices: Number(row.devices), keyCreatedAt: row.key_created_at, pendingExpiresAt: row.pending_expires_at } : null;
   }
 
   async createGroup(deviceId: string, keyHmac: Buffer, now: Date): Promise<{ groupId: string } | null> {
@@ -55,16 +55,55 @@ export class PgRecoveryRepo implements RecoveryRepo {
     });
   }
 
-  async rotateKey(deviceId: string, keyHmac: Buffer, now: Date): Promise<{ groupId: string } | null> {
+  async startRotation(deviceId: string, pending: PendingRotation): Promise<{ groupId: string } | null> {
     return this.tx(deviceId, async (db) => {
+      // Рабочий key_hmac не трогаем: старый ключ жив, пока замена не подтверждена. Новая замена затирает прежнюю.
       const { rows } = await db.query<{ id: string }>(
-        `UPDATE sync_groups g SET key_hmac = $2, key_created_at = $3
+        `UPDATE sync_groups g SET pending_key_hmac = $2, pending_id = $3, pending_expires_at = $4
            FROM device_links l
           WHERE l.group_id = g.id AND l.device_id = $1
           RETURNING g.id`,
-        [deviceId, keyHmac, now],
+        [deviceId, pending.keyHmac, pending.id, pending.expiresAt],
       );
       return rows[0] ? { groupId: rows[0].id } : null;
+    });
+  }
+
+  async confirmRotation(deviceId: string, pendingId: string, now: Date): Promise<ConfirmRotationResult> {
+    return this.tx(deviceId, async (db): Promise<ConfirmRotationResult> => {
+      // FOR UPDATE по группе: параллельные redeem (ищет по key_hmac с той же блокировкой), start/cancel и второй confirm
+      // ждут нас; после коммита старый ключ уже не находится, а новый находится — переключение атомарно.
+      const { rows } = await db.query<{ id: string; pending_key_hmac: Buffer | null; pending_id: string | null; pending_expires_at: Date | null }>(
+        `SELECT g.id, g.pending_key_hmac, g.pending_id, g.pending_expires_at
+           FROM device_links l JOIN sync_groups g ON g.id = l.group_id
+          WHERE l.device_id = $1
+          FOR UPDATE OF g`,
+        [deviceId],
+      );
+      const group = rows[0];
+      if (!group) return { ok: false, reason: "no_key" };
+      if (!group.pending_key_hmac || !group.pending_id || !group.pending_expires_at) return { ok: false, reason: "no_pending" };
+      if (group.pending_id !== pendingId) return { ok: false, reason: "replaced" };
+      if (group.pending_expires_at.getTime() <= now.getTime()) return { ok: false, reason: "expired" };
+      await db.query(
+        `UPDATE sync_groups
+            SET key_hmac = pending_key_hmac, key_created_at = $2,
+                pending_key_hmac = NULL, pending_id = NULL, pending_expires_at = NULL
+          WHERE id = $1`,
+        [group.id, now],
+      );
+      return { ok: true, groupId: group.id, keyHmac: group.pending_key_hmac };
+    });
+  }
+
+  async cancelRotation(deviceId: string): Promise<void> {
+    await this.tx(deviceId, async (db) => {
+      await db.query(
+        `UPDATE sync_groups g SET pending_key_hmac = NULL, pending_id = NULL, pending_expires_at = NULL
+           FROM device_links l
+          WHERE l.group_id = g.id AND l.device_id = $1`,
+        [deviceId],
+      );
     });
   }
 
