@@ -4,7 +4,8 @@
  * Среда (изолированный worktree, свой api/web, БД pundoku_keyv):
  *   BASE=http://127.0.0.1:3995 API=http://127.0.0.1:5995 PW_DIR=/tmp/pd16-pw \
  *   PLAYWRIGHT_BROWSERS_PATH=/tmp/pd16-pw/browsers ART=<worktree>/design/pd142-shots \
- *   node design/pd142-shots.mjs [wk|cr|all|rep|red]   (rep — только замена, red — только Reduce Motion)
+ *   node design/pd142-shots.mjs [wk|cr|all|rep|red|scroll]   (rep — только замена, red — только Reduce Motion,
+ *   scroll — AX3 на 320×568: последний элемент каждого шага достижим выше таб-бара/safe-area)
  *
  * Лимиты api: devices 10/мин на адрес — между контекстами пауза 7 с; выпуск ключа 5/час на устройство (тут ≤ 2).
  * Что проверяется в каждом контексте: фокус в первом поле, шрифт ≥ 16 px, цели ≥ 44, нет горизонтального скролла,
@@ -202,12 +203,136 @@ async function replaceFlow(browser, tag, o) {
   }
 }
 
+/**
+ * Доработка по QA: на крупнейшем Dynamic Type (AX3) и узком экране страницу можно прокрутить так, чтобы ПОСЛЕДНИЙ элемент
+ * каждого шага (показ ключа, проверка, ошибка, шит пропуска) оказался выше таб-бара и безопасной зоны.
+ * Мерим на реальной сборке: scroll-контейнер `.scroll` прокручен до конца → нижняя граница самого нижнего элемента `.settings`
+ * не ниже верхней границы `.tabbar`; для шита — нижняя граница последней кнопки не ниже окна минус нижний inset.
+ */
+const SA_BOT = SAFE_PORTRAIT.bot;
+async function bottomProbe(page, tag, step, frame) {
+  const m = await page.evaluate(() => {
+    const sc = document.querySelector(".scroll");
+    const tabTop = document.querySelector(".tabbar").getBoundingClientRect().top;
+    const lowest = (root) => {
+      let low = 0, lowEl = "";
+      for (const el of root.querySelectorAll("*")) {
+        const r = el.getBoundingClientRect();
+        if (r.width === 0 || r.height === 0 || el.closest(".sr-only")) continue; // sr-only — для скринридера, глазу не видно
+        if (r.bottom > low) { low = r.bottom; lowEl = (el.dataset.testid || el.className || el.tagName).toString().slice(0, 40); }
+      }
+      return { low, lowEl };
+    };
+    const keySec = document.querySelector('section[aria-labelledby="settings-h-key"]');
+    // 1) выводим НИЖНИЙ элемент шага (раздел ключа) на 8 px выше таб-бара — достижимо ли это прокруткой
+    const k0 = lowest(keySec);
+    sc.scrollTop += k0.low - (tabTop - 8);
+    const k1 = lowest(keySec);
+    // 2) конец всей страницы тоже выше таб-бара
+    sc.scrollTop = sc.scrollHeight;
+    const pageEnd = lowest(document.querySelector(".settings"));
+    return { keyLow: k1.low, keyEl: k1.lowEl, tabTop, pageEnd: pageEnd.low, scrollable: sc.scrollHeight > sc.clientHeight + 1 };
+  });
+  check(m.keyLow <= m.tabTop + 0.5, `${tag}: «${step}» — нижний элемент шага («${m.keyEl}») можно вывести выше таб-бара`,
+    `низ ${Math.round(m.keyLow)} ≤ верх таб-бара ${Math.round(m.tabTop)}`);
+  check(m.pageEnd <= m.tabTop + 0.5, `${tag}: «${step}» — конец страницы выше таб-бара`, `запас ${Math.round(m.tabTop - m.pageEnd)} px, прокручивается: ${m.scrollable}`);
+  if (frame) {
+    // кадр: нижний элемент шага у самого таб-бара (последнее, до чего можно довести прокруткой)
+    await page.evaluate(() => {
+      const sc = document.querySelector(".scroll");
+      const tabTop = document.querySelector(".tabbar").getBoundingClientRect().top;
+      const keySec = document.querySelector('section[aria-labelledby="settings-h-key"]');
+      let low = 0;
+      for (const el of keySec.querySelectorAll("*")) {
+        const r = el.getBoundingClientRect();
+        if (r.width && r.height && !el.closest(".sr-only") && r.bottom > low) low = r.bottom;
+      }
+      sc.scrollTop += low - (tabTop - 8);
+    });
+    await page.waitForTimeout(150);
+    await shot(page, `${tag}-${frame}`);
+  }
+  await page.evaluate(() => { document.querySelector(".scroll").scrollTop = 0; });
+}
+async function sheetProbe(page, tag, step, frame) {
+  await page.waitForTimeout(450);
+  const m = await page.evaluate(() => {
+    const sh = document.querySelector('[data-testid="action-sheet"]');
+    sh.scrollTop = sh.scrollHeight;
+    const btns = [...sh.querySelectorAll("button")];
+    const last = btns[btns.length - 1].getBoundingClientRect();
+    const head = sh.querySelector("h3").getBoundingClientRect();
+    return { lastBottom: last.bottom, headTop: head.top, scrollable: sh.scrollHeight > sh.clientHeight + 1, vh: innerHeight };
+  });
+  await page.waitForTimeout(150);
+  check(m.lastBottom <= m.vh - SA_BOT + 0.5, `${tag}: «${step}» — последняя кнопка шита выше нижнего inset`,
+    `низ ${Math.round(m.lastBottom)} ≤ ${m.vh - SA_BOT}, прокручивается: ${m.scrollable}`);
+  if (frame) await shot(page, `${tag}-${frame}`);
+  await page.evaluate(() => { document.querySelector('[data-testid="action-sheet"]').scrollTop = 0; });
+  const top = await page.evaluate(() => document.querySelector('[data-testid="action-sheet"] h3').getBoundingClientRect().top);
+  check(top >= 0, `${tag}: «${step}» — заголовок шита при прокрутке вверх виден`, `верх ${Math.round(top)}`);
+}
+
+async function scrollFlow(browser, tag, o) {
+  const { ctx, page } = await open(browser, o);
+  try {
+    await page.locator(T("key-create")).tap();
+    await page.waitForSelector(T("key-shown"));
+    const key = await readKey(page);
+    await bottomProbe(page, tag, "показ ключа", "07-key-bottom");
+    await page.locator(T("key-saved")).tap();
+    await page.waitForSelector(T("key-check-0"));
+    await page.waitForTimeout(350);
+    await bottomProbe(page, tag, "проверка", "08-check-bottom");
+    const [a, b] = await asked(page);
+    await page.locator(T("key-check-0")).fill(key.slice(a * 4, a * 4 + 4));
+    await page.locator(T("key-check-1")).fill("2222" === key.slice(b * 4, b * 4 + 4) ? "3333" : "2222");
+    await page.locator(T("key-check-go")).tap();
+    await page.waitForSelector(T("key-error"));
+    await page.waitForTimeout(250);
+    await bottomProbe(page, tag, "проверка с ошибкой", "09-mismatch-bottom");
+    await page.locator(T("key-check-skip")).tap();
+    await page.waitForSelector(T("action-sheet"));
+    await sheetProbe(page, tag, "шит пропуска (создание)", "10-skip-sheet");
+    await page.locator(T("action-sheet-cancel")).tap();
+    await page.waitForTimeout(300);
+    await fillRight(page, key);
+    await page.locator(T("key-check-go")).tap();
+    await page.waitForSelector(T("key-created"));
+    await bottomProbe(page, tag, "ключ создан", null);
+    // замена: показ нового ключа, проверка, шит пропуска замены
+    await page.locator(T("key-reissue")).tap();
+    await page.waitForSelector(T("action-sheet"));
+    await sheetProbe(page, tag, "шит замены", null);
+    await page.locator(T("action-sheet-go")).tap();
+    await page.waitForSelector(T("key-shown"));
+    await bottomProbe(page, tag, "показ ключа (замена)", "11-replace-key-bottom");
+    await page.locator(T("key-saved")).tap();
+    await page.waitForSelector(T("key-check-0"));
+    await page.waitForTimeout(350);
+    await bottomProbe(page, tag, "проверка (замена)", "12-replace-check-bottom");
+    await page.locator(T("key-check-skip")).tap();
+    await page.waitForSelector(T("action-sheet"));
+    await sheetProbe(page, tag, "шит пропуска (замена)", "13-replace-skip-sheet");
+  } finally {
+    await ctx.close();
+    await pause(7000);
+  }
+}
+
 const engines = [];
+if (which === "scroll") engines.push(["wk", await webkit.launch()]);
 if (which === "wk" || which === "all" || which === "rep" || which === "red") engines.push(["wk", await webkit.launch()]);
 if (which === "cr" || which === "all") engines.push(["cr", await chromium.launch()]);
 
 for (const [eng, browser] of engines) {
-  if (eng === "wk" && which === "rep") {
+  if (eng === "wk" && which === "scroll") {
+    const small = { width: 320, height: 568 };
+    for (const locale of ["en", "uk"]) {
+      await scrollFlow(browser, `wk-${locale}-light-320x568-AX3`, { locale, ctx: { viewport: small, dynamicType: "AX3" } });
+    }
+    await scrollFlow(browser, "wk-ru-dark-320x568-AX3", { locale: "ru", ctx: { colorScheme: "dark", viewport: small, dynamicType: "AX3" } });
+  } else if (eng === "wk" && which === "rep") {
     for (const locale of ["en", "uk", "ru"]) await replaceFlow(browser, `wk-${locale}-replace`, { locale, ctx: {} });
   } else if (eng === "wk" && which === "red") {
     await flow(browser, "wk-en-light-393-reduce", { locale: "en", reduced: true, ctx: { reducedMotion: "reduce" } }, []);

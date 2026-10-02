@@ -6,6 +6,7 @@ import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 
 const css = readFileSync(join(dirname(fileURLToPath(import.meta.url)), "../src/styles/settings.css"), "utf8");
+const shell = readFileSync(join(dirname(fileURLToPath(import.meta.url)), "../src/styles/shell.css"), "utf8");
 const rule = css.match(/\.settings-checkinput \{([^}]*)\}/)[1];
 
 describe("CSS поля проверки ключа (PD-142)", () => {
@@ -22,5 +23,13 @@ describe("CSS поля проверки ключа (PD-142)", () => {
     const fc = css.slice(css.indexOf("@media (forced-colors: active)"));
     expect(fc).toMatch(/\.settings-checkinput[,\s{]/);
     expect(fc).toMatch(/\.settings-checkinput\[aria-invalid="true"\] \{[^}]*border-style: double/);
+  });
+  it("нижний отступ прокрутки не меньше высоты таб-бара и учитывает safe-area (AX3: последний элемент шага выводится выше таб-бара)", () => {
+    const pad = shell.match(/\.scroll \{[^}]*padding-bottom:\s*calc\((\d+)px \+ var\(--sa-bot\)\)/);
+    expect(pad).not.toBeNull();
+    const tabbar = shell.match(/\.tabbar \{[^}]*padding:\s*(\d+)px [^;]*calc\((\d+)px \+ var\(--sa-bot\)\)/);
+    const tabMin = shell.match(/\.tab \{[^}]*min-height:\s*(\d+)px/);
+    // таб-бар: верхний + нижний padding + min-height вкладки (подписи вкладок не растут с Dynamic Type)
+    expect(Number(pad[1])).toBeGreaterThanOrEqual(Number(tabbar[1]) + Number(tabbar[2]) + Number(tabMin[1]));
   });
 });
