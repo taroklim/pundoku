@@ -466,7 +466,7 @@ sudoku.com/generator > device, ранний `solvedAt` — решённый во
 
 ## Уход с Settings при показанном ключе (PD-57)
 
-Пока ключ восстановления показан один раз и не подтверждён («Key saved»), любой уход с экрана Settings идёт через action
+Пока ключ восстановления показан один раз и не подтверждён (проверка записи PD-142 не пройдена и не пропущена), любой уход с экрана Settings идёт через action
 sheet «The key isn’t saved yet» (`RecoveryStore.guardLeave/requestLeave`): «‹ Today», вкладки и — что добавил PD-57 —
 браузерное «назад», iOS edge-swipe и правка адреса (`popstate`/`hashchange`, `shell/tabs.ts › useRoute(guard)`).
 
@@ -481,7 +481,7 @@ sheet «The key isn’t saved yet» (`RecoveryStore.guardLeave/requestLeave`): �
 - Ограничение веба: **закрыть или выгрузить приложение iOS (смахнуть из переключателя, выгрузка системой) перехватить нельзя** —
   `beforeunload` в iOS-PWA не срабатывает, а `pagehide`/`visibilitychange` не позволяют показать диалог. Остаются только
   предупреждение шита при уходе внутри приложения и текст «shown one time only» на экране; ключ, показанный и потерянный так,
-  восстановить нельзя; при **замене** (PD-126) это безопасно: рабочий ключ не тронут до «Key saved», новый можно выпустить заново
+  восстановить нельзя; при **замене** (PD-126) это безопасно: рабочий ключ не тронут до проверки и подтверждения, новый можно выпустить заново
   («Start replacement again» в карточке «New key not confirmed»). Проверить на устройстве этот случай веб не может.
 - `beforeunload` (десктопные браузеры) по-прежнему держит закрытие вкладки, пока ключ показан.
 
@@ -542,13 +542,13 @@ Year строятся из `days` (`listDays`), а Play лежит в `kv`. Би
 «Replace key» больше не гасит рабочий ключ при нажатии. Клиент (`recovery/api.ts`, `store.ts`, `SettingsScreen.tsx`):
 
 - Шит «Replace the recovery key?» не деструктивный (кнопка «Make new key»): `rotate` возвращает `{key, pendingId, expiresAt}`, стор
-  входит в фазу `shown` в режиме `replace` (заголовок «Your new key», текст «current key keeps working until you tap “Key saved”»).
-- «Key saved» в режиме замены — запрос `POST /key/rotate/confirm` с `pendingId` (busy, `aria-busy`). Успех → ключ и метка стираются,
+  входит в фазу `shown` в режиме `replace` (заголовок «Your new key», текст «current key keeps working until you check and confirm it»).
+- Подтверждение в режиме замены (после проверки записи, PD-142) — запрос `POST /key/rotate/confirm` с `pendingId` (busy, `aria-busy`). Успех → ключ и метка стираются,
   статус «New key is active. The old one no longer works.» (`role="status"`). Сеть/сбой/лимит → ключ остаётся на экране, ошибка с
   `role="alert"`, можно нажать снова. После сети/сбоя результат считается неизвестным (ответ мог потеряться уже после переключения):
   текст «can’t tell yet whether the new key is already active… repeating is safe», повтор безопасен — сервер идемпотентен по
   `pendingId` и ответит успехом (F1); «Leave» после такой ошибки перечитывает статус, чтобы карточка не врала. `409` (отменена/перезапущена/истекла) → ключ стирается, текст «That replacement is no longer valid».
-  В режиме создания «Key saved» по-прежнему только стирает ключ из памяти.
+  В режиме создания подтверждение по-прежнему только стирает ключ из памяти.
 - Уход без подтверждения («Leave» в шите про *новый* ключ, закрытие приложения, перезагрузка): ключ и `pendingId` стираются (в IDB и
   `localStorage` не пишутся), рабочий ключ жив. После возврата `GET /api/recovery` отдаёт `pendingRotation` → карточка «New key not
   confirmed» со сроком («Valid until …»), кнопки «Start replacement again» и «Cancel replacement» (`DELETE /key/rotate`); строка
@@ -556,6 +556,42 @@ Year строятся из `days` (`listDays`), а Play лежит в `kv`. Би
 - i18n: добавлены `settings.key.yourNewKey`, `shownOnceReplace`, `warnReplace`, `footReplace`, `replacedOk`, `pending*`, `errConfirm*`,
   `errStale`, `sheetReAgainMsg`, `sheetLeaveRe*`; изменены `sheetReMsg`, `sheetReGo`, `footDanger` (PD-88: «подключённые устройства остаются
   подключёнными» сохранено). Паритет и `{{when}}` проверяет `recovery/i18n.test.ts`.
+
+## Проверка записи ключа восстановления (PD-142, H-21/SC-08)
+
+После показа нового ключа (создание **и** замена) кнопка «I’ve written it down» ведёт не к «Готово», а на шаг «Check your copy»:
+два случайных поля «Group N of 8» (две разные группы, порядок по возрастанию; жребий — при каждом входе на шаг, `pickCheckGroups`).
+Состояние живёт в `RecoveryStore` (`check: {groups, values, wrong}`, фаза остаётся `shown`) и **только в памяти**: значения
+не логируются и не пишутся в IDB/`localStorage`; на экране проверки самого ключа нет.
+
+- Нормализация — правила ключа (`normalizeGroupInput`): регистр, пробелы, дефисы не важны, `O→0`, `I/L→1`, `U→V`; если вставлен
+  целый ключ (≥ 32 знаков), берётся запрошенная группа — пароль-менеджер/буфер не мешают. Сравнение — `groupMatches`.
+- Неверно → мягкая ошибка (`role="alert"`, текст «That doesn’t match…»), `aria-invalid` только у неверного поля, остальные
+  введённые значения остаются (правка поля снимает ошибку); «Show the key again» возвращает к тому же ключу (`backToKey`, фокус
+  на ключе, введённое стирается), следующая проверка спросит группы заново; повторов без счётчика и блокировки (проверка
+  локальная и ничего не защищает, это самопроверка).
+- **Порядок относительно серверного confirm (замена): проверка раньше confirm, целиком локально.** Пока проверка не пройдена или
+  не пропущена, сервер не тронут: старый ключ работает, новый ожидающий не принимается (проверено вживую через `redeem`,
+  `design/pd142-shots.mjs`). Идемпотентный confirm и `pendingId` PD-126 не менялись: после прохождения вызывается тот же
+  `confirmRotation(pendingId)`. Обратный порядок (confirm, потом проверка) отвергнут: он активирует ключ, который человек ещё
+  не проверил, и убивает старый, а при провале проверки возвращать нечего.
+- Обхода нет: публичного «подтвердить без проверки» в сторе больше нет (`confirmSaved` стал приватным `finish()`), пропуск —
+  только из шага проверки через шит `skip`.
+- **Пропуск разрешён и честный** (решение: жёсткий барьер превращает полезную самопроверку в стену, люди с ключом в менеджере
+  паролей или с уже сделанной фотографией уйдут в «Leave»/смахивание, и ключ потеряется ещё надёжнее; PD-57/126 уже оставляют
+  выход). Кнопка «Skip the check» вторична, под основной, под ней сноска: «You can skip it, but without a written-down key progress
+  can’t be restored on another device.» Шит «Skip the check?» повторяет это предупреждение (для замены — ещё и «old one will
+  stop working»), главная кнопка шита — безопасная «Check the key» (`destructive: true`, фокус по умолчанию на ней, H-22),
+  деструктивная — «Skip the check».
+- Поля: фокус в первое поле при входе на шаг (эффект в `SettingsScreen`, не `autoFocus`-атрибут), `autocapitalize="characters"`, `autocorrect/autocomplete="off"`,
+  `spellcheck=false`, менеджеры паролей отключены (`data-1p-ignore`, `data-lpignore`), `enterkeyhint` next/done (Enter в последнем
+  поле = «Check»), шрифт `max(18px, 1.06rem)` (iOS не зумит), высота ≥ 48, остальные цели ≥ 44, у каждого поля `label` с номером группы,
+  ошибка и подсказка связаны через `aria-describedby`. AX3, 320 pt, Reduce Motion и `forced-colors` покрыты
+  `scripts/key-check-css.test.mjs` и живым прогоном.
+- i18n (en/uk/ru): `settings.key.written` (раньше `saved`), `verify*`, `sheetSkip*`; формулировки «Key saved» → «check and confirm»
+  в `shownOnceReplace`, `warnReplace`, `footReplace`, `pending*`.
+- Не сделано сознательно: экран «Готово» на сервере не помечает, пройдена ли проверка (сервер ключа не знает и знать не должен).
+  Метрики пропусков нет (аналитики в продукте нет).
 
 ## Настройка «Подсвечивать неверные цифры» (PD-112)
 

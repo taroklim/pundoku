@@ -52,6 +52,18 @@ async function readKey(page) {
   return parts.map((s) => s.trim()).join("");
 }
 const visible = (page, id) => page.locator(T(id)).isVisible().catch(() => false);
+/** PD-142: «I've written it down» → проверка записи (2 случайные группы из ключа) → подтверждение. */
+async function passCheck(page, key) {
+  await page.locator(T("key-saved")).tap();
+  await page.waitForSelector(T("key-check-0"), { timeout: 15000 });
+  for (const i of [0, 1]) {
+    const id = await page.locator(T(`key-check-${i}`)).getAttribute("id");
+    const n = Number((await page.locator(`label[for="${id}"]`).textContent()).match(/\d+/)[0]) - 1;
+    await page.locator(T(`key-check-${i}`)).fill(key.slice(n * 4, n * 4 + 4).toLowerCase());
+  }
+  await page.locator(T("key-check-go")).tap();
+  await page.waitForTimeout(300);
+}
 async function sheetOpen(page) {
   await page.waitForTimeout(450);
   return visible(page, "action-sheet");
@@ -263,9 +275,8 @@ export async function run(R, browser) {
   await pa.waitForSelector(T("key-shown"), { timeout: 15000 });
   const K2 = await readKey(pa);
   R.add(36, K2.length === 32 && K2 !== K1, `после подтверждения показан новый ключ, отличный от прежнего`);
-  await pa.locator(T("key-saved")).tap();
-  await pa.waitForTimeout(300);
-  R.add(40, await visible(pa, "key-created"), `"Key saved" доступна как кнопка и переводит в состояние "Ключ создан"`);
+  await passCheck(pa, K2);
+  R.add(40, await visible(pa, "key-created"), `"I've written it down" -> проверка двух групп -> состояние "Ключ создан"`);
   const auth = (t) => ({ authorization: `Bearer ${t}`, "content-type": "application/json" });
   const old = await api("/api/recovery/redeem", { method: "POST", headers: auth(tokenB), body: JSON.stringify({ key: K1 }) });
   R.add(36, old.status === 400, `старый ключ после перевыпуска перестал работать: redeem -> HTTP ${old.status} ${old.json?.error?.code ?? ""}`);
@@ -293,8 +304,7 @@ export async function run(R, browser) {
   await pa.locator(T("key-create")).tap();
   await pa.waitForSelector(T("key-shown"), { timeout: 15000 });
   const K3 = await readKey(pa);
-  await pa.locator(T("key-saved")).tap();
-  await pa.waitForTimeout(300);
+  await passCheck(pa, K3);
   await pa.locator(T("key-delete")).tap();
   const sDel = await sheetOpen(pa);
   const delTitle = sDel ? await pa.locator(`${T("action-sheet")} h3`).textContent() : null;
@@ -415,7 +425,7 @@ export async function run(R, browser) {
     const fcCard = await page.locator(".settings-card").first().evaluate((e) => { const cs = getComputedStyle(e); return { bs: cs.borderTopStyle, bw: parseFloat(cs.borderTopWidth) }; });
     const fcBtn = await read(T("key-saved"));
     await shot(page, "i42-forced-colors");
-    R.add(42, fcChip.bs !== "none" && fcChip.bw >= 1 && fcCard.bs !== "none" && fcCard.bw >= 1 && fcBtn.bs !== "none" && fcBtn.bw >= 1, `forced colors: у плашек, карточек и кнопки "Key saved" есть видимая рамка (плашка ${fcChip.bs} ${fcChip.bw}px, карточка ${fcCard.bs} ${fcCard.bw}px, кнопка ${fcBtn.bs} ${fcBtn.bw}px)`);
+    R.add(42, fcChip.bs !== "none" && fcChip.bw >= 1 && fcCard.bs !== "none" && fcCard.bw >= 1 && fcBtn.bs !== "none" && fcBtn.bw >= 1, `forced colors: у плашек, карточек и кнопки "I've written it down" есть видимая рамка (плашка ${fcChip.bs} ${fcChip.bw}px, карточка ${fcCard.bs} ${fcCard.bw}px, кнопка ${fcBtn.bs} ${fcBtn.bw}px)`);
     await page.locator(T("settings-back")).tap();
     await sheetOpen(page);
     const fcSheet = await page.locator(`${T("action-sheet")} .st-agrp`).first().evaluate((e) => { const cs = getComputedStyle(e); return { bs: cs.borderTopStyle, bw: parseFloat(cs.borderTopWidth) }; });
@@ -596,8 +606,7 @@ export async function run(R, browser) {
     await shot(page, `i43-${tag}-leave-sheet`);
     await page.locator(T("action-sheet-cancel")).tap();
     await page.waitForTimeout(300);
-    await page.locator(T("key-saved")).tap();
-    await page.waitForTimeout(300);
+    await passCheck(page, await readKey(page));
     await check("created");
     await shot(page, `i43-${tag}-created`);
     await page.locator(T("key-reissue")).tap();
