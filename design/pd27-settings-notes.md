@@ -161,7 +161,7 @@ CSS-генерики (`system-ui`, `ui-serif`, `ui-monospace`). **Ни одно�
 (`3a new key shown`, `3b not confirmed`, `3c replaced`, `3d stale`) и шит «Replace the recovery key?».
 
 - **3a. Новый ключ показан.** Тот же экран, что состояние 2, но заголовок «Your new key», подпись «… Your current key keeps
-  working until you tap “Key saved”», предупреждение «Until then nothing changes, so if you leave now you lose nothing» и
+  working until you tap “Key saved”», предупреждение «If the connection drops, just tap it again — repeating is safe» и
   футер под кнопкой. Кнопка «Key saved» теперь делает запрос: busy (`aria-busy`), при сетевой ошибке ключ остаётся и под
   кнопкой `alert` «… Tap “Key saved” again».
 - **3b. «New key not confirmed».** После «Leave»/закрытия/перезагрузки. Карточка над данными ключа: иконка чернилами +

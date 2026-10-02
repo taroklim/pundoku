@@ -79,7 +79,7 @@
       "sheetLeaveGo": "Leave",
       "sheetLeaveStay": "Stay",
       "shownOnceReplace": "The new key is shown this one time only. Your current key keeps working until you tap “Key saved”.",
-      "warnReplace": "Keep it somewhere safe, then tap “Key saved”. Until then nothing changes, so if you leave now you lose nothing.",
+      "warnReplace": "Keep it somewhere safe, then tap “Key saved”. If the connection drops, just tap it again — repeating is safe.",
       "footReplace": "The new key takes over only after “Key saved”. Until then the current key keeps working on every device.",
       "replacedOk": "New key is active. The old one no longer works.",
       "pendingTitle": "New key not confirmed",
