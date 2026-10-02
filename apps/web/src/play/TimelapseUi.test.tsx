@@ -246,6 +246,22 @@ describe("TimelapseSheet", () => {
     expect(q("tl-move")!.textContent).toBe(`Move 0 of ${MOVES}`);
   });
 
+  it("PD-139: засечки подсказок на шкале и «· N hints» в сводке; без hintLog их нет", () => {
+    const withHints: PlayState = { ...solvedPlay(), hintLog: [{ t: 3500, cell: 4 }, { t: 40000, cell: null }] };
+    act(() => root.render(<TimelapseSheet play={withHints} date="2026-09-30" difficulty="medium" onClose={() => {}} />));
+    expect(document.querySelector(".tl-sub")!.textContent).toContain("2 hints");
+    click(q("tl-start"));
+    const ticks = [...q("tl-ticks")!.querySelectorAll("i")];
+    expect(ticks.map((i) => i.getAttribute("data-move"))).toEqual(["3", "40"]);
+    expect(q("tl-ticks")!.getAttribute("aria-hidden")).toBe("true");
+    act(() => root.unmount());
+    root = createRoot(host);
+    act(() => root.render(<TimelapseSheet play={solvedPlay()} date="2026-09-30" difficulty="medium" onClose={() => {}} />));
+    click(q("tl-start"));
+    expect(q("tl-ticks")).toBeNull();
+    expect(document.querySelector(".tl-sub")!.textContent).not.toContain("hint");
+  });
+
   it("«назад к этапам» возвращает контактный лист", () => {
     sheet();
     click(q("tl-start"));
@@ -263,6 +279,29 @@ describe("ExportSheet / подпись PNG", () => {
     expect(c.right).toBe("30 Sep 2026 · 8:14 · 51 moves · clean");
     expect(fingerprintCaption(t, "en", { ...base, blots: 2, clean: false }).right).toMatch(/· 2 blots$/);
     expect(fingerprintCaption(t, "en", { ...base, blots: 1, clean: false }).right).toMatch(/· 1 blot$/);
+  });
+
+  it("PD-139: подпись партии с подсказками — «· N hints» в конце, без цифр шага; без подсказок строки нет", () => {
+    const t = i18n.t.bind(i18n);
+    const base = { date: "2026-09-30", durationMs: 494000, moves: 51, blots: 0, corrections: 0, clean: true };
+    expect(fingerprintCaption(t, "en", { ...base, hints: 3 }).right).toBe("30 Sep 2026 · 8:14 · 51 moves · clean · 3 hints");
+    expect(fingerprintCaption(t, "en", { ...base, hints: 1 }).right).toMatch(/· 1 hint$/);
+    expect(fingerprintCaption(t, "en", { ...base, blots: 2, clean: false, hints: 2 }).right).toMatch(/· 2 blots · 2 hints$/);
+    expect(fingerprintCaption(t, "en", { ...base, hints: 0 }).right).toBe("30 Sep 2026 · 8:14 · 51 moves · clean");
+  });
+
+  it("PD-139: ExportSheet рисует «N hints» из hintLog партии", async () => {
+    const texts: string[] = [];
+    const ctx = new Proxy({ measureText: () => ({ width: 100 }) } as Record<string, unknown>, {
+      get: (o, k) => (k === "fillText" ? (s: string) => void texts.push(s) : k in o ? o[k as string] : () => {}),
+      set: () => true,
+    });
+    vi.spyOn(HTMLCanvasElement.prototype, "getContext").mockReturnValue(ctx as never);
+    vi.spyOn(HTMLCanvasElement.prototype, "toBlob").mockImplementation((cb) => cb(new Blob([new Uint8Array([1])], { type: "image/png" })));
+    vi.stubGlobal("URL", Object.assign(URL, { createObjectURL: () => "blob:x", revokeObjectURL: () => {} }));
+    const play: PlayState = { ...solvedPlay(), hintLog: [{ t: 2500, cell: 2 }, { t: 9000, cell: null }] };
+    await act(async () => root.render(<ExportSheet play={play} date="2026-09-30" onClose={() => {}} />));
+    expect(texts.find((s) => s.includes("moves"))).toMatch(/· 2 hints$/);
   });
 
   it("подпись ink-дня с 2 кляксами: ходы = число клеток (не кадров), «N moves · 2 blots»", async () => {

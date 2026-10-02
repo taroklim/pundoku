@@ -7,7 +7,7 @@ import { MiniField, ReplayField } from "./ReplayField";
 import { timelapseOf } from "./timelapse";
 import { LoopIcon, NextIcon, PauseIcon, PlayIcon, PrevIcon } from "./timelapseIcons";
 import type { TimelapseSpeed } from "./timelapseModel";
-import { BUDGET_MS, LOOP_HOLD_MS, contactStages, firstBlotFrames, frameAt, moveIndex, playbackSchedule } from "./timelapseModel";
+import { BUDGET_MS, LOOP_HOLD_MS, contactStages, firstBlotFrames, frameAt, hintTickMoves, moveIndex, playbackSchedule } from "./timelapseModel";
 import { TimelapseSheetShell } from "./TimelapseSheetShell";
 
 const SPEEDS: readonly TimelapseSpeed[] = ["slow", "normal", "fast"];
@@ -54,6 +54,8 @@ export function TimelapseSheet({ play, date, difficulty, onClose }: TimelapseShe
   const blots = useMemo(() => firstBlotFrames(frames), [frames]);
   // Счёт и скраббер — в ходах игрока, не в кадрах (PD-80): пара «клякса → замена» — один ход.
   const moves = useMemo(() => moveIndex(frames), [frames]);
+  const ticks = useMemo(() => hintTickMoves(frames, play.hintLog), [frames, play.hintLog]);
+  const helped = Math.max(play.hintLog?.length ?? 0, 0);
   const stages = useMemo(() => contactStages(moves.count).map((m) => moves.frameOf[m]!), [moves]);
 
   const [mode, setMode] = useState<"contact" | "player">("contact");
@@ -118,7 +120,7 @@ export function TimelapseSheet({ play, date, difficulty, onClose }: TimelapseShe
 
   if (tl === null || n === 0) return null;
 
-  const dayLine = [formatDay(new Date(`${date}T12:00:00`), locale), difficulty ? t(`difficulty.${difficulty}`) : null, formatClock(tl.sourceDurationMs)]
+  const dayLine = [formatDay(new Date(`${date}T12:00:00`), locale), difficulty ? t(`difficulty.${difficulty}`) : null, formatClock(tl.sourceDurationMs), helped > 0 ? t("timelapse.hints", { count: helped }) : null]
     .filter(Boolean)
     .join(" · ");
 
@@ -175,6 +177,13 @@ export function TimelapseSheet({ play, date, difficulty, onClose }: TimelapseShe
             </span>
           </div>
           <div className="tl-scrub-wrap">
+            {moves.count > 0 && ticks.length > 0 && (
+              <div className="tl-ticks" aria-hidden="true" data-testid="tl-ticks">
+                {ticks.map((m) => (
+                  <i key={m} data-move={m} style={{ ["--f" as string]: m / moves.count }} />
+                ))}
+              </div>
+            )}
             <input
               type="range"
               className="tl-scrub"

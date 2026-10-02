@@ -14,6 +14,7 @@ import {
   firstBlotFrames,
   frameAt,
   hasBlots,
+  hintTickMoves,
   isBlotReplacement,
   moveIndex,
   playbackSchedule,
@@ -180,5 +181,27 @@ describe("moveIndex (PD-80): ход игрока, а не кадр", () => {
     expect(m.count).toBe(empties);
     expect(m.frameOf[m.count]).toBe(f.length - 1);
     expect(f.at(-1)!.values.join("")).toBe(last.solution.join(""));
+  });
+});
+
+describe("hintTickMoves (PD-139)", () => {
+  const play = inkPlay("2026-09-29", []);
+  const tl = real(play);
+
+  it("пустой журнал — засечек нет", () => {
+    expect(hintTickMoves(tl.frames, undefined)).toEqual([]);
+    expect(hintTickMoves(tl.frames, [])).toEqual([]);
+  });
+
+  it("запись ложится после последнего хода с t ≤ hint.t; до первого хода — 0; повторы схлопываются", () => {
+    const t3 = play.log[2]!.t;
+    expect(hintTickMoves(tl.frames, [{ t: 0 }])).toEqual([0]);
+    expect(hintTickMoves(tl.frames, [{ t: t3 }, { t: t3 + 1 }])).toEqual([3]);
+    expect(hintTickMoves(tl.frames, [{ t: t3 + 1 }, { t: 0 }])).toEqual([0, 3]);
+  });
+
+  it("после последнего хода — на конце шкалы (число ходов)", () => {
+    const n = moveIndex(tl.frames).count;
+    expect(hintTickMoves(tl.frames, [{ t: 10 ** 9 }])).toEqual([n]);
   });
 });

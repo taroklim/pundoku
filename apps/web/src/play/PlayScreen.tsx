@@ -138,7 +138,7 @@ export function PlayScreen({ onOpenSettings, onOpenHelp }: { onOpenSettings?: ()
       {snap.setup ? (
         snap.restoring ? null : <p className="subline">{t("ink.playSub")}</p>
       ) : (
-        <Subline day={dayLabel} difficulty={diffLabel} ink={ink} clock={showClock ? clock : null} />
+        <Subline day={dayLabel} difficulty={diffLabel} ink={ink} help={snap.assisted === true} clock={showClock ? clock : null} />
       )}
 
       {snap.setup && snap.restoring ? null : snap.setup ? (
@@ -156,6 +156,7 @@ export function PlayScreen({ onOpenSettings, onOpenHelp }: { onOpenSettings?: ()
             cardRef={cardRef}
             title={t("solved.title")}
             timelapse={{ date: localDate(snap.startedOn), difficulty }}
+            hints={snap.hints}
             onOpenHelp={onOpenHelp}
           >
             {/* ПРОВИЗОРНО (PD-11): «New game» — минимум, чтобы из «решено» можно было выйти; в макете нет. */}

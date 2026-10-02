@@ -159,12 +159,12 @@ export function DayView({ store, archive, onOpenSettings, onOpenHelp }: { store:
         // Шестерёнка (PD-49/PD-123): действие шапки вкладки, а не четвёртая вкладка; ведёт на `#/settings`.
         <TabHeader title={<h1 className="title">{t("tabs.today")}</h1>} actions={hintButton} onOpenSettings={onOpenSettings} />
       )}
-      <Subline day={dayLabel} difficulty={diffLabel} ink={play?.ink === true} clock={showClock ? clock : null} />
+      <Subline day={dayLabel} difficulty={diffLabel} ink={play?.ink === true} help={snap.assisted === true} clock={showClock ? clock : null} />
 
       {phase === "solved" && cardShown ? (
         <>
           {play && (
-            <ResultCard play={play} cardRef={cardRef} title={t("today.cardTitle")} winRate={winRate} winRateScope={archive || snap.late ? "day" : "today"} timelapse={isRealDate(snap.date) ? { date: snap.date, difficulty: snap.difficultyKnown ? difficulty : null } : undefined} onOpenHelp={onOpenHelp}>
+            <ResultCard play={play} cardRef={cardRef} title={t("today.cardTitle")} winRate={winRate} winRateScope={archive || snap.late ? "day" : "today"} hints={snap.hints} timelapse={isRealDate(snap.date) ? { date: snap.date, difficulty: snap.difficultyKnown ? difficulty : null } : undefined} onOpenHelp={onOpenHelp}>
               {sourceLabel && <p className="source">{sourceLabel}</p>}
               {snap.late && (
                 <p className="source late-line" data-testid="late-note">

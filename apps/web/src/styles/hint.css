@@ -253,6 +253,18 @@
   clip-path: polygon(0 0, 100% 0, 100% 100%, 38% 100%, 0 62%);
 }
 
+/* Слово «with help» в подписи дня (рядом со словом режима чернил): слово, не плашка — читается без цвета. */
+.subline .helpmark {
+  color: var(--ink);
+  font-weight: 600;
+}
+
+/* Тепловая карта: клетка, к которой вела подсказка, — полая середина (позиция, не цифра). Порядок — прежняя непрозрачность. */
+.heat i.h {
+  -webkit-mask-image: radial-gradient(circle at center, transparent 0 24%, #000 26%);
+  mask-image: radial-gradient(circle at center, transparent 0 24%, #000 26%);
+}
+
 /* Одноразовая строка-намёк на месте «N cells left» (не кнопка, только текст). */
 .status.nudge b {
   color: var(--ink);
@@ -322,6 +334,13 @@
   }
   .hint-btn.on {
     outline: 2px solid Highlight;
+  }
+  .subline .helpmark {
+    color: CanvasText;
+    text-decoration: underline;
+  }
+  .heat i.h {
+    forced-color-adjust: none;
   }
   .hint-more {
     border: 1px solid ButtonText;

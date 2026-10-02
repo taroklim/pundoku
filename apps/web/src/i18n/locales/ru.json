@@ -222,6 +222,7 @@
     "erase": "Стереть"
   },
   "hint": {
+    "mark": "с подсказкой",
     "button": "Подсказка",
     "buttonUsed": "Подсказка, сегодня взято {{count}}",
     "buttonUsedPlay": "Подсказка, взято {{count}}",
@@ -331,6 +332,7 @@
     "time": "Время",
     "corrections": "Исправления",
     "clean": "чисто",
+    "hints": "Подсказки",
     "technique": "Достигнутая техника",
     "share": "Поделиться",
     "newGame": "Новая игра"
@@ -523,6 +525,10 @@
     "fpCorrections_one": "{{count}} исправление",
     "fpCorrections_few": "{{count}} исправления",
     "fpCorrections_many": "{{count}} исправлений",
-    "fpCorrections_other": "{{count}} исправления"
+    "fpCorrections_other": "{{count}} исправления",
+    "hints_one": "{{count}} подсказка",
+    "hints_few": "{{count}} подсказки",
+    "hints_many": "{{count}} подсказок",
+    "hints_other": "{{count}} подсказки"
   }
 }

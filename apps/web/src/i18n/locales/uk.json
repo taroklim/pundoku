@@ -222,6 +222,7 @@
     "erase": "Стерти"
   },
   "hint": {
+    "mark": "з підказкою",
     "button": "Підказка",
     "buttonUsed": "Підказка, сьогодні взято {{count}}",
     "buttonUsedPlay": "Підказка, взято {{count}}",
@@ -331,6 +332,7 @@
     "time": "Час",
     "corrections": "Виправлення",
     "clean": "чисто",
+    "hints": "Підказки",
     "technique": "Досягнута техніка",
     "share": "Поділитися",
     "newGame": "Нова гра"
@@ -523,6 +525,10 @@
     "fpCorrections_one": "{{count}} виправлення",
     "fpCorrections_few": "{{count}} виправлення",
     "fpCorrections_many": "{{count}} виправлень",
-    "fpCorrections_other": "{{count}} виправлення"
+    "fpCorrections_other": "{{count}} виправлення",
+    "hints_one": "{{count}} підказка",
+    "hints_few": "{{count}} підказки",
+    "hints_many": "{{count}} підказок",
+    "hints_other": "{{count}} підказки"
   }
 }

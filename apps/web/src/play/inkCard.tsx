@@ -25,8 +25,8 @@ export function blotCellSet(play: PlayState): ReadonlySet<number> {
   return new Set(play.ink === true ? blotsIn(play).map((b) => b.cell) : []);
 }
 
-/** Тепловая карта: обычные клетки — чернила по порядку, подсказки — контур, кляксы — сургуч со сколотым углом (`.b`). */
-export function HeatCells({ heat, blots }: { heat: readonly HeatCell[]; blots: ReadonlySet<number> }) {
+/** Тепловая карта: обычные клетки — чернила по порядку, givens — контур, кляксы — сургуч со сколотым углом (`.b`), клетки подсказки — полая середина (`.h`). */
+export function HeatCells({ heat, blots, hinted }: { heat: readonly HeatCell[]; blots: ReadonlySet<number>; hinted?: ReadonlySet<number> }) {
   return (
     <>
       {heat.map((o, i) =>
@@ -34,6 +34,9 @@ export function HeatCells({ heat, blots }: { heat: readonly HeatCell[]; blots: R
           <i key={i} className="b" data-blot="true" />
         ) : o === null ? (
           <i key={i} className="g" />
+        ) : hinted?.has(i) ? (
+          // PD-139: клетка, к которой вела подсказка, — полая середина (форма, не цифра); непрозрачность — порядок, как у соседей.
+          <i key={i} className="h" style={{ opacity: o }} data-o={o} data-hinted="true" />
         ) : (
           <i key={i} style={{ opacity: o }} data-o={o} />
         ),

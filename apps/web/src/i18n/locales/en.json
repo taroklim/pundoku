@@ -216,6 +216,7 @@
     "erase": "Erase"
   },
   "hint": {
+    "mark": "with help",
     "button": "Hint",
     "buttonUsed": "Hint, {{count}} used today",
     "buttonUsedPlay": "Hint, {{count}} used",
@@ -323,6 +324,7 @@
     "time": "Time",
     "corrections": "Fixes",
     "clean": "clean",
+    "hints": "Hints",
     "technique": "Technique reached",
     "share": "Share",
     "newGame": "New game"
@@ -499,6 +501,8 @@
     "fpBlots_one": "{{count}} blot",
     "fpBlots_other": "{{count}} blots",
     "fpCorrections_one": "{{count}} fix",
-    "fpCorrections_other": "{{count}} fixes"
+    "fpCorrections_other": "{{count}} fixes",
+    "hints_one": "{{count}} hint",
+    "hints_other": "{{count}} hints"
   }
 }

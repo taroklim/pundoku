@@ -6,6 +6,7 @@ import { useTranslation } from "react-i18next";
 import { formatClock } from "../play/format";
 import { useSheetSwipe } from "../shell/useSheetSwipe";
 import { heatLegend, heatOpacities } from "../play/heat";
+import { hintCellSet, hintCount, HintsRow } from "../play/hintCard";
 import { blotCellSet, HeatCells, InkModeValueRow } from "../play/inkCard";
 import { unsettledCells } from "../play/logic";
 import { WatchRow, useTimelapseEntry } from "../play/TimelapseEntry";
@@ -233,7 +234,7 @@ function DayCard({
       {progress && solved && sum && heat ? (
         <>
           <div className="heat" role="img" aria-label={t("result.heatLabel")} data-testid="heat">
-            <HeatCells heat={heat} blots={blots} />
+            <HeatCells heat={heat} blots={blots} hinted={hintCellSet(progress.play)} />
           </div>
           <div className="legend">
             <span>{t("result.early")}</span>
@@ -268,6 +269,7 @@ function DayCard({
                 <dd>{t("year.card.assistedValue")}</dd>
               </div>
             )}
+            <HintsRow count={hintCount(progress.play, progress.hints)} />
           </dl>
           <WatchRow available={tl.available} onWatch={() => tl.open("player")} />
           {tl.sheets}
