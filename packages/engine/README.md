@@ -24,6 +24,7 @@ pnpm measure:engine 200 hard expert       # (из корня) замер поп�
 | Типы опций | `HumanSolveOptions`, `GenerateOptions` |
 | Сетка (`grid.ts`) | `GRID_SIZE`, `ROW_OF`, `COL_OF`, `BOX_OF`, `UNITS`, `PEERS`, `emptyGrid`, `parseGrid`, `formatGrid`, `toGrid`, `isValidGrid`, `conflicts`, `candidates` |
 | Решатель (`solver.ts`) | `solve`, `countSolutions`, `hasUniqueSolution` |
+| Подсказки (`hint.ts`) | `nextHint`; типы `Hint`, `HintState`, `StepHint`, `MistakeHint`, `NoHint`, `NoHintReason`, `HintRegion`, `HintRegionKind`, `HintCells`, `HintExplanation`, `HintExplanationId`, `HintPlacement`, `HintLead` |
 | Human-решатель (`human.ts`) | `humanSolve`, `techniqueForCell`, `rateDifficulty`, `techniquesUsed`, `techniqueTier`, `difficultyForTechnique`, `maxTechnique`, `TECHNIQUE_ORDER` |
 | Генератор (`generator.ts`) | `generate`, `dailySeed`, `dailyPuzzle`, `GenerationError`, `DEFAULT_MAX_ATTEMPTS`, `GENERATOR_VERSION` |
 | Сложность (`difficulty.ts`) | `DIFFICULTIES`, `DIFFICULTY_PROFILES`, `EASY_MIN_CLUES` |
@@ -82,6 +83,79 @@ pnpm measure:engine 200 hard expert       # (из корня) замер поп�
   «Как определяется сложность»; `techniquesUsed(input)`, `techniqueTier(t)`, `maxTechnique(list)`;
   `difficultyForTechnique(t)` — только техническая ось (singles → easy, locked → hard, pairs → expert,
   beyond → master; `medium` ею недостижим).
+
+### Лесенка подсказок (`hint.ts`, PD-134)
+
+`nextHint(state) → Hint` — ближайший логичный шаг по **текущей доске игрока**, уже разложенный по
+ступеням лесенки (решение владельца: область → техника → клетки → разбор; цифра — только на последней
+ступени, и UI решает, показывать ли её). Чистая функция, вход не меняется, результат — JSON.
+
+```ts
+nextHint({ givens, values, solution?, notes?, lastCell? }): Hint
+// Hint = StepHint | MistakeHint | { kind: 'none', reason: 'solved' | 'beyond' | 'invalid_puzzle' }
+```
+
+| Поле входа | Смысл |
+| --- | --- |
+| `givens`, `values` | исходные подсказки и доска игрока (подсказки + его цифры, возможно неверные; подсказки в `values` обязаны совпадать с `givens`, иначе `RangeError`) |
+| `solution` | необязательно; если нет — выводится из `givens` (нужна единственность решения, иначе `none/invalid_puzzle`) |
+| `notes` | необязательно: 81 маска (бит `d` = цифра `d`, как в таймлапсе). **На корректность не влияет** |
+| `lastCell` | необязательно: при равной технике берётся шаг, ближайший к последнему ходу |
+
+**Ступени (`kind: 'step'`):**
+
+| Ступень | Поле | Содержимое |
+| --- | --- | --- |
+| 1. Область | `region` | `{ kind: 'row'\|'col'\|'box', index (0-based), unit (индекс в UNITS) }` |
+| 2. Техника | `technique` | `naked_single`, `hidden_single`, `locked_candidates`, `naked_pair`, `hidden_pair` |
+| 3. Клетки | `cells` | `target` — клетки паттерна; `witnesses` — клетки с цифрой, из-за которых вывод верен (singles, locked); `affected` — где вычёркивается (locked, пары) |
+| 4. Разбор | `explanation` | `{ id, params }` — данные, не строки (см. ниже) |
+| 5. Итог | `placement` \| `eliminations` | singles → `{ cell, digit }`; locked/пары → `eliminations: {cell, digit}[]` (+ `leadsTo`) |
+
+`explanation.id` ∈ `naked_single`, `hidden_single`, `locked_pointing`, `locked_claiming`, `naked_pair`,
+`hidden_pair`, `mistake_conflict`, `mistake_hidden`; ключ i18n — `hint.explain.<id>`, параметры — клетки
+(индексы 0..80), цифры, `HintRegion`. Локализация (en/uk/ru) целиком на стороне UI.
+
+**Приоритет (детерминированный):**
+1. Ошибка игрока на доске (цифра ≠ решению) → `mistake`, пока она есть.
+2. Самая дешёвая применимая техника (`TECHNIQUE_ORDER`): naked single → hidden single → locked candidates →
+   naked pair → hidden pair. Это тот же порядок, что у `humanSolve`: техника подсказки = первый шаг
+   `humanSolve` на этой же доске (проверено тестом).
+3. Внутри техники — шаг, ближайший к `lastCell` (сама клетка → сосед по дому → далеко); без `lastCell` и при
+   равенстве — первый в порядке скана (дома 0..26, цифры 1..9, клетки 0..80).
+4. Регион singles: naked — дом клетки с наибольшим числом цифр (при равенстве дом с `lastCell`, затем блок →
+   строка → столбец); hidden — дом, где цифра скрыта (предпочтение тем же порядком). Locked — дом, где
+   видна закономерность (блок для pointing, линия для claiming); пары — дом пары.
+
+**Кандидаты и заметки.** Кандидаты движок считает сам из цифр доски. Доска от вычёркиваний не меняется,
+поэтому шаг-вычёркивание без `notes` повторялся бы вечно. С `notes` движок смотрит только одно: все ли
+вычёркивания шага уже убраны из заметок игрока (в клетке, где заметки используются). Такой шаг молча
+применяется к рабочему состоянию, поиск идёт дальше — после вычёркиваний открываются singles; те
+вычёркивания, на которые опирается найденный шаг, перечислены в `assumes`. Частично сделанный шаг
+возвращается с оставшимися `eliminations`. Неверные заметки (в т. ч. без цифры решения) выбор шага не
+меняют — они лишь не засчитывают вычёркивание. Без заметок у шага-вычёркивания есть `leadsTo` — первая
+постановка, которая из него следует по цепочке техник движка (`null`, если цепочка застревает).
+
+**Ошибка (`kind: 'mistake'`) и принцип «без оракула».** Ошибка определяется относительно решения — это
+оракул, допустимый только для явной подсказки (помощь помечает день; в обычной игре эта функция не
+вызывается). Лесенка при этом остаётся осторожной: ступень 1 — **область**, а не клетка: если неверная
+цифра даёт видимый дубликат — общий дом дубликата (`mistake_conflict`), иначе её блок (`mistake_hidden`,
+9 клеток). Точные клетки (`cells.target` — все неверные клетки этого дома) и `totalWrong` — на ступенях 3+.
+Клетка последнего хода приоритетна, затем неверные клетки с видимым дубликатом, затем по индексу. Цифра
+решения в ответе не раскрывается.
+
+**`none`:** `solved` — всё верно заполнено; `beyond` — ошибок нет, но ни одна техника движка не применима
+(честно: движок не умеет X-Wing и выше, это не «логики нет»); `invalid_puzzle` — `givens` без решения или с
+несколькими решениями при отсутствии `solution`.
+
+**Ограничения.** Техник ровно пять (нет X-Wing, Swordfish, XY-Wing, цепочек) — на master-сетках подсказка
+рано или поздно вернёт `beyond`. Подсказка отвечает «что делать дальше», а не «как решать оптимально»;
+у шагов-вычёркиваний `leadsTo` — лишь одна из цепочек. Доска со **множеством решений** не поддерживается
+(при неединственности без явного `solution` — `invalid_puzzle`). Производительность: медиана ≈ 0.03 мс,
+p95 < 1 мс на состояние (1187 состояний партий всех классов, Node 24; при load average 300 разовые
+выбросы до 170 мс — шум планировщика, не алгоритм); без `solution` +≈ 1 мс на решение из `givens`.
+Тесты — `hint.test.ts`: фикстуры реальных сеток по каждой технике, property-партии (с заметками и без) на
+сетках всех сложностей, ошибки/none/валидация/неизменность входа.
 
 ### Генератор (`generator.ts`)
 
@@ -300,6 +374,6 @@ pnpm measure:engine 200 hard expert       # (из корня) замер поп�
 
 ## Что не реализовано (сознательно)
 
-- X-Wing, Swordfish, XY-Wing, цепочки — вторая волна; сейчас всё сверх пар помечается `'beyond'`.
+- X-Wing, Swordfish, XY-Wing, цепочки — вторая волна; сейчас всё сверх пар помечается `'beyond'` (и `nextHint` возвращает `none/beyond`).
 - Симметричное вычитание клеток.
 - Оценка «SE rating»-подобным числом — только классы техник.
