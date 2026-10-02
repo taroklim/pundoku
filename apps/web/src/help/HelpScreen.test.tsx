@@ -33,12 +33,12 @@ const render = (block: HelpBlockId | null = null, onBack = () => {}) =>
   act(() => root.render(<HelpScreen block={block} backName="Settings" backLabel="Back to Settings" onBack={onBack} />));
 
 describe("HelpScreen (PD-120)", () => {
-  it("заголовок и пять блоков по порядку; каждый — секция с заголовком h2", () => {
+  it("заголовок и шесть блоков по порядку; каждый — секция с заголовком h2", () => {
     render();
     expect(host.querySelector("h1")!.textContent).toBe("How Pundoku works");
     const ids = [...host.querySelectorAll("section")].map((s) => s.getAttribute("data-testid"));
     expect(ids).toEqual(HELP_BLOCKS.map((b) => `help-${b}`));
-    expect([...host.querySelectorAll("h2")].map((h) => h.textContent)).toEqual(["Grid ∞", "Fixes", "Technique reached", "Year marks", "Numbers on the pad"]);
+    expect([...host.querySelectorAll("h2")].map((h) => h.textContent)).toEqual(["Grid ∞", "Fixes", "Technique reached", "Hints", "Year marks", "Numbers on the pad"]);
   });
 
   it("Grid ∞: текст честный — 30–60 клеток; «enough clues» подставлено из метки Today", () => {
@@ -85,7 +85,7 @@ describe("HelpScreen (PD-120)", () => {
   it.each(["uk", "ru"])("%s: все блоки на месте, без «Corrections»", async (lng) => {
     await i18n.changeLanguage(lng);
     render();
-    expect(host.querySelectorAll("section")).toHaveLength(5);
+    expect(host.querySelectorAll("section")).toHaveLength(6);
     expect(host.textContent).not.toMatch(/Corrections|help\./);
     await i18n.changeLanguage("en");
   });

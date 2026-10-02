@@ -56,6 +56,19 @@ export interface PlayState {
    * (PD-70). Отсутствует у настоящих партий.
    */
   readonly logSynthetic?: true;
+  /**
+   * PD-139: журнал результативных подсказок партии — `t` (мс тихого времени, шкала `log[].t`) и клетка, куда подсказка
+   * вела (`null` — не называла: ошибка/вычёркивание без постановки). Нужен Таймлапсу (засечки на шкале) и карточке (полая
+   * середина клетки тепловой карты). Это НЕ ход: в `log` движка подсказки не пишутся, `heatmap/summary` их не видят.
+   * Опционально: старые записи и дни без подсказок — без поля.
+   */
+  readonly hintLog?: readonly HintEvent[];
+}
+
+/** Запись журнала подсказок (`PlayState.hintLog`). */
+export interface HintEvent {
+  readonly t: number;
+  readonly cell: number | null;
 }
 
 export function createPlay(puzzle: { mission: string; solution: string }): PlayState {

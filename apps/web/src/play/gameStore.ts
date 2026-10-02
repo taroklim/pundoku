@@ -65,6 +65,13 @@ export interface PlaySnapshot {
    * PD-119: он же сообщает итог «Fill candidates» (`filled` с числом клеток `count`, `fillNone`).
    */
   readonly hint?: { readonly kind: HintKind; readonly id: number; readonly count?: number; readonly dead?: number } | null;
+  /**
+   * PD-139: сколько РЕЗУЛЬТАТИВНЫХ подсказок взято в этой партии (ступень «Покажи область» уже не считается — считается
+   * только открытие, давшее технику или ошибку; «ничего не нашёл» не считается). Отдельно от `assisted`.
+   */
+  readonly hints?: number;
+  /** PD-139: партия «с помощью» — выставляется первой результативной подсказкой и больше не снимается. Не выводится из `hints`. */
+  readonly assisted?: boolean;
 }
 
 type Mutable<T> = { -readonly [K in keyof T]: T[K] };
@@ -83,6 +90,8 @@ export function initialSnapshot(): PlaySnapshot {
     wave: null,
     echo: null,
     blot: null,
+    hints: 0,
+    assisted: false,
   };
 }
 
@@ -153,6 +162,8 @@ export abstract class GameStore<S extends PlaySnapshot = PlaySnapshot> {
       echo: null,
       blot: null,
       hint: null,
+      hints: 0,
+      assisted: false,
       ...patch,
     } as Partial<S>);
     return play;
@@ -173,6 +184,8 @@ export abstract class GameStore<S extends PlaySnapshot = PlaySnapshot> {
       echo: null,
       blot: null,
       hint: null,
+      hints: 0,
+      assisted: false,
       ...patch,
     } as Partial<S>);
   }
@@ -191,6 +204,8 @@ export abstract class GameStore<S extends PlaySnapshot = PlaySnapshot> {
       echo: null,
       blot: null,
       hint: null,
+      hints: 0,
+      assisted: false,
       startedOn: new Date(),
       ...patch,
     } as Partial<S>);
@@ -256,7 +271,7 @@ export abstract class GameStore<S extends PlaySnapshot = PlaySnapshot> {
   setInk(on: boolean): boolean {
     const { play, phase } = this.snap;
     if (phase !== "playing" || !play) return false;
-    if (on && !this.inkAllowed()) return (play.ink === true) === on;
+    if (on && (!this.inkAllowed() || this.snap.assisted === true)) return (play.ink === true) === on;
     const next = setInkMode(play, on);
     if (next !== play) this.set({ play: next } as Partial<S>);
     return (next.ink === true) === on;
@@ -269,7 +284,29 @@ export abstract class GameStore<S extends PlaySnapshot = PlaySnapshot> {
    */
   inkChoosable(): boolean {
     const { play, phase } = this.snap;
-    return phase === "playing" && play !== null && !play.solved && !hasPlacedDigit(play) && this.inkAllowed();
+    return phase === "playing" && play !== null && !play.solved && !hasPlacedDigit(play) && this.inkAllowed() && this.snap.assisted !== true;
+  }
+
+  /**
+   * PD-139: можно ли просить подсказку. Партия идёт, не решена и НЕ чернильная (решение владельца: в Ink подсказок нет
+   * вообще). Наследники сужают (Today: не Grid ∞ — его играет не этот стор).
+   */
+  hintAllowed(): boolean {
+    const { play, phase } = this.snap;
+    return phase === "playing" && play !== null && !play.solved && play.ink !== true;
+  }
+
+  /**
+   * PD-139: открытие подсказки дало результат (техника или ошибка) — партия помечается «с помощью», счётчик растёт,
+   * момент и клетка ложатся в `play.hintLog` (Таймлапс/карточка). Вызывает экран ровно один раз на открытие (повторный
+   * показ той же ступени не считается). Возвращает `true`, если счёт изменился. Пишется вместе с партией (`set` наследников).
+   */
+  registerHint(cell: number | null = null): boolean {
+    const { play } = this.snap;
+    if (!this.hintAllowed() || !play) return false;
+    const hintLog = [...(play.hintLog ?? []), { t: Math.round(this.getElapsedMs()), cell }];
+    this.set({ hints: (this.snap.hints ?? 0) + 1, assisted: true, play: { ...play, hintLog } } as unknown as Partial<S>);
+    return true;
   }
 
   /** Разрешён ли Чернильный режим на этом экране: Today и Play — да; архивный `DayStore` переопределяет. */

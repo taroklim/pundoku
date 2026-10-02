@@ -32,8 +32,13 @@ export interface DayProgress {
   readonly solvedAt: string | null;
   /** День решён после своей даты (дата дня < даты на момент решения). */
   readonly late: boolean;
-  /** Решено с подсказкой. В релизе 1 подсказок нет — всегда `false`. */
+  /**
+   * Решено с подсказкой (PD-139): партия помечена первой РЕЗУЛЬТАТИВНОЙ подсказкой (техника или ошибка; «ничего не нашёл»
+   * не помечает). Хранится отдельно от `hints` и не выводится из него.
+   */
   readonly assisted: boolean;
+  /** Сколько результативных подсказок взято (PD-139). Опционально: старые записи — 0; схему снапшота не версионируем. */
+  readonly hints?: number;
 }
 
 const CELL_COUNT = 81;
@@ -80,6 +85,12 @@ function isUndoEntry(e: unknown): boolean {
   );
 }
 
+/** Запись журнала подсказок (`play/logic.ts › HintEvent`, PD-139). */
+function isHintEvent(e: unknown): boolean {
+  if (!isObj(e)) return false;
+  return typeof e["t"] === "number" && Number.isFinite(e["t"]) && e["t"] >= 0 && (e["cell"] === null || isInt(e["cell"], 0, CELL_COUNT - 1));
+}
+
 /** Причина, по которой `play` нечитаем (`null` — годится). Структура — `PlayState` (`play/logic.ts`). */
 function playProblem(play: unknown): string | null {
   if (!isObj(play)) return "play";
@@ -95,6 +106,8 @@ function playProblem(play: unknown): string | null {
   if (typeof play["solved"] !== "boolean") return "play.solved";
   if (!isBoolOrUndef(play["ink"])) return "play.ink";
   if (play["logSynthetic"] !== undefined && play["logSynthetic"] !== true) return "play.logSynthetic";
+  const hintLog = play["hintLog"];
+  if (hintLog !== undefined && (!Array.isArray(hintLog) || !hintLog.every(isHintEvent))) return "play.hintLog";
   return null;
 }
 
@@ -121,6 +134,7 @@ export function dayProgressProblem(x: unknown): string | null {
   if (x["solvedAt"] !== null && typeof x["solvedAt"] !== "string") return "solvedAt";
   if (typeof x["late"] !== "boolean") return "late";
   if (typeof x["assisted"] !== "boolean") return "assisted";
+  if (x["hints"] !== undefined && !isInt(x["hints"], 0, 999)) return "hints";
   return null;
 }
 
