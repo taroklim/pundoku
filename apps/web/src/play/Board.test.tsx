@@ -7,7 +7,7 @@ import "../i18n";
 import { Board, BLOT_MOMENT_MS } from "./Board";
 import { MOTION_MS } from "./motion";
 import { createPlay } from "./logic";
-import { HIGHLIGHT_WRONG_KEY, setHighlightWrong } from "../settings/prefs";
+import { HIGHLIGHT_WRONG_KEY, setHighlightPeers, setHighlightWrong } from "../settings/prefs";
 import type { PlaySnapshot } from "./gameStore";
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
@@ -245,5 +245,46 @@ describe("PD-89: события движения гаснут сами", () => {
     expect(document.querySelectorAll(".cell.blotting").length).toBeGreaterThan(0);
     act(() => void window.dispatchEvent(new Event("pointerdown")));
     expect(document.querySelectorAll(".cell.blotting")).toHaveLength(0);
+  });
+});
+
+describe("PD-124: слабая заливка ряда/столбца/блока выбранной клетки", () => {
+  const peers = () => [...document.querySelectorAll<HTMLElement>(".cell.peer")].map((c) => Number(c.dataset["i"]));
+
+  it("по умолчанию вкл: ровно 20 соседей выбранной (ряд, столбец, блок), сама клетка — нет (у неё кольцо и .sel)", () => {
+    render(snapOf({ selected: 2 }));
+    const got = peers().sort((a, b) => a - b);
+    const want = [...new Set([...row(0), ...col(2), 0, 1, 9, 10, 11, 18, 19, 20])].filter((i) => i !== 2).sort((a, b) => a - b);
+    expect(got).toEqual(want);
+    expect(got).toHaveLength(20);
+    expect(document.querySelector('.cell[data-i="2"]')!.classList.contains("peer")).toBe(false);
+    expect(document.querySelector('.cell[data-i="2"]')!.classList.contains("sel")).toBe(true);
+  });
+
+  it("выкл в Settings: класса нет нигде; включение возвращает его без перезагрузки", () => {
+    setHighlightPeers(false);
+    try {
+      render(snapOf({ selected: 2 }));
+      expect(peers()).toEqual([]);
+      act(() => setHighlightPeers(true));
+      expect(peers()).toHaveLength(20);
+    } finally {
+      setHighlightPeers(true);
+    }
+  });
+
+  it("нет выбора или поле не готово (setup/loading/решено) — заливки нет", () => {
+    render(snapOf({ selected: null }));
+    expect(peers()).toEqual([]);
+    render(snapOf({ selected: 2, phase: "loading" }));
+    expect(peers()).toEqual([]);
+  });
+
+  it("peer — отдельный класс: не смешивается с .same («та же цифра») и .err; клетка может нести peer и same вместе", () => {
+    // клетка 0 содержит 5 (given); выбор клетки 1 (3): same — другие тройки; peer — соседи клетки 1
+    render(snapOf({ selected: 1 }));
+    const both = [...document.querySelectorAll(".cell.peer.same")];
+    for (const c of both) expect(c.classList.contains("sel")).toBe(false);
+    expect(document.querySelectorAll(".cell.same:not(.peer)").length + both.length).toBeGreaterThan(0);
   });
 });

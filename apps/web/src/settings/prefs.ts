@@ -37,11 +37,53 @@ export function setHighlightWrong(on: boolean): void {
   notify();
 }
 
+/**
+ * Настройки, ВКЛЮЧЁННЫЕ по умолчанию (PD-119, PD-124): ключа нет — значит вкл; выкл хранится значением «0». Так у всех, включая
+ * игравших раньше, новое поведение работает без действий, а возврат к умолчанию — просто удаление ключа.
+ */
+export const AUTO_CLEAR_NOTES_KEY = "pundoku.autoClearNotes";
+export const HIGHLIGHT_PEERS_KEY = "pundoku.highlightPeers";
+
+function defaultOnPref(key: string) {
+  let memory = true;
+  return {
+    get(): boolean {
+      try {
+        return localStorage.getItem(key) !== "0";
+      } catch {
+        return memory;
+      }
+    },
+    set(on: boolean): void {
+      memory = on;
+      try {
+        if (on) localStorage.removeItem(key);
+        else localStorage.setItem(key, "0");
+      } catch {
+        /* выбор живёт до перезагрузки */
+      }
+      notify();
+    },
+  };
+}
+
+const autoClearPref = defaultOnPref(AUTO_CLEAR_NOTES_KEY);
+const peersPref = defaultOnPref(HIGHLIGHT_PEERS_KEY);
+
+/** PD-119: убирать поставленную цифру из заметок строки/столбца/блока. По умолчанию ВКЛ. В чернилах не действует никогда. */
+export const getAutoClearNotes = autoClearPref.get;
+export const setAutoClearNotes = autoClearPref.set;
+/** PD-124: очень слабая заливка строки/столбца/блока выбранной клетки. По умолчанию ВКЛ. */
+export const getHighlightPeers = peersPref.get;
+export const setHighlightPeers = peersPref.set;
+
+const WATCHED_KEYS: readonly string[] = [HIGHLIGHT_WRONG_KEY, AUTO_CLEAR_NOTES_KEY, HIGHLIGHT_PEERS_KEY];
+
 function subscribe(listener: () => void): () => void {
   listeners.add(listener);
   // Другая вкладка/окно PWA изменила настройку (или очистила хранилище: key === null).
   const onStorage = (e: StorageEvent) => {
-    if (e.key === null || e.key === HIGHLIGHT_WRONG_KEY) listener();
+    if (e.key === null || WATCHED_KEYS.includes(e.key)) listener();
   };
   window.addEventListener("storage", onStorage);
   return () => {
@@ -52,4 +94,12 @@ function subscribe(listener: () => void): () => void {
 
 export function useHighlightWrong(): boolean {
   return useSyncExternalStore(subscribe, getHighlightWrong, () => false);
+}
+
+export function useAutoClearNotes(): boolean {
+  return useSyncExternalStore(subscribe, getAutoClearNotes, () => true);
+}
+
+export function useHighlightPeers(): boolean {
+  return useSyncExternalStore(subscribe, getHighlightPeers, () => true);
 }

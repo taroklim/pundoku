@@ -624,6 +624,22 @@ button.row:active{ background:var(--ink-tint); }
                reason Language is first: the key block below changes height and must keep growing downward. ---- -->
       <section class="sec" aria-labelledby="h-game">
         <h2 class="sec-head" id="h-game" data-t="gameHead">Game</h2>
+        <!-- PD-119: auto-clear neighbouring notes. ON by default; Ink mode ignores it (notes are by hand). -->
+        <div class="card">
+          <label class="row switch">
+            <span class="lab" data-t="acLabel">Clear notes automatically</span>
+            <input class="sw" type="checkbox" role="switch" aria-describedby="ac-foot" id="ac" checked>
+          </label>
+        </div>
+        <p class="sec-foot" id="ac-foot" data-t="acFoot"></p>
+        <!-- PD-124: very light tint of the selected cell's row, column and box (~3 % ink, token --fill-peer). ON by default. -->
+        <div class="card">
+          <label class="row switch">
+            <span class="lab" data-t="pxLabel">Tint row, column and box</span>
+            <input class="sw" type="checkbox" role="switch" aria-describedby="px-foot" id="px" checked>
+          </label>
+        </div>
+        <p class="sec-foot" id="px-foot" data-t="pxFoot"></p>
         <div class="card">
           <label class="row switch">
             <span class="lab" data-t="hwLabel">Highlight wrong digits</span>
@@ -799,6 +815,9 @@ button.row:active{ background:var(--ink-tint); }
       dayline:"Wed 30 Sep · Medium", boardLabel:"Sudoku grid for Wednesday 30 September",
       gear:"Settings", settings:"Settings", done:"Done", kb:"system keyboard",
       langHead:"Language",
+      acLabel:"Clear notes automatically", pxLabel:"Tint row, column and box",
+      acFoot:"When you place a digit, it disappears from the notes of the cells in the same row, column and box, and Undo brings them back together with the move. On by default. Ink mode keeps notes by hand. To fill notes with every digit that still fits, press and hold Notes (or press F).",
+      pxFoot:"Very lightly tints the row, column and box of the selected cell, so you can see which cells it sees. On by default.",
       gameHead:"Game", hwLabel:"Highlight wrong digits",
       hwFoot:"Colours a digit you placed red when it doesn’t match the solution, and has VoiceOver say so. Off by default. Ink mode always shows its blots.",
       langs:{ en:"English", uk:"Українська", ru:"Русский" },
@@ -867,6 +886,9 @@ button.row:active{ background:var(--ink-tint); }
       dayline:"Ср, 30 вер. · Середньо", boardLabel:"Сітка судоку за 30 вересня",
       gear:"Налаштування", settings:"Налаштування", done:"Готово", kb:"системна клавіатура",
       langHead:"Мова",
+      acLabel:"Автоочищення нотаток", pxLabel:"Підсвічувати рядок, стовпець і блок",
+      acFoot:"Коли ви ставите цифру, вона зникає з нотаток клітинок того ж рядка, стовпця й блока, а «Скасувати» повертає їх разом із ходом. Увімкнено за замовчуванням. У чорнильному режимі нотатки ведуться вручну. Щоб заповнити нотатки всіма цифрами, що ще підходять, утримуйте «Нотатки» (або натисніть F).",
+      pxFoot:"Дуже ледь підфарбовує рядок, стовпець і блок вибраної клітинки, щоб було видно, які клітинки з нею пов’язані. Увімкнено за замовчуванням.",
       gameHead:"Гра", hwLabel:"Підсвічувати неправильні цифри",
       hwFoot:"Фарбує у червоний цифру, яку ви поставили, якщо вона не збігається з розв’язком, і озвучує це у VoiceOver. За замовчуванням вимкнено. Чорнильний режим завжди показує свої ляпки.",
       langs:{ en:"English", uk:"Українська", ru:"Русский" },
@@ -935,6 +957,9 @@ button.row:active{ background:var(--ink-tint); }
       dayline:"Ср, 30 сент. · Средне", boardLabel:"Сетка судоку за 30 сентября",
       gear:"Настройки", settings:"Настройки", done:"Готово", kb:"системная клавиатура",
       langHead:"Язык",
+      acLabel:"Автоочистка заметок", pxLabel:"Подсвечивать строку, столбец и блок",
+      acFoot:"Когда вы ставите цифру, она исчезает из заметок клеток той же строки, столбца и блока, а «Отменить» возвращает их вместе с ходом. Включено по умолчанию. В чернильном режиме заметки ведутся вручную. Чтобы заполнить заметки всеми цифрами, которые ещё подходят, удерживайте «Заметки» (или нажмите F).",
+      pxFoot:"Очень слабо подкрашивает строку, столбец и блок выбранной клетки, чтобы было видно, с какими клетками она связана. Включено по умолчанию.",
       gameHead:"Игра", hwLabel:"Подсвечивать неверные цифры",
       hwFoot:"Красит красным цифру, которую вы поставили, если она не совпадает с решением, и озвучивает это в VoiceOver. По умолчанию выключено. Чернильный режим всегда показывает свои кляксы.",
       langs:{ en:"English", uk:"Українська", ru:"Русский" },

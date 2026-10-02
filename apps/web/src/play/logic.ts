@@ -18,12 +18,20 @@ import { INK_RULES, appendMove, blotsOf, createMoveLog, inkAllows, techniqueForC
 export const CELLS = 81;
 
 /** Запись стека undo: состояние клетки до действия (цифра + заметки целиком). */
-interface UndoEntry {
+export interface UndoEntry {
   readonly cell: number;
   readonly prevValue: number;
   readonly prevNotes: number;
   /** Для информационного поля `digit` undo-хода. */
   readonly digit?: Digit;
+  /**
+   * PD-119: другие клетки, которые тот же ход тронул, — `[клетка, заметки до хода]`. Это автоочистка соседей при постановке
+   * цифры и «Fill candidates». Откат одним `undo` возвращает и основную клетку, и эти. Только клиентское: в лог ходов не
+   * попадает (ход там один — `place` либо одна служебная `note_add`), так что движок и снапшот остаются совместимыми.
+   */
+  readonly also?: readonly (readonly [number, number])[];
+  /** PD-119: запись — «Fill candidates» (откат не переводит выбор на `cell`: это просто первая затронутая клетка). */
+  readonly fill?: true;
 }
 
 export interface PlayState {
@@ -206,7 +214,15 @@ function techniqueOf(s: PlayState, cell: number): TechniqueOrBeyond | undefined 
  * Backspace/Delete). Ink: клетка с цифрой заблокирована; неверная цифра — клякса
  * (`inkBlot`): по `rules.autoReplaceBlot` клетка тут же получает верную цифру.
  */
-export function enterDigit(s: PlayState, cell: number, digit: number, t: number, rules: InkRules = INK_RULES): PlayState {
+export function enterDigit(
+  s: PlayState,
+  cell: number,
+  digit: number,
+  t: number,
+  rules: InkRules = INK_RULES,
+  /** PD-119: убрать поставленную цифру из заметок клеток той же строки/столбца/блока (одной записью undo). В ink не действует. */
+  autoClear = false,
+): PlayState {
   if (s.solved || isGiven(s, cell) || digit < 1 || digit > 9) return s;
   const ink = s.ink === true;
   if (ink && !inkAllows("place", (s.values[cell] ?? 0) !== 0, rules)) return s;
@@ -223,15 +239,61 @@ export function enterDigit(s: PlayState, cell: number, digit: number, t: number,
     correct,
     ...(technique ? { technique } : {}),
   };
+  // Автоочистка зависит только от того, что стоит на доске, а не от верности цифры: иначе «заметки не тронулись» выдавало бы
+  // ошибку (оракул). Верная и неверная цифра чистят соседей одинаково.
+  const cleared = autoClear && !ink ? clearPeerNotes(s, cell, digit) : null;
   const next: PlayState = {
     ...s,
     values: withCell(s.values, cell, digit),
-    notes: withCell(s.notes, cell, 0),
+    notes: cleared ? cleared.notes : withCell(s.notes, cell, 0),
     log: push(s, move),
     // В ink undo нет — стек не ведём: кнопка «Отменить» в UI не должна оживать.
-    undoStack: ink ? s.undoStack : [...s.undoStack, { cell, prevValue: s.values[cell] ?? 0, prevNotes: s.notes[cell] ?? 0, digit: d }],
+    undoStack: ink
+      ? s.undoStack
+      : [
+          ...s.undoStack,
+          {
+            cell,
+            prevValue: s.values[cell] ?? 0,
+            prevNotes: s.notes[cell] ?? 0,
+            digit: d,
+            ...(cleared && cleared.also.length > 0 ? { also: cleared.also } : {}),
+          },
+        ],
   };
   return finish(next);
+}
+
+/** Клетки той же строки, столбца и блока, что и `cell` (без неё самой), по возрастанию номера. */
+export function peersOf(cell: number): number[] {
+  const r = Math.floor(cell / 9);
+  const c = cell % 9;
+  const out: number[] = [];
+  for (let i = 0; i < CELLS; i++) {
+    if (i === cell) continue;
+    const ir = Math.floor(i / 9);
+    const ic = i % 9;
+    if (ir === r || ic === c || (Math.floor(ir / 3) === Math.floor(r / 3) && Math.floor(ic / 3) === Math.floor(c / 3))) out.push(i);
+  }
+  return out;
+}
+
+/**
+ * Заметки после постановки `digit` в `cell` (PD-119): своя клетка очищена, цифра убрана из заметок соседей. `also` — соседи,
+ * чьи заметки реально изменились, с масками ДО хода (для undo). Только пустые клетки игрока: у остальных заметок нет.
+ */
+function clearPeerNotes(s: PlayState, cell: number, digit: number): { notes: number[]; also: [number, number][] } {
+  const notes = withCell(s.notes, cell, 0);
+  const also: [number, number][] = [];
+  const bit = 1 << digit;
+  for (const p of peersOf(cell)) {
+    const mask = s.notes[p] ?? 0;
+    if (mask & bit) {
+      notes[p] = mask & ~bit;
+      also.push([p, mask]);
+    }
+  }
+  return { notes, also };
 }
 
 /**
@@ -297,12 +359,60 @@ export function undo(s: PlayState, t: number, rules: InkRules = INK_RULES): Play
   if (s.solved || !top) return s;
   if (s.ink === true && !inkAllows("undo", false, rules)) return s;
   const move: Move = { t: stamp(s, t), cell: top.cell, kind: "undo", ...(top.digit ? { digit: top.digit } : {}) };
+  const notes = withCell(s.notes, top.cell, top.prevNotes);
+  for (const [c, mask] of top.also ?? []) notes[c] = mask; // PD-119: соседи/заполнение откатываются тем же шагом
   return {
     ...s,
     values: withCell(s.values, top.cell, top.prevValue),
-    notes: withCell(s.notes, top.cell, top.prevNotes),
+    notes,
     log: push(s, move),
     undoStack: s.undoStack.slice(0, -1),
+  };
+}
+
+/**
+ * Допустимые кандидаты пустой клетки (PD-119): цифры, которых нет в её строке, столбце и блоке — по тому, что СТОИТ на доске
+ * (заданные и цифры игрока, верные и неверные). Решение не используется: это не подсказка, а факт о доске. Битовая маска.
+ */
+export function candidatesOf(s: PlayState, cell: number): number {
+  let mask = 0b1111111110;
+  for (const p of peersOf(cell)) {
+    const d = digitAt(s, p);
+    if (d) mask &= ~(1 << d);
+  }
+  return mask;
+}
+
+/**
+ * «Fill candidates» (PD-119): заполнить заметки всеми допустимыми кандидатами в пустых клетках БЕЗ заметок. Клетки, где игрок уже
+ * что-то написал, не трогаются — это его работа (в т. ч. намеренно вычеркнутые кандидаты). Одно действие: одна запись undo
+ * (откат возвращает все клетки) и один служебный ход `note_add` в логе — он нужен только затем, чтобы стек клиента и стек
+ * движка оставались зеркальными (движок заметки в расчёты не берёт). Ink и решённая партия — no-op (подсказок в чернилах нет).
+ * Нечего заполнять — возвращает `s`.
+ */
+export function fillCandidates(s: PlayState, t: number): PlayState {
+  if (s.solved || s.ink === true) return s;
+  const notes = s.notes.slice();
+  const changed: number[] = [];
+  for (let i = 0; i < CELLS; i++) {
+    if (isGiven(s, i) || (s.values[i] ?? 0) !== 0 || (s.notes[i] ?? 0) !== 0) continue;
+    const mask = candidatesOf(s, i);
+    if (mask === 0) continue; // тупик из-за неверных цифр — писать нечего
+    notes[i] = mask;
+    changed.push(i);
+  }
+  const first = changed[0];
+  if (first === undefined) return s;
+  const firstDigit = notesOf(notes[first] ?? 0)[0] as Digit;
+  const move: Move = { t: stamp(s, t), cell: first, kind: "note_add", digit: firstDigit };
+  return {
+    ...s,
+    notes,
+    log: push(s, move),
+    undoStack: [
+      ...s.undoStack,
+      { cell: first, prevValue: 0, prevNotes: 0, digit: firstDigit, fill: true, also: changed.slice(1).map((c): [number, number] => [c, 0]) },
+    ],
   };
 }
 

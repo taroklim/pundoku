@@ -19,7 +19,11 @@
     "game": {
       "head": "Game",
       "highlightWrong": "Highlight wrong digits",
-      "highlightWrongFoot": "Colours a digit you placed red when it doesn’t match the solution, and has VoiceOver say so. Off by default. Ink mode always shows its blots."
+      "highlightWrongFoot": "Colours a digit you placed red when it doesn’t match the solution, and has VoiceOver say so. Off by default. Ink mode always shows its blots.",
+      "autoClearNotes": "Clear notes automatically",
+      "autoClearNotesFoot": "When you place a digit, it disappears from the notes of the cells in the same row, column and box, and Undo brings them back together with the move. On by default. Ink mode keeps notes by hand. To fill notes with every digit that still fits, press and hold Notes (or press F).",
+      "highlightPeers": "Tint row, column and box",
+      "highlightPeersFoot": "Very lightly tints the row, column and box of the selected cell, so you can see which cells it sees. On by default."
     },
     "open": "Settings",
     "backLabel": "Back to Today",
@@ -178,11 +182,18 @@
     "discardMessage": "Your progress on this puzzle will be lost.",
     "discard": "Discard",
     "keepPlaying": "Keep playing",
+    "fillTitle": "Fill candidates",
+    "fillMessage": "Notes go into every empty cell that has none yet, with the digits that still fit. Undo takes it all back in one step.",
+    "fillAction": "Fill candidates",
+    "fillCancel": "Cancel",
     "gridFull": "Grid full — something doesn’t match",
     "hint": {
       "pickCell": "Pick an empty cell first",
       "noteFilled": "Notes go in empty cells only",
-      "inkFilled": "This cell is filled — ink doesn’t lift"
+      "inkFilled": "This cell is filled — ink doesn’t lift",
+      "filled_one": "Notes filled in {{count}} cell",
+      "filled_other": "Notes filled in {{count}} cells",
+      "fillNone": "Nothing to fill in"
     },
     "cellsLeft_one": "{{count}} cell left",
     "cellsLeft_other": "{{count}} cells left"

@@ -106,6 +106,10 @@ describe("isDayProgress (PD-148): порченые записи отбрасыв
     ["undoStack: [null]", withPlay(good, { undoStack: [null] })],
     ["undoStack: не массив", withPlay(good, { undoStack: undefined })],
     ["undoStack: запись без prevNotes", withPlay(good, { undoStack: [{ cell: 0, prevValue: 0 }] })],
+    ["undoStack: also — не массив", withPlay(good, { undoStack: [{ cell: 0, prevValue: 0, prevNotes: 0, also: 5 }] })],
+    ["undoStack: also — клетка вне поля", withPlay(good, { undoStack: [{ cell: 0, prevValue: 0, prevNotes: 0, also: [[81, 2]] }] })],
+    ["undoStack: also — маска заметок с битом 0", withPlay(good, { undoStack: [{ cell: 0, prevValue: 0, prevNotes: 0, also: [[1, 3]] }] })],
+    ["undoStack: fill — не true", withPlay(good, { undoStack: [{ cell: 0, prevValue: 0, prevNotes: 0, fill: false }] })],
     ["solved не boolean", withPlay(good, { solved: "yes" })],
     ["ink не boolean", withPlay(good, { ink: "yes" })],
     ["play: null", { ...good, play: null }],
@@ -127,6 +131,17 @@ describe("isDayProgress (PD-148): порченые записи отбрасыв
   it.each(bad)("%s", (_name, rec) => {
     expect(dayProgressProblem(rec)).not.toBeNull();
     expect(isDayProgress(rec)).toBe(false);
+  });
+
+  it("PD-119: запись undo с also (автоочистка/заполнение) и fill — валидна; старые записи без них — тоже", () => {
+    const ok = withPlay(good, {
+      undoStack: [
+        { cell: 0, prevValue: 0, prevNotes: 0 },
+        { cell: 1, prevValue: 0, prevNotes: 4, digit: 2, also: [[5, 6], [80, 1022]] },
+        { cell: 2, prevValue: 0, prevNotes: 0, digit: 1, fill: true, also: [] },
+      ],
+    });
+    expect(dayProgressProblem(ok)).toBeNull();
   });
 
   it("sanitizeDays: порченая запись отброшена с причиной в console.error, соседние годные остаются", () => {

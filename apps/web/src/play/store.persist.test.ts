@@ -89,6 +89,31 @@ describe("PD-116: сохранение и восстановление парт�
     expect(b.getSnapshot().play!.log.at(-1)!.kind).toBe("undo");
   });
 
+  it("PD-119: заметки, автоочистка и Fill переживают перезагрузку; Undo из восстановленного стека откатывает ход вместе с очисткой", async () => {
+    localStorage.clear();
+    const repo = new InMemoryProgressRepository();
+    const a = started(repo);
+    a.toggleNotesMode();
+    a.select(3);
+    a.input(4); // заметка 4 в клетке 3 (строка клетки 2)
+    a.toggleNotesMode();
+    a.select(2);
+    a.input(4); // автоочистка: у клетки 3 заметка 4 ушла
+    expect(a.getSnapshot().play!.notes[3]).toBe(0);
+    a.fillCandidates();
+    await flush();
+    const before = a.getSnapshot().play!;
+
+    const b = await restored(repo);
+    expect(b.getSnapshot().play).toEqual(before);
+    expect(b.getSnapshot().play!.notes[3]).not.toBe(0); // Fill записал кандидатов в клетку 3
+    b.undo(); // откат Fill: заметки как после автоочистки
+    expect(b.getSnapshot().play!.notes[3]).toBe(0);
+    b.undo(); // откат хода: цифра ушла, у соседа вернулась ручная заметка 4
+    expect(b.getSnapshot().play!.values[2]).toBe(0);
+    expect(b.getSnapshot().play!.notes[3]).toBe(1 << 4);
+  });
+
   it("Ink переживает перезагрузку: режим, клякса и блокировка клеток", async () => {
     const repo = new InMemoryProgressRepository();
     const a = started(repo, { ink: true });

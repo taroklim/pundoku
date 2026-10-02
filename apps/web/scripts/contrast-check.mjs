@@ -2,7 +2,7 @@
 // PD-122 (AX-05): контраст пар §2.3 (research/usability-2026-10/a11y-i18n-responsive.md) по РЕАЛЬНЫМ computed-цветам
 // четырёх тем — light/dark × normal/more — в Chromium (эмуляция prefers-color-scheme и prefers-contrast).
 // Не расчёт «по hex из CSS»: цифры и заливки читаются из живых клеток Play (`.cell.sel`, `.fl`, `.d.player`, `.d.err`),
-// остальное — из computed-значений токенов на :root. Выход ≠ 0, если пара ниже порога (текст 4.5, графика 3).
+// остальное — из computed-значений токенов на :root. PD-124: добавлены пары заливки соседей (--fill-peer). Выход ≠ 0, если пара ниже порога (текст 4.5, графика 3).
 //
 //   pnpm build && pnpm exec vite preview --port 3986 &      # api не нужен: Play (свободная игра) оффлайн
 //   BASE=http://127.0.0.1:3986 node scripts/contrast-check.mjs
@@ -92,7 +92,14 @@ async function measure(browser, theme) {
         probe.remove();
         return v;
       };
-      const out = { tok: {}, num: { fillSel: parseFloat(root.getPropertyValue("--fill-sel")), fillSame: parseFloat(root.getPropertyValue("--fill-same")) } };
+      const out = {
+        tok: {},
+        num: {
+          fillSel: parseFloat(root.getPropertyValue("--fill-sel")),
+          fillSame: parseFloat(root.getPropertyValue("--fill-same")),
+          fillPeer: parseFloat(root.getPropertyValue("--fill-peer")),
+        },
+      };
       for (const n of ["--ink", "--wax", "--surface", "--bg", "--label", "--label-2", "--label-2-grouped", "--notes", "--notes-fill",
         "--hairline", "--mark-ink-soft", "--mark-wax-soft", "--mark-ink", "--mark-wax", "--dis-label", "--dis-fill"]) out.tok[n] = tok(n);
       const sel = document.querySelector(".board .cell.sel");
@@ -100,6 +107,11 @@ async function measure(browser, theme) {
       out.selDigit = d ? cs(d, "color") : null;
       out.selIsErr = !!d?.classList.contains("err");
       out.selFl = sel ? { bg: cs(sel.querySelector(".fl"), "backgroundColor"), op: +cs(sel.querySelector(".fl"), "opacity") } : null;
+      // PD-124: живая клетка-сосед выбранной (заданная цифра на слабой заливке) — цвет цифры и итоговая заливка слоя .fl.
+      const peer = document.querySelector(".board .cell.peer:has(.d.given)");
+      out.peer = peer
+        ? { digit: cs(peer.querySelector(".d.given"), "color"), bg: cs(peer.querySelector(".fl"), "backgroundColor"), op: +cs(peer.querySelector(".fl"), "opacity") }
+        : null;
       out.corner = sel ? getComputedStyle(sel, "::after").backgroundImage.includes("gradient") : false;
       return out;
     });
@@ -109,7 +121,7 @@ async function measure(browser, theme) {
   await cellAt(iErr).click();
   await page.waitForTimeout(400);
   const errSnap = await snap();
-  const read = { ...okSnap, playerDigit: okSnap.selDigit, selFl: okSnap.selFl, errDigit: errSnap.selIsErr ? errSnap.selDigit : null,
+  const read = { ...okSnap, peer: okSnap.peer, playerDigit: okSnap.selDigit, selFl: okSnap.selFl, errDigit: errSnap.selIsErr ? errSnap.selDigit : null,
     errFl: errSnap.selFl, errHasCorner: errSnap.corner };
   await ctx.close();
   return read;
@@ -126,6 +138,13 @@ for (const theme of THEMES) {
   // Заливка выбора = слой --ink при непрозрачности --fill-sel поверх поверхности (как в .cell.sel > .fl).
   const selFill = over(tk["--ink"], surface, r.num.fillSel);
   const sameFill = over(tk["--ink"], surface, r.num.fillSame);
+  // PD-124: заливка соседей (ряд/столбец/блок) = слой --ink при --fill-peer поверх поверхности (.cell.peer > .fl).
+  const peerFill = over(tk["--ink"], surface, r.num.fillPeer);
+  // PD-124: «очень слабая» (≈2–3 % чернил; в тёмных темах до 5 %) — потолок 6 %, ниже заливки «та же цифра» (--fill-same), иначе peer заглушит смысл.
+  if (!(r.num.fillPeer >= 0.02 && r.num.fillPeer <= 0.06 && r.num.fillPeer < r.num.fillSame)) {
+    failed++;
+    rows.push({ theme: theme.id, pair: `--fill-peer in 0.02..0.06 and < --fill-same (got ${r.num.fillPeer})`, min: "-", value: "NO", ok: false });
+  }
   const live = (f) => (f ? over(parse(f.bg), surface, f.op * parse(f.bg)[3]) : null);
   const liveFill = live(r.selFl);
   const liveErrFill = live(r.errFl);
@@ -141,9 +160,16 @@ for (const theme of THEMES) {
   if (r.playerDigit && liveFill) add("digit ink (live) / sel fill (live)", parse(r.playerDigit), liveFill, 4.5);
   if (r.errDigit && liveErrFill) add("digit wax (live err) / sel fill (live)", parse(r.errDigit), liveErrFill, 4.5);
   if (r.errDigit) rows.push({ theme: theme.id, pair: "err corner mark rendered", min: "-", value: r.errHasCorner ? "yes" : "NO", ok: r.errHasCorner }), (r.errHasCorner || failed++);
+  // PD-124: живой сосед — заданная цифра на слабой заливке (то, что видит игрок), плюс токены на расчётной заливке.
+  if (r.peer) add("given (live) / peer fill (live)", parse(r.peer.digit), live(r.peer), 4.5);
+  else (rows.push({ theme: theme.id, pair: "live peer cell found", min: "-", value: "NO", ok: false }), failed++);
   // §2.3, текст.
   add("digit ink / sel fill", tk["--ink"], selFill, 4.5);
   add("digit ink / same fill", tk["--ink"], sameFill, 4.5);
+  add("digit ink / peer fill", tk["--ink"], peerFill, 4.5);
+  add("digit wax / peer fill", tk["--wax"], peerFill, 4.5);
+  add("notes / peer fill", tk["--notes"], peerFill, 4.5);
+  add("given / peer fill", tk["--label"], peerFill, 4.5);
   add("digit wax / sel fill", tk["--wax"], selFill, 4.5);
   add("digit ink / surface", tk["--ink"], surface, 4.5);
   add("digit wax / surface", tk["--wax"], surface, 4.5);
@@ -154,6 +180,7 @@ for (const theme of THEMES) {
   add("dis-label / dis-fill", tk["--dis-label"], tk["--dis-fill"].slice(0, 3), 4.5);
   // §2.3, графика (3:1).
   add("ring ink / sel fill", tk["--ink"], selFill, 3);
+  add("ring ink / peer fill", tk["--ink"], peerFill, 3);
   add("ring ink / surface", tk["--ink"], surface, 3);
   add("ring ink / bg", tk["--ink"], bg, 3);
   add("ring wax / surface", tk["--wax"], surface, 3);

@@ -6,6 +6,7 @@
 import type { CSSProperties, KeyboardEvent } from "react";
 import { memo, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { ActionSheet } from "../recovery/ActionSheet";
 import { formatClock } from "./format";
 import type { GameStore, PlaySnapshot } from "./gameStore";
 import { EraseIcon, NotesIcon, UndoIcon } from "./icons";
@@ -35,7 +36,7 @@ export const StatusLine = memo(function StatusLine({ left, full = false, hint = 
   useEffect(() => {
     prev.current = state;
   }, [state]);
-  const text = hint ? t(`play.hint.${hint.kind}`) : full ? t("play.gridFull") : t("play.cellsLeft", { count: left });
+  const text = hint ? t(`play.hint.${hint.kind}`, { count: hint.count }) : full ? t("play.gridFull") : t("play.cellsLeft", { count: left });
   return (
     <p key={MOTION_FLAGS.statusRoll ? state : "static"} className={rolled ? "status roll" : "status"} data-testid="status-line">
       {text}
@@ -113,12 +114,13 @@ export function useHintAnnouncement(hint: PlaySnapshot["hint"]): string {
   const [text, setText] = useState("");
   const id = hint?.id ?? 0;
   const kind = hint?.kind;
+  const count = hint?.count;
   useEffect(() => {
     setText("");
     if (id === 0 || !kind) return;
-    const say = window.setTimeout(() => setText(t(`play.hint.${kind}`)), 50);
+    const say = window.setTimeout(() => setText(t(`play.hint.${kind}`, { count })), 50);
     return () => window.clearTimeout(say);
-  }, [id, kind, t]);
+  }, [id, kind, count, t]);
   return text;
 }
 
@@ -162,7 +164,7 @@ export function useClearEffectsOnUnmount(store: Pick<GameStore, "clearEffects">)
 /** Клавиатурный ввод игрового экрана (цифры, Backspace, Ctrl+Z, N). */
 export function handleGameKey(
   e: KeyboardEvent<HTMLElement>,
-  store: Pick<GameStore, "undo" | "erase" | "input" | "toggleNotesMode">,
+  store: Pick<GameStore, "undo" | "erase" | "input" | "toggleNotesMode" | "fillCandidates">,
 ): void {
   const target = e.target as HTMLElement;
   // Шит поверх экрана (PD-116: «Discard current puzzle?») — его клавиши не ввод в клетку.
@@ -184,8 +186,14 @@ export function handleGameKey(
     store.erase();
   } else if (e.code === "KeyN" && !e.altKey && !e.shiftKey) {
     store.toggleNotesMode();
+  } else if (e.code === "KeyF" && !e.altKey && !e.shiftKey) {
+    // PD-119: «Fill candidates» — отдельное действие (как долгий тап по Notes), без подтверждения: откатывается одним Undo.
+    store.fillCandidates();
   }
 }
+
+/** Долгое нажатие на Notes (PD-119): порог — как у системных контекстных меню iOS. */
+export const LONG_PRESS_MS = 500;
 
 /** Событие M8 живёт, пока уезжает счётчик клавиши (пауза до ответа + 220 мс); потом клавиша показывает «·». */
 function useEchoKey(echo: PlaySnapshot["echo"]): NonNullable<PlaySnapshot["echo"]> | null {
@@ -213,6 +221,23 @@ export function GamePad({ snap, store }: { snap: PlaySnapshot; store: GameStore 
   const canUndo = interactive && (play?.undoStack.length ?? 0) > 0;
   // M8: пока идёт ответ закрытой цифры, её счётчик ещё показывает последний остаток и уезжает вверх (220 мс), затем «·».
   const echo = useEchoKey(snap.echo ?? null);
+  // PD-119: «Fill candidates» — долгий тап по Notes (или правая кнопка/контекстное меню) открывает шит с этим действием.
+  // Четвёртой кнопки в ряду нет (320 pt не вмещает её при цели ≥44), а «⋯» в шапке не нашлось места; шит — подтверждение
+  // намерения: случайный долгий тап ничего не заполняет. В чернилах недоступно: подсказок в ink нет.
+  const [filling, setFilling] = useState(false);
+  const fillable = interactive && !ink;
+  const press = useRef<{ timer: number; fired: boolean } | null>(null);
+  const stopPress = () => {
+    if (press.current) window.clearTimeout(press.current.timer);
+  };
+  useEffect(() => () => stopPress(), []);
+  const closeFill = () => {
+    press.current = null; // «fired» не должен проглотить следующий тап/Enter по Notes
+    setFilling(false);
+  };
+  useEffect(() => {
+    if (!fillable) setFilling(false); // ink/конец партии закрыли действие из-под открытого шита
+  }, [fillable]);
   return (
     <div className="pad-wrap">
       <div className="pad" role="group" aria-label={t("pad.label")}>
@@ -247,7 +272,36 @@ export function GamePad({ snap, store }: { snap: PlaySnapshot; store: GameStore 
           className="act"
           aria-pressed={snap.notesMode}
           disabled={!interactive}
-          onClick={() => store.toggleNotesMode()}
+          onPointerDown={() => {
+            stopPress();
+            press.current = null;
+            if (!fillable) return;
+            const state = { timer: 0, fired: false };
+            state.timer = window.setTimeout(() => {
+              state.fired = true;
+              setFilling(true);
+            }, LONG_PRESS_MS);
+            press.current = state;
+          }}
+          onPointerUp={stopPress}
+          onPointerLeave={stopPress}
+          onPointerCancel={stopPress}
+          onContextMenu={(e) => {
+            // iOS/Android отдают долгий тап как contextmenu (на кнопках не всегда) — и мышь по правой кнопке.
+            if (!fillable) return;
+            e.preventDefault();
+            stopPress();
+            if (press.current) press.current.fired = true;
+            setFilling(true);
+          }}
+          onClick={() => {
+            // Тап, закончивший долгое нажатие, не переключает режим заметок (шит уже открыт).
+            if (press.current?.fired) {
+              press.current = null;
+              return;
+            }
+            store.toggleNotesMode();
+          }}
         >
           <NotesIcon />
           <span>{t("actions.notes")}</span>
@@ -263,6 +317,19 @@ export function GamePad({ snap, store }: { snap: PlaySnapshot; store: GameStore 
           <span>{ink ? t("ink.eraseNotes") : t("actions.erase")}</span>
         </button>
       </div>
+      {filling && (
+        <ActionSheet
+          title={t("play.fillTitle")}
+          message={t("play.fillMessage")}
+          actionLabel={t("play.fillAction")}
+          cancelLabel={t("play.fillCancel")}
+          onAction={() => {
+            closeFill();
+            store.fillCandidates();
+          }}
+          onCancel={closeFill}
+        />
+      )}
     </div>
   );
 }

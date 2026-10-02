@@ -7,6 +7,7 @@
  */
 import type { Difficulty } from "@pundoku/engine";
 import { isBlotMistake } from "@pundoku/engine";
+import { getAutoClearNotes } from "../settings/prefs";
 import type { PlayState } from "./logic";
 import {
   closedUnits,
@@ -14,6 +15,7 @@ import {
   digitCells,
   enterDigit,
   eraseCell,
+  fillCandidates as fillNotes,
   firstOpenCell,
   hasPlacedDigit,
   isDigitClosed,
@@ -30,7 +32,7 @@ export type Phase = "loading" | "playing" | "solved" | "error";
  * Тихий отклик на отказ (PD-117b): что именно не получилось. Тексты — `play.hint.<kind>` (строка статуса вместо
  * «N cells left» на `HINT_MS`, тот же aria-live; без модалки, без вибрации, без движения сверх обычного M9).
  */
-export type HintKind = "pickCell" | "noteFilled" | "inkFilled";
+export type HintKind = "pickCell" | "noteFilled" | "inkFilled" | "filled" | "fillNone";
 
 /** Сколько строка статуса показывает отклик, прежде чем вернуться к «N cells left», мс. */
 export const HINT_MS = 2600;
@@ -57,8 +59,11 @@ export interface PlaySnapshot {
   readonly echo?: { readonly digit: number; readonly cells: readonly number[]; readonly delay: number; readonly id: number } | null;
   /** Ink (PD-71): клякса, только что поставленная игроком (неверная цифра и клетка; id меняется на каждую). */
   readonly blot?: { readonly cell: number; readonly digit: number; readonly id: number } | null;
-  /** PD-117b: отклик на отказ (цифра без выбранной клетки, заметка в занятую клетку, цифра в чернильную клетку); id — на каждый. */
-  readonly hint?: { readonly kind: HintKind; readonly id: number } | null;
+  /**
+   * PD-117b: отклик на отказ (цифра без выбранной клетки, заметка в занятую клетку, цифра в чернильную клетку); id — на каждый.
+   * PD-119: он же сообщает итог «Fill candidates» (`filled` с числом клеток `count`, `fillNone`).
+   */
+  readonly hint?: { readonly kind: HintKind; readonly id: number; readonly count?: number } | null;
 }
 
 type Mutable<T> = { -readonly [K in keyof T]: T[K] };
@@ -213,10 +218,10 @@ export abstract class GameStore<S extends PlaySnapshot = PlaySnapshot> {
   }
 
   /** PD-117b: показать отклик на отказ; снимается сам через `HINT_MS`, новым ходом или выбором клетки. */
-  private showHint(kind: HintKind): void {
+  private showHint(kind: HintKind, count?: number): void {
     if (this.hintTimer !== null) window.clearTimeout(this.hintTimer);
     const id = ++this.effectId;
-    this.setTransient({ hint: { kind, id } } as Partial<S>);
+    this.setTransient({ hint: { kind, id, ...(count === undefined ? {} : { count }) } } as Partial<S>);
     this.hintTimer = window.setTimeout(() => {
       this.hintTimer = null;
       if (this.snap.hint?.id === id) this.setTransient({ hint: null } as Partial<S>);
@@ -287,7 +292,8 @@ export abstract class GameStore<S extends PlaySnapshot = PlaySnapshot> {
     }
     const t = this.getElapsedMs();
     const notes = notesMode !== invert;
-    const next = notes ? toggleNote(play, selected, digit, t) : enterDigit(play, selected, digit, t);
+    // PD-119: автоочистка заметок у соседей — настройка устройства (по умолчанию вкл); в ink логика её игнорирует.
+    const next = notes ? toggleNote(play, selected, digit, t) : enterDigit(play, selected, digit, t, undefined, getAutoClearNotes());
     if (next === play) {
       const occupied = (play.values[selected] ?? 0) !== 0;
       // Повтор той же цифры в клетке — намеренный no-op (PD-115), без отклика: двойной тап не должен «ругаться».
@@ -329,7 +335,28 @@ export abstract class GameStore<S extends PlaySnapshot = PlaySnapshot> {
     if (phase !== "playing" || !play) return;
     const top = play.undoStack[play.undoStack.length - 1];
     const next = undoMove(play, this.getElapsedMs());
-    if (next !== play) this.finishMove(next, { play: next, pop: null, echo: null, selected: top ? top.cell : this.snap.selected, ...this.dropHint() });
+    // «Fill candidates» откатывается целиком, а выбор не уводит на случайную «первую затронутую» клетку.
+    const selected = top && !top.fill ? top.cell : this.snap.selected;
+    if (next !== play) this.finishMove(next, { play: next, pop: null, echo: null, selected, ...this.dropHint() });
+  }
+
+  /**
+   * «Fill candidates» (PD-119): заполнить заметки допустимыми кандидатами во всех пустых клетках без заметок. Отдельное
+   * действие, не автоматика: по умолчанию заметки только ручные. Одно действие — один шаг undo. В ink не действует
+   * (подсказок в чернилах нет; UI там пункт не показывает, это защита на уровне логики). Итог — строка статуса и озвучка.
+   */
+  fillCandidates(): void {
+    const { play, phase } = this.snap;
+    if (phase !== "playing" || !play || play.ink === true) return;
+    const next = fillNotes(play, this.getElapsedMs());
+    if (next === play) {
+      this.showHint("fillNone");
+      return;
+    }
+    let count = 0;
+    for (let i = 0; i < next.notes.length; i++) if (next.notes[i] !== play.notes[i]) count++;
+    this.finishMove(next, { play: next, pop: null, echo: null, ...this.dropHint() });
+    this.showHint("filled", count);
   }
 
   /**
