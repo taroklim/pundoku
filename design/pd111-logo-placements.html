@@ -1,0 +1,1135 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>PD-111 — Pundoku: куда ещё поставить знак и вордмарк</title>
+<style>
+/* ---------------------------------------------------------------------------
+   PD-111. Страница самодостаточна: ни одного внешнего ресурса, ни одного скрипта.
+   Весь знак/вордмарк — inline SVG (пути из design/pd98-assets, §18.3 pd98-logo-round3.md).
+   Кадры телефона — 390 px на широком экране, на телефоне сжимаются до ширины окна
+   (горизонтального скролла нет ни на 393, ни на 320).
+   Текст самой страницы — не меньше 16 px; внутри кадров (класс .mini) идёт имитация
+   интерфейса, там размеры настоящие (13–26 px).
+--------------------------------------------------------------------------- */
+:root {
+  color-scheme: light dark;
+  --pg: #f6f6f8;
+  --pgc: #1c1c1e;
+  --pgc2: #55555a;
+  --line: #d6d6dc;
+  --card: #ffffff;
+  --acc: #3b48b0;
+  --ok: #1f6b45;
+  --no: #9a2d25;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --pg: #111114;
+    --pgc: #f2f2f5;
+    --pgc2: #a8a8ae;
+    --line: #2f2f36;
+    --card: #1a1a1e;
+    --acc: #8c96ff;
+    --ok: #68d3a0;
+    --no: #ff8f84;
+  }
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: var(--pg);
+  color: var(--pgc);
+  font: 16px/1.55 system-ui, -apple-system, "SF Pro Text", "Helvetica Neue", Arial, sans-serif;
+  -webkit-text-size-adjust: 100%;
+}
+.wrap {
+  max-width: 1140px;
+  margin: 0 auto;
+  padding: 26px max(16px, env(safe-area-inset-left, 0px)) 90px max(16px, env(safe-area-inset-right, 0px));
+}
+h1 { font-size: 27px; line-height: 1.2; margin: 0 0 10px; letter-spacing: -0.01em; }
+h2 { font-size: 22px; line-height: 1.25; margin: 0 0 6px; letter-spacing: -0.01em; }
+h3 { font-size: 17px; margin: 18px 0 6px; }
+p, li { font-size: 16px; }
+p { margin: 0 0 10px; }
+ul { margin: 0 0 10px; padding-left: 20px; }
+li { margin: 0 0 4px; }
+code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 15px;
+  background: color-mix(in srgb, var(--pgc) 8%, transparent);
+  border-radius: 5px;
+  padding: 1px 5px;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+a { color: var(--acc); }
+.lead { color: var(--pgc2); max-width: 70ch; }
+.sec {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 20px 18px;
+  margin: 0 0 22px;
+}
+.toc { display: flex; flex-wrap: wrap; gap: 8px; margin: 14px 0 0; padding: 0; list-style: none; }
+.toc a {
+  display: inline-block;
+  min-height: 44px;
+  line-height: 44px;
+  padding: 0 14px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--card);
+  text-decoration: none;
+  color: var(--pgc);
+}
+.tag {
+  display: inline-block;
+  min-height: 28px;
+  line-height: 26px;
+  padding: 0 10px;
+  border-radius: 9px;
+  font-size: 15px;
+  font-weight: 600;
+  border: 1px solid currentColor;
+}
+.tag.yes { color: var(--ok); }
+.tag.no { color: var(--no); }
+.tag.ask { color: var(--pgc2); }
+.hint { color: var(--pgc2); }
+
+/* --- пары кадров --- */
+.pair { display: flex; flex-wrap: wrap; gap: 20px; margin: 16px 0 6px; }
+.fig { margin: 0; flex: 0 1 390px; min-width: 0; }
+.fig figcaption { font-size: 16px; color: var(--pgc2); margin: 0 0 8px; }
+.ph {
+  width: min(390px, 100%);
+  border: 1px solid var(--line);
+  border-radius: 26px;
+  overflow: hidden;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg);
+  color: var(--label);
+  font-family: system-ui, -apple-system, "SF Pro Text", "Helvetica Neue", Arial, sans-serif;
+  line-height: 1.3;
+
+  --serif: ui-serif, "New York", Charter, Georgia, serif;
+  --bg: #f2f2f7;
+  --elev: #ffffff;
+  --label: #1c1c1e;
+  --label-2: #6e6e73;
+  --label-2g: #6a6a6e;
+  --ink: #3b48b0;
+  --on-ink: #ffffff;
+  --hairline: rgba(60, 60, 67, 0.29);
+  --thin: rgba(60, 60, 67, 0.16);
+  --ink-tint: rgba(59, 72, 176, 0.12);
+  --glass: #f6f6f9;
+  --shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+  --chip: #f2f2f7;
+  --pun: var(--ink);
+  --doku: #43474f;
+}
+.ph.dark {
+  --bg: #000000;
+  --elev: #1c1c1e;
+  --label: #ffffff;
+  --label-2: #98989d;
+  --label-2g: #98989d;
+  --ink: #8c96ff;
+  --on-ink: #000000;
+  --hairline: rgba(235, 235, 245, 0.22);
+  --thin: rgba(235, 235, 245, 0.14);
+  --ink-tint: rgba(140, 150, 255, 0.18);
+  --glass: #141416;
+  --shadow: none;
+  --chip: #2c2c2e;
+  --doku: #a7abb5;
+}
+.scr { display: flex; flex-direction: column; flex: 1; min-height: 0; }
+.fade {
+  position: absolute;
+  left: 0; right: 0; bottom: 0;
+  height: 54px;
+  background: linear-gradient(to bottom, rgba(128, 128, 128, 0), var(--bg) 78%);
+  pointer-events: none;
+}
+
+/* --- имитация системного хрома и экранов приложения --- */
+.ph .sb {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 11px 22px 0; font-size: 14px; font-weight: 600; letter-spacing: 0.01em;
+}
+.ph .sb span:last-child { letter-spacing: 2px; font-size: 13px; }
+.ph .tb {
+  display: flex; align-items: flex-end; justify-content: space-between; gap: 12px;
+  padding: 10px 16px 0;
+}
+.ph .tb h1 { font-size: 26px; font-weight: 700; letter-spacing: -0.02em; margin: 0; }
+.ph .tb .lead-mark { color: var(--ink); flex: none; margin-bottom: 4px; }
+.ph .tl { display: flex; align-items: flex-end; gap: 10px; min-width: 0; }
+.ph .gear { width: 26px; height: 26px; color: var(--ink); flex: none; margin-bottom: 3px; }
+.ph .sub { margin: 3px 0 0; padding: 0 16px; color: var(--label-2); font-size: 14px; }
+.ph .shead { margin: 0; padding: 20px 16px 7px; font-size: 13px; color: var(--label-2g); text-transform: uppercase; letter-spacing: 0.04em; }
+
+.ph .bw { padding: 12px 16px 0; }
+.ph .board { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; }
+.ph .box { display: grid; grid-template-columns: repeat(3, 1fr); border-radius: 10px; overflow: hidden; background: var(--elev); box-shadow: var(--shadow); }
+.ph .box i {
+  aspect-ratio: 1; display: grid; place-items: center; font-style: normal;
+  font-size: 19px; color: var(--label); box-shadow: inset 0 0 0 0.5px var(--thin);
+}
+.ph .box i.g { font-family: var(--serif); font-weight: 600; }
+.ph .box i.p { color: var(--ink); font-weight: 500; }
+
+.ph .gap { flex: 1 1 auto; min-height: 22px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; padding: 0 20px; text-align: center; }
+.ph .status { margin: 0; color: var(--label-2); font-size: 14px; }
+.ph .pad { display: grid; grid-template-columns: repeat(9, 1fr); gap: 4px; padding: 0 16px; }
+.ph .key { min-height: 52px; border-radius: 9px; background: var(--elev); box-shadow: var(--shadow); display: grid; place-items: center; font-size: 20px; font-weight: 500; }
+.ph .acts { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; padding: 10px 16px 12px; }
+.ph .act { min-height: 44px; border-radius: 11px; background: var(--elev); box-shadow: var(--shadow); display: grid; place-items: center; font-size: 15px; color: var(--label-2); }
+
+.ph .tabs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2px; padding: 6px 10px 12px; background: var(--glass); border-top: 1px solid var(--hairline); }
+.ph .tab { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; min-height: 50px; border-radius: 14px; color: var(--label-2); font-size: 12px; }
+.ph .tab svg { width: 26px; height: 26px; }
+.ph .tab.on { color: var(--ink); background: var(--ink-tint); font-weight: 600; }
+
+.ph .card { background: var(--elev); border-radius: 18px; margin: 14px 16px 0; padding: 16px; box-shadow: var(--shadow); }
+.ph .card h2 { font-size: 16px; font-weight: 600; margin: 0 0 2px; }
+.ph .card .csub { color: var(--label-2); font-size: 13px; margin: 0 0 12px; }
+
+.ph .list { background: var(--elev); border-radius: 14px; margin: 0 16px; overflow: hidden; box-shadow: var(--shadow); }
+.ph .row { display: flex; align-items: center; gap: 12px; min-height: 46px; padding: 11px 14px; font-size: 15px; }
+.ph .row + .row { box-shadow: inset 0 0.5px 0 var(--hairline); }
+.ph .row .rv { margin-left: auto; color: var(--label-2); font-size: 14px; }
+.ph .foot { margin: 7px 16px 0; color: var(--label-2g); font-size: 13px; }
+.ph .primary { display: flex; align-items: center; justify-content: center; gap: 8px; min-height: 50px; margin: 16px; border-radius: 13px; background: var(--ink); color: var(--on-ink); font-size: 16px; font-weight: 600; }
+.ph .cta { display: inline-flex; align-items: center; min-height: 46px; padding: 0 18px; border-radius: 11px; background: var(--ink); color: var(--on-ink); font-size: 15px; font-weight: 600; }
+
+/* Settings → About */
+.ph .about { background: var(--elev); border-radius: 14px; margin: 0 16px; padding: 20px 16px; display: flex; flex-direction: column; align-items: center; text-align: center; box-shadow: var(--shadow); }
+.ph .about .ver { margin: 8px 0 0; font-size: 13px; color: var(--label-2g); }
+.ph .about .wm { margin-top: 14px; }
+.ph .plate { border-radius: 22.3%; display: block; }
+.ph.dark .plate { box-shadow: 0 0 0 0.5px var(--hairline); }
+
+/* Year */
+.ph .ymonths { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; padding: 12px 16px 0; }
+.ph .ymo { background: var(--elev); border-radius: 12px; padding: 7px 8px 9px; box-shadow: var(--shadow); }
+.ph .ymo span { display: block; font-size: 12px; color: var(--label-2); margin: 0 0 5px; }
+.ph .ymo svg { display: block; width: 100%; height: auto; }
+.ph .yempty { padding: 18px 16px 0; }
+.ph .yempty p { margin: 0 0 12px; max-width: 30ch; color: var(--label-2); font-size: 14px; }
+.ph .emark { display: block; color: var(--label-2); margin: 0 0 14px; }
+
+/* шит экспорта */
+.ph .sheet { margin-top: auto; background: var(--elev); border-radius: 18px 18px 0 0; padding: 8px 16px 18px; box-shadow: 0 -1px 0 var(--hairline); }
+.ph .grab { width: 36px; height: 5px; border-radius: 3px; background: var(--hairline); margin: 0 auto 10px; }
+.ph .sheet h2 { font-size: 18px; font-weight: 700; margin: 0 0 2px; }
+.ph .sheet .ssub { font-size: 13px; color: var(--label-2); margin: 0 0 12px; }
+.ph .note { font-size: 13px; color: var(--label-2); margin: 10px 0 0; text-align: center; }
+.ph .fpframe { background: var(--chip); border-radius: 12px; padding: 12px; display: flex; justify-content: center; }
+
+/* PNG-отпечаток (всегда светлый, какой бы ни была тема приложения) */
+.pngcard {
+  width: min(330px, 100%);
+  aspect-ratio: 1080 / 1350;
+  background: #ffffff;
+  color: #1c1c1e;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 11.1% 7.04% 5.6%;
+  display: flex;
+  flex-direction: column;
+  font-family: system-ui, -apple-system, "SF Pro Text", "Helvetica Neue", Arial, sans-serif;
+}
+.pngcard.mini-prev { width: 100%; border: 0; border-radius: 6px; padding: 11.1% 7.04% 5.6%; }
+.fpgrid { display: grid; grid-template-columns: repeat(9, 1fr); gap: 0.86%; }
+.fpgrid i { display: block; aspect-ratio: 1; border-radius: 14%; background: #3b48b0; }
+.fpgrid i.gv { background: none; box-shadow: inset 0 0 0 1.4px rgba(60, 60, 67, 0.29); }
+.fpgrid i.o3 { opacity: 0.3; } .fpgrid i.o4 { opacity: 0.42; } .fpgrid i.o5 { opacity: 0.54; }
+.fpgrid i.o6 { opacity: 0.66; } .fpgrid i.o7 { opacity: 0.78; } .fpgrid i.o8 { opacity: 0.89; }
+.fpgrid i.o9 { opacity: 1; }
+.fpgrid i.sm { transform: scale(0.74); }
+.fpcap { margin-top: auto; padding-top: 6%; display: flex; align-items: flex-end; gap: 4%; }
+.fpcap .lockup { display: flex; align-items: flex-end; gap: 7%; flex: none; }
+.fpcap .mk { color: #6e6e73; flex: none; }
+.fpcap .word { font-family: var(--serif, ui-serif, "New York", Georgia, serif); font-weight: 600; font-size: 13px; line-height: 1; color: #1c1c1e; }
+.fpcap .meta { margin-left: auto; text-align: right; font-size: 9px; line-height: 1.1; color: #6e6e73; }
+.fpcap .wm-pun, .fpcap .wm-doku { stroke: #1c1c1e; }
+.fptop { display: flex; align-items: flex-end; gap: 10px; margin: 0 0 6%; }
+.fptop .mk { color: #6e6e73; }
+.fptop .wm-pun, .fptop .wm-doku { stroke: #1c1c1e; }
+
+/* вордмарк: два цвета по умолчанию, одноцветный — класс .wm-mono */
+.wm-pun { stroke: var(--pun, #3b48b0); }
+.wm-doku { stroke: var(--doku, #43474f); }
+.wm-mono .wm-pun, .wm-mono .wm-doku { stroke: currentColor; }
+.wm { display: block; }
+.mk { display: block; }
+
+/* таблицы */
+table { width: 100%; border-collapse: collapse; table-layout: fixed; margin: 12px 0 4px; }
+th, td { text-align: left; vertical-align: top; padding: 9px 10px 9px 0; border-bottom: 1px solid var(--line); font-size: 16px; overflow-wrap: anywhere; }
+th { color: var(--pgc2); font-weight: 600; }
+.cols { display: flex; flex-wrap: wrap; gap: 0 28px; }
+.cols > div { flex: 1 1 280px; min-width: 0; }
+dl.meta { margin: 10px 0 0; }
+dl.meta dt { font-weight: 600; margin-top: 10px; }
+dl.meta dd { margin: 2px 0 0; color: var(--pgc); }
+.swatches { display: flex; gap: 14px; flex-wrap: wrap; }
+.sw { width: min(186px, 46%); border: 1px solid var(--line); border-radius: 14px; overflow: hidden; }
+.sw .fill { height: 112px; }
+.sw .cap { padding: 8px 10px; font-size: 15px; color: var(--pgc2); }
+</style>
+</head>
+<body>
+
+<!-- Общие паттерны для имитации полотна Year (светлая и тёмная). Объявлены до первого использования. -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <defs>
+    <pattern id="ydl" width="10" height="10" patternUnits="userSpaceOnUse"><rect width="7" height="7" rx="1.6" fill="#c7c7cc"/></pattern>
+    <pattern id="ydd" width="10" height="10" patternUnits="userSpaceOnUse"><rect width="7" height="7" rx="1.6" fill="#3a3a3c"/></pattern>
+  </defs>
+</svg>
+
+<div class="wrap">
+
+<header>
+  <h1>PD-111 · Куда ещё поставить знак «Унос» и вордмарк</h1>
+  <p class="lead">
+    Шесть мест (и их подварианты) — каждое на настоящей разметке и токенах приложения
+    (<code>apps/web/src/styles/tokens.css</code>, макет <code>design/pd7-board-variants.html</code>),
+    в светлой и тёмной теме, кадр 390&nbsp;px. Знак и вордмарк — те самые пути из
+    <code>design/pd98-assets</code> (§18.3 <code>pd98-logo-round3.md</code>), вставлены inline:
+    страница открывается двойным кликом из любой папки, сети не требует.
+  </p>
+  <nav>
+    <ul class="toc">
+      <li><a href="#rule">Правило и что уже есть</a></li>
+      <li><a href="#v1">1 · Шапка Today</a></li>
+      <li><a href="#v2">2 · PNG-отпечаток</a></li>
+      <li><a href="#v3">3 · Settings → About</a></li>
+      <li><a href="#v4">4 · Пустые состояния</a></li>
+      <li><a href="#v5">5 · Экран «New puzzle»</a></li>
+      <li><a href="#v6">6 · Заставка и первый запуск</a></li>
+      <li><a href="#verdict">Итог</a></li>
+      <li><a href="#questions">Вопросы</a></li>
+    </ul>
+  </nav>
+</header>
+
+<!-- ===================== ПРАВИЛО ===================== -->
+<section class="sec" id="rule">
+  <h2>Правило, по которому всё это оценивается</h2>
+  <p>
+    Действующее с раунда 1 и записанное в §6 / §18.5 <code>pd98-logo-round3.md</code>:
+    <strong>знак появляется там, где нет контекста приложения</strong> (картинка, которая из него уходит),
+    <strong>где нет контента</strong> (пустое состояние) или <strong>где о приложении и спрашивают</strong>
+    (Settings → About). На рабочем экране — никогда.
+  </p>
+  <p class="hint">
+    <code>branding.md › Best practices</code>: «Resist the temptation to display your logo throughout your
+    app or game unless it’s essential for providing context» и «Ensure branding always defers to content.
+    Using screen space for an element that does nothing but display a brand asset can mean there’s less room
+    for the content people care about».
+  </p>
+  <h3>Где знак уже стоит сегодня (не предлагается заново)</h3>
+  <table>
+    <tr><th style="width:40%">Место</th><th>Как сейчас</th></tr>
+    <tr><td>Settings → About</td><td>плоский знак 60&nbsp;px чернилами + вордмарк 28&nbsp;px + версия (<code>SettingsScreen.tsx</code>)</td></tr>
+    <tr><td>Year, пустое состояние</td><td>знак 56&nbsp;px нейтральным <code>--label-2</code> над строкой (<code>YearScreen.tsx</code>)</td></tr>
+    <tr><td>PNG-отпечаток</td><td>знак 44&nbsp;px <code>#6e6e73</code> + слово «Pundoku», <em>набранное</em> New&nbsp;York 44/600 (<code>fingerprint.ts</code>)</td></tr>
+    <tr><td>Иконка PWA, favicon</td><td><code>icon.svg</code>, <code>icon-192/512</code>, <code>apple-touch-icon-180</code></td></tr>
+    <tr><td>Экран запуска</td><td>сплошная заливка <code>#F2F2F7</code>/<code>#000000</code>, знака нет</td></tr>
+  </table>
+</section>
+
+<!-- ===================== ВАРИАНТ 1 ===================== -->
+<section class="sec" id="v1">
+  <h2>1 · Шапка Today: знак слева от заголовка</h2>
+  <p><span class="tag no">Не рекомендую</span> &nbsp;Показываю, чтобы было видно цену: это единственный вариант, который платит местом на рабочем экране.</p>
+  <p>
+    Знак 24&nbsp;px чернилами слева от «Today», выровнен по базовой линии заголовка.
+    Подвариант 1б — вордмарк вместо слова «Today» (ниже, только шапки).
+  </p>
+
+  <div class="pair">
+    <figure class="fig">
+      <figcaption>Светлая — знак 24 px слева от заголовка</figcaption>
+      <div class="ph mini" style="height:470px">
+        <div class="scr">
+          <div class="sb"><span>9:41</span><span>▮▮▮</span></div>
+          <div class="tb">
+            <div class="tl">
+              <svg class="mk lead-mark" width="24" height="24" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true" focusable="false"><path d="M3 3H9V7H13V13A2 2 0 0 1 11 15H3A2 2 0 0 1 1 13V5A2 2 0 0 1 3 3Z"/><path d="M12 1H14A1 1 0 0 1 15 2V4A1 1 0 0 1 14 5H12A1 1 0 0 1 11 4V2A1 1 0 0 1 12 1Z"/></svg>
+              <h1>Today</h1>
+            </div>
+            <svg class="gear" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="3.4"/><path d="M12 2.9v2.4M12 18.7v2.4M21.1 12h-2.4M5.3 12H2.9M18.4 5.6l-1.7 1.7M7.3 16.7l-1.7 1.7M18.4 18.4l-1.7-1.7M7.3 7.3 5.6 5.6"/></svg>
+          </div>
+          <p class="sub">Thu 2 Oct · Medium · 2:41</p>
+          <div class="bw">
+            <div class="board">
+              <div class="box"><i class="g">5</i><i></i><i class="p">3</i><i></i><i class="g">9</i><i></i><i class="p">7</i><i></i><i class="g">1</i></div>
+              <div class="box"><i></i><i class="g">8</i><i></i><i class="p">2</i><i></i><i class="g">6</i><i></i><i class="p">4</i><i></i></div>
+              <div class="box"><i class="g">7</i><i></i><i></i><i></i><i class="p">1</i><i></i><i class="g">3</i><i></i><i class="p">9</i></div>
+              <div class="box"><i></i><i class="p">6</i><i></i><i class="g">4</i><i></i><i></i><i></i><i class="g">2</i><i></i></div>
+              <div class="box"><i class="g">3</i><i></i><i class="p">9</i><i></i><i class="g">5</i><i></i><i class="p">8</i><i></i><i></i></div>
+              <div class="box"><i></i><i class="g">4</i><i></i><i class="p">7</i><i></i><i class="g">1</i><i></i><i></i><i class="p">6</i></div>
+            </div>
+          </div>
+        </div>
+        <div class="fade"></div>
+      </div>
+    </figure>
+
+    <figure class="fig">
+      <figcaption>Тёмная — то же</figcaption>
+      <div class="ph mini dark" style="height:470px">
+        <div class="scr">
+          <div class="sb"><span>9:41</span><span>▮▮▮</span></div>
+          <div class="tb">
+            <div class="tl">
+              <svg class="mk lead-mark" width="24" height="24" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true" focusable="false"><path d="M3 3H9V7H13V13A2 2 0 0 1 11 15H3A2 2 0 0 1 1 13V5A2 2 0 0 1 3 3Z"/><path d="M12 1H14A1 1 0 0 1 15 2V4A1 1 0 0 1 14 5H12A1 1 0 0 1 11 4V2A1 1 0 0 1 12 1Z"/></svg>
+              <h1>Today</h1>
+            </div>
+            <svg class="gear" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="3.4"/><path d="M12 2.9v2.4M12 18.7v2.4M21.1 12h-2.4M5.3 12H2.9M18.4 5.6l-1.7 1.7M7.3 16.7l-1.7 1.7M18.4 18.4l-1.7-1.7M7.3 7.3 5.6 5.6"/></svg>
+          </div>
+          <p class="sub">Thu 2 Oct · Medium · 2:41</p>
+          <div class="bw">
+            <div class="board">
+              <div class="box"><i class="g">5</i><i></i><i class="p">3</i><i></i><i class="g">9</i><i></i><i class="p">7</i><i></i><i class="g">1</i></div>
+              <div class="box"><i></i><i class="g">8</i><i></i><i class="p">2</i><i></i><i class="g">6</i><i></i><i class="p">4</i><i></i></div>
+              <div class="box"><i class="g">7</i><i></i><i></i><i></i><i class="p">1</i><i></i><i class="g">3</i><i></i><i class="p">9</i></div>
+              <div class="box"><i></i><i class="p">6</i><i></i><i class="g">4</i><i></i><i></i><i></i><i class="g">2</i><i></i></div>
+              <div class="box"><i class="g">3</i><i></i><i class="p">9</i><i></i><i class="g">5</i><i></i><i class="p">8</i><i></i><i></i></div>
+              <div class="box"><i></i><i class="g">4</i><i></i><i class="p">7</i><i></i><i class="g">1</i><i></i><i></i><i class="p">6</i></div>
+            </div>
+          </div>
+        </div>
+        <div class="fade"></div>
+      </div>
+    </figure>
+  </div>
+
+  <h3>1б · Вордмарк вместо слова «Today» (только шапки)</h3>
+  <div class="pair">
+    <figure class="fig">
+      <figcaption>Светлая</figcaption>
+      <div class="ph mini" style="height:124px">
+        <div class="scr">
+          <div class="sb"><span>9:41</span><span>▮▮▮</span></div>
+          <div class="tb">
+            <svg class="wm" width="142" height="28" viewBox="0 0 588 116" aria-hidden="true" focusable="false"><g transform="translate(2 -94)" fill="none" stroke-width="22" stroke-linecap="butt" stroke-linejoin="round"><g class="wm-pun"><path d="M11 96V200M11 107H40A26 26 0 0 1 40 159H11"/><path transform="translate(83 0)" d="M11 124V167A23 22 0 0 0 57 167M57 124V200"/><path transform="translate(165 0)" d="M11 200V157A23 22 0 0 1 57 157V200"/></g><g class="wm-doku"><path transform="translate(247 0)" d="M11 162A28 27 0 0 1 67 162A28 27 0 0 1 11 162M67 96V200"/><path transform="translate(339 0)" d="M11 162A28 27 0 0 1 67 162A28 27 0 0 1 11 162"/><path transform="translate(431 0)" d="M11 96V200M58 124L26 168L62 200"/><path transform="translate(516 0)" d="M11 124V167A23 22 0 0 0 57 167M57 124V200"/></g></g></svg>
+            <svg class="gear" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="3.4"/><path d="M12 2.9v2.4M12 18.7v2.4M21.1 12h-2.4M5.3 12H2.9M18.4 5.6l-1.7 1.7M7.3 16.7l-1.7 1.7M18.4 18.4l-1.7-1.7M7.3 7.3 5.6 5.6"/></svg>
+          </div>
+          <p class="sub">Thu 2 Oct · Medium · 2:41</p>
+        </div>
+      </div>
+    </figure>
+    <figure class="fig">
+      <figcaption>Тёмная</figcaption>
+      <div class="ph mini dark" style="height:124px">
+        <div class="scr">
+          <div class="sb"><span>9:41</span><span>▮▮▮</span></div>
+          <div class="tb">
+            <svg class="wm" width="142" height="28" viewBox="0 0 588 116" aria-hidden="true" focusable="false"><g transform="translate(2 -94)" fill="none" stroke-width="22" stroke-linecap="butt" stroke-linejoin="round"><g class="wm-pun"><path d="M11 96V200M11 107H40A26 26 0 0 1 40 159H11"/><path transform="translate(83 0)" d="M11 124V167A23 22 0 0 0 57 167M57 124V200"/><path transform="translate(165 0)" d="M11 200V157A23 22 0 0 1 57 157V200"/></g><g class="wm-doku"><path transform="translate(247 0)" d="M11 162A28 27 0 0 1 67 162A28 27 0 0 1 11 162M67 96V200"/><path transform="translate(339 0)" d="M11 162A28 27 0 0 1 67 162A28 27 0 0 1 11 162"/><path transform="translate(431 0)" d="M11 96V200M58 124L26 168L62 200"/><path transform="translate(516 0)" d="M11 124V167A23 22 0 0 0 57 167M57 124V200"/></g></g></svg>
+            <svg class="gear" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="3.4"/><path d="M12 2.9v2.4M12 18.7v2.4M21.1 12h-2.4M5.3 12H2.9M18.4 5.6l-1.7 1.7M7.3 16.7l-1.7 1.7M18.4 18.4l-1.7-1.7M7.3 7.3 5.6 5.6"/></svg>
+          </div>
+          <p class="sub">Thu 2 Oct · Medium · 2:41</p>
+        </div>
+      </div>
+    </figure>
+  </div>
+
+  <div class="cols">
+    <div>
+      <h3>Плюсы</h3>
+      <ul>
+        <li>Знак виден каждый день — это единственный вариант с ежедневным контактом.</li>
+        <li>Технически дёшево: один <code>&lt;Mark size={24}&gt;</code> в тулбаре.</li>
+      </ul>
+    </div>
+    <div>
+      <h3>Минусы</h3>
+      <ul>
+        <li>Прямо против <code>branding.md › Best practices</code> и против собственного правила §6.</li>
+        <li>У знака в чернилах ровно тот же цвет, что у цифр игрока на поле под ним: на рабочем экране чернила значат «вы поставили», а тут вдруг — «логотип».</li>
+        <li>1б хуже 1а: вордмарк не локализуется и не масштабируется с Dynamic&nbsp;Type, а заголовок экрана обязан делать и то и другое; на AX-размерах либо вордмарк остаётся 28&nbsp;px посреди выросшего интерфейса, либо лезет на шестерёнку. Плюс название экрана исчезает: «Pundoku» не отвечает на вопрос «где я».</li>
+        <li>Симметрия: если знак у Today, его ждут и у Play, и у Year — иначе выглядит случайностью. Три шапки — три раза ни за чем.</li>
+      </ul>
+    </div>
+  </div>
+  <dl class="meta">
+    <dt>Юзабилити</dt>
+    <dd>Поле и панель не трогает (знак в тулбаре), но съедает 34&nbsp;px ширины заголовка: на 320&nbsp;pt и AX-размерах «Today» начинает переноситься. VoiceOver — знак <code>aria-hidden</code>, порядок чтения не меняется. Движения нет.</dd>
+    <dt>Стоимость</dt><dd>S (1а) · S/M (1б — ещё i18n и Dynamic Type)</dd>
+    <dt>Файлы</dt><dd><code>today/TodayScreen.tsx</code>, <code>play/PlayScreen.tsx</code>, <code>year/YearScreen.tsx</code>, <code>styles/shell.css</code> + тесты шапок</dd>
+  </dl>
+</section>
+
+<!-- ===================== ВАРИАНТ 2 ===================== -->
+<section class="sec" id="v2">
+  <h2>2 · PNG-отпечаток: вордмарк вместо набранного слова</h2>
+  <p><span class="tag yes">Рекомендую — 2а</span> &nbsp;Самое сильное место из всех: это единственная картинка, которая из приложения уходит.</p>
+  <p>
+    Сейчас в подписи PNG стоит знак 44&nbsp;px и слово «Pundoku», <em>набранное</em> New&nbsp;York 44/600.
+    То есть логотип наполовину там уже есть — но буквы чужие. Предлагаю поставить нарисованный вордмарк:
+    места он занимает столько же.
+  </p>
+  <p class="hint">
+    Расчёт: у нарисованного вордмарка рост прописных 104 из 116 единиц высоты, у New&nbsp;York 44&nbsp;px —
+    примерно 31&nbsp;px. Значит высота вордмарка <strong>35&nbsp;px</strong> (не 44) даёт тот же рост прописных
+    31.4&nbsp;px и ширину 35×588/116&nbsp;=&nbsp;<strong>177&nbsp;px</strong> против нынешних ~170&nbsp;px набранного слова.
+    Разница 7&nbsp;px — правая строка данных её не заметит (её алгоритм ужимает шрифт 32→22&nbsp;px только когда не влезает).
+    Базовая линия вордмарка ложится на <code>FP_CAPTION_Y</code>, то есть верх на <code>1274 − 35×106/116 = 1242</code>.
+  </p>
+
+  <div class="pair">
+    <figure class="fig">
+      <figcaption>Как сейчас (PNG всегда светлый)</figcaption>
+      <div class="pngcard">
+        <div class="fpgrid">
+          <i class="gv"></i><i class="o3"></i><i class="o4"></i><i class="o5 sm"></i><i class="gv"></i><i class="o6"></i><i class="o4"></i><i class="gv"></i><i class="o7"></i>
+          <i class="o3"></i><i class="gv"></i><i class="o5"></i><i class="o6"></i><i class="o4 sm"></i><i class="gv"></i><i class="o7"></i><i class="o5"></i><i class="gv"></i>
+          <i class="o4"></i><i class="o5"></i><i class="gv"></i><i class="o7"></i><i class="o6"></i><i class="o5 sm"></i><i class="gv"></i><i class="o8"></i><i class="o6"></i>
+          <i class="gv"></i><i class="o6"></i><i class="o7"></i><i class="gv"></i><i class="o8"></i><i class="o7"></i><i class="o6 sm"></i><i class="gv"></i><i class="o5"></i>
+          <i class="o5"></i><i class="o7"></i><i class="gv"></i><i class="o8"></i><i class="gv"></i><i class="o9"></i><i class="o7"></i><i class="o6"></i><i class="gv"></i>
+          <i class="o6"></i><i class="gv"></i><i class="o8"></i><i class="o9 sm"></i><i class="o7"></i><i class="gv"></i><i class="o8"></i><i class="o7"></i><i class="o6"></i>
+          <i class="o7"></i><i class="o8"></i><i class="o6"></i><i class="gv"></i><i class="o9"></i><i class="o8"></i><i class="gv"></i><i class="o5 sm"></i><i class="o7"></i>
+          <i class="gv"></i><i class="o9"></i><i class="o7"></i><i class="o8"></i><i class="o6 sm"></i><i class="gv"></i><i class="o9"></i><i class="o8"></i><i class="gv"></i>
+          <i class="o8"></i><i class="o7"></i><i class="gv"></i><i class="o6"></i><i class="o9"></i><i class="o7"></i><i class="gv"></i><i class="o9"></i><i class="o8"></i>
+        </div>
+        <div class="fpcap">
+          <div class="lockup">
+            <svg class="mk" width="14" height="14" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true" focusable="false"><path d="M3 3H9V7H13V13A2 2 0 0 1 11 15H3A2 2 0 0 1 1 13V5A2 2 0 0 1 3 3Z"/><path d="M12 1H14A1 1 0 0 1 15 2V4A1 1 0 0 1 14 5H12A1 1 0 0 1 11 4V2A1 1 0 0 1 12 1Z"/></svg>
+            <span class="word">Pundoku</span>
+          </div>
+          <span class="meta">2 Oct 2026 · 8:14 · 51 moves · clean</span>
+        </div>
+      </div>
+    </figure>
+
+    <figure class="fig">
+      <figcaption>2а — вордмарк на том же месте</figcaption>
+      <div class="pngcard">
+        <div class="fpgrid">
+          <i class="gv"></i><i class="o3"></i><i class="o4"></i><i class="o5 sm"></i><i class="gv"></i><i class="o6"></i><i class="o4"></i><i class="gv"></i><i class="o7"></i>
+          <i class="o3"></i><i class="gv"></i><i class="o5"></i><i class="o6"></i><i class="o4 sm"></i><i class="gv"></i><i class="o7"></i><i class="o5"></i><i class="gv"></i>
+          <i class="o4"></i><i class="o5"></i><i class="gv"></i><i class="o7"></i><i class="o6"></i><i class="o5 sm"></i><i class="gv"></i><i class="o8"></i><i class="o6"></i>
+          <i class="gv"></i><i class="o6"></i><i class="o7"></i><i class="gv"></i><i class="o8"></i><i class="o7"></i><i class="o6 sm"></i><i class="gv"></i><i class="o5"></i>
+          <i class="o5"></i><i class="o7"></i><i class="gv"></i><i class="o8"></i><i class="gv"></i><i class="o9"></i><i class="o7"></i><i class="o6"></i><i class="gv"></i>
+          <i class="o6"></i><i class="gv"></i><i class="o8"></i><i class="o9 sm"></i><i class="o7"></i><i class="gv"></i><i class="o8"></i><i class="o7"></i><i class="o6"></i>
+          <i class="o7"></i><i class="o8"></i><i class="o6"></i><i class="gv"></i><i class="o9"></i><i class="o8"></i><i class="gv"></i><i class="o5 sm"></i><i class="o7"></i>
+          <i class="gv"></i><i class="o9"></i><i class="o7"></i><i class="o8"></i><i class="o6 sm"></i><i class="gv"></i><i class="o9"></i><i class="o8"></i><i class="gv"></i>
+          <i class="o8"></i><i class="o7"></i><i class="gv"></i><i class="o6"></i><i class="o9"></i><i class="o7"></i><i class="gv"></i><i class="o9"></i><i class="o8"></i>
+        </div>
+        <div class="fpcap">
+          <div class="lockup">
+            <svg class="mk" width="14" height="14" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true" focusable="false"><path d="M3 3H9V7H13V13A2 2 0 0 1 11 15H3A2 2 0 0 1 1 13V5A2 2 0 0 1 3 3Z"/><path d="M12 1H14A1 1 0 0 1 15 2V4A1 1 0 0 1 14 5H12A1 1 0 0 1 11 4V2A1 1 0 0 1 12 1Z"/></svg>
+            <svg class="wm" width="56" height="11" viewBox="0 0 588 116" aria-hidden="true" focusable="false"><g transform="translate(2 -94)" fill="none" stroke-width="22" stroke-linecap="butt" stroke-linejoin="round"><g class="wm-pun"><path d="M11 96V200M11 107H40A26 26 0 0 1 40 159H11"/><path transform="translate(83 0)" d="M11 124V167A23 22 0 0 0 57 167M57 124V200"/><path transform="translate(165 0)" d="M11 200V157A23 22 0 0 1 57 157V200"/></g><g class="wm-doku"><path transform="translate(247 0)" d="M11 162A28 27 0 0 1 67 162A28 27 0 0 1 11 162M67 96V200"/><path transform="translate(339 0)" d="M11 162A28 27 0 0 1 67 162A28 27 0 0 1 11 162"/><path transform="translate(431 0)" d="M11 96V200M58 124L26 168L62 200"/><path transform="translate(516 0)" d="M11 124V167A23 22 0 0 0 57 167M57 124V200"/></g></g></svg>
+          </div>
+          <span class="meta">2 Oct 2026 · 8:14 · 51 moves · clean</span>
+        </div>
+      </div>
+    </figure>
+  </div>
+
+  <h3>Цвет вордмарка в PNG — одноцветный, и это осознанно</h3>
+  <p>
+    В фирменном виде «Pun» набран чернилами <code>#3B48B0</code>. В отпечатке чернила уже заняты:
+    ими нарисован путь решения. Если «Pun» станет чернилами, подпись прочитается как ещё один
+    поставленный квадрат. Поэтому в PNG обе половины вордмарка — <code>#1C1C1E</code> (17.0:1 на белом,
+    ровно как у нынешнего набранного слова), знак остаётся <code>#6E6E73</code> (5.1:1). В интерфейсе
+    (About) двухцветный вариант сохраняется.
+  </p>
+
+  <h3>2б · Подвариант: локап в верхней полосе PNG</h3>
+  <p>
+    Над сеткой в PNG пустая белая полоса 150&nbsp;px (<code>FP_GRID_TOP</code>) — там локап помещается
+    целиком и ничего не вытесняет. Тогда нижняя строка остаётся <strong>только данными</strong>, и уходит
+    единственный реальный риск этой зоны: длинная подпись на uk/ru ужимается до 22&nbsp;px.
+  </p>
+  <div class="pair">
+    <figure class="fig">
+      <figcaption>2б — знак и вордмарк сверху, данные снизу</figcaption>
+      <div class="pngcard">
+        <div class="fptop">
+          <svg class="mk" width="18" height="18" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true" focusable="false"><path d="M3 3H9V7H13V13A2 2 0 0 1 11 15H3A2 2 0 0 1 1 13V5A2 2 0 0 1 3 3Z"/><path d="M12 1H14A1 1 0 0 1 15 2V4A1 1 0 0 1 14 5H12A1 1 0 0 1 11 4V2A1 1 0 0 1 12 1Z"/></svg>
+          <svg class="wm" width="71" height="14" viewBox="0 0 588 116" aria-hidden="true" focusable="false"><g transform="translate(2 -94)" fill="none" stroke-width="22" stroke-linecap="butt" stroke-linejoin="round"><g class="wm-pun"><path d="M11 96V200M11 107H40A26 26 0 0 1 40 159H11"/><path transform="translate(83 0)" d="M11 124V167A23 22 0 0 0 57 167M57 124V200"/><path transform="translate(165 0)" d="M11 200V157A23 22 0 0 1 57 157V200"/></g><g class="wm-doku"><path transform="translate(247 0)" d="M11 162A28 27 0 0 1 67 162A28 27 0 0 1 11 162M67 96V200"/><path transform="translate(339 0)" d="M11 162A28 27 0 0 1 67 162A28 27 0 0 1 11 162"/><path transform="translate(431 0)" d="M11 96V200M58 124L26 168L62 200"/><path transform="translate(516 0)" d="M11 124V167A23 22 0 0 0 57 167M57 124V200"/></g></g></svg>
+        </div>
+        <div class="fpgrid">
+          <i class="gv"></i><i class="o3"></i><i class="o4"></i><i class="o5 sm"></i><i class="gv"></i><i class="o6"></i><i class="o4"></i><i class="gv"></i><i class="o7"></i>
+          <i class="o3"></i><i class="gv"></i><i class="o5"></i><i class="o6"></i><i class="o4 sm"></i><i class="gv"></i><i class="o7"></i><i class="o5"></i><i class="gv"></i>
+          <i class="o4"></i><i class="o5"></i><i class="gv"></i><i class="o7"></i><i class="o6"></i><i class="o5 sm"></i><i class="gv"></i><i class="o8"></i><i class="o6"></i>
+          <i class="gv"></i><i class="o6"></i><i class="o7"></i><i class="gv"></i><i class="o8"></i><i class="o7"></i><i class="o6 sm"></i><i class="gv"></i><i class="o5"></i>
+          <i class="o5"></i><i class="o7"></i><i class="gv"></i><i class="o8"></i><i class="gv"></i><i class="o9"></i><i class="o7"></i><i class="o6"></i><i class="gv"></i>
+          <i class="o6"></i><i class="gv"></i><i class="o8"></i><i class="o9 sm"></i><i class="o7"></i><i class="gv"></i><i class="o8"></i><i class="o7"></i><i class="o6"></i>
+          <i class="o7"></i><i class="o8"></i><i class="o6"></i><i class="gv"></i><i class="o9"></i><i class="o8"></i><i class="gv"></i><i class="o5 sm"></i><i class="o7"></i>
+          <i class="gv"></i><i class="o9"></i><i class="o7"></i><i class="o8"></i><i class="o6 sm"></i><i class="gv"></i><i class="o9"></i><i class="o8"></i><i class="gv"></i>
+          <i class="o8"></i><i class="o7"></i><i class="gv"></i><i class="o6"></i><i class="o9"></i><i class="o7"></i><i class="gv"></i><i class="o9"></i><i class="o8"></i>
+        </div>
+        <div class="fpcap">
+          <span class="meta">2 Oct 2026 · 8:14 · 51 moves · clean</span>
+        </div>
+      </div>
+    </figure>
+
+    <figure class="fig">
+      <figcaption>Как это видно в приложении: шит экспорта, тёмная тема (PNG внутри всё равно светлый)</figcaption>
+      <div class="ph mini dark" style="height:560px">
+        <div class="scr">
+          <div class="sb"><span>9:41</span><span>▮▮▮</span></div>
+          <div class="gap"></div>
+          <div class="sheet">
+            <div class="grab"></div>
+            <h2>Fingerprint</h2>
+            <p class="ssub">No digits from the solution — safe to post.</p>
+            <div class="fpframe">
+              <div class="pngcard mini-prev" style="width:150px">
+                <div class="fptop" style="margin-bottom:5%">
+                  <svg class="mk" width="10" height="10" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true" focusable="false"><path d="M3 3H9V7H13V13A2 2 0 0 1 11 15H3A2 2 0 0 1 1 13V5A2 2 0 0 1 3 3Z"/><path d="M12 1H14A1 1 0 0 1 15 2V4A1 1 0 0 1 14 5H12A1 1 0 0 1 11 4V2A1 1 0 0 1 12 1Z"/></svg>
+                  <svg class="wm" width="40" height="8" viewBox="0 0 588 116" aria-hidden="true" focusable="false"><g transform="translate(2 -94)" fill="none" stroke-width="22" stroke-linecap="butt" stroke-linejoin="round"><g class="wm-pun"><path d="M11 96V200M11 107H40A26 26 0 0 1 40 159H11"/><path transform="translate(83 0)" d="M11 124V167A23 22 0 0 0 57 167M57 124V200"/><path transform="translate(165 0)" d="M11 200V157A23 22 0 0 1 57 157V200"/></g><g class="wm-doku"><path transform="translate(247 0)" d="M11 162A28 27 0 0 1 67 162A28 27 0 0 1 11 162M67 96V200"/><path transform="translate(339 0)" d="M11 162A28 27 0 0 1 67 162A28 27 0 0 1 11 162"/><path transform="translate(431 0)" d="M11 96V200M58 124L26 168L62 200"/><path transform="translate(516 0)" d="M11 124V167A23 22 0 0 0 57 167M57 124V200"/></g></g></svg>
+                </div>
+                <svg viewBox="0 0 100 100" style="display:block;width:100%;height:auto" aria-hidden="true" focusable="false">
+                  <defs><pattern id="fpdots" width="11.11" height="11.11" patternUnits="userSpaceOnUse"><rect width="8.7" height="8.7" rx="1.2" fill="#3b48b0" opacity="0.62"/></pattern></defs>
+                  <rect width="100" height="100" fill="url(#fpdots)"/>
+                </svg>
+                <div class="fpcap"><span class="meta" style="font-size:5px">2 Oct 2026 · 8:14 · 51 moves · clean</span></div>
+              </div>
+            </div>
+            <p class="note">Tone is the order you filled cells; size is how long you thought.</p>
+            <div class="primary" style="margin:14px 0 0">Share</div>
+            <p class="note">PNG 1080 × 1350</p>
+          </div>
+        </div>
+      </div>
+    </figure>
+  </div>
+
+  <div class="cols">
+    <div>
+      <h3>Плюсы</h3>
+      <ul>
+        <li>Контекста приложения нет — ровно случай, для которого правило §6 и писалось.</li>
+        <li>Это единственная «витрина» продукта: из всего, что мы сделаем, в чужую ленту попадает только эта картинка.</li>
+        <li>2а не меняет раскладку: ширина локапа совпадает с нынешней в пределах 7&nbsp;px.</li>
+        <li>Вордмарк — вектор, значит в PNG 1080&nbsp;px он чистый, а не «шрифт, который оказался на машине».</li>
+      </ul>
+    </div>
+    <div>
+      <h3>Минусы</h3>
+      <ul>
+        <li>Теряем цветовое выделение «Pun» (чернила заняты данными) — вордмарк в PNG одноцветный.</li>
+        <li>В <code>fingerprint.ts</code> появляются обводки (вордмарк — штрихи 22, а не заливки): <code>Path2D</code> + <code>stroke</code> с <code>lineWidth = 22 × h/116</code>, два прохода по цветам.</li>
+        <li>2б двигает раскладку PNG — перерисовываются эталонные тесты отпечатка.</li>
+      </ul>
+    </div>
+  </div>
+  <dl class="meta">
+    <dt>Юзабилити</dt>
+    <dd>Экрана не касается вообще: ни поле, ни панель, ни safe areas. Для VoiceOver картинка остаётся одной <code>alt</code>-строкой («Your fingerprint for this day»). Движения нет. Фолбэк уже есть: без <code>Path2D</code> подпись рисуется как раньше.</dd>
+    <dt>Стоимость</dt><dd>2а — S/M (~30 строк + пути вордмарка вынести в <code>brand/</code>) · 2б — M (раскладка + тесты)</dd>
+    <dt>Файлы</dt><dd><code>play/fingerprint.ts</code>, <code>brand/markPaths.ts</code> (+ пути вордмарка), <code>brand/Wordmark.tsx</code> (берёт пути оттуда же), <code>play/fingerprint.mark.test.ts</code>, <code>play/fingerprint.test.ts</code></dd>
+  </dl>
+</section>
+
+<!-- ===================== ВАРИАНТ 3 ===================== -->
+<section class="sec" id="v3">
+  <h2>3 · Settings → About: настоящая плашка иконки вместо плоского знака</h2>
+  <p><span class="tag yes">Рекомендую</span> &nbsp;Усиление того, что уже есть, без единого нового места в приложении.</p>
+  <p>
+    Сейчас в About стоит плоский знак чернилами. Предлагаю показывать там <strong>ту самую иконку</strong>, которую
+    владелец видит на домашнем экране: графитовая плашка, бумажное поле, чернильная унесённая клетка — 68&nbsp;px,
+    скругление 22.3&nbsp;% (маска iOS). Под ней вордмарк 32&nbsp;px (вместо 28) и версия.
+  </p>
+  <p class="hint">
+    Почему это не «графит протёк в интерфейс»: плашка здесь — изображение иконки, как скриншот, а не токен.
+    В <code>tokens.css</code> ничего не добавляется (§18.5ж остаётся в силе). Плашка берётся <strong>светлая в обеих темах</strong> —
+    на iOS у веб-клипа одна иконка, и на домашнем экране она светлая всегда (§18.6); показывать в тёмной теме
+    другую означало бы врать про то, что лежит на экране телефона. Чтобы графит не сливался с карточкой
+    <code>#1C1C1E</code>, в тёмной теме у плашки добавлен хайрлайн 0.5&nbsp;px — как iOS рисует вокруг тёмных иконок.
+  </p>
+
+  <h3>Сейчас</h3>
+  <div class="pair">
+    <figure class="fig">
+      <figcaption>Светлая — как сегодня</figcaption>
+      <div class="ph mini" style="height:300px">
+        <div class="scr">
+          <p class="shead">About</p>
+          <div class="about">
+            <svg class="mk" width="60" height="60" viewBox="0 0 16 16" fill="currentColor" style="color:var(--ink)" aria-hidden="true" focusable="false"><path d="M3 3H9V7H13V13A2 2 0 0 1 11 15H3A2 2 0 0 1 1 13V5A2 2 0 0 1 3 3Z"/><path d="M12 1H14A1 1 0 0 1 15 2V4A1 1 0 0 1 14 5H12A1 1 0 0 1 11 4V2A1 1 0 0 1 12 1Z"/></svg>
+            <svg class="wm" width="142" height="28" viewBox="0 0 588 116" aria-hidden="true" focusable="false"><g transform="translate(2 -94)" fill="none" stroke-width="22" stroke-linecap="butt" stroke-linejoin="round"><g class="wm-pun"><path d="M11 96V200M11 107H40A26 26 0 0 1 40 159H11"/><path transform="translate(83 0)" d="M11 124V167A23 22 0 0 0 57 167M57 124V200"/><path transform="translate(165 0)" d="M11 200V157A23 22 0 0 1 57 157V200"/></g><g class="wm-doku"><path transform="translate(247 0)" d="M11 162A28 27 0 0 1 67 162A28 27 0 0 1 11 162M67 96V200"/><path transform="translate(339 0)" d="M11 162A28 27 0 0 1 67 162A28 27 0 0 1 11 162"/><path transform="translate(431 0)" d="M11 96V200M58 124L26 168L62 200"/><path transform="translate(516 0)" d="M11 124V167A23 22 0 0 0 57 167M57 124V200"/></g></g></svg>
+            <p class="ver">v1.1.0</p>
+          </div>
+        </div>
+      </div>
+    </figure>
+    <figure class="fig">
+      <figcaption>Тёмная — как сегодня</figcaption>
+      <div class="ph mini dark" style="height:300px">
+        <div class="scr">
+          <p class="shead">About</p>
+          <div class="about">
+            <svg class="mk" width="60" height="60" viewBox="0 0 16 16" fill="currentColor" style="color:var(--ink)" aria-hidden="true" focusable="false"><path d="M3 3H9V7H13V13A2 2 0 0 1 11 15H3A2 2 0 0 1 1 13V5A2 2 0 0 1 3 3Z"/><path d="M12 1H14A1 1 0 0 1 15 2V4A1 1 0 0 1 14 5H12A1 1 0 0 1 11 4V2A1 1 0 0 1 12 1Z"/></svg>
+            <svg class="wm" width="142" height="28" viewBox="0 0 588 116" aria-hidden="true" focusable="false"><g transform="translate(2 -94)" fill="none" stroke-width="22" stroke-linecap="butt" stroke-linejoin="round"><g class="wm-pun"><path d="M11 96V200M11 107H40A26 26 0 0 1 40 159H11"/><path transform="translate(83 0)" d="M11 124V167A23 22 0 0 0 57 167M57 124V200"/><path transform="translate(165 0)" d="M11 200V157A23 22 0 0 1 57 157V200"/></g><g class="wm-doku"><path transform="translate(247 0)" d="M11 162A28 27 0 0 1 67 162A28 27 0 0 1 11 162M67 96V200"/><path transform="translate(339 0)" d="M11 162A28 27 0 0 1 67 162A28 27 0 0 1 11 162"/><path transform="translate(431 0)" d="M11 96V200M58 124L26 168L62 200"/><path transform="translate(516 0)" d="M11 124V167A23 22 0 0 0 57 167M57 124V200"/></g></g></svg>
+            <p class="ver">v1.1.0</p>
+          </div>
+        </div>
+      </div>
+    </figure>
+  </div>
+
+  <h3>Предложение</h3>
+  <div class="pair">
+    <figure class="fig">
+      <figcaption>Светлая — плашка 68 px + вордмарк 32 px</figcaption>
+      <div class="ph mini" style="height:380px">
+        <div class="scr">
+          <p class="shead">Recovery key</p>
+          <div class="list">
+            <div class="row"><span>Recovery key</span><span class="rv">Created</span></div>
+            <div class="row"><span>Language</span><span class="rv">English</span></div>
+          </div>
+          <p class="shead">About</p>
+          <div class="about">
+            <svg class="plate" width="68" height="68" viewBox="0 0 1024 1024" aria-hidden="true" focusable="false">
+              <defs><linearGradient id="gp1" x1="0" y1="0" x2="0.3" y2="1"><stop offset="0" stop-color="#5A616E"/><stop offset="0.45" stop-color="#2B2F38"/><stop offset="1" stop-color="#14161B"/></linearGradient></defs>
+              <rect width="1024" height="1024" rx="229" fill="url(#gp1)"/>
+              <path d="M296 388H460V564H636V728A72 72 0 0 1 564 800H296A72 72 0 0 1 224 728V460A72 72 0 0 1 296 388Z" fill="#E3E3E4"/>
+              <path d="M654 224H770A30 30 0 0 1 800 254V370A30 30 0 0 1 770 400H654A30 30 0 0 1 624 370V254A30 30 0 0 1 654 224Z" fill="#838EF9"/>
+            </svg>
+            <svg class="wm" width="162" height="32" viewBox="0 0 588 116" aria-hidden="true" focusable="false"><g transform="translate(2 -94)" fill="none" stroke-width="22" stroke-linecap="butt" stroke-linejoin="round"><g class="wm-pun"><path d="M11 96V200M11 107H40A26 26 0 0 1 40 159H11"/><path transform="translate(83 0)" d="M11 124V167A23 22 0 0 0 57 167M57 124V200"/><path transform="translate(165 0)" d="M11 200V157A23 22 0 0 1 57 157V200"/></g><g class="wm-doku"><path transform="translate(247 0)" d="M11 162A28 27 0 0 1 67 162A28 27 0 0 1 11 162M67 96V200"/><path transform="translate(339 0)" d="M11 162A28 27 0 0 1 67 162A28 27 0 0 1 11 162"/><path transform="translate(431 0)" d="M11 96V200M58 124L26 168L62 200"/><path transform="translate(516 0)" d="M11 124V167A23 22 0 0 0 57 167M57 124V200"/></g></g></svg>
+            <p class="ver">v1.1.0</p>
+          </div>
+        </div>
+      </div>
+    </figure>
+    <figure class="fig">
+      <figcaption>Тёмная — плашка светлая (как на домашнем экране) + хайрлайн</figcaption>
+      <div class="ph mini dark" style="height:380px">
+        <div class="scr">
+          <p class="shead">Recovery key</p>
+          <div class="list">
+            <div class="row"><span>Recovery key</span><span class="rv">Created</span></div>
+            <div class="row"><span>Language</span><span class="rv">English</span></div>
+          </div>
+          <p class="shead">About</p>
+          <div class="about">
+            <svg class="plate" width="68" height="68" viewBox="0 0 1024 1024" aria-hidden="true" focusable="false">
+              <defs><linearGradient id="gp2" x1="0" y1="0" x2="0.3" y2="1"><stop offset="0" stop-color="#5A616E"/><stop offset="0.45" stop-color="#2B2F38"/><stop offset="1" stop-color="#14161B"/></linearGradient></defs>
+              <rect width="1024" height="1024" rx="229" fill="url(#gp2)"/>
+              <path d="M296 388H460V564H636V728A72 72 0 0 1 564 800H296A72 72 0 0 1 224 728V460A72 72 0 0 1 296 388Z" fill="#E3E3E4"/>
+              <path d="M654 224H770A30 30 0 0 1 800 254V370A30 30 0 0 1 770 400H654A30 30 0 0 1 624 370V254A30 30 0 0 1 654 224Z" fill="#838EF9"/>
+            </svg>
+            <svg class="wm" width="162" height="32" viewBox="0 0 588 116" aria-hidden="true" focusable="false"><g transform="translate(2 -94)" fill="none" stroke-width="22" stroke-linecap="butt" stroke-linejoin="round"><g class="wm-pun"><path d="M11 96V200M11 107H40A26 26 0 0 1 40 159H11"/><path transform="translate(83 0)" d="M11 124V167A23 22 0 0 0 57 167M57 124V200"/><path transform="translate(165 0)" d="M11 200V157A23 22 0 0 1 57 157V200"/></g><g class="wm-doku"><path transform="translate(247 0)" d="M11 162A28 27 0 0 1 67 162A28 27 0 0 1 11 162M67 96V200"/><path transform="translate(339 0)" d="M11 162A28 27 0 0 1 67 162A28 27 0 0 1 11 162"/><path transform="translate(431 0)" d="M11 96V200M58 124L26 168L62 200"/><path transform="translate(516 0)" d="M11 124V167A23 22 0 0 0 57 167M57 124V200"/></g></g></svg>
+            <p class="ver">v1.1.0</p>
+          </div>
+        </div>
+      </div>
+    </figure>
+  </div>
+
+  <div class="cols">
+    <div>
+      <h3>Плюсы</h3>
+      <ul>
+        <li>Ровно там, где «о приложении и спрашивают» — единственное место, которому HIG разрешает полную подачу.</li>
+        <li>Иконка в About совпадает с иконкой на домашнем экране: About отвечает «это то самое приложение», а не «вот наш абстрактный глиф».</li>
+        <li>Знак наконец показан в своём материале — графит/бумага/чернила; плоский <code>currentColor</code> эту мысль теряет.</li>
+        <li>Ноль новых мест в приложении: карточка уже есть, меняется только её содержимое.</li>
+      </ul>
+    </div>
+    <div>
+      <h3>Минусы</h3>
+      <ul>
+        <li>В тёмной теме на экране появляется тёмное пятно 68×68 — нужен хайрлайн, иначе плашка «обрезана» краем карточки.</li>
+        <li>Два цвета вордмарка и трёхцветная плашка рядом — больше цвета, чем в остальном приложении. Это намеренно и только здесь.</li>
+        <li>Если иконку когда-нибудь подменим на малую оптику (план Б §18.7), плашку в About надо менять вместе с ней — иначе разойдутся.</li>
+      </ul>
+    </div>
+  </div>
+  <dl class="meta">
+    <dt>Юзабилити</dt>
+    <dd>Экран Settings прокручиваемый, карточка последняя — ничего не вытесняет. Плашка и вордмарк <code>aria-hidden</code>, доступное имя несёт <code>&lt;h2&gt;About&lt;/h2&gt;</code> и скрытая строка «Pundoku, Version…» (она уже есть). Dynamic Type: плашка — фиксированные 68&nbsp;px (это изображение, а не текст), версия растёт. <code>forced-colors</code>: плашку перекрашивать нельзя, и не надо — <code>&lt;rect&gt;</code>/<code>&lt;path&gt;</code> с явными заливками система не трогает; существующее правило для плоского знака остаётся для вордмарка.</dd>
+    <dt>Стоимость</dt><dd>S (≈0.5 дня)</dd>
+    <dt>Файлы</dt><dd><code>brand/IconPlate.tsx</code> (новый, 2 пути + градиент), <code>recovery/SettingsScreen.tsx</code>, <code>styles/settings.css</code>, <code>brand/brand.test.tsx</code>, <code>recovery/SettingsScreen.test.tsx</code></dd>
+  </dl>
+</section>
+
+<!-- ===================== ВАРИАНТ 4 ===================== -->
+<section class="sec" id="v4">
+  <h2>4 · Семья пустых состояний: один знак, одно правило</h2>
+  <p><span class="tag yes">Рекомендую</span> &nbsp;Дёшево, в ежедневной работе невидимо, убирает нынешнюю непоследовательность.</p>
+  <p>
+    Знак в пустом состоянии уже есть — но только в Year. Сейчас «день архива недоступен» — это
+    по-настоящему пустой экран (ни поля, ни панели), и там одна серая строка посреди пустоты.
+    Предлагаю <strong>один компонент</strong> <code>&lt;EmptyState&gt;</code>: знак 48&nbsp;px нейтральным
+    <code>--label-2</code> + строка + (если есть) действие — и применить его в обоих местах.
+  </p>
+
+  <div class="pair">
+    <figure class="fig">
+      <figcaption>Светлая — Archive, день недоступен</figcaption>
+      <div class="ph mini" style="height:520px">
+        <div class="scr">
+          <div class="sb"><span>9:41</span><span>▮▮▮</span></div>
+          <div class="tb" style="flex-direction:column;align-items:flex-start;gap:0">
+            <div style="min-height:34px;display:flex;align-items:center;gap:3px;color:var(--ink);font-size:15px;font-weight:500">
+              <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="m15 6-6 6 6 6"/></svg>
+              <span>Year</span>
+            </div>
+            <h1>Archive</h1>
+          </div>
+          <p class="sub">Mon 14 Apr</p>
+          <div class="gap">
+            <svg class="mk emark" width="48" height="48" viewBox="0 0 16 16" fill="currentColor" style="margin:0" aria-hidden="true" focusable="false"><path d="M3 3H9V7H13V13A2 2 0 0 1 11 15H3A2 2 0 0 1 1 13V5A2 2 0 0 1 3 3Z"/><path d="M12 1H14A1 1 0 0 1 15 2V4A1 1 0 0 1 14 5H12A1 1 0 0 1 11 4V2A1 1 0 0 1 12 1Z"/></svg>
+            <p class="status">This day’s puzzle isn’t available.</p>
+          </div>
+          <div class="tabs">
+            <div class="tab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect x="3.5" y="4.8" width="17" height="15.4" rx="3.4"/><path d="M3.5 9.2h17M8 3.2v2.8M16 3.2v2.8"/><circle cx="12" cy="14.7" r="1.9" fill="currentColor" stroke="none"/></svg><span>Today</span></div>
+            <div class="tab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect x="3.5" y="3.5" width="17" height="17" rx="3.4"/><path d="M9.2 3.5v17M14.8 3.5v17M3.5 9.2h17M3.5 14.8h17"/></svg><span>Play</span></div>
+            <div class="tab on"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" focusable="false"><rect x="3.2" y="5.2" width="3.6" height="3.6" rx="1"/><rect x="8.6" y="5.2" width="3.6" height="3.6" rx="1"/><rect x="14" y="5.2" width="3.6" height="3.6" rx="1"/><rect x="19.4" y="5.2" width="1.4" height="3.6" rx="0.7"/><rect x="3.2" y="10.2" width="3.6" height="3.6" rx="1"/><rect x="8.6" y="10.2" width="3.6" height="3.6" rx="1"/><rect x="14" y="10.2" width="3.6" height="3.6" rx="1"/><rect x="19.4" y="10.2" width="1.4" height="3.6" rx="0.7"/><rect x="3.2" y="15.2" width="3.6" height="3.6" rx="1"/><rect x="8.6" y="15.2" width="3.6" height="3.6" rx="1"/><rect x="14" y="15.2" width="3.6" height="3.6" rx="1"/><rect x="19.4" y="15.2" width="1.4" height="3.6" rx="0.7"/></svg><span>Year</span></div>
+          </div>
+        </div>
+      </div>
+    </figure>
+
+    <figure class="fig">
+      <figcaption>Тёмная — то же</figcaption>
+      <div class="ph mini dark" style="height:520px">
+        <div class="scr">
+          <div class="sb"><span>9:41</span><span>▮▮▮</span></div>
+          <div class="tb" style="flex-direction:column;align-items:flex-start;gap:0">
+            <div style="min-height:34px;display:flex;align-items:center;gap:3px;color:var(--ink);font-size:15px;font-weight:500">
+              <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="m15 6-6 6 6 6"/></svg>
+              <span>Year</span>
+            </div>
+            <h1>Archive</h1>
+          </div>
+          <p class="sub">Mon 14 Apr</p>
+          <div class="gap">
+            <svg class="mk emark" width="48" height="48" viewBox="0 0 16 16" fill="currentColor" style="margin:0" aria-hidden="true" focusable="false"><path d="M3 3H9V7H13V13A2 2 0 0 1 11 15H3A2 2 0 0 1 1 13V5A2 2 0 0 1 3 3Z"/><path d="M12 1H14A1 1 0 0 1 15 2V4A1 1 0 0 1 14 5H12A1 1 0 0 1 11 4V2A1 1 0 0 1 12 1Z"/></svg>
+            <p class="status">This day’s puzzle isn’t available.</p>
+          </div>
+          <div class="tabs">
+            <div class="tab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect x="3.5" y="4.8" width="17" height="15.4" rx="3.4"/><path d="M3.5 9.2h17M8 3.2v2.8M16 3.2v2.8"/><circle cx="12" cy="14.7" r="1.9" fill="currentColor" stroke="none"/></svg><span>Today</span></div>
+            <div class="tab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect x="3.5" y="3.5" width="17" height="17" rx="3.4"/><path d="M9.2 3.5v17M14.8 3.5v17M3.5 9.2h17M3.5 14.8h17"/></svg><span>Play</span></div>
+            <div class="tab on"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" focusable="false"><rect x="3.2" y="5.2" width="3.6" height="3.6" rx="1"/><rect x="8.6" y="5.2" width="3.6" height="3.6" rx="1"/><rect x="14" y="5.2" width="3.6" height="3.6" rx="1"/><rect x="19.4" y="5.2" width="1.4" height="3.6" rx="0.7"/><rect x="3.2" y="10.2" width="3.6" height="3.6" rx="1"/><rect x="8.6" y="10.2" width="3.6" height="3.6" rx="1"/><rect x="14" y="10.2" width="3.6" height="3.6" rx="1"/><rect x="19.4" y="10.2" width="1.4" height="3.6" rx="0.7"/><rect x="3.2" y="15.2" width="3.6" height="3.6" rx="1"/><rect x="8.6" y="15.2" width="3.6" height="3.6" rx="1"/><rect x="14" y="15.2" width="3.6" height="3.6" rx="1"/><rect x="19.4" y="15.2" width="1.4" height="3.6" rx="0.7"/></svg><span>Year</span></div>
+          </div>
+        </div>
+      </div>
+    </figure>
+  </div>
+
+  <h3>Для сверки — Year, пустое состояние (уже в релизе, не меняется)</h3>
+  <div class="pair">
+    <figure class="fig">
+      <figcaption>Светлая</figcaption>
+      <div class="ph mini" style="height:540px">
+        <div class="scr">
+          <div class="sb"><span>9:41</span><span>▮▮▮</span></div>
+          <div class="tb"><h1>2026</h1></div>
+          <p class="sub">0 days · 0 clean</p>
+          <div class="ymonths">
+            <div class="ymo"><span>Jan</span><svg viewBox="0 0 70 50" aria-hidden="true" focusable="false"><rect width="70" height="50" fill="url(#ydl)"/></svg></div>
+            <div class="ymo"><span>Feb</span><svg viewBox="0 0 70 50" aria-hidden="true" focusable="false"><rect width="70" height="50" fill="url(#ydl)"/></svg></div>
+            <div class="ymo"><span>Mar</span><svg viewBox="0 0 70 50" aria-hidden="true" focusable="false"><rect width="70" height="50" fill="url(#ydl)"/></svg></div>
+            <div class="ymo"><span>Apr</span><svg viewBox="0 0 70 50" aria-hidden="true" focusable="false"><rect width="70" height="50" fill="url(#ydl)"/></svg></div>
+            <div class="ymo"><span>May</span><svg viewBox="0 0 70 50" aria-hidden="true" focusable="false"><rect width="70" height="50" fill="url(#ydl)"/></svg></div>
+            <div class="ymo"><span>Jun</span><svg viewBox="0 0 70 50" aria-hidden="true" focusable="false"><rect width="70" height="50" fill="url(#ydl)"/></svg></div>
+          </div>
+          <div class="yempty">
+            <svg class="mk emark" width="56" height="56" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true" focusable="false"><path d="M3 3H9V7H13V13A2 2 0 0 1 11 15H3A2 2 0 0 1 1 13V5A2 2 0 0 1 3 3Z"/><path d="M12 1H14A1 1 0 0 1 15 2V4A1 1 0 0 1 14 5H12A1 1 0 0 1 11 4V2A1 1 0 0 1 12 1Z"/></svg>
+            <p>Your year starts today. Each day you play leaves one mark here.</p>
+            <span class="cta">Open today’s puzzle</span>
+          </div>
+        </div>
+        <div class="fade"></div>
+      </div>
+    </figure>
+    <figure class="fig">
+      <figcaption>Тёмная</figcaption>
+      <div class="ph mini dark" style="height:540px">
+        <div class="scr">
+          <div class="sb"><span>9:41</span><span>▮▮▮</span></div>
+          <div class="tb"><h1>2026</h1></div>
+          <p class="sub">0 days · 0 clean</p>
+          <div class="ymonths">
+            <div class="ymo"><span>Jan</span><svg viewBox="0 0 70 50" aria-hidden="true" focusable="false"><rect width="70" height="50" fill="url(#ydd)"/></svg></div>
+            <div class="ymo"><span>Feb</span><svg viewBox="0 0 70 50" aria-hidden="true" focusable="false"><rect width="70" height="50" fill="url(#ydd)"/></svg></div>
+            <div class="ymo"><span>Mar</span><svg viewBox="0 0 70 50" aria-hidden="true" focusable="false"><rect width="70" height="50" fill="url(#ydd)"/></svg></div>
+            <div class="ymo"><span>Apr</span><svg viewBox="0 0 70 50" aria-hidden="true" focusable="false"><rect width="70" height="50" fill="url(#ydd)"/></svg></div>
+            <div class="ymo"><span>May</span><svg viewBox="0 0 70 50" aria-hidden="true" focusable="false"><rect width="70" height="50" fill="url(#ydd)"/></svg></div>
+            <div class="ymo"><span>Jun</span><svg viewBox="0 0 70 50" aria-hidden="true" focusable="false"><rect width="70" height="50" fill="url(#ydd)"/></svg></div>
+          </div>
+          <div class="yempty">
+            <svg class="mk emark" width="56" height="56" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true" focusable="false"><path d="M3 3H9V7H13V13A2 2 0 0 1 11 15H3A2 2 0 0 1 1 13V5A2 2 0 0 1 3 3Z"/><path d="M12 1H14A1 1 0 0 1 15 2V4A1 1 0 0 1 14 5H12A1 1 0 0 1 11 4V2A1 1 0 0 1 12 1Z"/></svg>
+            <p>Your year starts today. Each day you play leaves one mark here.</p>
+            <span class="cta">Open today’s puzzle</span>
+          </div>
+        </div>
+        <div class="fade"></div>
+      </div>
+    </figure>
+  </div>
+
+  <div class="cols">
+    <div>
+      <h3>Плюсы</h3>
+      <ul>
+        <li>Правило §6 начинает работать как правило, а не как исключение в одном экране.</li>
+        <li>Пустой экран перестаёт выглядеть сломанным: сейчас там одна серая строка в пустоте.</li>
+        <li>В ежедневном сценарии не видно вообще никогда — сетка дня есть всегда.</li>
+        <li>Один компонент вместо двух похожих кусков разметки.</li>
+      </ul>
+    </div>
+    <div>
+      <h3>Минусы</h3>
+      <ul>
+        <li>Знак оказывается рядом с сообщением об ошибке — лёгкий риск прочитать его как «иконку ошибки». Снимается нейтральным тоном и размером (48, не 72) и тем, что он над текстом, а не перед ним.</li>
+        <li>Состояние редкое: выгода маленькая. Это полировка, не функция.</li>
+        <li>Соблазн расползания: «загрузка дня» и «не удалось загрузить» — <strong>не</strong> пустые состояния (поле на экране есть), знака там быть не должно.</li>
+      </ul>
+    </div>
+  </div>
+  <dl class="meta">
+    <dt>Юзабилити</dt>
+    <dd>Блок живёт в <code>.gap</code> между полем и панелью, которых в этом состоянии нет, — ничего не вытесняет. <code>role="alert"</code> у строки сохраняется, знак <code>aria-hidden</code>, VoiceOver читает только текст. Dynamic Type: знак фиксированный, текст растёт; на AX-размерах знак можно скрыть через <code>@container</code>/<code>@media (max-height)</code>, если текст перестанет помещаться. Движения нет.</dd>
+    <dt>Стоимость</dt><dd>S (≈0.5 дня)</dd>
+    <dt>Файлы</dt><dd><code>shell/EmptyState.tsx</code> (новый), <code>today/TodayScreen.tsx</code> (ветка <code>unavailable</code>), <code>year/YearScreen.tsx</code> (переход на общий компонент), <code>styles/play.css</code> или <code>styles/year.css</code>, <code>today/ArchiveScreen.test.tsx</code>, <code>year/YearScreen.test.tsx</code></dd>
+  </dl>
+</section>
+
+<!-- ===================== ВАРИАНТ 5 ===================== -->
+<section class="sec" id="v5">
+  <h2>5 · Экран «New puzzle»: локап над списком</h2>
+  <p><span class="tag no">Не рекомендую</span> &nbsp;Выглядит соблазнительно (поля нет, место есть), но это рабочий экран, а не пустота.</p>
+  <p>Знак 40&nbsp;px + вордмарк 26&nbsp;px по центру над группой «New puzzle».</p>
+
+  <div class="pair">
+    <figure class="fig">
+      <figcaption>Светлая</figcaption>
+      <div class="ph mini" style="height:470px">
+        <div class="scr">
+          <div class="sb"><span>9:41</span><span>▮▮▮</span></div>
+          <div class="tb"><h1>Play</h1></div>
+          <div style="display:flex;flex-direction:column;align-items:center;gap:10px;padding:26px 16px 22px">
+            <svg class="mk" width="40" height="40" viewBox="0 0 16 16" fill="currentColor" style="color:var(--label-2)" aria-hidden="true" focusable="false"><path d="M3 3H9V7H13V13A2 2 0 0 1 11 15H3A2 2 0 0 1 1 13V5A2 2 0 0 1 3 3Z"/><path d="M12 1H14A1 1 0 0 1 15 2V4A1 1 0 0 1 14 5H12A1 1 0 0 1 11 4V2A1 1 0 0 1 12 1Z"/></svg>
+            <svg class="wm" width="132" height="26" viewBox="0 0 588 116" aria-hidden="true" focusable="false"><g transform="translate(2 -94)" fill="none" stroke-width="22" stroke-linecap="butt" stroke-linejoin="round"><g class="wm-pun"><path d="M11 96V200M11 107H40A26 26 0 0 1 40 159H11"/><path transform="translate(83 0)" d="M11 124V167A23 22 0 0 0 57 167M57 124V200"/><path transform="translate(165 0)" d="M11 200V157A23 22 0 0 1 57 157V200"/></g><g class="wm-doku"><path transform="translate(247 0)" d="M11 162A28 27 0 0 1 67 162A28 27 0 0 1 11 162M67 96V200"/><path transform="translate(339 0)" d="M11 162A28 27 0 0 1 67 162A28 27 0 0 1 11 162"/><path transform="translate(431 0)" d="M11 96V200M58 124L26 168L62 200"/><path transform="translate(516 0)" d="M11 124V167A23 22 0 0 0 57 167M57 124V200"/></g></g></svg>
+          </div>
+          <p class="shead" style="padding-top:0">New puzzle</p>
+          <div class="list">
+            <div class="row"><span>Difficulty</span><span class="rv">Medium ›</span></div>
+            <div class="row"><span>Ink mode</span><span class="rv">Off ›</span></div>
+          </div>
+          <p class="foot">In ink mode there is no undo and no eraser for digits.</p>
+          <div class="primary">Start</div>
+        </div>
+        <div class="fade"></div>
+      </div>
+    </figure>
+    <figure class="fig">
+      <figcaption>Тёмная</figcaption>
+      <div class="ph mini dark" style="height:470px">
+        <div class="scr">
+          <div class="sb"><span>9:41</span><span>▮▮▮</span></div>
+          <div class="tb"><h1>Play</h1></div>
+          <div style="display:flex;flex-direction:column;align-items:center;gap:10px;padding:26px 16px 22px">
+            <svg class="mk" width="40" height="40" viewBox="0 0 16 16" fill="currentColor" style="color:var(--label-2)" aria-hidden="true" focusable="false"><path d="M3 3H9V7H13V13A2 2 0 0 1 11 15H3A2 2 0 0 1 1 13V5A2 2 0 0 1 3 3Z"/><path d="M12 1H14A1 1 0 0 1 15 2V4A1 1 0 0 1 14 5H12A1 1 0 0 1 11 4V2A1 1 0 0 1 12 1Z"/></svg>
+            <svg class="wm" width="132" height="26" viewBox="0 0 588 116" aria-hidden="true" focusable="false"><g transform="translate(2 -94)" fill="none" stroke-width="22" stroke-linecap="butt" stroke-linejoin="round"><g class="wm-pun"><path d="M11 96V200M11 107H40A26 26 0 0 1 40 159H11"/><path transform="translate(83 0)" d="M11 124V167A23 22 0 0 0 57 167M57 124V200"/><path transform="translate(165 0)" d="M11 200V157A23 22 0 0 1 57 157V200"/></g><g class="wm-doku"><path transform="translate(247 0)" d="M11 162A28 27 0 0 1 67 162A28 27 0 0 1 11 162M67 96V200"/><path transform="translate(339 0)" d="M11 162A28 27 0 0 1 67 162A28 27 0 0 1 11 162"/><path transform="translate(431 0)" d="M11 96V200M58 124L26 168L62 200"/><path transform="translate(516 0)" d="M11 124V167A23 22 0 0 0 57 167M57 124V200"/></g></g></svg>
+          </div>
+          <p class="shead" style="padding-top:0">New puzzle</p>
+          <div class="list">
+            <div class="row"><span>Difficulty</span><span class="rv">Medium ›</span></div>
+            <div class="row"><span>Ink mode</span><span class="rv">Off ›</span></div>
+          </div>
+          <p class="foot">In ink mode there is no undo and no eraser for digits.</p>
+          <div class="primary">Start</div>
+        </div>
+        <div class="fade"></div>
+      </div>
+    </figure>
+  </div>
+
+  <div class="cols">
+    <div>
+      <h3>Плюсы</h3>
+      <ul>
+        <li>Единственный экран приложения, где поля нет и место действительно свободно.</li>
+        <li>Знак и вордмарк видно крупно, в правильной паре, без давки.</li>
+      </ul>
+    </div>
+    <div>
+      <h3>Минусы</h3>
+      <ul>
+        <li>Это не пустое состояние: экран занят выбором сложности и режима. Логотип тут отодвигает «Start» вниз, то есть платит рукой пользователя за украшение.</li>
+        <li>Экран частый: по нему проходят каждый раз, когда начинают свободную партию. Логотип, который видят часто, перестаёт работать и начинает надоедать.</li>
+        <li>Заголовок «Play» и локап «Pundoku» на одном экране спорят за роль шапки.</li>
+      </ul>
+    </div>
+  </div>
+  <dl class="meta">
+    <dt>Юзабилити</dt>
+    <dd>Сдвигает «Start» примерно на 120&nbsp;px вниз — на маленьком экране (<code>max-height: 640</code>) кнопка уедет под сгиб. Это прямое нарушение «важные контролы — в нижней половине, но видимыми».</dd>
+    <dt>Стоимость</dt><dd>S</dd>
+    <dt>Файлы</dt><dd><code>play/PlaySetup.tsx</code>, <code>styles/ink.css</code></dd>
+  </dl>
+</section>
+
+<!-- ===================== ВАРИАНТ 6 ===================== -->
+<section class="sec" id="v6">
+  <h2>6 · Заставка PWA и одноразовый «первый запуск»</h2>
+  <p><span class="tag no">6а — заставка: не берём</span> <span class="tag ask">6б — welcome: решение владельца</span></p>
+
+  <h3>6а · Перепроверка: можно ли всё-таки положить знак на заставку</h3>
+  <p>
+    Перепроверил, как просили. Короткий ответ: <strong>технически можно, по сути — нет</strong>, решение PD-92 остаётся.
+  </p>
+  <ul>
+    <li><strong>Техника не мешает.</strong> <code>apple-touch-startup-image</code> — обычный PNG, который мы генерируем сами
+      (<code>gen-startup-images.mjs</code>). Сейчас он индексный, 1&nbsp;бит на пиксель, одна краска; добавить вторую краску
+      и нарисовать знак — это та же палитра на два цвета, без зависимостей. Так что «нельзя, потому что статический PNG» — неточная формулировка;
+      статичность мешает другому (см. ниже).</li>
+    <li><strong>Мешает HIG, и прямым текстом.</strong> <code>launching.md › Launch screens</code>: «Don’t advertise. The launch screen
+      isn’t a branding opportunity… don’t include logos or other branding elements <em>unless they’re a fixed part of your app’s first
+      screen</em>» и «Design a launch screen that’s nearly identical to the first screen». Первый экран Pundoku — Today, а там знака нет
+      (и по варианту 1 мы его туда не ставим). Значит знак на заставке = вспышка: он появится и тут же исчезнет.</li>
+    <li><strong>Условие, при котором это стало бы законно:</strong> если принять вариант 1а (знак в шапке Today), то знак станет
+      «fixed part of the first screen», и тогда та же метка на заставке — уже не реклама, а совпадение кадров. То есть 6а живёт
+      только вместе с 1а, а 1а я не рекомендую.</li>
+    <li><strong>Цена статичности:</strong> 13 устройств × 2 схемы = 26 PNG, и знак в каждом надо позиционировать в точку, где он окажется
+      на первом кадре Today, — иначе он «прыгнет». Это та самая хрупкость, ради которой заставку и держат одноцветной.</li>
+  </ul>
+  <div class="swatches">
+    <div class="sw"><div class="fill" style="background:#F2F2F7"></div><div class="cap">Заставка сейчас, светлая — <code>#F2F2F7</code></div></div>
+    <div class="sw"><div class="fill" style="background:#000000"></div><div class="cap">Заставка сейчас, тёмная — <code>#000000</code></div></div>
+  </div>
+
+  <h3>6б · Законная альтернатива: экран приветствия, один раз за всю жизнь установки</h3>
+  <p>
+    Тот же <code>launching.md</code> говорит, куда деть «красивый кадр с брендом»: «If you need a splash screen, consider displaying it
+    at the beginning of your onboarding flow». У Pundoku онбординга нет и не планируется, но анонимный аккаунт и так создаётся при
+    первом запуске — это естественный и единственный момент, когда показать логотип честно.
+  </p>
+
+  <div class="pair">
+    <figure class="fig">
+      <figcaption>Светлая — показывается один раз</figcaption>
+      <div class="ph mini" style="height:520px">
+        <div class="scr">
+          <div class="sb"><span>9:41</span><span>▮▮▮</span></div>
+          <div class="gap" style="gap:18px">
+            <svg class="plate" width="88" height="88" viewBox="0 0 1024 1024" aria-hidden="true" focusable="false">
+              <defs><linearGradient id="gp3" x1="0" y1="0" x2="0.3" y2="1"><stop offset="0" stop-color="#5A616E"/><stop offset="0.45" stop-color="#2B2F38"/><stop offset="1" stop-color="#14161B"/></linearGradient></defs>
+              <rect width="1024" height="1024" rx="229" fill="url(#gp3)"/>
+              <path d="M296 388H460V564H636V728A72 72 0 0 1 564 800H296A72 72 0 0 1 224 728V460A72 72 0 0 1 296 388Z" fill="#E3E3E4"/>
+              <path d="M654 224H770A30 30 0 0 1 800 254V370A30 30 0 0 1 770 400H654A30 30 0 0 1 624 370V254A30 30 0 0 1 654 224Z" fill="#838EF9"/>
+            </svg>
+            <svg class="wm" width="178" height="35" viewBox="0 0 588 116" aria-hidden="true" focusable="false"><g transform="translate(2 -94)" fill="none" stroke-width="22" stroke-linecap="butt" stroke-linejoin="round"><g class="wm-pun"><path d="M11 96V200M11 107H40A26 26 0 0 1 40 159H11"/><path transform="translate(83 0)" d="M11 124V167A23 22 0 0 0 57 167M57 124V200"/><path transform="translate(165 0)" d="M11 200V157A23 22 0 0 1 57 157V200"/></g><g class="wm-doku"><path transform="translate(247 0)" d="M11 162A28 27 0 0 1 67 162A28 27 0 0 1 11 162M67 96V200"/><path transform="translate(339 0)" d="M11 162A28 27 0 0 1 67 162A28 27 0 0 1 11 162"/><path transform="translate(431 0)" d="M11 96V200M58 124L26 168L62 200"/><path transform="translate(516 0)" d="M11 124V167A23 22 0 0 0 57 167M57 124V200"/></g></g></svg>
+            <p class="status" style="max-width:28ch;font-size:15px">One grid a day. The cell you place last opens a clue in a grid of your own.</p>
+          </div>
+          <div class="primary" style="margin:0 16px 26px">Open today’s puzzle</div>
+        </div>
+      </div>
+    </figure>
+    <figure class="fig">
+      <figcaption>Тёмная</figcaption>
+      <div class="ph mini dark" style="height:520px">
+        <div class="scr">
+          <div class="sb"><span>9:41</span><span>▮▮▮</span></div>
+          <div class="gap" style="gap:18px">
+            <svg class="plate" width="88" height="88" viewBox="0 0 1024 1024" aria-hidden="true" focusable="false">
+              <defs><linearGradient id="gp4" x1="0" y1="0" x2="0.3" y2="1"><stop offset="0" stop-color="#5A616E"/><stop offset="0.45" stop-color="#2B2F38"/><stop offset="1" stop-color="#14161B"/></linearGradient></defs>
+              <rect width="1024" height="1024" rx="229" fill="url(#gp4)"/>
+              <path d="M296 388H460V564H636V728A72 72 0 0 1 564 800H296A72 72 0 0 1 224 728V460A72 72 0 0 1 296 388Z" fill="#E3E3E4"/>
+              <path d="M654 224H770A30 30 0 0 1 800 254V370A30 30 0 0 1 770 400H654A30 30 0 0 1 624 370V254A30 30 0 0 1 654 224Z" fill="#838EF9"/>
+            </svg>
+            <svg class="wm" width="178" height="35" viewBox="0 0 588 116" aria-hidden="true" focusable="false"><g transform="translate(2 -94)" fill="none" stroke-width="22" stroke-linecap="butt" stroke-linejoin="round"><g class="wm-pun"><path d="M11 96V200M11 107H40A26 26 0 0 1 40 159H11"/><path transform="translate(83 0)" d="M11 124V167A23 22 0 0 0 57 167M57 124V200"/><path transform="translate(165 0)" d="M11 200V157A23 22 0 0 1 57 157V200"/></g><g class="wm-doku"><path transform="translate(247 0)" d="M11 162A28 27 0 0 1 67 162A28 27 0 0 1 11 162M67 96V200"/><path transform="translate(339 0)" d="M11 162A28 27 0 0 1 67 162A28 27 0 0 1 11 162"/><path transform="translate(431 0)" d="M11 96V200M58 124L26 168L62 200"/><path transform="translate(516 0)" d="M11 124V167A23 22 0 0 0 57 167M57 124V200"/></g></g></svg>
+            <p class="status" style="max-width:28ch;font-size:15px">One grid a day. The cell you place last opens a clue in a grid of your own.</p>
+          </div>
+          <div class="primary" style="margin:0 16px 26px">Open today’s puzzle</div>
+        </div>
+      </div>
+    </figure>
+  </div>
+
+  <div class="cols">
+    <div>
+      <h3>Плюсы</h3>
+      <ul>
+        <li>Единственное место, где логотипу можно дать полный размер и это не противоречит ни HIG, ни нашему правилу §6.</li>
+        <li>Заодно объясняет механику постоянной сетки, которую сейчас никто не объясняет.</li>
+        <li>Стоит ровно один показ за установку: ежедневный ритуал не трогает.</li>
+      </ul>
+    </div>
+    <div>
+      <h3>Минусы</h3>
+      <ul>
+        <li>Это +1 экран в продукте, девиз которого «чистое судоку, ничего лишнего». Самый первый контакт с приложением становится не судоку.</li>
+        <li>Нужен флаг «уже видел» в хранилище, значит он переживает чистку IndexedDB только вместе с аккаунтом; иначе экран однажды покажется второй раз.</li>
+        <li><code>launching.md › Best practices</code>: «Launch instantly». Экран между запуском и сеткой — ровно то, против чего это написано, даже если он один раз.</li>
+      </ul>
+    </div>
+  </div>
+  <dl class="meta">
+    <dt>Юзабилити</dt>
+    <dd>Кнопка в нижней трети (одна рука), текст и кнопка растут с Dynamic Type, плашка фиксирована. VoiceOver: заголовок экрана — текстовая строка, плашка и вордмарк <code>aria-hidden</code>. Движение: если захочется проявления знака — только через <code>--mo</code>/<code>--mk</code> (<code>tokens.css</code>), при «Уменьшении движения» остаётся кроссфейд.</dd>
+    <dt>Стоимость</dt><dd>6а — S/M (и всё равно не берём) · 6б — M (новый экран, флаг, i18n ×3, тесты)</dd>
+    <dt>Файлы</dt><dd>6а: <code>apps/web/scripts/gen-startup-images.mjs</code>, <code>startup-devices.mjs</code>, <code>startup-images.test.mjs</code>. 6б: <code>shell/Welcome.tsx</code> (новый), <code>App.tsx</code>, хранилище флага, <code>i18n/locales/{en,uk,ru}.json</code>, тесты</dd>
+  </dl>
+</section>
+
+<!-- ===================== ИТОГ ===================== -->
+<section class="sec" id="verdict">
+  <h2>Итог: что беру, что нет</h2>
+  <table>
+    <tr><th style="width:34%">Вариант</th><th style="width:20%">Вердикт</th><th style="width:14%">Стоимость</th><th>Одной фразой</th></tr>
+    <tr><td>2а · Вордмарк в подписи PNG</td><td><span class="tag yes">берём</span></td><td>S/M</td><td>Единственная картинка, которая уходит из приложения; места занимает столько же.</td></tr>
+    <tr><td>3 · Плашка иконки в About</td><td><span class="tag yes">берём</span></td><td>S</td><td>Там, где о приложении и спрашивают; показывает знак в его материале.</td></tr>
+    <tr><td>4 · Пустые состояния одним компонентом</td><td><span class="tag yes">берём</span></td><td>S</td><td>Правило §6 становится правилом, а не исключением в одном экране.</td></tr>
+    <tr><td>2б · Локап в верхней полосе PNG</td><td><span class="tag ask">на выбор</span></td><td>M</td><td>Больше присутствия и чистая строка данных; цена — переразметка PNG.</td></tr>
+    <tr><td>6б · Экран приветствия один раз</td><td><span class="tag ask">на выбор</span></td><td>M</td><td>Законный «большой логотип», но это +1 экран в «чистом судоку».</td></tr>
+    <tr><td>1 · Шапка Today (и 1б вордмарк-заголовок)</td><td><span class="tag no">нет</span></td><td>S</td><td>Рабочий экран; чернила знака спорят с чернилами цифр; 1б ломает локализацию и Dynamic Type.</td></tr>
+    <tr><td>5 · Экран «New puzzle»</td><td><span class="tag no">нет</span></td><td>S</td><td>Частый экран выбора; отодвигает «Start» под сгиб.</td></tr>
+    <tr><td>6а · Знак на заставке</td><td><span class="tag no">нет</span></td><td>S/M</td><td>Технически можно, HIG прямо запрещает, и знак вспыхнет и исчезнет.</td></tr>
+  </table>
+  <p>
+    Если брать все три рекомендованных — это примерно <strong>1.5–2 дня</strong> работы и ни одного нового пикселя
+    на рабочем экране. Порядок: <strong>3 → 2а → 4</strong> (About виден сразу и ничем не рискует; PNG — самый
+    ценный, но трогает код отрисовки; пустые состояния — полировка).
+  </p>
+</section>
+
+<section class="sec" id="questions">
+  <h2>Вопросы владельцу</h2>
+  <ol>
+    <li><strong>PNG: 2а или 2а+2б?</strong> 2а — вордмарк вместо набранного слова на том же месте (безопасно, дёшево).
+      2б — локап над сеткой, нижняя строка только данными (заметнее, дороже, трогает раскладку картинки).</li>
+    <li><strong>Цвет вордмарка в PNG.</strong> Предлагаю одноцветный <code>#1C1C1E</code>: чернила в отпечатке означают
+      ваш путь решения, и «Pun» чернилами прочитается как ещё один поставленный квадрат. Согласны потерять
+      двухцветность именно в PNG (в About она остаётся)?</li>
+    <li><strong>About: плашка или плоский знак?</strong> Плашка = та самая иконка с домашнего экрана, включая графит.
+      Плоский знак = как сейчас, чернилами, тише. Если «тише» — берём только увеличение вордмарка 28→32 и ничего больше.</li>
+    <li><strong>Экран приветствия (6б) — нужен?</strong> По умолчанию считаю, что нет: «чистое судоку» и «launch instantly».
+      Но это единственное место, где логотип можно показать крупно без нарушений.</li>
+    <li><strong>Шапка Today (вариант 1) — точно нет?</strong> Если хочется видеть знак каждый день, это единственный способ;
+      я против, но решение ваше, и от него зависит 6а.</li>
+  </ol>
+</section>
+
+<p class="hint">
+  Кадры и скриншоты по этому макету снимает developer. Не проверено без iPhone: как читается плашка 68&nbsp;px в About
+  на живом экране в тёмной теме и не выглядит ли вордмарк в PNG тяжелее набранного слова при реальном рендере canvas.
+</p>
+
+</div>
+
+</body>
+</html>
