@@ -39,3 +39,36 @@ export function keyGroups(key: string): string[] {
 
 /** «K7QP» → «K 7 Q P»: так VoiceOver читает группу по знакам, а не словом. */
 export const spellGroup = (group: string): string => group.split("").join(" ");
+
+/** Сколько групп спрашивает проверка записи ключа (PD-142). */
+export const CHECK_GROUPS = 2;
+
+/**
+ * Какие группы спросить: `count` разных индексов 0..7 по возрастанию (человек идёт по записи сверху вниз). `random` —
+ * источник случайности (в тестах подменяется); не криптографический — выбор группы не секрет.
+ */
+export function pickCheckGroups(random: () => number = Math.random, count: number = CHECK_GROUPS): number[] {
+  const pool = Array.from({ length: KEY_GROUPS }, (_, i) => i);
+  const picked: number[] = [];
+  while (picked.length < Math.min(count, KEY_GROUPS)) {
+    const at = Math.min(pool.length - 1, Math.floor(random() * pool.length));
+    picked.push(pool.splice(at, 1)[0]!);
+  }
+  return picked.sort((a, b) => a - b);
+}
+
+/**
+ * Ввод в поле одной группы: те же правила, что у поля всего ключа (регистр, пробелы, дефисы, Crockford-путаница), ровно
+ * `KEY_GROUP` символов. Если вставили ключ целиком (32 символа), берётся именно спрашиваемая группа, а не первые четыре.
+ */
+export function normalizeGroupInput(raw: string, index: number): string {
+  const compact = compactKey(normalizeKeyInput(raw));
+  if (compact.length >= KEY_CHARS) return compact.slice(index * KEY_GROUP, (index + 1) * KEY_GROUP);
+  return compact.slice(0, KEY_GROUP);
+}
+
+/** Введённая группа (уже нормализованная) совпадает с группой `index` ключа. Неполная группа не совпадает. */
+export function groupMatches(key: string, index: number, entered: string): boolean {
+  const expected = keyGroups(key)[index];
+  return expected !== undefined && entered.length === KEY_GROUP && entered === expected;
+}

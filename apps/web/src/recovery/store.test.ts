@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { RecoveryApi, RecoveryResult, RecoveryStatus } from "./api";
 import { httpRecoveryApi } from "./api";
 import type { RecoverySync } from "./store";
+import { keyGroups } from "./key";
 import { COPIED_MS, RecoveryStore } from "./store";
 
 const KEY = "K7QP-M2XZ-9D4T-VB6N-H3RW-8YCJ-5FGA-E0S1";
@@ -15,7 +16,7 @@ const CREATED = { hasKey: true, devices: 2, keyCreatedAt: null, pendingRotation:
 
 const ok = <T,>(value: T): RecoveryResult<T> => ({ kind: "ok", value });
 
-function setup(over: Partial<{ [K in keyof RecoveryApi]: RecoveryApi[K] }> = {}) {
+function setup(over: Partial<{ [K in keyof RecoveryApi]: RecoveryApi[K] }> = {}, random?: () => number) {
   const calls: string[] = [];
   const api: RecoveryApi = {
     status: vi.fn(async () => ok<RecoveryStatus>({ hasKey: false })),
@@ -37,11 +38,22 @@ function setup(over: Partial<{ [K in keyof RecoveryApi]: RecoveryApi[K] }> = {})
     adoptToken: vi.fn(),
   };
   const writeClipboard = vi.fn(async () => {});
-  const store = new RecoveryStore({ api, sync, now: () => Date.parse("2026-09-30T10:00:00Z"), writeClipboard });
+  const store = new RecoveryStore({ api, sync, now: () => Date.parse("2026-09-30T10:00:00Z"), writeClipboard, random });
   made.push(store);
   return { store, api, sync, calls, writeClipboard };
 }
 const snap = (s: RecoveryStore) => s.getSnapshot();
+/**
+ * PD-142: «Я записал ключ» → верно введённые спрашиваемые группы → «Проверить». Всё синхронно до первого await внутри
+ * `submitCheck`, поэтому не-await-нутый вызов ведёт себя как прежний `confirmSaved()` (busy виден сразу).
+ */
+function passCheck(store: RecoveryStore): Promise<void> {
+  if (snap(store).check === null) store.startCheck();
+  const { check, shownKey } = snap(store);
+  const groups = keyGroups(shownKey ?? "");
+  check?.groups.forEach((g, i) => store.setCheckValue(i, groups[g] ?? ""));
+  return store.submitCheck();
+}
 const made: RecoveryStore[] = [];
 
 beforeEach(() => {
@@ -94,7 +106,7 @@ describe("RecoveryStore: состояние блока", () => {
     await vi.waitFor(() => expect(snap(store).phase).toBe("none"));
     await store.create();
     expect(snap(store)).toMatchObject({ phase: "shown", shownKey: KEY, devices: 1 });
-    store.confirmSaved();
+    passCheck(store);
     expect(snap(store)).toMatchObject({ phase: "created", shownKey: null });
     expect(JSON.stringify(snap(store))).not.toContain(COMPACT);
   });
@@ -158,7 +170,7 @@ describe("RecoveryStore: отложенная замена ключа (PD-126)",
 
   it("«Ключ сохранён»: confirm с меткой → ключ стёрт из памяти, pending снят, «Новый ключ действует»", async () => {
     const { store, api } = await replacing();
-    const p = store.confirmSaved();
+    const p = passCheck(store);
     expect(snap(store).busy).toBe(true);
     await p;
     expect(api.confirmRotation).toHaveBeenCalledWith("tok", PENDING);
@@ -174,11 +186,11 @@ describe("RecoveryStore: отложенная замена ключа (PD-126)",
       .mockResolvedValueOnce({ kind: "rate_limited", retryAfterSec: 120 })
       .mockResolvedValue(ok(true as const));
     const { store } = await replacing({ confirmRotation });
-    await store.confirmSaved();
+    await passCheck(store);
     expect(snap(store)).toMatchObject({ phase: "shown", shownKey: KEY2, pendingId: PENDING, busy: false, error: { kind: "offline" } });
-    await store.confirmSaved();
+    await passCheck(store);
     expect(snap(store)).toMatchObject({ phase: "shown", shownKey: KEY2, error: { kind: "limit", minutes: 2 } });
-    await store.confirmSaved();
+    await passCheck(store);
     expect(snap(store)).toMatchObject({ phase: "created", shownKey: null, replaced: true, error: null });
   });
 
@@ -208,10 +220,10 @@ describe("RecoveryStore: отложенная замена ключа (PD-126)",
     });
     const api = httpRecoveryApi({ fetchFn: fetchFn as unknown as typeof fetch, base: "http://api.test" });
     const { store } = await replacing({ confirmRotation: api.confirmRotation, status: api.status });
-    await store.confirmSaved();
+    await passCheck(store);
     expect(snap(store)).toMatchObject({ phase: "shown", shownKey: KEY2, error: { kind: "offline" } }); // «нет соединения»
     expect(confirmed).toBe(PENDING); // а на сервере ключ уже переключён
-    await store.confirmSaved(); // повтор
+    await passCheck(store); // повтор
     expect(serverCalls).toBe(2);
     expect(snap(store)).toMatchObject({ phase: "created", shownKey: null, pendingId: null, replaced: true, error: null });
     expect(JSON.stringify(snap(store))).not.toContain(COMPACT2);
@@ -221,7 +233,7 @@ describe("RecoveryStore: отложенная замена ключа (PD-126)",
     const status = vi.fn<RecoveryApi["status"]>().mockResolvedValue(ok<RecoveryStatus>({ hasKey: true, devices: 2, keyCreatedAt: "2026-09-30T11:00:00.000Z", pendingRotation: null }));
     const { store } = await replacing({ confirmRotation: vi.fn(async () => ({ kind: "network" }) as const), status });
     status.mockClear();
-    await store.confirmSaved();
+    await passCheck(store);
     store.requestLeave(() => {});
     await store.confirmSheet(); // sheet "leave" → осознанный уход
     await vi.waitFor(() => expect(snap(store)).toMatchObject({ phase: "created", pending: null, createdAt: "2026-09-30T11:00:00.000Z" }));
@@ -232,7 +244,7 @@ describe("RecoveryStore: отложенная замена ключа (PD-126)",
     const status = vi.fn<RecoveryApi["status"]>().mockResolvedValue(ok<RecoveryStatus>({ hasKey: true, devices: 2, keyCreatedAt: null, pendingRotation: { expiresAt: EXPIRES } }));
     const { store } = await replacing({ confirmRotation: vi.fn(async () => ({ kind: "rate_limited", retryAfterSec: 60 }) as const), status });
     status.mockClear();
-    await store.confirmSaved();
+    await passCheck(store);
     store.requestLeave(() => {});
     await store.confirmSheet();
     await Promise.resolve();
@@ -241,15 +253,15 @@ describe("RecoveryStore: отложенная замена ключа (PD-126)",
 
   it("замена уже недействительна (отменена/затёрта/истекла): ключ стёрт, объяснение, рабочий ключ не менялся", async () => {
     const { store } = await replacing({ confirmRotation: vi.fn(async () => ({ kind: "stale_rotation" }) as const) });
-    await store.confirmSaved();
+    await passCheck(store);
     expect(snap(store)).toMatchObject({ phase: "created", shownKey: null, pendingId: null, replaced: false, error: { kind: "stale" } });
     await vi.waitFor(() => expect(snap(store).pending).toBeNull());
   });
 
   it("двойной тап по «Ключ сохранён»: один запрос", async () => {
     const { store, api } = await replacing();
-    const first = store.confirmSaved();
-    void store.confirmSaved();
+    const first = passCheck(store);
+    void passCheck(store);
     await first;
     expect(api.confirmRotation).toHaveBeenCalledTimes(1);
   });
@@ -320,7 +332,7 @@ describe("RecoveryStore: отложенная замена ключа (PD-126)",
     const held = new Event("beforeunload", { cancelable: true });
     window.dispatchEvent(held);
     expect(held.defaultPrevented).toBe(true);
-    await store.confirmSaved();
+    await passCheck(store);
     const free = new Event("beforeunload", { cancelable: true });
     window.dispatchEvent(free);
     expect(free.defaultPrevented).toBe(false);
@@ -492,7 +504,7 @@ describe("RecoveryStore: уход с экрана при неподтвержд�
     const held = new Event("beforeunload", { cancelable: true });
     window.dispatchEvent(held);
     expect(held.defaultPrevented).toBe(true);
-    store.confirmSaved();
+    passCheck(store);
     const free = new Event("beforeunload", { cancelable: true });
     window.dispatchEvent(free);
     expect(free.defaultPrevented).toBe(false);
@@ -503,11 +515,242 @@ describe("ключ не сохраняется в браузере", () => {
   it("ни localStorage, ни sessionStorage не содержат ключ после создания и ввода", async () => {
     const { store } = setup();
     await store.create();
-    store.confirmSaved();
+    passCheck(store);
     store.startEntry();
     store.setEntry(KEY);
     for (const st of [localStorage, sessionStorage]) {
       expect(JSON.stringify({ ...st })).not.toContain(COMPACT.slice(0, 8));
     }
+  });
+});
+
+describe("RecoveryStore: проверка записи ключа (PD-142)", () => {
+  const G = KEY.split("-"); // группы создаваемого ключа
+  const G2 = KEY2.split("-"); // группы нового ключа при замене
+  /** random → детерминированный выбор: [0.99, 0] спрашивает группы 8 и 1 → индексы 0 и 7. */
+  const rnd = (...vals: number[]) => {
+    let i = 0;
+    return () => vals[i++ % vals.length]!;
+  };
+
+  async function creating(over: Parameters<typeof setup>[0] = {}, random: () => number = rnd(0.99, 0)) {
+    const t = setup(over, random);
+    await t.store.create();
+    return t;
+  }
+  async function replacing(over: Parameters<typeof setup>[0] = {}, random: () => number = rnd(0.99, 0)) {
+    const t = setup({ status: vi.fn(async () => ok<RecoveryStatus>({ ...CREATED })), ...over }, random);
+    t.store.open();
+    await vi.waitFor(() => expect(snap(t.store).phase).toBe("created"));
+    t.store.openSheet("reissue");
+    await t.store.confirmSheet();
+    return t;
+  }
+
+  it("«Я записал» открывает проверку двух РАЗНЫХ групп по возрастанию; ключ остаётся в памяти, на сервер ничего не уходит", async () => {
+    const { store, api } = await creating();
+    store.startCheck();
+    expect(snap(store).check).toEqual({ groups: [0, 7], values: ["", ""], wrong: [false, false] });
+    expect(snap(store)).toMatchObject({ phase: "shown", shownKey: KEY });
+    expect(api.confirmRotation).not.toHaveBeenCalled();
+    store.startCheck(); // повторный вызов не пересобирает вопрос
+    expect(snap(store).check!.groups).toEqual([0, 7]);
+  });
+
+  it("без прохождения проверки ключ не стирается ни из состояния, ни прямым вызовом (обхода «Готово» нет)", async () => {
+    const { store } = await creating();
+    expect((store as unknown as { confirmSaved?: unknown }).confirmSaved).toBeUndefined();
+    store.startCheck();
+    await store.submitCheck(); // пустые поля
+    expect(snap(store)).toMatchObject({ phase: "shown", shownKey: KEY, error: { kind: "mismatch" } });
+  });
+
+  it("верные группы (создание): ключ и введённое стёрты из памяти, фаза «Ключ создан», сервер не вызывается", async () => {
+    const { store, api } = await creating();
+    store.startCheck();
+    store.setCheckValue(0, G[0]!);
+    store.setCheckValue(1, G[7]!);
+    await store.submitCheck();
+    expect(snap(store)).toMatchObject({ phase: "created", shownKey: null, check: null, error: null });
+    expect(JSON.stringify(snap(store))).not.toContain(G[0]!);
+    expect(JSON.stringify(snap(store))).not.toContain(G[7]!);
+    expect(api.confirmRotation).not.toHaveBeenCalled();
+  });
+
+  it("нормализация: регистр, пробелы, дефисы, I/L→1, O→0, U→V — как у поля всего ключа", async () => {
+    const { store } = await creating();
+    store.startCheck();
+    store.setCheckValue(0, " k7-qp ");
+    expect(snap(store).check!.values[0]).toBe("K7QP");
+    const t = await creating({ create: vi.fn(async () => ok({ key: "ABCD-EFGH-JKMN-PQRS-TVWX-YZ01-2345-6789", devices: 1 })) }, rnd(0.99, 0.5));
+    t.store.startCheck();
+    t.store.setCheckValue(0, "ab-cd");
+    expect(snap(t.store).check!.values[0]).toBe("ABCD");
+    t.store.setCheckValue(0, "oo11");
+    expect(snap(t.store).check!.values[0]).toBe("0011");
+    t.store.setCheckValue(0, "u0il"); // U→V, I/L→1, O→0
+    expect(snap(t.store).check!.values[0]).toBe("V011");
+  });
+
+  it("путаница символов прощается: «O» вместо нуля в группе с нулём — совпало", async () => {
+    const t = await creating({ create: vi.fn(async () => ok({ key: "0123-4567-89AB-CDEF-GHJK-MNPQ-RSTV-WXYZ", devices: 1 })) }, rnd(0, 0)); // группы 1 и 2
+    t.store.startCheck();
+    t.store.setCheckValue(0, "o123");
+    t.store.setCheckValue(1, "4567");
+    await t.store.submitCheck();
+    expect(snap(t.store).phase).toBe("created");
+  });
+
+  it("вставили ключ целиком — берётся именно спрашиваемая группа, а не первые 4 символа", async () => {
+    const { store } = await creating();
+    store.startCheck();
+    store.setCheckValue(0, KEY.toLowerCase());
+    store.setCheckValue(1, KEY.replace(/-/g, " "));
+    expect(snap(store).check!.values).toEqual([G[0], G[7]]);
+    await store.submitCheck();
+    expect(snap(store).phase).toBe("created");
+  });
+
+  it("неверная группа: мягкая ошибка, помечено только неверное поле, ключ на месте; правка снимает пометку и ошибку; повтор проходит", async () => {
+    const { store } = await creating();
+    store.startCheck();
+    store.setCheckValue(0, G[0]!);
+    store.setCheckValue(1, "AAAA");
+    await store.submitCheck();
+    expect(snap(store)).toMatchObject({ phase: "shown", shownKey: KEY, error: { kind: "mismatch" } });
+    expect(snap(store).check!.wrong).toEqual([false, true]);
+    store.setCheckValue(1, G[7]!);
+    expect(snap(store).error).toBeNull();
+    expect(snap(store).check!.wrong).toEqual([false, false]);
+    await store.submitCheck();
+    expect(snap(store).phase).toBe("created");
+  });
+
+  it("неполная группа (меньше 4 знаков) — не совпало; лишнее обрезается до 4", async () => {
+    const { store } = await creating();
+    store.startCheck();
+    store.setCheckValue(0, G[0]!.slice(0, 3));
+    store.setCheckValue(1, G[7]!);
+    await store.submitCheck();
+    expect(snap(store).check!.wrong).toEqual([true, false]);
+    store.setCheckValue(0, G[0]! + "ZZ");
+    expect(snap(store).check!.values[0]).toBe(G[0]);
+  });
+
+  it("«Показать ключ ещё раз»: введённое стёрто, следующая проверка спрашивает заново (может быть другая пара)", async () => {
+    const { store } = await creating({}, rnd(0.99, 0, 0.3, 0.6));
+    store.startCheck();
+    store.setCheckValue(0, "ZZZZ");
+    await store.submitCheck();
+    store.backToKey();
+    expect(snap(store)).toMatchObject({ check: null, error: null, shownKey: KEY });
+    store.startCheck();
+    expect(snap(store).check!.groups).not.toEqual([0, 7]);
+    expect(snap(store).check!.values).toEqual(["", ""]);
+  });
+
+  it("закрытие экрана стирает введённое, ключ остаётся (как раньше), после возврата снова плашки", async () => {
+    const { store } = await creating();
+    store.startCheck();
+    store.setCheckValue(0, G[0]!);
+    store.close();
+    expect(snap(store)).toMatchObject({ check: null, shownKey: KEY, phase: "shown" });
+  });
+
+  it("явный пропуск: только из шага проверки, через шит «skip»; создание — ключ стёрт, замена — confirm", async () => {
+    const a = await creating();
+    a.store.openSheet("skip"); // из экрана с ключом — нельзя
+    expect(snap(a.store).sheet).toBeNull();
+    a.store.startCheck();
+    a.store.openSheet("skip");
+    expect(snap(a.store).sheet).toBe("skip");
+    a.store.closeSheet(); // «Проверить ключ» — ничего не произошло
+    expect(snap(a.store)).toMatchObject({ phase: "shown", shownKey: KEY, sheet: null });
+    a.store.openSheet("skip");
+    await a.store.confirmSheet();
+    expect(snap(a.store)).toMatchObject({ phase: "created", shownKey: null, sheet: null });
+
+    const b = await replacing();
+    b.store.startCheck();
+    b.store.openSheet("skip");
+    expect(b.api.confirmRotation).not.toHaveBeenCalled(); // сам шит ничего не меняет
+    await b.store.confirmSheet();
+    expect(b.api.confirmRotation).toHaveBeenCalledWith("tok", PENDING);
+    expect(snap(b.store)).toMatchObject({ phase: "created", replaced: true });
+  });
+
+  it("замена: пока проверка не пройдена, confirm не вызван и старый ключ жив; неверный ввод тоже не вызывает", async () => {
+    const { store, api } = await replacing();
+    store.startCheck();
+    expect(api.confirmRotation).not.toHaveBeenCalled();
+    store.setCheckValue(0, "AAAA");
+    store.setCheckValue(1, "BBBB");
+    await store.submitCheck();
+    expect(api.confirmRotation).not.toHaveBeenCalled();
+    expect(snap(store)).toMatchObject({ phase: "shown", pending: { expiresAt: EXPIRES }, pendingId: PENDING });
+    store.setCheckValue(0, G2[0]!);
+    store.setCheckValue(1, G2[7]!);
+    await store.submitCheck();
+    expect(api.confirmRotation).toHaveBeenCalledTimes(1);
+    expect(api.confirmRotation).toHaveBeenCalledWith("tok", PENDING);
+  });
+
+  it("замена: сеть упала на confirm — поля и ключ остаются, повтор тем же submitCheck идемпотентен (та же метка), успех", async () => {
+    const confirmRotation = vi.fn<RecoveryApi["confirmRotation"]>().mockResolvedValueOnce({ kind: "network" }).mockResolvedValue(ok(true as const));
+    const { store } = await replacing({ confirmRotation });
+    store.startCheck();
+    store.setCheckValue(0, G2[0]!);
+    store.setCheckValue(1, G2[7]!);
+    await store.submitCheck();
+    expect(snap(store)).toMatchObject({ phase: "shown", shownKey: KEY2, error: { kind: "offline" }, busy: false });
+    expect(snap(store).check!.values).toEqual([G2[0], G2[7]]);
+    await store.submitCheck();
+    expect(confirmRotation.mock.calls.map((c) => c[1])).toEqual([PENDING, PENDING]);
+    expect(snap(store)).toMatchObject({ phase: "created", shownKey: null, check: null, replaced: true, error: null });
+  });
+
+  it("замена: «Leave» посреди проверки — ключ и введённое стёрты, confirm не вызывался, pending остался на сервере (старый ключ жив)", async () => {
+    const { store, api } = await replacing();
+    store.startCheck();
+    store.setCheckValue(0, G2[0]!);
+    store.requestLeave(() => {});
+    await store.confirmSheet();
+    expect(api.confirmRotation).not.toHaveBeenCalled();
+    expect(snap(store)).toMatchObject({ phase: "created", shownKey: null, check: null });
+    expect(JSON.stringify(snap(store))).not.toContain(G2[0]!);
+  });
+
+  it("во время запроса confirm поля не принимают ввод, повторное «Проверить» не удваивает запрос", async () => {
+    let release!: (r: RecoveryResult<true>) => void;
+    const { store, api } = await replacing({ confirmRotation: vi.fn(() => new Promise<RecoveryResult<true>>((r) => (release = r))) });
+    store.startCheck();
+    store.setCheckValue(0, G2[0]!);
+    store.setCheckValue(1, G2[7]!);
+    const first = store.submitCheck();
+    void store.submitCheck();
+    store.setCheckValue(0, "ZZZZ");
+    store.backToKey();
+    expect(snap(store).check!.values).toEqual([G2[0], G2[7]]);
+    await vi.waitFor(() => expect(api.confirmRotation).toHaveBeenCalledTimes(1));
+    release(ok(true as const));
+    await first;
+    expect(snap(store).phase).toBe("created");
+  });
+
+  it("ключ и группы проверки не попадают ни в консоль, ни в localStorage/sessionStorage", async () => {
+    const spies = (["log", "info", "warn", "error", "debug"] as const).map((m) => vi.spyOn(console, m).mockImplementation(() => {}));
+    const setItem = vi.spyOn(Storage.prototype, "setItem");
+    const { store } = await creating();
+    store.startCheck();
+    store.setCheckValue(0, "ZZZZ");
+    await store.submitCheck(); // ошибка
+    store.setCheckValue(0, G[0]!);
+    store.setCheckValue(1, G[7]!);
+    await store.submitCheck();
+    for (const spy of spies) expect(spy).not.toHaveBeenCalled();
+    expect(setItem).not.toHaveBeenCalled();
+    expect(JSON.stringify([localStorage, sessionStorage])).not.toContain(G[0]!);
+    spies.forEach((spy) => spy.mockRestore());
+    setItem.mockRestore();
   });
 });

@@ -7,7 +7,7 @@ import type { Locale } from "../i18n";
 import { setLocale, SUPPORTED_LOCALES } from "../i18n";
 import { setHighlightWrong, useHighlightWrong } from "../settings/prefs";
 import { ActionSheet } from "./ActionSheet";
-import { KEY_GROUP, keyGroups, isCompleteKey, spellGroup } from "./key";
+import { KEY_GROUP, KEY_GROUPS, keyGroups, isCompleteKey, spellGroup } from "./key";
 import type { TabId } from "../shell/tabs";
 import type { RecoveryError, RecoveryStore } from "./store";
 
@@ -116,6 +116,24 @@ export function SettingsScreen({ store, onBack, origin = "today", onOpenHelp }: 
     prevPhase.current = s.phase;
   }, [s.phase]);
 
+  // PD-142: шаг проверки открылся — фокус в первое поле; вернулись к ключу — на группу ключа.
+  const checkRefs = useRef<Array<HTMLInputElement | null>>([]);
+  const checking = s.check !== null;
+  const prevChecking = useRef(checking);
+  useEffect(() => {
+    if (prevChecking.current !== checking && s.phase === "shown") {
+      if (checking) checkRefs.current[0]?.focus();
+      else keyRef.current?.focus({ preventScroll: false });
+    }
+    prevChecking.current = checking;
+  }, [checking, s.phase]);
+  const onCheckKey = (e: KeyboardEvent<HTMLInputElement>, i: number, last: number) => {
+    if (e.key !== "Enter") return;
+    e.preventDefault();
+    if (i < last) checkRefs.current[i + 1]?.focus();
+    else void store.submitCheck();
+  };
+
   // ---- поле ввода: курсор не прыгает в конец, когда нормализация меняет текст посередине ----
   const caret = useRef<number | null>(null);
   const onEntry = (e: ChangeEvent<HTMLTextAreaElement>) => {
@@ -163,6 +181,8 @@ export function SettingsScreen({ store, onBack, origin = "today", onOpenHelp }: 
     switch (e.kind) {
       case "invalid":
         return t("settings.key.errKey");
+      case "mismatch":
+        return t("settings.key.verifyMismatch");
       case "limit":
         return t("settings.key.errLimit", { minutes: e.minutes ?? 1 });
       case "stale":
@@ -227,6 +247,86 @@ export function SettingsScreen({ store, onBack, origin = "today", onOpenHelp }: 
         );
       case "shown": {
         const replace = s.shownMode === "replace";
+        const check = s.check;
+        if (check) {
+          // PD-142: проверка записи. Ключа на экране нет (иначе это переписывание, а не проверка); он в памяти и вернётся по «Показать ключ ещё раз».
+          const last = check.groups.length - 1;
+          const ready = check.values.every((v) => v.length === KEY_GROUP); // «Проверить» ждёт обе группы целиком
+          const mismatch = err?.kind === "mismatch";
+          const goDisabled = s.busy || !ready;
+          return (
+            <>
+              <div className="settings-card">
+                <div className="settings-pad">
+                  <span className="settings-cap" id="settings-check-cap">
+                    {t("settings.key.verifyCap")}
+                  </span>
+                  <p className="settings-hint" id="settings-check-intro">
+                    {t("settings.key.verifyIntro")}
+                  </p>
+                  <div className="settings-checkgrid" role="group" aria-labelledby="settings-check-cap" aria-describedby="settings-check-intro">
+                    {check.groups.map((g, i) => (
+                      <div className="settings-checkfield" key={g}>
+                        <label className="settings-cap" htmlFor={`settings-check-${i}`}>
+                          {t("settings.key.verifyField", { n: g + 1, total: KEY_GROUPS })}
+                        </label>
+                        <input
+                          ref={(node) => {
+                            checkRefs.current[i] = node;
+                          }}
+                          id={`settings-check-${i}`}
+                          className="settings-checkinput"
+                          type="text"
+                          value={check.values[i] ?? ""}
+                          onChange={(e) => store.setCheckValue(i, e.target.value)}
+                          onKeyDown={(e) => onCheckKey(e, i, last)}
+                          readOnly={s.busy}
+                          placeholder={t("settings.key.verifyPlaceholder")}
+                          autoCapitalize="characters"
+                          autoCorrect="off"
+                          spellCheck={false}
+                          autoComplete="off"
+                          data-1p-ignore="true"
+                          data-lpignore="true"
+                          enterKeyHint={i < last ? "next" : "done"}
+                          aria-invalid={check.wrong[i] ? true : undefined}
+                          aria-describedby={`settings-check-hint${mismatch ? " settings-check-err" : ""}`}
+                          data-testid={`key-check-${i}`}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                  <p className="settings-hint" id="settings-check-hint">
+                    {t("settings.key.verifyHint")}
+                  </p>
+                </div>
+                <button type="button" className="settings-rowbtn" aria-disabled={s.busy} onClick={() => store.backToKey()} data-testid="key-check-back">
+                  <BackIcon />
+                  {t("settings.key.verifyBack")}
+                </button>
+              </div>
+              <button
+                type="button"
+                className="settings-primary"
+                aria-disabled={goDisabled}
+                aria-busy={s.busy}
+                onClick={() => {
+                  if (!goDisabled) void store.submitCheck();
+                }}
+                data-testid="key-check-go"
+              >
+                {s.busy && <span className="settings-spin" aria-hidden="true" />}
+                {replace ? t("settings.key.verifyGoReplace") : t("settings.key.verifyGo")}
+              </button>
+              {errLine("confirm", "settings-check-err")}
+              <button type="button" className="settings-secondary" aria-disabled={s.busy} onClick={() => store.openSheet("skip")} data-testid="key-check-skip">
+                {t("settings.key.verifySkip")}
+              </button>
+              <p className="settings-foot">{t("settings.key.verifySkipNote")}</p>
+              {replace && <p className="settings-foot">{t("settings.key.footReplace")}</p>}
+            </>
+          );
+        }
         return (
           <>
             <div className="settings-card">
@@ -255,20 +355,9 @@ export function SettingsScreen({ store, onBack, origin = "today", onOpenHelp }: 
                 <span>{replace ? t("settings.key.warnReplace") : t("settings.key.warn")}</span>
               </p>
             </div>
-            <button
-              type="button"
-              className="settings-primary"
-              aria-disabled={s.busy}
-              aria-busy={s.busy}
-              onClick={() => {
-                if (!s.busy) void store.confirmSaved();
-              }}
-              data-testid="key-saved"
-            >
-              {s.busy && <span className="settings-spin" aria-hidden="true" />}
-              {t("settings.key.saved")}
+            <button type="button" className="settings-primary" onClick={() => store.startCheck()} data-testid="key-saved">
+              {t("settings.key.written")}
             </button>
-            {errLine("confirm")}
             {replace && <p className="settings-foot">{t("settings.key.footReplace")}</p>}
           </>
         );
@@ -412,7 +501,15 @@ export function SettingsScreen({ store, onBack, origin = "today", onOpenHelp }: 
           ? { title: t("settings.key.sheetUnTitle"), message: t("settings.key.sheetUnMsg"), action: t("settings.key.sheetUnGo"), destructive: false, cancel: t("settings.key.cancel") }
           : sheet === "delete"
             ? { title: t("settings.key.sheetDelTitle"), message: t("settings.key.sheetDelMsg"), action: t("settings.key.sheetDelGo"), destructive: true, cancel: t("settings.key.cancel") }
-            : s.shownMode === "replace"
+            : sheet === "skip"
+              ? {
+                  title: t("settings.key.sheetSkipTitle"),
+                  message: s.shownMode === "replace" ? t("settings.key.sheetSkipReMsg") : t("settings.key.sheetSkipMsg"),
+                  action: t("settings.key.sheetSkipGo"),
+                  destructive: true, // без записи ключ можно потерять; начальный фокус — на «Проверить ключ»
+                  cancel: t("settings.key.sheetSkipBack"),
+                }
+              : s.shownMode === "replace"
               ? { title: t("settings.key.sheetLeaveReTitle"), message: t("settings.key.sheetLeaveReMsg"), action: t("settings.key.sheetLeaveGo"), destructive: false, cancel: t("settings.key.sheetLeaveStay") }
               : { title: t("settings.key.sheetLeaveTitle"), message: t("settings.key.sheetLeaveMsg"), action: t("settings.key.sheetLeaveGo"), destructive: true, cancel: t("settings.key.sheetLeaveStay") };
 

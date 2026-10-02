@@ -320,6 +320,50 @@ button.settings-row:active {
   box-shadow: 0 0 0 2px var(--wax);
 }
 
+/* Проверка записи ключа (PD-142): два поля по группе в ряд; на узком экране и при крупном тексте — столбцом (auto-fit),
+   ничего не обрезается. Шрифт ≥ 17 px (iOS не масштабирует страницу при фокусе), высота ≥ 48 pt. */
+.settings-checkgrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 9.5em), 1fr));
+  gap: 12px;
+}
+.settings-checkfield {
+  min-width: 0;
+}
+.settings-checkfield .settings-cap {
+  margin-bottom: 6px;
+}
+.settings-checkinput {
+  display: block;
+  width: 100%;
+  min-height: 48px;
+  box-sizing: border-box;
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  font-size: max(18px, 1.06rem);
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-align: center;
+  color: var(--label);
+  background: var(--chip-bg);
+  border: 0;
+  border-radius: 8px;
+  padding: 10px 8px;
+  -webkit-appearance: none;
+  appearance: none;
+}
+.settings-checkinput::placeholder {
+  color: var(--label-2);
+  opacity: 1;
+  font-weight: 400;
+}
+/* Не совпало: сургучное кольцо, дублируется текстом-алертом и aria-invalid. */
+.settings-checkinput[aria-invalid="true"] {
+  box-shadow: 0 0 0 2px var(--wax);
+}
+.settings-checkinput[readonly] {
+  color: var(--label-2);
+}
+
 .settings-err {
   display: flex;
   gap: 6px;
@@ -628,8 +672,14 @@ button.settings-row:active {
     border-style: dashed;
   }
   .settings-chip,
-  .settings-ta {
+  .settings-ta,
+  .settings-checkinput {
     border: 1px solid CanvasText;
+  }
+  .settings-checkinput[aria-invalid="true"] {
+    box-shadow: none;
+    border-width: 3px;
+    border-style: double;
   }
   .settings-pad.bad .settings-ta {
     box-shadow: none;
