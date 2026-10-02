@@ -324,7 +324,7 @@ Gates: build → typecheck, lint, тесты web/engine/api (api с TEST_DATABAS
 | PD-101 | PD-58 и PD-83(1): свести тексты вне макета к макету PD-48 (ветка `pd-copy`), PD-83 ряд демо-кнопок | developer | P3 | completed (смержен в main fd37d90; уточнения: «Key saved» на всю ширину оставлено, шит перевыпуска/дата по макету, 8 текстов вне макета оставлены, предложения формулировок errGeneric/statusFailed/sheetLeaveMsg/sheetLeaveGo в отчёте — применить пачкой по желанию; PD-58 закрыт) | — |
 | PD-102 | Реализация логотипа D5 «Унос» в приложении (владелец 2026-10-01): иконки (apple-touch 180, PWA 192/512 + maskable, favicon, svg-mark, theme-color/manifest), малая оптика для 29/40 pt и favicon 16/32 (дизайнер → developer), знак/вордмарк в местах из `design/pd98-logo-round3.md`, тесты манифеста/иконок, QA webkit+chromium; ветка `pd-logo` | designer+developer | P2 | completed (СМЕРЖЕН в main, ветка pd-logo @ 3156a23; иконки 192/512/180 растеризованы Playwright из d5-*.svg и закоммичены, порог ≤60 → малая оптика, favicon.svg, Mark/Wordmark, About + Year-пусто + знак в PNG отпечатка, версия кэша ?v=d5, gen-icons удалён, verify-dump trap TERM, td code перенос; gates web 746/engine 178/api 142+35; maskable 0 пикселей вне круга; iOS dark/tinted у веб-клипа невозможны (один apple-touch-icon); запасной план — подмена на d5-small одной строкой; ждёт QA PD-103) | — |
 | PD-103 | QA PD-102 + PD-101 на main (иконки/манифест/SW/kэш, About/Year/PNG отпечатка, Settings тексты, webkit+chromium, light/dark, 320/390/430, 29/40/60/180/512, maskable в круге, регресс финала/ghost-click, gates) | qa-tester | P1 | completed (PASS на 21e0035: блокеров нет; иконки/манифест/SW/офлайн, maskable 0 px вне круга, малая оптика читается на 29/16 px (эмуляция), About/Year/PNG отпечатка матрица, Settings 90/90, регресс финала/ghost-click, gates; Info: регистр «Delete Key»/апостроф U+02BC в макете — типографика; не проверено: iPhone 29 pt, dark/tinted, share PNG) | PD-102, PD-101 |
-| PD-104 | iOS-чек-лист: пункты 59+ (переустановка веб-клипа и вид иконки; читаемость на 29 pt, запасной план d5-small; знак в About и пустом Year), selftest, копия на Desktop | developer | P3 | in_progress | PD-102 |
+| PD-104 | iOS-чек-лист: пункты 59+ (переустановка веб-клипа и вид иконки; читаемость на 29 pt, запасной план d5-small; знак в About и пустом Year), selftest, копия на Desktop | developer | P3 | completed (e8459ff; чек-лист 63 пункта, 59–63 про иконку/About/Year/PNG; selftest зелёный, копия на Desktop) | PD-102 |
 | PD-20 | QA PD-14 (pd-14 @ 0026b2a): PASS с оговорками, блокеров и Medium нет; 4 Low + решение по слиянию → PD-31 | qa-tester | P1 | completed | PD-14 |
 | PD-31 | Фикс-проход pd-14 по QA PD-20 (pd-14 @ c574f13; gates зелёные: web 213, engine 105, api 77+2 skipped, интеграционные 7/7 на живой БД) | developer | P1 | completed | PD-20 |
 | PD-32 | PASS с оговорками (слияние 409 по источникам, 1500 дней без лишних PUT, gates, интеграционные 7/7); Low → PD-37. QA-регресс pd-14 @ c574f13 (перезапуск после сбоя контейнера; worktree /tmp/pundoku-qa/qa-pd32, БД pundoku_qa5, порты 3320/5320): слияние 409 по источникам, отсутствие лишних PUT при 1500 днях, сокращённый регресс PD-20, gates + интеграционные api-тесты | qa-tester | P1 | completed | PD-31 |
@@ -398,11 +398,17 @@ Gates: build → typecheck, lint, тесты web/engine/api (api с `TEST_DATABA
 - **Осталось (в таком порядке):** (1) повторный QA PD-94 (qa-tester, новый worktree, порты вне 3700–3799/3950/5950/5960/3960); (2) пересобрать iOS-чек-лист (`docs/ios-selfcheck/build-checklist.mjs`, счётчики в `selftest-checklist.mjs`, итог 52 → добавить пункты: ощущение анимаций; calc() в keyframes+Reduce Motion (п.52 уже есть); свайп листов; Cancel/Done на 320/AX3; плавность финала на iPhone 16; ghost-click после тапа по финалу рядом с New game/кнопками Today), selftest, копия `~/Desktop/Pundoku-iPhone/ios-checklist.html`, коммит; (3) push — Coordinator; (4) PD-95 (фриз монтирования финала/Grid ∞, Medium) после push; (5) хвост PD-83/PD-87; (6) реализация логотипа после выбора владельца D1/D2/D3.
 - **Ждёт владельца:** выбор логотипа D1/D2/D3 (D2 — ещё решение по палитре бренда); PD-54/PD-58; iPhone-чек-лист.
 
+## Бэклог после релиза 2026-10-02 (push 41f7e73; новую работу не начинать без владельца)
+- Low: chromium 320×568 uk/ru/ink — кнопки карточки под таб-баром до 41 px (WebKit ок; не целевое).
+- Профиль рендера карточки финала ~60 мс при 4x CPU (React-рендер карточки и onfinish) — остаток PD-95.
+- Тексты Settings вне макета (`errGeneric`, `statusFailed`, `sheetLeaveMsg`, `sheetLeaveGo`) — предложенные формулировки в отчёте PD-101 не применены; владельцу не показываем, оставлено как есть.
+- PD-22, PD-66 (боевое учение восстановления в рабочий том), PD-54 решён PD-99; открытых решений владельца по Pundoku нет, кроме iPhone-чек-листа (пп.1–63, не ждём).
+- Если 29 pt иконки на iPhone плохо читаются — подмена apple-touch-icon на d5-small (одна строка в `design/pd98-icons.mjs`).
+
 ## Агенты (текущий статус)
 | Имя | Роль | Статус | Тикет | Обновлено |
 |-----|------|--------|-------|-----------|
-| PM-Pundoku-9 | product-manager | working | PD-104 | 2026-10-02 |
-| Dev-Pundoku-PD104 | developer | working | PD-104 | 2026-10-02 |
+| PM-Pundoku-9 | product-manager | idle | нет тикетов в работе | 2026-10-02 |
 
 ## Чек-пойнт 2026-10-01 (конец сессии PM-Pundoku-7)
 - **Сделано:** решения владельца по релизу 1.1 зафиксированы; PD-74 (UI ink, pd-74 @ 73444b2), PD-75 (UI таймлапса/PNG Rhythm, pd-75 @ bfeedbf), PD-80 (счёт ходов в ink, pd-80 @ de5a52d) смержены в локальный main; gates на слитом: build/typecheck/lint, web 624, engine 178 (api не затронут, 174+3). PD-78 сделан в PD-74. PD-79 закрыт: не дефект.
