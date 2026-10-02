@@ -1,0 +1,1365 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<title>Pundoku — Hint ladder (PD-133)</title>
+<!--
+  PD-133 — mockup of the HINT LADDER. FOR APPROVAL, not an implementation.
+  Owner decision 6.1, option 2: a hint never gives the digit. Four rungs:
+  region -> technique -> cells -> walk-through. A day that used a hint carries
+  its own mark in Year.
+
+  Everything visual is inherited from the APPROVED mockups
+  (design/pd7-board-variants.html variant B, design/pd24-year-variants.html,
+  design/pd69-ink-timelapse.html): same tokens, ink #3B48B0 / #8C96FF,
+  wax #B3261E / #FF6B5E, grouped background #F2F2F7 / #000, elevated surface
+  #FFFFFF / #1C1C1E, typefaces only through CSS generics.
+  NO NEW COLOUR is introduced. Two new opacity tokens only (--fill-hint, --hint-dash).
+
+  Frames are 390x844 (production iPhone 16 is 393x852). Safe areas are simulated
+  at 59 / 34. Each state is shown light and dark; themes are pinned by class so
+  screenshots are deterministic (production follows prefers-color-scheme).
+
+  Reading order:
+    A  Entry point
+    B  The four rungs
+    C  Branches: a mistake on the board / no step found
+    D  Where the mark lives: Year, day sheet, result card, PNG
+    E  Ink mode
+    F  Marks key (enlarged)
+    G  uk / ru text length
+  Notes: design/pd133-hint-ladder.md
+-->
+<style>
+/* ==================================================================
+   1. TOKENS — copied from tokens.css / the approved mockups.
+      Themes are classes, not media queries, so both render on one page.
+   ================================================================== */
+.t{
+  --font-sans: system-ui, -apple-system, "SF Pro Text", "Helvetica Neue", Arial, sans-serif;
+  --font-serif: ui-serif, "New York", Charter, Georgia, serif;
+
+  --sa-top: 59px;
+  --sa-bot: 34px;
+
+  --box-gap: 4px;
+  --box-radius: 10px;
+
+  --fill-same: .10;
+  --fill-sel: .16;
+
+  /* NEW in PD-133 — both are opacities of EXISTING tokens, so the hint layer can
+     never drift away from the ink / wax it is derived from.
+       --fill-hint  6 % ink wash over the region. Decorative only: the region is
+                    carried by the dashed outline and by the panel text, never by
+                    this wash (accessibility.md > Vision: more than colour alone).
+       --hint-dash  dash pattern of the region outline. It NEVER animates
+                    (no marching ants) — motion.md and the reduced-motion contract. */
+  --fill-hint: .06;
+  --hint-dash: 5px 4px;
+}
+.t.light{
+  color-scheme: light;
+  --bg-grouped:#F2F2F7; --elev:#FFFFFF;
+  --bg: var(--bg-grouped); --surface: var(--elev);
+  --label:#1C1C1E;            /* 17.0:1 on #FFFFFF */
+  --label-2:#6E6E73;          /* 5.1:1 on #FFFFFF */
+  --label-2-grouped:#6A6A6E;  /* 4.64:1 on #F2F2F7 */
+  --notes:#6E6E73; --notes-fill:#5A5A5F;
+  --ink:#3B48B0;              /* 7.7:1 on #FFFFFF — the dashed outline rides on this */
+  --on-ink:#FFFFFF;
+  --wax:#B3261E;              /* 6.5:1 on #FFFFFF */
+  --rule-thin: rgba(60,60,67,.29);
+  --hairline: rgba(60,60,67,.29);
+  --ink-tint: rgba(59,72,176,.12);
+  --wax-tint: rgba(179,38,30,.10);
+  --chip-bg:#F2F2F7;
+  --box-shadow: 0 1px 2px rgba(0,0,0,.04);
+  --glass-solid:#F6F6F9;
+  --mark-ink:#3B48B0; --mark-ink-soft:#8589CE;   /* ink @ 62 % — 3.11:1 */
+  --mark-wax:#B3261E; --mark-wax-soft:#D07874;   /* wax @ 62 % — 3.17:1 */
+  --scrim: rgba(0,0,0,.28);
+}
+.t.dark{
+  color-scheme: dark;
+  --bg-grouped:#000000; --elev:#1C1C1E;
+  --bg: var(--bg-grouped); --surface: var(--elev);
+  --label:#FFFFFF; --label-2:#98989D; --label-2-grouped:#98989D;
+  --notes:#98989D; --notes-fill:#AEAEB2;
+  --ink:#8C96FF; --on-ink:#000000; --wax:#FF6B5E;
+  --rule-thin: rgba(235,235,245,.22);
+  --hairline: rgba(235,235,245,.22);
+  --ink-tint: rgba(140,150,255,.18);
+  --wax-tint: rgba(255,107,94,.16);
+  --chip-bg:#2C2C2E;
+  --box-shadow: none;
+  --glass-solid:#141416;
+  --mark-ink:#8C96FF; --mark-ink-soft:#6168AA;   /* 3.30:1 on #1C1C1E */
+  --mark-wax:#FF6B5E; --mark-wax-soft:#B14D46;   /* 3.11:1 on #1C1C1E */
+  --scrim: rgba(0,0,0,.5);
+  --fill-hint: .09;   /* 6 % ink reads as nothing on #1C1C1E; still decorative */
+}
+
+/* ==================================================================
+   2. PAGE CHROME (review only — not part of the product)
+   ================================================================== */
+*{ box-sizing: border-box; }
+html{ font-family: system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif; }
+body{
+  margin:0; background:#8A8A8E; color:#111;
+  font-size:14px; line-height:1.45;
+}
+.doc{ max-width:1180px; margin:0 auto; padding:28px 20px 10px; color:#fff; }
+.doc h1{ font-size:26px; margin:0 0 6px; letter-spacing:-.02em; }
+.doc p{ margin:0 0 8px; max-width:70ch; }
+.doc a{ color:#fff; }
+.doc .nav{ margin:10px 0 0; padding:0; list-style:none; display:flex; flex-wrap:wrap; gap:8px 16px; font-size:13px; }
+section.block{ max-width:1180px; margin:0 auto; padding:22px 20px 6px; color:#fff; }
+section.block h2{ font-size:19px; margin:0 0 4px; letter-spacing:-.01em; }
+section.block > p{ margin:0 0 14px; max-width:78ch; font-size:13.5px; opacity:.92; }
+.row{ display:flex; flex-wrap:wrap; gap:26px; align-items:flex-start; }
+.cell-cap{ width:390px; }
+.cap{ font-size:12.5px; color:#fff; opacity:.9; margin:8px 2px 0; }
+.cap b{ font-weight:600; }
+
+/* ==================================================================
+   3. FRAME + SCREEN SKELETON (mirrors the shipped app)
+   ================================================================== */
+.frame{
+  width:390px; height:844px; border-radius:42px; overflow:hidden;
+  position:relative; display:flex; flex-direction:column;
+  background:var(--bg); color:var(--label);
+  font-family:var(--font-sans); font-size:17px; line-height:1.3;
+  box-shadow:0 18px 50px rgba(0,0,0,.35);
+}
+.frame button{ font:inherit; color:inherit; background:none; border:0; padding:0; cursor:pointer; -webkit-appearance:none; appearance:none; }
+.screen{ flex:1; min-height:0; display:flex; flex-direction:column; }
+
+.toolbar{
+  display:flex; align-items:flex-end; justify-content:space-between; gap:8px;
+  padding: calc(var(--sa-top) + 8px) 16px 0;
+}
+.title{ font-size:1.62rem; font-weight:700; letter-spacing:-.02em; margin:0; min-width:0; }
+.tools{ display:flex; align-items:center; gap:2px; margin:0 -10px -8px 0; }
+.icon-btn{
+  width:44px; height:44px; display:grid; place-items:center;
+  color:var(--label-2-grouped); border-radius:22px; flex:none;
+}
+/* The hint lives in the top bar at the SAME weight as the gear: present, never loud. */
+.icon-btn.on{ color:var(--ink); background:var(--ink-tint); }
+.daybar{ margin:2px 0 0; padding:0 16px; color:var(--label-2-grouped); font-size:.88rem; }
+.daybar .mark{ color:var(--ink); font-weight:600; }
+.daybar .mark::before{ content:"·\00a0"; color:var(--label-2-grouped); font-weight:400; }
+
+/* ---------- Board — variant B Boxes, unchanged ---------- */
+.board-wrap{ padding:12px 16px 0; container-type: inline-size; }
+.board{
+  position:relative; display:grid; grid-template-columns:repeat(3,1fr); gap:var(--box-gap);
+  --s: calc((100cqi - 2 * var(--box-gap)) / 9);
+}
+.box{
+  position:relative; display:grid; grid-template-columns:repeat(3,1fr);
+  border-radius:var(--box-radius); overflow:hidden;
+  background:var(--surface); box-shadow:var(--box-shadow);
+}
+.cell{
+  position:relative; aspect-ratio:1; min-width:0; min-height:0;
+  display:grid; place-items:center; overflow:hidden; background:var(--surface);
+  box-shadow: inset -0.5px 0 0 var(--rule-thin), inset 0 -0.5px 0 var(--rule-thin);
+}
+.box .cell:nth-child(3n){ box-shadow: inset 0 -0.5px 0 var(--rule-thin); }
+.box .cell:nth-child(n+7){ box-shadow: inset -0.5px 0 0 var(--rule-thin); }
+.box .cell:nth-child(9){ box-shadow:none; }
+.cell .d{ position:relative; z-index:2; line-height:1; font-size:6.5cqi; }
+.cell .d.given{ font-family:var(--font-serif); font-weight:600; color:var(--label); }
+.cell .d.player{ font-family:var(--font-sans); font-weight:500; color:var(--ink); }
+.marks{
+  position:absolute; inset:0; z-index:2; display:grid; padding:4%;
+  grid-template-columns:repeat(3,minmax(0,1fr)); grid-template-rows:repeat(3,minmax(0,1fr));
+}
+.marks span{
+  font-size:11px; line-height:1; font-weight:400; letter-spacing:-.02em;
+  color:var(--notes); display:grid; place-items:center;
+}
+/* A candidate the hint strikes off: the line is drawn, the note is NOT deleted. */
+.marks span.x{
+  color:var(--ink);
+  text-decoration: line-through; text-decoration-color: var(--ink); text-decoration-thickness:1px;
+}
+.cell.sel{ background:color-mix(in srgb, var(--ink) 16%, var(--surface)); }
+
+/* ---------- Hint layer: four marks, four different SHAPES ---------- */
+/* 1. region — dashed outline + 6 % wash */
+.cell .w{ position:absolute; inset:0; background:var(--ink); opacity:var(--fill-hint); z-index:0; }
+.hint-region{
+  position:absolute; z-index:5; pointer-events:none; box-sizing:border-box;
+  border:1.5px dashed var(--ink); border-radius:6px;
+  left:   calc(var(--rc) * var(--s) + var(--rbc) * var(--box-gap));
+  top:    calc(var(--rr) * var(--s) + var(--rbr) * var(--box-gap));
+  width:  calc(var(--rw) * var(--s) + var(--rwg) * var(--box-gap));
+  height: calc(var(--rh) * var(--s) + var(--rhg) * var(--box-gap));
+}
+/* the mistake branch borrows the same shape in wax: the region of the discrepancy */
+.hint-region.bad{ border-color:var(--wax); border-width:2px; }
+/* 2. where it happens — a bar under the cell (never collides with a ring on the border) */
+.cell .u{
+  position:absolute; z-index:4; left:16%; right:16%; bottom:3px; height:3px;
+  border-radius:1.5px; background:var(--ink);
+}
+/* 3. why — a hollow ring in the top-left corner */
+.cell .o{
+  position:absolute; z-index:4; left:3px; top:3px; width:9px; height:9px;
+  border:1.5px solid var(--ink); border-radius:50%;
+}
+/* selection ring — unchanged (ink, solid, 2 px, on the cell border) */
+.ring{
+  position:absolute; z-index:6; pointer-events:none;
+  width:var(--s); height:var(--s);
+  border:2px solid var(--ink); border-radius:4px;
+  transform: translate(
+    calc(var(--c) * var(--s) + var(--bc) * var(--box-gap)),
+    calc(var(--r) * var(--s) + var(--br) * var(--box-gap))
+  );
+}
+
+/* ---------- Gap + status ---------- */
+.gap{ flex:1 1 auto; min-height:20px; display:flex; align-items:center; justify-content:center; padding:0 16px; }
+.status{ margin:0; color:var(--label-2); font-size:.88rem; font-variant-numeric:tabular-nums; text-align:center; }
+/* The one-time nudge: an inline tip in space that is already empty.
+   offering-help.md > Creating tips: one or two sentences, easy to ignore. */
+.nudge{
+  margin:0; display:flex; align-items:center; gap:7px;
+  color:var(--label-2); font-size:.84rem; text-align:center;
+}
+.nudge b{ color:var(--ink); font-weight:600; }
+
+/* ---------- Pad ---------- */
+.pad-wrap{ padding:0 16px; }
+.pad{ display:grid; grid-template-columns:repeat(9,1fr); gap:4px; }
+.key{
+  min-width:0; min-height:56px; border-radius:9px; background:var(--elev); color:var(--label);
+  display:flex; flex-direction:column; align-items:center; justify-content:center; gap:1px;
+}
+.key .kd{ font-size:1.24rem; font-weight:500; line-height:1.05; }
+.key .kr{ font-size:11px; line-height:1; color:var(--label-2); font-variant-numeric:tabular-nums; }
+.actions{ display:grid; grid-template-columns:repeat(3,1fr); gap:8px; padding:10px 0 14px; }
+.actions.two{ grid-template-columns:repeat(2,1fr); }
+.act{
+  min-width:0; min-height:46px; border-radius:11px;
+  display:flex; align-items:center; justify-content:center; gap:6px; padding:4px 6px;
+  color:var(--label-2); font-size:.82rem;
+}
+.act svg{ width:19px; height:19px; flex:none; }
+.pad.off .key, .actions.off .act{ opacity:.4; }
+
+/* ---------- The hint dock: takes the pad's place, never the board's ---------- */
+.dock{
+  margin:0 16px 14px; padding:11px 14px 12px;
+  background:var(--elev); border-radius:16px; box-shadow:var(--box-shadow);
+  display:flex; flex-direction:column; gap:6px;
+  min-height:176px; max-height:248px; overflow-y:auto;
+}
+.dock-top{ display:flex; align-items:center; justify-content:space-between; gap:10px; }
+.dock-step{ font-size:.76rem; color:var(--label-2-grouped); font-variant-numeric:tabular-nums; letter-spacing:.01em; }
+.dock-close{ min-height:44px; margin:-11px -6px -11px 0; padding:0 6px; color:var(--ink); font-size:.88rem; }
+.dock h2{ margin:0; font-size:1.05rem; font-weight:600; letter-spacing:-.01em; }
+.dock p.body{ margin:0; font-size:.92rem; color:var(--label-2); }
+.dock .key-line{
+  margin:2px 0 0; display:flex; flex-wrap:wrap; gap:4px 14px;
+  font-size:.74rem; color:var(--label-2-grouped);
+}
+.dock .key-line span{ display:inline-flex; align-items:center; gap:5px; }
+.g-u{ width:14px; height:3px; border-radius:1.5px; background:var(--ink); display:inline-block; }
+.g-o{ width:9px; height:9px; border:1.5px solid var(--ink); border-radius:50%; display:inline-block; }
+.g-d{ width:16px; height:10px; border:1.5px dashed var(--ink); border-radius:3px; display:inline-block; }
+.g-x{ color:var(--ink); text-decoration:line-through; text-decoration-color:var(--ink); }
+.dock .more{
+  margin-top:auto; min-height:44px; border-radius:11px;
+  background:var(--ink-tint); color:var(--ink); font-size:.95rem; font-weight:600;
+}
+.dock .more.quiet{ background:transparent; color:var(--ink); }
+.dock .foot{
+  margin:0; padding-top:2px; display:flex; align-items:center; gap:6px;
+  font-size:.74rem; color:var(--label-2-grouped);
+}
+.dock.bad h2{ color:var(--wax); }
+.dock.bad .more{ background:var(--wax-tint); color:var(--wax); }
+
+/* the Year square, reused inline as a glyph in the dock footer and in legends */
+.ymark{
+  position:relative; display:inline-block; width:11px; height:11px; border-radius:2px;
+  --m: var(--mark-ink); flex:none;
+}
+.ymark::before{ content:""; position:absolute; inset:0; border-radius:inherit; background:var(--m); }
+.ymark.help{ --m: var(--mark-ink-soft); }
+.ymark.corr{ --m: var(--mark-wax); }
+.ymark.help.corr{ --m: var(--mark-wax-soft); }
+/* shape, not only tone: corrections notch the top-right (shipped), help notches the
+   bottom-left (new). A day with both carries both notches. */
+.ymark.corr::before{ clip-path: polygon(0 0, 62% 0, 100% 38%, 100% 100%, 0 100%); }
+.ymark.help::before{ clip-path: polygon(0 0, 100% 0, 100% 100%, 38% 100%, 0 62%); }
+.ymark.help.corr::before{ clip-path: polygon(0 0, 62% 0, 100% 38%, 100% 100%, 38% 100%, 0 62%); }
+.ymark.half::before{ background: linear-gradient(to top, var(--m) 50%, transparent 50%); }
+.ymark.miss::before{ background:none; box-shadow: inset 0 0 0 1px var(--hairline); }
+.ymark.void::before{ background:none; }
+.ymark.today::after{
+  content:""; position:absolute; inset:-3px; border-radius:5px; box-shadow:0 0 0 1.5px var(--ink);
+}
+
+/* ---------- Sheets ---------- */
+.sheet-scrim{ position:absolute; inset:0; background:var(--scrim); z-index:8; }
+.sheet{
+  position:absolute; left:0; right:0; bottom:0; z-index:9;
+  background:var(--elev); border-radius:16px 16px 0 0;
+  padding:8px 20px calc(16px + var(--sa-bot));
+  display:flex; flex-direction:column; gap:10px;
+}
+.grabber{ width:36px; height:5px; border-radius:3px; background:var(--hairline); margin:0 auto 6px; }
+.sheet h2{ margin:0; font-size:1.3rem; font-weight:700; letter-spacing:-.02em; }
+.sheet p{ margin:0; font-size:.92rem; color:var(--label-2); }
+.sheet ul{ margin:2px 0 0; padding:0; list-style:none; display:flex; flex-direction:column; gap:9px; }
+.sheet li{ display:flex; gap:9px; font-size:.9rem; align-items:flex-start; }
+.sheet li .b{ width:7px; height:7px; border-radius:50%; background:var(--ink); margin-top:6px; flex:none; }
+.btn-primary{
+  min-height:50px; border-radius:13px; background:var(--ink); color:var(--on-ink);
+  font-size:1rem; font-weight:600; width:100%;
+}
+.btn-plain{ min-height:48px; color:var(--ink); font-size:1rem; width:100%; }
+
+/* ---------- Year ---------- */
+.ygrid{ display:grid; grid-template-columns:repeat(7,1fr); gap:6px; padding:0 16px; }
+.ygrid .ymark{ width:100%; height:auto; aspect-ratio:1; border-radius:3px; }
+.ylegend{
+  list-style:none; margin:14px 0 0; padding:0 16px;
+  display:flex; flex-wrap:wrap; gap:7px 14px; color:var(--label-2-grouped); font-size:.6875rem;
+}
+.ylegend li{ display:flex; align-items:center; gap:5px; }
+.sect{ padding:16px 16px 0; font-size:.78rem; color:var(--label-2-grouped); text-transform:uppercase; letter-spacing:.05em; }
+
+/* ---------- Cards / rows ---------- */
+.card{
+  background:var(--elev); border-radius:18px; margin:14px 16px 0; padding:16px;
+}
+.card h2{ font-size:1rem; font-weight:600; margin:0 0 2px; }
+.card .sub{ color:var(--label-2); font-size:.8rem; margin:0 0 12px; }
+.rows{ margin:12px 0 0; display:flex; flex-direction:column; }
+.r{
+  display:flex; justify-content:space-between; gap:12px; align-items:center;
+  padding:9px 0; font-size:.9rem; border-top:1px solid var(--hairline);
+}
+.r .k{ color:var(--label-2); }
+.r .v{ font-weight:600; display:flex; align-items:center; gap:6px; }
+.heat{ display:grid; grid-template-columns:repeat(9,1fr); gap:2px; }
+.heat i{ aspect-ratio:1; border-radius:2px; display:block; background:var(--ink); position:relative; }
+.heat i.g{ background:transparent; box-shadow: inset 0 0 0 1px var(--hairline); }
+/* the cells you filled right after a hint: a hollow centre — position, never a digit */
+.heat i.h::after{
+  content:""; position:absolute; inset:28%; border-radius:50%;
+  background:var(--elev);
+}
+
+/* ---------- PNG fingerprint (indicative; real style = pd69 "Rhythm") ---------- */
+.png{
+  margin:14px 16px 0; background:#FFFFFF; color:#1C1C1E; border-radius:12px;
+  padding:18px 16px 14px; display:flex; flex-direction:column; gap:12px;
+}
+.png .rh{ display:grid; grid-template-columns:repeat(9,1fr); gap:3px; place-items:center; }
+.png .rh i{ display:block; background:#3B48B0; border-radius:2px; }
+.png .ttl{ font-family:var(--font-serif); font-weight:600; font-size:1.05rem; }
+.png .meta{ font-size:.76rem; color:#6A6A6E; font-variant-numeric:tabular-nums; }
+
+/* ---------- Tab bar ---------- */
+.tabbar{
+  display:grid; grid-template-columns:repeat(3,1fr);
+  background:var(--glass-solid); border-top:.5px solid var(--hairline);
+  padding:7px 0 calc(2px + var(--sa-bot));
+}
+.tab{ display:flex; flex-direction:column; align-items:center; gap:2px; color:var(--label-2-grouped); font-size:10px; }
+.tab.sel{ color:var(--ink); font-weight:600; }
+.tab svg{ width:25px; height:25px; }
+
+/* ---------- Enlarged marks key (section F) ---------- */
+.keygrid{ display:flex; flex-wrap:wrap; gap:18px; }
+.keyitem{ width:250px; background:var(--elev); border-radius:14px; padding:14px; color:var(--label); }
+.keyitem .demo{
+  width:100%; aspect-ratio:3/1; display:grid; grid-template-columns:repeat(3,1fr);
+  background:var(--surface); border-radius:8px; overflow:hidden; position:relative;
+  box-shadow: 0 0 0 1px var(--hairline);
+}
+.keyitem .demo .cell{ aspect-ratio:auto; }
+.keyitem h3{ margin:10px 0 2px; font-size:.95rem; font-weight:600; }
+.keyitem p{ margin:0; font-size:.8rem; color:var(--label-2); }
+</style>
+</head>
+<body>
+
+<header class="doc">
+  <h1>Pundoku — hint ladder (PD-133)</h1>
+  <p>Owner decision 6.1, option 2: help for a stuck player is a <b>ladder that never gives the digit</b> —
+     region, technique, cells, walk-through. Taking it marks the day <i>with help</i> in Year.
+     This is a mockup for approval, not an implementation. Notes, copy in en/uk/ru, the decision table and
+     the open questions are in <code>design/pd133-hint-ladder.md</code>.</p>
+  <p>Frames 390&times;844, safe areas simulated 59 / 34, themes pinned by class. No new colour is introduced:
+     the hint layer is ink and wax at new opacities plus four distinct <i>shapes</i>.</p>
+  <ul class="nav">
+    <li>A — entry point</li><li>B — the four rungs</li><li>C — branches</li>
+    <li>D — where the mark lives</li><li>E — ink</li><li>F — marks key</li><li>G — uk / ru length</li>
+  </ul>
+</header>
+
+<!-- ============================ A. ENTRY ============================ -->
+<section class="block">
+  <h2>A. Entry point — the top bar, not the pad</h2>
+  <p>The Notes / Undo / Erase row is already tight at 320–390 pt and ink drops to two buttons, so a fourth
+     button is out. The hint sits in the toolbar, left of the gear: a 44&times;44 target in the same quiet
+     <code>--label-2-grouped</code> as the gear, as far from the working thumb as the screen allows —
+     Good Sudoku's hint button is criticised for exactly the accidental taps that distance prevents
+     (competitors-a §2.4). Discovery is covered by a one-time inline tip in the gap, which is empty space anyway.</p>
+
+  <div class="row">
+    <div class="cell-cap">
+      <div class="t light frame">
+        <div class="screen">
+          <div class="toolbar">
+            <h1 class="title">Today</h1>
+            <div class="tools">
+              <button class="icon-btn" aria-label="Hint">
+                <svg viewBox="0 0 24 24" width="23" height="23" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9.3 18h5.4"/><path d="M10.2 20.7h3.6"/><path d="M12 3.3a5.9 5.9 0 0 0-3.4 10.7c.5.4.8 1 .8 1.6v.4h5.2v-.4c0-.6.3-1.2.8-1.6A5.9 5.9 0 0 0 12 3.3Z"/></svg>
+              </button>
+              <button class="icon-btn" aria-label="Settings">
+                <svg viewBox="0 0 24 24" width="23" height="23" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="3.2"/><path d="M12 2.9v2.3M12 18.8v2.3M4.4 12H2.1M21.9 12h-2.3M6.7 6.7 5.1 5.1M18.9 18.9l-1.6-1.6M17.3 6.7l1.6-1.6M5.1 18.9l1.6-1.6"/></svg>
+              </button>
+            </div>
+          </div>
+          <p class="daybar">Thursday, 2 October · 14:08</p>
+          <div class="board-wrap"><div class="board" data-spec="rest"></div></div>
+          <div class="gap"><p class="status">34 cells left</p></div>
+          <div class="pad-wrap">
+            <div class="pad">
+              <button class="key"><span class="kd">1</span><span class="kr">5</span></button>
+              <button class="key"><span class="kd">2</span><span class="kr">4</span></button>
+              <button class="key"><span class="kd">3</span><span class="kr">3</span></button>
+              <button class="key"><span class="kd">4</span><span class="kr">5</span></button>
+              <button class="key"><span class="kd">5</span><span class="kr">5</span></button>
+              <button class="key"><span class="kd">6</span><span class="kr">4</span></button>
+              <button class="key"><span class="kd">7</span><span class="kr">4</span></button>
+              <button class="key"><span class="kd">8</span><span class="kr">3</span></button>
+              <button class="key"><span class="kd">9</span><span class="kr">4</span></button>
+            </div>
+            <div class="actions">
+              <button class="act"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><path d="M4 5h16M4 10h16M4 15h10M4 20h6"/></svg><span>Notes</span></button>
+              <button class="act"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 7 4 12l5 5"/><path d="M4 12h9a6 6 0 0 1 0 12h-1"/></svg><span>Undo</span></button>
+              <button class="act"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 19h12"/><path d="M15.5 5.5 20 10 11 19H6.5L4 16.5Z"/></svg><span>Erase</span></button>
+            </div>
+          </div>
+          <nav class="tabbar">
+            <span class="tab sel"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><rect x="3.5" y="4.5" width="17" height="16" rx="3"/><path d="M3.5 9h17M8 3v3M16 3v3"/></svg>Today</span>
+            <span class="tab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><rect x="3.5" y="3.5" width="17" height="17" rx="3"/><path d="M9 3.5v17M15 3.5v17M3.5 9h17M3.5 15h17"/></svg>Play</span>
+            <span class="tab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><rect x="3.5" y="4.5" width="17" height="16" rx="3"/><path d="M7 9h3M14 9h3M7 13h3M14 13h3M7 17h3"/></svg>Year</span>
+          </nav>
+        </div>
+      </div>
+      <p class="cap"><b>A1 light.</b> Rest state. The bulb is the same weight as the gear — present, never loud.
+         VoiceOver name: &ldquo;Hint&rdquo;; after a hint has been taken today: &ldquo;Hint, 2 used today&rdquo;.</p>
+    </div>
+
+    <div class="cell-cap">
+      <div class="t dark frame">
+        <div class="screen">
+          <div class="toolbar">
+            <h1 class="title">Today</h1>
+            <div class="tools">
+              <button class="icon-btn" aria-label="Hint">
+                <svg viewBox="0 0 24 24" width="23" height="23" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9.3 18h5.4"/><path d="M10.2 20.7h3.6"/><path d="M12 3.3a5.9 5.9 0 0 0-3.4 10.7c.5.4.8 1 .8 1.6v.4h5.2v-.4c0-.6.3-1.2.8-1.6A5.9 5.9 0 0 0 12 3.3Z"/></svg>
+              </button>
+              <button class="icon-btn" aria-label="Settings">
+                <svg viewBox="0 0 24 24" width="23" height="23" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="3.2"/><path d="M12 2.9v2.3M12 18.8v2.3M4.4 12H2.1M21.9 12h-2.3M6.7 6.7 5.1 5.1M18.9 18.9l-1.6-1.6M17.3 6.7l1.6-1.6M5.1 18.9l1.6-1.6"/></svg>
+              </button>
+            </div>
+          </div>
+          <p class="daybar">Thursday, 2 October · 14:08</p>
+          <div class="board-wrap"><div class="board" data-spec="rest"></div></div>
+          <div class="gap"><p class="nudge"><b>Stuck?</b> There&rsquo;s a hint at the top.</p></div>
+          <div class="pad-wrap">
+            <div class="pad">
+              <button class="key"><span class="kd">1</span><span class="kr">5</span></button>
+              <button class="key"><span class="kd">2</span><span class="kr">4</span></button>
+              <button class="key"><span class="kd">3</span><span class="kr">3</span></button>
+              <button class="key"><span class="kd">4</span><span class="kr">5</span></button>
+              <button class="key"><span class="kd">5</span><span class="kr">5</span></button>
+              <button class="key"><span class="kd">6</span><span class="kr">4</span></button>
+              <button class="key"><span class="kd">7</span><span class="kr">4</span></button>
+              <button class="key"><span class="kd">8</span><span class="kr">3</span></button>
+              <button class="key"><span class="kd">9</span><span class="kr">4</span></button>
+            </div>
+            <div class="actions">
+              <button class="act"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><path d="M4 5h16M4 10h16M4 15h10M4 20h6"/></svg><span>Notes</span></button>
+              <button class="act"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 7 4 12l5 5"/><path d="M4 12h9a6 6 0 0 1 0 12h-1"/></svg><span>Undo</span></button>
+              <button class="act"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 19h12"/><path d="M15.5 5.5 20 10 11 19H6.5L4 16.5Z"/></svg><span>Erase</span></button>
+            </div>
+          </div>
+          <nav class="tabbar">
+            <span class="tab sel"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><rect x="3.5" y="4.5" width="17" height="16" rx="3"/><path d="M3.5 9h17M8 3v3M16 3v3"/></svg>Today</span>
+            <span class="tab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><rect x="3.5" y="3.5" width="17" height="17" rx="3"/><path d="M9 3.5v17M15 3.5v17M3.5 9h17M3.5 15h17"/></svg>Play</span>
+            <span class="tab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><rect x="3.5" y="4.5" width="17" height="16" rx="3"/><path d="M7 9h3M14 9h3M7 13h3M14 13h3M7 17h3"/></svg>Year</span>
+          </nav>
+        </div>
+      </div>
+      <p class="cap"><b>A2 dark.</b> The nudge. Shown at most <b>once per device</b>, after ~90 s with no placement
+         and only while a step exists; it replaces &ldquo;N cells left&rdquo; in the gap and disappears on the next
+         placement. It is a sentence, not a button: tapping the bulb is still the only way in.</p>
+    </div>
+
+    <div class="cell-cap">
+      <div class="t light frame">
+        <div class="screen">
+          <div class="toolbar">
+            <h1 class="title">Today</h1>
+            <div class="tools">
+              <button class="icon-btn on" aria-label="Hint">
+                <svg viewBox="0 0 24 24" width="23" height="23" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9.3 18h5.4"/><path d="M10.2 20.7h3.6"/><path d="M12 3.3a5.9 5.9 0 0 0-3.4 10.7c.5.4.8 1 .8 1.6v.4h5.2v-.4c0-.6.3-1.2.8-1.6A5.9 5.9 0 0 0 12 3.3Z"/></svg>
+              </button>
+              <button class="icon-btn" aria-label="Settings">
+                <svg viewBox="0 0 24 24" width="23" height="23" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="3.2"/><path d="M12 2.9v2.3M12 18.8v2.3M4.4 12H2.1M21.9 12h-2.3M6.7 6.7 5.1 5.1M18.9 18.9l-1.6-1.6M17.3 6.7l1.6-1.6M5.1 18.9l1.6-1.6"/></svg>
+              </button>
+            </div>
+          </div>
+          <p class="daybar">Thursday, 2 October · 14:08</p>
+          <div class="board-wrap"><div class="board" data-spec="rest"></div></div>
+          <div class="gap"><p class="status">34 cells left</p></div>
+          <div class="pad-wrap">
+            <div class="pad off">
+              <button class="key"><span class="kd">1</span><span class="kr">5</span></button>
+              <button class="key"><span class="kd">2</span><span class="kr">4</span></button>
+              <button class="key"><span class="kd">3</span><span class="kr">3</span></button>
+              <button class="key"><span class="kd">4</span><span class="kr">5</span></button>
+              <button class="key"><span class="kd">5</span><span class="kr">5</span></button>
+              <button class="key"><span class="kd">6</span><span class="kr">4</span></button>
+              <button class="key"><span class="kd">7</span><span class="kr">4</span></button>
+              <button class="key"><span class="kd">8</span><span class="kr">3</span></button>
+              <button class="key"><span class="kd">9</span><span class="kr">4</span></button>
+            </div>
+            <div class="actions off">
+              <button class="act"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><path d="M4 5h16M4 10h16M4 15h10M4 20h6"/></svg><span>Notes</span></button>
+              <button class="act"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 7 4 12l5 5"/><path d="M4 12h9a6 6 0 0 1 0 12h-1"/></svg><span>Undo</span></button>
+              <button class="act"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 19h12"/><path d="M15.5 5.5 20 10 11 19H6.5L4 16.5Z"/></svg><span>Erase</span></button>
+            </div>
+          </div>
+          <nav class="tabbar">
+            <span class="tab sel"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><rect x="3.5" y="4.5" width="17" height="16" rx="3"/><path d="M3.5 9h17M8 3v3M16 3v3"/></svg>Today</span>
+            <span class="tab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><rect x="3.5" y="3.5" width="17" height="17" rx="3"/><path d="M9 3.5v17M15 3.5v17M3.5 9h17M3.5 15h17"/></svg>Play</span>
+            <span class="tab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><rect x="3.5" y="4.5" width="17" height="16" rx="3"/><path d="M7 9h3M14 9h3M7 13h3M14 13h3M7 17h3"/></svg>Year</span>
+          </nav>
+        </div>
+        <div class="sheet-scrim"></div>
+        <div class="sheet">
+          <div class="grabber"></div>
+          <h2>A hint marks the day</h2>
+          <p>Pundoku never fills a cell for you. A hint walks you to the next move in four steps:
+             where to look, which technique, which cells, and why.</p>
+          <ul>
+            <li><span class="b"></span><span>The day is recorded as <b>solved with help</b> — in the year and on the card.</span></li>
+            <li><span class="b"></span><span>Further hints today don&rsquo;t change the mark.</span></li>
+            <li><span class="b"></span><span>If Pundoku finds nothing to explain, nothing is marked.</span></li>
+          </ul>
+          <button class="btn-primary">Show the hint</button>
+          <button class="btn-plain">Not now</button>
+        </div>
+      </div>
+      <p class="cap"><b>A3 light.</b> One-time rule sheet, the same pattern as the ink rule (PD-74) — shown
+         <b>once per device, ever</b>, before the first hint of all time. After that the honest line lives in
+         the dock footer, so it is never a surprise. Re-readable in Settings &rarr; How Pundoku works.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============================ B. LADDER ============================ -->
+<section class="block">
+  <h2>B. The four rungs — a dock in the pad&rsquo;s place, never over the board</h2>
+  <p>The hint must point at the board, so it cannot be a sheet. The dock takes the pad&rsquo;s place (the pad is
+     inert while you are reading anyway) and grows only into the gap, which is 135 px tall at default type —
+     <b>the board does not move</b>. No third sheet layer, no stack (heuristic H-17). One button goes down the
+     ladder, one closes. Closing at rung 3 or later leaves the selection on the hint cell, so the pad comes back
+     with the right cell already chosen — a cell, never a digit.</p>
+
+  <div class="row">
+    <div class="cell-cap">
+      <div class="t light frame">
+        <div class="screen">
+          <div class="toolbar">
+            <h1 class="title">Today</h1>
+            <div class="tools">
+              <button class="icon-btn on" aria-label="Hint"><svg viewBox="0 0 24 24" width="23" height="23" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9.3 18h5.4"/><path d="M10.2 20.7h3.6"/><path d="M12 3.3a5.9 5.9 0 0 0-3.4 10.7c.5.4.8 1 .8 1.6v.4h5.2v-.4c0-.6.3-1.2.8-1.6A5.9 5.9 0 0 0 12 3.3Z"/></svg></button>
+              <button class="icon-btn" aria-label="Settings"><svg viewBox="0 0 24 24" width="23" height="23" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="3.2"/><path d="M12 2.9v2.3M12 18.8v2.3M4.4 12H2.1M21.9 12h-2.3M6.7 6.7 5.1 5.1M18.9 18.9l-1.6-1.6M17.3 6.7l1.6-1.6M5.1 18.9l1.6-1.6"/></svg></button>
+            </div>
+          </div>
+          <p class="daybar">Thursday, 2 October · 14:08</p>
+          <div class="board-wrap"><div class="board" data-spec="step1"></div></div>
+          <div class="gap"></div>
+          <div class="dock" role="group" aria-label="Hint">
+            <div class="dock-top"><span class="dock-step">Step 1 of 4</span><button class="dock-close">Close</button></div>
+            <h2>Look at row 6.</h2>
+            <p class="body">There&rsquo;s a move here you can make right now.</p>
+            <p class="key-line"><span><i class="g-d"></i> the region</span></p>
+            <button class="more">One more step</button>
+            <p class="foot"><span class="ymark help"></span> This day is marked &ldquo;with help&rdquo;.</p>
+          </div>
+          <nav class="tabbar">
+            <span class="tab sel"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><rect x="3.5" y="4.5" width="17" height="16" rx="3"/><path d="M3.5 9h17M8 3v3M16 3v3"/></svg>Today</span>
+            <span class="tab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><rect x="3.5" y="3.5" width="17" height="17" rx="3"/><path d="M9 3.5v17M15 3.5v17M3.5 9h17M3.5 15h17"/></svg>Play</span>
+            <span class="tab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><rect x="3.5" y="4.5" width="17" height="16" rx="3"/><path d="M7 9h3M14 9h3M7 13h3M14 13h3M7 17h3"/></svg>Year</span>
+          </nav>
+        </div>
+      </div>
+      <p class="cap"><b>B1 light — rung 1, the region.</b> Dashed outline (never animated) + 6 % wash.
+         Most players stop here: knowing <i>where</i> is most of the help and none of the answer.</p>
+    </div>
+
+    <div class="cell-cap">
+      <div class="t dark frame">
+        <div class="screen">
+          <div class="toolbar">
+            <h1 class="title">Today</h1>
+            <div class="tools">
+              <button class="icon-btn on" aria-label="Hint"><svg viewBox="0 0 24 24" width="23" height="23" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9.3 18h5.4"/><path d="M10.2 20.7h3.6"/><path d="M12 3.3a5.9 5.9 0 0 0-3.4 10.7c.5.4.8 1 .8 1.6v.4h5.2v-.4c0-.6.3-1.2.8-1.6A5.9 5.9 0 0 0 12 3.3Z"/></svg></button>
+              <button class="icon-btn" aria-label="Settings"><svg viewBox="0 0 24 24" width="23" height="23" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="3.2"/><path d="M12 2.9v2.3M12 18.8v2.3M4.4 12H2.1M21.9 12h-2.3M6.7 6.7 5.1 5.1M18.9 18.9l-1.6-1.6M17.3 6.7l1.6-1.6M5.1 18.9l1.6-1.6"/></svg></button>
+            </div>
+          </div>
+          <p class="daybar">Thursday, 2 October · 14:08</p>
+          <div class="board-wrap"><div class="board" data-spec="step1"></div></div>
+          <div class="gap"></div>
+          <div class="dock" role="group" aria-label="Hint">
+            <div class="dock-top"><span class="dock-step">Step 2 of 4</span><button class="dock-close">Close</button></div>
+            <h2>Hidden Single</h2>
+            <p class="body">In this region one digit has only one place left to go.</p>
+            <p class="key-line"><span><i class="g-d"></i> the region</span></p>
+            <button class="more">One more step</button>
+            <p class="foot"><span class="ymark help"></span> This day is marked &ldquo;with help&rdquo;.</p>
+          </div>
+          <nav class="tabbar">
+            <span class="tab sel"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><rect x="3.5" y="4.5" width="17" height="16" rx="3"/><path d="M3.5 9h17M8 3v3M16 3v3"/></svg>Today</span>
+            <span class="tab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><rect x="3.5" y="3.5" width="17" height="17" rx="3"/><path d="M9 3.5v17M15 3.5v17M3.5 9h17M3.5 15h17"/></svg>Play</span>
+            <span class="tab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><rect x="3.5" y="4.5" width="17" height="16" rx="3"/><path d="M7 9h3M14 9h3M7 13h3M14 13h3M7 17h3"/></svg>Year</span>
+          </nav>
+        </div>
+      </div>
+      <p class="cap"><b>B2 dark — rung 2, the technique.</b> The name is the heading, the one-line gloss is the
+         body. This doubles as the glossary the product has never had (heuristic B3 / H-06): the same strings
+         feed &ldquo;Technique reached&rdquo; on the result card.</p>
+    </div>
+
+    <div class="cell-cap">
+      <div class="t light frame">
+        <div class="screen">
+          <div class="toolbar">
+            <h1 class="title">Today</h1>
+            <div class="tools">
+              <button class="icon-btn on" aria-label="Hint"><svg viewBox="0 0 24 24" width="23" height="23" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9.3 18h5.4"/><path d="M10.2 20.7h3.6"/><path d="M12 3.3a5.9 5.9 0 0 0-3.4 10.7c.5.4.8 1 .8 1.6v.4h5.2v-.4c0-.6.3-1.2.8-1.6A5.9 5.9 0 0 0 12 3.3Z"/></svg></button>
+              <button class="icon-btn" aria-label="Settings"><svg viewBox="0 0 24 24" width="23" height="23" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="3.2"/><path d="M12 2.9v2.3M12 18.8v2.3M4.4 12H2.1M21.9 12h-2.3M6.7 6.7 5.1 5.1M18.9 18.9l-1.6-1.6M17.3 6.7l1.6-1.6M5.1 18.9l1.6-1.6"/></svg></button>
+            </div>
+          </div>
+          <p class="daybar">Thursday, 2 October · 14:08</p>
+          <div class="board-wrap"><div class="board" data-spec="step3"></div></div>
+          <div class="gap"></div>
+          <div class="dock" role="group" aria-label="Hint">
+            <div class="dock-top"><span class="dock-step">Step 3 of 4</span><button class="dock-close">Close</button></div>
+            <h2>Row 6, column 4.</h2>
+            <p class="body">That one cell is where the move happens. The digit is still yours to find.</p>
+            <p class="key-line"><span><i class="g-u"></i> where it happens</span></p>
+            <button class="more">One more step</button>
+            <p class="foot"><span class="ymark help"></span> This day is marked &ldquo;with help&rdquo;.</p>
+          </div>
+          <nav class="tabbar">
+            <span class="tab sel"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><rect x="3.5" y="4.5" width="17" height="16" rx="3"/><path d="M3.5 9h17M8 3v3M16 3v3"/></svg>Today</span>
+            <span class="tab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><rect x="3.5" y="3.5" width="17" height="17" rx="3"/><path d="M9 3.5v17M15 3.5v17M3.5 9h17M3.5 15h17"/></svg>Play</span>
+            <span class="tab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><rect x="3.5" y="4.5" width="17" height="16" rx="3"/><path d="M7 9h3M14 9h3M7 13h3M14 13h3M7 17h3"/></svg>Year</span>
+          </nav>
+        </div>
+      </div>
+      <p class="cap"><b>B3 light — rung 3, the cells.</b> The bar sits <i>under</i> the cell, inside it, so a
+         selection ring (on the border) and a wax error ring never collide with it. Closing here moves the
+         selection to this cell.</p>
+    </div>
+
+    <div class="cell-cap">
+      <div class="t dark frame">
+        <div class="screen">
+          <div class="toolbar">
+            <h1 class="title">Today</h1>
+            <div class="tools">
+              <button class="icon-btn on" aria-label="Hint"><svg viewBox="0 0 24 24" width="23" height="23" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9.3 18h5.4"/><path d="M10.2 20.7h3.6"/><path d="M12 3.3a5.9 5.9 0 0 0-3.4 10.7c.5.4.8 1 .8 1.6v.4h5.2v-.4c0-.6.3-1.2.8-1.6A5.9 5.9 0 0 0 12 3.3Z"/></svg></button>
+              <button class="icon-btn" aria-label="Settings"><svg viewBox="0 0 24 24" width="23" height="23" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="3.2"/><path d="M12 2.9v2.3M12 18.8v2.3M4.4 12H2.1M21.9 12h-2.3M6.7 6.7 5.1 5.1M18.9 18.9l-1.6-1.6M17.3 6.7l1.6-1.6M5.1 18.9l1.6-1.6"/></svg></button>
+            </div>
+          </div>
+          <p class="daybar">Thursday, 2 October · 14:08</p>
+          <div class="board-wrap"><div class="board" data-spec="step4"></div></div>
+          <div class="gap"></div>
+          <div class="dock" role="group" aria-label="Hint">
+            <div class="dock-top"><span class="dock-step">Step 4 of 4</span><button class="dock-close">Close</button></div>
+            <h2>Why that cell</h2>
+            <p class="body">Row 6 is still missing one digit. Each circled cell already holds it and rules out
+               one free square of the row — columns 2, 6 and 8. Only the underlined cell is left.</p>
+            <p class="key-line"><span><i class="g-u"></i> where it happens</span><span><i class="g-o"></i> why</span></p>
+            <button class="more quiet">Got it</button>
+            <p class="foot"><span class="ymark help"></span> This day is marked &ldquo;with help&rdquo;.</p>
+          </div>
+          <nav class="tabbar">
+            <span class="tab sel"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><rect x="3.5" y="4.5" width="17" height="16" rx="3"/><path d="M3.5 9h17M8 3v3M16 3v3"/></svg>Today</span>
+            <span class="tab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><rect x="3.5" y="3.5" width="17" height="17" rx="3"/><path d="M9 3.5v17M15 3.5v17M3.5 9h17M3.5 15h17"/></svg>Play</span>
+            <span class="tab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><rect x="3.5" y="4.5" width="17" height="16" rx="3"/><path d="M7 9h3M14 9h3M7 13h3M14 13h3M7 17h3"/></svg>Year</span>
+          </nav>
+        </div>
+      </div>
+      <p class="cap"><b>B4 dark — rung 4, the walk-through.</b> <b>The digit is never printed.</b> The circled
+         cells are where it is already standing on the board, so the last inference stays the player&rsquo;s —
+         this is what keeps a four-rung hint honest enough to be called &ldquo;with help&rdquo; and not &ldquo;reveal&rdquo;.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============================ C. BRANCHES ============================ -->
+<section class="block">
+  <h2>C. Two branches that are not a ladder</h2>
+  <p>If the board disagrees with a solvable grid, there is no next step to explain — only a region.
+     If no implemented technique applies, the honest answer is that there is none, and nothing is marked.</p>
+
+  <div class="row">
+    <div class="cell-cap">
+      <div class="t light frame">
+        <div class="screen">
+          <div class="toolbar">
+            <h1 class="title">Today</h1>
+            <div class="tools">
+              <button class="icon-btn on" aria-label="Hint"><svg viewBox="0 0 24 24" width="23" height="23" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9.3 18h5.4"/><path d="M10.2 20.7h3.6"/><path d="M12 3.3a5.9 5.9 0 0 0-3.4 10.7c.5.4.8 1 .8 1.6v.4h5.2v-.4c0-.6.3-1.2.8-1.6A5.9 5.9 0 0 0 12 3.3Z"/></svg></button>
+              <button class="icon-btn" aria-label="Settings"><svg viewBox="0 0 24 24" width="23" height="23" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="3.2"/><path d="M12 2.9v2.3M12 18.8v2.3M4.4 12H2.1M21.9 12h-2.3M6.7 6.7 5.1 5.1M18.9 18.9l-1.6-1.6M17.3 6.7l1.6-1.6M5.1 18.9l1.6-1.6"/></svg></button>
+            </div>
+          </div>
+          <p class="daybar">Thursday, 2 October · 14:08</p>
+          <div class="board-wrap"><div class="board" data-spec="mistake"></div></div>
+          <div class="gap"></div>
+          <div class="dock bad" role="group" aria-label="Hint">
+            <div class="dock-top"><span class="dock-step">Before the next step</span><button class="dock-close">Close</button></div>
+            <h2>Something here doesn&rsquo;t add up</h2>
+            <p class="body">Two of your digits in the middle-left box are the same, so the grid can&rsquo;t be
+               finished as it stands. Pundoku won&rsquo;t point at the cell — hints come back once the box works again.</p>
+            <p class="key-line"><span><i class="g-d" style="border-color:var(--wax)"></i> the region of the disagreement</span></p>
+            <button class="more">Close</button>
+            <p class="foot"><span class="ymark help"></span> This day is marked &ldquo;with help&rdquo;.</p>
+          </div>
+          <nav class="tabbar">
+            <span class="tab sel"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><rect x="3.5" y="4.5" width="17" height="16" rx="3"/><path d="M3.5 9h17M8 3v3M16 3v3"/></svg>Today</span>
+            <span class="tab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><rect x="3.5" y="3.5" width="17" height="17" rx="3"/><path d="M9 3.5v17M15 3.5v17M3.5 9h17M3.5 15h17"/></svg>Play</span>
+            <span class="tab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><rect x="3.5" y="4.5" width="17" height="16" rx="3"/><path d="M7 9h3M14 9h3M7 13h3M14 13h3M7 17h3"/></svg>Year</span>
+          </nav>
+        </div>
+      </div>
+      <p class="cap"><b>C1 light — a mistake on the board.</b> Region only, in wax, dashed. No cell is named and
+         no cell is painted red: the always-on conflict highlight the owner rejected stays rejected, this is a
+         single answer to a single explicit request. Two cases of copy — &ldquo;two of your digits are the same&rdquo;
+         (arithmetic the player can check) and the neutral &ldquo;this box can&rsquo;t be finished&rdquo;. Marks the day.</p>
+    </div>
+
+    <div class="cell-cap">
+      <div class="t dark frame">
+        <div class="screen">
+          <div class="toolbar">
+            <h1 class="title">Today</h1>
+            <div class="tools">
+              <button class="icon-btn on" aria-label="Hint"><svg viewBox="0 0 24 24" width="23" height="23" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9.3 18h5.4"/><path d="M10.2 20.7h3.6"/><path d="M12 3.3a5.9 5.9 0 0 0-3.4 10.7c.5.4.8 1 .8 1.6v.4h5.2v-.4c0-.6.3-1.2.8-1.6A5.9 5.9 0 0 0 12 3.3Z"/></svg></button>
+              <button class="icon-btn" aria-label="Settings"><svg viewBox="0 0 24 24" width="23" height="23" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="3.2"/><path d="M12 2.9v2.3M12 18.8v2.3M4.4 12H2.1M21.9 12h-2.3M6.7 6.7 5.1 5.1M18.9 18.9l-1.6-1.6M17.3 6.7l1.6-1.6M5.1 18.9l1.6-1.6"/></svg></button>
+            </div>
+          </div>
+          <p class="daybar">Thursday, 2 October · 14:08</p>
+          <div class="board-wrap"><div class="board" data-spec="rest"></div></div>
+          <div class="gap"></div>
+          <div class="dock" role="group" aria-label="Hint">
+            <div class="dock-top"><span class="dock-step">No step</span><button class="dock-close">Close</button></div>
+            <h2>Nothing Pundoku can explain</h2>
+            <p class="body">This position needs a technique Pundoku doesn&rsquo;t teach yet — an X-Wing or beyond.
+               Nothing on your board is wrong.</p>
+            <button class="more">Close</button>
+            <p class="foot">Nothing was revealed, so the day keeps a clean mark.</p>
+          </div>
+          <nav class="tabbar">
+            <span class="tab sel"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><rect x="3.5" y="4.5" width="17" height="16" rx="3"/><path d="M3.5 9h17M8 3v3M16 3v3"/></svg>Today</span>
+            <span class="tab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><rect x="3.5" y="3.5" width="17" height="17" rx="3"/><path d="M9 3.5v17M15 3.5v17M3.5 9h17M3.5 15h17"/></svg>Play</span>
+            <span class="tab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><rect x="3.5" y="4.5" width="17" height="16" rx="3"/><path d="M7 9h3M14 9h3M7 13h3M14 13h3M7 17h3"/></svg>Year</span>
+          </nav>
+        </div>
+      </div>
+      <p class="cap"><b>C2 dark — no step found.</b> &ldquo;Nothing on your board is wrong&rdquo; is the valuable half:
+         it separates <i>beyond</i> from <i>mistake</i>. <b>Never marks the day</b> — nothing was given, so nothing
+         is owed. The dock has no footer mark and no &ldquo;one more step&rdquo;.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============================ D. THE MARK ============================ -->
+<section class="block">
+  <h2>D. Where the mark lives</h2>
+  <p>The owner already approved tone 62 % for &ldquo;with help&rdquo; (PD-24) and the schema already carries
+     <code>assisted</code> (PD-14). PD-133 adds the second channel the tone always needed:
+     <b>a notch in the bottom-left corner</b>, mirroring the top-right notch corrections already use,
+     so the two combine and neither depends on colour.</p>
+
+  <div class="row">
+    <div class="cell-cap">
+      <div class="t light frame">
+        <div class="screen">
+          <div class="toolbar">
+            <h1 class="title">2026</h1>
+            <div class="tools"><button class="icon-btn" aria-label="Settings"><svg viewBox="0 0 24 24" width="23" height="23" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="3.2"/><path d="M12 2.9v2.3M12 18.8v2.3M4.4 12H2.1M21.9 12h-2.3M6.7 6.7 5.1 5.1M18.9 18.9l-1.6-1.6M17.3 6.7l1.6-1.6M5.1 18.9l1.6-1.6"/></svg></button></div>
+          </div>
+          <p class="daybar">41 days · 12 clean</p>
+          <p class="sect">October</p>
+          <div class="ygrid" style="padding-top:8px">
+            <span class="ymark"></span><span class="ymark"></span><span class="ymark corr"></span>
+            <span class="ymark help"></span><span class="ymark"></span><span class="ymark miss"></span>
+            <span class="ymark"></span><span class="ymark help corr"></span><span class="ymark"></span>
+            <span class="ymark half"></span><span class="ymark"></span><span class="ymark help"></span>
+            <span class="ymark"></span><span class="ymark corr"></span><span class="ymark miss"></span>
+            <span class="ymark"></span><span class="ymark help"></span><span class="ymark"></span>
+            <span class="ymark"></span><span class="ymark"></span><span class="ymark half help"></span>
+            <span class="ymark corr"></span><span class="ymark"></span><span class="ymark"></span>
+            <span class="ymark help"></span><span class="ymark"></span><span class="ymark miss"></span>
+            <span class="ymark"></span><span class="ymark"></span><span class="ymark today"></span>
+            <span class="ymark void"></span><span class="ymark void"></span><span class="ymark void"></span>
+            <span class="ymark void"></span><span class="ymark void"></span>
+          </div>
+          <ul class="ylegend">
+            <li><span class="ymark"></span>Solved</li>
+            <li><span class="ymark help"></span>With help</li>
+            <li><span class="ymark corr"></span>Corrections</li>
+            <li><span class="ymark half"></span>Unfinished</li>
+            <li><span class="ymark miss"></span>Missed</li>
+          </ul>
+          <div class="gap"></div>
+          <nav class="tabbar">
+            <span class="tab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><rect x="3.5" y="4.5" width="17" height="16" rx="3"/><path d="M3.5 9h17M8 3v3M16 3v3"/></svg>Today</span>
+            <span class="tab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><rect x="3.5" y="3.5" width="17" height="17" rx="3"/><path d="M9 3.5v17M15 3.5v17M3.5 9h17M3.5 15h17"/></svg>Play</span>
+            <span class="tab sel"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><rect x="3.5" y="4.5" width="17" height="16" rx="3"/><path d="M7 9h3M14 9h3M7 13h3M14 13h3M7 17h3"/></svg>Year</span>
+          </nav>
+        </div>
+      </div>
+      <p class="cap"><b>D1 light — Year.</b> Help = tone 62 % <b>and</b> a notched bottom-left corner;
+         corrections keep the top-right notch; a day with both is notched twice. Survives greyscale and
+         <code>forced-colors</code>, where the shipped build currently cannot tell help from solved
+         (PD-38 item 4, accepted at the time because the feature did not exist).</p>
+    </div>
+
+    <div class="cell-cap">
+      <div class="t dark frame">
+        <div class="screen">
+          <div class="toolbar">
+            <h1 class="title">2026</h1>
+            <div class="tools"><button class="icon-btn" aria-label="Settings"><svg viewBox="0 0 24 24" width="23" height="23" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="3.2"/><path d="M12 2.9v2.3M12 18.8v2.3M4.4 12H2.1M21.9 12h-2.3M6.7 6.7 5.1 5.1M18.9 18.9l-1.6-1.6M17.3 6.7l1.6-1.6M5.1 18.9l1.6-1.6"/></svg></button></div>
+          </div>
+          <p class="daybar">41 days · 12 clean</p>
+          <p class="sect">October</p>
+          <div class="ygrid" style="padding-top:8px">
+            <span class="ymark"></span><span class="ymark"></span><span class="ymark corr"></span>
+            <span class="ymark help"></span><span class="ymark"></span><span class="ymark miss"></span>
+            <span class="ymark"></span><span class="ymark help corr"></span><span class="ymark"></span>
+            <span class="ymark half"></span><span class="ymark"></span><span class="ymark help"></span>
+            <span class="ymark"></span><span class="ymark corr"></span><span class="ymark miss"></span>
+          </div>
+          <div class="gap"></div>
+          <div class="sheet-scrim"></div>
+          <div class="sheet">
+            <div class="grabber"></div>
+            <h2>Thursday, 2 October</h2>
+            <p>Solved <b>with help</b>.</p>
+            <div class="rows">
+              <div class="r"><span class="k">Time</span><span class="v">11:42</span></div>
+              <div class="r"><span class="k">Corrections</span><span class="v">clean</span></div>
+              <div class="r"><span class="k">Hints</span><span class="v"><span class="ymark help"></span>2</span></div>
+              <div class="r"><span class="k">Technique reached</span><span class="v">Hidden Single</span></div>
+            </div>
+            <button class="btn-plain">Watch your solve</button>
+          </div>
+          <nav class="tabbar">
+            <span class="tab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><rect x="3.5" y="4.5" width="17" height="16" rx="3"/><path d="M3.5 9h17M8 3v3M16 3v3"/></svg>Today</span>
+            <span class="tab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><rect x="3.5" y="3.5" width="17" height="17" rx="3"/><path d="M9 3.5v17M15 3.5v17M3.5 9h17M3.5 15h17"/></svg>Play</span>
+            <span class="tab sel"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><rect x="3.5" y="4.5" width="17" height="16" rx="3"/><path d="M7 9h3M14 9h3M7 13h3M14 13h3M7 17h3"/></svg>Year</span>
+          </nav>
+        </div>
+      </div>
+      <p class="cap"><b>D2 dark — the day sheet.</b> The existing <code>assistedRow</code> / <code>assistedValue</code>
+         strings finally have a value, plus one counted row &ldquo;Hints&rdquo;. The row is shown only when the count
+         is above zero, the same rule ink already uses.</p>
+    </div>
+
+    <div class="cell-cap">
+      <div class="t light frame">
+        <div class="screen">
+          <div class="toolbar">
+            <h1 class="title">Today</h1>
+            <div class="tools"><button class="icon-btn" aria-label="Settings"><svg viewBox="0 0 24 24" width="23" height="23" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="3.2"/><path d="M12 2.9v2.3M12 18.8v2.3M4.4 12H2.1M21.9 12h-2.3M6.7 6.7 5.1 5.1M18.9 18.9l-1.6-1.6M17.3 6.7l1.6-1.6M5.1 18.9l1.6-1.6"/></svg></button></div>
+          </div>
+          <p class="daybar">Thursday, 2 October · solved <span class="mark">with help</span></p>
+          <div class="card">
+            <h2>Your path</h2>
+            <p class="sub">Every cell shaded by when you filled it.</p>
+            <div class="heat" data-heat="1"></div>
+            <div class="rows">
+              <div class="r"><span class="k">Time</span><span class="v">11:42</span></div>
+              <div class="r"><span class="k">Corrections</span><span class="v">clean</span></div>
+              <div class="r"><span class="k">Hints</span><span class="v"><span class="ymark help"></span>2</span></div>
+              <div class="r"><span class="k">Technique reached</span><span class="v">Hidden Single</span></div>
+            </div>
+          </div>
+          <p class="cap" style="color:var(--label-2-grouped);padding:10px 16px 0;margin:0;font-size:.74rem">
+            Hollow squares in the path = the two cells you filled right after a hint. Position only, never a digit.</p>
+          <div class="gap"></div>
+          <nav class="tabbar">
+            <span class="tab sel"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><rect x="3.5" y="4.5" width="17" height="16" rx="3"/><path d="M3.5 9h17M8 3v3M16 3v3"/></svg>Today</span>
+            <span class="tab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><rect x="3.5" y="3.5" width="17" height="17" rx="3"/><path d="M9 3.5v17M15 3.5v17M3.5 9h17M3.5 15h17"/></svg>Play</span>
+            <span class="tab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><rect x="3.5" y="4.5" width="17" height="16" rx="3"/><path d="M7 9h3M14 9h3M7 13h3M14 13h3M7 17h3"/></svg>Year</span>
+          </nav>
+        </div>
+      </div>
+      <p class="cap"><b>D3 light — the result card.</b> &ldquo;with help&rdquo; also rides in the day line, next to the
+         date, exactly where ink puts its own word (PD-69). Card scrolled into view.</p>
+    </div>
+
+    <div class="cell-cap">
+      <div class="t dark frame">
+        <div class="screen">
+          <div class="toolbar">
+            <h1 class="title">Share</h1>
+            <div class="tools"><button class="icon-btn" aria-label="Close"><svg viewBox="0 0 24 24" width="23" height="23" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
+          </div>
+          <p class="daybar">PNG 1080 &times; 1350 · always light, never digits</p>
+          <div class="png">
+            <div class="ttl">Pundoku · 2 October 2026</div>
+            <div class="rh" data-rhythm="1"></div>
+            <div class="meta">11:42 · 47 moves · clean · 2 hints</div>
+          </div>
+          <div class="gap"></div>
+          <button class="btn-primary" style="margin:0 16px 14px;width:auto">Share</button>
+          <nav class="tabbar">
+            <span class="tab sel"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><rect x="3.5" y="4.5" width="17" height="16" rx="3"/><path d="M3.5 9h17M8 3v3M16 3v3"/></svg>Today</span>
+            <span class="tab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><rect x="3.5" y="3.5" width="17" height="17" rx="3"/><path d="M9 3.5v17M15 3.5v17M3.5 9h17M3.5 15h17"/></svg>Play</span>
+            <span class="tab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><rect x="3.5" y="4.5" width="17" height="16" rx="3"/><path d="M7 9h3M14 9h3M7 13h3M14 13h3M7 17h3"/></svg>Year</span>
+          </nav>
+        </div>
+      </div>
+      <p class="cap"><b>D4 dark — the PNG fingerprint</b> (Rhythm block indicative; the real style is
+         <code>pd69-fingerprint-compare.html</code>). One word added to the caption line that already reads
+         &ldquo;N moves · M blots&rdquo; in ink. Spoiler-free: a count, no digits, no positions beyond those the
+         fingerprint already shows. <b>Open question 4</b> — whether the public artefact should carry it at all.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============================ E. INK ============================ -->
+<section class="block">
+  <h2>E. Ink mode — no hints at all</h2>
+  <p>Ink is a bargain: every digit is final, there is no undo, no digit eraser, and a wrong digit seals the cell
+     and fills the right digit for you. A hint is a retreat from that bargain, and the mistake branch is
+     meaningless there because a mistake cannot survive on the board. So the bulb is <b>absent, not dimmed</b> —
+     the same choice PD-74 made for Undo. One line is added to the rule sheet.</p>
+
+  <div class="row">
+    <div class="cell-cap">
+      <div class="t light frame">
+        <div class="screen">
+          <div class="toolbar">
+            <h1 class="title">Today</h1>
+            <div class="tools"><button class="icon-btn" aria-label="Settings"><svg viewBox="0 0 24 24" width="23" height="23" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="3.2"/><path d="M12 2.9v2.3M12 18.8v2.3M4.4 12H2.1M21.9 12h-2.3M6.7 6.7 5.1 5.1M18.9 18.9l-1.6-1.6M17.3 6.7l1.6-1.6M5.1 18.9l1.6-1.6"/></svg></button></div>
+          </div>
+          <p class="daybar">Thursday, 2 October <span class="mark">ink</span></p>
+          <div class="board-wrap"><div class="board" data-spec="rest"></div></div>
+          <div class="gap"><p class="status">34 cells left</p></div>
+          <div class="pad-wrap">
+            <div class="pad">
+              <button class="key"><span class="kd">1</span><span class="kr">5</span></button>
+              <button class="key"><span class="kd">2</span><span class="kr">4</span></button>
+              <button class="key"><span class="kd">3</span><span class="kr">3</span></button>
+              <button class="key"><span class="kd">4</span><span class="kr">5</span></button>
+              <button class="key"><span class="kd">5</span><span class="kr">5</span></button>
+              <button class="key"><span class="kd">6</span><span class="kr">4</span></button>
+              <button class="key"><span class="kd">7</span><span class="kr">4</span></button>
+              <button class="key"><span class="kd">8</span><span class="kr">3</span></button>
+              <button class="key"><span class="kd">9</span><span class="kr">4</span></button>
+            </div>
+            <div class="actions two">
+              <button class="act"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><path d="M4 5h16M4 10h16M4 15h10M4 20h6"/></svg><span>Notes</span></button>
+              <button class="act"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 19h12"/><path d="M15.5 5.5 20 10 11 19H6.5L4 16.5Z"/></svg><span>Erase notes</span></button>
+            </div>
+          </div>
+          <nav class="tabbar">
+            <span class="tab sel"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><rect x="3.5" y="4.5" width="17" height="16" rx="3"/><path d="M3.5 9h17M8 3v3M16 3v3"/></svg>Today</span>
+            <span class="tab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><rect x="3.5" y="3.5" width="17" height="17" rx="3"/><path d="M9 3.5v17M15 3.5v17M3.5 9h17M3.5 15h17"/></svg>Play</span>
+            <span class="tab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><rect x="3.5" y="4.5" width="17" height="16" rx="3"/><path d="M7 9h3M14 9h3M7 13h3M14 13h3M7 17h3"/></svg>Year</span>
+          </nav>
+        </div>
+      </div>
+      <p class="cap"><b>E1 light.</b> Ink game: one icon in the bar, not two. The nudge never fires here either.</p>
+    </div>
+
+    <div class="cell-cap">
+      <div class="t dark frame">
+        <div class="screen">
+          <div class="toolbar">
+            <h1 class="title">Today</h1>
+            <div class="tools"><button class="icon-btn" aria-label="Settings"><svg viewBox="0 0 24 24" width="23" height="23" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="3.2"/><path d="M12 2.9v2.3M12 18.8v2.3M4.4 12H2.1M21.9 12h-2.3M6.7 6.7 5.1 5.1M18.9 18.9l-1.6-1.6M17.3 6.7l1.6-1.6M5.1 18.9l1.6-1.6"/></svg></button></div>
+          </div>
+          <p class="daybar">Thursday, 2 October</p>
+          <div class="board-wrap"><div class="board" data-spec="rest"></div></div>
+          <div class="gap"></div>
+          <div class="sheet-scrim"></div>
+          <div class="sheet">
+            <div class="grabber"></div>
+            <h2>Ink doesn&rsquo;t lift</h2>
+            <p>In ink mode every digit you place is final. Read this before you start — you can&rsquo;t switch later.</p>
+            <ul>
+              <li><span class="b"></span><span>No undo, and no eraser for digits.</span></li>
+              <li><span class="b"></span><span>A wrong digit leaves a blot: the cell seals, and the right digit is filled in for you.</span></li>
+              <li><span class="b"></span><span>Notes stay — pencil still lifts.</span></li>
+              <li><span class="b"></span><span><b>No hints, either.</b></span></li>
+            </ul>
+            <button class="btn-primary">Play in ink</button>
+            <button class="btn-plain">Not today</button>
+          </div>
+          <nav class="tabbar">
+            <span class="tab sel"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><rect x="3.5" y="4.5" width="17" height="16" rx="3"/><path d="M3.5 9h17M8 3v3M16 3v3"/></svg>Today</span>
+            <span class="tab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><rect x="3.5" y="3.5" width="17" height="17" rx="3"/><path d="M9 3.5v17M15 3.5v17M3.5 9h17M3.5 15h17"/></svg>Play</span>
+            <span class="tab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><rect x="3.5" y="4.5" width="17" height="16" rx="3"/><path d="M7 9h3M14 9h3M7 13h3M14 13h3M7 17h3"/></svg>Year</span>
+          </nav>
+        </div>
+      </div>
+      <p class="cap"><b>E2 dark.</b> One line added to the shipped rule sheet — the rule is stated before the
+         choice, as PD-74 requires, not discovered by a missing button.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============================ F. MARKS KEY ============================ -->
+<section class="block">
+  <h2>F. The four marks, enlarged</h2>
+  <p>Each mark is a different <b>shape</b>, so none of them depends on colour, and none of them collides with the
+     three marks the board already uses: the indigo selection ring (solid, 2 px, on the border), the wax error
+     ring (2–3 px, on the border) and &ldquo;same digit&rdquo; (10 % wash, no outline).</p>
+  <div class="row">
+    <div class="t light keygrid" style="padding:16px;background:var(--bg);border-radius:16px">
+      <div class="keyitem">
+        <div class="demo">
+          <div class="cell"><i class="w"></i><span class="d given">8</span></div>
+          <div class="cell"><i class="w"></i></div>
+          <div class="cell"><i class="w"></i><span class="d player">3</span></div>
+          <div class="hint-region" style="--rc:0;--rbc:0;--rr:0;--rbr:0;--rw:3;--rwg:0;--rh:1;--rhg:0;--s:33.3%;height:100%"></div>
+        </div>
+        <h3>Region — dashed</h3>
+        <p>1.5 px dashed ink + 6 % wash. Never animated. In the mistake branch: 2 px dashed wax.</p>
+      </div>
+      <div class="keyitem">
+        <div class="demo">
+          <div class="cell"></div>
+          <div class="cell"><i class="u"></i></div>
+          <div class="cell"></div>
+        </div>
+        <h3>Where it happens — bar</h3>
+        <p>3 px bar inside the bottom edge. Singles: the answer cell. Eliminations: the cells whose notes shrink.</p>
+      </div>
+      <div class="keyitem">
+        <div class="demo">
+          <div class="cell"><i class="o"></i><span class="d given">9</span></div>
+          <div class="cell"></div>
+          <div class="cell"><i class="o"></i><span class="d player">9</span></div>
+        </div>
+        <h3>Why — hollow ring</h3>
+        <p>9 px open circle, top-left. The evidence cells. This is where the digit is already visible on the
+           board — which is how rung 4 explains everything without printing it.</p>
+      </div>
+      <div class="keyitem">
+        <div class="demo">
+          <div class="cell"><div class="marks"><span>1</span><span class="x">2</span><span></span><span>4</span><span></span><span></span><span></span><span class="x">8</span><span></span></div></div>
+          <div class="cell"></div>
+          <div class="cell"><div class="marks"><span></span><span class="x">2</span><span>3</span><span></span><span></span><span></span><span>7</span><span></span><span></span></div></div>
+        </div>
+        <h3>Struck candidate</h3>
+        <p>Only on rung 4 of elimination techniques, and only where the player actually wrote that note.
+           The hint draws the line; it never writes, deletes or auto-fills a note.</p>
+      </div>
+    </div>
+    <div class="t dark keygrid" style="padding:16px;background:var(--bg);border-radius:16px">
+      <div class="keyitem">
+        <div class="demo">
+          <div class="cell"><i class="w"></i><span class="d given">8</span></div>
+          <div class="cell"><i class="w"></i></div>
+          <div class="cell"><i class="w"></i><span class="d player">3</span></div>
+          <div class="hint-region" style="--rc:0;--rbc:0;--rr:0;--rbr:0;--rw:3;--rwg:0;--rh:1;--rhg:0;--s:33.3%;height:100%"></div>
+        </div>
+        <h3>Region — dashed</h3>
+        <p>On #1C1C1E the ink dash is 6.4:1 — far above the 3:1 floor for meaningful graphics.</p>
+      </div>
+      <div class="keyitem">
+        <div class="demo">
+          <div class="cell"></div>
+          <div class="cell"><i class="u"></i></div>
+          <div class="cell"></div>
+        </div>
+        <h3>Where it happens — bar</h3>
+        <p>Inside the cell, so the ring on the border is still fully visible on the same cell.</p>
+      </div>
+      <div class="keyitem">
+        <div class="demo">
+          <div class="cell"><i class="o"></i><span class="d given">9</span></div>
+          <div class="cell"></div>
+          <div class="cell"><i class="o"></i><span class="d player">9</span></div>
+        </div>
+        <h3>Why — hollow ring</h3>
+        <p>Open, not filled: a filled dot would read as a value in the cell.</p>
+      </div>
+      <div class="keyitem">
+        <div class="demo">
+          <div class="cell"><div class="marks"><span>1</span><span class="x">2</span><span></span><span>4</span><span></span><span></span><span></span><span class="x">8</span><span></span></div></div>
+          <div class="cell"></div>
+          <div class="cell"><div class="marks"><span></span><span class="x">2</span><span>3</span><span></span><span></span><span></span><span>7</span><span></span><span></span></div></div>
+        </div>
+        <h3>Struck candidate</h3>
+        <p>The struck note turns ink so the strike is legible at 11 px; the untouched notes stay grey.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================ G. uk / ru ============================ -->
+<section class="block">
+  <h2>G. uk / ru — the longest rung at default type</h2>
+  <p>Rung 4 is the longest string in the feature. Both translations fit the dock at 17 px without scrolling;
+     at AX3 the dock scrolls internally and the board still does not move.</p>
+  <div class="row">
+    <div class="cell-cap">
+      <div class="t light frame" lang="uk">
+        <div class="screen">
+          <div class="toolbar">
+            <h1 class="title">Сьогодні</h1>
+            <div class="tools">
+              <button class="icon-btn on" aria-label="Підказка"><svg viewBox="0 0 24 24" width="23" height="23" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9.3 18h5.4"/><path d="M10.2 20.7h3.6"/><path d="M12 3.3a5.9 5.9 0 0 0-3.4 10.7c.5.4.8 1 .8 1.6v.4h5.2v-.4c0-.6.3-1.2.8-1.6A5.9 5.9 0 0 0 12 3.3Z"/></svg></button>
+              <button class="icon-btn" aria-label="Налаштування"><svg viewBox="0 0 24 24" width="23" height="23" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="3.2"/><path d="M12 2.9v2.3M12 18.8v2.3M4.4 12H2.1M21.9 12h-2.3M6.7 6.7 5.1 5.1M18.9 18.9l-1.6-1.6M17.3 6.7l1.6-1.6M5.1 18.9l1.6-1.6"/></svg></button>
+            </div>
+          </div>
+          <p class="daybar">Четвер, 2 жовтня · 14:08</p>
+          <div class="board-wrap"><div class="board" data-spec="step4"></div></div>
+          <div class="gap"></div>
+          <div class="dock" role="group" aria-label="Підказка">
+            <div class="dock-top"><span class="dock-step">Крок 4 з 4</span><button class="dock-close">Закрити</button></div>
+            <h2>Чому саме ця клітинка</h2>
+            <p class="body">У рядку 6 бракує однієї цифри. Кожна обведена клітинка вже тримає її й закриває
+               одну вільну клітинку рядка — колонки 2, 6 і 8. Лишається тільки підкреслена.</p>
+            <p class="key-line"><span><i class="g-u"></i> де відбувається</span><span><i class="g-o"></i> чому</span></p>
+            <button class="more quiet">Зрозуміло</button>
+            <p class="foot"><span class="ymark help"></span> Цей день позначено «з підказкою».</p>
+          </div>
+          <nav class="tabbar">
+            <span class="tab sel"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><rect x="3.5" y="4.5" width="17" height="16" rx="3"/><path d="M3.5 9h17M8 3v3M16 3v3"/></svg>Сьогодні</span>
+            <span class="tab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><rect x="3.5" y="3.5" width="17" height="17" rx="3"/><path d="M9 3.5v17M15 3.5v17M3.5 9h17M3.5 15h17"/></svg>Гра</span>
+            <span class="tab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><rect x="3.5" y="4.5" width="17" height="16" rx="3"/><path d="M7 9h3M14 9h3M7 13h3M14 13h3M7 17h3"/></svg>Рік</span>
+          </nav>
+        </div>
+      </div>
+      <p class="cap"><b>G1 uk light.</b> Terminology note: uk/ru already use «підказка / подсказка» for the puzzle&rsquo;s
+         <i>clues</i> (&ldquo;30 clues&rdquo;). The .md proposes «відкриті клітинки / открытые клетки» for clues so the two
+         never share a word on one screen.</p>
+    </div>
+
+    <div class="cell-cap">
+      <div class="t dark frame" lang="ru">
+        <div class="screen">
+          <div class="toolbar">
+            <h1 class="title">Сегодня</h1>
+            <div class="tools">
+              <button class="icon-btn on" aria-label="Подсказка"><svg viewBox="0 0 24 24" width="23" height="23" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9.3 18h5.4"/><path d="M10.2 20.7h3.6"/><path d="M12 3.3a5.9 5.9 0 0 0-3.4 10.7c.5.4.8 1 .8 1.6v.4h5.2v-.4c0-.6.3-1.2.8-1.6A5.9 5.9 0 0 0 12 3.3Z"/></svg></button>
+              <button class="icon-btn" aria-label="Настройки"><svg viewBox="0 0 24 24" width="23" height="23" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="3.2"/><path d="M12 2.9v2.3M12 18.8v2.3M4.4 12H2.1M21.9 12h-2.3M6.7 6.7 5.1 5.1M18.9 18.9l-1.6-1.6M17.3 6.7l1.6-1.6M5.1 18.9l1.6-1.6"/></svg></button>
+            </div>
+          </div>
+          <p class="daybar">Четверг, 2 октября · 14:08</p>
+          <div class="board-wrap"><div class="board" data-spec="step4"></div></div>
+          <div class="gap"></div>
+          <div class="dock" role="group" aria-label="Подсказка">
+            <div class="dock-top"><span class="dock-step">Шаг 4 из 4</span><button class="dock-close">Закрыть</button></div>
+            <h2>Почему именно эта клетка</h2>
+            <p class="body">В строке 6 не хватает одной цифры. Каждая обведённая клетка уже держит её и закрывает
+               одну свободную клетку строки — колонки 2, 6 и 8. Остаётся только подчёркнутая.</p>
+            <p class="key-line"><span><i class="g-u"></i> где происходит</span><span><i class="g-o"></i> почему</span></p>
+            <button class="more quiet">Понятно</button>
+            <p class="foot"><span class="ymark help"></span> Этот день помечен «с подсказкой».</p>
+          </div>
+          <nav class="tabbar">
+            <span class="tab sel"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><rect x="3.5" y="4.5" width="17" height="16" rx="3"/><path d="M3.5 9h17M8 3v3M16 3v3"/></svg>Сегодня</span>
+            <span class="tab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><rect x="3.5" y="3.5" width="17" height="17" rx="3"/><path d="M9 3.5v17M15 3.5v17M3.5 9h17M3.5 15h17"/></svg>Игра</span>
+            <span class="tab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><rect x="3.5" y="4.5" width="17" height="16" rx="3"/><path d="M7 9h3M14 9h3M7 13h3M14 13h3M7 17h3"/></svg>Год</span>
+          </nav>
+        </div>
+      </div>
+      <p class="cap"><b>G2 ru dark.</b> Both translations keep the sentence shape of the English: statement,
+         evidence, conclusion. No calque of &ldquo;walk-through&rdquo; — the heading is a question the player is
+         already asking.</p>
+    </div>
+  </div>
+</section>
+
+<footer class="doc" style="padding-bottom:40px">
+  <p><b>Not in this mockup:</b> AX3 and 320 pt frames (rules are described in the .md), the real Rhythm
+     fingerprint, the &ldquo;How Pundoku works&rdquo; page (PD-120 owns it — one paragraph is specified in the .md),
+     the timelapse scrubber ticks. The example position is illustrative: the cells were chosen so that the
+     claim &ldquo;hidden single for one digit in row 6 at r6c4&rdquo; is checkable by hand, not because the engine
+     would necessarily pick that step first.</p>
+</footer>
+
+<script>
+(function () {
+  "use strict";
+
+  /* The classic puzzle, plus a plausible mid-game set of player digits.
+     Chosen so the hint claim is verifiable by hand:
+       row 6 free cells are c2, c4, c6, c8;
+       the digit 9 cannot go in c2 (r3c2 holds it), c6 (r8c6) or c8 (r5c8);
+       so row 6 has exactly one home for it — r6c4, a hidden single.
+     r6c4 has two candidates of its own, so it is NOT also a naked single. */
+  var GIVENS =
+    "530070000" + "600195000" + "098000060" +
+    "800060003" + "400803001" + "700020006" +
+    "060000280" + "000419005" + "000080079";
+
+  var PLAYER =
+    "004008000" + "072000000" + "100300000" +
+    "000000000" + "020000090" + "003000800" +
+    "901000000" + "287000000" + "305000000";
+
+  /* The mistake variant: the player also wrote the same digit twice in the
+     middle-left box (r6c2 and r6c3 both 3). */
+  var WRONG = PLAYER.substring(0, 46) + "3" + PLAYER.substring(47);
+
+  function cellsOfRow(r) {
+    var out = [], c;
+    for (c = 0; c < 9; c++) { out.push(r * 9 + c); }
+    return out;
+  }
+  function cellsOfBox(b) {
+    var out = [], p, r, c;
+    for (p = 0; p < 9; p++) {
+      r = 3 * Math.floor(b / 3) + Math.floor(p / 3);
+      c = 3 * (b % 3) + (p % 3);
+      out.push(r * 9 + c);
+    }
+    return out;
+  }
+  function has(list, i) { return !!list && list.indexOf(i) >= 0; }
+
+  var ROW6 = cellsOfRow(5);
+  var BOX_ML = cellsOfBox(3);
+
+  /* region outline geometry, in cells and gaps */
+  var OUT_ROW6 = { c: 0, bc: 0, r: 5, br: 1, w: 9, wg: 2, h: 1, hg: 0 };
+  var OUT_BOX_ML = { c: 0, bc: 0, r: 3, br: 1, w: 3, wg: 0, h: 3, hg: 0 };
+
+  var SPECS = {
+    rest: { sel: 29 },
+    step1: { region: ROW6, outline: OUT_ROW6 },
+    step3: { region: ROW6, outline: OUT_ROW6, under: [48] },
+    step4: { region: ROW6, outline: OUT_ROW6, under: [48], circ: [19, 43, 68] },
+    mistake: { player: WRONG, region: BOX_ML, outline: OUT_BOX_ML, bad: true }
+  };
+
+  function cellHtml(i, s) {
+    var player = s.player || PLAYER;
+    var inRegion = has(s.region, i);
+    var cls = "cell";
+    if (inRegion) { cls += " hreg"; }
+    if (s.sel === i) { cls += " sel"; }
+
+    var h = '<div class="' + cls + '">';
+    if (inRegion && !s.bad) { h += '<i class="w"></i>'; }
+
+    var g = GIVENS.charAt(i);
+    var p = player.charAt(i);
+    if (g !== "0") {
+      h += '<span class="d given">' + g + "</span>";
+    } else if (p !== "0") {
+      h += '<span class="d player">' + p + "</span>";
+    } else if (s.notes && s.notes[i]) {
+      var ns = s.notes[i];
+      var st = (s.struck && s.struck[i]) || [];
+      h += '<div class="marks">';
+      for (var d = 1; d <= 9; d++) {
+        var on = ns.indexOf(d) >= 0;
+        var x = st.indexOf(d) >= 0;
+        h += "<span" + (x ? ' class="x"' : "") + ">" + (on ? d : "") + "</span>";
+      }
+      h += "</div>";
+    }
+
+    if (has(s.under, i)) { h += '<i class="u"></i>'; }
+    if (has(s.circ, i)) { h += '<i class="o"></i>'; }
+    h += "</div>";
+    return h;
+  }
+
+  function boardHtml(s) {
+    var h = "", b, p, r, c;
+    for (b = 0; b < 9; b++) {
+      h += '<div class="box">';
+      for (p = 0; p < 9; p++) {
+        r = 3 * Math.floor(b / 3) + Math.floor(p / 3);
+        c = 3 * (b % 3) + (p % 3);
+        h += cellHtml(r * 9 + c, s);
+      }
+      h += "</div>";
+    }
+    if (s.outline) {
+      var o = s.outline;
+      h += '<div class="hint-region' + (s.bad ? " bad" : "") + '" style="' +
+        "--rc:" + o.c + ";--rbc:" + o.bc + ";--rr:" + o.r + ";--rbr:" + o.br +
+        ";--rw:" + o.w + ";--rwg:" + o.wg + ";--rh:" + o.h + ";--rhg:" + o.hg + '"></div>';
+    }
+    if (typeof s.sel === "number") {
+      var sr = Math.floor(s.sel / 9), sc = s.sel % 9;
+      h += '<div class="ring" style="--c:' + sc + ";--r:" + sr +
+        ";--bc:" + Math.floor(sc / 3) + ";--br:" + Math.floor(sr / 3) + '"></div>';
+    }
+    return h;
+  }
+
+  var boards = document.querySelectorAll(".board[data-spec]");
+  for (var i = 0; i < boards.length; i++) {
+    var spec = SPECS[boards[i].getAttribute("data-spec")];
+    if (spec) { boards[i].innerHTML = boardHtml(spec); }
+  }
+
+  /* Heat map of the day card: givens as outlines, the rest shaded by fill order,
+     two hollow squares for the cells filled right after a hint. */
+  var HINTED = [48, 19];
+  var heats = document.querySelectorAll(".heat[data-heat]");
+  for (var j = 0; j < heats.length; j++) {
+    var hh = "";
+    for (var k = 0; k < 81; k++) {
+      if (GIVENS.charAt(k) !== "0") {
+        hh += '<i class="g"></i>';
+      } else {
+        var op = (0.25 + 0.75 * (((k * 37) % 81) / 81)).toFixed(2);
+        hh += '<i class="' + (HINTED.indexOf(k) >= 0 ? "h" : "") + '" style="opacity:' + op + '"></i>';
+      }
+    }
+    heats[j].innerHTML = hh;
+  }
+
+  /* Indicative "Rhythm" fingerprint: square size by how long each move took. */
+  var rhs = document.querySelectorAll(".rh[data-rhythm]");
+  for (var m = 0; m < rhs.length; m++) {
+    var rh = "";
+    for (var n = 0; n < 45; n++) {
+      var sz = 5 + ((n * 13) % 11);
+      rh += '<i style="width:' + sz + "px;height:" + sz + 'px"></i>';
+    }
+    rhs[m].innerHTML = rh;
+  }
+})();
+</script>
+
+</body>
+</html>
