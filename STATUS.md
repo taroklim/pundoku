@@ -394,7 +394,7 @@ Gates: build → typecheck, lint, тесты web/engine/api (api с TEST_DATABAS
 | PD-139 | UI лесенки подсказок по макету PD-133 на движке PD-134 (ждёт ответов владельца по PD-133 md) | developer | P1 | in_progress (dev, ветка pd-hint-ui) | PD-133, PD-134 |
 | PD-140 | IA-ревью (запрос владельца 2026-10-02): структура навигации — хаб vs доска на Today/Play, Ink, варианты A/B/C + свой, замеры тапов/секунд, макеты `design/pd140-ia-*.html`, итог `research/usability-2026-10/ia-review.md`; в код ничего до решения | designer+developer | P1 | completed (ia-review.md, макет; замеры ветка pd-ia-measure @ 36eacc5: ветеран ежедневки 1 тап, Play hard 4+2 жеста ОС, новичок 1, Ink Today 3 / Play 5, архив 5 (решённый день 3), Year→шит дня 3; ПЕРЕМЕРИТЬ после мержа A–E) | — |
 | PD-141 | Дизайн логотипа раунд 4 (запрос владельца): буква P из клеток блока 3×3 / цифр / сетки / «унос» / P+Pundoku, `design/pd141-logo-round4.html` + кадры + копия `~/Desktop/Pundoku-iPhone/logo-round4.html`; D5 не обязан заменяться; в код ничего до выбора | designer | P2 | completed (макет и рендер готовы; выбор варианта за владельцем; D5 не заменяется; в код ничего до выбора. По рендеру: P4 читается на всех размерах, P5 «F и точка» уже на 120/180 px, P1 как флажок, favicon: сплошная P чистая, клеточная на 16 px едва узнаётся) | — |
-| PD-142 | Проверка записи ключа восстановления при создании: ввод 1–2 групп ключа (H-21/SC-08), решение владельца 2026-10-02: ДА; после пакета E (ветка pd-key), макет в стиле Settings, en/uk/ru, тесты, QA | developer | P1 | in_progress (dev готов: pd-key-verify 8e65e4e/0f20051; идёт QA)  | PD-126 |
+| PD-142 | Проверка записи ключа восстановления при создании: ввод 1–2 групп ключа (H-21/SC-08), решение владельца 2026-10-02: ДА; после пакета E (ветка pd-key), макет в стиле Settings, en/uk/ru, тесты, QA | developer | P1 | completed (QA PASS; merged b55f967)  | PD-126 |
 | PD-143 | Пакет C: PD-119 + PD-124 + PD-129 (после смержа A) | developer | P1 | in_progress (dev готов: pd-pkg-c 304941f; идёт QA)  | PD-135 |
 | PD-144 | Play по IA-варианту C (решение владельца 2026-10-02): строка «Продолжить» с независимыми незавершёнными играми (день и свободная), сложность списком, Ink как строка «Режим» + чип в шапке; нужен точный макет-проработка (design/pd140-ia-variants.html — основа) и затем реализация после пакетов A/B/D/E/C; место под отдельный раздел режимов релиза 2 заложить, не реализовывать. Включить: select сложности на экране настройки Play 13 px → ≥16 px (QA PD-135 L3); убрать дубль «New puzzle» и «New game» на карточке Play (Info) | designer+developer | P1 | pending | PD-135, PD-143 |
 | PD-145 | Логотип R4: отрендерить design/pd141-logo-round4.html в Chromium+WebKit, PNG-кадры, копия ~/Desktop/Pundoku-iPhone/logo-round4.html (+PNG), коммит в main pundoku | developer | P2 | completed (рендер design/pd141-shots, копия ~/Desktop/Pundoku-iPhone/logo-round4.html + logo-round4-shots; коммит в main, не запушен) | PD-141 |
@@ -475,6 +475,8 @@ Gates: build → typecheck, lint, тесты web/engine/api (api с `TEST_DATABA
 - **Ждёт владельца:** выбор логотипа D1/D2/D3 (D2 — ещё решение по палитре бренда); PD-54/PD-58; iPhone-чек-лист.
 
 ## Бэклог после релиза 2026-10-02 (push 41f7e73; новую работу не начинать без владельца)
+- Low (QA PD-142): при двух неверных группах ключа сообщение не называет, какая именно.
+- Low (QA PD-142): кириллические двойники латинских букв молча отбрасываются при вводе ключа (так же, как у поля всего ключа).
 - Low: chromium 320×568 uk/ru/ink — кнопки карточки под таб-баром до 41 px (WebKit ок; не целевое).
 - Профиль рендера карточки финала ~60 мс при 4x CPU (React-рендер карточки и onfinish) — остаток PD-95.
 - Тексты Settings вне макета (`errGeneric`, `statusFailed`, `sheetLeaveMsg`, `sheetLeaveGo`) — предложенные формулировки в отчёте PD-101 не применены; владельцу не показываем, оставлено как есть.
@@ -487,7 +489,6 @@ Gates: build → typecheck, lint, тесты web/engine/api (api с `TEST_DATABA
 | PM-Pundoku-10 | product-manager | working | пакеты реализации по решениям владельца | 2026-10-02 |
 | Dev-Pundoku-HintUI | developer | working | PD-139 | 2026-10-03 |
 | QA-Pundoku-PkgC | qa-tester | working | PD-143 | 2026-10-03 |
-| QA-Pundoku-KeyV | qa-tester | working | PD-142 | 2026-10-03 |
 
 ## Чек-пойнт 2026-10-01 (конец сессии PM-Pundoku-7)
 - **Сделано:** решения владельца по релизу 1.1 зафиксированы; PD-74 (UI ink, pd-74 @ 73444b2), PD-75 (UI таймлапса/PNG Rhythm, pd-75 @ bfeedbf), PD-80 (счёт ходов в ink, pd-80 @ de5a52d) смержены в локальный main; gates на слитом: build/typecheck/lint, web 624, engine 178 (api не затронут, 174+3). PD-78 сделан в PD-74. PD-79 закрыт: не дефект.
