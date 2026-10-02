@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useLayoutEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { HelpScreen } from "./help/HelpScreen";
 import { PlayScreen } from "./play/PlayScreen";
@@ -52,7 +52,10 @@ export function App() {
     setNavigated(true);
   }
 
-  useEffect(() => {
+  // Layout-эффект, не обычный: `lang` задаёт переносы (`hyphens: auto`) и поэтому раскладку текста. Обычный эффект родителя идёт
+  // ПОСЛЕ эффектов детей — справка успевала прокрутиться к блоку по раскладке с lang="en", а потом текст перекладывался (WebKit),
+  // и заголовок блока уезжал вверх на 2–20 px.
+  useLayoutEffect(() => {
     document.documentElement.lang = i18n.resolvedLanguage ?? "en";
   }, [i18n.resolvedLanguage]);
 
