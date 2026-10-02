@@ -10,6 +10,7 @@ import "./styles/settings.css";
 import "./styles/ink.css";
 import "./styles/timelapse.css";
 import { App } from "./App";
+import { ErrorBoundary } from "./shell/ErrorBoundary";
 import { startSync, sync } from "./sync/runtime";
 import { recordFirstUse } from "./year/firstUse";
 
@@ -23,6 +24,8 @@ void recordFirstUse(sync.repository);
 
 createRoot(root).render(
   <StrictMode>
-    <App />
+    <ErrorBoundary scope="app">
+      <App />
+    </ErrorBoundary>
   </StrictMode>,
 );

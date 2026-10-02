@@ -9,6 +9,7 @@
  * восстановленной записи.
  */
 import type { SyncStorage } from "../today/repository";
+import { sanitizeDays } from "../today/repository";
 import { localDate } from "../today/dayResolver";
 import type { YearEntry } from "./model";
 import { archiveStart, entryFromProgress } from "./model";
@@ -45,7 +46,7 @@ export async function readUseStart(storage: Pick<SyncStorage, "getMeta" | "listD
   try {
     const [firstUse, days] = await Promise.all([readFirstUse(storage), storage.listDays()]);
     const entries = new Map<string, YearEntry>();
-    for (const p of days) {
+    for (const p of sanitizeDays(days, "readUseStart")) {
       const e = entryFromProgress(p);
       if (e) entries.set(p.date, e);
     }

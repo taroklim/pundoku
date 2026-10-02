@@ -7,6 +7,7 @@ import { BACK_LABEL, SettingsScreen } from "./recovery/SettingsScreen";
 import { ArchiveScreen } from "./today/ArchiveScreen";
 import { dayStore } from "./today/dayStore";
 import { TodayScreen } from "./today/TodayScreen";
+import { ErrorBoundary } from "./shell/ErrorBoundary";
 import { panelDomId, tabDomId, TabBar } from "./shell/TabBar";
 import type { HelpBlockId } from "./help/blocks";
 import type { TabId } from "./shell/tabs";
@@ -71,35 +72,38 @@ export function App() {
           aria-labelledby={pushed ? undefined : tabDomId(tab)}
           // На всех вкладках внутри есть кнопки/клетки — лишняя остановка Tab на оболочке не нужна.
         >
-          {help ? (
-            <HelpScreen
-              block={help.block}
-              backName={t(help.via === "settings" ? "settings.title" : `tabs.${tab}`)}
-              backLabel={t(help.via === "settings" ? "help.backLabel" : BACK_LABEL[tab])}
-              onBack={() => leaveHelp(go)}
-            />
-          ) : settings ? (
-            <SettingsScreen
-              store={recoveryStore}
-              origin={tab}
-              onBack={() => recoveryStore.requestLeave(() => leaveSettings(go))}
-              onOpenHelp={() => recoveryStore.requestLeave(() => openHelp(null))}
-            />
-          ) : archiveDate ? (
-            <ArchiveScreen date={archiveDate} onBack={() => go({ yearDay: archiveDate })} onOpenHelp={openHelp} />
-          ) : tab === "play" ? (
-            <PlayScreen onOpenSettings={() => go({ settings: true })} onOpenHelp={openHelp} />
-          ) : tab === "today" ? (
-            <TodayScreen onOpenSettings={() => go({ settings: true })} onOpenHelp={openHelp} />
-          ) : (
-            <YearTab
-              onOpenSettings={() => go({ settings: true })}
-              onOpenToday={() => setTab("today")}
-              onPlayDay={playDay}
-              initialDate={route.yearDate}
-              onInitialDateConsumed={() => go({ tab: "year" })}
-            />
-          )}
+          {/* PD-146: сбой рендера вкладки не должен ронять всё приложение; панель с key=panelKey размонтируется при смене вкладки — экран сбоя сбрасывается. */}
+          <ErrorBoundary scope="tab">
+            {help ? (
+              <HelpScreen
+                block={help.block}
+                backName={t(help.via === "settings" ? "settings.title" : `tabs.${tab}`)}
+                backLabel={t(help.via === "settings" ? "help.backLabel" : BACK_LABEL[tab])}
+                onBack={() => leaveHelp(go)}
+              />
+            ) : settings ? (
+              <SettingsScreen
+                store={recoveryStore}
+                origin={tab}
+                onBack={() => recoveryStore.requestLeave(() => leaveSettings(go))}
+                onOpenHelp={() => recoveryStore.requestLeave(() => openHelp(null))}
+              />
+            ) : archiveDate ? (
+              <ArchiveScreen date={archiveDate} onBack={() => go({ yearDay: archiveDate })} onOpenHelp={openHelp} />
+            ) : tab === "play" ? (
+              <PlayScreen onOpenSettings={() => go({ settings: true })} onOpenHelp={openHelp} />
+            ) : tab === "today" ? (
+              <TodayScreen onOpenSettings={() => go({ settings: true })} onOpenHelp={openHelp} />
+            ) : (
+              <YearTab
+                onOpenSettings={() => go({ settings: true })}
+                onOpenToday={() => setTab("today")}
+                onPlayDay={playDay}
+                initialDate={route.yearDate}
+                onInitialDateConsumed={() => go({ tab: "year" })}
+              />
+            )}
+          </ErrorBoundary>
         </div>
       </main>
       <TabBar active={tab} onSelect={setTab} />

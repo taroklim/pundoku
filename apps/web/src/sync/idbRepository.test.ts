@@ -108,3 +108,75 @@ describe("LazyProgressRepository", () => {
     expect(await lazy.backend()).toBeInstanceOf(InMemoryProgressRepository);
   });
 });
+
+describe("IndexedDbProgressRepository: нечитаемые записи (PD-146)", () => {
+  /** Кладёт в `days` «мусорную» запись мимо репозитория — как WebKit, отдавший ключ без читаемого значения. */
+  const putRaw = (factory: IDBFactory, value: unknown) =>
+    new Promise<void>((resolve, reject) => {
+      const open = factory.open("pundoku", 1);
+      open.onsuccess = () => {
+        const db = open.result;
+        const tx = db.transaction("days", "readwrite");
+        tx.objectStore("days").put(value);
+        tx.oncomplete = () => {
+          db.close();
+          resolve();
+        };
+        tx.onerror = () => reject(tx.error);
+      };
+    });
+
+  it("listDays: записи без play/mission отбрасываются, годные остаются, ошибка логируется", async () => {
+    const err = vi.spyOn(console, "error").mockImplementation(() => {});
+    const factory = fresh();
+    const repo = await IndexedDbProgressRepository.open(factory);
+    await repo.saveDay(progressOf("2026-09-29"));
+    repo.close();
+    await putRaw(factory, { date: "2026-09-28" });
+    await putRaw(factory, { date: "2026-09-27", mission: "x", play: {} });
+
+    const again = await IndexedDbProgressRepository.open(factory);
+    const days = await again.listDays();
+    expect(days.map((d) => d.date)).toEqual(["2026-09-29"]);
+    expect(days.every((d) => d !== undefined)).toBe(true);
+    expect(err).toHaveBeenCalledTimes(1);
+    err.mockRestore();
+  });
+
+  it("getDay: нечитаемая запись считается отсутствующей (null), а не битым объектом", async () => {
+    const err = vi.spyOn(console, "error").mockImplementation(() => {});
+    const factory = fresh();
+    const repo = await IndexedDbProgressRepository.open(factory);
+    repo.close();
+    await putRaw(factory, { date: "2026-09-28" });
+    const again = await IndexedDbProgressRepository.open(factory);
+    expect(await again.getDay("2026-09-28")).toBeNull();
+    expect(err).toHaveBeenCalledTimes(1);
+    err.mockRestore();
+  });
+
+  it("listDays: если getAll отдал undefined-элементы (поведение WebKit), их нет в результате", async () => {
+    const err = vi.spyOn(console, "error").mockImplementation(() => {});
+    const factory = fresh();
+    const repo = await IndexedDbProgressRepository.open(factory);
+    await repo.saveDay(progressOf("2026-09-29"));
+    // Подмена результата запроса на уровне IDBRequest — ровно то, что видел потребитель в WebKit: [undefined × 5, запись].
+    const proto = (await import("fake-indexeddb")).IDBRequest.prototype;
+    const desc = Object.getOwnPropertyDescriptor(proto, "result")!;
+    Object.defineProperty(proto, "result", {
+      configurable: true,
+      get() {
+        const r = desc.get!.call(this) as unknown;
+        return Array.isArray(r) && r.length > 0 ? [undefined, undefined, undefined, undefined, undefined, ...r] : r;
+      },
+    });
+    try {
+      const days = await repo.listDays();
+      expect(days.map((d) => d.date)).toEqual(["2026-09-29"]);
+    } finally {
+      Object.defineProperty(proto, "result", desc);
+    }
+    expect(err).toHaveBeenCalled();
+    err.mockRestore();
+  });
+});

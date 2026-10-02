@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import { Mark } from "../brand/Mark";
 import { TabHeader } from "../shell/TabHeader";
 import type { DayProgress } from "../today/repository";
+import { sanitizeDays } from "../today/repository";
 import { monthName } from "./format";
 import { markClass, monthAriaLabel } from "./labels";
 import type { YearEntry } from "./model";
@@ -45,7 +46,8 @@ export function YearScreen({ days, firstUse, today, onOpenToday, onPlayDay, init
   const { entries, progress } = useMemo(() => {
     const entries = new Map<string, YearEntry>();
     const progress = new Map<string, DayProgress>();
-    for (const p of days ?? []) {
+    // PD-146: `days` пришёл из хранилища — нечитаемые элементы (undefined из getAll в WebKit) отбрасываются здесь же, а не роняют экран.
+    for (const p of sanitizeDays(days, "YearScreen")) {
       const e = entryFromProgress(p);
       if (!e) continue;
       entries.set(p.date, e);

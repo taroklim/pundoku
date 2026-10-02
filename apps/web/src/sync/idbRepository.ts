@@ -8,7 +8,7 @@
  */
 import type { PermanentGridState } from "../today/permanent";
 import type { DayProgress, PersistentStore } from "../today/repository";
-import { InMemoryProgressRepository } from "../today/repository";
+import { InMemoryProgressRepository, isDayProgress, sanitizeDays } from "../today/repository";
 import type { IdbFactoryLike } from "./idb";
 import { openDb, readWrite, STORE_DAYS, STORE_KV, withStore } from "./idb";
 
@@ -32,13 +32,18 @@ export class IndexedDbProgressRepository implements PersistentStore {
     await withStore(this.db, STORE_KV, "readwrite", (s) => s.put(state, KEY_PERMANENT));
   }
   async getDay(date: string): Promise<DayProgress | null> {
-    return ((await withStore(this.db, STORE_DAYS, "readonly", (s) => s.get(date))) as DayProgress | undefined) ?? null;
+    const raw = (await withStore(this.db, STORE_DAYS, "readonly", (s) => s.get(date))) as unknown;
+    if (raw === undefined || raw === null) return null;
+    if (isDayProgress(raw)) return raw;
+    // Запись есть, но не читается (PD-146): как отсутствующую — день начнётся заново, сервер вернёт решённое при синхронизации.
+    console.error(`[pundoku] days/${date}: запись нечитаема, считаем отсутствующей`);
+    return null;
   }
   async saveDay(progress: DayProgress): Promise<void> {
     await withStore(this.db, STORE_DAYS, "readwrite", (s) => s.put(progress));
   }
   async listDays(): Promise<DayProgress[]> {
-    return (await withStore(this.db, STORE_DAYS, "readonly", (s) => s.getAll())) as DayProgress[];
+    return sanitizeDays((await withStore(this.db, STORE_DAYS, "readonly", (s) => s.getAll())) as unknown[], "IndexedDB days");
   }
   async getMeta(key: string): Promise<unknown> {
     return ((await withStore(this.db, STORE_KV, "readonly", (s) => s.get(`meta:${key}`))) as unknown) ?? null;

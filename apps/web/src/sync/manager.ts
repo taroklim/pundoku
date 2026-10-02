@@ -31,6 +31,7 @@ import {
 } from "./schema";
 import type { PushResult, RemoteSnapshot, SyncApi } from "./syncApi";
 import type { PersistentStore } from "../today/repository";
+import { sanitizeDays } from "../today/repository";
 
 export const META_TOKEN = "deviceToken";
 export const META_SYNC_STATE = "syncState";
@@ -430,7 +431,7 @@ export class SyncManager {
   private async collectLocal(): Promise<{ data: SnapshotData; records: Record<string, DayRecord> }> {
     const now = this.deps.now();
     const records: Record<string, DayRecord> = {};
-    for (const p of await this.deps.storage.listDays()) {
+    for (const p of sanitizeDays(await this.deps.storage.listDays(), "SyncManager.collectLocal")) {
       const rec = dayRecordFromProgress(p, now);
       if (rec) records[p.date] = rec;
     }

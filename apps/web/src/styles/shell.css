@@ -268,3 +268,47 @@ button {
   white-space: nowrap;
   border: 0;
 }
+
+/* ---------- Экран сбоя (PD-146, ErrorBoundary): тихий, в стиле пустого состояния; кнопка — как .year-empty .cta ---------- */
+.crash {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  min-height: 100%;
+  padding: calc(var(--sa-top) + 24px) max(24px, var(--sa-r)) calc(var(--sa-bot) + 24px) max(24px, var(--sa-l));
+  background: var(--bg);
+  color: var(--label);
+}
+.crash-app {
+  height: 100dvh;
+}
+.crash-mark {
+  display: block;
+  flex: none;
+  margin: 0 0 14px;
+  color: var(--label-2);
+}
+.crash-title {
+  margin: 0 0 8px;
+  font-size: 1.3rem;
+  font-weight: 700;
+}
+.crash p {
+  margin: 0 0 18px;
+  max-width: 30ch;
+  color: var(--label-2);
+  font-size: 0.95rem;
+}
+.crash .cta {
+  display: inline-flex;
+  align-items: center;
+  min-height: 46px;
+  padding: 0 18px;
+  border-radius: 11px;
+  background: var(--ink);
+  color: var(--on-ink);
+  font-size: 0.95rem;
+  font-weight: 600;
+}

@@ -35,6 +35,35 @@ export interface DayProgress {
   readonly assisted: boolean;
 }
 
+/**
+ * Граница хранилища (PD-146): запись дня, прочитанная из IndexedDB, — не доверенный вход. WebKit (iOS Safari/WKWebView) умеет
+ * отдать из `getAll()` ключ без читаемого значения: элемент массива `undefined` (запись недозафиксирована/не разобралась) — и
+ * `p.solved` в потребителе роняло всё приложение пустым экраном (PD-146). Годится только объект с датой `YYYY-MM-DD`, строкой
+ * `mission` и `play` с массивом `log`; остальное — не запись дня.
+ */
+export function isDayProgress(x: unknown): x is DayProgress {
+  if (typeof x !== "object" || x === null) return false;
+  const p = x as Partial<Record<keyof DayProgress, unknown>>;
+  if (typeof p.date !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(p.date)) return false;
+  if (typeof p.mission !== "string") return false;
+  const play = p.play as { log?: unknown } | null | undefined;
+  return typeof play === "object" && play !== null && Array.isArray(play.log);
+}
+
+/**
+ * Не-null инвариант списка дней: остаются только записи, прошедшие `isDayProgress`; пропущенное — в `console.error`
+ * (не молча: потеря записи видна в отладке, но не роняет экран). Если всё годно — возвращается тот же массив.
+ */
+export function sanitizeDays(list: readonly unknown[] | null | undefined, source = "days"): DayProgress[] {
+  if (!Array.isArray(list)) return [];
+  const good = list.filter(isDayProgress);
+  if (good.length !== list.length) {
+    console.error(`[pundoku] ${source}: пропущено нечитаемых записей дня — ${list.length - good.length} из ${list.length}`);
+    return good;
+  }
+  return list as DayProgress[];
+}
+
 export interface ProgressRepository {
   getPermanent(): Promise<PermanentGridState | null>;
   savePermanent(state: PermanentGridState): Promise<void>;

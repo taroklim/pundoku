@@ -94,6 +94,21 @@ afterEach(() => {
   vi.useRealTimers();
 });
 
+describe("нечитаемые записи хранилища (PD-146)", () => {
+  it("undefined среди дней из listDays не роняет сборку локальных данных: цикл завершается, годные дни уходят на сервер", async () => {
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    const storage = new InMemoryProgressRepository();
+    await storage.saveDay(progressOf("2026-09-28"));
+    const real = storage.listDays.bind(storage);
+    storage.listDays = async () => [undefined, undefined, ...(await real())] as never;
+    const { m } = make(storage);
+    await run(m);
+    expect(m.getSnapshot()).toMatchObject({ device: "registered", phase: "idle" });
+    expect(Object.keys(server.pushed.at(-1)!.data.days)).toEqual(["2026-09-28"]);
+    vi.restoreAllMocks();
+  });
+});
+
 describe("устройство", () => {
   it("первый запуск без токена: POST /api/devices, токен в хранилище; пустое состояние на сервер не шлётся", async () => {
     const { m, storage } = make();

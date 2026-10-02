@@ -169,3 +169,24 @@ describe("YearTab: записи из будущих лет", () => {
     expect([...host.querySelectorAll('[role="menuitemradio"]')].map((i) => i.textContent)).toEqual(["2027", "2026"]);
   });
 });
+
+describe("YearTab: нечитаемые записи из хранилища (PD-146)", () => {
+  // Воспроизводящее условие, найденное в WebKit: `getAll()` вернул массив, где у ключей нет читаемых значений — элементы
+  // `undefined`. Раньше `p.solved` в entryFromProgress ронял весь экран (пустое приложение).
+  it("undefined среди дней не роняет экран: нечитаемые пропускаются, годная запись рисуется", async () => {
+    const err = vi.spyOn(console, "error").mockImplementation(() => {});
+    h.days = [undefined, undefined, undefined, undefined, undefined, progressOf("2026-09-27")];
+    await mount();
+    expect(host.querySelector('[data-testid="year-screen"]')).not.toBeNull();
+    expect(host.querySelectorAll(".year-month").length).toBe(12);
+    expect(marks("is-solved")).toBe(1);
+    expect(err).toHaveBeenCalled(); // потеря не молчаливая
+  });
+
+  it("все записи нечитаемы: пустой год, а не пустое приложение", async () => {
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    h.days = [undefined, null, 5, {}, { date: "2026-09-27" }];
+    await mount();
+    expect(isEmpty()).toBe(true);
+  });
+});
