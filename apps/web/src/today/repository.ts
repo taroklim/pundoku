@@ -8,6 +8,7 @@
  * Поверх хранилища работает синхронизация снапшота с сервером (`sync/manager.ts`).
  */
 import type { Difficulty } from "@pundoku/engine";
+import { DIFFICULTIES, TECHNIQUE_ORDER } from "@pundoku/engine";
 import type { DaySource } from "./dayResolver";
 import type { PermanentGridState } from "./permanent";
 import type { PlayState } from "../play/logic";
@@ -35,30 +36,98 @@ export interface DayProgress {
   readonly assisted: boolean;
 }
 
-/**
- * Граница хранилища (PD-146): запись дня, прочитанная из IndexedDB, — не доверенный вход. WebKit (iOS Safari/WKWebView) умеет
- * отдать из `getAll()` ключ без читаемого значения: элемент массива `undefined` (запись недозафиксирована/не разобралась) — и
- * `p.solved` в потребителе роняло всё приложение пустым экраном (PD-146). Годится только объект с датой `YYYY-MM-DD`, строкой
- * `mission` и `play` с массивом `log`; остальное — не запись дня.
- */
-export function isDayProgress(x: unknown): x is DayProgress {
-  if (typeof x !== "object" || x === null) return false;
-  const p = x as Partial<Record<keyof DayProgress, unknown>>;
-  if (typeof p.date !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(p.date)) return false;
-  if (typeof p.mission !== "string") return false;
-  const play = p.play as { log?: unknown } | null | undefined;
-  return typeof play === "object" && play !== null && Array.isArray(play.log);
+const CELL_COUNT = 81;
+const MOVE_KINDS: readonly unknown[] = ["place", "erase", "note_add", "note_remove", "undo"];
+const TECHNIQUES: readonly unknown[] = [...TECHNIQUE_ORDER, "beyond"];
+const DAY_SOURCES: readonly unknown[] = ["sudoku.com", "generator", "client"];
+/** Маска заметок: биты 1..9 (бит 0 не используется). */
+const NOTES_MAX = 0x3fe;
+
+const isInt = (v: unknown, min: number, max: number): v is number => typeof v === "number" && Number.isInteger(v) && v >= min && v <= max;
+const isIntArray81 = (v: unknown, min: number, max: number): boolean =>
+  Array.isArray(v) && v.length === CELL_COUNT && v.every((n) => isInt(n, min, max));
+/** Маска заметок: целое, только биты 1..9. */
+const isNotesMask = (n: unknown): boolean => isInt(n, 0, NOTES_MAX) && (n & 1) === 0;
+const isBoolOrUndef = (v: unknown): boolean => v === undefined || typeof v === "boolean";
+const isObj = (v: unknown): v is Record<string, unknown> => typeof v === "object" && v !== null;
+
+/** Ход лога по схеме `Move` движка (`types.ts`): все поля, которые читают `heatmap`/`summary`/Таймлапс. */
+function isMove(m: unknown): boolean {
+  if (!isObj(m)) return false;
+  if (typeof m["t"] !== "number" || !Number.isFinite(m["t"]) || m["t"] < 0) return false;
+  if (!isInt(m["cell"], 0, CELL_COUNT - 1)) return false;
+  if (!MOVE_KINDS.includes(m["kind"])) return false;
+  if (m["digit"] !== undefined && !isInt(m["digit"], 1, 9)) return false;
+  if (!isBoolOrUndef(m["correct"]) || !isBoolOrUndef(m["blot"])) return false;
+  return m["technique"] === undefined || TECHNIQUES.includes(m["technique"]);
+}
+
+/** Запись стека undo (`play/logic.ts › UndoEntry`). */
+function isUndoEntry(e: unknown): boolean {
+  if (!isObj(e)) return false;
+  return isInt(e["cell"], 0, CELL_COUNT - 1) && isInt(e["prevValue"], 0, 9) && isNotesMask(e["prevNotes"]) && (e["digit"] === undefined || isInt(e["digit"], 1, 9));
+}
+
+/** Причина, по которой `play` нечитаем (`null` — годится). Структура — `PlayState` (`play/logic.ts`). */
+function playProblem(play: unknown): string | null {
+  if (!isObj(play)) return "play";
+  if (!isIntArray81(play["mission"], 0, 9)) return "play.mission";
+  if (!isIntArray81(play["solution"], 0, 9)) return "play.solution";
+  if (!isIntArray81(play["values"], 0, 9)) return "play.values";
+  if (!Array.isArray(play["notes"]) || play["notes"].length !== CELL_COUNT || !play["notes"].every(isNotesMask)) return "play.notes";
+  const log = play["log"];
+  if (!Array.isArray(log)) return "play.log";
+  if (!log.every(isMove)) return "play.log[]";
+  const stack = play["undoStack"];
+  if (!Array.isArray(stack) || !stack.every(isUndoEntry)) return "play.undoStack";
+  if (typeof play["solved"] !== "boolean") return "play.solved";
+  if (!isBoolOrUndef(play["ink"])) return "play.ink";
+  if (play["logSynthetic"] !== undefined && play["logSynthetic"] !== true) return "play.logSynthetic";
+  return null;
 }
 
 /**
+ * Почему запись дня нечитаема (`null` — годится). Граница хранилища (PD-146): запись, прочитанная из IndexedDB, — не
+ * доверенный вход. WebKit (iOS Safari/WKWebView) умеет отдать из `getAll()` ключ без читаемого значения (`undefined`), а
+ * порченая запись (напр. `log: [null]`) роняла потребителей (`summary`/`heatmap`/Year) на каждом открытии, и «Reload» не
+ * помогал (PD-148). Поэтому проверяем всё, что потребители разыменовывают: поля `DayProgress`, массивы `PlayState`
+ * фиксированной длины 81 с диапазонами значений, маски заметок, каждый ход лога по схеме `Move` и стек undo.
+ */
+export function dayProgressProblem(x: unknown): string | null {
+  if (!isObj(x)) return "not an object";
+  if (typeof x["date"] !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(x["date"])) return "date";
+  if (typeof x["mission"] !== "string") return "mission";
+  if (x["difficulty"] !== null && !DIFFICULTIES.includes(x["difficulty"] as Difficulty)) return "difficulty";
+  if (!DAY_SOURCES.includes(x["source"])) return "source";
+  if (x["winRate"] !== null && (typeof x["winRate"] !== "number" || !Number.isFinite(x["winRate"]))) return "winRate";
+  const play = playProblem(x["play"]);
+  if (play !== null) return play;
+  if (typeof x["elapsedMs"] !== "number" || !Number.isFinite(x["elapsedMs"]) || x["elapsedMs"] < 0) return "elapsedMs";
+  if (typeof x["solved"] !== "boolean") return "solved";
+  if (x["serverVerified"] !== null && typeof x["serverVerified"] !== "boolean") return "serverVerified";
+  if (x["verification"] !== "server" && x["verification"] !== "local") return "verification";
+  if (x["solvedAt"] !== null && typeof x["solvedAt"] !== "string") return "solvedAt";
+  if (typeof x["late"] !== "boolean") return "late";
+  if (typeof x["assisted"] !== "boolean") return "assisted";
+  return null;
+}
+
+export const isDayProgress = (x: unknown): x is DayProgress => dayProgressProblem(x) === null;
+
+/**
  * Не-null инвариант списка дней: остаются только записи, прошедшие `isDayProgress`; пропущенное — в `console.error`
- * (не молча: потеря записи видна в отладке, но не роняет экран). Если всё годно — возвращается тот же массив.
+ * с причиной (не молча: потеря записи видна в отладке, но не роняет экран). Если всё годно — возвращается тот же массив.
  */
 export function sanitizeDays(list: readonly unknown[] | null | undefined, source = "days"): DayProgress[] {
   if (!Array.isArray(list)) return [];
-  const good = list.filter(isDayProgress);
-  if (good.length !== list.length) {
-    console.error(`[pundoku] ${source}: пропущено нечитаемых записей дня — ${list.length - good.length} из ${list.length}`);
+  const bad: string[] = [];
+  const good = list.filter((x) => {
+    const why = dayProgressProblem(x);
+    if (why !== null) bad.push(`${isObj(x) && typeof x["date"] === "string" ? x["date"] : "?"}: ${why}`);
+    return why === null;
+  });
+  if (bad.length > 0) {
+    console.error(`[pundoku] ${source}: пропущено нечитаемых записей дня — ${bad.length} из ${list.length} (${bad.slice(0, 5).join("; ")})`);
     return good;
   }
   return list as DayProgress[];

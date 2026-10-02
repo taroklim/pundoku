@@ -1,5 +1,5 @@
 import type { ErrorInfo, ReactNode } from "react";
-import { Component } from "react";
+import { Component, useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { Mark } from "../brand/Mark";
 
@@ -11,12 +11,18 @@ import { Mark } from "../brand/Mark";
  */
 export function CrashScreen({ scope }: { scope: "app" | "tab" }) {
   const { t } = useTranslation();
+  const reload = useRef<HTMLButtonElement>(null);
+  // Экран сбоя — role=alert: фокус сразу на единственное действие (клавиатура/VoiceOver не ищут кнопку), без прокрутки
+  // и сдвига вёрстки (`preventScroll`; рамка фокуса — outline, место не занимает).
+  useEffect(() => {
+    reload.current?.focus({ preventScroll: true });
+  }, []);
   return (
     <div className={`crash crash-${scope}`} role="alert" data-testid="crash-screen">
       <Mark size={56} className="crash-mark" />
       <h1 className="crash-title">{t("crash.title")}</h1>
       <p>{t("crash.body")}</p>
-      <button type="button" className="cta" onClick={() => window.location.reload()}>
+      <button ref={reload} type="button" className="cta" onClick={() => window.location.reload()}>
         {t("crash.reload")}
       </button>
     </div>

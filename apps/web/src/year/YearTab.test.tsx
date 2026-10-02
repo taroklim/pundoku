@@ -189,4 +189,16 @@ describe("YearTab: нечитаемые записи из хранилища (PD
     await mount();
     expect(isEmpty()).toBe(true);
   });
+
+  // PD-148: массив log есть, но элемент — null; раньше запись проходила проверку и Year падал на каждом открытии.
+  it("запись с log:[null] отбрасывается, а не роняет Year: рядом годная запись рисуется, экран сбоя не показан", async () => {
+    const err = vi.spyOn(console, "error").mockImplementation(() => {});
+    const broken = progressOf("2026-09-28");
+    h.days = [{ ...broken, play: { ...broken.play, log: [null] } }, progressOf("2026-09-27")];
+    await mount();
+    expect(host.querySelector('[data-testid="year-screen"]')).not.toBeNull();
+    expect(host.querySelector('[data-testid="crash-screen"]')).toBeNull();
+    expect(marks("is-solved")).toBe(1);
+    expect(err).toHaveBeenCalled();
+  });
 });

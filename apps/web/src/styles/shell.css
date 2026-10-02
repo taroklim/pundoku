@@ -269,20 +269,31 @@ button {
   border: 0;
 }
 
-/* ---------- Экран сбоя (PD-146, ErrorBoundary): тихий, в стиле пустого состояния; кнопка — как .year-empty .cta ---------- */
+/* ---------- Экран сбоя (PD-146, ErrorBoundary): тихий, в стиле пустого состояния; кнопка — как .year-empty .cta ----------
+   PD-148: html/body — overflow:hidden, поэтому прокрутку держит сам экран (`overflow-y: auto`), а не страница: на 320×568
+   при крупнейшем Dynamic Type (AX3) и uk-тексте содержимое выше экрана, и кнопка должна оставаться достижимой.
+   Центрирование — через auto-поля крайних детей (а не justify-content: center): при переполнении верх не обрезается. */
 .crash {
   flex: 1;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  justify-content: center;
   min-height: 100%;
   padding: calc(var(--sa-top) + 24px) max(24px, var(--sa-r)) calc(var(--sa-bot) + 24px) max(24px, var(--sa-l));
   background: var(--bg);
   color: var(--label);
 }
+.crash > :first-child {
+  margin-top: auto;
+}
+.crash > :last-child {
+  margin-bottom: auto;
+}
 .crash-app {
   height: 100dvh;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
 }
 .crash-mark {
   display: block;
@@ -294,21 +305,41 @@ button {
   margin: 0 0 8px;
   font-size: 1.3rem;
   font-weight: 700;
+  overflow-wrap: anywhere;
 }
 .crash p {
   margin: 0 0 18px;
   max-width: 30ch;
   color: var(--label-2);
   font-size: 0.95rem;
+  overflow-wrap: anywhere;
 }
 .crash .cta {
   display: inline-flex;
   align-items: center;
-  min-height: 46px;
-  padding: 0 18px;
+  flex: none;
+  min-height: 46px; /* >= 44 pt; растёт вместе с текстом при Dynamic Type, перенос слов разрешён */
+  max-width: 100%;
+  padding: 10px 18px;
   border-radius: 11px;
   background: var(--ink);
   color: var(--on-ink);
   font-size: 0.95rem;
   font-weight: 600;
+  overflow-wrap: anywhere;
+}
+/* Низкий экран (iPhone SE в ландшафте/320×568 с крупным шрифтом): компактнее — знак поменьше, поля уже. */
+@media (max-height: 600px) {
+  .crash {
+    padding-top: calc(var(--sa-top) + 16px);
+    padding-bottom: calc(var(--sa-bot) + 16px);
+  }
+  .crash-mark {
+    width: 48px; /* кратно 16: знак малой оптики остаётся на целой сетке (3x) */
+    height: 48px;
+    margin-bottom: 10px;
+  }
+  .crash p {
+    margin-bottom: 14px;
+  }
 }

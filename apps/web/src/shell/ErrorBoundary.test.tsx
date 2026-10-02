@@ -102,4 +102,35 @@ describe("ErrorBoundary (PD-146)", () => {
     expect(host.querySelector('[data-testid="tabbar"]')).not.toBeNull();
     expect(host.querySelector('[data-testid="crash-screen"]')).not.toBeNull();
   });
+
+  // PD-148: экран сбоя — role=alert; единственное действие получает фокус сразу, без прокрутки/сдвига.
+  it.each(["app", "tab"] as const)("автофокус на Reload при показе экрана сбоя (%s), preventScroll", async (scope) => {
+    const focus = vi.spyOn(HTMLElement.prototype, "focus");
+    await render(
+      <div>
+        <button type="button" data-testid="other">
+          other
+        </button>
+        <ErrorBoundary scope={scope}>
+          <Bomb explode />
+        </ErrorBoundary>
+      </div>,
+    );
+    const reload = host.querySelector<HTMLButtonElement>(".crash button")!;
+    expect(document.activeElement).toBe(reload);
+    expect(focus).toHaveBeenCalledWith({ preventScroll: true });
+    expect(focus.mock.contexts).toContain(reload);
+  });
+
+  it("без сбоя фокус не перехватывается", async () => {
+    await render(
+      <ErrorBoundary scope="app">
+        <button type="button" data-testid="mine">
+          mine
+        </button>
+      </ErrorBoundary>,
+    );
+    host.querySelector<HTMLButtonElement>('[data-testid="mine"]')!.focus();
+    expect(document.activeElement).toBe(host.querySelector('[data-testid="mine"]'));
+  });
 });
