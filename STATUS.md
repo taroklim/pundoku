@@ -160,6 +160,10 @@
 - Возврат к партии: после reopen выбрана уже заполненная клетка (ход = 2 тапа) — перемерить на смерженном main (PD-115/116 в A).
 - Новичок: нет онбординга — известно.
 
+## Backlog по PD-146
+- Low: защита getPermanent/getMeta/setMetaIfAbsent от нечитаемых записей IDB (по аналогии с listDays); ErrorBoundary не ловит ошибки обработчиков/промисов; нечитаемые записи остаются в IDB до перезаписи.
+- Замерщикам: сидировать IDB с ожиданием tx.oncomplete; перемер PD-140 после мержа A–E.
+
 ## Backlog по QA PD-136
 - Low: заголовок Year ниже, чем у Today/Play на 6–8 px (косметика → PD-144).
 - Вне пакета: строка Ink на Play при 200%/320 px ломает слова по буквам; select сложности в WebKit-эмуляции 79×19 — оба в PD-144.
@@ -394,8 +398,9 @@ Gates: build → typecheck, lint, тесты web/engine/api (api с TEST_DATABAS
 | PD-143 | Пакет C: PD-119 + PD-124 + PD-129 (после смержа A) | developer | P1 | pending | PD-135 |
 | PD-144 | Play по IA-варианту C (решение владельца 2026-10-02): строка «Продолжить» с независимыми незавершёнными играми (день и свободная), сложность списком, Ink как строка «Режим» + чип в шапке; нужен точный макет-проработка (design/pd140-ia-variants.html — основа) и затем реализация после пакетов A/B/D/E/C; место под отдельный раздел режимов релиза 2 заложить, не реализовывать. Включить: select сложности на экране настройки Play 13 px → ≥16 px (QA PD-135 L3); убрать дубль «New puzzle» и «New game» на карточке Play (Info) | designer+developer | P1 | pending | PD-135, PD-143 |
 | PD-145 | Логотип R4: отрендерить design/pd141-logo-round4.html в Chromium+WebKit, PNG-кадры, копия ~/Desktop/Pundoku-iPhone/logo-round4.html (+PNG), коммит в main pundoku | developer | P2 | completed (рендер design/pd141-shots, копия ~/Desktop/Pundoku-iPhone/logo-round4.html + logo-round4-shots; коммит в main, не запушен) | PD-141 |
-| PD-146 | S1/S2: ~1 из 10 холодных загрузок WebKit вкладка Year роняет приложение в пустой экран (`TypeError … e.solved`); корневая причина + фикс + ErrorBoundary + циклы ≥30 холодных загрузок webkit/chromium; ветка pd-year-blank; затем QA-перепроверка | developer | P0 | in_progress | — |
+| PD-146 | S1/S2: ~1 из 10 холодных загрузок WebKit вкладка Year роняет приложение в пустой экран (`TypeError … e.solved`); корневая причина + фикс + ErrorBoundary + циклы ≥30 холодных загрузок webkit/chromium; ветка pd-year-blank; затем QA-перепроверка | developer | P0 | dev done (pd-year-blank @ 8ab08a8: первопричина — WebKit getAll() с undefined-элементами, YearScreen читал p.solved; фикс listDays/getDay/sanitizeDays + ErrorBoundary; на iPhone не подтверждено); ждёт QA PD-148, затем мерж | — |
 | PD-147 | Повторный QA pd-key: миграции 0007→0008 на БД с данными, идемпотентный повтор confirm, гонка двух устройств, cancel-лимит, UI-путь потерянного ответа, полные прогоны api/web/engine после rebase (--testTimeout=60000) | qa-tester | P1 | completed (PASS, pd-key @ 972ad59) | PD-126 |
+| PD-148 | QA PD-146 (pd-year-blank @ 8ab08a8): детерминированная проверка фикса, циклы ≥30 webkit/chromium, ErrorBoundary-экран (a11y, en/uk/ru, 320, dark), регресс Year/Archive/sync | qa-tester | P0 | in_progress | PD-146 |
 | PD-20 | QA PD-14 (pd-14 @ 0026b2a): PASS с оговорками, блокеров и Medium нет; 4 Low + решение по слиянию → PD-31 | qa-tester | P1 | completed | PD-14 |
 | PD-31 | Фикс-проход pd-14 по QA PD-20 (pd-14 @ c574f13; gates зелёные: web 213, engine 105, api 77+2 skipped, интеграционные 7/7 на живой БД) | developer | P1 | completed | PD-20 |
 | PD-32 | PASS с оговорками (слияние 409 по источникам, 1500 дней без лишних PUT, gates, интеграционные 7/7); Low → PD-37. QA-регресс pd-14 @ c574f13 (перезапуск после сбоя контейнера; worktree /tmp/pundoku-qa/qa-pd32, БД pundoku_qa5, порты 3320/5320): слияние 409 по источникам, отсутствие лишних PUT при 1500 днях, сокращённый регресс PD-20, gates + интеграционные api-тесты | qa-tester | P1 | completed | PD-31 |
@@ -481,7 +486,7 @@ Gates: build → typecheck, lint, тесты web/engine/api (api с `TEST_DATABA
 |-----|------|--------|-------|-----------|
 | PM-Pundoku-10 | product-manager | working | пакеты реализации по решениям владельца | 2026-10-02 |
 | QA-Pundoku-D | qa-tester | done | PD-137 | 2026-10-02 |
-| Dev-Pundoku-YB | developer | working | PD-146 (pd-year-blank) | 2026-10-02 |
+| QA-Pundoku-YB | qa-tester | working | PD-148 (pd-year-blank) | 2026-10-02 |
 | QA-Pundoku-E | qa-tester | done | PD-138 | 2026-10-02 |
 
 ## Чек-пойнт 2026-10-01 (конец сессии PM-Pundoku-7)
