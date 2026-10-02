@@ -19,7 +19,8 @@ export function boldParts(text: string): ReactNode[] {
   return text.split("**").map((part, i) => (i % 2 === 1 ? <strong key={i}>{part}</strong> : part));
 }
 
-export function HintRuleSheet({ onGo, onCancel }: { onGo: () => void; onCancel: () => void }) {
+/** `play`: свободная партия Play — в Year она не попадает, метка только на карточке результата (решение владельца PD-139). */
+export function HintRuleSheet({ onGo, onCancel, play = false }: { onGo: () => void; onCancel: () => void; play?: boolean }) {
   const { t } = useTranslation();
   const scrim = useRef<HTMLDivElement>(null);
   const root = useRef<HTMLElement>(null);
@@ -79,7 +80,7 @@ export function HintRuleSheet({ onGo, onCancel }: { onGo: () => void; onCancel: 
       >
         <div className="grabber sheet-handle" aria-hidden="true" {...swipe} />
         <h2 id={titleId} className="ink-sheet-title sheet-handle" {...swipe}>
-          {t("hint.rule.title")}
+          {t(play ? "hint.rule.titlePlay" : "hint.rule.title")}
         </h2>
         <p id={leadId} className="ink-sheet-lead">
           {t("hint.rule.lead")}
@@ -87,11 +88,11 @@ export function HintRuleSheet({ onGo, onCancel }: { onGo: () => void; onCancel: 
         <ul className="ink-rules">
           <li>
             <MarkIcon />
-            <span>{boldParts(t("hint.rule.r1"))}</span>
+            <span>{boldParts(t(play ? "hint.rule.r1Play" : "hint.rule.r1"))}</span>
           </li>
           <li>
             <RepeatIcon />
-            <span>{t("hint.rule.r2")}</span>
+            <span>{t(play ? "hint.rule.r2Play" : "hint.rule.r2")}</span>
           </li>
           <li>
             <NoneIcon />

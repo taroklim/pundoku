@@ -170,6 +170,14 @@ describe("HintRuleSheet", () => {
     act(() => void document.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true })));
     expect(cancel).toHaveBeenCalledTimes(2);
   });
+
+  it("в Play правило говорит про партию и карточку, не про день и Year", () => {
+    act(() => root.render(<HintRuleSheet play onGo={() => {}} onCancel={() => {}} />));
+    const text = q("hint-rule-sheet")!.textContent ?? "";
+    expect(text).toContain(i18n.t("hint.rule.titlePlay"));
+    expect(text).not.toContain(i18n.t("hint.rule.title"));
+    expect(text).not.toMatch(/\byear\b/i);
+  });
 });
 
 describe("Board: метки подсказки", () => {

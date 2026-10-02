@@ -197,7 +197,7 @@ export function PlayScreen({ onOpenSettings, onOpenHelp }: { onOpenSettings?: ()
           {hint.open ? <HintDock ladder={ladder} state={hint} play /> : <GamePad snap={snap} store={playStore} />}
         </>
       )}
-      {hint.rule && <HintRuleSheet onGo={() => ladder.confirmRule()} onCancel={() => ladder.dismissRule()} />}
+      {hint.rule && <HintRuleSheet play onGo={() => ladder.confirmRule()} onCancel={() => ladder.dismissRule()} />}
       {confirming && (
         <ActionSheet
           title={t("play.discardTitle")}

@@ -130,6 +130,8 @@
   max-height: 248px;
   overflow-y: auto;
   overscroll-behavior: contain;
+  /* Низкий экран (SE): док не помещается над таб-баром — при открытии страница докручивается до него (scrollIntoView, block: nearest). */
+  scroll-margin-bottom: calc(72px + var(--sa-bot));
   animation: fadeRise calc(220ms * var(--mk)) var(--e-out) both;
 }
 .hint-dock h2:focus {

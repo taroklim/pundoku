@@ -128,6 +128,11 @@ button {
   gap: 8px;
   min-width: 0;
 }
+/* Заголовок вкладки не сжимается до переноса по буквам: уступает кнопка «New puzzle» (PD-139, лампочка отняла 46 pt). */
+.toolbar > .title {
+  flex: 0 0 auto;
+  max-width: 50%;
+}
 .toolbar-end .difficulty {
   max-width: 100%;
   min-width: 0;

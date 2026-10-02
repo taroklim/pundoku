@@ -27,12 +27,21 @@ interface HintDockProps {
 export function HintDock({ ladder, state, play = false }: HintDockProps) {
   const { t } = useTranslation();
   const heading = useRef<HTMLHeadingElement>(null);
+  const dock = useRef<HTMLElement>(null);
   const { hint, step, session } = state;
 
   // Новое открытие дока (в т.ч. пересчёт после хода — это та же сессия, фокус не дёргаем).
   useEffect(() => {
-    if (state.open) heading.current?.focus({ preventScroll: true });
+    if (!state.open) return;
+    heading.current?.focus({ preventScroll: true });
+    // Док выше свободного места (iPhone SE): показать целиком; там, где он помещается, прокрутки нет — поле не двигается.
+    dock.current?.scrollIntoView?.({ block: "nearest" });
   }, [session, state.open]);
+
+  // Новая ступень: текст начинается сверху (на AX3 док скроллится внутри себя, кнопка внизу — ступень не должна открываться «с середины»).
+  useEffect(() => {
+    if (dock.current) dock.current.scrollTop = 0;
+  }, [step, hint?.kind]);
 
   const copy = useMemo(() => (hint ? hintStepCopy(t, hint, step) : null), [t, hint, step]);
   if (!state.open || !hint || !copy) return null;
@@ -53,6 +62,7 @@ export function HintDock({ ladder, state, play = false }: HintDockProps) {
 
   return (
     <section
+      ref={dock}
       id={HINT_DOCK_ID}
       className={`hint-dock${hint.kind === "mistake" ? " bad" : ""}`}
       role="group"

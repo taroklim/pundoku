@@ -12,7 +12,11 @@
 /* ---------- «New puzzle» в тулбаре Play (PD-116): явная кнопка вместо нативного select сложности ---------- */
 .newpuzzle-btn {
   /* Цель ≥ 44 pt (HIG), шрифт не меньше 16 px: читается без зума. Отрицательные поля — как у .gear-btn: тулбар не растёт. */
-  flex: none;
+  /* PD-139: с лампочкой в тулбаре на 320 pt (uk/ru) подпись не помещается — сжимается с многоточием, заголовок не переносится. */
+  flex: 0 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
   min-height: 44px;
   margin: -6px -4px -6px 0;
   padding: 0 14px;
