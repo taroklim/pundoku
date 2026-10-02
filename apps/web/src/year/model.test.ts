@@ -27,9 +27,17 @@ describe("метка дня: форма и цвет (решения владел
     expect(m).toMatchObject({ kind: "unfinished", corrections: true, hasRecord: true });
   });
 
-  it("доигранный позже день остаётся пропуском (missed), но с записью и late = true", () => {
-    const m = markOf("2026-09-15", { ...solved, late: true, hadCorrections: true }, ctx);
-    expect(m).toMatchObject({ kind: "missed", late: true, hasRecord: true, corrections: false, assisted: false });
+  it("PD-125: доигранный позже день — своё состояние late (не пропуск), с записью; усилие не стирается", () => {
+    expect(markOf("2026-09-15", { ...solved, late: true }, ctx)).toMatchObject({ kind: "late", late: true, hasRecord: true, corrections: false, assisted: false });
+    // исправления и помощь сохраняются (срез угла и тон те же, что у решённого вовремя)
+    expect(markOf("2026-09-15", { ...solved, late: true, hadCorrections: true }, ctx)).toMatchObject({ kind: "late", corrections: true, assisted: false });
+    expect(markOf("2026-09-15", { ...solved, late: true, assisted: true, hadCorrections: true }, ctx)).toMatchObject({ kind: "late", corrections: true, assisted: true });
+    // не пропуск: ни kind, ни hasRecord=false
+    expect(markOf("2026-09-15", { ...solved, late: true }, ctx).kind).not.toBe("missed");
+  });
+  it("PD-125: late у unfinished не бывает; решённый вовремя остаётся solved", () => {
+    expect(markOf("2026-09-15", { ...unfinished, late: true }, ctx).kind).toBe("unfinished");
+    expect(markOf("2026-09-15", { ...solved, late: false }, ctx).kind).toBe("solved");
   });
 
   it("прошедший день без записи после начала пользования — пропуск; до начала — пусто", () => {
@@ -56,6 +64,7 @@ describe("сборка года", () => {
     ["2026-09-12", { ...solved, assisted: true }],
     ["2026-09-13", { status: "unfinished", hadCorrections: false, assisted: false, late: false }],
     ["2026-09-14", { ...solved, late: true }],
+    ["2026-09-17", { ...solved, late: true, hadCorrections: true }],
   ]);
   const view = buildYear(2026, entries, ctx);
 
@@ -66,14 +75,14 @@ describe("сборка года", () => {
     expect(daysInMonth(2100, 1)).toBe(28);
   });
 
-  it("итоги месяца: решённые, с исправлениями, брошенные; доигранный позже не в счёт", () => {
-    expect(view.months[8]!.summary).toEqual({ solved: 3, corrections: 1, unfinished: 1 });
-    expect(view.months[7]!.summary).toEqual({ solved: 0, corrections: 0, unfinished: 0 });
+  it("итоги месяца: решённые, с исправлениями, брошенные; доигранные позже — отдельным счётом, в solved не входят", () => {
+    expect(view.months[8]!.summary).toEqual({ solved: 3, corrections: 1, unfinished: 1, late: 2 });
+    expect(view.months[7]!.summary).toEqual({ solved: 0, corrections: 0, unfinished: 0, late: 0 });
   });
 
   it("итоги года: сыграно, чисто, с исправлениями — нейтральные числа без серий и процентов", () => {
-    expect(view.totals).toEqual({ played: 3, clean: 2, withCorrections: 1 });
-    expect(Object.keys(view.totals).sort()).toEqual(["clean", "played", "withCorrections"]);
+    expect(view.totals).toEqual({ played: 3, clean: 2, withCorrections: 1, late: 2 });
+    expect(Object.keys(view.totals).sort()).toEqual(["clean", "late", "played", "withCorrections"]);
   });
 
   it("другой год не подхватывает чужие записи", () => {
@@ -144,7 +153,7 @@ describe("PD-51: старт года = самая ранняя запись", ()
     const c = yearContext("2026-09-20", e, today);
     expect(markOf("2026-09-20", undefined, c).kind).toBe("void");
     expect(markOf("2026-09-21", undefined, c).kind).toBe("void");
-    expect(markOf("2026-09-22", e.get("2026-09-22"), c)).toMatchObject({ kind: "missed", late: true });
+    expect(markOf("2026-09-22", e.get("2026-09-22"), c)).toMatchObject({ kind: "late", late: true });
     expect(markOf("2026-09-23", undefined, c).kind).toBe("missed");
     expect(markOf("2026-09-29", undefined, c)).toMatchObject({ kind: "void", today: true });
   });

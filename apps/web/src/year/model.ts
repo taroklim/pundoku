@@ -7,8 +7,9 @@
  *   будущее и время до старта года (самый ранний решённый день) — пусто (`void`);
  * - цвет — по факту «были исправления / не были» (`hadCorrections`), не по числу; «решено с помощью»
  *   (`assisted`) — более светлый тон постоянно;
- * - пропущенный день можно доиграть (архив), но в Year он остаётся пропуском: решённый день с
- *   `late = true` рисуется как `missed`;
+ * - пропущенный день можно доиграть (архив). PD-125 (решение владельца 6.6, 2026-10-02): такой день — НЕ пропуск, а своё
+ *   состояние `late` («решено позже»): отдельный знак (рамка с ядром), в итоги «days/clean/corrections» не входит
+ *   (отдельный счётчик), а усилие не стирается — признаки исправлений и помощи у него сохраняются (те же срез угла и тон);
  * - PD-51 (решение владельца 2026-09-30): началом года считается САМАЯ РАННЯЯ ЗАПИСЬ дня, а не `firstUseDate`.
  *   PD-54 (решение PM по полномочию владельца): «записью», которая стартует год, считается только РЕШЁННЫЙ день
  *   (solved, включая доигранный `late`, в том числе архивный). Начатый и брошенный день (`unfinished`) рисуется как
@@ -21,7 +22,7 @@
 import { summary } from "@pundoku/engine";
 import type { DayProgress } from "../today/repository";
 
-export type MarkKind = "solved" | "unfinished" | "missed" | "void";
+export type MarkKind = "solved" | "unfinished" | "late" | "missed" | "void";
 
 /** Итог дня из записи прогресса: то, что нужно полотну (без heat/moveLog). */
 export interface YearEntry {
@@ -39,11 +40,11 @@ export interface DayMark {
   /** Число месяца, 1..31. */
   readonly day: number;
   readonly kind: MarkKind;
-  /** Были исправления (сургуч + срез угла). Только у `solved`/`unfinished`. */
+  /** Были исправления (сургуч + срез угла). У `solved`/`late`/`unfinished`. */
   readonly corrections: boolean;
-  /** Решено с помощью (светлый тон 62 %). Только у `solved`. */
+  /** Решено с помощью (светлый тон 62 %). У `solved`/`late`. */
   readonly assisted: boolean;
-  /** Решён после своей даты: kind = `missed`, но карточка дня покажет результат. */
+  /** Решён после своей даты (PD-125): `kind === "late"` — не пропуск; карточка дня покажет результат. */
   readonly late: boolean;
   readonly today: boolean;
   /** Есть запись прогресса (карточка покажет результат, а не «не играно»). */
@@ -54,6 +55,8 @@ export interface MonthSummary {
   readonly solved: number;
   readonly corrections: number;
   readonly unfinished: number;
+  /** Решённых позже своей даты (PD-125): в `solved` не входят. */
+  readonly late: number;
 }
 
 export interface YearMonth {
@@ -64,10 +67,12 @@ export interface YearMonth {
 }
 
 export interface YearTotals {
-  /** Решённых дней (не late). */
+  /** Решённых дней вовремя (не late). */
   readonly played: number;
   readonly clean: number;
   readonly withCorrections: number;
+  /** Решённых позже своей даты (PD-125): отдельный счёт, в `played`/`clean` не входят. */
+  readonly late: number;
 }
 
 export interface YearView {
@@ -109,7 +114,8 @@ export function markOf(date: string, entry: YearEntry | undefined, ctx: YearCont
   const base = { date, day: Number(date.slice(8, 10)), today: date === ctx.today };
   if (entry) {
     if (entry.status === "solved" && entry.late) {
-      return { ...base, kind: "missed", corrections: false, assisted: false, late: true, hasRecord: true };
+      // PD-125: не пропуск; усилие не стирается — исправления и помощь видны так же, как у решённого вовремя.
+      return { ...base, kind: "late", corrections: entry.hadCorrections, assisted: entry.assisted, late: true, hasRecord: true };
     }
     if (entry.status === "solved") {
       return { ...base, kind: "solved", corrections: entry.hadCorrections, assisted: entry.assisted, late: false, hasRecord: true };
@@ -125,12 +131,14 @@ export function markOf(date: string, entry: YearEntry | undefined, ctx: YearCont
 export function buildYear(year: number, entries: ReadonlyMap<string, YearEntry>, ctx: YearContext): YearView {
   let played = 0;
   let withCorrections = 0;
+  let lateTotal = 0;
   const months: YearMonth[] = [];
   for (let m = 0; m < 12; m++) {
     const days: DayMark[] = [];
     let solved = 0;
     let corrections = 0;
     let unfinished = 0;
+    let late = 0;
     for (let d = 1; d <= daysInMonth(year, m); d++) {
       const date = ymd(year, m, d);
       const mark = markOf(date, entries.get(date), ctx);
@@ -139,12 +147,14 @@ export function buildYear(year: number, entries: ReadonlyMap<string, YearEntry>,
         solved++;
         if (mark.corrections) corrections++;
       } else if (mark.kind === "unfinished") unfinished++;
+      else if (mark.kind === "late") late++;
     }
     played += solved;
     withCorrections += corrections;
-    months.push({ index: m, days, summary: { solved, corrections, unfinished } });
+    lateTotal += late;
+    months.push({ index: m, days, summary: { solved, corrections, unfinished, late } });
   }
-  return { year, months, totals: { played, clean: played - withCorrections, withCorrections } };
+  return { year, months, totals: { played, clean: played - withCorrections, withCorrections, late: lateTotal } };
 }
 
 /**

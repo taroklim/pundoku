@@ -22,7 +22,8 @@ const DAYS: DayProgress[] = [
   { ...progressOf("2026-09-12"), assisted: true }, // с подсказкой
   { ...progressOf("2026-09-16", { withFix: true }), assisted: true }, // с подсказкой и исправлением
   progressOf("2026-09-13", { solved: false, moves: 12 }), // начат и брошен
-  progressOf("2026-09-14", { late: true }), // решён позже своей даты
+  progressOf("2026-09-14", { late: true }), // решён позже своей даты (PD-125: своё состояние, не пропуск)
+  progressOf("2026-09-17", { late: true, withFix: true }), // решён позже, с исправлением: усилие не стирается
 ];
 
 let host: HTMLDivElement;
@@ -82,8 +83,10 @@ describe("полотно года: формы и цвет меток", () => {
     expect(mark("2026-09-13").className).toBe("ymark is-unfinished");
   });
 
-  it("доигранный позже — контур is-missed (пропуск остаётся пропуском), даже решённый", () => {
-    expect(mark("2026-09-14").className).toBe("ymark is-missed");
+  it("PD-125: доигранный позже — рамка с ядром is-late, НЕ контур пропуска; исправления сохраняются (has-corr)", () => {
+    expect(mark("2026-09-14").className).toBe("ymark is-late");
+    expect(mark("2026-09-17").className).toBe("ymark is-late has-corr");
+    expect(host.querySelectorAll(".year-month .ymark.is-late")).toHaveLength(2);
   });
 
   it("пропуск после самой ранней записи (09-10) — контур; до неё (даже после firstUse 09-01) и будущее — пусто", () => {
@@ -102,19 +105,21 @@ describe("полотно года: формы и цвет меток", () => {
   });
 
   it("месяц назван словами: имя, решено из скольких, с исправлениями, брошенные", () => {
-    expect(month(8).getAttribute("aria-label")).toBe("September, 4 of 30 days solved, 2 with fixes, 1 unfinished");
+    expect(month(8).getAttribute("aria-label")).toBe("September, 4 of 30 days solved, 2 with fixes, 2 solved late, 1 unfinished");
     expect(month(2).getAttribute("aria-label")).toBe("March, nothing yet");
   });
 
   it("итоги — нейтральный текст, без серий и процентов", () => {
     const totals = host.querySelector('[data-testid="year-totals"]')!.textContent!;
-    expect(totals).toBe("4 days · 2 clean · 2 with fixes");
+    expect(totals).toBe("4 days · 2 clean · 2 with fixes · 2 solved late");
     expect(totals).not.toMatch(/%|streak/i);
   });
 
-  it("легенда всегда на экране: решено / с помощью / исправления / брошено / пропуск", () => {
+  it("легенда всегда на экране: решено / с помощью / исправления / решено позже / брошено / пропуск", () => {
     const items = [...host.querySelectorAll(".year-legend li")].map((li) => li.textContent);
-    expect(items).toEqual(["Solved", "With help", "Fixes", "Unfinished", "Missed"]);
+    expect(items).toEqual(["Solved", "With help", "Fixes", "Solved late", "Unfinished", "Missed"]);
+    // знак «решено позже» в легенде — тот же класс, что в клетке дня
+    expect(host.querySelector(".year-legend .ymark.is-late")).not.toBeNull();
   });
 
   it("один год — без выбора года; заголовок — h1 с годом", () => {
@@ -189,7 +194,7 @@ describe("пустой год", () => {
     // firstUse 09-20, первая партия — архивный день 09-22 (late): пропуски 09-23..09-28, раньше — пусто
     render([progressOf("2026-09-22", { late: true })], "2026-09-29", "2026-09-20");
     expect(mark("2026-09-21").className).toBe("ymark is-void");
-    expect(mark("2026-09-22").className).toBe("ymark is-missed"); // late = контур
+    expect(mark("2026-09-22").className).toBe("ymark is-late"); // late = своё состояние (PD-125), год стартует с него
     expect(mark("2026-09-23").className).toBe("ymark is-missed");
     expect(mark("2026-09-28").className).toBe("ymark is-missed");
   });
@@ -305,14 +310,16 @@ describe("шит месяца и карточка дня", () => {
     expect(cell("2026-09-11").getAttribute("aria-label")).toBe("Fri 11 September, solved with fixes");
     expect(cell("2026-09-12").getAttribute("aria-label")).toContain("solved with help");
     expect(cell("2026-09-13").getAttribute("aria-label")).toContain("started, not finished");
-    expect(cell("2026-09-14").getAttribute("aria-label")).toContain("played late, counts as missed");
+    expect(cell("2026-09-14").getAttribute("aria-label")).toContain("solved late");
+    expect(cell("2026-09-17").getAttribute("aria-label")).toBe("Thu 17 September, solved late, with corrections");
+    expect(cell("2026-09-14").getAttribute("aria-label")).not.toContain("missed");
     expect(cell("2026-09-15").getAttribute("aria-label")).toContain("not played");
     expect(cell("2026-09-05").getAttribute("aria-label")).toContain("before your first entry");
     expect(cell(TODAY).getAttribute("aria-label")).toContain("today, not played yet");
     expect(cell("2026-09-30").getAttribute("aria-label")).toContain("not yet");
     expect(cell("2026-09-11").querySelector(".ymark")!.className).toBe("ymark is-solved has-corr");
     expect(cell(TODAY).classList.contains("today")).toBe(true);
-    expect(document.querySelector(".sheet-foot")!.textContent).toBe("4 of 30 days solved, 2 with fixes, 1 unfinished");
+    expect(document.querySelector(".sheet-foot")!.textContent).toBe("4 of 30 days solved, 2 with fixes, 2 solved late, 1 unfinished");
   });
 
   it("тап по дню — вторая страница ТОГО ЖЕ шита: карточка результата с тепловой картой, временем, «чисто»", () => {
@@ -342,13 +349,23 @@ describe("шит месяца и карточка дня", () => {
     expect(document.querySelector('[data-testid="assisted-row"]')!.textContent).toBe("Solvedwith help");
   });
 
-  it("доигранный позже день: карточка доступна, результат показан, помечено «остаётся пропуском»", () => {
+  it("PD-125: доигранный позже день: карточка с результатом, помечена «solved late», слова «missed» нет", () => {
     openDay(8, "2026-09-14");
     const card = document.querySelector<HTMLElement>('[data-testid="day-card"]')!;
-    expect(card.dataset["kind"]).toBe("missed");
+    expect(card.dataset["kind"]).toBe("late");
     expect(card.dataset["late"]).toBe("true");
     expect(card.querySelectorAll(".heat i")).toHaveLength(81);
-    expect(card.querySelector('[data-testid="late-note"]')!.textContent).toContain("missed");
+    const note = card.querySelector('[data-testid="late-note"]')!;
+    expect(note.textContent).toBe("Solved after its day — your year keeps it as “solved late”.");
+    expect(note.textContent).not.toMatch(/missed/i);
+    expect(note.querySelector(".ymark.is-late")).not.toBeNull();
+    expect(card.querySelector('[data-testid="late-warning"]')).toBeNull(); // день решён — предупреждать поздно и не о чем
+  });
+
+  it("PD-125: решённый позже с исправлением — карточка показывает число правок (усилие не стёрто)", () => {
+    openDay(8, "2026-09-17");
+    const err = document.querySelector('[data-testid="day-card"] .row dd.err')!;
+    expect(Number(err.textContent)).toBeGreaterThan(0);
   });
 
   it("брошенный день: сколько клеток стоит, без тепловой карты", () => {
@@ -416,7 +433,7 @@ describe("шит месяца и карточка дня", () => {
     });
 
     it("решён (чисто, с правками, late): карточка результата без кнопок", () => {
-      for (const date of ["2026-09-10", "2026-09-11", "2026-09-14"]) {
+      for (const date of ["2026-09-10", "2026-09-11", "2026-09-14", "2026-09-17"]) {
         openDay(8, date);
         expect(btn("play-day"), date).toBeNull();
         expect(btn("finish-day"), date).toBeNull();
@@ -425,6 +442,38 @@ describe("шит месяца и карточка дня", () => {
         render();
       }
       expect(playDay).not.toHaveBeenCalled();
+    });
+
+    // PD-125: предупреждение ДО старта — строка перед кнопкой «Play/Finish», а не после победы
+    // PD-125: предупреждение ДО старта — строка перед кнопкой «Play/Finish», а не после победы
+    it.each([
+      ["2026-09-05", "play-day"],
+      ["2026-09-15", "play-day"],
+      ["2026-09-13", "finish-day"],
+    ] as const)("PD-125: %s — перед кнопкой %s стоит предупреждение про «solved late»", (date, id) => {
+      openDay(8, date);
+      const warn = document.querySelector('[data-testid="late-warning"]')!;
+      expect(warn.textContent).toBe("If you solve it now, your year keeps it as “solved late”.");
+      expect(warn.querySelector(".ymark.is-late")).not.toBeNull();
+      // порядок в DOM: предупреждение раньше кнопки действия
+      expect(warn.compareDocumentPosition(btn(id)!) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+      expect(warn.textContent).not.toMatch(/missed|streak/i);
+    });
+
+    it("PD-125: предупреждения нет там, где кнопки архива нет — сегодня, будущее, до границы архива, решённые дни", () => {
+      const warn = () => document.querySelector('[data-testid="late-warning"]');
+      openDay(8, TODAY);
+      expect(warn()).toBeNull();
+      click(document.querySelector(".ysheet-head .back"));
+      click(document.querySelector('.ycell[data-date="2026-09-30"]'));
+      expect(warn()).toBeNull();
+      click(document.querySelector(".ysheet-head .back"));
+      click(document.querySelector('.ycell[data-date="2026-09-10"]'));
+      expect(warn()).toBeNull();
+      act(() => void root.render(null));
+      render(DAYS, TODAY, "2026-09-05");
+      openDay(8, "2026-09-03");
+      expect(warn()).toBeNull();
     });
 
     it("сегодня и будущее — без кнопок архива; до начала пользования — тоже", () => {

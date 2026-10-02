@@ -29,7 +29,7 @@ describe("year.css: forced-colors", () => {
 
   it("базовые правила, которые блок переопределяет, объявлены выше него", () => {
     // внутри блока селекторы с отступом, так что «\n.селектор {» в начале строки — только базовые правила
-    for (const sel of ["\n.year-month {", "\n.ycell.today {", "\n.ycell {", "\n.ymark.is-today::after {", "\n.ymark.is-missed::before {", "\n.ymark.has-corr {"]) {
+    for (const sel of ["\n.year-month {", "\n.ycell.today {", "\n.ycell {", "\n.ymark.is-today::after {", "\n.ymark.is-missed::before {", "\n.ymark.is-late::before {", "\n.ymark.has-corr {"]) {
       expect(css.includes(sel), sel).toBe(true);
       expect(css.lastIndexOf(sel), sel).toBeLessThan(start);
     }

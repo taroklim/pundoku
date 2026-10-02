@@ -125,6 +125,15 @@ describe("YearTab: загрузка и перечитывание данных",
     expect(host.querySelector('[data-testid="year-totals"]')!.textContent).toBe("2 days · 1 clean · 1 with fixes");
   });
 
+  it("PD-125: день с late = true из хранилища рисуется как «решён позже» (is-late), не как пропуск, и стартует год", async () => {
+    h.days = [progressOf("2026-09-27", { late: true })];
+    await mount();
+    expect(marks("is-late")).toBe(1);
+    expect(marks("is-solved")).toBe(0);
+    expect(marks("is-missed")).toBe(1); // 28-е — настоящий пропуск; 27-е им не стало
+    expect(host.querySelector('[data-testid="year-totals"]')!.textContent).toBe("0 days · 0 clean · 1 solved late");
+  });
+
   it("при размонтировании отписывается от subscribeRemote и visibilitychange", async () => {
     await mount();
     act(() => root.unmount());

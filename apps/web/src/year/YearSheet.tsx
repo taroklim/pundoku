@@ -12,6 +12,7 @@ import { WatchRow, useTimelapseEntry } from "../play/TimelapseEntry";
 import type { DayProgress } from "../today/repository";
 import { dayLong, leadingBlanks, monthName, monthTitle, weekdayInitials } from "./format";
 import { dayStateKey, markClass, monthSummaryText } from "./labels";
+import { LateSign } from "./LateSign";
 import type { DayMark, YearContext, YearMonth } from "./model";
 
 /** Длительность выезда/скрытия шита, мс (CSS: 280; при reduced motion — 160, таймер берёт максимум). */
@@ -271,7 +272,8 @@ function DayCard({
           <WatchRow available={tl.available} onWatch={() => tl.open("player")} />
           {tl.sheets}
           {mark.late && (
-            <p className="emptyday" data-testid="late-note">
+            <p className="emptyday late-line" data-testid="late-note">
+              <LateSign />
               {t("year.card.lateNote")}
             </p>
           )}
@@ -284,6 +286,7 @@ function DayCard({
               {t("year.continueToday")}
             </button>
           )}
+          {!mark.today && archivable && <LateWarning />}
           {!mark.today && archivable && (
             <button type="button" className="ghost" data-testid="finish-day" onClick={() => onPlayDay(mark.date)}>
               {t("year.card.finish")}
@@ -302,6 +305,7 @@ function DayCard({
           <p className="emptyday">
             {mark.date > ctx.today ? t("year.card.future") : mark.kind === "missed" ? t("year.card.notPlayed") : !ctx.hasRecords && mark.date >= ctx.archiveStart ? t("year.card.noRecord") : t("year.card.before")}
           </p>
+          {archivable && <LateWarning />}
           {archivable && (
             <button type="button" className="ghost" data-testid="play-day" onClick={() => onPlayDay(mark.date)}>
               {t("year.card.play")}
@@ -310,5 +314,19 @@ function DayCard({
         </>
       )}
     </div>
+  );
+}
+
+/**
+ * Предупреждение ДО старта (PD-125): что станет с днём, если решить его сейчас, — до кнопки «Play/Finish», а не после победы.
+ * Только факт о том, как день отметится в году; ничего не обещает сверх этого и не пугает пропуском.
+ */
+function LateWarning() {
+  const { t } = useTranslation();
+  return (
+    <p className="late-warn" data-testid="late-warning">
+      <LateSign />
+      {t("year.card.lateWarning")}
+    </p>
   );
 }

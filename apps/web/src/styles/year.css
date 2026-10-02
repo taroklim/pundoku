@@ -41,15 +41,23 @@
 .ymark.is-unfinished::before {
   background: linear-gradient(to top, var(--m) 50%, transparent 50%);
 }
-/* пропущен (в том числе доигран позже): только контур, тихо — намеренно */
+/* пропущен: только контур, тихо — намеренно */
 .ymark.is-missed::before {
   box-shadow: inset 0 0 0 1px var(--hairline);
+}
+/* решён позже своей даты (PD-125): рамка с ядром — «день вне срока, но решён внутри». Это НЕ пропуск (у пропуска рамка
+   без ядра и тусклая) и не решённый вовремя (сплошной квадрат): различим формой при любом зрении. Тон тот же --m (чернила,
+   сургуч при исправлениях, мягкий при помощи), срез угла у has-corr тот же. Ядро — 34 % стороны (≈ 4 px при клетке 12). */
+.ymark.is-late::before {
+  box-shadow: inset 0 0 0 1.5px var(--m);
+  background: linear-gradient(var(--m), var(--m)) center / 34% 34% no-repeat;
 }
 /* будущее и «до самой ранней записи»: не рисуем ничего (is-void) */
 
 /* Исправления — ещё и сколотый правый верхний угол: смысл не держится на одном оттенке
    (accessibility.md > Color and effects). У половинки скол — от её верхней грани. */
-.ymark.is-solved.has-corr::before {
+.ymark.is-solved.has-corr::before,
+.ymark.is-late.has-corr::before {
   clip-path: polygon(0 0, 62% 0, 100% 38%, 100% 100%, 0 100%);
 }
 .ymark.is-unfinished.has-corr::before {
@@ -400,6 +408,31 @@
 .daycard .rows + .emptyday {
   margin-top: 14px;
 }
+/* PD-125: строка со знаком «решено позже» — предупреждение до старта и пометка на карточке результата. Знак — в начале
+   строки, на уровне первой строки текста; перенос идёт под текстом, не под знаком. */
+.late-line,
+.late-warn {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+.late-line > .late-sign,
+.late-warn > .late-sign {
+  flex: none;
+  width: 0.8em;
+  height: 0.8em;
+  min-width: 11px;
+  min-height: 11px;
+  transform: translateY(0.05em);
+}
+.daycard .late-warn {
+  margin: 0 0 12px;
+  color: var(--label-2);
+  font-size: 0.85rem;
+}
+.card .source.late-line {
+  justify-content: center;
+}
 .daycard .ghost {
   display: flex;
   align-items: center;
@@ -460,6 +493,11 @@
   .ymark.is-missed::before {
     box-shadow: none;
     border: 1px solid GrayText;
+  }
+  .ymark.is-late::before {
+    box-shadow: none;
+    border: 1.5px solid CanvasText;
+    background: linear-gradient(CanvasText, CanvasText) center / 34% 34% no-repeat;
   }
   .ymark.is-today::after {
     box-shadow: none;

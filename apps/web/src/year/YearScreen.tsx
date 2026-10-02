@@ -141,6 +141,7 @@ export function YearScreen({ days, firstUse, today, onOpenToday, onPlayDay, init
             t("year.totalsDays", { count: view.totals.played }),
             t("year.totalsClean", { n: view.totals.clean }),
             view.totals.withCorrections > 0 ? t("year.totalsCorrections", { n: view.totals.withCorrections }) : null,
+            view.totals.late > 0 ? t("year.totalsLate", { n: view.totals.late }) : null,
           ]
             .filter(Boolean)
             .join(" · ")}
@@ -193,6 +194,10 @@ export function YearScreen({ days, firstUse, today, onOpenToday, onPlayDay, init
           <li>
             <i className="ymark is-solved has-corr" aria-hidden="true" />
             {t("year.legend.corrections")}
+          </li>
+          <li>
+            <i className="ymark is-late" aria-hidden="true" />
+            {t("year.legend.late")}
           </li>
           <li>
             <i className="ymark is-unfinished" aria-hidden="true" />

@@ -63,6 +63,28 @@ describe("i18n: блок year.* (PD-25)", () => {
     expect(y(ru).card.before).toBe("До первой записи.");
   });
 
+  it("PD-125: «решено позже» и предупреждение до старта — во всех локалях, согласованным словом (en/uk/ru)", () => {
+    type L = { year: { legend: { late: string }; state: Record<string, string>; card: { lateNote: string; lateWarning: string }; totalsLate: string; monthLate: string } };
+    const cases: [object, string, string][] = [
+      [en, "solved late", "“solved late”"],
+      [uk, "розв’язано пізніше", "«розв’язано пізніше»"],
+      [ru, "решено позже", "«решено позже»"],
+    ];
+    for (const [l, word, quoted] of cases) {
+      const y = (l as L).year;
+      expect(y.legend.late.toLowerCase()).toBe(word);
+      expect(y.state["late"]).toBe(word);
+      for (const k of ["lateCorrections", "lateHelp", "lateHelpCorrections"]) expect(y.state[k]!.startsWith(`${word}, `), k).toBe(true);
+      // и предупреждение до старта, и пометка после решения называют состояние одним и тем же словом
+      expect(y.card.lateWarning).toContain(quoted);
+      expect(y.card.lateNote).toContain(quoted);
+      expect(y.totalsLate).toContain(word);
+      expect(y.monthLate).toContain(word);
+      // ни одна строка про «решено позже» не называет день пропуском (прежний текст «считается пропуском» убран)
+      for (const v of [y.card.lateNote, y.card.lateWarning, ...Object.values(y.state).filter((v) => v.startsWith(word))]) expect(v).not.toMatch(/missed|пропуск|пропущ/i);
+    }
+  });
+
   it("нет пустых строк; плейсхолдеры одинаковы во всех локалях", () => {
     const e = year(en as { year: Tree });
     for (const l of [uk, ru] as { year: Tree }[]) {

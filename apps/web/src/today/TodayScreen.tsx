@@ -24,6 +24,7 @@ import { dayStore } from "./dayStore";
 import { MiniBoard } from "./MiniBoard";
 import { hiddenSolution } from "./permanent";
 import { useSolveSequence } from "./useSolveSequence";
+import { LateSign } from "../year/LateSign";
 
 /** `YYYY-MM-DD` → локальная полночь этой даты (без сдвига часовых поясов). */
 function dateOf(ymd: string): Date {
@@ -158,7 +159,8 @@ export function DayView({ store, archive, onOpenSettings, onOpenHelp }: { store:
             <ResultCard play={play} cardRef={cardRef} title={t("today.cardTitle")} winRate={winRate} winRateScope={archive ? "day" : "today"} timelapse={isRealDate(snap.date) ? { date: snap.date, difficulty: snap.difficultyKnown ? difficulty : null } : undefined} onOpenHelp={onOpenHelp}>
               {sourceLabel && <p className="source">{sourceLabel}</p>}
               {archive && snap.late && (
-                <p className="source" data-testid="late-note">
+                <p className="source late-line" data-testid="late-note">
+                  <LateSign />
                   {t("year.card.lateNote")}
                 </p>
               )}

@@ -129,13 +129,16 @@ describe("экран архивного дня", () => {
     expect(wr).not.toContain("today");
   });
 
-  it("решённый позже день: карточка результата с пометкой «остаётся пропуском», без Grid ∞", async () => {
+  it("PD-125: решённый позже день: карточка результата с пометкой «solved late» (не «missed») и знаком, без Grid ∞", async () => {
     const repo = new InMemoryProgressRepository();
     await repo.saveDay(progressOf(PAST, { late: true }));
     const { store } = make(ok, repo);
     await render(store);
     await settle();
-    expect(q('[data-testid="late-note"]')!.textContent).toContain("missed");
+    const note = q('[data-testid="late-note"]')!;
+    expect(note.textContent).toBe("Solved after its day — your year keeps it as “solved late”.");
+    expect(note.textContent).not.toMatch(/missed/i);
+    expect(note.querySelector(".ymark.is-late")).not.toBeNull();
     expect(q('[data-testid="grid-inf-section"]')).toBeNull();
   });
 
