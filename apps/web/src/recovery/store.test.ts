@@ -6,6 +6,11 @@ import { COPIED_MS, RecoveryStore } from "./store";
 
 const KEY = "K7QP-M2XZ-9D4T-VB6N-H3RW-8YCJ-5FGA-E0S1";
 const COMPACT = KEY.replace(/-/g, "");
+const KEY2 = "ZQ8W-4NMD-7T2X-H9RB-C5VK-1JYF-3GPE-6A0S";
+const COMPACT2 = KEY2.replace(/-/g, "");
+const PENDING = "6f0c1d9e-1b7a-4c52-9f1a-3e5d8b2a7c10";
+const EXPIRES = "2026-10-03T10:00:00.000Z";
+const CREATED = { hasKey: true, devices: 2, keyCreatedAt: null, pendingRotation: null } as const;
 
 const ok = <T,>(value: T): RecoveryResult<T> => ({ kind: "ok", value });
 
@@ -14,7 +19,9 @@ function setup(over: Partial<{ [K in keyof RecoveryApi]: RecoveryApi[K] }> = {})
   const api: RecoveryApi = {
     status: vi.fn(async () => ok<RecoveryStatus>({ hasKey: false })),
     create: vi.fn(async () => ok({ key: KEY, devices: 1 })),
-    rotate: vi.fn(async () => ok({ key: KEY })),
+    rotate: vi.fn(async () => ok({ key: KEY2, pendingId: PENDING, expiresAt: EXPIRES })),
+    confirmRotation: vi.fn(async () => ok(true as const)),
+    cancelRotation: vi.fn(async () => ok(true as const)),
     redeem: vi.fn(async () => ok({ devices: 2 })),
     unlink: vi.fn(async () => ok(true as const)),
     remove: vi.fn(async () => ok(true as const)),
@@ -51,7 +58,7 @@ describe("RecoveryStore: состояние блока", () => {
     expect(snap(a.store).phase).toBe("loading");
     await vi.waitFor(() => expect(snap(a.store).phase).toBe("none"));
 
-    const b = setup({ status: vi.fn(async () => ok<RecoveryStatus>({ hasKey: true, devices: 3, keyCreatedAt: "2026-09-01T00:00:00.000Z" })) });
+    const b = setup({ status: vi.fn(async () => ok<RecoveryStatus>({ hasKey: true, devices: 3, keyCreatedAt: "2026-09-01T00:00:00.000Z", pendingRotation: null })) });
     b.store.open();
     await vi.waitFor(() => expect(snap(b.store).phase).toBe("created"));
     expect(snap(b.store)).toMatchObject({ devices: 3, createdAt: "2026-09-01T00:00:00.000Z" });
@@ -110,22 +117,155 @@ describe("RecoveryStore: состояние блока", () => {
   it("ключ уже существует (409): показываем карточку существующего ключа, а не ошибку", async () => {
     const { store } = setup({
       create: vi.fn(async () => ({ kind: "key_exists" }) as const),
-      status: vi.fn(async () => ok<RecoveryStatus>({ hasKey: true, devices: 2, keyCreatedAt: null })),
+      status: vi.fn(async () => ok<RecoveryStatus>({ ...CREATED })),
     });
     await store.create();
     await vi.waitFor(() => expect(snap(store).phase).toBe("created"));
     expect(snap(store).error).toBeNull();
   });
 
-  it("перевыпуск: шит → новый ключ показывается заново", async () => {
-    const { store, api } = setup({ status: vi.fn(async () => ok<RecoveryStatus>({ hasKey: true, devices: 2, keyCreatedAt: null })) });
+  it("перевыпуск: шит → новый ключ показан как ЗАМЕНА (ожидающая), старый на сервере жив", async () => {
+    const { store, api } = setup({ status: vi.fn(async () => ok<RecoveryStatus>({ ...CREATED })) });
     store.open();
     await vi.waitFor(() => expect(snap(store).phase).toBe("created"));
     store.openSheet("reissue");
     expect(snap(store).sheet).toBe("reissue");
     await store.confirmSheet();
     expect(api.rotate).toHaveBeenCalledWith("tok");
-    expect(snap(store)).toMatchObject({ phase: "shown", shownKey: KEY, sheet: null });
+    expect(snap(store)).toMatchObject({
+      phase: "shown",
+      shownKey: KEY2,
+      shownMode: "replace",
+      pendingId: PENDING,
+      pending: { expiresAt: EXPIRES },
+      sheet: null,
+    });
+    expect(api.confirmRotation).not.toHaveBeenCalled(); // само по себе показание ничего не подтверждает
+  });
+});
+
+describe("RecoveryStore: отложенная замена ключа (PD-126)", () => {
+  async function replacing(over: Parameters<typeof setup>[0] = {}) {
+    const t = setup({ status: vi.fn(async () => ok<RecoveryStatus>({ ...CREATED })), ...over });
+    t.store.open();
+    await vi.waitFor(() => expect(snap(t.store).phase).toBe("created"));
+    t.store.openSheet("reissue");
+    await t.store.confirmSheet();
+    expect(snap(t.store).phase).toBe("shown");
+    return t;
+  }
+
+  it("«Ключ сохранён»: confirm с меткой → ключ стёрт из памяти, pending снят, «Новый ключ действует»", async () => {
+    const { store, api } = await replacing();
+    const p = store.confirmSaved();
+    expect(snap(store).busy).toBe(true);
+    await p;
+    expect(api.confirmRotation).toHaveBeenCalledWith("tok", PENDING);
+    expect(snap(store)).toMatchObject({ phase: "created", shownKey: null, pendingId: null, pending: null, replaced: true, busy: false, error: null });
+    expect(JSON.stringify(snap(store))).not.toContain(COMPACT2);
+    expect(JSON.stringify(snap(store))).not.toContain(PENDING);
+  });
+
+  it("ошибка сети/лимит при confirm: ключ остаётся на экране (повторить можно), старый ключ не тронут", async () => {
+    const confirmRotation = vi
+      .fn<RecoveryApi["confirmRotation"]>()
+      .mockResolvedValueOnce({ kind: "network" })
+      .mockResolvedValueOnce({ kind: "rate_limited", retryAfterSec: 120 })
+      .mockResolvedValue(ok(true as const));
+    const { store } = await replacing({ confirmRotation });
+    await store.confirmSaved();
+    expect(snap(store)).toMatchObject({ phase: "shown", shownKey: KEY2, pendingId: PENDING, busy: false, error: { kind: "offline" } });
+    await store.confirmSaved();
+    expect(snap(store)).toMatchObject({ phase: "shown", shownKey: KEY2, error: { kind: "limit", minutes: 2 } });
+    await store.confirmSaved();
+    expect(snap(store)).toMatchObject({ phase: "created", shownKey: null, replaced: true, error: null });
+  });
+
+  it("замена уже недействительна (отменена/затёрта/истекла): ключ стёрт, объяснение, рабочий ключ не менялся", async () => {
+    const { store } = await replacing({ confirmRotation: vi.fn(async () => ({ kind: "stale_rotation" }) as const) });
+    await store.confirmSaved();
+    expect(snap(store)).toMatchObject({ phase: "created", shownKey: null, pendingId: null, replaced: false, error: { kind: "stale" } });
+    await vi.waitFor(() => expect(snap(store).pending).toBeNull());
+  });
+
+  it("двойной тап по «Ключ сохранён»: один запрос", async () => {
+    const { store, api } = await replacing();
+    const first = store.confirmSaved();
+    void store.confirmSaved();
+    await first;
+    expect(api.confirmRotation).toHaveBeenCalledTimes(1);
+  });
+
+  it("уход без подтверждения: ключ стёрт, pending остаётся (статус «не подтверждён»), метка забыта, confirm не вызывался", async () => {
+    const { store, api } = await replacing();
+    const go = vi.fn();
+    store.requestLeave(go);
+    expect(snap(store).sheet).toBe("leave");
+    await store.confirmSheet();
+    expect(go).toHaveBeenCalledTimes(1);
+    expect(snap(store)).toMatchObject({ phase: "created", shownKey: null, pendingId: null, pending: { expiresAt: EXPIRES }, replaced: false });
+    expect(api.confirmRotation).not.toHaveBeenCalled();
+    expect(JSON.stringify(snap(store))).not.toContain(COMPACT2);
+  });
+
+  it("после возврата на экран статус pending приходит с сервера; без него (истёк) — снимается", async () => {
+    const status = vi
+      .fn<RecoveryApi["status"]>()
+      .mockResolvedValueOnce(ok<RecoveryStatus>({ ...CREATED, pendingRotation: { expiresAt: EXPIRES } }))
+      .mockResolvedValue(ok<RecoveryStatus>({ ...CREATED }));
+    const { store } = setup({ status });
+    store.open();
+    await vi.waitFor(() => expect(snap(store)).toMatchObject({ phase: "created", pending: { expiresAt: EXPIRES } }));
+    store.close();
+    store.open();
+    await vi.waitFor(() => expect(snap(store).pending).toBeNull());
+  });
+
+  it("«Начать заново»: тот же шит, rotate затирает прежнюю замену; новый ключ и новая метка", async () => {
+    const rotate = vi
+      .fn<RecoveryApi["rotate"]>()
+      .mockResolvedValueOnce(ok({ key: KEY2, pendingId: PENDING, expiresAt: EXPIRES }))
+      .mockResolvedValueOnce(ok({ key: KEY, pendingId: "11111111-2222-4333-8444-555555555555", expiresAt: "2026-10-04T10:00:00.000Z" }));
+    const { store } = await replacing({ rotate });
+    store.requestLeave(() => {});
+    await store.confirmSheet();
+    store.openSheet("reissue");
+    await store.confirmSheet();
+    expect(snap(store)).toMatchObject({ phase: "shown", shownKey: KEY, pendingId: "11111111-2222-4333-8444-555555555555", pending: { expiresAt: "2026-10-04T10:00:00.000Z" } });
+  });
+
+  it("«Отменить замену»: запрос → pending снят; ошибка сети — pending остаётся и показана ошибка", async () => {
+    const status = vi.fn(async () => ok<RecoveryStatus>({ ...CREATED, pendingRotation: { expiresAt: EXPIRES } }));
+    const cancelRotation = vi.fn<RecoveryApi["cancelRotation"]>().mockResolvedValueOnce({ kind: "network" }).mockResolvedValue(ok(true as const));
+    const { store, api } = setup({ status, cancelRotation });
+    store.open();
+    await vi.waitFor(() => expect(snap(store).pending).not.toBeNull());
+    await store.cancelPending();
+    expect(snap(store)).toMatchObject({ pending: { expiresAt: EXPIRES }, error: { kind: "offline" }, busy: false });
+    await store.cancelPending();
+    expect(api.cancelRotation).toHaveBeenCalledWith("tok");
+    expect(snap(store)).toMatchObject({ pending: null, error: null });
+  });
+
+  it("отвязка/удаление ключа сбрасывают pending", async () => {
+    const status = vi.fn(async () => ok<RecoveryStatus>({ ...CREATED, pendingRotation: { expiresAt: EXPIRES } }));
+    const { store } = setup({ status });
+    store.open();
+    await vi.waitFor(() => expect(snap(store).pending).not.toBeNull());
+    store.openSheet("unlink");
+    await store.confirmSheet();
+    expect(snap(store)).toMatchObject({ phase: "none", pending: null });
+  });
+
+  it("beforeunload держит страницу и при замене, пока новый ключ на экране; отпускает после confirm", async () => {
+    const { store } = await replacing();
+    const held = new Event("beforeunload", { cancelable: true });
+    window.dispatchEvent(held);
+    expect(held.defaultPrevented).toBe(true);
+    await store.confirmSaved();
+    const free = new Event("beforeunload", { cancelable: true });
+    window.dispatchEvent(free);
+    expect(free.defaultPrevented).toBe(false);
   });
 });
 
@@ -140,7 +280,7 @@ describe("RecoveryStore: ввод ключа", () => {
   });
 
   it("успех: redeem без дефисов → resetAfterLinkChange (а не adoptToken) → «Прогресс восстановлен», ввод стёрт", async () => {
-    const { store, api, sync, calls } = setup({ status: vi.fn(async () => ok<RecoveryStatus>({ hasKey: true, devices: 2, keyCreatedAt: "2026-09-01T00:00:00.000Z" })) });
+    const { store, api, sync, calls } = setup({ status: vi.fn(async () => ok<RecoveryStatus>({ hasKey: true, devices: 2, keyCreatedAt: "2026-09-01T00:00:00.000Z", pendingRotation: null })) });
     store.startEntry();
     store.setEntry(KEY.toLowerCase());
     const p = store.submit();
@@ -225,7 +365,7 @@ describe("RecoveryStore: отвязка и удаление", () => {
     ["delete", "remove"],
   ] as const) {
     it(`${sheet}: запрос → resetAfterLinkChange (токен не меняется) → «ключа нет»`, async () => {
-      const { store, api, sync } = setup({ status: vi.fn(async () => ok<RecoveryStatus>({ hasKey: true, devices: 2, keyCreatedAt: null })) });
+      const { store, api, sync } = setup({ status: vi.fn(async () => ok<RecoveryStatus>({ ...CREATED })) });
       store.open();
       await vi.waitFor(() => expect(snap(store).phase).toBe("created"));
       store.openSheet(sheet);
@@ -239,7 +379,7 @@ describe("RecoveryStore: отвязка и удаление", () => {
 
   it("отказ сервера: ничего не сбрасываем, показываем ошибку", async () => {
     const { store, sync } = setup({
-      status: vi.fn(async () => ok<RecoveryStatus>({ hasKey: true, devices: 2, keyCreatedAt: null })),
+      status: vi.fn(async () => ok<RecoveryStatus>({ ...CREATED })),
       unlink: vi.fn(async () => ({ kind: "network" }) as const),
     });
     store.open();

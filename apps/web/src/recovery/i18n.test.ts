@@ -29,6 +29,9 @@ describe("i18n: блок settings.* (PD-49)", () => {
       "key.errGeneric", "key.retry", "key.statusFailed", "key.sheetReTitle", "key.sheetReMsg", "key.sheetReGo", "key.sheetUnTitle",
       "key.sheetUnMsg", "key.sheetUnGo", "key.sheetDelTitle", "key.sheetDelMsg", "key.sheetDelGo", "key.sheetLeaveTitle",
       "key.sheetLeaveMsg", "key.sheetLeaveGo", "key.sheetLeaveStay",
+      "key.yourNewKey", "key.shownOnceReplace", "key.warnReplace", "key.footReplace", "key.replacedOk", "key.pendingTitle",
+      "key.pendingBody", "key.pendingAgain", "key.pendingCancel", "key.errConfirmOffline", "key.errConfirmGeneric", "key.errStale",
+      "key.sheetReAgainMsg", "key.sheetLeaveReTitle", "key.sheetLeaveReMsg",
     ]) {
       expect(e[k], k).toBeTruthy();
     }
@@ -48,6 +51,7 @@ describe("i18n: блок settings.* (PD-49)", () => {
     }
     expect(placeholders(e["key.errLimit"]!)).toBe("minutes");
     expect(placeholders(e["key.keyGroup"]!)).toBe("chars,n,total");
+    expect(placeholders(e["key.pendingBody"]!)).toBe("when"); // PD-126: срок действия подставляется
   });
 
   it("uk и ru переведены, а не скопированы из en (кроме образца ключа)", () => {

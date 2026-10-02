@@ -481,7 +481,8 @@ sheet «The key isn’t saved yet» (`RecoveryStore.guardLeave/requestLeave`): �
 - Ограничение веба: **закрыть или выгрузить приложение iOS (смахнуть из переключателя, выгрузка системой) перехватить нельзя** —
   `beforeunload` в iOS-PWA не срабатывает, а `pagehide`/`visibilitychange` не позволяют показать диалог. Остаются только
   предупреждение шита при уходе внутри приложения и текст «shown one time only» на экране; ключ, показанный и потерянный так,
-  восстановить нельзя — только «Replace key» из карточки «Key created». Проверить на устройстве этот случай веб не может.
+  восстановить нельзя; при **замене** (PD-126) это безопасно: рабочий ключ не тронут до «Key saved», новый можно выпустить заново
+  («Start replacement again» в карточке «New key not confirmed»). Проверить на устройстве этот случай веб не может.
 - `beforeunload` (десктопные браузеры) по-прежнему держит закрытие вкладки, пока ключ показан.
 
 ## Пакет A: ввод, счётчики, партия Play (PD-115…118)
@@ -535,6 +536,24 @@ Year строятся из `days` (`listDays`), а Play лежит в `kv`. Би
 проп `timelapse` у `ResultCard`; дата — подпись и имя PNG `pundoku-<дата старта>.png` (у Play нет дня; при решении Today и Play в
 один день имена файлов совпадут — браузер добавит « (1)»). Партия после перезагрузки сохраняет лог целиком, поэтому кнопка доступна
 и после восстановления.
+
+## Замена ключа восстановления без потери старого (PD-126)
+
+«Replace key» больше не гасит рабочий ключ при нажатии. Клиент (`recovery/api.ts`, `store.ts`, `SettingsScreen.tsx`):
+
+- Шит «Replace the recovery key?» не деструктивный (кнопка «Make new key»): `rotate` возвращает `{key, pendingId, expiresAt}`, стор
+  входит в фазу `shown` в режиме `replace` (заголовок «Your new key», текст «current key keeps working until you tap “Key saved”»).
+- «Key saved» в режиме замены — запрос `POST /key/rotate/confirm` с `pendingId` (busy, `aria-busy`). Успех → ключ и метка стираются,
+  статус «New key is active. The old one no longer works.» (`role="status"`). Сеть/лимит → ключ остаётся на экране, ошибка с
+  `role="alert"`, можно нажать снова. `409` (отменена/перезапущена/истекла) → ключ стирается, текст «That replacement is no longer valid».
+  В режиме создания «Key saved» по-прежнему только стирает ключ из памяти.
+- Уход без подтверждения («Leave» в шите про *новый* ключ, закрытие приложения, перезагрузка): ключ и `pendingId` стираются (в IDB и
+  `localStorage` не пишутся), рабочий ключ жив. После возврата `GET /api/recovery` отдаёт `pendingRotation` → карточка «New key not
+  confirmed» со сроком («Valid until …»), кнопки «Start replacement again» и «Cancel replacement» (`DELETE /key/rotate`); строка
+  «Replace key» на это время скрыта.
+- i18n: добавлены `settings.key.yourNewKey`, `shownOnceReplace`, `warnReplace`, `footReplace`, `replacedOk`, `pending*`, `errConfirm*`,
+  `errStale`, `sheetReAgainMsg`, `sheetLeaveRe*`; изменены `sheetReMsg`, `sheetReGo`, `footDanger` (PD-88: «подключённые устройства остаются
+  подключёнными» сохранено). Паритет и `{{when}}` проверяет `recovery/i18n.test.ts`.
 
 ## Настройка «Подсвечивать неверные цифры» (PD-112)
 

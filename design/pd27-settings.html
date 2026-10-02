@@ -360,6 +360,12 @@ button.row:active{ background:var(--ink-tint); }
   color:var(--ink); font-size:.86rem; font-weight:600; line-height:1.35; overflow-wrap:anywhere;
 }
 .okline svg{ width:1.15em; height:1.15em; flex:none; margin-top:.1em; }
+/* PD-126: «Новый ключ не подтверждён» — статус-карточка над данными ключа (иконка чернилами + слова, не только цвет) */
+.pending{ margin-bottom:22px; }
+.notice{ display:flex; gap:10px; align-items:flex-start; padding:12px 16px; color:var(--label); }
+.notice svg{ width:1.3em; height:1.3em; flex:none; margin-top:.05em; color:var(--ink); }
+.notice h3{ margin:0; font-size:1rem; font-weight:600; line-height:1.3; overflow-wrap:anywhere; }
+.notice p{ margin:4px 0 0; font-size:.86rem; line-height:1.4; color:var(--label-2); overflow-wrap:anywhere; }
 
 /* Primary action: filled ink, full width, BELOW the card and low on the screen —
    the same component as the Share button on the Today card.
@@ -643,7 +649,7 @@ button.row:active{ background:var(--ink-tint); }
     <div class="pane reissue">
       <div class="grp">
         <div class="head"><h3 data-t="shReTitle"></h3><p data-t="shReMsg"></p></div>
-        <button class="destructive sheet-go" data-t="shReGo"></button>
+        <button class="sheet-go" data-t="shReGo"></button>
       </div>
       <div class="grp"><button class="cancel" data-t="cancel" data-close="1"></button></div>
     </div>
@@ -706,7 +712,7 @@ button.row:active{ background:var(--ink-tint); }
 
   <div class="grp2"><b>Key state</b>
     <div class="seg" data-key="key">
-      <button data-val="none" aria-pressed="true">1 no key</button><button data-val="shown" aria-pressed="false">2 shown once</button><button data-val="created" aria-pressed="false">3 key exists</button><button data-val="enter" aria-pressed="false">4 enter a key</button><button data-val="restored" aria-pressed="false">6 restored</button><button data-val="error" aria-pressed="false">7 wrong key</button><button data-val="limit" aria-pressed="false">8 limit</button><button data-val="offline" aria-pressed="false">9 offline</button>
+      <button data-val="none" aria-pressed="true">1 no key</button><button data-val="shown" aria-pressed="false">2 shown once</button><button data-val="created" aria-pressed="false">3 key exists</button><button data-val="replace" aria-pressed="false">3a new key shown</button><button data-val="pending" aria-pressed="false">3b not confirmed</button><button data-val="replaced" aria-pressed="false">3c replaced</button><button data-val="stale" aria-pressed="false">3d stale</button><button data-val="enter" aria-pressed="false">4 enter a key</button><button data-val="restored" aria-pressed="false">6 restored</button><button data-val="error" aria-pressed="false">7 wrong key</button><button data-val="limit" aria-pressed="false">8 limit</button><button data-val="offline" aria-pressed="false">9 offline</button>
     </div>
   </div>
 
@@ -814,7 +820,21 @@ button.row:active{ background:var(--ink-tint); }
       unlink:"Unlink this device",
       deleteKey:"Delete key and unlink all devices",
       footCreated:"Progress is saved. Enter the key on another phone to continue there.",
-      footDanger:"Replacing the key makes the old one stop working. Deleting it changes nothing about the puzzles already on this phone.",
+      yourNewKey:"Your new key",
+      shownOnceReplace:"The new key is shown this one time only. Your current key keeps working until you tap “Key saved”.",
+      warnReplace:"Keep it somewhere safe, then tap “Key saved”. Until then nothing changes, so if you leave now you lose nothing.",
+      footReplace:"The new key takes over only after “Key saved”. Until then the current key keeps working on every device.",
+      replacedOk:"New key is active. The old one no longer works.",
+      pendingTitle:"New key not confirmed",
+      pendingBody:"Your current key still works. The new one was shown once and isn’t active until you confirm it; it can’t be shown again. Valid until 3 Oct 2026, 10:00.",
+      pendingAgain:"Start replacement again",
+      pendingCancel:"Cancel replacement",
+      errConfirmOffline:"No connection. The new key isn’t active yet and the current key still works. Tap “Key saved” again.",
+      errStale:"That replacement is no longer valid: it was cancelled, restarted or expired. Your current key still works.",
+      sheetReAgainMsg:"The key that wasn’t confirmed is discarded, and a new one is made and shown once. Your current key keeps working until you tap “Key saved” on the new one. Devices that are already connected stay connected.",
+      sheetLeaveReTitle:"The new key isn’t confirmed yet",
+      sheetLeaveReMsg:"It is shown only once. If you leave now, it disappears and your current key keeps working. You can start the replacement again from Settings.",
+      footDanger:"A new key replaces the old one only after you confirm you saved it. Deleting the key changes nothing about the puzzles already on this phone.",
       showEntry:"Enter a different key",
 
       enterLabel:"Recovery key",
@@ -833,8 +853,8 @@ button.row:active{ background:var(--ink-tint); }
       retry:"Try again",
 
       shReTitle:"Replace the recovery key?",
-      shReMsg:"The new key replaces the current one, which stops working straight away. Devices that are already connected stay connected. To disconnect them, use “Unlink this device” or “Delete key and unlink all devices”.",
-      shReGo:"Replace key",
+      shReMsg:"A new key is made and shown once. Your current key keeps working until you tap “Key saved” on the new one, so leaving halfway loses nothing. Devices that are already connected stay connected. To disconnect them, use “Unlink this device” or “Delete key and unlink all devices”.",
+      shReGo:"Make new key",
       shUnTitle:"Unlink this device?",
       shUnMsg:"It keeps everything already on it and stops syncing with the key.",
       shUnGo:"Unlink",
@@ -868,7 +888,21 @@ button.row:active{ background:var(--ink-tint); }
       unlink:"Відв’язати цей пристрій",
       deleteKey:"Видалити ключ і розірвати всі зв’язки",
       footCreated:"Прогрес зберігається. Введіть ключ на іншому телефоні, щоб продовжити там.",
-      footDanger:"Після перевипуску старий ключ перестає працювати. Видалення не змінює того, що вже розгадано на цьому телефоні.",
+      yourNewKey:"Ваш новий ключ",
+      shownOnceReplace:"Новий ключ показується лише цей один раз. Поточний ключ працює, доки ви не натиснете «Ключ збережено».",
+      warnReplace:"Збережіть його в надійному місці й натисніть «Ключ збережено». До цього нічого не змінюється, тож якщо піти зараз, нічого не втратиться.",
+      footReplace:"Новий ключ набуде чинності лише після «Ключ збережено». До цього поточний ключ працює на всіх пристроях.",
+      replacedOk:"Новий ключ діє. Старий більше не працює.",
+      pendingTitle:"Новий ключ не підтверджено",
+      pendingBody:"Поточний ключ досі працює. Новий показано один раз, і він не діє, доки ви його не підтвердите; показати його знову не можна. Дійсний до 3 Oct 2026, 10:00.",
+      pendingAgain:"Почати заміну заново",
+      pendingCancel:"Скасувати заміну",
+      errConfirmOffline:"Немає з’єднання. Новий ключ ще не діє, поточний працює. Натисніть «Ключ збережено» ще раз.",
+      errStale:"Ця заміна більше не діє: її скасовано, розпочато заново або вона минула. Поточний ключ працює.",
+      sheetReAgainMsg:"Непідтверджений ключ буде відкинуто, а новий створено й показано один раз. Поточний ключ працює, доки ви не натиснете «Ключ збережено» на новому. Пристрої, які вже підключені, залишаються підключеними.",
+      sheetLeaveReTitle:"Новий ключ ще не підтверджено",
+      sheetLeaveReMsg:"Його показано лише один раз. Якщо піти зараз, він зникне, а поточний ключ продовжить працювати. Почати заміну заново можна в налаштуваннях.",
+      footDanger:"Новий ключ замінює старий лише після того, як ви підтвердите, що зберегли його. Видалення не змінює того, що вже розгадано на цьому телефоні.",
       showEntry:"Ввести інший ключ",
 
       enterLabel:"Ключ відновлення",
@@ -887,8 +921,8 @@ button.row:active{ background:var(--ink-tint); }
       retry:"Повторити",
 
       shReTitle:"Перевипустити ключ відновлення?",
-      shReMsg:"Новий ключ замінить поточний, і той одразу перестане працювати. Пристрої, які вже підключені, залишаються підключеними. Щоб відвʼязати їх, скористайтеся «Відвʼязати цей пристрій» або «Видалити ключ і розірвати всі звʼязки».",
-      shReGo:"Перевипустити",
+      shReMsg:"Буде створено новий ключ і показано один раз. Поточний ключ працює, доки ви не натиснете «Ключ збережено» на новому, тож якщо піти на півдорозі, нічого не втратиться. Пристрої, які вже підключені, залишаються підключеними. Щоб відв’язати їх, скористайтеся «Відв’язати цей пристрій» або «Видалити ключ і розірвати всі зв’язки».",
+      shReGo:"Створити новий ключ",
       shUnTitle:"Відвʼязати цей пристрій?",
       shUnMsg:"Усе, що вже є на телефоні, залишиться; синхронізація за ключем припиниться.",
       shUnGo:"Відвʼязати",
@@ -922,7 +956,21 @@ button.row:active{ background:var(--ink-tint); }
       unlink:"Отвязать это устройство",
       deleteKey:"Удалить ключ и разорвать все связи",
       footCreated:"Прогресс сохраняется. Введите ключ на другом телефоне, чтобы продолжить там.",
-      footDanger:"После перевыпуска старый ключ перестаёт работать. Удаление не меняет того, что уже разгадано на этом телефоне.",
+      yourNewKey:"Ваш новый ключ",
+      shownOnceReplace:"Новый ключ показывается только этот один раз. Текущий ключ продолжает работать, пока вы не нажмёте «Ключ сохранён».",
+      warnReplace:"Сохраните его в надёжном месте и нажмите «Ключ сохранён». До этого ничего не меняется, поэтому если уйти сейчас, ничего не потеряется.",
+      footReplace:"Новый ключ вступит в силу только после «Ключ сохранён». До этого текущий ключ работает на всех устройствах.",
+      replacedOk:"Новый ключ действует. Старый больше не работает.",
+      pendingTitle:"Новый ключ не подтверждён",
+      pendingBody:"Текущий ключ по-прежнему работает. Новый был показан один раз и не действует, пока вы его не подтвердите; показать его снова нельзя. Действителен до 3 Oct 2026, 10:00.",
+      pendingAgain:"Начать замену заново",
+      pendingCancel:"Отменить замену",
+      errConfirmOffline:"Нет соединения. Новый ключ ещё не действует, текущий работает. Нажмите «Ключ сохранён» ещё раз.",
+      errStale:"Эта замена больше не действует: она отменена, начата заново или истекла. Текущий ключ работает.",
+      sheetReAgainMsg:"Неподтверждённый ключ будет отброшен, а новый создан и показан один раз. Текущий ключ работает, пока вы не нажмёте «Ключ сохранён» на новом. Устройства, которые уже подключены, остаются подключёнными.",
+      sheetLeaveReTitle:"Новый ключ ещё не подтверждён",
+      sheetLeaveReMsg:"Он показан только один раз. Если уйти сейчас, он исчезнет, а текущий ключ продолжит работать. Начать замену заново можно в настройках.",
+      footDanger:"Новый ключ заменяет старый только после того, как вы подтвердите, что сохранили его. Удаление не меняет того, что уже разгадано на этом телефоне.",
       showEntry:"Ввести другой ключ",
 
       enterLabel:"Ключ восстановления",
@@ -941,8 +989,8 @@ button.row:active{ background:var(--ink-tint); }
       retry:"Повторить",
 
       shReTitle:"Перевыпустить ключ восстановления?",
-      shReMsg:"Новый ключ заменит текущий, и тот сразу перестанет работать. Устройства, которые уже подключены, остаются подключёнными. Чтобы отвязать их, воспользуйтесь «Отвязать это устройство» или «Удалить ключ и разорвать все связи».",
-      shReGo:"Перевыпустить",
+      shReMsg:"Будет создан новый ключ и показан один раз. Текущий ключ работает, пока вы не нажмёте «Ключ сохранён» на новом, поэтому если уйти на полпути, ничего не потеряется. Устройства, которые уже подключены, остаются подключёнными. Чтобы отвязать их, воспользуйтесь «Отвязать это устройство» или «Удалить ключ и разорвать все связи».",
+      shReGo:"Создать новый ключ",
       shUnTitle:"Отвязать это устройство?",
       shUnMsg:"Всё, что уже есть на телефоне, останется; синхронизация по ключу прекратится.",
       shUnGo:"Отвязать",
@@ -1071,24 +1119,37 @@ button.row:active{ background:var(--ink-tint); }
     }
 
     /* ---- 2. the key, shown once ---- */
-    else if (s === "shown"){
+    else if (s === "shown" || s === "replace"){
+      var rp = s === "replace";   /* PD-126: replacement — the current key keeps working until "Key saved" */
       h += '<div class="card">' +
              '<div class="pad">' +
-               '<span class="cap">' + t.yourKey + '</span>' +
+               '<span class="cap">' + (rp ? t.yourNewKey : t.yourKey) + '</span>' +
                keyDisplay() +
-               '<p class="hint">' + t.shownOnce + '</p>' +
+               '<p class="hint">' + (rp ? t.shownOnceReplace : t.shownOnce) + '</p>' +
              '</div>' +
              '<button class="rowbtn" id="btn-copy" aria-live="polite">' +
                (st.copied ? CHECK + t.copied : COPYI + t.copy) +
              '</button>' +
-             '<p class="warn">' + TRI + '<span>' + t.warn + '</span></p>' +
+             '<p class="warn">' + TRI + '<span>' + (rp ? t.warnReplace : t.warn) + '</span></p>' +
            '</div>' +
-           '<button class="primary" id="btn-saved">' + t.saved + '</button>';
+           '<button class="primary" id="btn-saved">' + t.saved + '</button>' +
+           (rp ? '<p class="sec-foot">' + t.footReplace + '</p>' : '');
     }
 
     /* ---- 3. the key exists ---- */
-    else if (s === "created" || s === "restored"){
+    else if (s === "created" || s === "restored" || s === "pending" || s === "replaced" || s === "stale"){
       if (s === "restored") h += '<p class="okline" role="status">' + CHECK + '<span>' + t.restored + '</span></p>';
+      if (s === "replaced") h += '<p class="okline" role="status">' + CHECK + '<span>' + t.replacedOk + '</span></p>';
+      if (s === "stale")    h += '<p class="err" role="alert">' + BANG + '<span>' + t.errStale + '</span></p>';
+      if (s === "pending"){
+        /* Not an alarm but a state that can be closed: ink icon, plain text, actions as rows.
+           "Replace key" is hidden from the actions card while this is shown. */
+        h += '<div class="card pending" role="group" aria-labelledby="pend-t">' +
+               '<div class="notice">' + BANG + '<div><h3 id="pend-t">' + t.pendingTitle + '</h3><p>' + t.pendingBody + '</p></div></div>' +
+               '<button class="rowbtn" id="btn-reissue">' + t.pendingAgain + '</button>' +
+               '<button class="rowbtn" id="btn-pcancel">' + t.pendingCancel + '</button>' +
+             '</div>';
+      }
       h += '<div class="card">' +
              '<div class="row"><span class="lab">' + t.rowCreated + '</span><span class="val">' + t.createdOn + '</span></div>' +
              '<div class="row"><span class="lab">' + t.rowDevices + '</span><span class="val">' + st.devices + '</span></div>' +
@@ -1098,7 +1159,7 @@ button.row:active{ background:var(--ink-tint); }
               managing-accounts.md > Deleting accounts — "Provide a clear way to initiate
               account deletion within your app." */
            '<div class="card">' +
-             '<button class="rowbtn" id="btn-reissue">' + t.reissue + '</button>' +
+             (s === "pending" ? '' : '<button class="rowbtn" id="btn-reissue">' + t.reissue + '</button>') +
              '<button class="rowbtn" id="btn-unlink">' + t.unlink + '</button>' +
              '<button class="rowbtn destructive" id="btn-delete">' + t.deleteKey + '</button>' +
            '</div>' +
@@ -1152,7 +1213,8 @@ button.row:active{ background:var(--ink-tint); }
          so the button never lies about what it will do next time. */
       setTimeout(function(){ st.copied = false; if (root.dataset.key === "shown") renderKey(); }, 2200);
     });
-    if (g("btn-saved")) g("btn-saved").addEventListener("click", function(){ set("key","created"); });
+    if (g("btn-saved")) g("btn-saved").addEventListener("click", function(){ set("key", root.dataset.key === "replace" ? "replaced" : "created"); });
+    if (g("btn-pcancel")) g("btn-pcancel").addEventListener("click", function(){ set("key","created"); });
 
     var f = g("f-key");
     if (f) f.addEventListener("input", function(){
@@ -1196,7 +1258,7 @@ button.row:active{ background:var(--ink-tint); }
     if (!b.classList.contains("sheet-go")) return;
     var which = root.getAttribute("data-sheet");
     closeSheet();
-    if (which === "reissue"){ st.groups = genKey(); st.copied = false; st.devices = 1; set("key","shown"); }
+    if (which === "reissue"){ st.groups = genKey(); st.copied = false; set("key","replace"); }
     if (which === "unlink"){ st.devices = Math.max(0, st.devices - 1); set("key","none"); }
     if (which === "delete"){ st.groups = null; st.devices = 0; set("key","none"); }
   });
@@ -1230,7 +1292,7 @@ button.row:active{ background:var(--ink-tint); }
       x.setAttribute("aria-pressed", String(x.dataset.val === val));
     });
     /* States 2 and 3 need a key to exist; the switches shouldn't show an empty grid. */
-    if ((val === "shown" || val === "created") && !st.groups) st.groups = genKey();
+    if ((val === "shown" || val === "created" || val === "replace" || val === "pending") && !st.groups) st.groups = genKey();
     if (key === "lang" || key === "key" || key === "busy" || key === "keyfmt") render();
   }
   document.querySelectorAll(".mock .seg").forEach(function(seg){

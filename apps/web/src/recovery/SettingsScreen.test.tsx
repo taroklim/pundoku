@@ -13,6 +13,9 @@ import { RecoveryStore } from "./store";
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
 const KEY = "K7QP-M2XZ-9D4T-VB6N-H3RW-8YCJ-5FGA-E0S1";
+const KEY2 = "ZQ8W-4NMD-7T2X-H9RB-C5VK-1JYF-3GPE-6A0S";
+const PENDING = "6f0c1d9e-1b7a-4c52-9f1a-3e5d8b2a7c10";
+const EXPIRES = "2026-10-03T10:00:00.000Z";
 const ok = <T,>(value: T): RecoveryResult<T> => ({ kind: "ok", value });
 
 let host: HTMLDivElement;
@@ -44,7 +47,9 @@ async function mount(status: RecoveryStatus = { hasKey: false }, over: Partial<R
   api = {
     status: vi.fn(async () => ok(status)),
     create: vi.fn(async () => ok({ key: KEY, devices: 1 })),
-    rotate: vi.fn(async () => ok({ key: KEY })),
+    rotate: vi.fn(async () => ok({ key: KEY2, pendingId: PENDING, expiresAt: EXPIRES })),
+    confirmRotation: vi.fn(async () => ok(true as const)),
+    cancelRotation: vi.fn(async () => ok(true as const)),
     redeem: vi.fn(async () => ok({ devices: 2 })),
     unlink: vi.fn(async () => ok(true as const)),
     remove: vi.fn(async () => ok(true as const)),
@@ -102,7 +107,7 @@ describe("SettingsScreen: состояния блока «Recovery key»", () =>
   });
 
   it("3. ключ создан: дата, число устройств, три действия; последнее — деструктивное", async () => {
-    await mount({ hasKey: true, devices: 3, keyCreatedAt: "2026-09-30T10:00:00.000Z" });
+    await mount({ hasKey: true, devices: 3, keyCreatedAt: "2026-09-30T10:00:00.000Z", pendingRotation: null });
     expect(q("key-created")!.textContent).toBe(formatCreated("2026-09-30T10:00:00.000Z", "en"));
     expect(q("key-devices")!.textContent).toBe("3");
     expect(q("key-reissue")).not.toBeNull();
@@ -128,7 +133,7 @@ describe("SettingsScreen: состояния блока «Recovery key»", () =>
 
   it("5–6. проверка и успех: спиннер и «Checking…», затем «Progress restored.»; синхронизация сброшена, поле пустое", async () => {
     let release!: (r: RecoveryResult<{ devices: number }>) => void;
-    const status = vi.fn<RecoveryApi["status"]>().mockResolvedValueOnce(ok({ hasKey: false })).mockResolvedValue(ok({ hasKey: true, devices: 2, keyCreatedAt: null }));
+    const status = vi.fn<RecoveryApi["status"]>().mockResolvedValueOnce(ok({ hasKey: false })).mockResolvedValue(ok({ hasKey: true, devices: 2, keyCreatedAt: null, pendingRotation: null }));
     await mount({ hasKey: false }, { status, redeem: () => new Promise((r) => (release = r)) });
     await click("key-have");
     await type(KEY);
@@ -209,7 +214,7 @@ describe("SettingsScreen: состояния блока «Recovery key»", () =>
 });
 
 describe("SettingsScreen: action sheets", () => {
-  const created = { hasKey: true, devices: 2, keyCreatedAt: "2026-09-30T10:00:00.000Z" } as const;
+  const created = { hasKey: true, devices: 2, keyCreatedAt: "2026-09-30T10:00:00.000Z", pendingRotation: null } as const;
 
   it("Replace key: диалог aria-modal, действие сверху, Esc закрывает, фокус возвращается на кнопку", async () => {
     await mount(created);
@@ -222,7 +227,10 @@ describe("SettingsScreen: action sheets", () => {
     // PD-88: текст не обещает отвязку других устройств (сервер при перевыпуске меняет только ключ)
     expect(dlg.textContent).toContain("stay connected");
     expect(dlg.textContent).not.toMatch(/is unlinked|will be unlinked/);
-    expect(q("action-sheet-go")!.className).toContain("destructive");
+    // PD-126: замена больше ничего не ломает до подтверждения, шит не деструктивный
+    expect(q("action-sheet-go")!.className).not.toContain("destructive");
+    expect(q("action-sheet-go")!.textContent).toBe("Make new key");
+    expect(dlg.textContent).toContain("keeps working until you tap");
     await act(async () => void dlg.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true })));
     expect(q("action-sheet")).toBeNull();
     expect(document.activeElement).toBe(q("key-reissue"));
@@ -317,6 +325,116 @@ describe("SettingsScreen: action sheets", () => {
     await click("action-sheet-cancel");
     expect(go).not.toHaveBeenCalled();
     expect(q("key-shown")).not.toBeNull();
+  });
+});
+
+describe("SettingsScreen: отложенная замена ключа (PD-126)", () => {
+  const created = { hasKey: true, devices: 2, keyCreatedAt: "2026-09-30T10:00:00.000Z", pendingRotation: null } as const;
+  const pending = { ...created, pendingRotation: { expiresAt: EXPIRES } } as const;
+
+  async function startReplace() {
+    await click("key-reissue");
+    await click("action-sheet-go");
+  }
+
+  it("замена: экран «Your new key» с пояснением, что старый ключ работает; ничего не подтверждено само", async () => {
+    await mount(created);
+    await startReplace();
+    expect(api.rotate).toHaveBeenCalledWith("tok");
+    expect(host.querySelector("#settings-h-key")).not.toBeNull();
+    expect(host.textContent).toContain("Your new key");
+    expect(host.textContent).toContain("Your current key keeps working until you tap");
+    expect([...host.querySelectorAll(".settings-chip")].map((c) => c.textContent).join("-")).toBe(KEY2);
+    expect(document.activeElement).toBe(q("key-shown"));
+    expect(api.confirmRotation).not.toHaveBeenCalled();
+  });
+
+  it("«Key saved»: busy → confirm с pendingId → «New key is active», ключа на экране нет, pending-карточки нет", async () => {
+    let release!: (r: RecoveryResult<true>) => void;
+    await mount(created, { confirmRotation: vi.fn(() => new Promise<RecoveryResult<true>>((r) => (release = r))) });
+    await startReplace();
+    await click("key-saved");
+    expect(q("key-saved")!.getAttribute("aria-busy")).toBe("true");
+    await act(async () => release(ok(true as const)));
+    await flush();
+    expect(api.confirmRotation).toHaveBeenCalledWith("tok", PENDING);
+    expect(q("key-shown")).toBeNull();
+    expect(host.textContent).not.toContain("ZQ8W");
+    expect(q("key-replaced")!.textContent).toBe("New key is active. The old one no longer works.");
+    expect(q("key-replaced")!.getAttribute("role")).toBe("status");
+    expect(q("key-pending")).toBeNull();
+  });
+
+  it("ошибка сети при confirm: alert с понятным текстом, ключ остаётся, «Key saved» можно нажать снова", async () => {
+    const confirmRotation = vi.fn<RecoveryApi["confirmRotation"]>().mockResolvedValueOnce({ kind: "network" }).mockResolvedValue(ok(true as const));
+    await mount(created, { confirmRotation });
+    await startReplace();
+    await click("key-saved");
+    expect(q("key-error")!.getAttribute("role")).toBe("alert");
+    expect(q("key-error")!.textContent).toContain("current key still works");
+    expect(q("key-shown")).not.toBeNull();
+    await click("key-saved");
+    expect(q("key-shown")).toBeNull();
+    expect(q("key-replaced")).not.toBeNull();
+  });
+
+  it("замена устарела (409): ключ стёрт, сказано, что рабочий ключ не менялся", async () => {
+    await mount(created, { confirmRotation: async () => ({ kind: "stale_rotation" }) });
+    await startReplace();
+    await click("key-saved");
+    expect(q("key-shown")).toBeNull();
+    expect(q("key-error")!.getAttribute("data-kind")).toBe("stale");
+    expect(q("key-error")!.textContent).toContain("no longer valid");
+    expect(q("key-replaced")).toBeNull();
+  });
+
+  it("уход без подтверждения: шит про НОВЫЙ ключ, не деструктивный; «Leave» → pending-карточка со старым ключом рабочим", async () => {
+    const status = vi.fn<RecoveryApi["status"]>().mockResolvedValueOnce(ok(created)).mockResolvedValue(ok(pending));
+    await mount(created, { status });
+    await startReplace();
+    const go = vi.fn();
+    await act(async () => store.requestLeave(go));
+    expect(q("action-sheet")!.textContent).toContain("The new key isn’t confirmed yet");
+    expect(q("action-sheet")!.textContent).toContain("current key keeps working");
+    expect(q("action-sheet-go")!.className).not.toContain("destructive");
+    await click("action-sheet-go");
+    expect(go).toHaveBeenCalledTimes(1);
+    expect(api.confirmRotation).not.toHaveBeenCalled();
+    const card = q("key-pending")!;
+    expect(card.textContent).toContain("New key not confirmed");
+    expect(card.textContent).toContain("current key still works");
+    expect(card.getAttribute("role")).toBe("group");
+    expect(card.getAttribute("aria-labelledby")).toBe("settings-pending-title");
+    expect(host.textContent).not.toContain("ZQ8W");
+  });
+
+  it("pending-карточка: «Start replacement again» открывает шит с текстом про отброшенный ключ; «Replace key» из списка скрыт", async () => {
+    await mount(pending);
+    expect(q("key-pending")).not.toBeNull();
+    expect(host.querySelectorAll('[data-testid="key-reissue"]')).toHaveLength(1); // только в карточке
+    await click("key-reissue");
+    expect(q("action-sheet")!.textContent).toContain("wasn’t confirmed is discarded");
+    await click("action-sheet-go");
+    expect(api.rotate).toHaveBeenCalledTimes(1);
+    expect(q("key-shown")).not.toBeNull();
+  });
+
+  it("«Cancel replacement»: запрос и карточка исчезает, строка «Replace key» возвращается", async () => {
+    const status = vi.fn<RecoveryApi["status"]>().mockResolvedValueOnce(ok(pending)).mockResolvedValue(ok(created));
+    await mount(pending, { status });
+    await click("key-pending-cancel");
+    expect(api.cancelRotation).toHaveBeenCalledWith("tok");
+    expect(q("key-pending")).toBeNull();
+    expect(q("key-reissue")).not.toBeNull();
+  });
+
+  it("тексты замены переводятся (uk, ru), карточка показывает срок", async () => {
+    await mount(pending);
+    await click("lang-uk");
+    expect(q("key-pending")!.textContent).toContain("Новий ключ не підтверджено");
+    await click("lang-ru");
+    expect(q("key-pending")!.textContent).toContain("Новый ключ не подтверждён");
+    expect(q("key-pending")!.textContent).not.toContain("{{");
   });
 });
 

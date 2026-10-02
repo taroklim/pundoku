@@ -72,6 +72,13 @@ export function formatCreated(iso: string | null, locale: string): string {
     .trim();
 }
 
+/** «3 окт., 10:00» — когда протухнет неподтверждённый ключ (локальное время устройства). */
+export function formatUntil(iso: string, locale: string): string {
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return "—";
+  return new Intl.DateTimeFormat(locale, { day: "numeric", month: "short", hour: "numeric", minute: "2-digit" }).format(date);
+}
+
 /** Позиция курсора в отформатированном ключе после `n` значащих символов (дефис ставится между группами). */
 const caretAfter = (n: number): number => (n === 0 ? 0 : n + Math.floor((n - 1) / KEY_GROUP));
 
@@ -150,23 +157,27 @@ export function SettingsScreen({ store, onBack, origin = "today", onOpenHelp }: 
   const complete = isCompleteKey(s.entry);
   const restoreBlocked = s.busy || store.blocked || !complete;
   const err = s.error;
-  const errText = (e: RecoveryError, inEntry: boolean): string => {
+  /** `ctx`: где показана ошибка — поле ввода ключа, подтверждение замены («Ключ сохранён») или остальное. */
+  type ErrCtx = "entry" | "confirm" | "other";
+  const errText = (e: RecoveryError, ctx: ErrCtx): string => {
     switch (e.kind) {
       case "invalid":
         return t("settings.key.errKey");
       case "limit":
         return t("settings.key.errLimit", { minutes: e.minutes ?? 1 });
+      case "stale":
+        return t("settings.key.errStale");
       case "offline":
-        return inEntry ? t("settings.key.errOffline") : t("settings.key.statusFailed");
+        return ctx === "entry" ? t("settings.key.errOffline") : ctx === "confirm" ? t("settings.key.errConfirmOffline") : t("settings.key.statusFailed");
       default:
-        return t("settings.key.errGeneric");
+        return ctx === "confirm" ? t("settings.key.errConfirmGeneric") : t("settings.key.errGeneric");
     }
   };
-  const errLine = (inEntry: boolean, id?: string) =>
+  const errLine = (ctx: ErrCtx, id?: string) =>
     err ? (
       <p className="settings-err" id={id} role="alert" data-testid="key-error" data-kind={err.kind}>
         <BangIcon />
-        <span>{errText(err, inEntry)}</span>
+        <span>{errText(err, ctx)}</span>
       </p>
     ) : null;
 
@@ -210,16 +221,17 @@ export function SettingsScreen({ store, onBack, origin = "today", onOpenHelp }: 
               {s.busy && <span className="settings-spin" aria-hidden="true" />}
               {t("settings.key.create")}
             </button>
-            {errLine(false)}
+            {errLine("other")}
             <p className="settings-foot">{t("settings.key.footNone")}</p>
           </>
         );
-      case "shown":
+      case "shown": {
+        const replace = s.shownMode === "replace";
         return (
           <>
             <div className="settings-card">
               <div className="settings-pad">
-                <span className="settings-cap">{t("settings.key.yourKey")}</span>
+                <span className="settings-cap">{replace ? t("settings.key.yourNewKey") : t("settings.key.yourKey")}</span>
                 <div ref={keyRef} className="settings-keybox" role="group" aria-label={t("settings.key.keyLabel")} tabIndex={-1} data-testid="key-shown">
                   {groups.map((g, i) => (
                     <div
@@ -232,7 +244,7 @@ export function SettingsScreen({ store, onBack, origin = "today", onOpenHelp }: 
                     </div>
                   ))}
                 </div>
-                <p className="settings-hint">{t("settings.key.shownOnce")}</p>
+                <p className="settings-hint">{replace ? t("settings.key.shownOnceReplace") : t("settings.key.shownOnce")}</p>
               </div>
               <button type="button" className="settings-rowbtn" onClick={() => void store.copy()} aria-live="polite" data-testid="key-copy">
                 {s.copied ? <CheckIcon /> : <CopyIcon />}
@@ -240,14 +252,27 @@ export function SettingsScreen({ store, onBack, origin = "today", onOpenHelp }: 
               </button>
               <p className="settings-warn">
                 <TriIcon />
-                <span>{t("settings.key.warn")}</span>
+                <span>{replace ? t("settings.key.warnReplace") : t("settings.key.warn")}</span>
               </p>
             </div>
-            <button type="button" className="settings-primary" onClick={() => store.confirmSaved()} data-testid="key-saved">
+            <button
+              type="button"
+              className="settings-primary"
+              aria-disabled={s.busy}
+              aria-busy={s.busy}
+              onClick={() => {
+                if (!s.busy) void store.confirmSaved();
+              }}
+              data-testid="key-saved"
+            >
+              {s.busy && <span className="settings-spin" aria-hidden="true" />}
               {t("settings.key.saved")}
             </button>
+            {errLine("confirm")}
+            {replace && <p className="settings-foot">{t("settings.key.footReplace")}</p>}
           </>
         );
+      }
       case "created":
         return (
           <>
@@ -256,6 +281,30 @@ export function SettingsScreen({ store, onBack, origin = "today", onOpenHelp }: 
                 <CheckIcon />
                 <span>{t("settings.key.restored")}</span>
               </p>
+            )}
+            {s.replaced && (
+              <p className="settings-ok" role="status" data-testid="key-replaced">
+                <CheckIcon />
+                <span>{t("settings.key.replacedOk")}</span>
+              </p>
+            )}
+            {s.pending && (
+              <div className="settings-card settings-pending" role="group" aria-labelledby="settings-pending-title" data-testid="key-pending">
+                <div className="settings-notice">
+                  <BangIcon />
+                  <div>
+                    <h3 id="settings-pending-title">{t("settings.key.pendingTitle")}</h3>
+                    <p>{t("settings.key.pendingBody", { when: formatUntil(s.pending.expiresAt, locale) })}</p>
+                  </div>
+                </div>
+                <button type="button" className="settings-rowbtn" aria-disabled={s.busy} onClick={() => store.openSheet("reissue")} data-testid="key-reissue">
+                  {t("settings.key.pendingAgain")}
+                </button>
+                <button type="button" className="settings-rowbtn" aria-disabled={s.busy} onClick={() => void store.cancelPending()} data-testid="key-pending-cancel">
+                  {s.busy && <span className="settings-spin" aria-hidden="true" />}
+                  {t("settings.key.pendingCancel")}
+                </button>
+              </div>
             )}
             <div className="settings-card">
               <div className="settings-row">
@@ -269,9 +318,11 @@ export function SettingsScreen({ store, onBack, origin = "today", onOpenHelp }: 
             </div>
             <p className="settings-foot">{t("settings.key.footCreated")}</p>
             <div className="settings-card">
-              <button type="button" className="settings-rowbtn" aria-disabled={s.busy} onClick={() => store.openSheet("reissue")} data-testid="key-reissue">
-                {t("settings.key.reissue")}
-              </button>
+              {!s.pending && (
+                <button type="button" className="settings-rowbtn" aria-disabled={s.busy} onClick={() => store.openSheet("reissue")} data-testid="key-reissue">
+                  {t("settings.key.reissue")}
+                </button>
+              )}
               <button type="button" className="settings-rowbtn" aria-disabled={s.busy} onClick={() => store.openSheet("unlink")} data-testid="key-unlink">
                 {t("settings.key.unlink")}
               </button>
@@ -279,7 +330,7 @@ export function SettingsScreen({ store, onBack, origin = "today", onOpenHelp }: 
                 {t("settings.key.deleteKey")}
               </button>
             </div>
-            {errLine(false)}
+            {errLine("other")}
             <p className="settings-foot">{t("settings.key.footDanger")}</p>
           </>
         );
@@ -313,7 +364,7 @@ export function SettingsScreen({ store, onBack, origin = "today", onOpenHelp }: 
                   {t("settings.key.enterHint")}
                 </p>
               </div>
-              {errLine(true, "settings-key-err")}
+              {errLine("entry", "settings-key-err")}
             </div>
             <button
               type="button"
@@ -350,12 +401,20 @@ export function SettingsScreen({ store, onBack, origin = "today", onOpenHelp }: 
     sheet === null
       ? null
       : sheet === "reissue"
-        ? { title: t("settings.key.sheetReTitle"), message: t("settings.key.sheetReMsg"), action: t("settings.key.sheetReGo"), destructive: true, cancel: t("settings.key.cancel") }
+        ? {
+            title: t("settings.key.sheetReTitle"),
+            message: s.pending ? t("settings.key.sheetReAgainMsg") : t("settings.key.sheetReMsg"),
+            action: t("settings.key.sheetReGo"),
+            destructive: false, // PD-126: старый ключ жив до подтверждения, ничего не теряется
+            cancel: t("settings.key.cancel"),
+          }
         : sheet === "unlink"
           ? { title: t("settings.key.sheetUnTitle"), message: t("settings.key.sheetUnMsg"), action: t("settings.key.sheetUnGo"), destructive: false, cancel: t("settings.key.cancel") }
           : sheet === "delete"
             ? { title: t("settings.key.sheetDelTitle"), message: t("settings.key.sheetDelMsg"), action: t("settings.key.sheetDelGo"), destructive: true, cancel: t("settings.key.cancel") }
-            : { title: t("settings.key.sheetLeaveTitle"), message: t("settings.key.sheetLeaveMsg"), action: t("settings.key.sheetLeaveGo"), destructive: true, cancel: t("settings.key.sheetLeaveStay") };
+            : s.shownMode === "replace"
+              ? { title: t("settings.key.sheetLeaveReTitle"), message: t("settings.key.sheetLeaveReMsg"), action: t("settings.key.sheetLeaveGo"), destructive: false, cancel: t("settings.key.sheetLeaveStay") }
+              : { title: t("settings.key.sheetLeaveTitle"), message: t("settings.key.sheetLeaveMsg"), action: t("settings.key.sheetLeaveGo"), destructive: true, cancel: t("settings.key.sheetLeaveStay") };
 
   return (
     <div className="settings" data-testid="settings-screen">

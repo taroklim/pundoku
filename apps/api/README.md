@@ -99,9 +99,11 @@ curl http://localhost:3000/api/snapshot -H "Authorization: Bearer $TOK"
 | Метод и путь | Ответ |
 | --- | --- |
 | `POST /api/recovery/key` | `201 {key, devices: 1}` — создаёт группу; снапшот этого устройства становится снапшотом группы. `409 key_exists`, если устройство уже в группе |
-| `POST /api/recovery/key/rotate` | `200 {key}` — новый ключ, старый перестаёт работать; `404 no_key`, если устройство не в группе. Перевыпустить может любое устройство группы |
+| `POST /api/recovery/key/rotate` | `200 {key, pendingId, expiresAt}` — **начинает** замену (PD-126): новый ключ хранится как ожидающий (только HMAC, TTL 24 ч), **старый продолжает работать**, новый redeem не принимает. Повтор затирает прежнюю ожидающую замену. `404 no_key`, если устройство не в группе |
+| `POST /api/recovery/key/rotate/confirm` `{pendingId}` | `200 {confirmed: true}` — атомарно делает ожидающий ключ активным (старый перестаёт работать). `400 invalid_pending`, `404 no_key`, `409 no_pending` / `pending_replaced` / `pending_expired` |
+| `DELETE /api/recovery/key/rotate` | `200 {pending: false}` — отменить ожидающую замену (идемпотентно) |
 | `POST /api/recovery/redeem` `{key}` | `200 {linked: true, devices}` — устройство присоединено (повтор — идемпотентный успех); любая неудача — `400 invalid_key` |
-| `GET /api/recovery` | `{hasKey: false}` или `{hasKey: true, devices, keyCreatedAt}` |
+| `GET /api/recovery` | `{hasKey: false}` или `{hasKey: true, devices, keyCreatedAt, pendingRotation: {expiresAt} \| null}` |
 | `DELETE /api/recovery/link` | `200 {linked: false}` — «отвязать это устройство» (идемпотентно) |
 | `DELETE /api/recovery` | `200 {hasKey: false}` — «удалить ключ и разорвать все связи» (идемпотентно) |
 
@@ -124,8 +126,13 @@ curl -X POST localhost:3000/api/recovery/redeem -H "Authorization: Bearer $B" -H
 - **Присоединение (redeem):** прежний собственный снапшот устройства не удаляется, а помечается `snapshots.orphaned_at`
   (сирота, для будущей уборки); любой успешный `PUT` в свой снапшот снимает пометку. Устройство из другой группы
   сначала выходит из неё по правилам отвязки.
+- **Замена ключа (PD-126, миграция `0007`):** `sync_groups.pending_key_hmac/pending_id/pending_expires_at` (nullable, все три или
+  ни одной). Подтверждение — один `UPDATE` под `FOR UPDATE` строки группы: `key_hmac := pending_key_hmac`,
+  `key_created_at := now`, pending очищается; `pendingId` защищает от подтверждения ключа, которого устройство не видело
+  (замену перезапустили с другого устройства). Истёкший pending не отдаётся в `GET` и не подтверждается; чистится
+  следующим `rotate`/`confirm`/отменой.
 - **Гонки:** каждая изменяющая операция — транзакция, первым шагом блокирующая строку устройства
-  (`devices … FOR UPDATE`), redeem/rotate/удаление — ещё и строку группы (`FOR UPDATE`); при `40P01`/`40001` — до 3 попыток.
+  (`devices … FOR UPDATE`), redeem/rotate/confirm/удаление — ещё и строку группы (`FOR UPDATE`); при `40P01`/`40001` — до 3 попыток.
 
 Безопасность:
 - В БД только `HMAC-SHA256(RECOVERY_KEY_HMAC_SECRET, нормализованный ключ)` (`sync_groups.key_hmac`, unique, 32 байта);
@@ -136,11 +143,12 @@ curl -X POST localhost:3000/api/recovery/redeem -H "Authorization: Bearer $B" -H
 - Ответ на неудачный redeem **один и тот же** (`400 invalid_key`) для неверного формата, чужого, перевыпущенного,
   удалённого ключа и не-строки — как по телу, так и по времени (любая строка идёт в HMAC и поиск, формат не проверяется).
 - Лимиты (in-memory, по клиенту): redeem — **20 неудач/час с IP** и **10 неудач/час с устройства** (успехи не считаются;
-  `429 rate_limited` + `Retry-After` блокирует и верный ключ до конца окна); создание + перевыпуск — **5/час на устройство**.
+  `429 rate_limited` + `Retry-After` блокирует и верный ключ до конца окна); создание + начало замены — **5/час на устройство**; подтверждение/отмена замены — **30/час на устройство** (отдельный счётчик,
+  `RecoveryLimits.confirmPerDevice`).
   За reverse proxy включить `TRUST_PROXY=1`, иначе лимит по IP видит адрес прокси. Лимиты сбрасываются перезапуском api.
 - **Не логируется:** ключ (ни в каком виде, ни в теле запроса, ни в ответе), токен устройства, заголовок
   `Authorization`. pino `redact` закрывает `key`/`*.key`/`req.body.key`/`res.body.key` и заголовки; в логах событий
-  только `groupId` и `keyHmacPrefix` (6 hex HMAC) для расследований. Тест собирает весь лог и проверяет отсутствие ключа.
+  только `groupId` и `keyHmacPrefix` (6 hex HMAC) для расследований. Тест собирает весь лог и проверяет отсутствие ключа и `pendingId`.
 
 ## Источник сетки дня: Sudoku.com
 
@@ -229,9 +237,9 @@ TEST_DATABASE_URL=postgres://localhost:5432/pundoku_test pnpm --filter @pundoku/
 ```
 
 Ключ восстановления (`src/recovery/integration.test.ts`) требует **именно `TEST_DATABASE_URL`** и свежую БД с применённой
-миграцией `0006` (без таблицы `sync_groups` файл скипается); он не удаляет чужие строки — изоляция уникальными
+миграциями до `0007` включительно (без таблицы `sync_groups` файл скипается); он не удаляет чужие строки — изоляция уникальными
 устройствами. Те же сценарии (`src/test/recovery-scenarios.ts`) гоняются и на in-memory репозитории (unit,
-`src/recovery/router.test.ts`), плюс на Postgres — гонки redeem/rotate/unlink/delete и SQL-инварианты:
+`src/recovery/router.test.ts`), плюс на Postgres — гонки redeem/rotate/confirm/unlink/delete и SQL-инварианты (в т.ч. CHECK ожидающей замены):
 
 ```sh
 createdb pundoku_pd47 && DATABASE_URL=postgres:///pundoku_pd47 pnpm --filter @pundoku/api migrate

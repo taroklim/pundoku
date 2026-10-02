@@ -7,18 +7,30 @@
 import type { Options } from "../today/api";
 import { apiUrl, request } from "../today/api";
 
-export type RecoveryStatus = { hasKey: false } | { hasKey: true; devices: number; keyCreatedAt: string | null };
+/** `pendingRotation` — неподтверждённая замена ключа (PD-126): старый ключ ещё работает, новый ждёт «Ключ сохранён». */
+export type RecoveryStatus =
+  | { hasKey: false }
+  | { hasKey: true; devices: number; keyCreatedAt: string | null; pendingRotation: { expiresAt: string } | null };
+
+/** Ответ начала замены: новый ключ (один раз), метка для подтверждения и срок жизни ожидающего ключа. */
+export interface RotationStart {
+  key: string;
+  pendingId: string;
+  expiresAt: string;
+}
 
 /**
  * Итог вызова. `unauthorized` — сервер не знает токен устройства (клиент перерегистрируется и повторит один раз);
  * `rate_limited` — 429 (`retryAfterSec` из `Retry-After`); `invalid_key` — единый ответ 400 на любую неудачу redeem;
- * `key_exists` / `no_key` — 409 / 404 создания и перевыпуска; `network` — ответа нет; `error` — прочее.
+ * `key_exists` / `no_key` — 409 / 404 создания и перевыпуска; `stale_rotation` — 409 подтверждения замены, которой уже нет
+ * (отменена, затёрта новой, истекла, уже подтверждена); `network` — ответа нет; `error` — прочее.
  */
 export type RecoveryResult<T> =
   | { kind: "ok"; value: T }
   | { kind: "invalid_key" }
   | { kind: "key_exists" }
   | { kind: "no_key" }
+  | { kind: "stale_rotation" }
   | { kind: "rate_limited"; retryAfterSec: number | null }
   | { kind: "unauthorized" }
   | { kind: "network" }
@@ -27,7 +39,12 @@ export type RecoveryResult<T> =
 export interface RecoveryApi {
   status(token: string): Promise<RecoveryResult<RecoveryStatus>>;
   create(token: string): Promise<RecoveryResult<{ key: string; devices: number }>>;
-  rotate(token: string): Promise<RecoveryResult<{ key: string }>>;
+  /** Начать замену: старый ключ продолжает работать, пока не придёт `confirmRotation`. */
+  rotate(token: string): Promise<RecoveryResult<RotationStart>>;
+  /** «Ключ сохранён»: атомарно сделать ожидающий ключ рабочим. */
+  confirmRotation(token: string, pendingId: string): Promise<RecoveryResult<true>>;
+  /** Отменить ожидающую замену (рабочий ключ не трогается). */
+  cancelRotation(token: string): Promise<RecoveryResult<true>>;
   /** `key` — 32 знака без дефисов (нормализованный ввод). */
   redeem(token: string, key: string): Promise<RecoveryResult<{ devices: number }>>;
   unlink(token: string): Promise<RecoveryResult<true>>;
@@ -86,6 +103,7 @@ export function httpRecoveryApi(o: Options = {}): RecoveryApi {
     if (res.status === 400 && code === "invalid_key") return { kind: "invalid_key" };
     if (res.status === 409 && code === "key_exists") return { kind: "key_exists" };
     if (res.status === 404 && code === "no_key") return { kind: "no_key" };
+    if (res.status === 409 && (code === "no_pending" || code === "pending_replaced" || code === "pending_expired")) return { kind: "stale_rotation" };
     return { kind: "error" };
   }
 
@@ -96,7 +114,14 @@ export function httpRecoveryApi(o: Options = {}): RecoveryApi {
         if (!b) return null;
         if (b["hasKey"] === false) return { hasKey: false } satisfies RecoveryStatus;
         if (b["hasKey"] !== true || typeof b["devices"] !== "number") return null;
-        return { hasKey: true, devices: b["devices"], keyCreatedAt: typeof b["keyCreatedAt"] === "string" ? b["keyCreatedAt"] : null } satisfies RecoveryStatus;
+        const p = b["pendingRotation"];
+        const expiresAt = typeof p === "object" && p !== null ? (p as Record<string, unknown>)["expiresAt"] : null;
+        return {
+          hasKey: true,
+          devices: b["devices"],
+          keyCreatedAt: typeof b["keyCreatedAt"] === "string" ? b["keyCreatedAt"] : null,
+          pendingRotation: typeof expiresAt === "string" ? { expiresAt } : null,
+        } satisfies RecoveryStatus;
       }),
 
     create: (token) =>
@@ -108,8 +133,18 @@ export function httpRecoveryApi(o: Options = {}): RecoveryApi {
     rotate: (token) =>
       call("/api/recovery/key/rotate", { method: "POST", headers: headers(token) }, async (res) => {
         const b = await json(res);
-        return b && typeof b["key"] === "string" ? { key: b["key"] } : null;
+        return b && typeof b["key"] === "string" && typeof b["pendingId"] === "string" && typeof b["expiresAt"] === "string"
+          ? { key: b["key"], pendingId: b["pendingId"], expiresAt: b["expiresAt"] }
+          : null;
       }),
+
+    confirmRotation: (token, pendingId) =>
+      call("/api/recovery/key/rotate/confirm", { method: "POST", headers: headers(token, true), body: JSON.stringify({ pendingId }) }, async (res) => {
+        const b = await json(res);
+        return b && b["confirmed"] === true ? (true as const) : null;
+      }),
+
+    cancelRotation: (token) => call("/api/recovery/key/rotate", { method: "DELETE", headers: headers(token) }, async () => true as const),
 
     redeem: (token, key) =>
       call("/api/recovery/redeem", { method: "POST", headers: headers(token, true), body: JSON.stringify({ key }) }, async (res) => {
