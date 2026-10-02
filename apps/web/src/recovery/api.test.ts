@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 import { httpRecoveryApi } from "./api";
 
 const KEY = "K7QPM2XZ9D4TVB6NH3RW8YCJ5FGAE0S1";
+const PENDING = "6f0c1d9e-1b7a-4c52-9f1a-3e5d8b2a7c10";
 
 function api(res: Response | null) {
   const fetchFn = vi.fn(async () => {
@@ -20,6 +21,8 @@ describe("клиент /api/recovery/*", () => {
       ["GET", "/api/recovery", (a) => a.status("tok")],
       ["POST", "/api/recovery/key", (a) => a.create("tok")],
       ["POST", "/api/recovery/key/rotate", (a) => a.rotate("tok")],
+      ["POST", "/api/recovery/key/rotate/confirm", (a) => a.confirmRotation("tok", PENDING)],
+      ["DELETE", "/api/recovery/key/rotate", (a) => a.cancelRotation("tok")],
       ["POST", "/api/recovery/redeem", (a) => a.redeem("tok", KEY)],
       ["DELETE", "/api/recovery/link", (a) => a.unlink("tok")],
       ["DELETE", "/api/recovery", (a) => a.remove("tok")],
@@ -59,13 +62,36 @@ describe("клиент /api/recovery/*", () => {
     expect(await api(json(200, { hasKey: false })).api.status("t")).toEqual({ kind: "ok", value: { hasKey: false } });
     expect(await api(json(200, { hasKey: true, devices: 3, keyCreatedAt: "2026-09-30T10:00:00.000Z" })).api.status("t")).toEqual({
       kind: "ok",
-      value: { hasKey: true, devices: 3, keyCreatedAt: "2026-09-30T10:00:00.000Z" },
+      value: { hasKey: true, devices: 3, keyCreatedAt: "2026-09-30T10:00:00.000Z", pendingRotation: null },
     });
+    // неподтверждённая замена (PD-126)
+    const withPending = { hasKey: true, devices: 2, keyCreatedAt: "2026-09-30T10:00:00.000Z", pendingRotation: { expiresAt: "2026-10-03T10:00:00.000Z" } };
+    expect(await api(json(200, withPending)).api.status("t")).toEqual({ kind: "ok", value: withPending });
+    expect(await api(json(200, { ...withPending, pendingRotation: { expiresAt: 5 } })).api.status("t")).toMatchObject({ value: { pendingRotation: null } });
   });
 
   it("create/rotate возвращают ключ", async () => {
     expect(await api(json(201, { key: KEY, devices: 1 })).api.create("t")).toEqual({ kind: "ok", value: { key: KEY, devices: 1 } });
-    expect(await api(json(200, { key: KEY })).api.rotate("t")).toEqual({ kind: "ok", value: { key: KEY } });
+    const started = { key: KEY, pendingId: PENDING, expiresAt: "2026-10-03T10:00:00.000Z" };
+    expect(await api(json(200, started)).api.rotate("t")).toEqual({ kind: "ok", value: started });
+    expect((await api(json(200, { key: KEY })).api.rotate("t")).kind).toBe("error"); // без метки подтвердить нечем
+  });
+
+  it("confirm: метка уходит только в теле; успех/устаревшая замена/ошибки", async () => {
+    const { fetchFn, api: a } = api(json(200, { confirmed: true }));
+    expect(await a.confirmRotation("tok", PENDING)).toEqual({ kind: "ok", value: true });
+    // Повтор уже сработавшего confirm (F1): сервер отвечает 200 с alreadyConfirmed — для клиента это тот же успех.
+    expect(await api(json(200, { confirmed: true, alreadyConfirmed: true })).api.confirmRotation("tok", PENDING)).toEqual({ kind: "ok", value: true });
+    const [url, init] = callOf(fetchFn);
+    expect(url).not.toContain(PENDING);
+    expect(JSON.parse(init.body as string)).toEqual({ pendingId: PENDING });
+    for (const code of ["no_pending", "pending_replaced", "pending_expired"]) {
+      expect((await api(json(409, { error: { code } })).api.confirmRotation("t", PENDING)).kind, code).toBe("stale_rotation");
+    }
+    expect((await api(json(404, { error: { code: "no_key" } })).api.confirmRotation("t", PENDING)).kind).toBe("no_key");
+    expect((await api(json(429, {}, { "retry-after": "60" })).api.confirmRotation("t", PENDING))).toEqual({ kind: "rate_limited", retryAfterSec: 60 });
+    expect((await api(null).api.confirmRotation("t", PENDING)).kind).toBe("network");
+    expect((await api(json(200, {})).api.confirmRotation("t", PENDING)).kind).toBe("error");
   });
 
   it("коды ошибок → значения результата", async () => {
