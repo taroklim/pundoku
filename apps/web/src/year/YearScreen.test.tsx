@@ -105,13 +105,13 @@ describe("полотно года: формы и цвет меток", () => {
   });
 
   it("месяц назван словами: имя, решено из скольких, с исправлениями, брошенные", () => {
-    expect(month(8).getAttribute("aria-label")).toBe("September, 4 of 30 days solved, 2 with fixes, 2 solved late, 1 unfinished");
+    expect(month(8).getAttribute("aria-label")).toBe("September, 4 of 30 days solved, 2 with fixes, 2 with help, 2 solved late, 1 unfinished");
     expect(month(2).getAttribute("aria-label")).toBe("March, nothing yet");
   });
 
   it("итоги — нейтральный текст, без серий и процентов", () => {
     const totals = host.querySelector('[data-testid="year-totals"]')!.textContent!;
-    expect(totals).toBe("4 days · 2 clean · 2 with fixes · 2 solved late");
+    expect(totals).toBe("4 days · 1 clean · 2 with fixes · 2 with help · 2 solved late");
     expect(totals).not.toMatch(/%|streak/i);
   });
 
@@ -319,7 +319,7 @@ describe("шит месяца и карточка дня", () => {
     expect(cell("2026-09-30").getAttribute("aria-label")).toContain("not yet");
     expect(cell("2026-09-11").querySelector(".ymark")!.className).toBe("ymark is-solved has-corr");
     expect(cell(TODAY).classList.contains("today")).toBe(true);
-    expect(document.querySelector(".sheet-foot")!.textContent).toBe("4 of 30 days solved, 2 with fixes, 2 solved late, 1 unfinished");
+    expect(document.querySelector(".sheet-foot")!.textContent).toBe("4 of 30 days solved, 2 with fixes, 2 with help, 2 solved late, 1 unfinished");
   });
 
   it("тап по дню — вторая страница ТОГО ЖЕ шита: карточка результата с тепловой картой, временем, «чисто»", () => {

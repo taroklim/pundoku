@@ -101,6 +101,20 @@ describe("тексты лесенки: полнота и форма", () => {
     expect(hintStepCopy(t, pattern, 4).body).not.toMatch(/struck in your notes/);
   });
 
+  it("подвал «ничего не нашёл»: Today/архив — про день, Play — про игру (en/uk/ru); подвал есть и там и там", async () => {
+    const none = computeHint(playOf("beyond"));
+    const words = { en: ["day", "game"], uk: ["день", "гра"], ru: ["день", "игра"] } as const;
+    for (const lng of ["en", "uk", "ru"] as const) {
+      const t = await tOf(lng);
+      const day = hintStepCopy(t, none, 1).foot!;
+      const play = hintStepCopy(t, none, 1, true).foot!;
+      expect(day, lng).toContain(words[lng][0]);
+      expect(day, lng).not.toContain(words[lng][1]);
+      expect(play, lng).toContain(words[lng][1]);
+      expect(play, lng).not.toContain(words[lng][0]);
+    }
+  });
+
   it("«ничего не нашёл» и ошибка не зависят от ступени; у none есть подвал, у ошибки ключ одной метки", async () => {
     const t = await tOf("uk");
     const none = computeHint(playOf("beyond"));

@@ -50,7 +50,7 @@ function ladderFor(name: FixtureName): { ladder: HintLadder; store: PlayStore } 
   return { ladder, store };
 }
 
-const dock = (ladder: HintLadder) => act(() => root.render(<HintDock ladder={ladder} state={ladder.getState()} />));
+const dock = (ladder: HintLadder, play = false) => act(() => root.render(<HintDock ladder={ladder} state={ladder.getState()} play={play} />));
 
 describe("HintDock", () => {
   it("закрыт — ничего не рисует; открыт — счётчик «Step 1 of 4», «More» и подвал с правилом", () => {
@@ -87,6 +87,14 @@ describe("HintDock", () => {
     dock(ladder);
     act(() => (q("hint-close") as HTMLButtonElement).click());
     expect(ladder.getState().open).toBe(false);
+  });
+
+  it("«ничего не нашёл» в Play: подвал говорит про игру, не про день", () => {
+    const { ladder } = ladderFor("beyond");
+    act(() => ladder.openLadder());
+    dock(ladder, true);
+    expect(q("hint-foot")!.textContent).toBe(i18n.t("hint.none.footPlay"));
+    expect(q("hint-foot")!.textContent).not.toMatch(/\bday\b/);
   });
 
   it("ветка «ничего не нашёл»: только «Close», без счётчика ступеней и без подвала про пометку", () => {

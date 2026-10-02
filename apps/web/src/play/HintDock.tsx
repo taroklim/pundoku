@@ -43,7 +43,7 @@ export function HintDock({ ladder, state, play = false }: HintDockProps) {
     if (dock.current) dock.current.scrollTop = 0;
   }, [step, hint?.kind]);
 
-  const copy = useMemo(() => (hint ? hintStepCopy(t, hint, step) : null), [t, hint, step]);
+  const copy = useMemo(() => (hint ? hintStepCopy(t, hint, step, play) : null), [t, hint, step, play]);
   if (!state.open || !hint || !copy) return null;
 
   const branch = hint.kind !== "step";

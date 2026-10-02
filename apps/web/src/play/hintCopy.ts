@@ -112,9 +112,12 @@ function mistakeCopy(t: TFunction, hint: MistakeHint): HintStepCopy {
   return { title: t("hint.bad.title"), body, key: [{ kind: "region", label: t("hint.bad.key") }] };
 }
 
-/** Текст ступени `step` для подсказки; ветка ошибки и «ничего не нашёл» от ступени не зависят. */
-export function hintStepCopy(t: TFunction, hint: Hint, step: HintStep): HintStepCopy {
+/**
+ * Текст ступени `step` для подсказки; ветка ошибки и «ничего не нашёл» от ступени не зависят. `play` — Play (партия, не день):
+ * подвал ветки «ничего не нашёл» говорит «игра», а не «день».
+ */
+export function hintStepCopy(t: TFunction, hint: Hint, step: HintStep, play = false): HintStepCopy {
   if (hint.kind === "mistake") return mistakeCopy(t, hint);
-  if (hint.kind === "none") return { title: t("hint.none.title"), body: t("hint.none.body"), key: [], foot: t("hint.none.foot") };
+  if (hint.kind === "none") return { title: t("hint.none.title"), body: t("hint.none.body"), key: [], foot: t(play ? "hint.none.footPlay" : "hint.none.foot") };
   return stepCopy(t, hint, step);
 }

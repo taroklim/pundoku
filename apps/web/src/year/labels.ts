@@ -19,9 +19,10 @@ export function markClass(mark: Pick<DayMark, "kind" | "corrections" | "assisted
 
 /** «21 of 31 days solved, 4 with corrections[, 2 unfinished]» — без названия месяца (подпись в шите и часть подписи месяца). */
 export function monthSummaryText(t: TFunction, month: YearMonth): string {
-  const { solved, corrections, unfinished, late } = month.summary;
+  const { solved, corrections, helped, unfinished, late } = month.summary;
   if (solved === 0 && unfinished === 0 && late === 0) return t("year.monthNothing");
   const parts = [t("year.monthSummary", { solved, count: month.days.length, corrections })];
+  if (helped > 0) parts.push(t("year.monthHelp", { n: helped }));
   if (late > 0) parts.push(t("year.monthLate", { n: late }));
   if (unfinished > 0) parts.push(t("year.monthUnfinished", { n: unfinished }));
   return parts.join(", ");

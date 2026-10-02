@@ -76,13 +76,42 @@ describe("сборка года", () => {
   });
 
   it("итоги месяца: решённые, с исправлениями, брошенные; доигранные позже — отдельным счётом, в solved не входят", () => {
-    expect(view.months[8]!.summary).toEqual({ solved: 3, corrections: 1, unfinished: 1, late: 2 });
-    expect(view.months[7]!.summary).toEqual({ solved: 0, corrections: 0, unfinished: 0, late: 0 });
+    expect(view.months[8]!.summary).toEqual({ solved: 3, corrections: 1, helped: 1, unfinished: 1, late: 2 });
+    expect(view.months[7]!.summary).toEqual({ solved: 0, corrections: 0, helped: 0, unfinished: 0, late: 0 });
   });
 
   it("итоги года: сыграно, чисто, с исправлениями — нейтральные числа без серий и процентов", () => {
-    expect(view.totals).toEqual({ played: 3, clean: 2, withCorrections: 1, late: 2 });
-    expect(Object.keys(view.totals).sort()).toEqual(["clean", "late", "played", "withCorrections"]);
+    // PD-139: день с помощью (09-12) чистым не считается: из трёх решённых чист один.
+    expect(view.totals).toEqual({ played: 3, clean: 1, withCorrections: 1, withHelp: 1, late: 2 });
+    expect(Object.keys(view.totals).sort()).toEqual(["clean", "late", "played", "withCorrections", "withHelp"]);
+  });
+
+  describe("PD-139: «чисто» = ни исправлений, ни помощи", () => {
+    const totalsOf = (e: Partial<YearEntry>[]) =>
+      buildYear(2026, new Map(e.map((x, i) => [`2026-09-${10 + i}`, { ...solved, ...x }])), ctx).totals;
+
+    it("чистый — чистый; с правками — не чистый", () => {
+      expect(totalsOf([{}])).toMatchObject({ played: 1, clean: 1, withCorrections: 0, withHelp: 0 });
+      expect(totalsOf([{ hadCorrections: true }])).toMatchObject({ played: 1, clean: 0, withCorrections: 1, withHelp: 0 });
+    });
+
+    it("с подсказкой — не чистый, но и не «с исправлениями»", () => {
+      expect(totalsOf([{ assisted: true }])).toMatchObject({ played: 1, clean: 0, withCorrections: 0, withHelp: 1 });
+    });
+
+    it("с подсказкой и правками — вычитается из чистых один раз, считается в обоих счётчиках", () => {
+      expect(totalsOf([{ assisted: true, hadCorrections: true }, {}])).toMatchObject({ played: 2, clean: 1, withCorrections: 1, withHelp: 1 });
+    });
+
+    it("доигранный позже (late) в чистые не входит и не портит их счёт, даже с помощью", () => {
+      expect(totalsOf([{ late: true, assisted: true }, {}])).toMatchObject({ played: 1, clean: 1, withHelp: 0, late: 1 });
+    });
+
+    it("«ничего не нашёл» помощи не оставляет: запись без assisted остаётся чистой", () => {
+      const p = { ...progressOf("2026-09-10"), assisted: false, hints: 0 };
+      expect(entryFromProgress(p)).toMatchObject({ assisted: false });
+      expect(totalsOf([{ assisted: entryFromProgress(p)!.assisted }])).toMatchObject({ clean: 1, withHelp: 0 });
+    });
   });
 
   it("другой год не подхватывает чужие записи", () => {

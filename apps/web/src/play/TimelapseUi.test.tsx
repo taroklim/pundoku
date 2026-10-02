@@ -284,8 +284,10 @@ describe("ExportSheet / подпись PNG", () => {
   it("PD-139: подпись партии с подсказками — «· N hints» в конце, без цифр шага; без подсказок строки нет", () => {
     const t = i18n.t.bind(i18n);
     const base = { date: "2026-09-30", durationMs: 494000, moves: 51, blots: 0, corrections: 0, clean: true };
-    expect(fingerprintCaption(t, "en", { ...base, hints: 3 }).right).toBe("30 Sep 2026 · 8:14 · 51 moves · clean · 3 hints");
-    expect(fingerprintCaption(t, "en", { ...base, hints: 1 }).right).toMatch(/· 1 hint$/);
+    expect(fingerprintCaption(t, "en", { ...base, hints: 3 }).right).toBe("30 Sep 2026 · 8:14 · 51 moves · 3 hints");
+    expect(fingerprintCaption(t, "en", { ...base, hints: 1 }).right).toMatch(/moves · 1 hint$/);
+    expect(fingerprintCaption(t, "en", { ...base, hints: 1 }).right).not.toContain("clean");
+    expect(fingerprintCaption(t, "en", { ...base, corrections: 2, clean: false, hints: 1 }).right).toMatch(/· 2 fixes · 1 hint$/);
     expect(fingerprintCaption(t, "en", { ...base, blots: 2, clean: false, hints: 2 }).right).toMatch(/· 2 blots · 2 hints$/);
     expect(fingerprintCaption(t, "en", { ...base, hints: 0 }).right).toBe("30 Sep 2026 · 8:14 · 51 moves · clean");
   });

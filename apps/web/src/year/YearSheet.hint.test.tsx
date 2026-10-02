@@ -43,6 +43,33 @@ function helped(date: string, cells: (number | null)[], hints = cells.length): D
   return { ...base, assisted: true, hints, play: { ...base.play, hintLog: log } };
 }
 
+const totals = () => host.querySelector('[data-testid="year-totals"]')!.textContent;
+const monthLabel = (m: number) => host.querySelector(`.year-month[data-month="${m}"]`)!.getAttribute("aria-label");
+
+describe("Year: итоги и «clean» с учётом помощи (PD-139)", () => {
+  it("чистый день — clean, без «with help»", () => {
+    render([progressOf("2026-09-10")]);
+    expect(totals()).toBe("1 day · 1 clean");
+  });
+
+  it("день с подсказкой — не clean, назван «with help»; в подписи месяца тоже", () => {
+    render([helped("2026-09-10", [null])]);
+    expect(totals()).toBe("1 day · 0 clean · 1 with help");
+    expect(monthLabel(8)).toContain("1 with help");
+  });
+
+  it("с подсказкой и правками — «with fixes» и «with help» вместе, clean не набегает", () => {
+    render([{ ...progressOf("2026-09-10", { withFix: true }), assisted: true, hints: 1 }, progressOf("2026-09-11")]);
+    expect(totals()).toBe("2 days · 1 clean · 1 with fixes · 1 with help");
+  });
+
+  it("«ничего не нашёл» (assisted не взведён, hints 0) — день остаётся clean", () => {
+    render([{ ...progressOf("2026-09-10"), assisted: false, hints: 0 }]);
+    expect(totals()).toBe("1 day · 1 clean");
+    expect(monthLabel(8)).not.toContain("help");
+  });
+});
+
 describe("Year: день с подсказкой", () => {
   it("клетка has-help; в шите — строка Hints и полая середина у клеток, к которым вела подсказка", () => {
     const base = progressOf("2026-09-10");

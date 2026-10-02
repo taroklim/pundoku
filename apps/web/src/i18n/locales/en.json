@@ -143,7 +143,7 @@
     "hints": {
       "title": "Hints",
       "p1": "The bulb at the top opens a ladder of four steps: where to look, which technique, which cells, and why. Each step gives a little more. It never says the digit — that part is yours.",
-      "p2": "The first hint that explains something marks the day “with help”, in the year and on its card; more hints that day change nothing. If Pundoku finds nothing to explain, nothing is marked.",
+      "p2": "The first hint that explains something marks the day “with help”, in the year and on its card; more hints that day change nothing. A day with help doesn’t count as clean in the year’s totals. If Pundoku finds nothing to explain, nothing is marked.",
       "p3": "It can name Naked and Hidden Singles, Locked Candidates and Pairs. Ink mode and Grid ∞ have no hints."
     },
     "year": {
@@ -314,7 +314,8 @@
       "step": "No step",
       "title": "Nothing Pundoku can explain",
       "body": "This position needs a technique Pundoku doesn’t teach yet — an X-Wing or beyond. Nothing on your board is wrong.",
-      "foot": "Nothing was revealed, so the day keeps a clean mark."
+      "foot": "Nothing was revealed, so the day stays unmarked.",
+      "footPlay": "Nothing was revealed, so the game stays unmarked."
     },
     "cellTail": {
       "region": "in the hint region",
@@ -382,6 +383,7 @@
     "totalsDays_other": "{{count}} days",
     "totalsClean": "{{n}} clean",
     "totalsCorrections": "{{n}} with fixes",
+    "totalsHelp": "{{n}} with help",
     "totalsLate": "{{n}} solved late",
     "legendLabel": "What the marks mean",
     "legend": {
@@ -401,6 +403,7 @@
     "monthSummary_one": "{{solved}} of {{count}} day solved, {{corrections}} with fixes",
     "monthSummary_other": "{{solved}} of {{count}} days solved, {{corrections}} with fixes",
     "monthUnfinished": "{{n}} unfinished",
+    "monthHelp": "{{n}} with help",
     "monthLate": "{{n}} solved late",
     "sheetDone": "Done",
     "sheetBack": "Back to {{month}}",
