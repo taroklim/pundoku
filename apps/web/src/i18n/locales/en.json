@@ -11,6 +11,11 @@
   "settings": {
     "title": "Settings",
     "language": "Language",
+    "game": {
+      "head": "Game",
+      "highlightWrong": "Highlight wrong digits",
+      "highlightWrongFoot": "Colours a digit you placed red when it doesn’t match the solution, and has VoiceOver say so. Off by default. Ink mode always shows its blots."
+    },
     "open": "Settings",
     "backLabel": "Back to Today",
     "about": {

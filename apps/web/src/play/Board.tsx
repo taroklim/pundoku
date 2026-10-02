@@ -1,6 +1,7 @@
 import type { CSSProperties, KeyboardEvent } from "react";
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { useHighlightWrong } from "../settings/prefs";
 import { blotsIn, digitAt, isGiven, isWrong, notesOf } from "./logic";
 import type { GameStore, PlaySnapshot } from "./gameStore";
 import { MOTION_MS } from "./motion";
@@ -183,6 +184,11 @@ export function Board({ snap, store, dim }: BoardProps) {
   const { t } = useTranslation();
   const ref = useRef<HTMLDivElement>(null);
   const { play, selected, pop } = snap;
+  // PD-112: подсветка неверной цифры в обычной партии — настройка устройства, по умолчанию выкл. Ink (клякса) от неё не
+  // зависит: там ошибка всегда видна (и озвучена) по правилам режима.
+  const highlightWrong = useHighlightWrong();
+  const showWrong = highlightWrong || play?.ink === true;
+  const wrongAt = (p: NonNullable<typeof play>, i: number) => showWrong && isWrong(p, i);
   // M3/M8/M7: события живут ровно столько, сколько играет анимация.
   const wave = useMoment(snap.wave, MOTION_MS.wave);
   const echo = useMoment(snap.echo, MOTION_MS.echo);
@@ -224,7 +230,7 @@ export function Board({ snap, store, dim }: BoardProps) {
     if (isGiven(play, i)) return t("board.cellClue", { ...where, digit: play.mission[i] });
     if (blotCells.has(i)) return t("ink.cellBlot", { ...where, digit: play.values[i] ?? 0 });
     const v = play.values[i] ?? 0;
-    if (v) return t(isWrong(play, i) ? "board.cellWrong" : "board.cellYours", { ...where, digit: v });
+    if (v) return t(wrongAt(play, i) ? "board.cellWrong" : "board.cellYours", { ...where, digit: v });
     const nn = notesOf(play.notes[i] ?? 0);
     if (nn.length) return t("board.cellNotes", { ...where, notes: nn.join(", ") });
     return t("board.cellEmpty", where);
@@ -270,7 +276,7 @@ export function Board({ snap, store, dim }: BoardProps) {
                   notes={play?.notes[i] ?? 0}
                   selected={ready && selected === i}
                   same={ready && selDigit !== 0 && selected !== i && digit === selDigit && !blotCells.has(i)}
-                  wrong={play ? isWrong(play, i) : false}
+                  wrong={play ? wrongAt(play, i) : false}
                   blot={blotCells.has(i)}
                   blotId={blotNow && blotNow.cell === i ? blotNow.id : 0}
                   wrongDigit={blotNow && blotNow.cell === i ? blotNow.digit : 0}
@@ -295,7 +301,7 @@ export function Board({ snap, store, dim }: BoardProps) {
             поэтому при старте не «прилетает» из угла. */}
         {ready && selected !== null && (
           <div
-            className={`ring${play && isWrong(play, selected) ? " err" : ""}`}
+            className={`ring${play && wrongAt(play, selected) ? " err" : ""}`}
             key={snap.startedOn.getTime()}
             style={ringStyle}
             aria-hidden="true"

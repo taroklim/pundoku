@@ -5,6 +5,7 @@ import { Mark } from "../brand/Mark";
 import { Wordmark } from "../brand/Wordmark";
 import type { Locale } from "../i18n";
 import { setLocale, SUPPORTED_LOCALES } from "../i18n";
+import { setHighlightWrong, useHighlightWrong } from "../settings/prefs";
 import { ActionSheet } from "./ActionSheet";
 import { KEY_GROUP, keyGroups, isCompleteKey, spellGroup } from "./key";
 import type { RecoveryError, RecoveryStore } from "./store";
@@ -72,6 +73,7 @@ export function SettingsScreen({ store, onBack }: { store: RecoveryStore; onBack
   const { t, i18n } = useTranslation();
   const s = useSyncExternalStore(store.subscribe, store.getSnapshot);
   const locale = (i18n.resolvedLanguage ?? "en") as Locale;
+  const highlightWrong = useHighlightWrong();
 
   useEffect(() => {
     store.open();
@@ -372,6 +374,29 @@ export function SettingsScreen({ store, onBack }: { store: RecoveryStore; onBack
             </button>
           ))}
         </div>
+      </section>
+
+      <section className="settings-sec" aria-labelledby="settings-h-game">
+        <h2 className="settings-head" id="settings-h-game">
+          {t("settings.game.head")}
+        </h2>
+        <div className="settings-card">
+          <label className="settings-row settings-switch">
+            <span className="lab">{t("settings.game.highlightWrong")}</span>
+            <input
+              type="checkbox"
+              role="switch"
+              className="st-switch"
+              checked={highlightWrong}
+              onChange={(e) => setHighlightWrong(e.target.checked)}
+              aria-describedby="settings-game-foot"
+              data-testid="highlight-wrong"
+            />
+          </label>
+        </div>
+        <p className="settings-foot" id="settings-game-foot">
+          {t("settings.game.highlightWrongFoot")}
+        </p>
       </section>
 
       <section className="settings-sec" aria-labelledby="settings-h-key">

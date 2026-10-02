@@ -275,6 +275,25 @@ input, textarea{ font:inherit; color:inherit; background:none; border:0; -webkit
 .row[aria-checked="false"] .ck{ visibility:hidden; }
 button.row:active{ background:var(--ink-tint); }
 
+/* Switch row (PD-112, «Game» section): a native <input type=checkbox role=switch> drawn as the iOS switch, 51x31 pt.
+   The whole row is a <label>: touch target = the row (>= 44 pt, grows at large text). Off = outline in --label-2
+   (>= 3:1 on the card), on = filled with ink. The knob moves with transform only. */
+.row.switch{ flex-wrap:nowrap; cursor:pointer; }
+.row.switch .lab{ flex:1 1 auto; }
+.row.switch:has(.sw:active){ background:var(--ink-tint); }
+.sw{
+  appearance:none; -webkit-appearance:none; position:relative; flex:none; box-sizing:border-box;
+  width:51px; height:31px; margin:0 0 0 auto; border-radius:16px;
+  background:rgba(120,120,128,.16); box-shadow:inset 0 0 0 1.5px var(--label-2);
+  transition:background-color .2s linear, box-shadow .2s linear;
+}
+.sw::before{
+  content:""; position:absolute; top:3px; left:3px; width:25px; height:25px; border-radius:50%;
+  background:var(--label-2); transition:transform .22s var(--e-spring, ease), background-color .2s linear;
+}
+.sw:checked{ background:var(--ink); box-shadow:none; }
+.sw:checked::before{ transform:translateX(20px); background:#fff; box-shadow:0 1px 3px rgba(0,0,0,.3); }
+
 /* Free-form block inside a card (the key display, the key field). */
 .pad{ position:relative; padding:12px 16px 14px; }
 .cap{ display:block; font-size:.82rem; color:var(--label-2); margin:0 0 8px; overflow-wrap:anywhere; }
@@ -467,6 +486,10 @@ button.row:active{ background:var(--ink-tint); }
    or wax has to survive when the OS replaces both.
    ================================================================== */
 @media (forced-colors: active){
+  .sw{ background:Canvas; box-shadow:none; border:2px solid ButtonText; }
+  .sw::before{ background:ButtonText; top:1px; left:1px; }
+  .sw:checked{ background:Highlight; border-color:Highlight; }
+  .sw:checked::before{ background:HighlightText; box-shadow:none; }
   .card, .asheet .grp{ border:1px solid CanvasText; }
   .row + .row::before, .row + .rowbtn::before, .rowbtn + .rowbtn::before,
   .rowbtn + .row::before, .pad + .rowbtn::before{ background:CanvasText; }
@@ -587,6 +610,21 @@ button.row:active{ background:var(--ink-tint); }
       <section class="sec" aria-labelledby="h-lang">
         <h2 class="sec-head" id="h-lang" data-t="langHead">Language</h2>
         <div class="card" role="radiogroup" aria-labelledby="h-lang" id="langCard"></div>
+      </section>
+
+      <!-- ---- Game (PD-112): device-local UI preference. Off by default for everyone. Wrong digits are
+               marked with sealing-wax in the cell (and "wrong" for VoiceOver) only while this is on; Ink mode
+               ignores it — a blot is always shown. Sits between Language and the key block for the same
+               reason Language is first: the key block below changes height and must keep growing downward. ---- -->
+      <section class="sec" aria-labelledby="h-game">
+        <h2 class="sec-head" id="h-game" data-t="gameHead">Game</h2>
+        <div class="card">
+          <label class="row switch">
+            <span class="lab" data-t="hwLabel">Highlight wrong digits</span>
+            <input class="sw" type="checkbox" role="switch" aria-describedby="hw-foot" id="hw">
+          </label>
+        </div>
+        <p class="sec-foot" id="hw-foot" data-t="hwFoot">Colours a digit you placed red when it doesn’t match the solution, and has VoiceOver say so. Off by default. Ink mode always shows its blots.</p>
       </section>
 
       <!-- ---- Recovery key ---- -->
@@ -755,6 +793,8 @@ button.row:active{ background:var(--ink-tint); }
       dayline:"Wed 30 Sep · Medium", boardLabel:"Sudoku grid for Wednesday 30 September",
       gear:"Settings", settings:"Settings", done:"Done", kb:"system keyboard",
       langHead:"Language",
+      gameHead:"Game", hwLabel:"Highlight wrong digits",
+      hwFoot:"Colours a digit you placed red when it doesn’t match the solution, and has VoiceOver say so. Off by default. Ink mode always shows its blots.",
       langs:{ en:"English", uk:"Українська", ru:"Русский" },
 
       keyHead:"Recovery key",
@@ -807,6 +847,8 @@ button.row:active{ background:var(--ink-tint); }
       dayline:"Ср, 30 вер. · Середньо", boardLabel:"Сітка судоку за 30 вересня",
       gear:"Налаштування", settings:"Налаштування", done:"Готово", kb:"системна клавіатура",
       langHead:"Мова",
+      gameHead:"Гра", hwLabel:"Підсвічувати неправильні цифри",
+      hwFoot:"Фарбує у червоний цифру, яку ви поставили, якщо вона не збігається з розв’язком, і озвучує це у VoiceOver. За замовчуванням вимкнено. Чорнильний режим завжди показує свої ляпки.",
       langs:{ en:"English", uk:"Українська", ru:"Русский" },
 
       keyHead:"Ключ відновлення",
@@ -859,6 +901,8 @@ button.row:active{ background:var(--ink-tint); }
       dayline:"Ср, 30 сент. · Средне", boardLabel:"Сетка судоку за 30 сентября",
       gear:"Настройки", settings:"Настройки", done:"Готово", kb:"системная клавиатура",
       langHead:"Язык",
+      gameHead:"Игра", hwLabel:"Подсвечивать неверные цифры",
+      hwFoot:"Красит красным цифру, которую вы поставили, если она не совпадает с решением, и озвучивает это в VoiceOver. По умолчанию выключено. Чернильный режим всегда показывает свои кляксы.",
       langs:{ en:"English", uk:"Українська", ru:"Русский" },
 
       keyHead:"Ключ восстановления",

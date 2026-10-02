@@ -22,7 +22,7 @@ describe("i18n: блок settings.* (PD-49)", () => {
 
   it("в en есть все ключи, которые использует экран", () => {
     for (const k of [
-      "title", "language", "open", "backLabel", "about.head", "about.name", "about.version", "key.head", "key.create", "key.haveKey", "key.yourKey", "key.keyLabel", "key.keyGroup",
+      "title", "language", "game.head", "game.highlightWrong", "game.highlightWrongFoot", "open", "backLabel", "about.head", "about.name", "about.version", "key.head", "key.create", "key.haveKey", "key.yourKey", "key.keyLabel", "key.keyGroup",
       "key.shownOnce", "key.copy", "key.copied", "key.warn", "key.saved", "key.rowCreated", "key.rowDevices", "key.reissue", "key.unlink",
       "key.deleteKey", "key.footNone", "key.footCreated", "key.footDanger", "key.footEnter", "key.enterLabel", "key.enterPlaceholder",
       "key.enterHint", "key.restore", "key.checking", "key.cancel", "key.restored", "key.errKey", "key.errLimit", "key.errOffline",
