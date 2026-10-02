@@ -155,6 +155,11 @@
 - Открытый вопрос PM к владельцу (не блокирует PD-14/PD-25): что считать «помощью» до появления функции подсказок — например, только будущая подсказка, или также решение с включённым режимом «показывать ошибки»/после «Проверить»? Рекомендация: только будущая подсказка (флаг всегда false до неё).
 - Очередь: QA PD-18 → мерж PD-12 → PD-14 → PD-25 (Year) → PD-26 (полировка: `apple-touch-startup-image` против светлой вспышки, PD-22) → PD-27 (ключ восстановления; e-mail отменён владельцем 2026-09-30).
 
+## Backlog по QA PD-136
+- Low: заголовок Year ниже, чем у Today/Play на 6–8 px (косметика → PD-144).
+- Вне пакета: строка Ink на Play при 200%/320 px ломает слова по буквам; select сложности в WebKit-эмуляции 79×19 — оба в PD-144.
+- iPhone-only: п.21 (orientation в установленной PWA), пп.22–26, VoiceOver, AX3, «Увеличение контраста».
+
 ## Backlog по QA PD-135
 - Low: перезагрузка без pagehide/hidden — async-запись IDB не успевает, откат таймера на 3–4 с и выбранной клетки (на iPhone не проявится, там hidden срабатывает).
 - Low: 320×568 ru — фраза «Grid full…» в две строки вплотную к полю.
@@ -359,7 +364,7 @@ Gates: build → typecheck, lint, тесты web/engine/api (api с TEST_DATABAS
 | PD-118 | P1 (A6, решение 6.5): счётчик «осталось N» считать по поставленным цифрам, а не по решению (сейчас оракул ошибок, даже при выкл подсветки PD-112) — ждёт решения владельца | developer | P1 | completed (pd-play-core, QA PD-135 PASS, смержен в main a23a258; не запушен) | — |
 | PD-119 | P1 (A2/SC-05, решение 6.2): автоочистка кандидатов у соседей (вкл, одним undo) + «Fill candidates» (выкл, отдельное действие); в Ink заметки ручные; 220 касаний на полный набор | developer | P1 | pending (решение владельца принято; в очереди после пакета A) | — |
 | PD-120 | P1 (B2/B3/B5/B6/SC-09/SC-14): страница «How Pundoku works» (5 блоков), объяснение Grid ∞ + прогресс к решаемости, подпись счётчика под цифрой, пояснение «Technique reached» | developer+designer | P1 | dev done (ветка pd-ux-texts @ 99031dc), ждёт QA PD-136, не смержен | — |
-| PD-121 | P1 (G1/D2/G2/G5): тексты — «Corrections» переименовать/пересчитать; убрать «With help» из легенды Year (пока подсказок нет); «Grid ∞» перевести uk/ru; «I already have a key» не скрывать офлайн [ДОРАБОТКА: вернуть «With help» в легенду Year — решение владельца 2026-10-02; поправить в pd-ux-texts после QA PD-136]  | developer | P1 | dev done (ветка pd-ux-texts @ 99031dc), ждёт QA PD-136, не смержен | — |
+| PD-121 | P1 (G1/D2/G2/G5): тексты — «Corrections» переименовать/пересчитать; убрать «With help» из легенды Year (пока подсказок нет); «Grid ∞» перевести uk/ru; «I already have a key» не скрывать офлайн [«With help» в легенде Year на месте — QA PD-136 подтвердил, возврат не нужен; осталась правка p3 Grid ∞]  | developer | P1 | dev done (ветка pd-ux-texts @ 99031dc), ждёт QA PD-136, не смержен | — |
 | PD-122 | P1 (F2/F4/AX-02/AX-05): нецветовой признак ошибки (форма/значок) и починить `prefers-contrast: more` в dark (контраст цифры 4.92→4.38) | developer | P1 | dev done (ветка pd-ux-texts @ 99031dc), ждёт QA PD-136, не смержен | — |
 | PD-123 | P1 (E1): шестерёнка настроек на всех трёх вкладках, а не только Today (F7 select сложности — в PD-116) | developer | P1 | dev done (ветка pd-ux-texts @ 99031dc), ждёт QA PD-136, не смержен | — |
 | PD-124 | P1 (A4/H-31, решение 6.4): очень слабая подсветка строки/столбца/блока выбранной клетки (2–3 % чернил), с выключателем рядом с PD-112 — оспаривает решение макета PD-7 «соседи не заливаются» | developer | P1 | pending (решение владельца принято; в очереди после пакета A) | — |
@@ -374,7 +379,7 @@ Gates: build → typecheck, lint, тесты web/engine/api (api с TEST_DATABAS
 | PD-133 | Дизайн лесенки подсказок (решение 6.1 вариант 2): `design/pd133-hint-ladder.html/.md` — вход, 4 ступени (область → техника → клетки → разбор) без выдачи цифры, знак «с помощью» в Year, Ink/архив/Grid ∞, a11y, тексты en/uk/ru; НЕ реализация | designer | P1 | completed (design/pd133-hint-ladder.html/.md; 4 вопроса владельцу — см. md; кадры снимет developer при реализации PD-139) | — |
 | PD-134 | Движок: API подсказки `nextStep` (следующая логичная техника по текущему состоянию доски и кандидатам, без выдачи цифры до последней ступени), чистый TS в packages/engine, тесты; ветка pd-engine-hint | developer | P1 | dev done (ветка pd-engine-hint @ db0df78), ждёт смерж; UI-часть в PD-139 | — |
 | PD-135 | Живой QA пакета A (pd-play-core: PD-115..118) на реальной сборке: webkit+chromium, en/uk/ru, перезагрузка посреди партии, New puzzle, счётчики, gates | qa-tester | P0 | completed (PASS, Low → бэклог) | PD-115, PD-116, PD-117, PD-118 |
-| PD-136 | Живой QA пакета B (pd-ux-texts: PD-120..123, PD-132) | qa-tester | P1 | in_progress | PD-120, PD-121, PD-122, PD-123, PD-132 |
+| PD-136 | Живой QA пакета B (pd-ux-texts: PD-120..123, PD-132) | qa-tester | P1 | completed (PASS с замечаниями; правки L1–L3 + p3 Grid ∞ + rebase на main — developer в pd-ux-texts) | PD-120, PD-121, PD-122, PD-123, PD-132 |
 | PD-137 | Живой QA пакета D (pd-late: PD-125, SC-04) | qa-tester | P1 | completed (PASS с замечаниями; доработка — карточка после полуночи) | PD-125 |
 | PD-138 | Живой QA пакета E (pd-key: PD-126, миграция 0007, два профиля) | qa-tester | P1 | completed (PASS с замечаниями; F1 S2 — потеря ответа confirm → ложное «ключ не заменён»; доработка PD-126 в pd-key) | PD-126 |
 | PD-139 | UI лесенки подсказок по макету PD-133 на движке PD-134 (ждёт ответов владельца по PD-133 md) | developer | P1 | pending (решения владельца 2026-10-02: Ink — подсказок нет вообще; «с помощью» с первой ступени, давшей результат, «ничего не нашёл» не помечает; PNG несёт «N подсказок», карточка Play несёт отметку; Play в Year не попадает; берётся после смержа A/B/D/E) | PD-133, PD-134 |
@@ -468,7 +473,8 @@ Gates: build → typecheck, lint, тесты web/engine/api (api с `TEST_DATABA
 | Имя | Роль | Статус | Тикет | Обновлено |
 |-----|------|--------|-------|-----------|
 | PM-Pundoku-10 | product-manager | working | пакеты реализации по решениям владельца | 2026-10-02 |
-| QA-Pundoku-B | qa-tester | working | PD-136 | 2026-10-02 |
+| QA-Pundoku-B | qa-tester | done | PD-136 | 2026-10-02 |
+| Dev-Pundoku-B2 | developer | working | PD-120..123,132 правки QA + rebase (pd-ux-texts) | 2026-10-02 |
 | QA-Pundoku-D | qa-tester | done | PD-137 | 2026-10-02 |
 | Dev-Pundoku-D2 | developer | working | PD-125 доработка (pd-late) | 2026-10-02 |
 | QA-Pundoku-E | qa-tester | done | PD-138 | 2026-10-02 |
