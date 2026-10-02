@@ -1,0 +1,30 @@
+import { pw, ctxFor, Session, BASE, solve } from "./u.mjs";
+import { readFileSync, writeFileSync } from "node:fs";
+const b = await pw.webkit.launch();
+const ctx = await ctxFor(b, { storageState: JSON.parse(readFileSync("state-a2.json", "utf8")) });
+const page = await ctx.newPage();
+const s = new Session(page, "A3");
+page.on("pageerror", e => s.log("PAGEERROR", e.message));
+await page.goto(BASE + "/");
+await page.waitForSelector(".board .cell .d.given", { timeout: 20000 });
+await page.waitForTimeout(800);
+const { solution } = await solve(page);
+const wc = await page.evaluate(() => document.querySelector(".cell.err")?.dataset.i);
+s.log("wrong cell", wc);
+await s.cell(Number(wc)); await s.key(Number(solution[wc]));
+const tFin = Date.now();
+await page.waitForSelector("[data-testid=grid-inf-section], .result, .card", { timeout: 8000 }).catch(() => s.log("no card selector"));
+s.log("card appeared after ms", Date.now() - tFin);
+await page.waitForTimeout(1500);
+await s.shot("S07-solved-card-top");
+s.log("TEXT:", await s.text());
+// scroll full page
+const sc = await page.evaluate(() => { const m = document.querySelector("main.scroll"); return { sh: m.scrollHeight, ch: m.clientHeight }; });
+s.log("scroll", JSON.stringify(sc));
+await page.evaluate(() => document.querySelector("main.scroll").scrollTo(0, 99999));
+await page.waitForTimeout(500);
+await s.shot("S08-solved-card-bottom");
+// class names inventory
+s.log("classes:", await page.evaluate(() => [...new Set([...document.querySelectorAll("main *")].map(e => e.className).filter(c => typeof c === "string" && c))].join(" ; ").slice(0, 900)));
+writeFileSync("state-a3.json", JSON.stringify(await ctx.storageState({ indexedDB: true })));
+await b.close();

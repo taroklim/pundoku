@@ -1,0 +1,14 @@
+import { pw, ctxFor, Session, BASE } from "./u.mjs";
+import { readFileSync } from "node:fs";
+const b = await pw.webkit.launch();
+const ctx = await ctxFor(b, { storageState: JSON.parse(readFileSync("state-a3.json", "utf8")) });
+const page = await ctx.newPage(); const s = new Session(page, "V7b");
+page.on("pageerror", e => s.log("PAGEERROR", e.message));
+page.on("download", d => s.log("DOWNLOAD", d.suggestedFilename()));
+await page.goto(BASE + "/#/today"); await page.waitForSelector(".card"); await page.waitForTimeout(800);
+await s.tap(page.getByRole("button", { name: /Share/ }), "Share"); await page.waitForTimeout(2000);
+await s.shot("S42-share-export-sheet");
+s.log("EXPORT TEXT:", (await s.text()).split("Fingerprint")[1]?.slice(0, 400));
+s.log("buttons:", await page.evaluate(() => [...document.querySelectorAll("button")].map(b => (b.getAttribute("aria-label") || b.innerText || "").trim().replace(/\n/g," ")).filter(Boolean).slice(-8).join(" ; ")));
+s.log("navigator.share:", await page.evaluate(() => typeof navigator.share), "canShare:", await page.evaluate(() => typeof navigator.canShare));
+await b.close();

@@ -1,0 +1,15 @@
+import { pw, ctxFor, Session, BASE, solve } from "./u.mjs";
+import { readFileSync, writeFileSync } from "node:fs";
+const b = await pw.webkit.launch();
+const ctx = await ctxFor(b, { storageState: JSON.parse(readFileSync("state-vet.json", "utf8")) });
+const page = await ctx.newPage(); const s = new Session(page, "V1");
+page.on("pageerror", e => s.log("PAGEERROR", e.message));
+await page.goto(BASE + "/#/year"); await page.waitForSelector(".year"); await page.waitForTimeout(1000);
+await s.shot("S25-year-vet");
+s.log("YEAR TEXT:", await s.text());
+await s.tap(page.locator(".year-month").nth(8), "Sep"); await page.waitForTimeout(800);
+await s.shot("S26-sep-sheet");
+await s.tap(page.locator('[role=dialog] button, .sheet button').filter({ hasText: /^30$/ }).first(), "Sep 30"); await page.waitForTimeout(700);
+await s.shot("S27-sep30-unfinished-card");
+s.log("SEP30:", (await s.text()).split("Done")[1]);
+await b.close();

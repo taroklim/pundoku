@@ -1,0 +1,15 @@
+import { pw, ctxFor, Session, BASE } from "./u.mjs";
+const b = await pw.webkit.launch();
+const ctx = await ctxFor(b);
+const page = await ctx.newPage();
+const s = new Session(page, "A");
+page.on("console", m => { if (m.type()==="error"||m.type()==="warning") s.log("console."+m.type(), m.text().slice(0,200)); });
+page.on("pageerror", e => s.log("PAGEERROR", e.message));
+await page.goto(BASE + "/");
+await page.waitForSelector(".board .cell", { timeout: 20000 });
+await page.waitForTimeout(1500);
+s.log(await s.text());
+await s.shot("explore-first");
+console.log(page.url());
+console.log(await page.evaluate(() => document.documentElement.outerHTML.length));
+await b.close();

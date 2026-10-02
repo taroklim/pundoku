@@ -1,0 +1,13 @@
+import { pw, ctxFor, Session, BASE } from "./u.mjs";
+import { readFileSync } from "node:fs";
+const b = await pw.webkit.launch();
+const ctx = await ctxFor(b, { locale: "uk-UA", storageState: JSON.parse(readFileSync("state-a3.json", "utf8")) }); const page = await ctx.newPage(); const s = new Session(page, "C4");
+await page.goto(BASE + "/#/settings"); await page.waitForTimeout(1000);
+await s.tap(page.getByTestId("lang-uk"), "uk");
+await page.goto(BASE + "/#/year"); await page.waitForTimeout(1200);
+s.log("year uk:", (await s.text()).slice(0, 300));
+await s.shot("S65-year-uk");
+await s.tap(page.locator(".year-month").nth(9), "Oct"); await page.waitForTimeout(800);
+s.log("month sheet:", (await s.text()).slice(0, 500));
+await s.shot("S66-month-uk");
+await b.close();

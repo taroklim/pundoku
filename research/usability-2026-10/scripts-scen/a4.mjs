@@ -1,0 +1,22 @@
+import { pw, ctxFor, Session, BASE } from "./u.mjs";
+import { readFileSync, writeFileSync } from "node:fs";
+const b = await pw.webkit.launch();
+const ctx = await ctxFor(b, { storageState: JSON.parse(readFileSync("state-a3.json", "utf8")) });
+const page = await ctx.newPage();
+const s = new Session(page, "A4");
+await page.goto(BASE + "/");
+await page.waitForSelector(".card", { timeout: 20000 });
+await page.waitForTimeout(1200);
+s.log("scrollTop on load:", await page.evaluate(() => document.querySelector("main.scroll").scrollTop));
+await s.shot("S09-card-after-reload");
+await page.evaluate(() => document.querySelector("main.scroll").scrollTo(0, 0));
+await page.waitForTimeout(400);
+await s.shot("S10-card-top");
+// tap on heatmap
+const box = await page.locator(".heat").boundingBox();
+s.log("heat box", JSON.stringify(box));
+await s.tap(".heat", "heat map");
+await page.waitForTimeout(800);
+await s.shot("S11-after-tap-heat");
+s.log("TEXT:", await s.text());
+await b.close();

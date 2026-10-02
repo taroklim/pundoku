@@ -1,0 +1,14 @@
+import { pw, ctxFor, Session, BASE } from "./u.mjs";
+import { readFileSync, writeFileSync } from "node:fs";
+const b = await pw.webkit.launch();
+const ctx = await ctxFor(b, { storageState: JSON.parse(readFileSync("state-vet2.json", "utf8")) });
+const page = await ctx.newPage(); const s = new Session(page, "V8");
+page.on("pageerror", e => s.log("PAGEERROR", e.message));
+await page.goto(BASE + "/#/today"); await page.waitForSelector(".board:not(.idle) .cell .d.given"); await page.waitForTimeout(500);
+await s.tap(page.getByTestId("open-settings"), "gear"); await page.waitForTimeout(800);
+await s.shot("S43-settings");
+s.log("SETTINGS TEXT:", await s.text());
+s.log("settings html controls:", await page.evaluate(() => [...document.querySelectorAll(".settings select, .settings button, .settings input")].map(e => e.tagName + ":" + (e.getAttribute("aria-label") || e.innerText || e.value).trim().replace(/\n/g, " ")).join(" ; ")));
+const sel = page.locator(".settings select");
+if (await sel.count()) s.log("lang select options:", await sel.first().evaluate(e => [...e.options].map(o => o.value + "=" + o.text).join(", ")), "font", await sel.first().evaluate(e => getComputedStyle(e).fontSize), JSON.stringify(await sel.first().boundingBox()));
+await b.close();

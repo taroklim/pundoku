@@ -1,0 +1,11 @@
+import { pw, ctxFor, Session, BASE } from "./u.mjs";
+const b = await pw.webkit.launch();
+const ctx = await ctxFor(b);
+const page = await ctx.newPage();
+page.on("response", r => { if (r.status() >= 400) console.log("HTTP", r.status(), r.url()); });
+page.on("requestfailed", r => console.log("FAIL", r.url()));
+await page.goto(BASE + "/");
+await page.waitForSelector(".board .cell", { timeout: 20000 });
+await page.waitForTimeout(2500);
+await page.reload(); await page.waitForTimeout(2500);
+await b.close();
