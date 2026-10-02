@@ -167,7 +167,7 @@ describe("InkEntry и шит правил", () => {
   it("строка «Ink mode · Off»: нажатие открывает шит, режим не включён до «Play in ink»", () => {
     act(() => root.render(<Harness />));
     expect(host.querySelector('[data-testid="ink-row-value"]')!.textContent).toBe("Off");
-    expect(host.querySelector(".ink-foot")!.textContent).toContain("Choose before your first move");
+    expect(host.querySelector(".ink-foot")!.textContent).toContain("Choose before you place your first digit");
     press(host.querySelector('[data-testid="ink-row"]'));
     expect(sheet()).not.toBeNull();
     expect(sheet()!.textContent).toContain("Ink doesn’t lift");
@@ -290,7 +290,7 @@ describe("ResultCard: чернильный день", () => {
     expect(play.solved).toBe(true);
     card(play);
     expect(host.querySelector('[data-testid="ink-chip"]')!.textContent).toBe("Ink");
-    expect(rows().map((r) => r[0])).not.toContain("Corrections");
+    expect(rows().map((r) => r[0])).not.toContain("Fixes");
     expect(rows()).toContainEqual(["Blots", "2"]);
     expect(host.querySelector('[data-testid="blots-row"] dd')!.classList.contains("wax")).toBe(true);
     expect(host.querySelectorAll(".heat i.b")).toHaveLength(2);
@@ -316,7 +316,7 @@ describe("ResultCard: чернильный день", () => {
     }
     card(p);
     expect(host.querySelector('[data-testid="ink-chip"]')).toBeNull();
-    expect(rows().map((r) => r[0])).toContain("Corrections");
+    expect(rows().map((r) => r[0])).toContain("Fixes");
     expect(host.querySelector('[data-testid="blots-row"]')).toBeNull();
     expect(host.querySelectorAll(".heat i.b")).toHaveLength(0);
   });

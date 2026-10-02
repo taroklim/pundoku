@@ -33,7 +33,7 @@ const ink = () => setInkMode(fresh(), true);
 const KEEP: InkRules = { ...INK_RULES, autoReplaceBlot: false };
 const [A, B, C] = EMPTIES as [number, number, number];
 
-describe("вход в режим: только до первого хода", () => {
+describe("вход в режим: только до первой цифры", () => {
   it("включается и выключается на пустом логе; по умолчанию режим выключен", () => {
     expect(isInk(fresh())).toBe(false);
     const on = ink();
@@ -51,10 +51,18 @@ describe("вход в режим: только до первого хода", ()
     expect(isInk(setInkMode(inkMoved, false))).toBe(true);
   });
 
-  it("даже заметка — уже ход: режим фиксируется", () => {
+  it("PD-121 (C3): заметка не ход для выбора чернил — после неё режим ещё можно включить; цифра (даже снятая undo) закрывает выбор", () => {
     const noted = toggleNote(fresh(), A, 1, 50);
     expect(noted.log).toHaveLength(1);
-    expect(isInk(setInkMode(noted, true))).toBe(false);
+    const on = setInkMode(noted, true);
+    expect(isInk(on)).toBe(true);
+    expect(on.log).toBe(noted.log); // заметка осталась в логе, партия та же
+    expect(isInk(setInkMode(on, false))).toBe(false);
+    const placed = enterDigit(noted, B, SOLUTION.charCodeAt(B) - 48, 90);
+    expect(setInkMode(placed, true)).toBe(placed);
+    const undone = undo(placed, 95);
+    expect(undone.log.some((m) => m.kind === "place")).toBe(true);
+    expect(setInkMode(undone, true)).toBe(undone);
   });
 
   it("решённую партию не переключить", () => {

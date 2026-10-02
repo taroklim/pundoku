@@ -126,13 +126,12 @@ describe("TimelapseSheet", () => {
     expect(document.querySelector(".tl-sub")!.textContent).toContain("Medium");
   });
 
-  it("PD-85: на контактном листе есть Cancel слева (в паре с Done), он закрывает шит; в плеере Cancel нет (там «Nine stages»)", () => {
+  it("PD-121 (E2): «Cancel», дублирующей «Done», нет ни на контактном листе, ни в плеере; «Done» закрывает шит, в плеере — «Nine stages»", () => {
     const onClose = vi.fn();
     act(() => root.render(<TimelapseSheet play={solvedPlay()} date="2026-09-30" difficulty="medium" onClose={onClose} />));
-    const cancel = q("tl-cancel")!;
-    expect(cancel.textContent).toBe("Cancel");
+    expect(q("tl-cancel")).toBeNull();
     expect(document.querySelector(".tl-done")!.textContent).toBe("Done");
-    click(cancel);
+    click(document.querySelector(".tl-done"));
     expect(onClose).toHaveBeenCalledTimes(1);
     click(q("tl-start"));
     expect(q("tl-cancel")).toBeNull();

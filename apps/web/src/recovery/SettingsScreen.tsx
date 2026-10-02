@@ -175,6 +175,10 @@ export function SettingsScreen({ store, onBack }: { store: RecoveryStore; onBack
             <button type="button" className="settings-rowbtn" onClick={() => store.retryStatus()} data-testid="key-status-retry">
               {t("settings.key.retry")}
             </button>
+            {/* PD-121(d): путь «у меня уже есть ключ» не прячется вместе со статусом — ошибка придёт при «Восстановить». */}
+            <button type="button" className="settings-rowbtn" onClick={() => store.startEntry()} data-testid="key-have">
+              {t("settings.key.haveKey")}
+            </button>
           </div>
         );
       case "none":

@@ -121,7 +121,7 @@
   "solved": {
     "title": "Solved",
     "time": "Time",
-    "corrections": "Corrections",
+    "corrections": "Fixes",
     "clean": "clean",
     "technique": "Technique reached",
     "share": "Share",
@@ -175,12 +175,12 @@
     "totalsDays_one": "{{count}} day",
     "totalsDays_other": "{{count}} days",
     "totalsClean": "{{n}} clean",
-    "totalsCorrections": "{{n}} with corrections",
+    "totalsCorrections": "{{n}} with fixes",
     "legendLabel": "What the marks mean",
     "legend": {
       "solved": "Solved",
       "help": "With help",
-      "corrections": "Corrections",
+      "corrections": "Fixes",
       "unfinished": "Unfinished",
       "missed": "Missed"
     },
@@ -190,18 +190,18 @@
     "openToday": "Open today’s puzzle",
     "continueToday": "Continue today’s puzzle",
     "monthNothing": "nothing yet",
-    "monthSummary_one": "{{solved}} of {{count}} day solved, {{corrections}} with corrections",
-    "monthSummary_other": "{{solved}} of {{count}} days solved, {{corrections}} with corrections",
+    "monthSummary_one": "{{solved}} of {{count}} day solved, {{corrections}} with fixes",
+    "monthSummary_other": "{{solved}} of {{count}} days solved, {{corrections}} with fixes",
     "monthUnfinished": "{{n}} unfinished",
     "sheetDone": "Done",
     "sheetBack": "Back to {{month}}",
     "state": {
       "solved": "solved",
-      "solvedCorrections": "solved with corrections",
+      "solvedCorrections": "solved with fixes",
       "solvedHelp": "solved with help",
-      "solvedHelpCorrections": "solved with help and corrections",
+      "solvedHelpCorrections": "solved with help and fixes",
       "unfinished": "started, not finished",
-      "unfinishedCorrections": "started with corrections, not finished",
+      "unfinishedCorrections": "started with fixes, not finished",
       "missed": "not played",
       "late": "played late, counts as missed",
       "today": "today, not played yet",
@@ -229,7 +229,7 @@
     "row": "Ink mode",
     "off": "Off",
     "on": "On",
-    "foot": "Choose before your first move. Not available once you have placed a digit.",
+    "foot": "Choose before you place your first digit. Notes don’t count.",
     "footPlay": "In ink mode there is no undo and no eraser for digits.",
     "eraseNotes": "Erase notes",
     "rule": {
@@ -277,7 +277,6 @@
     "startPlayer": "Play the replay",
     "backToStages": "Nine stages",
     "done": "Done",
-    "cancel": "Cancel",
     "fpTitle": "Fingerprint",
     "fpSub": "No digits from the solution — safe to post.",
     "fpLabel": "Your fingerprint for this day",
@@ -291,7 +290,7 @@
     "fpMoves_other": "{{count}} moves",
     "fpBlots_one": "{{count}} blot",
     "fpBlots_other": "{{count}} blots",
-    "fpCorrections_one": "{{count}} correction",
-    "fpCorrections_other": "{{count}} corrections"
+    "fpCorrections_one": "{{count}} fix",
+    "fpCorrections_other": "{{count}} fixes"
   }
 }

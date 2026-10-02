@@ -129,25 +129,7 @@
   overflow-wrap: break-word;
   hyphens: auto;
 }
-/* Cancel слева (HIG sheets.md: Done всегда в паре с Cancel/Back). */
-.tl-cancel {
-  flex: none;
-  display: flex;
-  align-items: center;
-  min-height: 44px;
-  min-width: 44px;
-  padding: 0 4px;
-  color: var(--ink);
-  font-size: 0.95rem;
-  font-weight: 500;
-}
-.tl-head.has-cancel {
-  align-items: center;
-}
-.tl-head.has-cancel h2 {
-  text-align: center;
-}
-/* Узкий шит (или крупный текст): Cancel и Done в первой строке по краям, заголовок под ними на всю ширину. */
+/* Узкий шит (или крупный текст): Done в первой строке справа, заголовок под ним на всю ширину. */
 @container (max-width: 22rem) {
   .tl-head {
     flex-wrap: wrap;
@@ -157,15 +139,11 @@
     order: 3;
     flex: 1 0 100%;
   }
-  .tl-head .tl-cancel,
   .tl-head .tl-done {
     order: 1;
   }
   .tl-head .tl-done {
     margin-left: auto;
-  }
-  .tl-head.has-cancel h2 {
-    text-align: start;
   }
 }
 .tl-body {

@@ -76,7 +76,8 @@ export class RecoveryStore {
   private copyTimer: ReturnType<typeof setTimeout> | null = null;
   private limitTimer: ReturnType<typeof setTimeout> | null = null;
   private pendingLeave: (() => void) | null = null;
-  private readonly now: () => number;
+  /** Откуда открыт ввод ключа: «Отмена» возвращает туда же (PD-121d). */
+  private entryFrom: "none" | "unavailable" = "none";  private readonly now: () => number;
   private readonly writeClipboard: (text: string) => Promise<void>;
 
   constructor(private readonly deps: RecoveryDeps) {
@@ -125,7 +126,7 @@ export class RecoveryStore {
     this.pendingLeave = null;
     this.clearLimitTimer();
     const patch: Partial<RecoveryState> = { sheet: null, error: null, restored: false, entry: "" };
-    if (this.snap.phase === "enter") patch.phase = "none";
+    if (this.snap.phase === "enter") patch.phase = this.entryFrom;
     this.set(patch);
   }
 
@@ -242,14 +243,23 @@ export class RecoveryStore {
 
   // ---- ввод ключа ------------------------------------------------------------------------------
 
+  /**
+   * PD-121(d): «У меня уже есть ключ» доступна и когда статус не проверился (`unavailable`) — ошибка придёт при «Восстановить»,
+   * а не молчаливым исчезновением пути. Откуда зашли — туда и возвращает «Отмена».
+   */
   startEntry(): void {
     this.clearLimitTimer();
+    const from = this.snap.phase;
+    this.entryFrom = from === "unavailable" ? "unavailable" : "none";
     this.set({ phase: "enter", entry: "", error: null, restored: false });
   }
 
   cancelEntry(): void {
     this.clearLimitTimer();
-    this.set({ phase: "none", entry: "", error: null });
+    const back = this.entryFrom;
+    this.set({ phase: back, entry: "", error: null });
+    // Статус при входе в ввод не проверялся — перепроверяем, чтобы вернуться на верную карточку.
+    if (back === "unavailable") this.retryStatus();
   }
 
   setEntry(raw: string): void {

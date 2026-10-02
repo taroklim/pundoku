@@ -102,19 +102,19 @@ describe("полотно года: формы и цвет меток", () => {
   });
 
   it("месяц назван словами: имя, решено из скольких, с исправлениями, брошенные", () => {
-    expect(month(8).getAttribute("aria-label")).toBe("September, 4 of 30 days solved, 2 with corrections, 1 unfinished");
+    expect(month(8).getAttribute("aria-label")).toBe("September, 4 of 30 days solved, 2 with fixes, 1 unfinished");
     expect(month(2).getAttribute("aria-label")).toBe("March, nothing yet");
   });
 
   it("итоги — нейтральный текст, без серий и процентов", () => {
     const totals = host.querySelector('[data-testid="year-totals"]')!.textContent!;
-    expect(totals).toBe("4 days · 2 clean · 2 with corrections");
+    expect(totals).toBe("4 days · 2 clean · 2 with fixes");
     expect(totals).not.toMatch(/%|streak/i);
   });
 
   it("легенда всегда на экране: решено / с помощью / исправления / брошено / пропуск", () => {
     const items = [...host.querySelectorAll(".year-legend li")].map((li) => li.textContent);
-    expect(items).toEqual(["Solved", "With help", "Corrections", "Unfinished", "Missed"]);
+    expect(items).toEqual(["Solved", "With help", "Fixes", "Unfinished", "Missed"]);
   });
 
   it("один год — без выбора года; заголовок — h1 с годом", () => {
@@ -302,7 +302,7 @@ describe("шит месяца и карточка дня", () => {
   it("клетка дня в шите: подпись словами, форма — та же метка, что в полотне", () => {
     click(month(8));
     const cell = (d: string) => document.querySelector<HTMLElement>(`.ycell[data-date="${d}"]`)!;
-    expect(cell("2026-09-11").getAttribute("aria-label")).toBe("Fri 11 September, solved with corrections");
+    expect(cell("2026-09-11").getAttribute("aria-label")).toBe("Fri 11 September, solved with fixes");
     expect(cell("2026-09-12").getAttribute("aria-label")).toContain("solved with help");
     expect(cell("2026-09-13").getAttribute("aria-label")).toContain("started, not finished");
     expect(cell("2026-09-14").getAttribute("aria-label")).toContain("played late, counts as missed");
@@ -312,7 +312,7 @@ describe("шит месяца и карточка дня", () => {
     expect(cell("2026-09-30").getAttribute("aria-label")).toContain("not yet");
     expect(cell("2026-09-11").querySelector(".ymark")!.className).toBe("ymark is-solved has-corr");
     expect(cell(TODAY).classList.contains("today")).toBe(true);
-    expect(document.querySelector(".sheet-foot")!.textContent).toBe("4 of 30 days solved, 2 with corrections, 1 unfinished");
+    expect(document.querySelector(".sheet-foot")!.textContent).toBe("4 of 30 days solved, 2 with fixes, 1 unfinished");
   });
 
   it("тап по дню — вторая страница ТОГО ЖЕ шита: карточка результата с тепловой картой, временем, «чисто»", () => {

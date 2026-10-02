@@ -182,6 +182,22 @@ describe("SettingsScreen: состояния блока «Recovery key»", () =>
     await click("key-status-retry");
   });
 
+  it("PD-121d: при недоступном статусе «I already have a key» остаётся; ошибка — при «Restore», «Cancel» возвращает на карточку статуса", async () => {
+    await mount(
+      { hasKey: false },
+      { status: async () => ({ kind: "network" }), redeem: async () => ({ kind: "network" }) },
+    );
+    expect(q("key-unavailable")).not.toBeNull();
+    expect(q("key-have")).not.toBeNull();
+    await click("key-have");
+    await type(KEY);
+    await click("key-restore");
+    expect(q("key-error")!.textContent).toContain("No connection");
+    await click("key-cancel");
+    expect(q("key-unavailable")).not.toBeNull();
+    expect(q("key-have")).not.toBeNull();
+  });
+
   it("«Cancel» возвращает к «нет ключа» и стирает введённое", async () => {
     await mount();
     await click("key-have");
@@ -211,6 +227,18 @@ describe("SettingsScreen: action sheets", () => {
     expect(q("action-sheet")).toBeNull();
     expect(document.activeElement).toBe(q("key-reissue"));
     expect(api.rotate).not.toHaveBeenCalled();
+  });
+
+  it("PD-121 (F9): в разрушающем шите (Replace/Delete) начальный фокус на «Cancel», в обычном (Unlink) — на самом шите", async () => {
+    await mount(created);
+    await click("key-reissue");
+    expect(document.activeElement).toBe(q("action-sheet-cancel"));
+    await click("action-sheet-cancel");
+    await click("key-delete");
+    expect(document.activeElement).toBe(q("action-sheet-cancel"));
+    await click("action-sheet-cancel");
+    await click("key-unlink");
+    expect(document.activeElement).toBe(q("action-sheet"));
   });
 
   it("Tab в диалоге не выходит за его пределы", async () => {

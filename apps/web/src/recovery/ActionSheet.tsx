@@ -24,8 +24,10 @@ const FOCUSABLE = "button:not([disabled])";
 export function ActionSheet({ title, message, actionLabel, destructive = false, cancelLabel, onAction, onCancel }: ActionSheetProps) {
   const scrim = useRef<HTMLDivElement>(null);
   const root = useRef<HTMLDivElement>(null);
+  const cancelBtn = useRef<HTMLButtonElement>(null);
   const cancelRef = useRef(onCancel);
   cancelRef.current = onCancel;
+  const destructiveRef = useRef(destructive);
   const titleId = useId();
   const msgId = useId();
 
@@ -41,7 +43,9 @@ export function ActionSheet({ title, message, actionLabel, destructive = false, 
         }
       }
     }
-    root.current?.focus({ preventScroll: true });
+    // PD-121 (F9): в разрушающем шите начальный фокус — на безопасной «Отмене» (Enter/пробел не сотрёт ключ, первый Tab не попадает
+    // на разрушающую кнопку); в обычном — на самом шите, как раньше.
+    (destructiveRef.current ? cancelBtn.current : root.current)?.focus({ preventScroll: true });
 
     // Клавиатура — на document, а не на шите: если фокус всё же оказался вне его (тап по фону, `body`), Esc и Tab работают.
     const onKey = (event: globalThis.KeyboardEvent) => {
@@ -94,7 +98,7 @@ export function ActionSheet({ title, message, actionLabel, destructive = false, 
           </button>
         </div>
         <div className="st-agrp">
-          <button type="button" className="cancel" onClick={onCancel} data-testid="action-sheet-cancel">
+          <button ref={cancelBtn} type="button" className="cancel" onClick={onCancel} data-testid="action-sheet-cancel">
             {cancelLabel}
           </button>
         </div>
