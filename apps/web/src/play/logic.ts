@@ -438,6 +438,11 @@ export function fillCandidates(s: PlayState, t: number): PlayState {
   };
 }
 
+/** Есть ли что заполнять: не чернила, не решена, и хотя бы одна пустая клетка без заметок имеет кандидатов (пункт «⋯» PD-144). */
+export function canFill(s: PlayState): boolean {
+  return !s.solved && s.ink !== true && fillCandidates(s, 0) !== s;
+}
+
 /** Юниты (строка/столбец/блок) клетки, в которых все девять цифр верны — для волны M3. */
 export function closedUnits(s: PlayState, cell: number): number[][] {
   const r = Math.floor(cell / 9);

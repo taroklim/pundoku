@@ -10,6 +10,7 @@ import {
   digitCells,
   enterDigit,
   eraseCell,
+  canFill,
   fillCandidates,
   firstOpenCell,
   isDigitClosed,
@@ -489,5 +490,26 @@ describe("PD-119: Fill candidates", () => {
     const ctx = { mission: s.mission.join(""), solution: s.solution.join("") };
     expect(timelapseFrames(s.log, ctx).frames.length).toBeGreaterThan(0);
     expect(heatmap(s.log, ctx)).toHaveLength(81);
+  });
+});
+
+describe("PD-144: canFill (доступность пункта «Fill candidates» в меню «⋯»)", () => {
+  it("свежая партия — можно; после Fill — нечего; ink и решённая — нельзя", () => {
+    expect(canFill(fresh())).toBe(true);
+    expect(canFill(fillCandidates(fresh(), 1000))).toBe(false);
+    expect(canFill(setInkMode(fresh(), true))).toBe(false);
+    expect(canFill({ ...fresh(), solved: true })).toBe(false);
+  });
+
+  it("не пишет в лог (чистая проверка) и согласуется с самим fillCandidates", () => {
+    const s = fresh();
+    const log = s.log.length;
+    canFill(s);
+    expect(s.log).toHaveLength(log);
+    // есть заметка во всех пустых клетках, кроме одной: можно ровно пока в ней есть кандидаты и нет заметки
+    let p = fresh();
+    for (let i = 0; i < 81; i++) if (!p.mission[i] && i !== EMPTY_CELL) p = toggleNote(p, i, 9, 100 + i);
+    expect(canFill(p)).toBe(fillCandidates(p, 5000) !== p);
+    expect(canFill(p)).toBe(true);
   });
 });

@@ -20,7 +20,7 @@ function memoryFlags(initial: string[] = []): FlagStore & { has: (k: string) => 
 function storeOf(play: PlayState, extra: Record<string, unknown> = {}): PlayStore {
   const store = new PlayStore();
   const inner = store as unknown as { snap: Record<string, unknown> };
-  inner.snap = { ...inner.snap, phase: "playing", play, selected: null, ...extra };
+  inner.snap = { ...inner.snap, hub: false, phase: "playing", play, selected: null, ...extra };
   return store;
 }
 
