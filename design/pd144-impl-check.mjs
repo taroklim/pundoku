@@ -30,13 +30,16 @@ const cases = [
   { name: 'mode-sheet', vp: BIG }, { name: 'mode-sheet', vp: SE, lang: 'uk', ax3: 1 }, { name: 'mode-sheet', vp: BIG, scheme: 'dark', lang: 'ru' },
   { name: 'game', vp: BIG }, { name: 'game', vp: SE }, { name: 'game', vp: SE, lang: 'ru', ax3: 1 }, { name: 'game', vp: MID },
   { name: 'game', vp: SE, dock: 1 }, { name: 'game', vp: SE, ax3: 1, dock: 1 }, { name: 'game', vp: BIG, dock: 1 },
+  // D-1/D-2 (QA): the dock must not move the board (see also pd144-fit-check.mjs); «with help» chip at AX3 after the dock closes.
+  { name: 'game', vp: MID, dock: 1 }, { name: 'game', vp: SE, lang: 'ru', dock: 1 }, { name: 'game', vp: MID, lang: 'uk', ax3: 1, dock: 1 },
+  { name: 'game', vp: SE, lang: 'ru', ax3: 1, help: 1 }, { name: 'game', vp: BIG, lang: 'uk', ax3: 1, help: 1 }, { name: 'game-ink', vp: BIG, scheme: 'dark', ax3: 1, ink: 1 },
   { name: 'game-ink', vp: BIG, scheme: 'dark', ink: 1 },
   { name: 'menu', vp: BIG }, { name: 'menu', vp: BIG, lang: 'uk' }, { name: 'menu-ink', vp: BIG, ink: 1 }, { name: 'menu', vp: SE, ax3: 1, lang: 'ru' },
   { name: 'discard', vp: SE, lang: 'uk', ax3: 1 }, { name: 'discard', vp: SE, lang: 'ru', ax3: 1 }, { name: 'discard', vp: BIG },
 ];
 
 const run = async (engineName, c) => {
-  const b = await (engineName === 'webkit' ? webkit : chromium).launch();
+  const b = await (engineName === 'webkit' ? webkit : chromium).launch(engineName === 'webkit' && process.env.PW_WEBKIT_EXEC ? { executablePath: process.env.PW_WEBKIT_EXEC } : {});
   const lang = c.lang ?? 'en';
   const ctx = await b.newContext({
     viewport: c.vp, deviceScaleFactor: 2, isMobile: true, hasTouch: true,
@@ -60,6 +63,7 @@ const run = async (engineName, c) => {
     await page.waitForTimeout(600);
   }
   if (c.dock) { await tap('hint-button'); await page.waitForTimeout(400); if (await page.locator('[data-testid="hint-rule-go"]').count()) { await tap('hint-rule-go'); } await page.waitForTimeout(600); }
+  if (c.help) { await tap('hint-button'); await page.waitForTimeout(400); if (await page.locator('[data-testid="hint-rule-go"]').count()) { await tap('hint-rule-go'); } await page.waitForTimeout(500); await tap('hint-close'); await page.waitForTimeout(500); }
   if (c.name.startsWith('menu')) { await tap('more-button'); await page.waitForTimeout(400); }
   if (c.name === 'discard') { await tap('more-button'); await tap('menu-new'); await page.waitForTimeout(500); await tap('setup-start'); await page.waitForTimeout(500); }
   const m = await page.evaluate(() => {
@@ -74,14 +78,14 @@ const run = async (engineName, c) => {
       minTarget: hp.length ? Math.min(...hp) : null, ax3: document.documentElement.dataset.type ?? null,
     };
   });
-  const file = `${c.name}-${c.vp.width}x${c.vp.height}-${c.scheme ?? 'light'}-${lang}${c.ax3 ? '-ax3' : ''}${c.dock ? '-dock' : ''}${engineName === 'webkit' ? '-wk' : ''}.png`;
+  const file = `${c.name}-${c.vp.width}x${c.vp.height}-${c.scheme ?? 'light'}-${lang}${c.ax3 ? '-ax3' : ''}${c.dock ? '-dock' : ''}${c.help ? '-help' : ''}${engineName === 'webkit' ? '-wk' : ''}.png`;
   await page.screenshot({ path: resolve(out, file) });
   console.log(JSON.stringify({ file, ...m, errs }));
   await b.close();
 };
 
 for (const c of cases) {
-  const tag = `${c.name}-${c.vp.width}x${c.vp.height}-${c.lang ?? 'en'}${c.ax3 ? '-ax3' : ''}${c.dock ? '-dock' : ''}`;
+  const tag = `${c.name}-${c.vp.width}x${c.vp.height}-${c.lang ?? 'en'}${c.ax3 ? '-ax3' : ''}${c.dock ? '-dock' : ''}${c.help ? '-help' : ''}`;
   if (filter && !tag.includes(filter)) continue;
   await run('chromium', c);
 }
