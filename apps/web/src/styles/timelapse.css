@@ -20,9 +20,9 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  flex-wrap: wrap;
   gap: 8px;
   text-align: center;
+  overflow-wrap: break-word; /* PD-143 (c): иконка остаётся слева от текста, длинная подпись переносится, а не выталкивает иконку в столбик */
 }
 /* PD-129: «Watch your solve» — главное действие карточки результата (залитая), Share под ней — тонированная.
    Тонированная только `.tl-start` (вход в «Replay» у других карточек). */
