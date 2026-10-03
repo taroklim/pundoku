@@ -32,7 +32,7 @@ interface HelpScreenProps {
 
 /**
  * «How Pundoku works» (PD-120): справка о четырёх собственных вещах продукта — Grid ∞, Fixes, «Technique reached»,
- * метки Year — и подписи счётчиков. Пять блоков по 2–3 строки, без картинок и туториала поверх игры: это место, куда
+ * метки Year — и подписи счётчиков. Шесть блоков по 2–3 строки, без картинок и туториала поверх игры: это место, куда
  * заглядывают сами (HIG onboarding.md: объяснение, которое можно найти позже, в Settings). Push-экран с «‹ Назад».
  * Тексты — правда по движку (`help.*` в i18n); число «30–60» для Grid ∞ измерено, см. README.
  */
@@ -108,6 +108,13 @@ export function HelpScreen({ block, backName, backLabel, onBack }: HelpScreenPro
                 <p>{t("help.technique.p1")}</p>
                 <p>{t("help.technique.p2")}</p>
                 <p>{t("help.technique.p3")}</p>
+              </>
+            )}
+            {id === "hints" && (
+              <>
+                <p>{t("help.hints.p1")}</p>
+                <p>{t("help.hints.p2")}</p>
+                <p>{t("help.hints.p3")}</p>
               </>
             )}
             {id === "year" && (

@@ -54,6 +54,8 @@ export interface DayMark {
 export interface MonthSummary {
   readonly solved: number;
   readonly corrections: number;
+  /** PD-139: решённых вовремя с помощью (пересекается с `corrections`). */
+  readonly helped: number;
   readonly unfinished: number;
   /** Решённых позже своей даты (PD-125): в `solved` не входят. */
   readonly late: number;
@@ -69,8 +71,11 @@ export interface YearMonth {
 export interface YearTotals {
   /** Решённых дней вовремя (не late). */
   readonly played: number;
+  /** Решённых вовремя без исправлений И без помощи (PD-139, решение владельца: «с помощью» — не чистый день). */
   readonly clean: number;
   readonly withCorrections: number;
+  /** Решённых вовремя с засчитанной помощью (`assisted`); может пересекаться с `withCorrections`. */
+  readonly withHelp: number;
   /** Решённых позже своей даты (PD-125): отдельный счёт, в `played`/`clean` не входят. */
   readonly late: number;
 }
@@ -131,12 +136,15 @@ export function markOf(date: string, entry: YearEntry | undefined, ctx: YearCont
 export function buildYear(year: number, entries: ReadonlyMap<string, YearEntry>, ctx: YearContext): YearView {
   let played = 0;
   let withCorrections = 0;
+  let withHelp = 0;
+  let notClean = 0;
   let lateTotal = 0;
   const months: YearMonth[] = [];
   for (let m = 0; m < 12; m++) {
     const days: DayMark[] = [];
     let solved = 0;
     let corrections = 0;
+    let helped = 0;
     let unfinished = 0;
     let late = 0;
     for (let d = 1; d <= daysInMonth(year, m); d++) {
@@ -146,15 +154,19 @@ export function buildYear(year: number, entries: ReadonlyMap<string, YearEntry>,
       if (mark.kind === "solved") {
         solved++;
         if (mark.corrections) corrections++;
+        if (mark.assisted) helped++;
+        // Чистый день — ни исправлений, ни помощи (PD-139): день с подсказкой чистым не считается.
+        if (mark.corrections || mark.assisted) notClean++;
       } else if (mark.kind === "unfinished") unfinished++;
       else if (mark.kind === "late") late++;
     }
     played += solved;
     withCorrections += corrections;
+    withHelp += helped;
     lateTotal += late;
-    months.push({ index: m, days, summary: { solved, corrections, unfinished, late } });
+    months.push({ index: m, days, summary: { solved, corrections, helped, unfinished, late } });
   }
-  return { year, months, totals: { played, clean: played - withCorrections, withCorrections, late: lateTotal } };
+  return { year, months, totals: { played, clean: played - notClean, withCorrections, withHelp, late: lateTotal } };
 }
 
 /**

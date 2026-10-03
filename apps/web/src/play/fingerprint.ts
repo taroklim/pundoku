@@ -162,11 +162,11 @@ export function drawFingerprint(ctx: CanvasRenderingContext2D, layout: FpLayout,
   const shift = markDrawn ? FP_MARK + FP_MARK_GAP : 0;
   const leftW = ctx.measureText(caption.left).width;
   ctx.fillText(caption.left, FP_PAD + shift, FP_CAPTION_Y);
-  // Правая часть: по возможности 32 px; не влезает — уменьшаем, но не ниже 22.
+  // Правая часть: по возможности 32 px; не влезает — уменьшаем, но не ниже 18 (PD-139: подпись с подсказками длиннее).
   const room = FP_GRID - shift - leftW - 32;
   let px = 32;
   ctx.font = `400 ${px}px ${SANS}`;
-  while (px > 22 && ctx.measureText(caption.right).width > room) {
+  while (px > 18 && ctx.measureText(caption.right).width > room) {
     px -= 1;
     ctx.font = `400 ${px}px ${SANS}`;
   }

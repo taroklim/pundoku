@@ -148,6 +148,26 @@ export function blotCount(frames: readonly TimelapseFrame[]): number {
 }
 
 /**
+ * Засечки подсказок на шкале плеера (PD-139): для каждой записи `hintLog` — номер хода, после которого она взята
+ * (последний ход с `t ≤ hint.t`; до первого хода — 0). Повторы в одном месте схлопываются; порядок по возрастанию.
+ * Кадры строятся с `maxGapMs: Infinity`, `frame.t` — исходное время хода, как и `hintLog.t`. Цифры шага здесь нет.
+ */
+export function hintTickMoves(frames: readonly TimelapseFrame[], hintLog: readonly { readonly t: number }[] | undefined): number[] {
+  if (!hintLog || hintLog.length === 0 || frames.length === 0) return [];
+  const idx = moveIndex(frames);
+  const out = new Set<number>();
+  for (const h of hintLog) {
+    let at = 0;
+    for (let j = 0; j < frames.length; j++) {
+      if (frames[j]!.t <= h.t) at = j;
+      else break;
+    }
+    out.add(idx.moveNo[at] ?? 0);
+  }
+  return [...out].sort((a, b) => a - b);
+}
+
+/**
  * «Сколько думал» на клетку отпечатка, 0 (мгновенно) … 1 (самая долгая пауза). Из `timelapseFingerprint` с
  * `maxGapMs: Infinity`: пауза перед клеткой = её момент минус момент предыдущей по порядку. Первая клетка (пауза
  * включает чтение сетки) получает медиану остальных; нормировка — корень от доли опорной паузы (max из 90-го

@@ -50,6 +50,9 @@ export interface SavedPlay {
   readonly elapsedMs: number;
   readonly selected: number | null;
   readonly notesMode: boolean;
+  /** PD-139: результативных подсказок в партии и пометка «с помощью» (опционально: записи без них читаются как 0/false). */
+  readonly hints?: number;
+  readonly assisted?: boolean;
 }
 
 export interface PlayDeps {
@@ -70,6 +73,8 @@ export function parseSavedPlay(raw: unknown): SavedPlay | null {
   if (typeof r.elapsedMs !== "number" || !Number.isFinite(r.elapsedMs) || r.elapsedMs < 0) return null;
   if (typeof r.startedOn !== "string" || Number.isNaN(Date.parse(r.startedOn))) return null;
   const selected = typeof r.selected === "number" && Number.isInteger(r.selected) && r.selected >= 0 && r.selected < CELLS ? r.selected : null;
+  const hints = typeof r.hints === "number" && Number.isInteger(r.hints) && r.hints > 0 && r.hints <= 999 ? r.hints : 0;
+  const assisted = r.assisted === true || hints > 0; // подсказки без пометки — порча записи: пометка важнее
   return {
     v: 1,
     difficulty: r.difficulty as Difficulty,
@@ -78,6 +83,8 @@ export function parseSavedPlay(raw: unknown): SavedPlay | null {
     elapsedMs: r.elapsedMs,
     selected,
     notesMode: r.notesMode === true,
+    ...(hints > 0 ? { hints } : {}),
+    ...(assisted ? { assisted: true } : {}),
   };
 }
 
@@ -117,6 +124,8 @@ export class PlayStore extends GameStore<PlayScreenSnapshot> {
       elapsedMs: this.getElapsedMs(),
       selected: s.selected,
       notesMode: s.notesMode,
+      ...((s.hints ?? 0) > 0 ? { hints: s.hints } : {}),
+      ...(s.assisted === true ? { assisted: true } : {}),
     };
     this.write(() => deps.storage.setMeta(PLAY_META_KEY, saved));
   }
@@ -130,7 +139,7 @@ export class PlayStore extends GameStore<PlayScreenSnapshot> {
   /** Партия меняется (ход/решение/смена фазы) — пишем. Выбор клетки, анимации и отклики — не прогресс, не пишем. */
   protected override set(patch: Partial<PlayScreenSnapshot>): void {
     super.set(patch);
-    if (patch.play !== undefined || patch.phase !== undefined) this.persist();
+    if (patch.play !== undefined || patch.phase !== undefined || patch.hints !== undefined) this.persist();
   }
 
   /** Решено: таймер уже остановлен на последнем ходе — дописываем точное время и итог. */
@@ -182,6 +191,8 @@ export class PlayStore extends GameStore<PlayScreenSnapshot> {
       startedOn: new Date(saved.startedOn),
       selected: saved.play.solved ? null : (saved.selected ?? firstOpenCell(saved.play)),
       notesMode: saved.notesMode && !saved.play.solved,
+      hints: saved.hints ?? 0,
+      assisted: saved.assisted === true,
     });
   }
 

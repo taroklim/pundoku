@@ -11,24 +11,33 @@ import { timelapseOf } from "./timelapse";
 import { blotCount, moveIndex } from "./timelapseModel";
 import { TimelapseSheetShell } from "./TimelapseSheetShell";
 
-/** «30 Sep 2026 · 8:14 · 51 moves · clean» — подпись под сеткой PNG (owner: `clean` либо `N blots`; правки без кляксы — `N fixes`). */
+/**
+ * «30 Sep 2026 · 8:14 · 51 moves · clean» — подпись под сеткой PNG (owner: `clean` либо `N blots`; правки без кляксы — `N fixes`).
+ * PD-139: партия с подсказками получает в конце «· 3 hints» — только число, без техник и клеток (картинка публикуется);
+ * «clean» ей не пишется: с помощью — не чистая.
+ */
 export function fingerprintCaption(
   t: TFunction,
   locale: string,
-  input: { date: string; durationMs: number; moves: number; blots: number; corrections: number; clean: boolean },
+  input: { date: string; durationMs: number; moves: number; blots: number; corrections: number; clean: boolean; hints?: number },
 ): FpCaption {
   // День-месяц-год во всех языках («30 Sep 2026»): порядок задаём сами, названия месяцев берём из Intl.
   const at = new Date(`${input.date}T12:00:00`);
   const part = (o: Intl.DateTimeFormatOptions, type: Intl.DateTimeFormatPartTypes) =>
     new Intl.DateTimeFormat(locale, o).formatToParts(at).find((p) => p.type === type)?.value ?? "";
   const day = [part({ day: "numeric" }, "day"), part({ month: "short" }, "month"), part({ year: "numeric" }, "year")].join(" ");
+  const helped = (input.hints ?? 0) > 0;
+  // «clean» — без правок И без помощи (решение владельца PD-139): у партии с подсказкой слова «clean» нет, остаётся «N hints».
   const tail =
     input.blots > 0
-      ? t("timelapse.fpBlots", { count: input.blots })
+      ? [t("timelapse.fpBlots", { count: input.blots })]
       : input.clean
-        ? t("timelapse.fpClean")
-        : t("timelapse.fpCorrections", { count: input.corrections });
-  return { left: "Pundoku", right: [day, formatClock(input.durationMs), t("timelapse.fpMoves", { count: input.moves }), tail].join(" · ") };
+        ? helped
+          ? []
+          : [t("timelapse.fpClean")]
+        : [t("timelapse.fpCorrections", { count: input.corrections })];
+  const help = helped ? [t("timelapse.hints", { count: input.hints })] : [];
+  return { left: "Pundoku", right: [day, formatClock(input.durationMs), t("timelapse.fpMoves", { count: input.moves }), ...tail, ...help].join(" · ") };
 }
 
 interface ExportSheetProps {
@@ -62,8 +71,9 @@ export function ExportSheet({ play, date, onClose }: ExportSheetProps) {
         blots: data.tl ? blotCount(data.tl.frames) : 0,
         corrections: data.sum.corrections,
         clean: data.sum.clean,
+        hints: play.hintLog?.length ?? 0,
       }),
-    [t, locale, date, data],
+    [t, locale, date, data, play.hintLog],
   );
 
   const [blob, setBlob] = useState<Blob | null>(null);

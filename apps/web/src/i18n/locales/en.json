@@ -140,6 +140,12 @@
       "p2": "From easiest: Naked Single, a cell that fits only one digit. Hidden Single, a digit that fits only one cell in its row, column or box. Then Locked Candidates and Pairs, which rule digits out by looking at several cells together.",
       "p3": "“Advanced” means harder still."
     },
+    "hints": {
+      "title": "Hints",
+      "p1": "The bulb at the top opens a ladder of four steps: where to look, which technique, which cells, and why. Each step gives a little more. It never says the digit — that part is yours.",
+      "p2": "The first hint that explains something marks the day “with help”, in the year and on its card; more hints that day change nothing. A day with help doesn’t count as clean in the year’s totals. If Pundoku finds nothing to explain, nothing is marked.",
+      "p3": "It can name Naked and Hidden Singles, Locked Candidates and Pairs. Ink mode and Grid ∞ have no hints."
+    },
     "year": {
       "title": "Year marks",
       "lead": "One square per day.",
@@ -209,11 +215,120 @@
     "undo": "Undo",
     "erase": "Erase"
   },
+  "hint": {
+    "mark": "with help",
+    "button": "Hint",
+    "buttonUsed": "Hint, {{count}} used today",
+    "buttonUsedPlay": "Hint, {{count}} used",
+    "step": "Step {{n}} of 4",
+    "more": "One more step",
+    "done": "Got it",
+    "close": "Close",
+    "keyWhere": "where it happens",
+    "keyWhy": "why",
+    "keyRegion": "the region",
+    "foot": "This day is marked “with help”.",
+    "footPlay": "This game is marked “with help”.",
+    "nudge": "**Stuck?** There’s a hint at the top.",
+    "rule": {
+      "title": "A hint marks the day",
+      "titlePlay": "A hint marks the game",
+      "lead": "Pundoku never fills a cell for you. A hint walks you to the next move in four steps: where to look, which technique, which cells, and why.",
+      "r1": "The day is recorded as **solved with help** — in the year and on the card.",
+      "r2": "Further hints today don’t change the mark.",
+      "r1Play": "The game is marked **with help** on its result card.",
+      "r2Play": "Further hints in this game don’t change the mark.",
+      "r3": "If Pundoku finds nothing to explain, nothing is marked.",
+      "r4": "Ink mode has no hints at all.",
+      "go": "Show the hint",
+      "not": "Not now"
+    },
+    "s1": {
+      "row": "Look at row {{n}}.",
+      "col": "Look at column {{n}}.",
+      "box": "Look at the {{box}}.",
+      "body": "There’s a move here you can make right now."
+    },
+    "box": {
+      "1": "top-left box",
+      "2": "top-middle box",
+      "3": "top-right box",
+      "4": "middle-left box",
+      "5": "centre box",
+      "6": "middle-right box",
+      "7": "bottom-left box",
+      "8": "bottom-middle box",
+      "9": "bottom-right box"
+    },
+    "regionIn": {
+      "row": "in row {{n}}",
+      "col": "in column {{n}}",
+      "box": {
+        "1": "in the top-left box",
+        "2": "in the top-middle box",
+        "3": "in the top-right box",
+        "4": "in the middle-left box",
+        "5": "in the centre box",
+        "6": "in the middle-right box",
+        "7": "in the bottom-left box",
+        "8": "in the bottom-middle box",
+        "9": "in the bottom-right box"
+      }
+    },
+    "s2": {
+      "naked_single": "One cell in there has a single candidate left.",
+      "hidden_single": "In this region one digit has only one place left to go.",
+      "locked_pointing": "In this box one digit is confined to a single line — so it can leave that line everywhere else.",
+      "locked_claiming": "In this line one digit only fits inside a single box — so it can leave the rest of that box.",
+      "naked_pair": "Two cells here hold the same two candidates and nothing else — those digits belong to them.",
+      "hidden_pair": "Two digits here fit in only two cells — those cells can drop everything else."
+    },
+    "s3": {
+      "cell": "Row {{r}}, column {{c}}.",
+      "cellBody": "That one cell is where the move happens. The digit is still yours to find.",
+      "pair": "Two cells: row {{r1}} column {{c1}}, row {{r2}} column {{c2}}.",
+      "pairBody": "The pair lives here. Everything it frees is one step further.",
+      "locked": "{{Source}}, the digit can only be {{target}}.",
+      "lockedBody": "Which cells that frees is one step further."
+    },
+    "s4": {
+      "titleOne": "Why that cell",
+      "titleMany": "Why those cells",
+      "naked_single": "Look at the row, column and box of the underlined cell. The circled cells already use eight of the nine digits — the ninth has nowhere else to go.",
+      "naked_single_assumed": "Look at the row, column and box of the underlined cell. The circled cells already use up some of the digits, and the candidates you struck in your notes rule out the rest — the one left has nowhere else to go.",
+      "hidden_single_one": "{{Region}}, one digit is still missing. The circled cell already holds it and rules out every other free square there. Only the underlined cell is left.",
+      "hidden_single_other": "{{Region}}, one digit is still missing. The circled cells already hold it and between them rule out every other free square there. Only the underlined cell is left.",
+      "locked": "{{Source}}, one digit only fits in the circled cells, all of them {{target}}. Wherever it lands there, it can’t also sit elsewhere {{target}} — strike it from the underlined cells.",
+      "naked_pair": "The two circled cells share the same pair of candidates and nothing else. Between them they will use both digits, so no other cell {{region}} can — strike them from the underlined cells.",
+      "hidden_pair": "{{Region}}, two digits fit only in the two circled cells. So those two cells can hold nothing else — strike every other candidate there.",
+      "assumes": "Part of this relies on candidates you already struck in your notes."
+    },
+    "bad": {
+      "step": "Before the next step",
+      "title": "Something here doesn’t add up",
+      "dup": "Two of your digits {{region}} are the same, so the grid can’t be finished as it stands. Pundoku won’t point at the cell — hints come back once it works again.",
+      "generic": "The grid can’t be finished with what’s {{region}}. Pundoku won’t point at the cell — hints come back once it works again.",
+      "key": "the region of the disagreement"
+    },
+    "none": {
+      "step": "No step",
+      "title": "Nothing Pundoku can explain",
+      "body": "This position needs a technique Pundoku doesn’t teach yet — an X-Wing or beyond. Nothing on your board is wrong.",
+      "foot": "Nothing was revealed, so the day stays unmarked.",
+      "footPlay": "Nothing was revealed, so the game stays unmarked."
+    },
+    "cellTail": {
+      "region": "in the hint region",
+      "cell": "hint cell",
+      "witness": "hint witness"
+    }
+  },
   "solved": {
     "title": "Solved",
     "time": "Time",
     "corrections": "Fixes",
     "clean": "clean",
+    "hints": "Hints",
     "technique": "Technique reached",
     "share": "Share",
     "newGame": "New game"
@@ -268,6 +383,7 @@
     "totalsDays_other": "{{count}} days",
     "totalsClean": "{{n}} clean",
     "totalsCorrections": "{{n}} with fixes",
+    "totalsHelp": "{{n}} with help",
     "totalsLate": "{{n}} solved late",
     "legendLabel": "What the marks mean",
     "legend": {
@@ -287,6 +403,7 @@
     "monthSummary_one": "{{solved}} of {{count}} day solved, {{corrections}} with fixes",
     "monthSummary_other": "{{solved}} of {{count}} days solved, {{corrections}} with fixes",
     "monthUnfinished": "{{n}} unfinished",
+    "monthHelp": "{{n}} with help",
     "monthLate": "{{n}} solved late",
     "sheetDone": "Done",
     "sheetBack": "Back to {{month}}",
@@ -390,6 +507,8 @@
     "fpBlots_one": "{{count}} blot",
     "fpBlots_other": "{{count}} blots",
     "fpCorrections_one": "{{count}} fix",
-    "fpCorrections_other": "{{count}} fixes"
+    "fpCorrections_other": "{{count}} fixes",
+    "hints_one": "{{count}} hint",
+    "hints_other": "{{count}} hints"
   }
 }

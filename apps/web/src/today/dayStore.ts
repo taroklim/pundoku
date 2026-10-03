@@ -24,7 +24,7 @@ import {
 } from "./dayResolver";
 import type { Landing, PermanentGridState } from "./permanent";
 import { initialPermanent, isSolvable, landDay, newInstallSeed } from "./permanent";
-import type { DayProgress, ProgressRepository } from "./repository";
+import type { DayProgress, ProgressRepository, SyncStorage } from "./repository";
 import { sync as syncRuntime } from "../sync/runtime";
 import type { RemoteApplied, SyncHooks } from "../sync/manager";
 import { readUseStart } from "../year/firstUse";
@@ -168,7 +168,6 @@ export class DayStore extends GameStore<DaySnapshot> {
   /** Итог дня для снапшота/Year: момент решения и «поздно» — фиксируются при первом решении. */
   private solvedAt: string | null = null;
   private late = false;
-  private assisted = false;
   /** >0 — идёт замена записи дня победителем слияния: `persist` молчит, чтобы не записать проигравшую (PD-43). */
   private holdPersist = 0;
   private readonly archive: boolean;
@@ -179,6 +178,20 @@ export class DayStore extends GameStore<DaySnapshot> {
     super(initialDaySnapshot(localDate(deps.now())));
     this.deps = deps;
     this.archive = options.archive === true;
+  }
+
+  /**
+   * PD-139: были ли на устройстве дни, помеченные «с помощью» (в т.ч. после смены/очистки флагов) — тогда шит правила
+   * подсказки уже не нужен. Хранилище без списка дней или с ошибкой чтения — «нет».
+   */
+  async anyAssisted(): Promise<boolean> {
+    const repo = this.deps.repo as Partial<SyncStorage>;
+    if (typeof repo.listDays !== "function") return false;
+    try {
+      return (await repo.listDays()).some((d) => d.assisted);
+    } catch {
+      return false;
+    }
   }
 
   /** Ink (PD-71): на Today — да; в архиве — только если правила (`INK_RULES.allowInArchive`) это разрешают. */
@@ -316,7 +329,6 @@ export class DayStore extends GameStore<DaySnapshot> {
     const date = this.archive ? (this.targetDate ?? today) : today;
     this.solvedAt = null;
     this.late = false;
-    this.assisted = false;
     this.resetToLoading({ date, source: null, winRate: null, landing: null, serverVerified: null, offline: false, verification: "local", unavailable: false, late: false });
     if (this.archive && !isArchiveDate(date, today)) {
       this.set({ phase: "error", unavailable: true });
@@ -386,7 +398,7 @@ export class DayStore extends GameStore<DaySnapshot> {
       if (solution) {
         if (saved) {
           const r = reconcileDay(
-            { mission: saved.mission, source: saved.source, hasMoves: saved.play.log.length > 0 },
+            { mission: saved.mission, source: saved.source, hasMoves: saved.play.log.length > 0 || (saved.hints ?? 0) > 0 },
             plan.puzzle,
           );
           // win rate относится к чужой (серверной) сетке — у своей его нет (PD-37: в записи он мог остаться от старой сверки)
@@ -438,7 +450,6 @@ export class DayStore extends GameStore<DaySnapshot> {
     const src = latest ?? saved;
     this.solvedAt = saved.solvedAt;
     this.late = saved.late;
-    this.assisted = saved.assisted;
     this.resumeGame(saved.play, saved.elapsedMs, {
       date: saved.date,
       source: src.source,
@@ -453,6 +464,8 @@ export class DayStore extends GameStore<DaySnapshot> {
       offline,
       late: saved.late,
       landing: null,
+      hints: saved.hints ?? 0,
+      assisted: saved.assisted,
     });
   }
 
@@ -488,7 +501,7 @@ export class DayStore extends GameStore<DaySnapshot> {
       return;
     }
     const r = reconcileDay(
-      { mission: s.play.mission.join(""), source: s.source, hasMoves: s.play.log.length > 0 },
+      { mission: s.play.mission.join(""), source: s.source, hasMoves: s.play.log.length > 0 || (s.hints ?? 0) > 0 },
       fetched.puzzle,
     );
     switch (r.action) {
@@ -555,10 +568,11 @@ export class DayStore extends GameStore<DaySnapshot> {
       verification: s.verification,
       solvedAt: solved ? this.solvedAt : null,
       late: solved && this.late,
-      assisted: this.assisted,
+      assisted: s.assisted === true,
+      ...((s.hints ?? 0) > 0 ? { hints: s.hints } : {}),
     };
     void this.write(() => this.deps.repo.saveDay(progress));
-    if (!solved && s.play.log.length > 0) this.deps.sync?.notify("progress");
+    if (!solved && (s.play.log.length > 0 || (s.hints ?? 0) > 0)) this.deps.sync?.notify("progress");
   }
 
   protected override onSolved(play: PlayState): void {

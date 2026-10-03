@@ -141,6 +141,7 @@ export function YearScreen({ days, firstUse, today, onOpenToday, onPlayDay, init
             t("year.totalsDays", { count: view.totals.played }),
             t("year.totalsClean", { n: view.totals.clean }),
             view.totals.withCorrections > 0 ? t("year.totalsCorrections", { n: view.totals.withCorrections }) : null,
+            view.totals.withHelp > 0 ? t("year.totalsHelp", { n: view.totals.withHelp }) : null,
             view.totals.late > 0 ? t("year.totalsLate", { n: view.totals.late }) : null,
           ]
             .filter(Boolean)

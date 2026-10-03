@@ -19,6 +19,10 @@ import {
   useHintAnnouncement,
 } from "./controls";
 import { formatDay } from "./format";
+import { HintButton } from "./HintButton";
+import { HintDock, HINT_DOCK_ID } from "./HintDock";
+import { HintRuleSheet, boldParts } from "./HintRuleSheet";
+import { useHintLadder } from "./hintStore";
 import { cellsLeft, isGridFull } from "./logic";
 import { PlaySetup } from "./PlaySetup";
 import { ResultCard } from "./ResultCard";
@@ -37,6 +41,8 @@ export function PlayScreen({ onOpenSettings, onOpenHelp }: { onOpenSettings?: ()
   const snap = useSyncExternalStore(playStore.subscribe, playStore.getSnapshot);
   const clock = useClock(playStore);
   const { phase, play, difficulty } = snap;
+  // PD-139: лесенка подсказок. В Ink и до старта партии её нет (`hintAllowed`); ушли с вкладки — подсветки снимаются.
+  const { ladder, state: hint } = useHintLadder(playStore);
 
   useEffect(() => {
     playStore.ensureStarted();
@@ -94,7 +100,8 @@ export function PlayScreen({ onOpenSettings, onOpenHelp }: { onOpenSettings?: ()
   useEffect(() => {
     if (phase !== "playing") setConfirming(false);
   }, [phase]);
-  const hasMoves = phase === "playing" && play !== null && play.log.length > 0;
+  // PD-139: подсказка — тоже «потраченное»: партия с взятой подсказкой не сбрасывается молча.
+  const hasMoves = phase === "playing" && play !== null && (play.log.length > 0 || (snap.hints ?? 0) > 0);
   const onNewPuzzle = () => {
     if (hasMoves) setConfirming(true);
     else playStore.toSetup();
@@ -108,7 +115,7 @@ export function PlayScreen({ onOpenSettings, onOpenHelp }: { onOpenSettings?: ()
   const ink = play?.ink === true;
 
   return (
-    <div className="play" onKeyDown={(e) => handleGameKey(e, playStore)}>
+    <div className="play" onKeyDown={(e) => handleGameKey(e, playStore, ladder)}>
       {/* Live-регион для скринридера: «N cells left» только на порогах (см. хук выше). */}
       <p className="sr-only" role="status" aria-live="polite" aria-atomic="true">
         {announcement}
@@ -119,16 +126,19 @@ export function PlayScreen({ onOpenSettings, onOpenHelp }: { onOpenSettings?: ()
         actions={
           !snap.setup &&
           !snap.restoring && (
-            <button type="button" className="newpuzzle-btn" onClick={onNewPuzzle} data-testid="new-puzzle">
-              {t("play.newPuzzle")}
-            </button>
+            <>
+              <button type="button" className="newpuzzle-btn" onClick={onNewPuzzle} data-testid="new-puzzle">
+                {t("play.newPuzzle")}
+              </button>
+              {playStore.hintAllowed() && <HintButton open={hint.open} used={snap.hints ?? 0} play onPress={() => ladder.toggle()} controls={HINT_DOCK_ID} />}
+            </>
           )
         }
       />
       {snap.setup ? (
         snap.restoring ? null : <p className="subline">{t("ink.playSub")}</p>
       ) : (
-        <Subline day={dayLabel} difficulty={diffLabel} ink={ink} clock={showClock ? clock : null} />
+        <Subline day={dayLabel} difficulty={diffLabel} ink={ink} help={snap.assisted === true} clock={showClock ? clock : null} />
       )}
 
       {snap.setup && snap.restoring ? null : snap.setup ? (
@@ -146,6 +156,7 @@ export function PlayScreen({ onOpenSettings, onOpenHelp }: { onOpenSettings?: ()
             cardRef={cardRef}
             title={t("solved.title")}
             timelapse={{ date: localDate(snap.startedOn), difficulty }}
+            hints={snap.hints}
             onOpenHelp={onOpenHelp}
           >
             {/* ПРОВИЗОРНО (PD-11): «New game» — минимум, чтобы из «решено» можно было выйти; в макете нет. */}
@@ -156,7 +167,7 @@ export function PlayScreen({ onOpenSettings, onOpenHelp }: { onOpenSettings?: ()
         )
       ) : (
         <>
-          <Board snap={snap} store={playStore} dim={phase === "solved"} />
+          <Board snap={snap} store={playStore} dim={phase === "solved"} hintMarks={hint.marks} />
 
           {/* Свободное место — МЕЖДУ полем и панелью (макет, находка 1); в зазоре — статус. */}
           <div className="gap">
@@ -173,14 +184,20 @@ export function PlayScreen({ onOpenSettings, onOpenHelp }: { onOpenSettings?: ()
                 </button>
               </p>
             )}
-            {(phase === "playing" || phase === "solved") && (
+            {/* Пока док открыт, строка «N cells left» скрыта: сообщение на экране одно (макет PD-133 §4). */}
+            {(phase === "playing" || phase === "solved") && !hint.open && (hint.nudge ? (
+              <p className="status nudge" data-testid="hint-nudge">
+                {boldParts(t("hint.nudge"))}
+              </p>
+            ) : (
               <StatusLine left={left} full={full} hint={snap.hint} />
-            )}
+            ))}
           </div>
 
-          <GamePad snap={snap} store={playStore} />
+          {hint.open ? <HintDock ladder={ladder} state={hint} play /> : <GamePad snap={snap} store={playStore} />}
         </>
       )}
+      {hint.rule && <HintRuleSheet play onGo={() => ladder.confirmRule()} onCancel={() => ladder.dismissRule()} />}
       {confirming && (
         <ActionSheet
           title={t("play.discardTitle")}

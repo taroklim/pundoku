@@ -40,8 +40,13 @@ export interface DayRecord {
   hadCorrections: boolean;
   /** Число правок (`summary.corrections`) — для строки «Corrections» на карточке дня; в Year не используется. */
   corrections?: number;
-  /** «Решено с подсказкой». В релизе 1 функции подсказки нет — всегда `false`; поле хранится и пробрасывается. */
+  /** «Решено с подсказкой» (PD-139): первая РЕЗУЛЬТАТИВНАЯ подсказка (техника/ошибка) ставит пометку; «ничего не нашёл» — нет. */
   assisted: boolean;
+  /**
+   * Сколько результативных подсказок взято (PD-139) — для подписи «N подсказок» на отпечатке и в шите дня. Только `> 0`
+   * (у дня без подсказок поля нет: старые записи равны побайтно, схему не версионируем — как `ink`). Не выводится в `assisted`.
+   */
+  hints?: number;
   /** День сыгран после своей даты (архив); в Year остаётся «пропуском». */
   late: boolean;
   source: RecordSource;
@@ -160,6 +165,8 @@ export function sanitizeDayRecord(raw: unknown): DayRecord | null {
   if (typeof corrections === "number" && Number.isInteger(corrections) && corrections >= 0) rec.corrections = corrections;
   const winRate = raw["winRate"];
   if (typeof winRate === "number" && winRate >= 0 && winRate <= 100) rec.winRate = winRate;
+  const hints = raw["hints"];
+  if (typeof hints === "number" && Number.isInteger(hints) && hints > 0 && hints <= 999) rec.hints = hints;
   if (raw["ink"] === true) {
     rec.ink = true;
     const blots = raw["blots"];
@@ -201,12 +208,13 @@ const fromRecordSource = (s: RecordSource): DaySource => (s === "device" ? "clie
  */
 export function dayRecordFromProgress(p: DayProgress, now: Date): DayRecord | null {
   const log = p.play.log;
-  if (!p.solved && log.length === 0) return null;
+  if (!p.solved && log.length === 0 && (p.hints ?? 0) === 0) return null; // подсказка без ходов — уже след дня (assisted)
   const sum = summary(log);
   const base = {
     hadCorrections: !sum.clean,
     corrections: sum.corrections,
     assisted: p.assisted,
+    ...((p.hints ?? 0) > 0 ? { hints: p.hints } : {}),
     source: toRecordSource(p.source),
     difficulty: p.difficulty,
     mission: p.mission,
@@ -319,6 +327,7 @@ export function progressFromRecord(date: string, rec: DayRecord): DayProgress | 
     solvedAt: rec.solvedAt ?? null,
     late: rec.late,
     assisted: rec.assisted,
+    ...(rec.hints !== undefined ? { hints: rec.hints } : {}),
   };
 }
 
