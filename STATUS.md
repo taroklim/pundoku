@@ -489,7 +489,7 @@ Gates: build → typecheck, lint, тесты web/engine/api (api с `TEST_DATABA
 |-----|------|--------|-------|-----------|
 | PM-Pundoku-10 | product-manager | working | пакеты реализации по решениям владельца | 2026-10-02 |
 | Dev-Pundoku-HintUI2 | developer | working | PD-139 доработка | 2026-10-03 |
-| Dev-Pundoku-PkgC2 | developer | working | PD-143 доработка (D1) | 2026-10-03 |
+| QA-Pundoku-PkgC2 | qa-tester | working | PD-143 повторный QA (D1, c, d) | 2026-10-03 |
 
 ## Чек-пойнт 2026-10-01 (конец сессии PM-Pundoku-7)
 - **Сделано:** решения владельца по релизу 1.1 зафиксированы; PD-74 (UI ink, pd-74 @ 73444b2), PD-75 (UI таймлапса/PNG Rhythm, pd-75 @ bfeedbf), PD-80 (счёт ходов в ink, pd-80 @ de5a52d) смержены в локальный main; gates на слитом: build/typecheck/lint, web 624, engine 178 (api не затронут, 174+3). PD-78 сделан в PD-74. PD-79 закрыт: не дефект.
