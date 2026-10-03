@@ -394,7 +394,7 @@ Gates: build → typecheck, lint, тесты web/engine/api (api с TEST_DATABAS
 | PD-136 | Живой QA пакета B (pd-ux-texts: PD-120..123, PD-132) | qa-tester | P1 | completed (PASS, правки внесены и смержены) | PD-120, PD-121, PD-122, PD-123, PD-132 |
 | PD-137 | Живой QA пакета D (pd-late: PD-125, SC-04) | qa-tester | P1 | completed (PASS; merged b148eeb) | PD-125 |
 | PD-138 | Живой QA пакета E (pd-key: PD-126, миграция 0007, два профиля) | qa-tester | P1 | completed (PASS; merged fa47ca1) | PD-126 |
-| PD-139 | UI лесенки подсказок по макету PD-133 на движке PD-134 (ждёт ответов владельца по PD-133 md) | developer | P1 | in_progress (rebased на main после пакета C, gates зелёные: web 1140; идёт QA)  | PD-133, PD-134 |
+| PD-139 | UI лесенки подсказок по макету PD-133 на движке PD-134 (ждёт ответов владельца по PD-133 md) | developer | P1 | completed (QA PASS с замечаниями; D1 исправлен dde95b4; merged ea74879)  | PD-133, PD-134 |
 | PD-140 | IA-ревью (запрос владельца 2026-10-02): структура навигации — хаб vs доска на Today/Play, Ink, варианты A/B/C + свой, замеры тапов/секунд, макеты `design/pd140-ia-*.html`, итог `research/usability-2026-10/ia-review.md`; в код ничего до решения | designer+developer | P1 | completed (ia-review.md, макет; замеры ветка pd-ia-measure @ 36eacc5: ветеран ежедневки 1 тап, Play hard 4+2 жеста ОС, новичок 1, Ink Today 3 / Play 5, архив 5 (решённый день 3), Year→шит дня 3; ПЕРЕМЕРИТЬ после мержа A–E) | — |
 | PD-141 | Дизайн логотипа раунд 4 (запрос владельца): буква P из клеток блока 3×3 / цифр / сетки / «унос» / P+Pundoku, `design/pd141-logo-round4.html` + кадры + копия `~/Desktop/Pundoku-iPhone/logo-round4.html`; D5 не обязан заменяться; в код ничего до выбора | designer | P2 | completed (макет и рендер готовы; выбор варианта за владельцем; D5 не заменяется; в код ничего до выбора. По рендеру: P4 читается на всех размерах, P5 «F и точка» уже на 120/180 px, P1 как флажок, favicon: сплошная P чистая, клеточная на 16 px едва узнаётся) | — |
 | PD-142 | Проверка записи ключа восстановления при создании: ввод 1–2 групп ключа (H-21/SC-08), решение владельца 2026-10-02: ДА; после пакета E (ветка pd-key), макет в стиле Settings, en/uk/ru, тесты, QA | developer | P1 | completed (QA PASS; merged b55f967)  | PD-126 |
@@ -478,6 +478,8 @@ Gates: build → typecheck, lint, тесты web/engine/api (api с `TEST_DATABA
 - **Ждёт владельца:** выбор логотипа D1/D2/D3 (D2 — ещё решение по палитре бренда); PD-54/PD-58; iPhone-чек-лист.
 
 ## Бэклог после релиза 2026-10-02 (push 41f7e73; новую работу не начинать без владельца)
+- Low (QA PD-139 D2): док подсказки сдвигает доску на 375×667 и 320×568 (iPhone 16 не касается) — учесть в PD-144 («нескроллящийся экран партии»).
+- docs/ios-checklist.html (70 пунктов) содержит группу подсказок, но не пункты пакетов A–E, C и PD-142 — они только в research/usability-2026-10/ios-owner-steps.md (пп. 21–47).
 - Low (QA PD-143): «Cancel» в ActionSheet ниже края на 320pt AX3 uk/ru (общее поведение шита) — в PD-144.
 - Low (QA PD-143): видимой точки входа в Fill candidates нет (долгий тап по Notes) — решение владельцу на макете в PD-144 (пункт в шите заметок или «⋯»).
 - Low (QA PD-142): при двух неверных группах ключа сообщение не называет, какая именно.
@@ -492,7 +494,6 @@ Gates: build → typecheck, lint, тесты web/engine/api (api с `TEST_DATABA
 | Имя | Роль | Статус | Тикет | Обновлено |
 |-----|------|--------|-------|-----------|
 | PM-Pundoku-10 | product-manager | working | пакеты реализации по решениям владельца | 2026-10-02 |
-| QA-Pundoku-Hint | qa-tester | working | PD-139 | 2026-10-03 |
 | Des-Pundoku-PlayC | designer | working | PD-144 макет | 2026-10-03 |
 
 ## Чек-пойнт 2026-10-01 (конец сессии PM-Pundoku-7)
