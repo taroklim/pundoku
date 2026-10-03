@@ -35,10 +35,10 @@ for (const scheme of ["light", "dark"]) {
   }));
   ok(m.sw <= m.cw, `нет горизонтального скролла (scrollWidth ${m.sw} <= ${m.cw})`);
   ok(/viewport-fit=cover/.test(m.viewport), `viewport: ${m.viewport}`);
-  ok(m.cards === 104, `на странице 104 карточки пункта (${m.cards})`);
+  ok(m.cards === 113, `на странице 113 карточки пункта (${m.cards})`);
   const doneVisible = await page.locator("#done-list article").first().isVisible();
   ok(!m.doneOpen && !doneVisible, "список «проверено командой» свёрнут по умолчанию (виден только заголовок)");
-  ok(m.count === "0 из 86", `счётчик «${m.count}»`);
+  ok(m.count === "0 из 95", `счётчик «${m.count}»`);
   const dark = scheme === "dark";
   ok(dark ? m.bg === "rgb(0, 0, 0)" : m.bg === "rgb(242, 242, 247)", `фон ${m.bg} (${scheme})`);
   const small = await page.evaluate(() => {
@@ -71,18 +71,18 @@ for (const scheme of ["light", "dark"]) {
   await page.locator("#item-3 textarea").fill("Стекло приятное, но слишком светлое");
   await page.locator("#item-5 .chk").tap();
   let c = await page.locator("#count").textContent();
-  ok(c === "2 из 86", `после двух отметок счётчик «${c}»`);
+  ok(c === "2 из 95", `после двух отметок счётчик «${c}»`);
   await page.reload();
   await page.waitForSelector("#item-3");
   c = await page.locator("#count").textContent();
   const st = await page.evaluate(() => ({ c3: document.querySelector("#item-3 input").checked, c5: document.querySelector("#item-5 input").checked, c1: document.querySelector("#item-1 input").checked, n3: document.querySelector("#item-3 textarea").value }));
-  ok(c === "2 из 86" && st.c3 && st.c5 && !st.c1, `после перезагрузки отметки на месте (3 и 5), счётчик «${c}»`);
+  ok(c === "2 из 95" && st.c3 && st.c5 && !st.c1, `после перезагрузки отметки на месте (3 и 5), счётчик «${c}»`);
   ok(st.n3 === "Стекло приятное, но слишком светлое", "заметка сохранилась");
   // необязательный пункт не меняет счётчик
   await page.locator("#done-list > summary").tap();
   await page.locator("#item-11 .chk").tap();
   c = await page.locator("#count").textContent();
-  ok(c === "2 из 86", `отметка необязательного пункта не меняет счётчик («${c}»)`);
+  ok(c === "2 из 95", `отметка необязательного пункта не меняет счётчик («${c}»)`);
   await page.screenshot({ path: `${ART}/cl-${scheme}-done.png` });
   await page.locator("#item-11 .chk").tap();
   await page.locator("#done-list > summary").tap();
@@ -93,7 +93,7 @@ for (const scheme of ["light", "dark"]) {
   await page.waitForTimeout(300);
   const copied = await page.evaluate(() => window.__copied);
   const msg = await page.locator("#msg").textContent();
-  ok(!!copied && /пройдено 2 из 86/.test(copied) && /Не пройдено \(84\)/.test(copied), `clipboard.writeText получил отчёт («${(copied || "").split("\n")[0]}»)`);
+  ok(!!copied && /пройдено 2 из 95/.test(copied) && /Не пройдено \(93\)/.test(copied), `clipboard.writeText получил отчёт («${(copied || "").split("\n")[0]}»)`);
   ok(/Заметки к остальным пунктам \(1\)/.test(copied) && /3\. \[Установка и запуск\].*\n\s+Заметка: Стекло/.test(copied), "раздел заметок содержит пункт 3");
   ok(!/\n  3\. /.test(copied.split("Заметки к остальным")[0]), "пункт 3 отмечен - в списке «не пройдено» его нет");
   ok(/Скопировано/.test(msg), `сообщение «${msg}»`);
@@ -128,16 +128,16 @@ for (const scheme of ["light", "dark"]) {
   const page = await ctx.newPage();
   await page.goto(URL_);
   await page.waitForSelector("#item-u22");
-  ok(await page.locator("article.card[id^=item-u]").count() === 34, "34 карточки пунктов «Н…»");
+  ok(await page.locator("article.card[id^=item-u]").count() === 43, "43 карточки пунктов «Н…»");
   ok((await page.locator("#item-u22 .num").textContent()) === "Н22" && /включает Н1/.test(await page.locator("#item-u22 .head").textContent()), "Н22 помечен и включает Н1");
   await page.locator("#item-u22 .chk").tap();
   await page.locator("#item-u22 textarea").fill("Шестерёнка ок");
   let c = await page.locator("#count").textContent();
-  ok(c === "1 из 86", `после отметки Н22 счётчик «${c}»`);
+  ok(c === "1 из 95", `после отметки Н22 счётчик «${c}»`);
   await page.reload();
   await page.waitForSelector("#item-u22");
   c = await page.locator("#count").textContent();
-  ok(c === "1 из 86" && await page.locator("#item-u22 input").isChecked() && (await page.locator("#item-u22 textarea").inputValue()) === "Шестерёнка ок", "отметка и заметка Н22 сохранились");
+  ok(c === "1 из 95" && await page.locator("#item-u22 input").isChecked() && (await page.locator("#item-u22 textarea").inputValue()) === "Шестерёнка ок", "отметка и заметка Н22 сохранились");
   await page.locator("#copy").tap();
   const rep = await page.locator("#out").inputValue();
   ok(/Заметка: Шестерёнка ок/.test(rep) && /\n  Н21\. \[/.test(rep) && !/\n  Н22\. \[/.test(rep.split("Заметки к остальным")[0]), "в отчёте метки «Н» и Н22 уже не в «не пройдено»");
