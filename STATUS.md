@@ -475,6 +475,7 @@ Gates: build → typecheck, lint, тесты web/engine/api (api с `TEST_DATABA
 - **Ждёт владельца:** выбор логотипа D1/D2/D3 (D2 — ещё решение по палитре бренда); PD-54/PD-58; iPhone-чек-лист.
 
 ## Бэклог после релиза 2026-10-02 (push 41f7e73; новую работу не начинать без владельца)
+- Low (QA PD-143): «Cancel» в ActionSheet ниже края на 320pt AX3 uk/ru (общее поведение шита) — в PD-144.
 - Low (QA PD-143): видимой точки входа в Fill candidates нет (долгий тап по Notes) — решение владельцу на макете в PD-144 (пункт в шите заметок или «⋯»).
 - Low (QA PD-142): при двух неверных группах ключа сообщение не называет, какая именно.
 - Low (QA PD-142): кириллические двойники латинских букв молча отбрасываются при вводе ключа (так же, как у поля всего ключа).
@@ -489,7 +490,7 @@ Gates: build → typecheck, lint, тесты web/engine/api (api с `TEST_DATABA
 |-----|------|--------|-------|-----------|
 | PM-Pundoku-10 | product-manager | working | пакеты реализации по решениям владельца | 2026-10-02 |
 | Dev-Pundoku-HintUI2 | developer | working | PD-139 доработка | 2026-10-03 |
-| QA-Pundoku-PkgC2 | qa-tester | working | PD-143 повторный QA (D1, c, d) | 2026-10-03 |
+| PM-gates-PkgC | product-manager | working | PD-143 финальные gates перед мержем | 2026-10-03 |
 
 ## Чек-пойнт 2026-10-01 (конец сессии PM-Pundoku-7)
 - **Сделано:** решения владельца по релизу 1.1 зафиксированы; PD-74 (UI ink, pd-74 @ 73444b2), PD-75 (UI таймлапса/PNG Rhythm, pd-75 @ bfeedbf), PD-80 (счёт ходов в ink, pd-80 @ de5a52d) смержены в локальный main; gates на слитом: build/typecheck/lint, web 624, engine 178 (api не затронут, 174+3). PD-78 сделан в PD-74. PD-79 закрыт: не дефект.
