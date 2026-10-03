@@ -92,17 +92,18 @@
   background: var(--ink);
   pointer-events: none;
 }
-/* 3. «Почему»: полое кольцо 9 px, обводка 1.5 px, верхний левый угол клетки. */
+/* 3. «Почему» (PD-139 D1): тонкая сплошная рамка-кольцо по периметру клетки, внутри границы (отступ 1 px, обводка 1.5 px,
+   скругление как у кольца ошибки). Прежний кружок 9 px в левом верхнем углу лежал ровно на заметке «1» сетки 3×3
+   (заметки занимают всю клетку), поэтому метка теперь не занимает ни одного слота заметок: глифы начинаются ≥ 3 px от
+   края клетки (39 pt: ≈ 4,3 px; 320 pt: ≈ 3,2 px), рамка заканчивается на 2,5 px. Форма отличается от пунктира
+   области (сплошная, 1,5 px, по клетке) и от кольца выбора/ошибки (те 2 px, поверх границы, другой цвет у ошибки). */
 .hint-ring {
   position: absolute;
   z-index: 2;
-  left: 3px;
-  top: 3px;
+  inset: 1px;
   box-sizing: border-box;
-  width: 9px;
-  height: 9px;
   border: 1.5px solid var(--ink);
-  border-radius: 50%;
+  border-radius: var(--r-tl) var(--r-tr) var(--r-br) var(--r-bl);
   pointer-events: none;
 }
 /* 4. Вычеркнутый кандидат — только там, где заметка есть: глиф цветом чернил + линия по нему. */
@@ -194,10 +195,10 @@
 }
 .hint-key .g-why {
   box-sizing: border-box;
-  width: 9px;
-  height: 9px;
+  width: 11px;
+  height: 11px;
   border: 1.5px solid var(--ink);
-  border-radius: 50%;
+  border-radius: 3px;
 }
 .hint-key .g-region {
   box-sizing: border-box;
@@ -283,6 +284,7 @@
 /* ---------- prefers-contrast: more — пунктир 2 px (в tokens.css), кольцо 2 px ---------- */
 @media (prefers-contrast: more) {
   .hint-ring {
+    inset: 0.5px;
     border-width: 2px;
   }
   .hint-key .g-why {
