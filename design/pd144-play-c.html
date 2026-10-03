@@ -1,0 +1,1141 @@
+<!DOCTYPE html>
+<html lang="en"
+      data-screen="hub" data-cont="both" data-mode="classic" data-sheet="none"
+      data-fill="a" data-notes="on" data-menu="closed" data-slot="off"
+      data-lang="en" data-type="default" data-safearea="sim" data-motion="system"
+      data-mock="closed">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>Pundoku — Play, IA variant C (PD-144)</title>
+<!--
+  PD-144 — the Play tab rebuilt as the hub of IA variant C (owner decision 2026-10-02).
+  DESIGN ONLY. Nothing here is wired into apps/. Decisions, copy, the open questions and the
+  list of findings this mockup closes are in design/pd144-play-c.md.
+
+  What the owner decided and this mockup draws:
+    * three tabs stay: Today · Play · Year;
+    * Play opens as a hub: "Continue" with TWO INDEPENDENT unfinished games (the day and the
+      free game), then "New puzzle";
+    * difficulty is a LIST of rows, not a 13 px native <select>;
+    * Ink is a "Mode" row in the hub plus a chip in the header while a game runs;
+    * the archive has ONE door only — Year. There is no "Past days" row here
+      (variant C in research/usability-2026-10/ia-review.md §3.4 had one; the owner removed it);
+    * a slot is reserved for a release-2 mode section (Liar / Melody / Pet). The slot is a
+      POSITION in the layout, drawn only in the dedicated review state (data-slot="on") with a
+      dashed "reserved" marker. Nothing about those modes is invented here and nothing ships
+      until the owner says which mode becomes a section.
+
+  Visual language inherited verbatim from the approved mockups pd7-board-variants.html
+  (board variant B "Boxes"), pd24-year-variants.html, pd27-settings.html and pd133-hint-ladder.html:
+  the same tokens, ink #3B48B0 / #8C96FF, wax #B3261E / #FF6B5E, grouped background #F2F2F7 / #000,
+  elevated surfaces #FFFFFF / #1C1C1E, glass tab bar with the opaque fallback, CSS generics only.
+  NO NEW COLOUR and no new token is introduced.
+
+  States (mockup controls at the bottom, or window.PD144 from design/pd144-shots.mjs):
+    screen    hub · game · solved · headers (title-baseline comparison, review only)
+    continue  both · free · day · none
+    mode      classic · ink
+    fill      a (line in the gap) · b (More menu in the toolbar) · c (fourth button — rejected)
+    sheet     none · mode · discard
+    slot      off · on          notes  on · off          menu  closed · open
+    language  en · uk · ru      text   17 / 40 px (AX3)
+-->
+<style>
+/* ==================================================================
+   1. TOKENS — copied from pd27-settings.html / tokens.css. Nothing new.
+   ================================================================== */
+:root{
+  --font-sans: system-ui, -apple-system, "SF Pro Text", "Helvetica Neue", Arial, sans-serif;
+  --font-serif: ui-serif, "New York", Charter, Georgia, serif;
+
+  --sa-top: env(safe-area-inset-top, 0px);
+  --sa-bot: env(safe-area-inset-bottom, 0px);
+  --sa-l:   env(safe-area-inset-left, 0px);
+  --sa-r:   env(safe-area-inset-right, 0px);
+
+  --bg:     #F2F2F7;
+  --elev:   #FFFFFF;
+  --chip-bg:#F2F2F7;
+
+  --label:   #1C1C1E;         /* 17.0:1 on #FFFFFF */
+  --label-2: #6E6E73;         /* 5.1:1 on #FFFFFF */
+  --label-2-grouped:#6A6A6E;  /* 4.64:1 on #F2F2F7 */
+  --notes:   #6E6E73;
+
+  --ink:    #3B48B0;          /* 7.66:1 on #FFFFFF */
+  --on-ink: #FFFFFF;
+  --wax:    #B3261E;
+
+  --hairline: rgba(60,60,67,.29);
+  --rule-thin: rgba(60,60,67,.29);
+  --ink-tint: rgba(59,72,176,.12);
+  --wax-tint: rgba(179,38,30,.10);
+  --box-shadow: 0 1px 2px rgba(0,0,0,.04);
+
+  --glass-fill: rgba(255,255,255,.72);
+  --glass-solid:#F6F6F9;
+  --scrim: rgba(0,0,0,.28);
+
+  --box-gap: 4px;
+  --box-radius: 10px;
+  --page-bg:#8A8A8E;
+}
+@media (prefers-color-scheme: dark){
+  :root:not(.force-light){
+    --bg:#000000; --elev:#1C1C1E; --chip-bg:#2C2C2E;
+    --label:#FFFFFF; --label-2:#98989D; --label-2-grouped:#98989D; --notes:#98989D;
+    --ink:#8C96FF; --on-ink:#000000; --wax:#FF6B5E;
+    --hairline:rgba(235,235,245,.22); --rule-thin:rgba(235,235,245,.22);
+    --ink-tint:rgba(140,150,255,.18); --wax-tint:rgba(255,107,94,.16);
+    --box-shadow:none;
+    --glass-fill:rgba(28,28,30,.72); --glass-solid:#141416;
+    --scrim:rgba(0,0,0,.5);
+    --page-bg:#2C2C2E;
+  }
+}
+.force-dark{
+  --bg:#000000; --elev:#1C1C1E; --chip-bg:#2C2C2E;
+  --label:#FFFFFF; --label-2:#98989D; --label-2-grouped:#98989D; --notes:#98989D;
+  --ink:#8C96FF; --on-ink:#000000; --wax:#FF6B5E;
+  --hairline:rgba(235,235,245,.22); --rule-thin:rgba(235,235,245,.22);
+  --ink-tint:rgba(140,150,255,.18); --wax-tint:rgba(255,107,94,.16);
+  --box-shadow:none;
+  --glass-fill:rgba(28,28,30,.72); --glass-solid:#141416;
+  --scrim:rgba(0,0,0,.5);
+  --page-bg:#2C2C2E;
+}
+@media (prefers-contrast: more){
+  :root{ --label-2:#3C3C43; --label-2-grouped:#3C3C43; --hairline:rgba(60,60,67,.55); --box-shadow:none; }
+  @media (prefers-color-scheme: dark){
+    :root:not(.force-light){ --label-2:#EBEBF5; --label-2-grouped:#EBEBF5; --hairline:rgba(235,235,245,.45); }
+  }
+  :root.force-dark{ --label-2:#EBEBF5; --label-2-grouped:#EBEBF5; --hairline:rgba(235,235,245,.45); }
+}
+:root[data-safearea="sim"]{
+  --sa-top: max(env(safe-area-inset-top, 0px), 59px);
+  --sa-bot: max(env(safe-area-inset-bottom, 0px), 34px);
+}
+/* iPhone SE 1 and anything else that short: the simulated inset shrinks with the device. */
+@media (max-height: 640px){
+  :root[data-safearea="sim"]{
+    --sa-top: max(env(safe-area-inset-top, 0px), 20px);
+    --sa-bot: max(env(safe-area-inset-bottom, 0px), 0px);
+  }
+}
+
+/* ==================================================================
+   2. BASE
+   ================================================================== */
+*{ box-sizing:border-box; }
+html{
+  font: -apple-system-body;      /* Dynamic Type: 1rem follows the user's text size on iOS */
+  font-family: var(--font-sans);
+  line-height:1.3;
+  -webkit-text-size-adjust:100%;
+}
+/* Review-only Dynamic Type simulation (on iOS the line above does it for real). */
+:root[data-type="xxxl"]{ font-size:23px; }
+:root[data-type="ax3"] { font-size:40px; }
+
+body{
+  margin:0; background:var(--bg); color:var(--label);
+  font-family:var(--font-sans);
+  touch-action:manipulation; overscroll-behavior:none;
+  -webkit-tap-highlight-color:transparent;
+}
+button{ font:inherit; color:inherit; background:none; border:0; padding:0; cursor:pointer; touch-action:manipulation; -webkit-appearance:none; appearance:none; text-align:left; }
+:focus-visible{ outline:2px solid var(--ink); outline-offset:2px; border-radius:6px; }
+
+.frame{
+  position:relative; width:100%; height:100dvh;
+  display:flex; flex-direction:column; background:var(--bg); overflow:hidden;
+}
+@media (min-width:440px){
+  body{ background:var(--page-bg); display:flex; align-items:flex-start; justify-content:center; min-height:100vh; padding:24px 0 460px; }
+  .frame{ width:390px; height:844px; border-radius:46px; box-shadow:0 20px 60px rgba(0,0,0,.35); }
+}
+
+/* ==================================================================
+   3. TOOLBAR — identical geometry on all three tabs.
+      FINDING (QA PD-136, Low): Year's title sits 6–8 px lower than Today's and Play's.
+      Cause in production: `.year .toolbar{min-height:44px}` plus `.titlebtn{min-height:44px;
+      margin:-8px 0}` inside a toolbar that is `align-items:flex-end`. The magic -8 px does not
+      equal half the slack between the 44 pt target and the title's line box, and the slack
+      changes with Dynamic Type, so the two can never line up at every text size.
+      FIX, drawn here and in the "headers" state: keep the 44 pt target, but derive the negative
+      margin from the line box instead of guessing it — see .titlebtn below.
+   ================================================================== */
+.toolbar{
+  display:flex; align-items:flex-end; justify-content:space-between; gap:12px;
+  padding: calc(var(--sa-top) + 8px) max(16px, var(--sa-r)) 0 max(16px, var(--sa-l));
+}
+.title{
+  font-size:1.62rem; font-weight:700; letter-spacing:-.02em; line-height:1.2;
+  margin:0; min-width:0; overflow-wrap:break-word;
+}
+.toolbar-end{ display:flex; align-items:flex-end; gap:2px; margin-right:-10px; min-width:0; }
+.icon-btn{
+  width:44px; height:44px; flex:none; margin-bottom:-6px;
+  display:grid; place-items:center; color:var(--label-2-grouped); border-radius:22px;
+}
+.icon-btn:active{ background:var(--ink-tint); color:var(--ink); }
+.icon-btn svg{ width:23px; height:23px; }
+.icon-btn[aria-expanded="true"]{ color:var(--ink); background:var(--ink-tint); }
+/* The title button Year uses. The slack is computed, not guessed: 1.62rem × 1.2 = 1.944rem is
+   the line box, so the offset is (lineBox − 44px) / 2, clamped at 0 once the text outgrows 44 pt. */
+.titlebtn{
+  display:flex; align-items:center; gap:4px; min-height:44px;
+  margin-block: min(0px, calc((1.944rem - 44px) / 2));
+  margin-inline:0 -6px; padding:0 6px 0 0; border-radius:10px;
+}
+.titlebtn svg{ width:15px; height:15px; color:var(--label-2); flex:none; }
+
+.subline{
+  margin:2px 0 0; padding:0 max(16px, var(--sa-r)) 0 max(16px, var(--sa-l));
+  color:var(--label-2); font-size:.88rem; overflow-wrap:break-word;
+}
+.subline .dot{ opacity:.6; }
+/* Ink while a game runs: a chip in the subline, next to the day/difficulty (owner decision). */
+.chip{
+  display:inline-flex; align-items:center; gap:4px; margin-left:6px;
+  padding:1px 7px; border-radius:999px;
+  background:var(--ink-tint); color:var(--ink); font-size:.76rem; font-weight:600;
+}
+
+/* ==================================================================
+   4. HUB — a grouped inset list, one page, no push stack.
+      lists-and-tables.md: "Prefer displaying text in a list or table… the row-based format is
+      especially well suited to making text easy to scan and read."
+   ================================================================== */
+.hub{ flex:1; min-height:0; display:flex; flex-direction:column; }
+.hub-scroll{
+  flex:1; min-height:0; overflow-y:auto; -webkit-overflow-scrolling:touch;
+  padding-bottom:12px;
+}
+.sec{ margin-top:16px; }
+.sec:first-child{ margin-top:10px; }
+.sec-head{
+  margin:0 0 6px; padding:0 max(16px, var(--sa-r)) 0 max(16px, var(--sa-l));
+  font-size:.82rem; color:var(--label-2-grouped); overflow-wrap:break-word;
+}
+.sec-foot{
+  margin:7px 0 0; padding:0 max(16px, var(--sa-r)) 0 max(16px, var(--sa-l));
+  font-size:.82rem; line-height:1.35; color:var(--label-2-grouped); overflow-wrap:break-word;
+}
+.card{
+  margin:0 max(16px, var(--sa-r)) 0 max(16px, var(--sa-l));
+  background:var(--elev); border-radius:12px; box-shadow:var(--box-shadow); overflow:hidden;
+}
+
+/* A row. 44 pt floor; at large text it WRAPS instead of truncating, and the value drops under
+   the label instead of squeezing it — this is the fix for the Ink row breaking words at 200 %
+   on 320 px (QA PD-136). `overflow-wrap:anywhere` is what let "Чорнильний" split mid-word;
+   `break-word` only breaks a word that cannot fit on a line of its own. */
+.row{
+  position:relative; width:100%; min-height:44px;
+  display:flex; align-items:center; gap:10px 12px; flex-wrap:wrap;
+  padding:11px max(16px, var(--sa-r)) 11px max(16px, var(--sa-l));
+  font-size:1rem; color:var(--label); text-align:left;
+}
+.row + .row::before{
+  content:""; position:absolute; left:max(16px, var(--sa-l)); right:0; top:0; height:1px;
+  background:var(--hairline); transform:scaleY(.5); transform-origin:top;
+}
+.row .lab{ flex:1 1 auto; min-width:0; overflow-wrap:break-word; hyphens:auto; }
+.row .val{
+  margin-left:auto; color:var(--label-2); text-align:right;
+  overflow-wrap:break-word; font-variant-numeric:tabular-nums;
+}
+.row .chev{ width:13px; height:13px; flex:none; color:var(--label-2); opacity:.7; }
+.row .ck{ flex:none; color:var(--ink); display:grid; place-items:center; }
+.row .ck svg{ width:20px; height:20px; }
+.row[aria-checked="false"] .ck{ visibility:hidden; }
+button.row:active{ background:var(--ink-tint); }
+/* Once the label alone needs the whole line, the value takes its own line under it
+   (390 pt at AX3, or 320 pt from xxxL up) — nothing is squeezed and nothing is hyphenated. */
+:root[data-type="ax3"] .row{ flex-direction:column; align-items:flex-start; gap:2px; }
+:root[data-type="ax3"] .row .val{ margin-left:0; text-align:left; }
+:root[data-type="ax3"] .row .chev,
+:root[data-type="ax3"] .row .ck{ position:absolute; right:14px; top:14px; }
+
+/* Continue: two lines — what it is, then how far along. Two INDEPENDENT games (owner decision):
+   the day and the free game each keep their own saved state, so neither can destroy the other. */
+.row.two{ flex-direction:column; align-items:stretch; gap:2px; padding-right:38px; }
+.row.two .l1{ display:flex; align-items:center; gap:6px; min-width:0; overflow-wrap:break-word; }
+.row.two .l2{ color:var(--label-2); font-size:.88rem; overflow-wrap:break-word; font-variant-numeric:tabular-nums; }
+.row.two .chev{ position:absolute; right:16px; top:50%; transform:translateY(-50%); }
+.row.two .glyph{ flex:none; width:19px; height:19px; color:var(--ink); }
+/* The difficulty row: name + what the grid is actually like. The numbers come from the
+   generator (PD-9) — they are not decoration and must not be hard-coded in the UI. */
+.row.diff{ padding-top:9px; padding-bottom:9px; }
+.row .sub{ display:block; color:var(--label-2); font-size:.82rem; margin-top:0; overflow-wrap:break-word; }
+/* The welcome line is for an EMPTY hub. Once "Continue" is on screen the hub explains itself,
+   and the line would only push the list down on a 390 pt screen. */
+:root[data-cont="both"] #hubSub,
+:root[data-cont="free"] #hubSub,
+:root[data-cont="day"]  #hubSub{ display:none; }
+
+/* The primary action sits in a bottom bar: it is the last step and it belongs in the thumb zone
+   (designing-for-ios.md: "easier and more comfortable… middle or bottom area of the display").
+   Pinned, so it is reachable even when the hub scrolls on a short screen. */
+.hub-bar{
+  flex:none; padding:10px max(16px, var(--sa-r)) calc(8px + var(--sa-bot)) max(16px, var(--sa-l));
+  background:var(--glass-solid); border-top:.5px solid var(--hairline);
+}
+@supports (backdrop-filter: blur(20px)){
+  .hub-bar{ background:var(--glass-fill); backdrop-filter:saturate(180%) blur(20px); }
+}
+@media (prefers-reduced-transparency: reduce){ .hub-bar{ background:var(--glass-solid); backdrop-filter:none; } }
+.btn-primary{
+  display:block; width:100%; min-height:50px; border-radius:13px;
+  background:var(--ink); color:var(--on-ink);
+  font-size:1rem; font-weight:600; text-align:center; padding:12px 14px;
+  overflow-wrap:break-word;
+}
+.btn-primary:active{ opacity:.85; }
+
+/* The release-2 slot. Review only: it is a POSITION, not a promise. tab-bars.md / writing.md are
+   both against showing something that does not exist yet, so the product ships this section only
+   once the owner names the mode and its mechanics are decided. */
+.slot{
+  margin:20px max(16px, var(--sa-r)) 0 max(16px, var(--sa-l));
+  border:1.5px dashed var(--ink); border-radius:12px; padding:12px 14px;
+  color:var(--label-2); font-size:.82rem; line-height:1.35;
+}
+.slot b{ display:block; color:var(--ink); font-size:.76rem; letter-spacing:.06em; text-transform:uppercase; margin-bottom:4px; }
+:root:not([data-slot="on"]) .slot{ display:none; }
+
+/* ==================================================================
+   5. BOARD + PAD — board variant B "Boxes", unchanged from pd7 / pd133.
+      The game screen NEVER scrolls: the board is sized from what is left after the fixed
+      chrome, so neither the pad, nor the hint dock (PD-133), nor the fill line can push
+      anything below the fold. This is the fix for "on iPhone SE the hint dock scrolls the
+      page" (QA PD-139) and for the same class of bug on the solved Today screen.
+   ================================================================== */
+.game{ flex:1; min-height:0; display:flex; flex-direction:column; overflow:hidden; }
+.board-wrap{
+  padding:12px max(16px, var(--sa-r)) 0 max(16px, var(--sa-l));
+  container-type:inline-size;
+  /* chrome = toolbar + subline + minimum gap + pad + actions + tab bar + insets */
+  --chrome: calc(var(--sa-top) + var(--sa-bot) + 44px + 24px + 56px + 126px + 51px + 24px);
+}
+.board{
+  position:relative; display:grid; grid-template-columns:repeat(3,1fr); gap:var(--box-gap);
+  width:min(100%, calc(100dvh - var(--chrome)));
+  margin:0 auto;
+  --s: calc((min(100cqi, 100dvh - var(--chrome)) - 2 * var(--box-gap)) / 9);
+}
+.box{
+  position:relative; display:grid; grid-template-columns:repeat(3,1fr);
+  border-radius:var(--box-radius); overflow:hidden;
+  background:var(--elev); box-shadow:var(--box-shadow);
+}
+.cell{
+  position:relative; aspect-ratio:1; min-width:0; min-height:0;
+  display:grid; place-items:center; overflow:hidden; background:var(--elev);
+  box-shadow: inset -0.5px 0 0 var(--rule-thin), inset 0 -0.5px 0 var(--rule-thin);
+}
+.box .cell:nth-child(3n){ box-shadow: inset 0 -0.5px 0 var(--rule-thin); }
+.box .cell:nth-child(n+7){ box-shadow: inset -0.5px 0 0 var(--rule-thin); }
+.box .cell:nth-child(9){ box-shadow:none; }
+.cell .d{ position:relative; z-index:2; line-height:1; font-size:6.5cqi; }
+.cell .d.given{ font-family:var(--font-serif); font-weight:600; color:var(--label); }
+.cell .d.player{ font-family:var(--font-sans); font-weight:500; color:var(--ink); }
+.cell.sel{ background:color-mix(in srgb, var(--ink) 16%, var(--elev)); }
+.marks{
+  position:absolute; inset:0; z-index:2; display:grid; padding:4%;
+  grid-template-columns:repeat(3,minmax(0,1fr)); grid-template-rows:repeat(3,minmax(0,1fr));
+}
+.marks span{ font-size:11px; line-height:1; color:var(--notes); display:grid; place-items:center; }
+
+.gap{
+  flex:1 1 auto; min-height:24px; display:flex; align-items:center; justify-content:center;
+  padding:4px max(16px, var(--sa-r)) 4px max(16px, var(--sa-l));
+}
+.status{ margin:0; color:var(--label-2); font-size:.88rem; font-variant-numeric:tabular-nums; text-align:center; }
+
+/* FILL VARIANT A (recommended): a tinted line in the gap, present only while Notes mode is on.
+   No new permanent chrome, the Notes / Undo / Erase row is untouched at 320 pt, and the action
+   appears exactly where and when it is wanted. The long press stays as the accelerator. */
+.fill-line{
+  min-height:44px; max-width:100%; border-radius:11px; padding:8px 14px;
+  display:inline-flex; align-items:center; justify-content:center; gap:7px; text-align:center;
+  background:var(--ink-tint); color:var(--ink); font-size:.95rem; font-weight:600;
+  overflow-wrap:break-word;
+}
+.fill-line svg{ width:18px; height:18px; flex:none; }
+.fill-line:active{ opacity:.8; }
+
+.pad-wrap{ padding:0 max(16px, var(--sa-r)) 0 max(16px, var(--sa-l)); }
+.pad{ display:grid; grid-template-columns:repeat(9,1fr); gap:4px; }
+.key{
+  min-width:0; min-height:56px; border-radius:9px; background:var(--elev); color:var(--label);
+  display:flex; flex-direction:column; align-items:center; justify-content:center; gap:1px;
+}
+.key .kd{ font-size:1.24rem; font-weight:500; line-height:1.05; }
+.key .kr{ font-size:11px; line-height:1; color:var(--label-2); font-variant-numeric:tabular-nums; }
+.actions{ display:grid; grid-template-columns:repeat(3,1fr); gap:8px; padding:10px 0 14px; }
+.actions.four{ grid-template-columns:repeat(4,1fr); }
+.act{
+  min-width:0; min-height:46px; border-radius:11px;
+  display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px; padding:4px 4px;
+  color:var(--label-2); font-size:.82rem; text-align:center; overflow-wrap:break-word;
+}
+.act svg{ width:19px; height:19px; flex:none; }
+.act[aria-pressed="true"]{ background:var(--ink-tint); color:var(--ink); }
+@media (min-width:360px){ .act{ flex-direction:row; gap:6px; } }
+:root[data-fill="c"] .act{ flex-direction:column; gap:2px; }
+
+/* Review-only ruler, shown with the rejected fourth-button variant. */
+.ruler{
+  margin:0 max(16px, var(--sa-r)) 10px max(16px, var(--sa-l));
+  border:1px dashed var(--wax); border-radius:8px; padding:6px 8px;
+  color:var(--wax); font-size:11px; line-height:1.3;
+}
+:root:not([data-fill="c"]) .ruler{ display:none; }
+
+/* ==================================================================
+   6. SOLVED — one card, ONE "New puzzle" button.
+      FINDING (PD-144 brief, Info): today the result card carries "New game" while the toolbar
+      carries "New puzzle" — two names, two buttons, one action. Here the toolbar action is
+      hidden in the solved state and the card keeps a single button, named "New puzzle" like
+      everywhere else (`solved.newGame` is deleted; `play.newPuzzle` is the only key).
+   ================================================================== */
+.solved{ flex:1; min-height:0; overflow-y:auto; -webkit-overflow-scrolling:touch; padding-bottom:calc(16px + 51px + var(--sa-bot)); }
+.rcard{
+  margin:12px max(16px, var(--sa-r)) 0 max(16px, var(--sa-l));
+  background:var(--elev); border-radius:18px; padding:16px; box-shadow:var(--box-shadow);
+}
+.rcard h2{ font-size:1.12rem; font-weight:700; margin:0 0 2px; letter-spacing:-.01em; }
+.rcard .sub{ color:var(--label-2); font-size:.8rem; margin:0 0 12px; }
+.heat{ display:grid; grid-template-columns:repeat(9,1fr); gap:2px; }
+.heat i{ aspect-ratio:1; border-radius:2px; display:block; background:var(--ink); }
+.rows{ margin:12px 0 0; display:flex; flex-direction:column; }
+.r{
+  display:flex; justify-content:space-between; gap:12px; align-items:baseline; flex-wrap:wrap;
+  padding:9px 0; font-size:.9rem; border-top:1px solid var(--hairline);
+}
+.r .k{ color:var(--label-2); }
+.r .v{ font-weight:600; }
+.rcard .acts{ margin-top:14px; display:flex; flex-direction:column; gap:8px; }
+.btn-plain{
+  display:block; width:100%; min-height:48px; border-radius:13px; padding:10px 14px;
+  color:var(--ink); font-size:1rem; font-weight:500; text-align:center; overflow-wrap:break-word;
+}
+/* "Peek" rule — the fix for "Grid ∞ on a solved Today sits below the screen" (PD-140 measurement).
+   Any scrolling tab panel keeps its bottom padding clear of the tab bar AND must not let the next
+   section start exactly at the fold: at the default text size at least 28 px of it shows. */
+.peek{
+  margin:14px max(16px, var(--sa-r)) 0 max(16px, var(--sa-l));
+  padding-top:10px; border-top:1px solid var(--hairline);
+  color:var(--label-2-grouped); font-size:.82rem;
+}
+
+/* ==================================================================
+   7. SHEETS AND MENUS
+   ================================================================== */
+.scrim{ position:absolute; inset:0; background:var(--scrim); z-index:30; }
+.sheet{
+  position:absolute; left:0; right:0; bottom:0; z-index:31;
+  background:var(--elev); border-radius:16px 16px 0 0;
+  padding:8px max(20px, var(--sa-r)) calc(16px + var(--sa-bot)) max(20px, var(--sa-l));
+  display:flex; flex-direction:column; gap:8px;
+  max-height:calc(100% - var(--sa-top) - 10px);
+}
+.grabber{ width:36px; height:5px; border-radius:3px; background:var(--hairline); margin:0 auto 6px; flex:none; }
+.sheet h2{ margin:0; font-size:1.24rem; font-weight:700; letter-spacing:-.02em; overflow-wrap:break-word; }
+.sheet .sheet-scroll{ overflow-y:auto; min-height:0; display:flex; flex-direction:column; gap:8px; }
+.mode-opt{
+  display:flex; align-items:flex-start; gap:10px; flex-wrap:wrap;
+  min-height:56px; padding:10px 12px; border-radius:12px; background:var(--chip-bg);
+}
+.mode-opt .mt{ font-size:1rem; font-weight:600; overflow-wrap:break-word; }
+.mode-opt .md{ flex-basis:100%; color:var(--label-2); font-size:.85rem; overflow-wrap:break-word; }
+.mode-opt .ck{ margin-left:auto; color:var(--ink); }
+.mode-opt .ck svg{ width:20px; height:20px; }
+.mode-opt[aria-checked="false"] .ck{ visibility:hidden; }
+
+/* ACTION SHEET.
+   FINDING (QA PD-143, Low): on 320 pt at AX3 in uk/ru "Cancel" ends up below the edge.
+   FIX: the sheet is a column capped at the safe height; only the TEXT scrolls, the buttons are
+   `flex:none` and therefore always on screen. action-sheets.md: "Avoid letting an action sheet
+   scroll… scrolling an action sheet can be hard to do without inadvertently tapping a button" —
+   so the thing that scrolls is never a button. */
+.asheet{
+  position:absolute; left:0; right:0; bottom:0; z-index:31;
+  padding: 0 max(10px, var(--sa-l)) calc(10px + var(--sa-bot)) max(10px, var(--sa-r));
+  display:flex; flex-direction:column; gap:8px;
+  max-height:calc(100% - var(--sa-top) - 10px);
+}
+.asheet-card{
+  background:var(--elev); border-radius:14px; overflow:hidden;
+  display:flex; flex-direction:column; min-height:0;
+}
+.asheet-scroll{
+  overflow-y:auto; min-height:0; flex:1 1 auto;
+  padding:14px 16px; text-align:center;
+}
+.asheet-scroll h2{ margin:0 0 4px; font-size:.95rem; font-weight:600; overflow-wrap:break-word; }
+.asheet-scroll p{ margin:0; font-size:.82rem; color:var(--label-2); overflow-wrap:break-word; }
+.asheet-act{
+  flex:none; width:100%; min-height:50px; padding:10px 14px; text-align:center;
+  border-top:1px solid var(--hairline); color:var(--ink); font-size:1rem; overflow-wrap:break-word;
+}
+.asheet-act.destructive{ color:var(--wax); font-weight:500; }
+.asheet-cancel{
+  flex:none; width:100%; min-height:50px; padding:10px 14px; text-align:center;
+  background:var(--elev); border-radius:14px; color:var(--ink); font-size:1rem; font-weight:600;
+  overflow-wrap:break-word;
+}
+
+/* FILL VARIANT B: a More menu in the toolbar.
+   toolbars.md: "Add a More menu to contain additional actions." It would also be the home for
+   "New puzzle", which is what truncates at 320 pt in uk/ru. */
+.menu{
+  position:absolute; z-index:31; top:calc(var(--sa-top) + 54px); right:10px;
+  min-width:230px; max-width:calc(100% - 20px);
+  background:var(--elev); border-radius:13px; box-shadow:0 10px 34px rgba(0,0,0,.22);
+  overflow:hidden;
+}
+.menu button{
+  display:flex; align-items:center; gap:10px; width:100%; min-height:44px;
+  padding:10px 14px; font-size:.95rem; overflow-wrap:break-word;
+}
+.menu button + button{ border-top:1px solid var(--hairline); }
+.menu svg{ width:18px; height:18px; flex:none; color:var(--label-2); }
+
+/* ==================================================================
+   8. TAB BAR — the only glass, with its fallbacks.
+   ================================================================== */
+.tabbar{
+  flex:none; display:grid; grid-template-columns:repeat(3,1fr);
+  background:var(--glass-solid); border-top:.5px solid var(--hairline);
+  padding:7px 0 calc(2px + var(--sa-bot));
+}
+@supports (backdrop-filter: blur(20px)){
+  .tabbar{ background:var(--glass-fill); backdrop-filter:saturate(180%) blur(20px); }
+}
+@media (prefers-reduced-transparency: reduce){ .tabbar{ background:var(--glass-solid); backdrop-filter:none; } }
+.tab{ display:flex; flex-direction:column; align-items:center; gap:2px; color:var(--label-2-grouped); font-size:10px; }
+.tab.sel{ color:var(--ink); font-weight:600; }
+.tab svg{ width:25px; height:25px; }
+
+/* ==================================================================
+   9. HEADER-ALIGNMENT COMPARISON (review only, data-screen="headers")
+   ================================================================== */
+.heads{ flex:1; min-height:0; overflow-y:auto; padding-bottom:20px; }
+.headrow{ position:relative; border-bottom:1px dashed var(--hairline); padding-bottom:10px; }
+.headrow + .headrow{ margin-top:10px; }
+.headrow .toolbar{ padding-top:10px; }
+.headrow:first-child .toolbar{ padding-top:calc(var(--sa-top) + 8px); }
+.guide{ position:absolute; left:0; right:0; border-top:1px solid var(--wax); opacity:.75; }
+.headnote{ margin:4px 16px 0; color:var(--label-2-grouped); font-size:.76rem; }
+
+/* ==================================================================
+   10. MOCKUP CONTROLS — review chrome, not part of the product.
+   ================================================================== */
+.mock{
+  position:fixed; left:0; right:0; bottom:0; z-index:90;
+  background:#121216; color:#fff; font-size:12px; line-height:1.3;
+  padding:10px 12px calc(10px + env(safe-area-inset-bottom, 0px));
+  display:none; grid-template-columns:repeat(auto-fit, minmax(230px, 1fr)); gap:8px 14px;
+  max-height:50vh; overflow:auto;
+}
+:root[data-mock="open"] .mock{ display:grid; }
+.mock .grp{ display:flex; align-items:center; flex-wrap:wrap; gap:4px; }
+.mock .grp > span{ opacity:.7; min-width:62px; }
+.mock .seg{ display:flex; flex-wrap:wrap; gap:4px; }
+.mock .seg button{
+  border:1px solid rgba(255,255,255,.3); border-radius:7px; padding:4px 8px; color:#fff; font-size:12px;
+}
+.mock .seg button[aria-pressed="true"]{ background:#fff; color:#121216; border-color:#fff; }
+.pill{
+  position:fixed; right:10px; bottom:calc(10px + env(safe-area-inset-bottom, 0px)); z-index:91;
+  background:#121216; color:#fff; border-radius:999px; padding:7px 12px; font-size:12px;
+  box-shadow:0 6px 18px rgba(0,0,0,.4);
+}
+:root[data-mock="open"] .pill{ display:none; }
+#mockClose{ color:#fff; text-decoration:underline; }
+</style>
+</head>
+<body>
+
+<div class="frame" id="frame">
+
+  <!-- ============ HUB ============ -->
+  <div class="hub" id="scr-hub">
+    <header class="toolbar">
+      <h1 class="title" data-t="play">Play</h1>
+      <div class="toolbar-end">
+        <button class="icon-btn" aria-label="Settings" data-t-aria="settings">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="3.2"/><path d="M12 2.9v2.3M12 18.8v2.3M4.4 12H2.1M21.9 12h-2.3M6.7 6.7 5.1 5.1M18.9 18.9l-1.6-1.6M17.3 6.7l1.6-1.6M5.1 18.9l1.6-1.6"/></svg>
+        </button>
+      </div>
+    </header>
+    <p class="subline" id="hubSub" data-t="hubSub">A puzzle of your own, any time.</p>
+
+    <div class="hub-scroll">
+      <!-- Continue. Appears only when something is unfinished; two independent games. -->
+      <section class="sec" id="sec-cont">
+        <p class="sec-head" data-t="contHead">Continue</p>
+        <div class="card">
+          <button class="row two" id="cont-day">
+            <span class="l1">
+              <svg class="glyph" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><rect x="3.5" y="4.5" width="17" height="16" rx="3"/><path d="M3.5 9h17M8 3v3M16 3v3"/></svg>
+              <b data-t="contDay">Today’s puzzle</b>
+              <span class="chip" id="cont-day-chip" hidden data-t="inkChip">Ink</span>
+            </span>
+            <span class="l2" id="cont-day-meta">Medium · 28 cells left · 12:04</span>
+            <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg>
+          </button>
+          <button class="row two" id="cont-free">
+            <span class="l1">
+              <svg class="glyph" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><rect x="3.5" y="3.5" width="17" height="17" rx="3"/><path d="M9 3.5v17M15 3.5v17M3.5 9h17M3.5 15h17"/></svg>
+              <b data-t="contFree">Your own puzzle</b>
+              <span class="chip" id="cont-free-chip" hidden data-t="inkChip">Ink</span>
+            </span>
+            <span class="l2" id="cont-free-meta">Hard · 47 cells left · 03:18</span>
+            <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg>
+          </button>
+        </div>
+      </section>
+
+      <!-- New puzzle: difficulty as a list of rows. No native <select> anywhere. -->
+      <section class="sec">
+        <p class="sec-head" data-t="newHead">New puzzle</p>
+        <div class="card" id="diffCard" role="radiogroup" aria-label="Difficulty"></div>
+      </section>
+
+      <!-- Mode: where Ink lives now, and where a release-2 VARIANT would live. -->
+      <section class="sec">
+        <div class="card">
+          <button class="row" id="modeRow">
+            <span class="lab" data-t="modeRow">Mode</span>
+            <span class="val" id="modeVal" data-t="modeClassic">Classic</span>
+            <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg>
+          </button>
+        </div>
+        <p class="sec-foot" id="modeFoot" data-t="footClassic">Free games aren’t recorded in your year.</p>
+      </section>
+
+      <!-- Reserved position for a release-2 mode SECTION. Review only. -->
+      <div class="slot">
+        <b data-t="slotTag">Reserved · release 2</b>
+        <span data-t="slotBody">A separate section for one of the release-2 modes goes here, under the hub’s own content and above the tab bar. Nothing is drawn inside it: which mode becomes a section, and what it does, is the owner’s decision.</span>
+      </div>
+    </div>
+
+    <div class="hub-bar">
+      <button class="btn-primary" id="startBtn" data-t="start">Start</button>
+    </div>
+  </div>
+
+  <!-- ============ GAME ============ -->
+  <div class="game" id="scr-game" hidden>
+    <header class="toolbar">
+      <h1 class="title" data-t="play">Play</h1>
+      <div class="toolbar-end">
+        <!-- The hint lamp belongs to PD-133; shown here so the toolbar is counted honestly. -->
+        <button class="icon-btn" aria-label="Hint" data-t-aria="hint">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9.3 18h5.4"/><path d="M10.2 20.7h3.6"/><path d="M12 3.3a5.9 5.9 0 0 0-3.4 10.7c.5.4.8 1 .8 1.6v.4h5.2v-.4c0-.6.3-1.2.8-1.6A5.9 5.9 0 0 0 12 3.3Z"/></svg>
+        </button>
+        <!-- Variant A/C: "New puzzle" is an icon, never a truncating label (320 pt uk/ru). -->
+        <button class="icon-btn" id="newBtn" aria-label="New puzzle" data-t-aria="newHead">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="3.5" width="12" height="12" rx="2.6"/><path d="M7.5 3.5v12M11.5 3.5v12M3.5 7.5h12M3.5 11.5h12"/><path d="M18.5 14.5v7M15 18h7"/></svg>
+        </button>
+        <!-- Variant B: a More menu instead, which would also hold "New puzzle". -->
+        <button class="icon-btn" id="moreBtn" aria-label="More" data-t-aria="more" aria-expanded="false" hidden>
+          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="5.5" cy="12" r="1.9"/><circle cx="12" cy="12" r="1.9"/><circle cx="18.5" cy="12" r="1.9"/></svg>
+        </button>
+        <button class="icon-btn" aria-label="Settings" data-t-aria="settings">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="3.2"/><path d="M12 2.9v2.3M12 18.8v2.3M4.4 12H2.1M21.9 12h-2.3M6.7 6.7 5.1 5.1M18.9 18.9l-1.6-1.6M17.3 6.7l1.6-1.6M5.1 18.9l1.6-1.6"/></svg>
+        </button>
+      </div>
+    </header>
+    <p class="subline" id="gameSub">Hard <span class="dot">·</span> 03:18<span class="chip" id="gameChip" hidden data-t="inkChip">Ink</span></p>
+
+    <div class="board-wrap"><div class="board" id="board"></div></div>
+
+    <div class="gap" id="gap">
+      <p class="status" id="statusLine">47 cells left</p>
+      <button class="fill-line" id="fillLine" hidden>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="3.5" width="17" height="17" rx="3"/><path d="M9 3.5v17M15 3.5v17M3.5 9h17M3.5 15h17"/><path d="M6 6.4h.01M12 6.4h.01M18 6.4h.01M6 12h.01M12 12h.01M18 12h.01"/></svg>
+        <span data-t="fillAction">Fill candidates</span>
+      </button>
+    </div>
+
+    <p class="ruler" id="ruler">—</p>
+
+    <div class="pad-wrap">
+      <div class="pad" id="pad"></div>
+      <div class="actions" id="actions"></div>
+    </div>
+  </div>
+
+  <!-- ============ SOLVED ============ -->
+  <div class="solved" id="scr-solved" hidden>
+    <header class="toolbar">
+      <h1 class="title" data-t="play">Play</h1>
+      <div class="toolbar-end">
+        <!-- No toolbar action in the solved state: the card carries the single "New puzzle". -->
+        <button class="icon-btn" aria-label="Settings" data-t-aria="settings">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="3.2"/><path d="M12 2.9v2.3M12 18.8v2.3M4.4 12H2.1M21.9 12h-2.3M6.7 6.7 5.1 5.1M18.9 18.9l-1.6-1.6M17.3 6.7l1.6-1.6M5.1 18.9l1.6-1.6"/></svg>
+        </button>
+      </div>
+    </header>
+    <p class="subline" id="solvedSub">Hard <span class="dot">·</span> 11:42</p>
+
+    <div class="rcard">
+      <h2 data-t="solvedTitle">Solved</h2>
+      <p class="sub" data-t="pathSub">Every cell shaded by when you filled it.</p>
+      <div class="heat" id="heat"></div>
+      <div class="rows">
+        <div class="r"><span class="k" data-t="rTime">Time</span><span class="v">11:42</span></div>
+        <div class="r"><span class="k" data-t="rFixes">Fixes</span><span class="v" data-t="clean">clean</span></div>
+        <div class="r"><span class="k" data-t="rTech">Technique reached</span><span class="v" data-t="techLocked">Locked candidates</span></div>
+      </div>
+      <div class="acts">
+        <button class="btn-primary" data-t="watch">Watch your solve</button>
+        <button class="btn-plain" data-t="newHead">New puzzle</button>
+      </div>
+    </div>
+    <p class="peek" data-t="peek">The next section starts here — at the default text size at least 28 px of it is visible above the tab bar, so nothing lives permanently below the fold.</p>
+  </div>
+
+  <!-- ============ HEADER ALIGNMENT (review only) ============ -->
+  <div class="heads" id="scr-heads" hidden>
+    <div class="headrow">
+      <header class="toolbar">
+        <h1 class="title" data-t="today">Today</h1>
+        <div class="toolbar-end"><button class="icon-btn" aria-label="Settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="3.2"/><path d="M12 2.9v2.3M12 18.8v2.3M4.4 12H2.1M21.9 12h-2.3M6.7 6.7 5.1 5.1M18.9 18.9l-1.6-1.6M17.3 6.7l1.6-1.6M5.1 18.9l1.6-1.6"/></svg></button></div>
+      </header>
+    </div>
+    <div class="headrow">
+      <header class="toolbar">
+        <h1 class="title" data-t="play">Play</h1>
+        <div class="toolbar-end"><button class="icon-btn" aria-label="Settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="3.2"/><path d="M12 2.9v2.3M12 18.8v2.3M4.4 12H2.1M21.9 12h-2.3M6.7 6.7 5.1 5.1M18.9 18.9l-1.6-1.6M17.3 6.7l1.6-1.6M5.1 18.9l1.6-1.6"/></svg></button></div>
+      </header>
+    </div>
+    <div class="headrow">
+      <header class="toolbar">
+        <span class="titlebtn"><span class="title" data-t="year2">2026</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></span>
+        <div class="toolbar-end"><button class="icon-btn" aria-label="Settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="3.2"/><path d="M12 2.9v2.3M12 18.8v2.3M4.4 12H2.1M21.9 12h-2.3M6.7 6.7 5.1 5.1M18.9 18.9l-1.6-1.6M17.3 6.7l1.6-1.6M5.1 18.9l1.6-1.6"/></svg></button></div>
+      </header>
+    </div>
+    <p class="headnote" data-t="headNote">Year’s title is a pull-down button, the other two are plain headings. Their top edges have to match at every text size; the red guide is drawn from the first title’s top edge.</p>
+  </div>
+
+  <!-- ============ OVERLAYS ============ -->
+  <div class="scrim" id="scrim" hidden></div>
+
+  <!-- Mode chooser -->
+  <div class="sheet" id="modeSheet" hidden role="dialog" aria-modal="true" aria-label="Mode">
+    <div class="grabber"></div>
+    <h2 data-t="modeRow">Mode</h2>
+    <div class="sheet-scroll">
+      <button class="mode-opt" id="optClassic" role="radio" aria-checked="true">
+        <span class="mt" data-t="modeClassic">Classic</span>
+        <span class="ck"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7"/></svg></span>
+        <span class="md" data-t="modeClassicSub">Undo, the eraser and notes all work.</span>
+      </button>
+      <button class="mode-opt" id="optInk" role="radio" aria-checked="false">
+        <span class="mt" data-t="modeInk">Ink</span>
+        <span class="ck"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7"/></svg></span>
+        <span class="md" data-t="modeInkSub">No undo and no eraser for digits. A wrong digit leaves a blot.</span>
+      </button>
+    </div>
+    <button class="btn-primary" id="modeDone" data-t="done">Done</button>
+  </div>
+
+  <!-- Action sheet: Start while a free game is unfinished -->
+  <div class="asheet" id="discard" hidden role="dialog" aria-modal="true">
+    <div class="asheet-card">
+      <div class="asheet-scroll">
+        <h2 data-t="discardTitle">Discard your unfinished puzzle?</h2>
+        <p data-t="discardMsg">Your progress on it will be lost. Today’s puzzle is not affected.</p>
+      </div>
+      <button class="asheet-act destructive" data-t="discard">Discard</button>
+    </div>
+    <button class="asheet-cancel" data-t="keepPlaying">Keep playing</button>
+  </div>
+
+  <!-- More menu (fill variant B) -->
+  <div class="menu" id="menu" hidden role="menu" aria-label="More">
+    <button role="menuitem"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="3.5" width="12" height="12" rx="2.6"/><path d="M18.5 14.5v7M15 18h7"/></svg><span data-t="newHead">New puzzle</span></button>
+    <button role="menuitem"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="3.5" width="17" height="17" rx="3"/><path d="M9 3.5v17M15 3.5v17M3.5 9h17M3.5 15h17"/></svg><span data-t="fillAction">Fill candidates</span></button>
+    <button role="menuitem"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9.6 9.3a2.5 2.5 0 1 1 3.3 2.4c-.6.2-.9.8-.9 1.4v.5"/><path d="M12 16.8h.01"/></svg><span data-t="howWorks">How Pundoku works</span></button>
+  </div>
+
+  <nav class="tabbar">
+    <span class="tab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><rect x="3.5" y="4.5" width="17" height="16" rx="3"/><path d="M3.5 9h17M8 3v3M16 3v3"/></svg><span data-t="today">Today</span></span>
+    <span class="tab sel"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><rect x="3.5" y="3.5" width="17" height="17" rx="3"/><path d="M9 3.5v17M15 3.5v17M3.5 9h17M3.5 15h17"/></svg><span data-t="play">Play</span></span>
+    <span class="tab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><rect x="3.5" y="4.5" width="17" height="16" rx="3"/><path d="M7 9h3M14 9h3M7 13h3M14 13h3M7 17h3"/></svg><span data-t="year">Year</span></span>
+  </nav>
+</div>
+
+<button class="pill" id="pill">Mockup controls</button>
+<div class="mock">
+  <div class="grp"><span>screen</span><div class="seg" data-key="screen">
+    <button data-val="hub" aria-pressed="true">hub</button><button data-val="game">game</button><button data-val="solved">solved</button><button data-val="headers">headers</button></div></div>
+  <div class="grp"><span>continue</span><div class="seg" data-key="cont">
+    <button data-val="both" aria-pressed="true">both</button><button data-val="free">free</button><button data-val="day">day</button><button data-val="none">none</button></div></div>
+  <div class="grp"><span>mode</span><div class="seg" data-key="mode">
+    <button data-val="classic" aria-pressed="true">classic</button><button data-val="ink">ink</button></div></div>
+  <div class="grp"><span>fill entry</span><div class="seg" data-key="fill">
+    <button data-val="a" aria-pressed="true">A gap line</button><button data-val="b">B more menu</button><button data-val="c">C 4th button</button></div></div>
+  <div class="grp"><span>notes</span><div class="seg" data-key="notes">
+    <button data-val="on" aria-pressed="true">on</button><button data-val="off">off</button></div></div>
+  <div class="grp"><span>menu</span><div class="seg" data-key="menu">
+    <button data-val="closed" aria-pressed="true">closed</button><button data-val="open">open</button></div></div>
+  <div class="grp"><span>overlay</span><div class="seg" data-key="sheet">
+    <button data-val="none" aria-pressed="true">none</button><button data-val="mode">mode</button><button data-val="discard">discard</button></div></div>
+  <div class="grp"><span>slot</span><div class="seg" data-key="slot">
+    <button data-val="off" aria-pressed="true">off</button><button data-val="on">on</button></div></div>
+  <div class="grp"><span>language</span><div class="seg" data-key="lang">
+    <button data-val="en" aria-pressed="true">en</button><button data-val="uk">uk</button><button data-val="ru">ru</button></div></div>
+  <div class="grp"><span>text size</span><div class="seg" data-key="type">
+    <button data-val="default" aria-pressed="true">17</button><button data-val="xxxl">23</button><button data-val="ax3">40 AX3</button></div></div>
+  <div class="grp"><span>appearance</span><div class="seg" data-key="appearance">
+    <button data-val="system" aria-pressed="true">system</button><button data-val="light">light</button><button data-val="dark">dark</button></div></div>
+  <div class="grp"><span>safe area</span><div class="seg" data-key="safearea">
+    <button data-val="sim" aria-pressed="true">sim</button><button data-val="real">real</button></div></div>
+  <div class="grp"><button id="mockClose">close</button></div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+  var root = document.documentElement;
+
+  /* ---------- 1. copy, en / uk / ru -----------------------------------
+     Reuses the shipped keys wherever they exist (apps/web/src/i18n/locales/*.json).
+     Two deliberate changes, both written up in design/pd144-play-c.md:
+       * ONE name for one action: "New puzzle" / «Нова сітка» / «Новая сетка». The long
+         `play.newPuzzle` («Нова головоломка») and `solved.newGame` («Нова гра») both go.
+       * clues are "given cells" in uk/ru — «підказка / подсказка» is now the hint (PD-133). */
+  var STR = {
+    en:{
+      today:"Today", play:"Play", year:"Year", year2:"2026",
+      settings:"Settings", hint:"Hint", more:"More",
+      hubSub:"A puzzle of your own, any time.",
+      contHead:"Continue", contDay:"Today’s puzzle", contFree:"Your own puzzle",
+      newHead:"New puzzle",
+      modeRow:"Mode", modeClassic:"Classic", modeInk:"Ink", inkChip:"Ink",
+      modeClassicSub:"Undo, the eraser and notes all work.",
+      modeInkSub:"No undo and no eraser for digits. A wrong digit leaves a blot.",
+      footClassic:"Free games aren’t recorded in your year.",
+      footInk:"In ink mode there is no undo and no eraser for digits. Free games aren’t recorded in your year.",
+      start:"Start", done:"Done",
+      diff:{ easy:"Easy", medium:"Medium", hard:"Hard", expert:"Expert", master:"Master" },
+      clues:"clues",
+      tech:{ singles:"singles", locked:"locked candidates", pairs:"pairs", beyond:"beyond pairs" },
+      left:function(n){ return n + (n === 1 ? " cell left" : " cells left"); },
+      fillAction:"Fill candidates", howWorks:"How Pundoku works",
+      notes:"Notes", undo:"Undo", erase:"Erase",
+      discardTitle:"Discard your unfinished puzzle?",
+      discardMsg:"Your progress on it will be lost. Today’s puzzle is not affected.",
+      discard:"Discard", keepPlaying:"Keep playing",
+      solvedTitle:"Solved", rTime:"Time", rFixes:"Fixes", clean:"clean",
+      rTech:"Technique reached", techLocked:"Locked candidates",
+      pathSub:"Every cell shaded by when you filled it.", watch:"Watch your solve",
+      peek:"The next section starts here — at the default text size at least 28 px of it is visible above the tab bar, so nothing lives permanently below the fold.",
+      slotTag:"Reserved · release 2",
+      slotBody:"A separate section for one of the release-2 modes goes here, under the hub’s own content and above the tab bar. Nothing is drawn inside it: which mode becomes a section, and what it does, is the owner’s decision.",
+      headNote:"Year’s title is a pull-down button, the other two are plain headings. Their top edges have to match at every text size; the red guide is drawn from the first title’s top edge.",
+      ruler:function(n,w){ return "REVIEW · 4 buttons at " + w + " pt: " + n + " pt each. Two of the three labels no longer fit on one line."; }
+    },
+    uk:{
+      today:"Сьогодні", play:"Гра", year:"Рік", year2:"2026",
+      settings:"Налаштування", hint:"Підказка", more:"Ще",
+      hubSub:"Власна сітка, коли завгодно.",
+      contHead:"Продовжити", contDay:"Головоломка дня", contFree:"Власна сітка",
+      newHead:"Нова сітка",
+      modeRow:"Режим", modeClassic:"Класика", modeInk:"Чорнило", inkChip:"Чорнило",
+      modeClassicSub:"Скасування, гумка й нотатки працюють.",
+      modeInkSub:"Немає скасування і немає гумки для цифр. Неправильна цифра лишає ляпку.",
+      footClassic:"Власні ігри не потрапляють до вашого року.",
+      footInk:"У чорнильному режимі немає скасування і немає гумки для цифр. Власні ігри не потрапляють до вашого року.",
+      start:"Почати", done:"Готово",
+      diff:{ easy:"Легко", medium:"Середньо", hard:"Складно", expert:"Експерт", master:"Майстер" },
+      clues:"відкритих",
+      tech:{ singles:"одиночки", locked:"замкнені кандидати", pairs:"пари", beyond:"понад пари" },
+      left:function(n){ return "залишилось " + n; },
+      fillAction:"Заповнити кандидатами", howWorks:"Як працює Pundoku",
+      notes:"Нотатки", undo:"Скасувати", erase:"Стерти",
+      discardTitle:"Відкинути незавершену сітку?",
+      discardMsg:"Прогрес у ній буде втрачено. Головоломки дня це не торкається.",
+      discard:"Відкинути", keepPlaying:"Грати далі",
+      solvedTitle:"Розв’язано", rTime:"Час", rFixes:"Виправлення", clean:"чисто",
+      rTech:"Досягнута техніка", techLocked:"Замкнені кандидати",
+      pathSub:"Кожна клітинка затінена за тим, коли ви її заповнили.", watch:"Подивитися своє розв’язання",
+      peek:"Тут починається наступний розділ — за звичайного розміру тексту над таб-баром видно щонайменше 28 px, тож ніщо не живе за межею екрана назавжди.",
+      slotTag:"Зарезервовано · реліз 2",
+      slotBody:"Тут буде окремий розділ для одного з режимів релізу 2 — під вмістом хаба й над таб-баром. Усередині нічого не намальовано: який саме режим стане розділом і що він робить, вирішує власник.",
+      headNote:"Заголовок Року — кнопка-меню, два інші — звичайні заголовки. Їхні верхні краї мають збігатися за будь-якого розміру тексту; червона лінія — від верхнього краю першого заголовка.",
+      ruler:function(n,w){ return "REVIEW · 4 кнопки на " + w + " pt: по " + n + " pt. Дві підписи з трьох уже не вміщаються в рядок."; }
+    },
+    ru:{
+      today:"Сегодня", play:"Игра", year:"Год", year2:"2026",
+      settings:"Настройки", hint:"Подсказка", more:"Ещё",
+      hubSub:"Своя сетка в любое время.",
+      contHead:"Продолжить", contDay:"Головоломка дня", contFree:"Своя сетка",
+      newHead:"Новая сетка",
+      modeRow:"Режим", modeClassic:"Классика", modeInk:"Чернила", inkChip:"Чернила",
+      modeClassicSub:"Отмена, ластик и заметки работают.",
+      modeInkSub:"Нет отмены и нет ластика для цифр. Неверная цифра оставляет кляксу.",
+      footClassic:"Свои игры не попадают в ваш год.",
+      footInk:"В чернильном режиме нет отмены и нет ластика для цифр. Свои игры не попадают в ваш год.",
+      start:"Начать", done:"Готово",
+      diff:{ easy:"Легко", medium:"Средне", hard:"Сложно", expert:"Эксперт", master:"Мастер" },
+      clues:"открытых",
+      tech:{ singles:"одиночки", locked:"запертые кандидаты", pairs:"пары", beyond:"сверх пар" },
+      left:function(n){ return "осталось " + n; },
+      fillAction:"Заполнить кандидатами", howWorks:"Как устроен Pundoku",
+      notes:"Заметки", undo:"Отменить", erase:"Стереть",
+      discardTitle:"Отбросить незавершённую сетку?",
+      discardMsg:"Прогресс в ней будет потерян. Головоломки дня это не касается.",
+      discard:"Отбросить", keepPlaying:"Играть дальше",
+      solvedTitle:"Решено", rTime:"Время", rFixes:"Исправления", clean:"чисто",
+      rTech:"Достигнутая техника", techLocked:"Запертые кандидаты",
+      pathSub:"Каждая клетка затенена по тому, когда вы её заполнили.", watch:"Посмотреть своё решение",
+      peek:"Здесь начинается следующий раздел — при обычном размере текста над таб-баром видно не меньше 28 px, поэтому ничто не живёт за краем экрана постоянно.",
+      slotTag:"Зарезервировано · релиз 2",
+      slotBody:"Здесь будет отдельный раздел для одного из режимов релиза 2 — под содержимым хаба и над таб-баром. Внутри ничего не нарисовано: какой именно режим станет разделом и что он делает, решает владелец.",
+      headNote:"Заголовок Года — кнопка-меню, два других — обычные заголовки. Их верхние края должны совпадать при любом размере текста; красная линия — от верхнего края первого заголовка.",
+      ruler:function(n,w){ return "REVIEW · 4 кнопки на " + w + " pt: по " + n + " pt. Две подписи из трёх уже не помещаются в строку."; }
+    }
+  };
+  function T(){ return STR[root.dataset.lang] || STR.en; }
+
+  /* ---------- 2. the example grid ------------------------------------ */
+  var GIVEN =
+    "53..7...." +
+    "6..195..." +
+    ".98....6." +
+    "8...6...3" +
+    "4..8.3..1" +
+    "7...2...6" +
+    ".6....28." +
+    "...419..5" +
+    "....8..79";
+  var PLAYER = { 2:"4", 3:"6", 10:"7", 18:"1", 28:"5", 72:"3" };
+  var NOTES  = { 5:"248", 20:"24", 47:"159" };
+  var SEL = 5;
+
+  function boardHtml(){
+    var h = "", b, i, idx, g, p, n;
+    for (b = 0; b < 9; b++){
+      h += '<div class="box">';
+      for (i = 0; i < 9; i++){
+        idx = (Math.floor(b/3)*3 + Math.floor(i/3)) * 9 + (b%3)*3 + (i%3);
+        g = GIVEN[idx]; p = PLAYER[idx]; n = NOTES[idx];
+        h += '<div class="cell' + (idx === SEL ? ' sel' : '') + '">';
+        if (g !== ".") h += '<span class="d given">' + g + "</span>";
+        else if (p) h += '<span class="d player">' + p + "</span>";
+        else if (n){
+          h += '<span class="marks">';
+          for (var d = 1; d <= 9; d++) h += "<span>" + (n.indexOf(String(d)) >= 0 ? d : "") + "</span>";
+          h += "</span>";
+        }
+        h += "</div>";
+      }
+      h += "</div>";
+    }
+    return h;
+  }
+
+  /* ---------- 3. render ---------------------------------------------- */
+  var DIFFS = [
+    { id:"easy",   clues:38, tech:"singles" },
+    { id:"medium", clues:30, tech:"singles" },
+    { id:"hard",   clues:26, tech:"locked" },
+    { id:"expert", clues:24, tech:"pairs" },
+    { id:"master", clues:24, tech:"beyond" }
+  ];
+  var chosen = "hard";
+
+  function renderDiff(){
+    var t = T(), h = "";
+    DIFFS.forEach(function(d){
+      h += '<button class="row diff" role="radio" data-diff="' + d.id + '" aria-checked="' + (d.id === chosen) + '">' +
+             '<span class="lab">' + t.diff[d.id] +
+               '<span class="sub">' + d.clues + " " + t.clues + " · " + t.tech[d.tech] + "</span>" +
+             "</span>" +
+             '<span class="ck"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7"/></svg></span>' +
+           "</button>";
+    });
+    document.getElementById("diffCard").innerHTML = h;
+  }
+
+  function renderPad(){
+    var t = T(), h = "", rem = [5,4,3,5,5,4,4,3,4], d;
+    for (d = 1; d <= 9; d++) h += '<button class="key"><span class="kd">' + d + '</span><span class="kr">' + rem[d-1] + "</span></button>";
+    document.getElementById("pad").innerHTML = h;
+
+    var ink = root.dataset.mode === "ink";
+    var fillC = root.dataset.fill === "c";
+    var notesOn = root.dataset.notes === "on";
+    var sIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><path d="M4 5h16M4 10h16M4 15h10M4 20h6"/></svg>';
+    var uIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 7 4 12l5 5"/><path d="M4 12h9a6 6 0 0 1 0 12h-1"/></svg>';
+    var eIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 19h12"/><path d="M15.5 5.5 20 10 11 19H6.5L4 16.5Z"/></svg>';
+    var fIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="3.5" width="17" height="17" rx="3"/><path d="M9 3.5v17M15 3.5v17M3.5 9h17M3.5 15h17"/></svg>';
+    var a = '<button class="act" aria-pressed="' + notesOn + '">' + sIcon + "<span>" + t.notes + "</span></button>";
+    if (fillC) a += '<button class="act">' + fIcon + "<span>" + t.fillAction + "</span></button>";
+    if (!ink)  a += '<button class="act">' + uIcon + "<span>" + t.undo + "</span></button>";
+    a += '<button class="act">' + eIcon + "<span>" + t.erase + "</span></button>";
+    var row = document.getElementById("actions");
+    row.className = "actions" + (fillC && !ink ? " four" : "");
+    row.innerHTML = a;
+  }
+
+  function renderHeat(){
+    var h = "", i;
+    for (i = 0; i < 81; i++) h += '<i style="opacity:' + (0.25 + ((i * 37) % 60) / 100).toFixed(2) + '"></i>';
+    document.getElementById("heat").innerHTML = h;
+  }
+
+  function applyText(){
+    var t = T();
+    document.querySelectorAll("[data-t]").forEach(function(el){
+      var v = t[el.dataset.t]; if (typeof v === "string") el.textContent = v;
+    });
+    document.querySelectorAll("[data-t-aria]").forEach(function(el){
+      var v = t[el.dataset.tAria]; if (typeof v === "string") el.setAttribute("aria-label", v);
+    });
+    root.lang = root.dataset.lang;
+
+    var ink = root.dataset.mode === "ink";
+    document.getElementById("modeVal").textContent = ink ? t.modeInk : t.modeClassic;
+    document.getElementById("modeFoot").textContent = ink ? t.footInk : t.footClassic;
+    document.getElementById("optClassic").setAttribute("aria-checked", String(!ink));
+    document.getElementById("optInk").setAttribute("aria-checked", String(ink));
+
+    document.getElementById("cont-day-meta").textContent = t.diff.medium + " · " + t.left(28) + " · 12:04";
+    document.getElementById("cont-free-meta").textContent = t.diff.hard + " · " + t.left(47) + " · 03:18";
+    document.getElementById("statusLine").textContent = t.left(47).replace(/^./, function(c){ return c.toUpperCase(); });
+    document.getElementById("gameSub").innerHTML =
+      t.diff.hard + ' <span class="dot">·</span> 03:18' +
+      (ink ? '<span class="chip">' + t.inkChip + "</span>" : "");
+    document.getElementById("solvedSub").innerHTML = t.diff.hard + ' <span class="dot">·</span> 11:42';
+
+    var w = Math.max(320, Math.min(window.innerWidth || 390, 430));
+    var per = Math.round((w - 32 - 24) / 4);
+    document.getElementById("ruler").textContent = t.ruler(per, w);
+  }
+
+  function render(){
+    var s = root.dataset.screen;
+    document.getElementById("scr-hub").hidden    = s !== "hub";
+    document.getElementById("scr-game").hidden   = s !== "game";
+    document.getElementById("scr-solved").hidden = s !== "solved";
+    document.getElementById("scr-heads").hidden  = s !== "headers";
+
+    var cont = root.dataset.cont;
+    document.getElementById("sec-cont").hidden = cont === "none";
+    document.getElementById("cont-day").hidden  = !(cont === "both" || cont === "day");
+    document.getElementById("cont-free").hidden = !(cont === "both" || cont === "free");
+    var ink = root.dataset.mode === "ink";
+    document.getElementById("cont-free-chip").hidden = !ink;
+
+    var fill = root.dataset.fill, notesOn = root.dataset.notes === "on";
+    document.getElementById("fillLine").hidden = !(fill === "a" && notesOn && !ink);
+    document.getElementById("statusLine").hidden = (fill === "a" && notesOn && !ink);
+    document.getElementById("moreBtn").hidden = fill !== "b";
+    document.getElementById("newBtn").hidden  = fill === "b";
+    var menuOpen = fill === "b" && root.dataset.menu === "open" && s === "game";
+    document.getElementById("menu").hidden = !menuOpen;
+    document.getElementById("moreBtn").setAttribute("aria-expanded", String(menuOpen));
+
+    var sheet = root.dataset.sheet;
+    document.getElementById("modeSheet").hidden = sheet !== "mode";
+    document.getElementById("discard").hidden   = sheet !== "discard";
+    document.getElementById("scrim").hidden     = sheet === "none" && !menuOpen;
+
+    renderDiff(); renderPad(); applyText();
+  }
+
+  /* ---------- 4. review chrome + API --------------------------------- */
+  function setAppearance(v){
+    root.classList.remove("force-light","force-dark");
+    if (v === "light") root.classList.add("force-light");
+    if (v === "dark")  root.classList.add("force-dark");
+  }
+  function set(key, val){
+    if (key === "appearance") setAppearance(val);
+    else root.setAttribute("data-" + key, val);
+    document.querySelectorAll('.mock .seg[data-key="' + key + '"] button').forEach(function(x){
+      x.setAttribute("aria-pressed", String(x.dataset.val === val));
+    });
+    render();
+  }
+  document.querySelectorAll(".mock .seg").forEach(function(seg){
+    seg.addEventListener("click", function(ev){
+      var b = ev.target.closest("button"); if (!b) return;
+      set(seg.dataset.key, b.dataset.val);
+    });
+  });
+  document.getElementById("diffCard").addEventListener("click", function(ev){
+    var b = ev.target.closest("[data-diff]"); if (!b) return;
+    chosen = b.dataset.diff; renderDiff();
+  });
+  document.getElementById("modeRow").addEventListener("click", function(){ set("sheet","mode"); });
+  document.getElementById("modeDone").addEventListener("click", function(){ set("sheet","none"); });
+  document.getElementById("optClassic").addEventListener("click", function(){ set("mode","classic"); });
+  document.getElementById("optInk").addEventListener("click", function(){ set("mode","ink"); });
+  document.getElementById("startBtn").addEventListener("click", function(){
+    if (root.dataset.cont === "both" || root.dataset.cont === "free") set("sheet","discard");
+    else set("screen","game");
+  });
+  document.getElementById("cont-free").addEventListener("click", function(){ set("screen","game"); });
+  document.getElementById("newBtn").addEventListener("click", function(){ set("screen","hub"); });
+  document.getElementById("moreBtn").addEventListener("click", function(){
+    set("menu", root.dataset.menu === "open" ? "closed" : "open");
+  });
+  document.getElementById("scrim").addEventListener("click", function(){
+    set("sheet","none"); set("menu","closed");
+  });
+  document.getElementById("pill").addEventListener("click", function(){ root.setAttribute("data-mock","open"); });
+  document.getElementById("mockClose").addEventListener("click", function(){ root.setAttribute("data-mock","closed"); });
+
+  /* Draw the red guide in the header-comparison state from the FIRST title's top edge. */
+  function drawGuide(){
+    if (root.dataset.screen !== "headers") return;
+    var host = document.getElementById("scr-heads");
+    var old = host.querySelectorAll(".guide"); old.forEach(function(g){ g.remove(); });
+    var first = host.querySelector(".title");
+    if (!first) return;
+    var top = first.getBoundingClientRect().top - host.getBoundingClientRect().top + host.scrollTop;
+    host.querySelectorAll(".headrow").forEach(function(rw){
+      var g = document.createElement("div");
+      g.className = "guide";
+      g.style.top = (top - (rw.offsetTop)) + "px";
+      rw.style.position = "relative";
+      rw.appendChild(g);
+    });
+  }
+
+  window.PD144 = {
+    set: set,
+    setDifficulty: function(d){ chosen = d; renderDiff(); },
+    guide: drawGuide,
+    reset: function(){
+      chosen = "hard";
+      ["screen","cont","mode","sheet","fill","notes","menu","slot","lang","type","safearea"].forEach(function(k){
+        root.setAttribute("data-" + k, {screen:"hub",cont:"both",mode:"classic",sheet:"none",fill:"a",
+          notes:"on",menu:"closed",slot:"off",lang:"en",type:"default",safearea:"sim"}[k]);
+      });
+      setAppearance("system");
+      render();
+    }
+  };
+
+  document.getElementById("board").innerHTML = boardHtml();
+  renderHeat();
+  render();
+})();
+</script>
+</body>
+</html>
