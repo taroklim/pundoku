@@ -287,3 +287,38 @@ describe("PD-116c: «Watch your solve» после партии Play", () => {
     expect(q('[data-testid="tl-nolog"]')).toBeNull();
   });
 });
+
+describe("PD-144 D-1: классы резерва под док на экране партии (play.css: --extra у .play-hintable, строка статуса у .play-docked)", () => {
+  const cls = () => q(".play")!.className.split(/\s+/);
+
+  it("обычная партия: play-fit + play-hintable, без play-docked; с открытым доком добавляется play-docked, резерв остаётся", () => {
+    playing(fresh());
+    render();
+    expect(cls()).toEqual(expect.arrayContaining(["play-fit", "play-hintable"]));
+    expect(cls()).not.toContain("play-docked");
+    tap(q('[data-testid="hint-button"]')!);
+    const go = q('[data-testid="hint-rule-go"]') ?? document.querySelector<HTMLElement>('[data-testid="hint-rule-go"]');
+    if (go) tap(go);
+    expect(q('[data-testid="hint-dock"]')).not.toBeNull();
+    expect(cls()).toEqual(expect.arrayContaining(["play-fit", "play-hintable", "play-docked"]));
+    tap(q('[data-testid="hint-close"]')!);
+    expect(cls()).toContain("play-hintable");
+    expect(cls()).not.toContain("play-docked");
+  });
+
+  it("Ink: лампочки нет — резерва нет (поле прежнее), класса play-hintable нет", () => {
+    playing(setInkMode(fresh(), true), WRONG_CELL, { hint: null });
+    render();
+    expect(q('[data-testid="hint-button"]')).toBeNull();
+    expect(cls()).toContain("play-fit");
+    expect(cls()).not.toContain("play-hintable");
+  });
+
+  it("хаб: ни play-fit, ни резерва", () => {
+    setSnap({ hub: true, restoring: false });
+    render();
+    expect(cls()).toContain("play-hub");
+    expect(cls()).not.toContain("play-hintable");
+    expect(cls()).not.toContain("play-fit");
+  });
+});

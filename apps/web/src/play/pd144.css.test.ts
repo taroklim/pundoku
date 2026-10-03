@@ -4,6 +4,7 @@
  * поля нескроллящегося экрана, резерв таб-бара, отсутствие новых цветов/токенов и зашитых размеров, правила Year и peek.
  */
 import { describe, expect, it } from "vitest";
+import { FIT } from "./fitModel";
 
 const fs = (await import(/* @vite-ignore */ ["node", "fs"].join(":"))) as { readFileSync(u: URL, enc: "utf8"): string };
 const read = (name: string) => fs.readFileSync(new URL(`../styles/${name}`, import.meta.url), "utf8").replace(/\/\*[\s\S]*?\*\//g, "");
@@ -47,14 +48,40 @@ describe("экран партии не скроллится: формула по
     expect(b).toMatch(/--s: calc\(\(min\(100cqi, 100dvh - var\(--chrome\)\) - 2 \* var\(--box-gap\)\) \/ 9\)/);
   });
 
-  it("--chrome учитывает настоящую высоту таб-бара (--tabbar-h), а не зашитые 51 px макета; число клетки не зашито", () => {
-    const chrome = squash(play.match(/--chrome:\s*calc\(([\s\S]*?)\);\s*\}/)![1]!);
+  it("--chrome0 учитывает настоящую высоту таб-бара (--tabbar-h), а не зашитые 51 px макета; число клетки не зашито", () => {
+    const chrome = squash(play.match(/--chrome0:\s*calc\(([\s\S]*?)\);\s*--chrome:/)![1]!);
     expect(chrome).toContain("var(--tabbar-h)");
     expect(chrome).toContain("var(--sa-top)");
     expect(chrome).toContain("var(--sa-bot)");
-    expect(chrome).toContain("var(--extra)");
     expect(chrome).not.toMatch(/\b51px\b/);
+    expect(chrome).not.toContain("var(--extra)"); // резерв под док отдельно, чтобы им можно было ограничить себя через --chrome0
+    expect(body(play, ".play-fit")).toMatch(/--chrome: calc\(var\(--chrome0\) \+ var\(--extra\)\)/);
     expect(squash(play)).not.toMatch(/--s:\s*\d+px/);
+  });
+
+  it("D-1: резерв под док — постоянный (класс .play-hintable, не :has(> .hint-dock)), числа те же, что в fitModel.ts", () => {
+    expect(play).not.toMatch(/:has\(\s*>\s*\.hint-dock/);
+    const b = body(play, ".play-hintable");
+    expect(b).toMatch(new RegExp(`--dock-h: ${FIT.dockH}px`));
+    const extra = squash(b.match(/--extra: (.*);$/)![1]!);
+    expect(extra).toContain(`var(--dock-h) + ${FIT.dockGap}px - ${FIT.padSlot}px - 1.15rem - ${FIT.gapPad}px`);
+    expect(extra).toContain(`100dvh - var(--chrome0) - ${FIT.boardFloor}px`);
+    // ровно та высота, что в --chrome0: клавиши 56 + ряд действий 66 = место панели
+    expect(FIT.padSlot).toBe(56 + 66);
+    expect(body(play, ".play-docked > .gap")).toMatch(/min-height: 8px/);
+  });
+
+  it("D-2: подпись партии — одна строка без переноса, сложность усекается многоточием, метки схлопываются в значки по container query", () => {
+    const sub = body(play, ".play-fit .subline");
+    expect(sub).toMatch(/flex-wrap: nowrap/);
+    expect(sub).toMatch(/white-space: nowrap/);
+    expect(sub).toMatch(/container-type: inline-size/);
+    expect(body(play, ".play-fit .subline > .mode-chip")).toMatch(/align-self: center/); // чип не вытягивает строку выше резерва
+    expect(body(play, ".play-fit .subline > .sub-diff")).toMatch(/text-overflow: ellipsis/);
+    const qs = squash(play);
+    expect(qs).toMatch(/@container \(max-width: 17em\) \{ \.subline \.chip-t \{ position: absolute;/);
+    expect(qs).toMatch(/\.subline \.hm-ic \{ display: inline-block;/);
+    expect(qs).toMatch(/\.subline \.chip-ic \{ display: block;/);
   });
 
   it("обвязка flex:none, гибкий только .gap; .gap держит строку статуса; .pad-wrap и .actions по ТЗ", () => {

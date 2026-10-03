@@ -118,8 +118,13 @@ export function PlayScreen({ onOpenSettings, onOpenHelp, onOpenToday }: { onOpen
   const showLamp = !hub && !restoring && playStore.hintAllowed();
   const showMore = !hub && !restoring && phase !== "solved";
 
+  // PD-144 (D-1): место под док подсказки отложено постоянно, пока подсказки возможны (партия не в Ink): поле не зависит от дока.
+  // До загрузки партии `play` нет — режим берётся из выбора на хабе, чтобы поле не прыгало при появлении партии.
+  const hintable = !hub && !(play ? ink : snap.inkNext);
+  const fitClass = hub ? " play-hub" : cardView ? "" : ` play-fit${hintable ? " play-hintable" : ""}${hint.open ? " play-docked" : ""}`;
+
   return (
-    <div className={`play${hub ? " play-hub" : cardView ? "" : " play-fit"}`} onKeyDown={hub ? undefined : (e) => handleGameKey(e, playStore, ladder)}>
+    <div className={`play${fitClass}`} onKeyDown={hub ? undefined : (e) => handleGameKey(e, playStore, ladder)}>
       {/* Live-регион для скринридера: «N cells left» только на порогах (см. хук выше). */}
       <p className="sr-only" role="status" aria-live="polite" aria-atomic="true">
         {announcement}

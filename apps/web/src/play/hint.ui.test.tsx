@@ -81,6 +81,24 @@ describe("HintDock", () => {
     expect(q("hint-dock")).toBeNull();
   });
 
+  it("PD-144 D-1: текст ступени и ключ значков — в одной прокручиваемой части (.hint-scroll); кнопки и счётчик вне неё", () => {
+    const { ladder } = ladderFor("hiddenSingle");
+    act(() => ladder.openLadder());
+    dock(ladder, true);
+    const scroll = document.querySelector<HTMLElement>(".hint-scroll")!;
+    expect(scroll.contains(q("hint-live"))).toBe(true);
+    expect(scroll.contains(q("hint-more"))).toBe(false);
+    expect(scroll.contains(q("hint-close"))).toBe(false);
+    expect(scroll.contains(q("hint-foot"))).toBe(false);
+    // jsdom не считает раскладку: «под нижней кромкой есть текст» не заявляется без измеренной прокрутки.
+    expect(scroll.getAttribute("data-more")).toBeNull();
+    // Ступень не меняет структуру: после «More» тот же контейнер, текст по-прежнему внутри, `aria-live` не потерян.
+    act(() => (q("hint-more") as HTMLButtonElement).click());
+    dock(ladder, true);
+    expect(document.querySelector(".hint-scroll")!.contains(q("hint-live"))).toBe(true);
+    expect(q("hint-live")!.getAttribute("aria-live")).toBe("polite");
+  });
+
   it("«Close» закрывает на любой ступени", () => {
     const { ladder } = ladderFor("nakedSingle");
     act(() => ladder.openLadder());

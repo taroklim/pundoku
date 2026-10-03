@@ -135,12 +135,69 @@
   scroll-margin-bottom: calc(16px + var(--tabbar-h) + var(--sa-bot));
   animation: fadeRise calc(220ms * var(--mk)) var(--e-out) both;
 }
-/* PD-144: на экране партии Play (не прокручивается) док — единственный уступающий элемент колонки после зазора и поля:
-   он сжимается и прокручивает ТЕКСТ внутри себя (кнопка «Ещё шаг» остаётся внизу, margin-top:auto), страницу не двигает. */
+/* PD-144 (D-1): на экране партии Play (не прокручивается) док ЗАНИМАЕТ место панели 1–9 + ряда действий + строки статуса и
+   не больше: поле над ним не двигается ни на одной ступени и ни в одной ветке. Это держит резерв `--extra` (play.css,
+   `.play-hintable`): место под док отложено ВСЕГДА, а не в момент открытия. Док — колонка: шапка со счётчиком и кнопки
+   фиксированы, прокручивается только `.hint-scroll` (текст ступени и ключ значков); страницу док не трогает. */
 .play-fit > .hint-dock {
   flex: 0 1 auto;
   min-height: 0;
-  margin-bottom: 14px;
+  margin-bottom: 10px;
+  overflow: hidden;
+}
+.hint-scroll {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.play-fit .hint-scroll {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+/* Под нижней кромкой ещё есть текст — край затухает (форма «можно листать», не только полоса прокрутки). */
+.play-fit .hint-scroll[data-more="1"] {
+  -webkit-mask-image: linear-gradient(#000 calc(100% - 22px), transparent);
+  mask-image: linear-gradient(#000 calc(100% - 22px), transparent);
+}
+/* Место на экране партии отдано полю, обвязке и доку (см. play.css): на короткой высоте (≤ 700: SE 568 и 8/SE 667) и при AX3 — компактный док. Подвал
+   «партия отмечена» остаётся в DOM для скринридера (и он же дублируется чипом «с подсказкой» в подписи), но визуально убран. */
+@media (max-height: 700px) {
+  .play-fit > .hint-dock {
+    padding: 8px 12px;
+    gap: 4px;
+  }
+  .play-fit .hint-scroll {
+    gap: 4px;
+  }
+  .play-fit .hint-foot {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+}
+:root[data-type="ax3"] .play-fit > .hint-dock {
+  padding: 8px 12px;
+  gap: 4px;
+}
+:root[data-type="ax3"] .play-fit .hint-step {
+  display: none;
+}
+:root[data-type="ax3"] .play-fit .hint-foot {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
 }
 .hint-dock h2:focus {
   outline: none;
