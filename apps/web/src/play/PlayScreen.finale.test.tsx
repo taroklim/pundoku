@@ -42,13 +42,13 @@ function setReduced(reduced: boolean) {
 
 let host: HTMLDivElement;
 let root: Root;
-const card = () => host.querySelector(".card, [data-testid='result-card'], .result, .newgame");
+const card = () => host.querySelector(".card, [data-testid='result-card'], .result, [data-testid='new-puzzle']");
 const dimmed = () => host.querySelector(".board.dim") !== null;
 
 function startAlmostSolved() {
   const { play, last } = almostSolved();
   const inner = playStore as unknown as { snap: Record<string, unknown> };
-  inner.snap = { ...inner.snap, setup: false, phase: "playing", play, selected: last, startedOn: new Date() };
+  inner.snap = { ...inner.snap, hub: false, phase: "playing", play, selected: last, startedOn: new Date() };
   act(() => root.render(<PlayScreen />));
   expect(card()).toBeNull();
   // последний верный ввод -> phase "solved"
@@ -139,7 +139,7 @@ describe("финал Play: dim-фаза и тап-прерывание (PD-89)",
     const added = add.mock.calls.filter((c) => c[0] === "pointerdown").length;
     expect(added).toBeGreaterThan(0);
     act(() => void vi.advanceTimersByTime(300));
-    act(() => playStore.toSetup());
+    act(() => playStore.toHub());
     const removed = remove.mock.calls.filter((c) => c[0] === "pointerdown").length;
     expect(removed).toBe(added);
     add.mockRestore();
@@ -150,12 +150,12 @@ describe("финал Play: dim-фаза и тап-прерывание (PD-89)",
     startAlmostSolved();
     act(() => void vi.advanceTimersByTime(300));
     expect(card()).not.toBeNull();
-    act(() => playStore.toSetup());
+    act(() => playStore.toHub());
     expect(card()).toBeNull();
     expect(dimmed()).toBe(false);
   });
   // PD-94: хвост прерывающего касания не должен нажать кнопку, оказавшуюся под пальцем.
-  const newGame = () => host.querySelector<HTMLButtonElement>("button.newgame")!;
+  const newGame = () => host.querySelector<HTMLButtonElement>('button[data-testid="new-puzzle"]')!;
   const tap = (target: Element, detail = 1) => {
     target.dispatchEvent(new Event("pointerup", { bubbles: true }));
     target.dispatchEvent(new MouseEvent("click", { bubbles: true, cancelable: true, detail }));
@@ -235,7 +235,7 @@ describe("финал Play: dim-фаза и тап-прерывание (PD-89)",
   it("PD-95: уход из solved до кадра отменяет отложенный фокус (нет ошибок и кражи фокуса)", () => {
     startAlmostSolved();
     act(() => void vi.advanceTimersByTime(240));
-    act(() => playStore.toSetup());
+    act(() => playStore.toHub());
     act(() => void vi.advanceTimersByTime(500));
     expect(host.querySelector('[data-testid="result-card"]')).toBeNull();
   });

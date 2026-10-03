@@ -208,42 +208,53 @@ describe("InkEntry и шит правил", () => {
   });
 });
 
-describe("PlaySetup: шаг «New puzzle»", () => {
-  it("сложность, Ink mode и Start; сложность меняется нативным select", () => {
-    const onDifficulty = vi.fn();
+describe("PlaySetup (хаб PD-144): сложность списком, строка «Режим», «Начать»", () => {
+  const props = { pick: "hard" as const, ink: false, own: null, reselect: 0, onPick: vi.fn(), onInk: vi.fn(), onStart: vi.fn(), onResume: vi.fn(), onOpenToday: vi.fn() };
+
+  it("сложность — radiogroup из пяти строк без нативного select; режим — через шит и правило PD-74; Start", () => {
+    const onPick = vi.fn();
     const onInk = vi.fn();
     const onStart = vi.fn();
-    act(() => root.render(<PlaySetup difficulty="hard" ink={false} onDifficulty={onDifficulty} onInk={onInk} onStart={onStart} />));
-    expect(host.querySelector(".sect-head")!.textContent).toBe("New puzzle");
-    expect(host.querySelector(".ink-row-select .row-v")!.textContent).toBe("Hard");
-    const select = host.querySelector<HTMLSelectElement>('[data-testid="setup-difficulty"]')!;
-    act(() => {
-      select.value = "easy";
-      select.dispatchEvent(new Event("change", { bubbles: true }));
-    });
-    expect(onDifficulty).toHaveBeenCalledWith("easy");
-    // Ink mode: шит → «Play in ink»
-    act(() => host.querySelector<HTMLElement>('[data-testid="ink-row"]')!.click());
+    act(() => root.render(<PlaySetup {...props} onPick={onPick} onInk={onInk} onStart={onStart} />));
+    expect(host.querySelector("select")).toBeNull();
+    expect(host.querySelector(".hub-head")!.textContent).toBe("New puzzle");
+    expect(host.querySelectorAll('[role="radiogroup"] [role="radio"]')).toHaveLength(5);
+    expect(host.querySelector('[data-testid="difficulty-hard"]')!.getAttribute("aria-checked")).toBe("true");
+    act(() => host.querySelector<HTMLElement>('[data-testid="difficulty-easy"]')!.click());
+    expect(onPick).toHaveBeenCalledWith("easy");
+    expect(host.querySelector('[data-testid="mode-value"]')!.textContent).toBe("Classic");
+    // Режим: шит → «Ink» → правило PD-74 поверх → «Play in ink»
+    act(() => host.querySelector<HTMLElement>('[data-testid="mode-row"]')!.click());
+    act(() => document.querySelector<HTMLElement>('[data-testid="mode-ink"]')!.click());
+    expect(onInk).not.toHaveBeenCalled(); // сначала правило
     act(() => document.querySelector<HTMLElement>('[data-testid="ink-rule-start"]')!.click());
     expect(onInk).toHaveBeenCalledWith(true);
+    act(() => document.querySelector<HTMLElement>('[data-testid="mode-done"]')!.click());
     act(() => host.querySelector<HTMLElement>('[data-testid="setup-start"]')!.click());
     expect(onStart).toHaveBeenCalledTimes(1);
-    expect(host.querySelector(".ink-foot")!.textContent).toBe("In ink mode there is no undo and no eraser for digits.");
+  });
+
+  it("сноска режима зависит от выбора: Классика и Чернила говорят разное", () => {
+    act(() => root.render(<PlaySetup {...props} ink={false} />));
+    const classic = host.querySelector('[data-testid="mode-foot"]')!.textContent;
+    act(() => root.render(<PlaySetup {...props} ink />));
+    expect(host.querySelector('[data-testid="mode-value"]')!.textContent).toBe("Ink");
+    expect(host.querySelector('[data-testid="mode-foot"]')!.textContent).not.toBe(classic);
   });
 });
 
-describe("PlayStore: шаг New puzzle", () => {
-  it("стартует в setup без партии; режим выбирается только в setup и сбрасывается toSetup", () => {
+describe("PlayStore: хаб PD-144", () => {
+  it("стартует на хабе без партии; режим и сложность выбираются только на хабе, режим сбрасывается после запуска", () => {
     const s = new PlayStore();
-    expect(s.getSnapshot()).toMatchObject({ setup: true, inkNext: false, play: null });
+    expect(s.getSnapshot()).toMatchObject({ hub: true, inkNext: false, play: null });
     s.setInkNext(true);
     s.setDifficulty("hard");
-    expect(s.getSnapshot()).toMatchObject({ inkNext: true, difficulty: "hard" });
-    s.toSetup("easy");
-    expect(s.getSnapshot()).toMatchObject({ setup: true, inkNext: false, difficulty: "easy", play: null });
+    expect(s.getSnapshot()).toMatchObject({ inkNext: true, pick: "hard" });
+    s.toHub(); // уже на хабе — ничего не меняется
+    expect(s.getSnapshot()).toMatchObject({ hub: true, inkNext: true, pick: "hard", play: null });
   });
 
-  it("сгенерированная партия в чернильном режиме включает ink; обычная — нет", () => {
+  it("сгенерированная партия в чернильном режиме включает ink; обычная — нет; выбор режима одноразовый", () => {
     const s = new PlayStore();
     const inner = s as unknown as {
       requestId: number;
@@ -253,9 +264,10 @@ describe("PlayStore: шаг New puzzle", () => {
     s.setInkNext(true);
     s.start(); // Worker в jsdom нет — фаза error, но requestId выдан
     inner.onGenerated(inner.requestId, { id: inner.requestId, ok: true, puzzle });
-    expect(s.getSnapshot()).toMatchObject({ phase: "playing", setup: false });
+    expect(s.getSnapshot()).toMatchObject({ phase: "playing", hub: false, inkNext: false });
     expect(s.getSnapshot().play!.ink).toBe(true);
-    s.toSetup();
+    s.toHub();
+    expect(s.hasSlot()).toBe(true);
     s.newGame("easy", false);
     inner.onGenerated(inner.requestId, { id: inner.requestId, ok: true, puzzle });
     expect(s.getSnapshot().play!.ink).toBeUndefined();

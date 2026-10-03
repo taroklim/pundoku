@@ -9,6 +9,8 @@ interface TabHeaderProps {
   actions?: ReactNode;
   /** Открыть Settings. Нет — шестерёнки нет (тесты отдельных экранов без оболочки). */
   onOpenSettings?: () => void;
+  /** PD-144: контрол ПОСЛЕ шестерёнки (меню «⋯» партии Play): порядок лампочка · шестерёнка · «⋯». */
+  trailing?: ReactNode;
 }
 
 /**
@@ -16,12 +18,12 @@ interface TabHeaderProps {
  * настройки не «исчезали» при смене вкладки (HIG: действие тулбара живёт на одном месте на всех корневых экранах).
  * Цель нажатия 44 × 44 (`.gear-btn`), подпись — `settings.open`. Архивный день шапку не использует (там «‹ Year»).
  */
-export function TabHeader({ title, actions, onOpenSettings }: TabHeaderProps) {
+export function TabHeader({ title, actions, onOpenSettings, trailing }: TabHeaderProps) {
   const { t } = useTranslation();
   return (
     <header className="toolbar" data-testid="tab-header">
       {title}
-      {(actions || onOpenSettings) && (
+      {(actions || onOpenSettings || trailing) && (
         <div className="toolbar-end">
           {actions}
           {onOpenSettings && (
@@ -29,6 +31,7 @@ export function TabHeader({ title, actions, onOpenSettings }: TabHeaderProps) {
               <GearIcon />
             </button>
           )}
+          {trailing}
         </div>
       )}
     </header>

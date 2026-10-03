@@ -1,0 +1,476 @@
+/*
+ * Хаб вкладки Play, меню «⋯» и шит «Режим» (PD-144) — по утверждённому макету design/pd144-play-c.html (разделы 4, 7).
+ * Только токены tokens.css, ни одного нового цвета. Правила, которые здесь важны:
+ *  - кольцо фокуса — ВНУТРЬ в каждом режущем контейнере (скругление/overflow:hidden/прокрутка срезают внешнее кольцо);
+ *  - длинный текст ПЕРЕНОСИТСЯ (`overflow-wrap: break-word`, без `anywhere` и без `hyphens:auto`), а не обрезается;
+ *  - Dynamic Type не ограничивается: при AX3 строка хаба встаёт колонкой, значение уходит под подпись.
+ */
+
+/* ---------- Хаб: сгруппированный список на одной странице ---------- */
+.hub-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: 12px;
+}
+.hub-sec {
+  margin-top: 16px;
+}
+.hub-sec:first-child {
+  margin-top: 10px;
+}
+.hub-head {
+  margin: 0 0 6px;
+  padding: 0 max(16px, var(--sa-r)) 0 max(16px, var(--sa-l));
+  font-size: 0.82rem;
+  color: var(--label-2-grouped);
+  overflow-wrap: break-word;
+}
+.hub-foot {
+  margin: 7px 0 0;
+  padding: 0 max(16px, var(--sa-r)) 0 max(16px, var(--sa-l));
+  font-size: 0.82rem;
+  line-height: 1.35;
+  color: var(--label-2-grouped);
+  overflow-wrap: break-word;
+}
+.hub-card {
+  margin: 0 max(16px, var(--sa-r)) 0 max(16px, var(--sa-l));
+  background: var(--card);
+  border-radius: 12px;
+  box-shadow: var(--box-shadow);
+  overflow: hidden;
+}
+
+/* Строка. Пол 44 pt; при крупном тексте переносится, а не обрезается, и значение уходит под подпись (QA PD-136). */
+.hub-row {
+  position: relative;
+  width: 100%;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px 12px;
+  padding: 11px max(16px, var(--sa-r)) 11px max(16px, var(--sa-l));
+  font-size: 1rem;
+  color: var(--label);
+  text-align: left;
+}
+.hub-row + .hub-row::before {
+  content: "";
+  position: absolute;
+  left: max(16px, var(--sa-l));
+  right: 0;
+  top: 0;
+  height: 1px;
+  background: var(--hairline);
+  transform: scaleY(0.5);
+  transform-origin: top;
+}
+.hub-row .lab {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow-wrap: break-word;
+}
+.hub-row .val {
+  margin-left: auto;
+  color: var(--label-2);
+  text-align: right;
+  overflow-wrap: break-word;
+  font-variant-numeric: tabular-nums;
+}
+.hub-row .chev {
+  width: 13px;
+  height: 13px;
+  flex: none;
+  color: var(--label-2);
+  opacity: 0.7;
+}
+.hub-row .ck {
+  flex: none;
+  display: grid;
+  place-items: center;
+  color: var(--ink);
+}
+.hub-row .ck svg {
+  width: 20px;
+  height: 20px;
+}
+.hub-row[aria-checked="false"] .ck {
+  visibility: hidden;
+}
+button.hub-row:active {
+  background: var(--ink-tint);
+}
+
+/* «Продолжить»: две строки — что это и насколько продвинулась. Две НЕЗАВИСИМЫЕ партии: у каждой своё сохранение. */
+.hub-row.two {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 2px;
+  padding-right: 38px;
+}
+.hub-row.two .l1 {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 6px;
+  min-width: 0;
+}
+.hub-row.two .l1 b {
+  min-width: 0;
+  overflow-wrap: break-word;
+}
+.hub-row.two .l2 {
+  color: var(--label-2);
+  font-size: 0.88rem;
+  overflow-wrap: break-word;
+  font-variant-numeric: tabular-nums;
+}
+.hub-row.two .chev {
+  position: absolute;
+  right: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+}
+.hub-row.two .glyph {
+  flex: none;
+  width: 19px;
+  height: 19px;
+  color: var(--ink);
+}
+/* Строка сложности: название + какая это сетка. Числа — из генератора (DIFFICULTY_PROFILES), не из интерфейса. */
+.hub-row.diff {
+  padding-top: 9px;
+  padding-bottom: 9px;
+}
+.hub-row .sub {
+  display: block;
+  color: var(--label-2);
+  font-size: 0.82rem;
+  overflow-wrap: break-word;
+}
+
+/* При AX3 название занимает строку целиком, значение и галочка — под ним/в углу: ничего не сжимается и не рвётся. */
+:root[data-type="ax3"] .hub-row:not(.two) {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+}
+:root[data-type="ax3"] .hub-row:not(.two) .val {
+  margin-left: 0;
+  text-align: left;
+}
+:root[data-type="ax3"] .hub-row:not(.two) .chev,
+:root[data-type="ax3"] .hub-row:not(.two) .ck {
+  position: absolute;
+  right: 14px;
+  top: 14px;
+}
+
+/* Чип «Чернила»: в подписи партии и в строке «Продолжить» (слово режима для Today остаётся `.inkmark`). */
+.mode-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: 6px;
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: var(--ink-tint);
+  color: var(--ink);
+  font-size: 0.76rem;
+  font-weight: 600;
+}
+.hub-row .l1 .mode-chip {
+  margin-left: 0;
+}
+
+/* «Начать» закреплена над таб-баром (большой палец, HIG); хаб прокручивается под ней. Стекло с непрозрачным запасным цветом. */
+.hub-bar {
+  flex: none;
+  padding: 10px max(16px, var(--sa-r)) 8px max(16px, var(--sa-l));
+  background: var(--glass-solid);
+  border-top: 0.5px solid var(--hairline);
+}
+@supports (backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px)) {
+  .hub-bar {
+    background: var(--glass-fill);
+    -webkit-backdrop-filter: blur(20px) saturate(1.8);
+    backdrop-filter: blur(20px) saturate(1.8);
+  }
+}
+@media (prefers-reduced-transparency: reduce), (prefers-contrast: more) {
+  .hub-bar {
+    background: var(--glass-solid);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+}
+.hub-primary {
+  display: block;
+  width: 100%;
+  min-height: 50px;
+  border-radius: 13px;
+  background: var(--ink);
+  color: var(--on-ink);
+  font-size: 1rem;
+  font-weight: 600;
+  text-align: center;
+  padding: 12px 14px;
+  overflow-wrap: break-word;
+}
+.hub-primary:active {
+  opacity: 0.85;
+}
+/* Позиция раздела режимов релиза 2: ничего не нарисовано (решение владельца 2026-10-03) — только место над закреплённой кнопкой. */
+.hub-slot-gap {
+  height: 20px;
+}
+
+/* ---------- Кнопка «⋯» в шапке партии ---------- */
+.more-btn {
+  width: 44px;
+  height: 44px;
+  margin: -8px -10px -8px 0;
+  flex: none;
+  display: grid;
+  place-items: center;
+  color: var(--label-2);
+  border-radius: 22px;
+}
+.more-btn svg {
+  width: 24px;
+  height: 24px;
+}
+.more-btn:active,
+.more-btn.on {
+  background: var(--ink-tint);
+  color: var(--ink);
+}
+.more-btn:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: -2px;
+}
+
+/* ---------- Меню «⋯»: pull-down, затемнение на весь экран (включая таб-бар) ---------- */
+.menu-scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  background: var(--scrim);
+  animation: st-fade calc(160ms * var(--mk)) linear;
+}
+.menu {
+  position: absolute;
+  right: max(10px, var(--sa-r));
+  min-width: 230px;
+  max-width: calc(100% - 20px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  background: var(--elev);
+  border-radius: 13px;
+  box-shadow: 0 10px 34px rgba(0, 0, 0, 0.22);
+  animation: st-fade calc(160ms * var(--mk)) linear;
+}
+.menu:focus {
+  outline: none;
+}
+.menu button {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 44px;
+  padding: 10px 14px;
+  font-size: 0.95rem;
+  text-align: left;
+  overflow-wrap: break-word;
+}
+.menu button + button {
+  border-top: 1px solid var(--hairline);
+}
+.menu button:active {
+  background: var(--ink-tint);
+}
+.menu svg {
+  width: 18px;
+  height: 18px;
+  flex: none;
+  color: var(--label-2);
+}
+.menu .mi {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1px;
+  min-width: 0;
+  text-align: left;
+}
+/* Недоступный пункт приглушён и ОБЪЯСНЁН, а не молча убран: меню в обоих режимах то же и в том же порядке. */
+.menu button[aria-disabled="true"] {
+  opacity: 0.45;
+}
+.menu button[aria-disabled="true"]:active {
+  background: none;
+}
+.menu .why {
+  font-size: 0.78rem;
+  line-height: 1.2;
+  color: var(--label-2);
+  overflow-wrap: break-word;
+}
+
+/* ---------- Шит «Режим»: два варианта с описаниями ---------- */
+.sheet-scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  background: var(--scrim);
+  display: flex;
+  align-items: flex-end;
+  animation: st-fade calc(220ms * var(--mk)) linear;
+}
+.mode-sheet {
+  width: 100%;
+  background: var(--elev);
+  border-radius: 16px 16px 0 0;
+  padding: 8px max(20px, var(--sa-r)) calc(16px + var(--sa-bot)) max(20px, var(--sa-l));
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  /* На 320×568 при AX3 шит может занять весь экран без 8 px: скроллится только текст вариантов, ручка, заголовок и «Готово»
+     (flex:none) не уезжают никогда. */
+  max-height: calc(100% - max(var(--sa-top), 8px) - 8px);
+  animation: st-rise calc(300ms * var(--mk)) var(--e-spring) both;
+}
+.mode-sheet:focus {
+  outline: none;
+}
+.mode-sheet .grabber {
+  width: 36px;
+  height: 5px;
+  border-radius: 3px;
+  background: var(--hairline);
+  margin: 0 auto 6px;
+  flex: none;
+}
+.mode-sheet > h2,
+.mode-sheet > .hub-primary {
+  flex: none;
+}
+.mode-sheet h2 {
+  margin: 0;
+  font-size: 1.24rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  overflow-wrap: break-word;
+}
+/* 3/4 px внутреннего поля, снятые равным отрицательным margin: раскладка не двигается, но ничто внутри не касается режущей
+   кромки прокрутки — скругления и кольца фокуса сохраняют воздух со всех четырёх сторон. */
+.mode-sheet .sheet-scroll {
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 3px 4px;
+  margin: -3px -4px;
+}
+/* flex-элемент колонки по умолчанию сжимается: при ограниченной высоте строки вариантов сплющивались, и третья строка
+   описания выходила за свой фон. Элемент держит высоту; прокручивается КОНТЕЙНЕР, не вариант. */
+.mode-sheet .sheet-scroll > * {
+  flex: none;
+}
+.mode-sheet .sheet-scroll .scroll-fade {
+  margin-inline: -4px;
+}
+.mode-opt {
+  display: flex;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 10px;
+  min-height: 56px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: var(--chip-bg);
+  text-align: left;
+}
+.mode-opt .mt {
+  font-size: 1rem;
+  font-weight: 600;
+  overflow-wrap: break-word;
+}
+.mode-opt .md {
+  flex-basis: 100%;
+  color: var(--label-2);
+  font-size: 0.85rem;
+  line-height: 1.25;
+  overflow-wrap: break-word;
+}
+.mode-opt .ck {
+  margin-left: auto;
+  color: var(--ink);
+}
+.mode-opt .ck svg {
+  width: 20px;
+  height: 20px;
+}
+.mode-opt[aria-checked="false"] .ck {
+  visibility: hidden;
+}
+.mode-opt:active {
+  opacity: 0.85;
+}
+/* Крупный текст в шите: плотнее отступы возвращают целые строки раньше, чем что-то придётся прокручивать (шрифт не ограничен). */
+:root[data-type="ax3"] .mode-sheet {
+  padding-left: max(12px, var(--sa-l));
+  padding-right: max(12px, var(--sa-r));
+  gap: 6px;
+}
+:root[data-type="ax3"] .mode-opt {
+  padding: 8px 10px;
+  gap: 6px;
+}
+
+/* ---------- Кольцо фокуса ВНУТРЬ: карточки хаба, меню и шит режима режут содержимое (overflow:hidden / прокрутка) ---------- */
+.hub-row:focus-visible,
+.menu button:focus-visible,
+.mode-opt:focus-visible {
+  outline: 2px solid transparent; /* прозрачный outline остаётся для forced-colors: там box-shadow отключён */
+  outline-offset: -2px;
+  border-radius: 0;
+  box-shadow: inset 0 0 0 2px var(--ink);
+}
+.mode-opt:focus-visible {
+  border-radius: 12px;
+}
+@media (forced-colors: active) {
+  .hub-row:focus-visible,
+  .menu button:focus-visible,
+  .mode-opt:focus-visible {
+    outline-color: Highlight;
+  }
+  .hub-card,
+  .menu {
+    border: 1px solid CanvasText;
+  }
+  .mode-opt {
+    border: 1px solid CanvasText;
+  }
+  .mode-opt[aria-checked="true"] {
+    border-width: 2px;
+  }
+  .mode-chip {
+    border: 1px solid CanvasText;
+  }
+  .hub-primary {
+    border: 1px solid ButtonText;
+  }
+  .menu button[aria-disabled="true"] {
+    opacity: 1;
+    color: GrayText;
+  }
+}

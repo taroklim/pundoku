@@ -131,9 +131,16 @@
   max-height: 248px;
   overflow-y: auto;
   overscroll-behavior: contain;
-  /* Низкий экран (SE): док не помещается над таб-баром — при открытии страница докручивается до него (scrollIntoView, block: nearest). */
-  scroll-margin-bottom: calc(72px + var(--sa-bot));
+  /* Today (прокручивается): на низком экране док не помещается над таб-баром — страница докручивается до него (scrollIntoView). */
+  scroll-margin-bottom: calc(16px + var(--tabbar-h) + var(--sa-bot));
   animation: fadeRise calc(220ms * var(--mk)) var(--e-out) both;
+}
+/* PD-144: на экране партии Play (не прокручивается) док — единственный уступающий элемент колонки после зазора и поля:
+   он сжимается и прокручивает ТЕКСТ внутри себя (кнопка «Ещё шаг» остаётся внизу, margin-top:auto), страницу не двигает. */
+.play-fit > .hint-dock {
+  flex: 0 1 auto;
+  min-height: 0;
+  margin-bottom: 14px;
 }
 .hint-dock h2:focus {
   outline: none;

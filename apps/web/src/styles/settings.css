@@ -564,8 +564,10 @@ button.settings-row:active {
 }
 .st-asheet {
   width: 100%;
-  max-height: 92%;
-  overflow-y: auto;
+  /* PD-144: колонка не выше безопасной области (над статус-баром и 8 px воздуха); прокручивается только текст шита. */
+  max-height: calc(100% - max(var(--sa-top), 8px) - 8px);
+  display: flex;
+  flex-direction: column;
   padding: 0 max(8px, var(--sa-l)) calc(8px + var(--sa-bot)) max(8px, var(--sa-r));
   animation: st-rise calc(300ms * var(--mk)) var(--e-spring) both;
 }
@@ -573,32 +575,48 @@ button.settings-row:active {
   outline: none;
 }
 .st-agrp {
+  flex: none;
   background: var(--elev);
   border-radius: 14px;
   overflow: hidden;
   margin-top: 8px;
   box-shadow: var(--box-shadow);
 }
+/* Первая группа (текст + главное действие) уступает высоту: её текст — единственное, что скроллится. */
+.st-agrp:first-child {
+  flex: 0 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
 .st-ahead {
+  flex: 0 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
   padding: 15px 16px;
   text-align: center;
   border-bottom: 1px solid var(--hairline);
+}
+.st-ahead .scroll-fade {
+  margin-inline: -16px; /* ровно по padding-box: шире — и у блока появится горизонтальная полоса прокрутки */
 }
 .st-ahead h3 {
   margin: 0;
   font-size: 0.88rem;
   font-weight: 600;
   color: var(--label);
-  overflow-wrap: anywhere;
+  overflow-wrap: break-word;
 }
 .st-ahead p {
   margin: 5px 0 0;
   font-size: 0.82rem;
-  line-height: 1.35;
+  line-height: 1.25;
   color: var(--label-2);
-  overflow-wrap: anywhere;
+  overflow-wrap: break-word;
 }
 .st-asheet button {
+  flex: none;
   width: 100%;
   min-height: 57px;
   padding: 14px 16px;
@@ -608,7 +626,26 @@ button.settings-row:active {
   text-align: center;
   font-size: max(17px, 1rem);
   color: var(--ink);
-  overflow-wrap: anywhere;
+  line-height: 1.25;
+  overflow-wrap: break-word;
+}
+/* PD-144: кольцо фокуса — ВНУТРЬ: группа режет содержимое скруглением (overflow:hidden), внешнее кольцо срезалось бы.
+   Прозрачный outline нужен forced-colors (там box-shadow отключён). */
+.st-asheet button:focus-visible {
+  outline: 2px solid transparent;
+  outline-offset: -2px;
+  border-radius: 0;
+  box-shadow: inset 0 0 0 2px var(--ink);
+}
+/* Крупный Dynamic Type: плотнее отступы возвращают строки текста, шрифт не ограничивается. */
+:root[data-type="ax3"] .st-ahead {
+  padding: 10px 12px;
+}
+:root[data-type="ax3"] .st-ahead .scroll-fade {
+  margin-inline: -12px;
+}
+:root[data-type="ax3"] .st-asheet button {
+  padding: 10px 12px;
 }
 .st-asheet button:active {
   background: var(--ink-tint);
@@ -646,6 +683,9 @@ button.settings-row:active {
 
 /* Forced colors: смысл, который несли чернила и сургуч, держат иконки и слова. */
 @media (forced-colors: active) {
+  .st-asheet button:focus-visible {
+    outline-color: Highlight;
+  }
   /* Знак/вордмарк: цвет по системной палитре (fill/stroke из переменных система отбрасывает сама, явно — надёжнее). */
   .settings-about-mark {
     color: CanvasText;

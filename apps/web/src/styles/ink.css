@@ -171,14 +171,15 @@
 .ink-row .row-t {
   flex: 1;
   min-width: 0;
-  overflow-wrap: anywhere;
+  /* PD-144: break-word, не anywhere — «Чорнильний» не рвётся посреди слова на 320 px при 200 % (QA PD-136). */
+  overflow-wrap: break-word;
   font-size: 0.95rem;
 }
 .ink-row .row-v {
   color: var(--label-2);
   font-size: 0.9rem;
   text-align: right;
-  overflow-wrap: anywhere;
+  overflow-wrap: break-word;
 }
 .ink-row .row-v.on {
   color: var(--ink);
@@ -196,45 +197,16 @@
   flex: none;
   color: var(--ink);
 }
-/* Строка сложности: прозрачный нативный select на всю площадь (системный пикер, 16 px — без зума iOS). */
-.row-select {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  opacity: 0;
-  font-size: 1rem;
-  cursor: pointer;
-}
-.ink-row-select:focus-within {
-  outline: 2px solid var(--ink);
-  outline-offset: -2px;
-}
 .ink-foot {
   margin: 0;
   padding: 6px max(16px, var(--sa-r)) 0 max(16px, var(--sa-l));
   color: var(--label-2-grouped);
   font-size: 0.78rem;
-  overflow-wrap: anywhere;
+  overflow-wrap: break-word;
 }
 .ink-entry .ink-foot {
   padding-inline: 2px;
 }
-.sect-head {
-  margin: 0;
-  padding: 18px max(16px, var(--sa-r)) 6px max(16px, var(--sa-l));
-  color: var(--label-2-grouped);
-  font-size: 0.78rem;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-}
-.play-setup {
-  padding-top: 6px;
-}
-.setup-start {
-  padding: 14px max(16px, var(--sa-r)) 0 max(16px, var(--sa-l));
-}
-
 /* ---------- Кнопки шита и «Start» ---------- */
 .ink-primary,
 .ink-quiet {

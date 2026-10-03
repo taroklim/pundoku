@@ -35,8 +35,10 @@ export function HintDock({ ladder, state, play = false }: HintDockProps) {
     if (!state.open) return;
     heading.current?.focus({ preventScroll: true });
     // Док выше свободного места (iPhone SE): показать целиком; там, где он помещается, прокрутки нет — поле не двигается.
-    dock.current?.scrollIntoView?.({ block: "nearest" });
-  }, [session, state.open]);
+    // PD-144: экран партии Play НЕ прокручивается никогда (`overflow:hidden` скроллится и скриптом — это и был D2 «док
+    // докручивает страницу»): там док сам сжимается и прокручивает текст внутри себя, а страницу не трогаем.
+    if (!play) dock.current?.scrollIntoView?.({ block: "nearest" });
+  }, [session, state.open, play]);
 
   // Новая ступень: текст начинается сверху (на AX3 док скроллится внутри себя, кнопка внизу — ступень не должна открываться «с середины»).
   useEffect(() => {

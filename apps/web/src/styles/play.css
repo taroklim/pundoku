@@ -8,29 +8,18 @@
   display: flex;
   flex-direction: column;
 }
-
-/* ---------- «New puzzle» в тулбаре Play (PD-116): явная кнопка вместо нативного select сложности ---------- */
-.newpuzzle-btn {
-  /* Цель ≥ 44 pt (HIG), шрифт не меньше 16 px: читается без зума. Отрицательные поля — как у .gear-btn: тулбар не растёт. */
-  /* PD-139: с лампочкой в тулбаре на 320 pt (uk/ru) подпись не помещается — сжимается с многоточием, заголовок не переносится. */
-  flex: 0 1 auto;
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  min-height: 44px;
-  margin: -6px -4px -6px 0;
-  padding: 0 14px;
-  border-radius: 12px;
-  color: var(--ink);
-  background: var(--ink-tint);
-  font: inherit;
-  font-size: max(1rem, 16px); /* на iPhone 1rem = Dynamic Type (≥17 px); пол 16 px — на системах без него (webkit macOS даёт 13 px) */
-  font-weight: 600;
-  white-space: nowrap;
+/* PD-144: экран партии НЕ прокручивается (закрывает D2). Вся обвязка `flex:none`; гибкий только `.gap`, а уступает размер
+   только поле: оно считается от того, что осталось после обвязки (`--chrome`, см. `.board-wrap`). Шапка → подпись → поле →
+   зазор со статусом → панель 1–9 → Notes/Undo/Erase; под ними таб-бар (оболочка отдаёт область до него, shell.css). */
+.play-fit,
+.play-hub {
+  min-height: 0;
 }
-.newpuzzle-btn:focus-visible {
-  outline: 2px solid var(--ink);
-  outline-offset: 1px;
+.play-fit > * {
+  flex: none;
+}
+.play-fit > .gap {
+  flex: 1 1 auto;
 }
 
 .subline .clock {
@@ -50,14 +39,49 @@
   /* Размер клетки: (ширина − 2 зазора) / 9. cqi — от .board-wrap. */
   --s: calc((100cqi - 2 * var(--box-gap)) / 9);
 }
+/* PD-144: на экране партии (нескроллящемся) поле уступает высоте. Всё, что ниже поля, считается в тех единицах, из которых
+   оно сделано: полосы шапки/подписи/зазора растут с Dynamic Type (rem), клавиши и таб-бар — нет (один фиксированный запас
+   был верен при 17 px и на 90 px мал при AX3). Today (прокручивается) этим не затронут. */
+.play-fit .board-wrap {
+  --extra: 0px;
+  --chrome: calc(
+    var(--sa-top) + var(--sa-bot) + 2rem + 8px /* шапка: заголовок 1.62rem × 1.2 и 8 px над ним */ + 1.15rem + 2px /* подпись */ + 1.15rem + 16px
+      /* зазор: одна строка статуса + его отступы */ + 56px /* клавиши 1–9: фиксированы, ограничен глиф */ + 66px /* ряд действий: цель 46 + 10 + 10 */ + var(--tabbar-h)
+      /* таб-бар: настоящий 64–67 px (в макете 51 — поле на 13–16 px меньше цифр ТЗ, см. README) */ + 12px /* верхний отступ .board-wrap */ + var(--extra)
+  );
+}
+/* Открытый док подсказки (PD-133) занимает место панели 1–9 (122 px) и тянется выше неё: на коротком экране без резерва он
+   сжимался до 109 px и прятал кнопку «Ещё шаг». Резерв `--extra` = (высота дока + 14) − 122: 200 px при max-height 640 (там док
+   ограничен 200), иначе — его минимум 176. Поле уступает ЗАРАНЕЕ; на высоких экранах оно ограничено шириной, резерв не виден.
+   При AX3 резерва нет: док остаётся в прежних рамках и прокручивает текст внутри (поле уже 165–170 px, меньше нельзя). */
+.play-fit:has(> .hint-dock) .board-wrap {
+  --extra: 68px;
+}
+@media (max-height: 640px) {
+  .play-fit:has(> .hint-dock) .board-wrap {
+    --extra: 92px;
+  }
+}
+:root[data-type="ax3"] .play-fit:has(> .hint-dock) .board-wrap {
+  --extra: 0px;
+}
+.play-fit .board {
+  width: min(100%, calc(100dvh - var(--chrome)));
+  margin: 0 auto;
+  --s: calc((min(100cqi, 100dvh - var(--chrome)) - 2 * var(--box-gap)) / 9);
+}
 .box {
   position: relative;
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   border-radius: var(--box-radius);
-  overflow: hidden;
+  /* PD-144: бокс НЕ режет содержимое клеток. Скругление задаёт поверхность, а не обрезает цифры: фиксированный радиус 10 при
+     клетке ≈ 25 px (320 pt) съедал заметку 9 в угловой клетке. Собственный фон бокса скругляется и без overflow; угловые
+     КЛЕТКИ несут тот же радиус (ниже), поэтому их заливка/выбор держат прежний силуэт. */
+  overflow: visible;
   background: var(--surface);
   box-shadow: var(--box-shadow);
+  --corner-in: calc(var(--box-radius) * 0.3);
 }
 .cell {
   position: relative;
@@ -66,7 +90,7 @@
   min-height: 0;
   display: grid;
   place-items: center;
-  overflow: hidden;
+  overflow: visible;
   background: var(--surface);
   /* Радиус кольца ошибки; углы боксов переопределяют его ниже. */
   --r-tl: 4px;
@@ -87,6 +111,31 @@
 .box > .cell:nth-child(9) {
   --r-br: var(--box-radius);
 }
+/* Скругление угловых клеток (поверхность и слои заливки), см. .box. */
+.box > .cell:nth-child(1) {
+  border-top-left-radius: var(--box-radius);
+}
+.box > .cell:nth-child(3) {
+  border-top-right-radius: var(--box-radius);
+}
+.box > .cell:nth-child(7) {
+  border-bottom-left-radius: var(--box-radius);
+}
+.box > .cell:nth-child(9) {
+  border-bottom-right-radius: var(--box-radius);
+}
+.box > .cell:nth-child(1) > .stain {
+  border-top-left-radius: var(--box-radius);
+}
+.box > .cell:nth-child(3) > .stain {
+  border-top-right-radius: var(--box-radius);
+}
+.box > .cell:nth-child(7) > .stain {
+  border-bottom-left-radius: var(--box-radius);
+}
+.box > .cell:nth-child(9) > .stain {
+  border-bottom-right-radius: var(--box-radius);
+}
 /* Фокус несёт кольцо выбора (оно всегда на сфокусированной клетке); своя обводка не нужна. */
 .cell:focus-visible {
   outline: none;
@@ -100,6 +149,7 @@
   pointer-events: none;
   background: var(--ink);
   opacity: 0;
+  border-radius: inherit; /* слои заливки повторяют скругление угловой клетки (бокс их больше не режет) */
 }
 /* Волна M3 живёт в ::before клетки, ответ M8 («цифра закрыта») — в ::after: слои не мешают друг другу,
    если клетка и в собранном юните, и в закрытой цифре. Над заливкой .fl, но под .d (z-index 2). */
@@ -128,7 +178,8 @@
   position: relative;
   z-index: 2;
   line-height: 1;
-  font-size: 6.5cqi;
+  /* От клетки (--s), а не от ширины колонки: на низком экране поле ограничено высотой и уже обёртки (PD-144). */
+  font-size: calc(var(--s) * 0.62);
 }
 .cell .d.given {
   font-family: var(--font-serif);
@@ -180,7 +231,8 @@
 .marks span {
   min-height: 0;
   overflow: visible;
-  font-size: 11px;
+  /* PD-144: от клетки; три глифа поперёк клетки ≈ 24 px (320 pt, поле ограничено высотой) требуют ≈ 7 px, а не 11. */
+  font-size: max(7px, calc(var(--s) * 0.3));
   line-height: 1;
   font-weight: 400;
   letter-spacing: -0.02em;
@@ -191,6 +243,24 @@
 .cell.same .marks span,
 .cell.sel .marks span {
   color: var(--notes-fill);
+}
+/* Сетка заметок угловой клетки отступает от скруглённого угла бокса, с которым делит дугу: заметка не обрезается и до дуги
+   не доходит. 0.3 × радиус = 3 px; сдвигаются только четыре угловых клетки и только две скруглённые стороны. */
+.box > .cell:nth-child(1) .marks {
+  padding-top: calc(4% + var(--corner-in));
+  padding-left: calc(4% + var(--corner-in));
+}
+.box > .cell:nth-child(3) .marks {
+  padding-top: calc(4% + var(--corner-in));
+  padding-right: calc(4% + var(--corner-in));
+}
+.box > .cell:nth-child(7) .marks {
+  padding-bottom: calc(4% + var(--corner-in));
+  padding-left: calc(4% + var(--corner-in));
+}
+.box > .cell:nth-child(9) .marks {
+  padding-bottom: calc(4% + var(--corner-in));
+  padding-right: calc(4% + var(--corner-in));
 }
 
 /* Hairline внутри блока (вариант B): 1 px @2x, при 50 % прозрачности. */
@@ -264,11 +334,13 @@
 /* ---------- Зазор между полем и панелью: статус ---------- */
 .gap {
   flex: 1 1 auto;
-  min-height: 20px;
+  /* ≥ 8 px воздуха под полем и ≥ 8 px до клавиш при любом размере текста: min-height резервирует целую строку статуса
+     плюс отступы, и она не сплющится о поле, когда колонка тесная. */
+  min-height: calc(1.15rem + 16px);
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 0 16px;
+  padding: 8px max(16px, var(--sa-r)) 8px max(16px, var(--sa-l));
 }
 .status {
   margin: 0;
@@ -276,6 +348,22 @@
   font-size: 0.88rem;
   font-variant-numeric: tabular-nums;
   text-align: center;
+}
+/* PD-144: короткая форма строки статуса — только при AX3 (иначе «Осталось 47 клеток» переносится на вторую строку, а резерв
+   `--chrome` держит одну). Длинная форма остаётся для скринридера. */
+.status .st-short {
+  display: none;
+}
+:root[data-type="ax3"] .status .st-short {
+  display: inline;
+}
+:root[data-type="ax3"] .status .st-long {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
 }
 /* M9: «осталось N» перекатывается (translateY 6 px + opacity, 220 мс). Класс ставит StatusLine только
    при смене числа и только если включён флаг MOTION_FLAGS.statusRoll (play/motion.ts). */
@@ -290,7 +378,11 @@
 
 /* ---------- Панель 1–9 ---------- */
 .pad-wrap {
+  /* flex:none — блок управления никогда не уступает (иначе нижний ряд уходил под таб-бар); место берётся у поля.
+     container-type: глиф клавиши ограничен шириной клавиши (cqi), а не только размером текста. */
+  flex: none;
   padding: 0 max(16px, var(--sa-r)) 0 max(16px, var(--sa-l));
+  container-type: inline-size;
 }
 /* Один ряд с остатками. gap 4 (в макете 5): на 320pt клавиша = (288 − 8·4) / 9 = 28.4pt ≥ 28pt
    минимума accessibility.md; на 393pt — 36.6pt. ОТКЛОНЕНИЕ: макет ниже 360pt сворачивает панель
@@ -311,14 +403,17 @@
   align-items: center;
   justify-content: center;
   gap: 1px;
+  overflow: hidden;
   transition:
     background-color 0.12s linear,
     color 0.12s linear,
     transform calc(220ms * var(--mk)) cubic-bezier(0.34, 1.36, 0.52, 1),
     opacity 0.16s linear;
 }
+/* КЛАВИША сохраняет размер (цель нажатия, 56 px входят в --chrome); ограничен глиф: на 320 pt клавиша 28.4 px, цифра AX3
+   в 49.6 px залезала на соседей. 7.5cqi ≈ 21.6 px там, а на 390 pt по-прежнему 1.24rem — обычные размеры не тронуты. */
 .key .kd {
-  font-size: clamp(18px, 1.24rem, 23px);
+  font-size: min(1.24rem, 7.5cqi);
   font-weight: 500;
   line-height: 1.05;
 }
@@ -349,17 +444,13 @@
   opacity: 0.4;
   cursor: default;
 }
-@media (max-height: 640px) {
-  .key {
-    min-height: 46px;
-  }
-}
 
 .actions {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 8px;
-  padding: 10px 0 14px;
+  /* 10 px снизу: плашка (и её скругления) всегда над таб-баром; цель 46 + 10 + 10 = 66 px из --chrome. */
+  padding: 10px 0;
 }
 .act {
   min-width: 0;
@@ -371,6 +462,7 @@
   gap: 6px;
   padding: 4px 6px;
   color: var(--label-2);
+  line-height: 1.2;
   font-size: clamp(12px, 0.82rem, 15px);
   transition:
     background-color 0.12s linear,
@@ -391,6 +483,23 @@
     flex-direction: column;
     gap: 2px;
     padding: 4px 2px;
+  }
+}
+/* PD-144: последнее средство — AX3 на узком экране: ТОЛЬКО иконки. Подпись скрыта визуально, но не убрана: имя кнопки задаёт
+   явный aria-label (controls.tsx). Атрибут data-type ставит shell/dynamicType.ts (media-query размер шрифта не видит). */
+@media (max-width: 360px) {
+  :root[data-type="ax3"] .act > span {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+  :root[data-type="ax3"] .act {
+    gap: 0;
   }
 }
 .act svg {
@@ -528,15 +637,24 @@
   width: 19px;
   height: 19px;
 }
-.newgame {
-  margin-top: 8px;
+/* PD-144: единственная кнопка нового пазла на решённой партии — вторичная («Новая сетка»), главная — «Watch your solve». */
+.btn-plain {
+  display: block;
   width: 100%;
-  min-height: 46px;
-  border-radius: 11px;
+  min-height: 48px;
+  border-radius: 13px;
+  padding: 10px 14px;
   color: var(--ink);
+  font-size: 1rem;
+  font-weight: 500;
+  text-align: center;
+  overflow-wrap: break-word;
+}
+.btn-plain:active {
   background: var(--ink-tint);
-  font-size: 0.95rem;
-  font-weight: 600;
+}
+.btn-plain.newgrid {
+  margin-top: 4px;
 }
 /* Low-замечание прохода 2: состояние «решено» — первый экран заканчивается на кнопках,
    Share не режется маской таб-бара. Запас снизу + scroll-edge маска, как в макете. */
@@ -795,7 +913,7 @@
     padding: 4px 0;
   }
   .card .share,
-  .card .newgame,
+  .card .newgrid,
   .card .tl-watch {
     min-height: 44px; /* PD-129: цель ≥ 44 pt и на низком экране (было 40) */
   }

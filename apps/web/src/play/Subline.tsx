@@ -13,6 +13,8 @@ interface SublineProps {
   help?: boolean;
   /** Тихий таймер; `null` — не показывать. */
   clock?: string | null;
+  /** PD-144: чип «Ink» в конце подписи партии Play (не часть склейки « · »; Today остаётся со словом режима). */
+  inkChip?: boolean;
 }
 
 /**
@@ -20,7 +22,7 @@ interface SublineProps {
  * `::before` — в макете PD-69 разделитель перед словом режима терял пробел: «Medium· Ink»). Слово режима —
  * отдельный элемент `.inkmark`: чернила + Semibold, в forced-colors подчёркнуто (ink.css); по слову, а не по цвету.
  */
-export function Subline({ day, difficulty, ink = false, help = false, clock = null }: SublineProps) {
+export function Subline({ day, difficulty, ink = false, help = false, clock = null, inkChip = false }: SublineProps) {
   const { t } = useTranslation();
   const parts: ReactNode[] = [];
   if (day) parts.push(day);
@@ -54,6 +56,11 @@ export function Subline({ day, difficulty, ink = false, help = false, clock = nu
           {part}
         </Fragment>
       ))}
+      {inkChip && (
+        <span className="mode-chip" data-testid="ink-chip">
+          {t("ink.chip")}
+        </span>
+      )}
     </p>
   );
 }

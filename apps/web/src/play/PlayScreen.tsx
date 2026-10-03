@@ -1,7 +1,6 @@
-import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { useTranslation } from "react-i18next";
 import type { HelpBlockId } from "../help/blocks";
-import { ActionSheet } from "../recovery/ActionSheet";
 import { useDeferredFocus } from "../shell/afterPaint";
 import { swallowGhostClick } from "../shell/ghostClick";
 import { TabHeader } from "../shell/TabHeader";
@@ -18,26 +17,27 @@ import {
   useClock,
   useHintAnnouncement,
 } from "./controls";
-import { formatDay } from "./format";
 import { HintButton } from "./HintButton";
 import { HintDock, HINT_DOCK_ID } from "./HintDock";
 import { HintRuleSheet, boldParts } from "./HintRuleSheet";
 import { useHintLadder } from "./hintStore";
-import { cellsLeft, isGridFull } from "./logic";
+import { canFill, cellsLeft, isGridFull } from "./logic";
+import { MoreMenu } from "./MoreMenu";
 import { PlaySetup } from "./PlaySetup";
 import { ResultCard } from "./ResultCard";
 import { playStore } from "./store";
 import { Subline } from "./Subline";
 
 /**
- * Экран Play (PD-11): подпись дня с тихим таймером → поле B Boxes → строка статуса «N cells left»
- * → панель 1–9 в один ряд с остатками → Notes / Undo / Erase. Партия локальная, на движке.
- * PD-74: партия начинается шагом «New puzzle» (сложность / Ink mode / Start); в чернилах панель без Undo.
- * PD-116: партия переживает перезагрузку (`store.ts`); сложность меняется только явной кнопкой «New puzzle» в
- * тулбаре — при наличии ходов за шитом подтверждения «Discard current puzzle?», затем шаг выбора.
+ * Экран Play (PD-11). PD-144 (вариант C): вкладка открывается ХАБОМ (`PlaySetup`: «Продолжить» / сложность / «Режим» /
+ * «Начать»), партию запускает игрок. Партия — нескроллящийся экран (`.play-fit`): подпись → поле B Boxes → строка статуса
+ * «N cells left» → панель 1–9 → Notes / Undo / Erase; обвязка `flex:none`, уступает только поле. Шапка партии:
+ * лампочка · шестерёнка · «⋯» (меню «Новая сетка» / «Заполнить кандидатами»). Решённая партия — карточка результата
+ * с одной кнопкой «Новая сетка». PD-116: партия переживает перезагрузку (`store.ts`); после неё всегда хаб, а идущая
+ * своя сетка — слот «Продолжить». Возврат на хаб подтверждения не требует: партия не выбрасывается, а встаёт на паузу.
  */
-export function PlayScreen({ onOpenSettings, onOpenHelp }: { onOpenSettings?: () => void; onOpenHelp?: (block: HelpBlockId) => void } = {}) {
-  const { t, i18n } = useTranslation();
+export function PlayScreen({ onOpenSettings, onOpenHelp, onOpenToday }: { onOpenSettings?: () => void; onOpenHelp?: (block: HelpBlockId) => void; onOpenToday?: () => void } = {}) {
+  const { t } = useTranslation();
   const snap = useSyncExternalStore(playStore.subscribe, playStore.getSnapshot);
   const clock = useClock(playStore);
   const { phase, play, difficulty } = snap;
@@ -84,7 +84,6 @@ export function PlayScreen({ onOpenSettings, onOpenHelp }: { onOpenSettings?: ()
   const cardRef = useRef<HTMLElement>(null);
   useDeferredFocus(cardRef, cardShown);
 
-  const locale = i18n.resolvedLanguage ?? "en";
   const interactive = phase === "playing" && play !== null;
   const left = play ? cellsLeft(play) : 81;
   // PD-117a: заполнена, но не решена — честная фраза вместо «0 cells left» и без счёта неверных клеток.
@@ -95,123 +94,105 @@ export function PlayScreen({ onOpenSettings, onOpenHelp }: { onOpenSettings?: ()
   // Клякса и отклик на отказ (PD-117b) вытесняют «N cells left» на время озвучивания (один live-регион — фразы не перебивают друг друга).
   const announcement = blotAnnouncement || hintAnnouncement || cellsAnnouncement;
 
-  // «New puzzle» (PD-116): с ходами — сначала подтверждение (шит), без ходов и после решения — сразу к выбору.
-  const [confirming, setConfirming] = useState(false);
+  // Фокус при смене хаб ↔ партия: кнопка, на которой он стоял («Новая сетка» в меню, строка «Продолжить»), исчезла вместе со
+  // старым экраном — фокус на заголовок вкладки, а не на <body> (VoiceOver/клавиатура не теряют место). Если фокус уже
+  // на живом элементе (повторный тап по вкладке), не трогаем.
+  const titleRef = useRef<HTMLHeadingElement>(null);
+  const wasHub = useRef(snap.hub);
   useEffect(() => {
-    if (phase !== "playing") setConfirming(false);
-  }, [phase]);
-  // PD-139: подсказка — тоже «потраченное»: партия с взятой подсказкой не сбрасывается молча.
-  const hasMoves = phase === "playing" && play !== null && (play.log.length > 0 || (snap.hints ?? 0) > 0);
-  const onNewPuzzle = () => {
-    if (hasMoves) setConfirming(true);
-    else playStore.toSetup();
-  };
+    if (wasHub.current !== snap.hub && (!document.activeElement || document.activeElement === document.body)) titleRef.current?.focus({ preventScroll: true });
+    wasHub.current = snap.hub;
+  }, [snap.hub]);
 
-  // Подпись дня не пересчитывается на каждый тик часов/кадр финала: Intl.DateTimeFormat на каждый рендер дорог при CPU 4x (PD-95).
-  const startedMs = snap.startedOn.getTime();
-  const dayLabel = useMemo(() => formatDay(new Date(startedMs), locale), [startedMs, locale]);
+  // Подпись партии — «Сложность · время» БЕЗ даты (макет PD-144): у своей сетки нет «дня», а дата удлиняла строку так, что
+  // на 320 pt при AX3 она переносилась и съедала резерв `--chrome` (он рассчитан на одну строку).
   const diffLabel = t(`difficulty.${difficulty}`);
   const showClock = phase === "playing" || phase === "solved";
   const ink = play?.ink === true;
 
+  const hub = snap.hub;
+  const restoring = snap.restoring === true;
+  const cardView = !hub && phase === "solved" && cardShown;
+  const fillState = ink ? "ink" : play && canFill(play) ? "ready" : "empty";
+  const own = playStore.hasSlot() && play ? { difficulty, left: cellsLeft(play), elapsedMs: playStore.getElapsedMs(), ink } : null;
+  const showLamp = !hub && !restoring && playStore.hintAllowed();
+  const showMore = !hub && !restoring && phase !== "solved";
+
   return (
-    <div className="play" onKeyDown={(e) => handleGameKey(e, playStore, ladder)}>
+    <div className={`play${hub ? " play-hub" : cardView ? "" : " play-fit"}`} onKeyDown={hub ? undefined : (e) => handleGameKey(e, playStore, ladder)}>
       {/* Live-регион для скринридера: «N cells left» только на порогах (см. хук выше). */}
       <p className="sr-only" role="status" aria-live="polite" aria-atomic="true">
         {announcement}
       </p>
       <TabHeader
-        title={<h1 className="title">{t("tabs.play")}</h1>}
-        onOpenSettings={onOpenSettings}
-        actions={
-          !snap.setup &&
-          !snap.restoring && (
-            <>
-              <button type="button" className="newpuzzle-btn" onClick={onNewPuzzle} data-testid="new-puzzle">
-                {t("play.newPuzzle")}
-              </button>
-              {playStore.hintAllowed() && <HintButton open={hint.open} used={snap.hints ?? 0} play onPress={() => ladder.toggle()} controls={HINT_DOCK_ID} />}
-            </>
-          )
+        title={
+          <h1 ref={titleRef} className="title" tabIndex={-1}>
+            {t("tabs.play")}
+          </h1>
         }
+        onOpenSettings={onOpenSettings}
+        actions={showLamp && <HintButton open={hint.open} used={snap.hints ?? 0} play onPress={() => ladder.toggle()} controls={HINT_DOCK_ID} />}
+        trailing={showMore && <MoreMenu fill={fillState} onNew={() => playStore.toHub()} onFill={() => playStore.fillCandidates()} />}
       />
-      {snap.setup ? (
-        snap.restoring ? null : <p className="subline">{t("ink.playSub")}</p>
-      ) : (
-        <Subline day={dayLabel} difficulty={diffLabel} ink={ink} help={snap.assisted === true} clock={showClock ? clock : null} />
-      )}
-
-      {snap.setup && snap.restoring ? null : snap.setup ? (
+      {restoring ? null : hub ? (
         <PlaySetup
-          difficulty={difficulty}
+          pick={snap.pick}
           ink={snap.inkNext}
-          onDifficulty={(d) => playStore.setDifficulty(d)}
+          own={own}
+          reselect={snap.reselect}
+          onPick={(d) => playStore.setDifficulty(d)}
           onInk={(on) => playStore.setInkNext(on)}
           onStart={() => playStore.start()}
+          onResume={() => playStore.resume()}
+          onOpenToday={() => onOpenToday?.()}
         />
-      ) : phase === "solved" && cardShown ? (
-        play && (
-          <ResultCard
-            play={play}
-            cardRef={cardRef}
-            title={t("solved.title")}
-            timelapse={{ date: localDate(snap.startedOn), difficulty }}
-            hints={snap.hints}
-            onOpenHelp={onOpenHelp}
-          >
-            {/* ПРОВИЗОРНО (PD-11): «New game» — минимум, чтобы из «решено» можно было выйти; в макете нет. */}
-            <button type="button" className="newgame" onClick={() => playStore.toSetup()}>
-              {t("solved.newGame")}
-            </button>
-          </ResultCard>
-        )
       ) : (
         <>
-          <Board snap={snap} store={playStore} dim={phase === "solved"} hintMarks={hint.marks} />
-
-          {/* Свободное место — МЕЖДУ полем и панелью (макет, находка 1); в зазоре — статус. */}
-          <div className="gap">
-            {phase === "loading" && (
-              <p className="status" role="status">
-                {t("play.preparing")}
-              </p>
-            )}
-            {phase === "error" && (
-              <p className="status" role="alert">
-                {t("play.failed")}{" "}
-                <button type="button" className="link" onClick={() => playStore.newGame()}>
-                  {t("play.retry")}
+          <Subline day="" difficulty={diffLabel} inkChip={ink} help={snap.assisted === true} clock={showClock ? clock : null} />
+          {cardView ? (
+            play && (
+              <ResultCard play={play} cardRef={cardRef} title={t("solved.title")} timelapse={{ date: localDate(snap.startedOn), difficulty }} hints={snap.hints} onOpenHelp={onOpenHelp}>
+                {/* PD-144: единственная кнопка нового пазла на экране (шапка на решённой партии действий не несёт). */}
+                <button type="button" className="btn-plain newgrid" onClick={() => playStore.toHub()} data-testid="new-puzzle">
+                  {t("play.newPuzzle")}
                 </button>
-              </p>
-            )}
-            {/* Пока док открыт, строка «N cells left» скрыта: сообщение на экране одно (макет PD-133 §4). */}
-            {(phase === "playing" || phase === "solved") && !hint.open && (hint.nudge ? (
-              <p className="status nudge" data-testid="hint-nudge">
-                {boldParts(t("hint.nudge"))}
-              </p>
-            ) : (
-              <StatusLine left={left} full={full} hint={snap.hint} />
-            ))}
-          </div>
+              </ResultCard>
+            )
+          ) : (
+            <>
+              <Board snap={snap} store={playStore} dim={phase === "solved"} hintMarks={hint.marks} />
 
-          {hint.open ? <HintDock ladder={ladder} state={hint} play /> : <GamePad snap={snap} store={playStore} />}
+              {/* Свободное место — МЕЖДУ полем и панелью (макет, находка 1); в зазоре — статус. Гибкий — только он (и поле). */}
+              <div className="gap">
+                {phase === "loading" && (
+                  <p className="status" role="status">
+                    {t("play.preparing")}
+                  </p>
+                )}
+                {phase === "error" && (
+                  <p className="status" role="alert">
+                    {t("play.failed")}{" "}
+                    <button type="button" className="link" onClick={() => playStore.newGame()}>
+                      {t("play.retry")}
+                    </button>
+                  </p>
+                )}
+                {/* Пока док открыт, строка «N cells left» скрыта: сообщение на экране одно (макет PD-133 §4). */}
+                {(phase === "playing" || phase === "solved") && !hint.open && (hint.nudge ? (
+                  <p className="status nudge" data-testid="hint-nudge">
+                    {boldParts(t("hint.nudge"))}
+                  </p>
+                ) : (
+                  <StatusLine left={left} full={full} hint={snap.hint} />
+                ))}
+              </div>
+
+              {hint.open ? <HintDock ladder={ladder} state={hint} play /> : <GamePad snap={snap} store={playStore} />}
+            </>
+          )}
         </>
       )}
       {hint.rule && <HintRuleSheet play onGo={() => ladder.confirmRule()} onCancel={() => ladder.dismissRule()} />}
-      {confirming && (
-        <ActionSheet
-          title={t("play.discardTitle")}
-          message={t("play.discardMessage")}
-          actionLabel={t("play.discard")}
-          destructive
-          cancelLabel={t("play.keepPlaying")}
-          onAction={() => {
-            setConfirming(false);
-            playStore.toSetup();
-          }}
-          onCancel={() => setConfirming(false)}
-        />
-      )}
     </div>
   );
 }

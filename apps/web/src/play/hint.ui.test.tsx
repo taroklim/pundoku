@@ -44,7 +44,7 @@ const flags: FlagStore = { get: () => true, set: () => undefined };
 function ladderFor(name: FixtureName): { ladder: HintLadder; store: PlayStore } {
   const store = new PlayStore();
   const inner = store as unknown as { snap: Record<string, unknown> };
-  inner.snap = { ...inner.snap, phase: "playing", play: playOf(name), selected: null };
+  inner.snap = { ...inner.snap, hub: false, phase: "playing", play: playOf(name), selected: null };
   const ladder = new HintLadder(store, { flags });
   ladder.attach();
   return { ladder, store };

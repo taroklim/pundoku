@@ -92,10 +92,25 @@ button {
   overflow-y: auto;
   overscroll-behavior: contain;
   -webkit-overflow-scrolling: touch;
-  /* Место под таб-бар (макет: 72px + нижний inset). */
-  padding-bottom: calc(72px + var(--sa-bot));
+  /* Правило «peek» (PD-144, §7.12): нижний отступ прокручиваемой панели = 16 px + высота таб-бара + нижний inset, чтобы последний
+     блок (на Today — секция Grid ∞) при прокрутке до конца целиком лежал НАД таб-баром с воздухом, а не под ним (раньше 72 px). */
+  padding-bottom: calc(16px + var(--tabbar-h) + var(--sa-bot));
   display: flex;
   flex-direction: column;
+}
+/* PD-144: хаб Play и экран партии НЕ прокручиваются: оболочка отдаёт им ровно область между шапкой и таб-баром, а прокрутка
+   (у хаба) живёт внутри `.hub-scroll`. Таб-бар — `--tabbar-h` (без нижнего inset): 64 px, а при крупном
+   тексте подпись вкладки (clamp 11…13 px) вытягивает его до 67 px. В макете он 51 px — настоящий выше (README, развилка). */
+:root {
+  --tabbar-h: calc(64px + (clamp(11px, 0.65rem, 13px) - 11px) * 1.5);
+}
+.scroll:has(.play-fit, .play-hub) {
+  overflow: hidden;
+  padding-bottom: calc(var(--tabbar-h) + var(--sa-bot));
+}
+.scroll:has(.play-fit, .play-hub) > .panel,
+.scroll:has(.play-fit, .play-hub) .play {
+  min-height: 0;
 }
 /* Панель вкладки занимает всю прокручиваемую область; фокус на ней не рисуем рамкой. */
 .panel {
@@ -128,10 +143,16 @@ button {
   gap: 8px;
   min-width: 0;
 }
+/* PD-144: три цели 44 pt в шапке партии (лампочка · шестерёнка · «⋯») не должны раздвигать шапку по высоте и сужать заголовок:
+   поля соседних иконок отрицательные (визуальный шаг ≈ как у двух иконок), правая — выровнена по краю экрана. */
+.toolbar-end > .gear-btn:not(:last-child) {
+  margin-right: -6px;
+}
 /* Заголовок вкладки не сжимается до переноса по буквам: уступает кнопка «New puzzle» (PD-139, лампочка отняла 46 pt). */
 .toolbar > .title {
   flex: 0 0 auto;
-  max-width: 50%;
+  /* Оставляем место одной цели 44 pt + зазору; при трёх иконках (партия Play) прежние 50% рвали «Игра» по буквам на 320 pt/AX3. */
+  max-width: calc(100% - 56px);
 }
 .toolbar-end .difficulty {
   max-width: 100%;
@@ -169,9 +190,15 @@ button {
   font-size: 1.62rem;
   font-weight: 700;
   letter-spacing: -0.02em;
+  /* PD-144: явная высота строки — по ней считается обвязка нескроллящегося экрана (--chrome: 1.62rem × 1.2 = 1.944rem ≈ 2rem). */
+  line-height: 1.2;
   margin: 0;
   min-width: 0;
-  overflow-wrap: anywhere;
+  /* break-word, а не anywhere: слово рвётся только если не помещается в строку целиком (PD-144, макет §4). */
+  overflow-wrap: break-word;
+}
+.title:focus {
+  outline: none;
 }
 .subline {
   margin: 2px 0 0;
@@ -259,6 +286,18 @@ button {
   .tab[aria-selected="true"] .lab {
     text-decoration: underline;
   }
+}
+
+/* PD-144: «ниже есть ещё» без полосы прокрутки — липкая растушёвка. Она ПОСЛЕДНИЙ ребёнок прокручиваемого текста и занимает
+   собственные 16 px после него, поэтому последнюю строку никогда не закрывает; докрутили до конца — лежит на пустой полосе и
+   не видна, выше — текст под ней гаснет, а не обрывается жёсткой кромкой. Ширину по краям задаёт контейнер (margin-inline). */
+.scroll-fade {
+  position: sticky;
+  bottom: 0;
+  flex: none;
+  height: 16px;
+  pointer-events: none;
+  background: linear-gradient(to bottom, transparent, var(--elev));
 }
 
 /* Только для скринридеров (live-регионы). */
