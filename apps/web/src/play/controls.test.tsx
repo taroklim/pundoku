@@ -185,6 +185,42 @@ describe("PD-119: Fill candidates — долгий тап по Notes", () => {
     expect(store.toggleNotesMode).toHaveBeenCalledTimes(1);
   });
 
+  it("QA PD-143 D1: хвост жеста (указательный click до нового нажатия) не жмёт Fill/Cancel и не закрывает шит по затемнению", () => {
+    const store = mkStore();
+    act(() => root.render(<GamePad snap={snapOf()} store={store as never} />));
+    down();
+    wait(LONG_PRESS_MS);
+    const go = document.querySelector<HTMLElement>('[data-testid="action-sheet-go"]')!;
+    const cancel = document.querySelector<HTMLElement>('[data-testid="action-sheet-cancel"]')!;
+    const scrim = document.querySelector<HTMLElement>('[data-testid="action-sheet-scrim"]')!;
+    const pointerClick = (el: HTMLElement) => act(() => void el.dispatchEvent(new MouseEvent("click", { bubbles: true, cancelable: true, detail: 1 })));
+    up();
+    // Палец мог быть отпущен сильно позже открытия (не «окно N мс») — защита снимается только новым нажатием.
+    wait(5000);
+    pointerClick(go);
+    pointerClick(cancel);
+    pointerClick(scrim);
+    expect(store.fillCandidates).not.toHaveBeenCalled();
+    expect(sheet()).not.toBeNull();
+    // Осознанный тап: pointerdown внутри шита, затем click — срабатывает сразу.
+    act(() => void go.dispatchEvent(new Event("pointerdown", { bubbles: true })));
+    pointerClick(go);
+    expect(store.fillCandidates).toHaveBeenCalledTimes(1);
+    expect(sheet()).toBeNull();
+  });
+
+  it("QA PD-143 D1: клавиатурный click (detail 0) и Esc работают сразу, без нажатия и без задержки", () => {
+    const store = mkStore();
+    act(() => root.render(<GamePad snap={snapOf()} store={store as never} />));
+    act(() => void notesBtn().dispatchEvent(new MouseEvent("contextmenu", { bubbles: true, cancelable: true })));
+    act(() => void document.querySelector<HTMLElement>('[data-testid="action-sheet-go"]')!.click()); // Enter/пробел: detail 0
+    expect(store.fillCandidates).toHaveBeenCalledTimes(1);
+    act(() => void notesBtn().dispatchEvent(new MouseEvent("contextmenu", { bubbles: true, cancelable: true })));
+    expect(sheet()).not.toBeNull();
+    act(() => void document.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true })));
+    expect(sheet()).toBeNull();
+  });
+
   it("«Cancel» закрывает шит и ничего не заполняет; тап по Notes после этого работает", () => {
     const store = mkStore();
     act(() => root.render(<GamePad snap={snapOf()} store={store as never} />));

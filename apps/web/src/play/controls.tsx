@@ -328,6 +328,7 @@ export function GamePad({ snap, store }: { snap: PlaySnapshot; store: GameStore 
             store.fillCandidates();
           }}
           onCancel={closeFill}
+          guardTail
         />
       )}
     </div>
