@@ -149,10 +149,29 @@ body{
 }
 button{ font:inherit; color:inherit; background:none; border:0; padding:0; cursor:pointer; touch-action:manipulation; -webkit-appearance:none; appearance:none; text-align:left; }
 :focus-visible{ outline:2px solid var(--ink); outline-offset:2px; border-radius:6px; }
-/* A row lives inside a card with `overflow:hidden`, so an outline drawn OUTSIDE the row is
-   clipped on the first and last row. Inside the card the ring is drawn inset instead. */
+/* FOCUS RING INSIDE CLIPPING CONTAINERS.
+   Four ancestors in this mockup clip: `.card{overflow:hidden}`, `.menu{overflow:hidden}`,
+   `.asheet-card{overflow:hidden}` and the two scroll areas — note that `overflow-y:auto` with
+   no `overflow-x` computes x to `auto` as well, so `.sheet-scroll` / `.asheet-scroll` clip
+   SIDEWAYS too. Any ring drawn outside an element's border box is therefore cut on at least
+   one edge. Everything focusable inside those containers draws its ring INWARD with an inset
+   shadow, which no ancestor can clip; the transparent outline is kept so Windows
+   forced-colors (which ignores box-shadow) still shows a ring. */
 .card .row:focus-visible,
-.menu button:focus-visible{ outline-offset:-3px; border-radius:0; }
+.menu button:focus-visible,
+.sheet .mode-opt:focus-visible,
+.asheet-act:focus-visible,
+.asheet-cancel:focus-visible{
+  outline:2px solid transparent; outline-offset:-2px;
+  box-shadow: inset 0 0 0 2px var(--ink);
+}
+@media (forced-colors: active){
+  .card .row:focus-visible,
+  .menu button:focus-visible,
+  .sheet .mode-opt:focus-visible,
+  .asheet-act:focus-visible,
+  .asheet-cancel:focus-visible{ outline-color: Highlight; }
+}
 
 .frame{
   position:relative; width:100%; height:100dvh;
@@ -249,7 +268,9 @@ button{ font:inherit; color:inherit; background:none; border:0; padding:0; curso
   content:""; position:absolute; left:max(16px, var(--sa-l)); right:0; top:0; height:1px;
   background:var(--hairline); transform:scaleY(.5); transform-origin:top;
 }
-.row .lab{ flex:1 1 auto; min-width:0; overflow-wrap:break-word; hyphens:auto; }
+/* No `hyphens:auto`: WebKit hyphenates uk/ru mid-word in places where the word would have fit
+   anyway. `overflow-wrap:break-word` breaks only a word that cannot fit a line of its own. */
+.row .lab{ flex:1 1 auto; min-width:0; overflow-wrap:break-word; }
 .row .val{
   margin-left:auto; color:var(--label-2); text-align:right;
   overflow-wrap:break-word; font-variant-numeric:tabular-nums;
@@ -273,7 +294,7 @@ button.row:active{ background:var(--ink-tint); }
    "Головоломка дня" alone is wider than the row, so the line has to be allowed to break and
    the chip has to be allowed to fall to the next line. */
 .row.two .l1{ display:flex; flex-wrap:wrap; align-items:center; gap:4px 6px; min-width:0; }
-.row.two .l1 b{ min-width:0; overflow-wrap:break-word; hyphens:auto; }
+.row.two .l1 b{ min-width:0; overflow-wrap:break-word; }
 .row.two .l2{ color:var(--label-2); font-size:.88rem; overflow-wrap:break-word; font-variant-numeric:tabular-nums; }
 .row.two .chev{ position:absolute; right:16px; top:50%; transform:translateY(-50%); }
 .row.two .glyph{ flex:none; width:19px; height:19px; color:var(--ink); }
@@ -350,7 +371,11 @@ button.row:active{ background:var(--ink-tint); }
 .box .cell:nth-child(3n){ box-shadow: inset 0 -0.5px 0 var(--rule-thin); }
 .box .cell:nth-child(n+7){ box-shadow: inset -0.5px 0 0 var(--rule-thin); }
 .box .cell:nth-child(9){ box-shadow:none; }
-.cell .d{ position:relative; z-index:2; line-height:1; font-size:6.5cqi; }
+/* Digits and notes are sized from the CELL (`--s`), not from the container width: on a short
+   screen the board is capped by height, so it is narrower than its wrapper and anything sized
+   in `cqi` overflows the cell. The grid is the documented Dynamic Type exception (QA PD-108):
+   it scales with the board, never with the text size. */
+.cell .d{ position:relative; z-index:2; line-height:1; font-size:calc(var(--s) * .62); }
 .cell .d.given{ font-family:var(--font-serif); font-weight:600; color:var(--label); }
 .cell .d.player{ font-family:var(--font-sans); font-weight:500; color:var(--ink); }
 .cell.sel{ background:color-mix(in srgb, var(--ink) 16%, var(--elev)); }
@@ -358,11 +383,17 @@ button.row:active{ background:var(--ink-tint); }
   position:absolute; inset:0; z-index:2; display:grid; padding:4%;
   grid-template-columns:repeat(3,minmax(0,1fr)); grid-template-rows:repeat(3,minmax(0,1fr));
 }
-.marks span{ font-size:11px; line-height:1; color:var(--notes); display:grid; place-items:center; }
+/* Three note glyphs across a 23.9 px cell (320 pt, board capped by height) need ~7 px, not the
+   fixed 11 px that fits a 38.9 px cell on 390 pt — at the fixed size they were clipped. */
+.marks span{
+  font-size:max(7px, calc(var(--s) * .30)); line-height:1;
+  color:var(--notes); display:grid; place-items:center;
+}
 
+/* >= 8 px of air under the board before the status line, at every text size. */
 .gap{
-  flex:1 1 auto; min-height:24px; display:flex; align-items:center; justify-content:center;
-  padding:4px max(16px, var(--sa-r)) 4px max(16px, var(--sa-l));
+  flex:1 1 auto; min-height:32px; display:flex; align-items:center; justify-content:center;
+  padding:8px max(16px, var(--sa-r)) 8px max(16px, var(--sa-l));
 }
 .status{ margin:0; color:var(--label-2); font-size:.88rem; font-variant-numeric:tabular-nums; text-align:center; }
 
@@ -378,13 +409,18 @@ button.row:active{ background:var(--ink-tint); }
 .fill-line svg{ width:18px; height:18px; flex:none; }
 .fill-line:active{ opacity:.8; }
 
-.pad-wrap{ padding:0 max(16px, var(--sa-r)) 0 max(16px, var(--sa-l)); }
+.pad-wrap{ padding:0 max(16px, var(--sa-r)) 0 max(16px, var(--sa-l)); container-type:inline-size; }
 .pad{ display:grid; grid-template-columns:repeat(9,1fr); gap:4px; }
 .key{
   min-width:0; min-height:56px; border-radius:9px; background:var(--elev); color:var(--label);
   display:flex; flex-direction:column; align-items:center; justify-content:center; gap:1px;
+  overflow:hidden;
 }
-.key .kd{ font-size:1.24rem; font-weight:500; line-height:1.05; }
+/* The KEY keeps its size (it is a touch target and must not shrink); only the GLYPH is capped
+   so it cannot grow wider than its key. At 320 pt a key is 28.4 px wide, so an AX3 digit of
+   49.6 px spilled over its neighbours and the 4 px gaps disappeared. 7.5cqi = 21.6 px there,
+   while on 390 pt the normal 1.24rem still wins — ordinary text sizes are untouched. */
+.key .kd{ font-size:min(1.24rem, 7.5cqi); font-weight:500; line-height:1.05; }
 .key .kr{ font-size:11px; line-height:1; color:var(--label-2); font-variant-numeric:tabular-nums; }
 .actions{ display:grid; grid-template-columns:repeat(3,1fr); gap:8px; padding:10px 0 14px; }
 .actions.four{ grid-template-columns:repeat(4,1fr); }
@@ -459,15 +495,29 @@ button.row:active{ background:var(--ink-tint); }
 .grabber{ width:36px; height:5px; border-radius:3px; background:var(--hairline); margin:0 auto 6px; flex:none; }
 .sheet > h2, .sheet > .btn-primary{ flex:none; }
 .sheet h2{ margin:0; font-size:1.24rem; font-weight:700; letter-spacing:-.02em; overflow-wrap:break-word; }
-.sheet .sheet-scroll{ overflow-y:auto; overscroll-behavior:contain; min-height:0; display:flex; flex-direction:column; gap:8px; }
-/* "There is more below" without a scrollbar: a sticky fade pinned to the bottom of the scroll
-   area. When the content is shorter than the area it sits over empty space and is invisible,
-   so a screenshot never shows a sentence that looks chopped off by accident. */
+/* 3/4 px of inner padding, cancelled by an equal negative margin: the layout does not move, but
+   nothing inside ever touches the clipping edge of the scroll box — rounded corners and rings
+   keep their air on all four sides. */
+.sheet .sheet-scroll{
+  overflow-y:auto; overscroll-behavior:contain; min-height:0;
+  display:flex; flex-direction:column; gap:8px;
+  padding:3px 4px; margin:-3px -4px;
+}
+/* A flex item in a column shrinks by default: with the sheet capped in height the option rows
+   were squashed below their content and the third line of the description escaped its own
+   background. Items keep their natural height; the CONTAINER scrolls, not the option. */
+.sheet .sheet-scroll > *{ flex:none; }
+/* "There is more below" without a scrollbar: a sticky strip that is the LAST child of the
+   scroll area and occupies its own 16 px of space after the text — it never covers the final
+   line. Scrolled to the end it lies over that blank strip and is invisible; scrolled up, the
+   text passing under it fades instead of ending on a hard edge. */
 .scroll-fade{
-  position:sticky; bottom:0; flex:none; height:16px; margin-top:-16px; pointer-events:none;
+  position:sticky; bottom:0; flex:none; height:16px; pointer-events:none;
   background:linear-gradient(to bottom, transparent, var(--elev));
 }
-.sheet-scroll .scroll-fade{ margin-inline:-20px; }
+/* The fade spans its container's padding box exactly — never wider, or the scroll box would
+   gain a horizontal scrollbar. */
+.sheet-scroll .scroll-fade{ margin-inline:-4px; }
 .asheet-scroll .scroll-fade{ margin-inline:-16px; }
 /* Large text inside a sheet: tighter leading and padding buy whole lines back before anything
    has to scroll at all. The type itself still scales — nothing here caps Dynamic Type. */
@@ -789,7 +839,7 @@ button.row:active{ background:var(--ink-tint); }
   <div class="asheet" id="discard" hidden role="dialog" aria-modal="true">
     <div class="asheet-card">
       <div class="asheet-scroll">
-        <h2 data-t="discardTitle">Discard your unfinished puzzle?</h2>
+        <h2 data-t="discardTitle">Discard this puzzle?</h2>
         <p data-t="discardMsg">Your progress on it will be lost. Today’s puzzle is not affected.</p>
         <div class="scroll-fade" aria-hidden="true"></div>
       </div>
@@ -871,7 +921,9 @@ button.row:active{ background:var(--ink-tint); }
       left:function(n){ return n + (n === 1 ? " cell left" : " cells left"); },
       fillAction:"Fill candidates", howWorks:"How Pundoku works",
       notes:"Notes", undo:"Undo", erase:"Erase",
-      discardTitle:"Discard your unfinished puzzle?",
+      /* Short titles on purpose: at AX3 on 320 pt a long compound word (ru «незавершённую»)
+         is wider than the line and gets broken mid-word. */
+      discardTitle:"Discard this puzzle?",
       discardMsg:"Your progress on it will be lost. Today’s puzzle is not affected.",
       discard:"Discard", keepPlaying:"Keep playing",
       solvedTitle:"Solved", rTime:"Time", rFixes:"Fixes", clean:"clean",
@@ -901,8 +953,7 @@ button.row:active{ background:var(--ink-tint); }
       left:function(n){ return "залишилось " + n; },
       fillAction:"Заповнити кандидатами", howWorks:"Як працює Pundoku",
       notes:"Нотатки", undo:"Скасувати", erase:"Стерти",
-      discardTitle:"Відкинути незавершену сітку?",
-      /* Short on purpose: at AX3 on 320 pt every word costs a line. */
+      discardTitle:"Відкинути цю сітку?",
       discardMsg:"Прогрес у ній буде втрачено. Головоломка дня не постраждає.",
       discard:"Відкинути", keepPlaying:"Грати далі",
       solvedTitle:"Розв’язано", rTime:"Час", rFixes:"Виправлення", clean:"чисто",
@@ -932,7 +983,7 @@ button.row:active{ background:var(--ink-tint); }
       left:function(n){ return "осталось " + n; },
       fillAction:"Заполнить кандидатами", howWorks:"Как устроен Pundoku",
       notes:"Заметки", undo:"Отменить", erase:"Стереть",
-      discardTitle:"Отбросить незавершённую сетку?",
+      discardTitle:"Отбросить эту сетку?",
       discardMsg:"Прогресс в ней будет потерян. Головоломка дня не пострадает.",
       discard:"Отбросить", keepPlaying:"Играть дальше",
       solvedTitle:"Решено", rTime:"Время", rFixes:"Исправления", clean:"чисто",
