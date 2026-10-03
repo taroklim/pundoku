@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en"
       data-screen="hub" data-cont="both" data-mode="classic" data-sheet="none"
-      data-fill="a" data-notes="on" data-menu="closed" data-slot="off"
+      data-fill="b" data-notes="on" data-menu="closed"
       data-lang="en" data-type="default" data-safearea="sim" data-motion="system"
       data-mock="closed">
 <head>
@@ -23,10 +23,13 @@
     * Ink is a "Mode" row in the hub plus a chip in the header while a game runs;
     * the archive has ONE door only — Year. There is no "Past days" row here
       (variant C in research/usability-2026-10/ia-review.md §3.4 had one; the owner removed it);
-    * a slot is reserved for a release-2 mode section (Liar / Melody / Pet). The slot is a
-      POSITION in the layout, drawn only in the dedicated review state (data-slot="on") with a
-      dashed "reserved" marker. Nothing about those modes is invented here and nothing ships
-      until the owner says which mode becomes a section.
+    * APPROVED 2026-10-03: the visible entry point for "Fill candidates" is the More menu in the
+      game toolbar (variant B). The mockup therefore OPENS on data-fill="b"; variants A and C are
+      kept switchable as the rejected evidence, not as something to build;
+    * APPROVED 2026-10-03: the release-2 mode section (Liar / Melody / Pet) is NOT in the product.
+      Nothing is drawn for it any more — no plate, no dashed marker, no label. All that is left
+      is the position in the layout (the 20 px above the pinned bar). The data-slot review state
+      and its plate were removed with this decision.
 
   Visual language inherited verbatim from the approved mockups pd7-board-variants.html
   (board variant B "Boxes"), pd24-year-variants.html, pd27-settings.html and pd133-hint-ladder.html:
@@ -38,9 +41,9 @@
     screen    hub · game · solved · headers (title-baseline comparison, review only)
     continue  both · free · day · none
     mode      classic · ink
-    fill      a (line in the gap) · b (More menu in the toolbar) · c (fourth button — rejected)
+    fill      b (More menu — CHOSEN) · a (line in the gap — rejected) · c (fourth button — rejected)
     sheet     none · mode · discard
-    slot      off · on          notes  on · off          menu  closed · open
+    notes     on · off          menu  closed · open
     language  en · uk · ru      text   17 / 40 px (AX3)
 -->
 <style>
@@ -328,16 +331,12 @@ button.row:active{ background:var(--ink-tint); }
 }
 .btn-primary:active{ opacity:.85; }
 
-/* The release-2 slot. Review only: it is a POSITION, not a promise. tab-bars.md / writing.md are
-   both against showing something that does not exist yet, so the product ships this section only
-   once the owner names the mode and its mechanics are decided. */
-.slot{
-  margin:20px max(16px, var(--sa-r)) 0 max(16px, var(--sa-l));
-  border:1.5px dashed var(--ink); border-radius:12px; padding:12px 14px;
-  color:var(--label-2); font-size:.82rem; line-height:1.35;
-}
-.slot b{ display:block; color:var(--ink); font-size:.76rem; letter-spacing:.06em; text-transform:uppercase; margin-bottom:4px; }
-:root:not([data-slot="on"]) .slot{ display:none; }
+/* RELEASE-2 MODE SECTION: position only, nothing drawn (owner decision 2026-10-03).
+   tab-bars.md / writing.md are both against showing something that does not exist yet, and the
+   owner has not chosen the mode — so there is no plate, no dashed marker and no label here, only
+   the space the future section would start after. Zero-content element on purpose: it must not
+   be mistaken for a placeholder to style. */
+.slot-gap{ height:20px; }
 
 /* ==================================================================
    5. BOARD + PAD — board variant B "Boxes", unchanged from pd7 / pd133.
@@ -652,8 +651,8 @@ button.row:active{ background:var(--ink-tint); }
   overflow-wrap:break-word;
 }
 
-/* FILL VARIANT B: a More menu in the toolbar.
-   toolbars.md: "Add a More menu to contain additional actions." It would also be the home for
+/* FILL VARIANT B — CHOSEN (owner 2026-10-03): a More menu in the toolbar.
+   toolbars.md: "Add a More menu to contain additional actions." It is also the home of
    "New puzzle", which is what truncates at 320 pt in uk/ru. */
 .menu{
   position:absolute; z-index:31; top:calc(var(--sa-top) + 54px); right:10px;
@@ -667,6 +666,12 @@ button.row:active{ background:var(--ink-tint); }
 }
 .menu button + button{ border-top:1px solid var(--hairline); }
 .menu svg{ width:18px; height:18px; flex:none; color:var(--label-2); }
+.menu .mi{ display:flex; flex-direction:column; align-items:flex-start; gap:1px; text-align:left; }
+/* An unavailable item is DIMMED AND EXPLAINED, never silently removed: the menu keeps the same
+   items in the same order in both modes, so the one in Ink does not look like a different menu.
+   The reason rides with the item, because a pull-down has nowhere else to put it. */
+.menu button[aria-disabled="true"]{ opacity:.45; }
+.menu .why{ font-size:.78rem; color:var(--label-2); line-height:1.2; overflow-wrap:break-word; }
 
 /* ==================================================================
    8. TAB BAR — the only glass, with its fallbacks.
@@ -789,11 +794,10 @@ button.row:active{ background:var(--ink-tint); }
         <p class="sec-foot" id="modeFoot" data-t="footClassic">Free games aren’t recorded in your year.</p>
       </section>
 
-      <!-- Reserved position for a release-2 mode SECTION. Review only. -->
-      <div class="slot">
-        <b data-t="slotTag">Reserved · release 2</b>
-        <span data-t="slotBody">A separate section for one of the release-2 modes goes here, under the hub’s own content and above the tab bar. Nothing is drawn inside it: which mode becomes a section, and what it does, is the owner’s decision.</span>
-      </div>
+      <!-- POSITION RESERVED for a release-2 mode section (Liar / Melody / Pet). Owner decision
+           2026-10-03: the mode is not chosen, so NOTHING ships here — no plate, no placeholder,
+           no label. Only this position in the layout and the space above the pinned bar. -->
+      <div class="slot-gap" aria-hidden="true"></div>
     </div>
 
     <div class="hub-bar">
@@ -810,16 +814,19 @@ button.row:active{ background:var(--ink-tint); }
         <button class="icon-btn" aria-label="Hint" data-t-aria="hint">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9.3 18h5.4"/><path d="M10.2 20.7h3.6"/><path d="M12 3.3a5.9 5.9 0 0 0-3.4 10.7c.5.4.8 1 .8 1.6v.4h5.2v-.4c0-.6.3-1.2.8-1.6A5.9 5.9 0 0 0 12 3.3Z"/></svg>
         </button>
-        <!-- Variant A/C: "New puzzle" is an icon, never a truncating label (320 pt uk/ru). -->
+        <!-- Rejected variants A/C only: "New puzzle" as its own icon. In the CHOSEN variant B it
+             is the first item of the More menu, so this button is hidden. -->
         <button class="icon-btn" id="newBtn" aria-label="New puzzle" data-t-aria="newHead">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="3.5" width="12" height="12" rx="2.6"/><path d="M7.5 3.5v12M11.5 3.5v12M3.5 7.5h12M3.5 11.5h12"/><path d="M18.5 14.5v7M15 18h7"/></svg>
         </button>
-        <!-- Variant B: a More menu instead, which would also hold "New puzzle". -->
-        <button class="icon-btn" id="moreBtn" aria-label="More" data-t-aria="more" aria-expanded="false" hidden>
-          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="5.5" cy="12" r="1.9"/><circle cx="12" cy="12" r="1.9"/><circle cx="18.5" cy="12" r="1.9"/></svg>
-        </button>
         <button class="icon-btn" aria-label="Settings" data-t-aria="settings">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="3.2"/><path d="M12 2.9v2.3M12 18.8v2.3M4.4 12H2.1M21.9 12h-2.3M6.7 6.7 5.1 5.1M18.9 18.9l-1.6-1.6M17.3 6.7l1.6-1.6M5.1 18.9l1.6-1.6"/></svg>
+        </button>
+        <!-- CHOSEN (owner 2026-10-03): the More menu, which also holds "New puzzle".
+             Toolbar order in a running game is the owner's: hint lamp · settings · More — and
+             "More" last is also the iOS habit (toolbars.md). -->
+        <button class="icon-btn" id="moreBtn" aria-label="More" data-t-aria="more" aria-expanded="false" aria-haspopup="menu" hidden>
+          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="5.5" cy="12" r="1.9"/><circle cx="12" cy="12" r="1.9"/><circle cx="18.5" cy="12" r="1.9"/></svg>
         </button>
       </div>
     </header>
@@ -932,16 +939,20 @@ button.row:active{ background:var(--ink-tint); }
     <button class="asheet-cancel" data-t="keepPlaying">Keep playing</button>
   </div>
 
-  <!-- More menu (fill variant B) -->
+  <!-- THE MORE MENU — the chosen entry point (owner 2026-10-03). Exactly two items in release 1,
+       in this order; "How Pundoku works" joins them only when that screen exists (PD-120) — a
+       menu item must not lead to a screen that has not been built. -->
   <div class="menu" id="menu" hidden role="menu" aria-label="More">
     <button role="menuitem"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="3.5" width="12" height="12" rx="2.6"/><path d="M18.5 14.5v7M15 18h7"/></svg><span data-t="newHead">New puzzle</span></button>
-    <button role="menuitem"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="3.5" width="17" height="17" rx="3"/><path d="M9 3.5v17M15 3.5v17M3.5 9h17M3.5 15h17"/></svg><span data-t="fillAction">Fill candidates</span></button>
-    <button role="menuitem"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9.6 9.3a2.5 2.5 0 1 1 3.3 2.4c-.6.2-.9.8-.9 1.4v.5"/><path d="M12 16.8h.01"/></svg><span data-t="howWorks">How Pundoku works</span></button>
+    <button role="menuitem" id="menuFill"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="3.5" width="17" height="17" rx="3"/><path d="M9 3.5v17M15 3.5v17M3.5 9h17M3.5 15h17"/></svg><span class="mi"><span data-t="fillAction">Fill candidates</span><span class="why" id="menuFillWhy" data-t="fillInkOff" hidden>Not available in Ink</span></span></button>
   </div>
 
   <nav class="tabbar">
     <span class="tab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><rect x="3.5" y="4.5" width="17" height="16" rx="3"/><path d="M3.5 9h17M8 3v3M16 3v3"/></svg><span data-t="today">Today</span></span>
-    <span class="tab sel"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><rect x="3.5" y="3.5" width="17" height="17" rx="3"/><path d="M9 3.5v17M15 3.5v17M3.5 9h17M3.5 15h17"/></svg><span data-t="play">Play</span></span>
+    <!-- Tapping the ALREADY SELECTED Play tab returns to the hub (approved 2026-10-03). It is
+         the second way back, next to "New puzzle" in the More menu, and the system habit on iOS
+         (a second tap on the current tab pops the tab to its root). -->
+    <span class="tab sel" id="tabPlay"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><rect x="3.5" y="3.5" width="17" height="17" rx="3"/><path d="M9 3.5v17M15 3.5v17M3.5 9h17M3.5 15h17"/></svg><span data-t="play">Play</span></span>
     <span class="tab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><rect x="3.5" y="4.5" width="17" height="16" rx="3"/><path d="M7 9h3M14 9h3M7 13h3M14 13h3M7 17h3"/></svg><span data-t="year">Year</span></span>
   </nav>
 </div>
@@ -955,15 +966,13 @@ button.row:active{ background:var(--ink-tint); }
   <div class="grp"><span>mode</span><div class="seg" data-key="mode">
     <button data-val="classic" aria-pressed="true">classic</button><button data-val="ink">ink</button></div></div>
   <div class="grp"><span>fill entry</span><div class="seg" data-key="fill">
-    <button data-val="a" aria-pressed="true">A gap line</button><button data-val="b">B more menu</button><button data-val="c">C 4th button</button></div></div>
+    <button data-val="b" aria-pressed="true">B more menu ✓</button><button data-val="a">A gap line (no)</button><button data-val="c">C 4th button (no)</button></div></div>
   <div class="grp"><span>notes</span><div class="seg" data-key="notes">
     <button data-val="on" aria-pressed="true">on</button><button data-val="off">off</button></div></div>
   <div class="grp"><span>menu</span><div class="seg" data-key="menu">
     <button data-val="closed" aria-pressed="true">closed</button><button data-val="open">open</button></div></div>
   <div class="grp"><span>overlay</span><div class="seg" data-key="sheet">
     <button data-val="none" aria-pressed="true">none</button><button data-val="mode">mode</button><button data-val="discard">discard</button></div></div>
-  <div class="grp"><span>slot</span><div class="seg" data-key="slot">
-    <button data-val="off" aria-pressed="true">off</button><button data-val="on">on</button></div></div>
   <div class="grp"><span>language</span><div class="seg" data-key="lang">
     <button data-val="en" aria-pressed="true">en</button><button data-val="uk">uk</button><button data-val="ru">ru</button></div></div>
   <div class="grp"><span>text size</span><div class="seg" data-key="type">
@@ -1003,7 +1012,7 @@ button.row:active{ background:var(--ink-tint); }
       clues:"clues",
       tech:{ singles:"singles", locked:"locked candidates", pairs:"pairs", beyond:"beyond pairs" },
       left:function(n){ return n + (n === 1 ? " cell left" : " cells left"); },
-      fillAction:"Fill candidates", howWorks:"How Pundoku works",
+      fillAction:"Fill candidates", fillInkOff:"Not available in Ink",
       notes:"Notes", undo:"Undo", erase:"Erase",
       /* Short titles on purpose: at AX3 on 320 pt a long compound word (ru «незавершённую»)
          is wider than the line and gets broken mid-word. */
@@ -1014,8 +1023,6 @@ button.row:active{ background:var(--ink-tint); }
       rTech:"Technique reached", techLocked:"Locked candidates",
       pathSub:"Every cell shaded by when you filled it.", watch:"Watch your solve",
       peek:"The next section starts here — at the default text size at least 28 px of it is visible above the tab bar, so nothing lives permanently below the fold.",
-      slotTag:"Reserved · release 2",
-      slotBody:"A separate section for one of the release-2 modes goes here, under the hub’s own content and above the tab bar. Nothing is drawn inside it: which mode becomes a section, and what it does, is the owner’s decision.",
       headNote:"Year’s title is a pull-down button, the other two are plain headings. Their top edges have to match at every text size; the red guide is drawn from the first title’s top edge.",
       ruler:function(n,w){ return "REVIEW · 4 buttons at " + w + " pt: " + n + " pt each. Two of the three labels no longer fit on one line."; }
     },
@@ -1035,7 +1042,7 @@ button.row:active{ background:var(--ink-tint); }
       clues:"відкритих",
       tech:{ singles:"одиночки", locked:"замкнені кандидати", pairs:"пари", beyond:"понад пари" },
       left:function(n){ return "залишилось " + n; },
-      fillAction:"Заповнити кандидатами", howWorks:"Як працює Pundoku",
+      fillAction:"Заповнити кандидатами", fillInkOff:"Недоступно в чорнилі",
       notes:"Нотатки", undo:"Скасувати", erase:"Стерти",
       discardTitle:"Відкинути цю сітку?",
       discardMsg:"Прогрес у ній буде втрачено. Головоломка дня не постраждає.",
@@ -1044,8 +1051,6 @@ button.row:active{ background:var(--ink-tint); }
       rTech:"Досягнута техніка", techLocked:"Замкнені кандидати",
       pathSub:"Кожна клітинка затінена за тим, коли ви її заповнили.", watch:"Подивитися своє розв’язання",
       peek:"Тут починається наступний розділ — за звичайного розміру тексту над таб-баром видно щонайменше 28 px, тож ніщо не живе за межею екрана назавжди.",
-      slotTag:"Зарезервовано · реліз 2",
-      slotBody:"Тут буде окремий розділ для одного з режимів релізу 2 — під вмістом хаба й над таб-баром. Усередині нічого не намальовано: який саме режим стане розділом і що він робить, вирішує власник.",
       headNote:"Заголовок Року — кнопка-меню, два інші — звичайні заголовки. Їхні верхні краї мають збігатися за будь-якого розміру тексту; червона лінія — від верхнього краю першого заголовка.",
       ruler:function(n,w){ return "REVIEW · 4 кнопки на " + w + " pt: по " + n + " pt. Дві підписи з трьох уже не вміщаються в рядок."; }
     },
@@ -1065,7 +1070,7 @@ button.row:active{ background:var(--ink-tint); }
       clues:"открытых",
       tech:{ singles:"одиночки", locked:"запертые кандидаты", pairs:"пары", beyond:"сверх пар" },
       left:function(n){ return "осталось " + n; },
-      fillAction:"Заполнить кандидатами", howWorks:"Как устроен Pundoku",
+      fillAction:"Заполнить кандидатами", fillInkOff:"Недоступно в чернилах",
       notes:"Заметки", undo:"Отменить", erase:"Стереть",
       discardTitle:"Отбросить эту сетку?",
       discardMsg:"Прогресс в ней будет потерян. Головоломка дня не пострадает.",
@@ -1074,8 +1079,6 @@ button.row:active{ background:var(--ink-tint); }
       rTech:"Достигнутая техника", techLocked:"Запертые кандидаты",
       pathSub:"Каждая клетка затенена по тому, когда вы её заполнили.", watch:"Посмотреть своё решение",
       peek:"Здесь начинается следующий раздел — при обычном размере текста над таб-баром видно не меньше 28 px, поэтому ничто не живёт за краем экрана постоянно.",
-      slotTag:"Зарезервировано · релиз 2",
-      slotBody:"Здесь будет отдельный раздел для одного из режимов релиза 2 — под содержимым хаба и над таб-баром. Внутри ничего не нарисовано: какой именно режим станет разделом и что он делает, решает владелец.",
       headNote:"Заголовок Года — кнопка-меню, два других — обычные заголовки. Их верхние края должны совпадать при любом размере текста; красная линия — от верхнего края первого заголовка.",
       ruler:function(n,w){ return "REVIEW · 4 кнопки на " + w + " pt: по " + n + " pt. Две подписи из трёх уже не помещаются в строку."; }
     }
@@ -1220,6 +1223,12 @@ button.row:active{ background:var(--ink-tint); }
     var menuOpen = fill === "b" && root.dataset.menu === "open" && s === "game";
     document.getElementById("menu").hidden = !menuOpen;
     document.getElementById("moreBtn").setAttribute("aria-expanded", String(menuOpen));
+    /* "Fill candidates" is dimmed-and-explained in Ink instead of disappearing: the menu keeps
+       the same shape in both modes, and aria-disabled (not `disabled`) keeps the item reachable
+       by VoiceOver, which is where the explanation is read out. */
+    var fillItem = document.getElementById("menuFill");
+    fillItem.setAttribute("aria-disabled", String(ink));
+    document.getElementById("menuFillWhy").hidden = !ink;
 
     var sheet = root.dataset.sheet;
     document.getElementById("modeSheet").hidden = sheet !== "mode";
@@ -1266,6 +1275,18 @@ button.row:active{ background:var(--ink-tint); }
   document.getElementById("moreBtn").addEventListener("click", function(){
     set("menu", root.dataset.menu === "open" ? "closed" : "open");
   });
+  /* "New puzzle" from the menu, and the second tap on the selected Play tab: both go back to
+     the hub and neither asks for confirmation — the game is saved in its own slot. */
+  document.querySelector("#menu button").addEventListener("click", function(){
+    set("menu","closed"); set("screen","hub");
+  });
+  /* The disabled item in Ink does nothing at all — not even close the menu. */
+  document.getElementById("menuFill").addEventListener("click", function(){
+    if (root.dataset.mode !== "ink") set("menu","closed");
+  });
+  document.getElementById("tabPlay").addEventListener("click", function(){
+    set("menu","closed"); set("sheet","none"); set("screen","hub");
+  });
   document.getElementById("scrim").addEventListener("click", function(){
     set("sheet","none"); set("menu","closed");
   });
@@ -1298,9 +1319,9 @@ button.row:active{ background:var(--ink-tint); }
       /* Only the shots script calls reset(), so this is the safe place to drop the review
          pill: it used to sit on top of "Done" / "Keep playing" in the rendered frames. */
       root.setAttribute("data-mock", "hidden");
-      ["screen","cont","mode","sheet","fill","notes","menu","slot","lang","type","safearea"].forEach(function(k){
-        root.setAttribute("data-" + k, {screen:"hub",cont:"both",mode:"classic",sheet:"none",fill:"a",
-          notes:"on",menu:"closed",slot:"off",lang:"en",type:"default",safearea:"sim"}[k]);
+      ["screen","cont","mode","sheet","fill","notes","menu","lang","type","safearea"].forEach(function(k){
+        root.setAttribute("data-" + k, {screen:"hub",cont:"both",mode:"classic",sheet:"none",fill:"b",
+          notes:"on",menu:"closed",lang:"en",type:"default",safearea:"sim"}[k]);
       });
       setAppearance("system");
       render();
