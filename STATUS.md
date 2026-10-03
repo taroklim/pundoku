@@ -404,7 +404,7 @@ Gates: build → typecheck, lint, тесты web/engine/api (api с TEST_DATABAS
 | PD-146 | S1/S2: ~1 из 10 холодных загрузок WebKit вкладка Year роняет приложение в пустой экран (`TypeError … e.solved`); корневая причина + фикс + ErrorBoundary + циклы ≥30 холодных загрузок webkit/chromium; ветка pd-year-blank; затем QA-перепроверка | developer | P0 | completed (merged b7ff7bf) | — |
 | PD-147 | Повторный QA pd-key: миграции 0007→0008 на БД с данными, идемпотентный повтор confirm, гонка двух устройств, cancel-лимит, UI-путь потерянного ответа, полные прогоны api/web/engine после rebase (--testTimeout=60000) | qa-tester | P1 | completed (PASS; merged fa47ca1) | PD-126 |
 | PD-148 | QA PD-146 (pd-year-blank @ 8ab08a8): детерминированная проверка фикса, циклы ≥30 webkit/chromium, ErrorBoundary-экран (a11y, en/uk/ru, 320, dark), регресс Year/Archive/sync | qa-tester | P0 | completed (PASS; merged b7ff7bf) | PD-146 |
-| PD-149 | Логотип раунд 5: клеточные P-u-n в надписи (иконка D5 не меняется); макет design/pd141-logo-round5.html/.md на согласование владельцу, затем рендер PNG на Desktop; в продукт не вносить | designer | P1 | in_progress (макет готов; рендер PNG) | — |
+| PD-149 | Логотип раунд 5: клеточные P-u-n в надписи (иконка D5 не меняется); макет design/pd141-logo-round5.html/.md на согласование владельцу, затем рендер PNG на Desktop; в продукт не вносить | designer+developer | P1 | completed (макет и кадры готовы к показу владельцу, a280a41; в продукт не внесён — ждёт выбора) | — |
 | PD-150 | Today-fix (в коммитах ветки pd-today-fix помечен «PD-147» — коллизия номера, верный номер PD-150): скорость старта ветерана, док подсказки без сдвига на Today 320x568, resume выбирает первую пустую клетку, 404 /api/snapshot | developer | P0 | in_progress (QA) | — |
 | PD-151 | QA PD-150 (pd-today-fix @ c94628c): замеры до/после, 320/375/390/393, AX3, en/uk/ru, light/dark, регресс Today/Play/Year/подсказки/ключ | qa-tester | P0 | in_progress | PD-150 |
 | PD-20 | QA PD-14 (pd-14 @ 0026b2a): PASS с оговорками, блокеров и Medium нет; 4 Low + решение по слиянию → PD-31 | qa-tester | P1 | completed | PD-14 |
@@ -500,7 +500,6 @@ Gates: build → typecheck, lint, тесты web/engine/api (api с `TEST_DATABA
 |-----|------|--------|-------|-----------|
 | PM-Pundoku-10 | product-manager | working | пакеты реализации по решениям владельца | 2026-10-02 |
 | QA-Pundoku-today | qa-tester | working | PD-151 | 2026-10-04 |
-| Dev-Pundoku-logo5 | developer | working | PD-149 | 2026-10-04 |
 
 ## Чек-пойнт 2026-10-01 (конец сессии PM-Pundoku-7)
 - **Сделано:** решения владельца по релизу 1.1 зафиксированы; PD-74 (UI ink, pd-74 @ 73444b2), PD-75 (UI таймлапса/PNG Rhythm, pd-75 @ bfeedbf), PD-80 (счёт ходов в ink, pd-80 @ de5a52d) смержены в локальный main; gates на слитом: build/typecheck/lint, web 624, engine 178 (api не затронут, 174+3). PD-78 сделан в PD-74. PD-79 закрыт: не дефект.
