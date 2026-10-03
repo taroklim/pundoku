@@ -29,7 +29,7 @@ import {
   MOVE_LOG_BUDGET_CHARS,
   progressFromRecord,
 } from "./schema";
-import type { PushResult, RemoteSnapshot, SyncApi } from "./syncApi";
+import type { PullResult, PushResult, RemoteSnapshot, SyncApi } from "./syncApi";
 import type { PersistentStore } from "../today/repository";
 import { sanitizeDays } from "../today/repository";
 
@@ -118,11 +118,15 @@ export class SyncManager {
   private failures = 0;
   /** Токен зарегистрирован в этой серии циклов и ещё ни разу не принят сервером (защита от цикла 401). */
   private freshToken = false;
+  /** Токен получен регистрацией В ЭТОМ цикле и записан этим устройством: у только что созданного устройства снапшота быть не может. */
+  private registeredNow = false;
   private lastPullAt = 0;
   private debounceTimer: ReturnType<typeof setTimeout> | null = null;
   private retryTimer: ReturnType<typeof setTimeout> | null = null;
   /** Ступень сжатия (`BUDGET_STEPS`), на которой сервер принял последний PUT; хранится в `meta:syncState`. */
   private compressStep = 0;
+  /** Запись состояния снапшота, отложенная `integrate(…, true)` (первичная сверка): `cycle` дожидается её после `initialDone`. */
+  private persisting: Promise<void> | null = null;
   private bootDone!: () => void;
   private readonly booted = new Promise<void>((resolve) => {
     this.bootDone = resolve;
@@ -155,9 +159,12 @@ export class SyncManager {
 
   private async boot(): Promise<void> {
     try {
-      const token = await this.deps.storage.getMeta(META_TOKEN);
+      // PD-147: два независимых чтения — параллельно (раньше две транзакции подряд на пути к первому кадру). allSettled:
+      // сбой одного чтения не должен стоить второго (без состояния токен остаётся, без токена — новое устройство).
+      const [tokenRes, stRes] = await Promise.allSettled([this.deps.storage.getMeta(META_TOKEN), this.deps.storage.getMeta(META_SYNC_STATE)]);
+      const token = tokenRes.status === "fulfilled" ? tokenRes.value : null;
       this.token = typeof token === "string" && token !== "" ? token : null;
-      const st = await this.deps.storage.getMeta(META_SYNC_STATE);
+      const st = stRes.status === "fulfilled" ? stRes.value : null;
       const parsed = st && typeof st === "object" ? this.parseState(st as { version?: unknown; data?: unknown; compressStep?: unknown }) : null;
       this.state = parsed;
       if (parsed) {
@@ -354,22 +361,30 @@ export class SyncManager {
     const seq = this.dirtySeq;
     this.setStatus({ phase: "syncing" });
     try {
+      this.registeredNow = false;
       const token = this.token ?? (await this.register());
       if (!token) return; // register уже назначил повтор
 
       let merged: SnapshotData;
       if (this.wantPull || !this.pulled) {
-        const r = await this.deps.api.pull(token);
+        // PD-147: у устройства, зарегистрированного только что, на сервере снапшота ещё нет — запрос вернул бы 404, который
+        // браузер пишет в консоль красной ошибкой на каждом чистом запуске. Не спрашиваем: это тот же исход, что «снапшота нет»
+        // (`none`). Токен, пришедший не от этой регистрации (другая вкладка выиграла гонку, ключ восстановления), спрашивает как раньше.
+        const r: PullResult = this.registeredNow ? { kind: "none" } : await this.deps.api.pull(token);
         if (r.kind === "unauthorized") return this.onUnauthorized();
         if (r.kind === "error") return this.scheduleRetry(r.retryAfterMs);
-        this.freshToken = false;
+        // Токен ещё не проверен сервером, если запрос пропущен: «свежим» остаётся до первого принятого PUT (ответ 401 на него — повтор по таймеру, не цикл).
+        if (!this.registeredNow) this.freshToken = false;
         this.wantPull = false;
         this.pulled = true;
         this.lastPullAt = this.deps.now().getTime();
         const remote = r.kind === "ok" ? this.parseRemote(r.snapshot) : null;
         if (remote === "blocked") return;
-        merged = await this.integrate(remote);
+        merged = await this.integrate(remote, true);
         this.initialDone();
+        const persisting = this.persisting;
+        this.persisting = null;
+        await persisting;
       } else {
         merged = await this.integrate(undefined);
       }
@@ -394,6 +409,7 @@ export class SyncManager {
     // Гонка двух вкладок: побеждает первый записавший, остальные забывают свой токен.
     const stored = await this.deps.storage.setMetaIfAbsent(META_TOKEN, r.token);
     this.token = typeof stored === "string" ? stored : r.token;
+    this.registeredNow = this.token === r.token;
     this.freshToken = true;
     this.setStatus({ device: "registered" });
     return this.token;
@@ -431,11 +447,11 @@ export class SyncManager {
   private async collectLocal(): Promise<{ data: SnapshotData; records: Record<string, DayRecord> }> {
     const now = this.deps.now();
     const records: Record<string, DayRecord> = {};
-    for (const p of sanitizeDays(await this.deps.storage.listDays(), "SyncManager.collectLocal")) {
+    const [days, grid] = await Promise.all([this.deps.storage.listDays(), this.deps.storage.getPermanent()]);
+    for (const p of sanitizeDays(days, "SyncManager.collectLocal")) {
       const rec = dayRecordFromProgress(p, now);
       if (rec) records[p.date] = rec;
     }
-    const grid = await this.deps.storage.getPermanent();
     return { data: { ...emptySnapshotData(), grid, days: records }, records };
   }
 
@@ -444,7 +460,7 @@ export class SyncManager {
    * `remote === undefined` — с сервера ничего не приходило: локальные данные объединяются с последним
    * подтверждённым снапшотом (в нём могут быть дни, которых локально нет — например «не решён» с сервера).
    */
-  private async integrate(remote: { version: number; data: SnapshotData } | null | undefined): Promise<SnapshotData> {
+  private async integrate(remote: { version: number; data: SnapshotData } | null | undefined, deferPersist = false): Promise<SnapshotData> {
     const local = await this.collectLocal();
     const shadow = this.state?.data ?? null;
     const base = shadow ? mergeSnapshots(local.data, shadow, { serverNewer: false }) : local.data;
@@ -454,7 +470,15 @@ export class SyncManager {
     const merged = mergeSnapshots(base, remote.data, { serverNewer });
     await this.applyLocally(merged, local);
     this.state = { version: remote.version, data: remote.data };
-    await this.persistState();
+    if (deferPersist) {
+      // PD-147: запись подтверждённого состояния не нужна, чтобы начать игру, — Today ждёт только слияния (`initialDone`).
+      // Запись уже поставлена (состояние снято синхронно), дожидается её `cycle` после `initialDone`.
+      const p = this.persistState();
+      p.catch(() => undefined); // отказ всплывёт при ожидании в `cycle`, а не как unhandled rejection
+      this.persisting = p;
+    } else {
+      await this.persistState();
+    }
     return merged;
   }
 

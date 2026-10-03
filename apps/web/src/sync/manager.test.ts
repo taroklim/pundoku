@@ -394,12 +394,35 @@ describe("снапшот: восстановление", () => {
 
   it("сервер отвечает 401 даже на свежий токен — без бесконечного цикла, только повтор по таймеру", async () => {
     vi.useFakeTimers();
-    server.api.pull = async () => ({ kind: "unauthorized" });
-    const { m } = make();
+    // Только что зарегистрированное устройство снапшот не запрашивает (PD-147): отказ приходит на первый PUT.
+    server.api.push = async () => ({ kind: "unauthorized" });
+    const storage = new InMemoryProgressRepository();
+    await storage.saveDay(progressOf("2026-09-29"));
+    const { m } = make(storage);
     await m.start();
     await vi.advanceTimersByTimeAsync(0);
     expect(server.calls.register).toBeLessThanOrEqual(2);
     expect(m.getSnapshot().phase).toBe("retrying");
+  });
+
+  it("PD-147: у только что зарегистрированного устройства снапшот не запрашивается (нет красной 404 в консоли), локальное уходит на сервер", async () => {
+    const storage = new InMemoryProgressRepository();
+    await storage.saveDay(progressOf("2026-09-29"));
+    const { m } = make(storage);
+    await run(m);
+    expect(server.calls.register).toBe(1);
+    expect(server.calls.pull).toBe(0);
+    expect(server.data("token-1")!.days["2026-09-29"]).toBeDefined();
+  });
+
+  it("PD-147: известный токен (не от этой регистрации) по-прежнему сверяется с сервером", async () => {
+    const storage = new InMemoryProgressRepository();
+    server.devices.add("token-1");
+    await storage.setMeta(META_TOKEN, "token-1");
+    const { m } = make(storage);
+    await run(m);
+    expect(server.calls.register).toBe(0);
+    expect(server.calls.pull).toBe(1);
   });
 });
 

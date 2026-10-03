@@ -335,6 +335,10 @@ export class DayStore extends GameStore<DaySnapshot> {
       return;
     }
 
+    // PD-147: запрос сетки дня идёт параллельно ожиданию восстановления и чтению записи, а не после них (последовательная
+    // цепочка «снапшот → чтение → сетка» стоила лишнего круга сети на каждом запуске ветерана).
+    const prefetch = this.prefetchDay(date);
+    prefetch?.catch(() => undefined); // отказ (если load оборвётся раньше) — не unhandled; при использовании он всплывёт там же
     await this.awaitRestore();
     if (token !== this.token) return;
     await this.writesSettled(); // не читать день, пока не дописан предыдущий
@@ -357,7 +361,7 @@ export class DayStore extends GameStore<DaySnapshot> {
     }
 
     const online = this.deps.isOnline();
-    const fetchP = online ? this.fetchDay(date) : null;
+    const fetchP = online ? (prefetch ? prefetch.then((r) => r ?? this.fetchDay(date)) : this.fetchDay(date)) : null;
     const first = fetchP ? await Promise.race([fetchP, sleep(this.deps.slowFetchMs)]) : "slow";
     if (token !== this.token) return;
 
@@ -372,6 +376,19 @@ export class DayStore extends GameStore<DaySnapshot> {
       const late = await fetchP;
       if (token === this.token) await this.applyLatest(late);
     }
+  }
+
+  /**
+   * Запрос сетки дня «наперёд» (только сегодняшний стор и только онлайн). Решённый день финален и идёт без сети — это
+   * проверяется быстрым чтением записи, поэтому для него запрос не уходит (`null`); если после восстановления запись
+   * всё же окажется иной (например, пришла решённая с сервера), результат просто не используется.
+   */
+  private prefetchDay(date: string): Promise<FetchedDay | null> | null {
+    if (this.archive || !this.deps.isOnline()) return null;
+    return this.deps.repo.getDay(date).then(
+      (saved) => (saved?.solved ? null : this.fetchDay(date)),
+      () => this.fetchDay(date),
+    );
   }
 
   private async fetchDay(date: string): Promise<FetchedDay> {

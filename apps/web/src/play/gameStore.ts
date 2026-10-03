@@ -21,6 +21,7 @@ import {
   hasPlacedDigit,
   isDigitClosed,
   isGiven,
+  resumeSelection,
   setInkMode,
   toggleNote,
   undo as undoMove,
@@ -176,7 +177,7 @@ export abstract class GameStore<S extends PlaySnapshot = PlaySnapshot> {
     this.set({
       phase: play.solved ? "solved" : "playing",
       play,
-      selected: play.solved ? null : firstOpenCell(play),
+      selected: resumeSelection(play),
       startedOn: new Date(),
       notesMode: false,
       pop: null,

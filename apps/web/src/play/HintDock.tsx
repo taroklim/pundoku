@@ -12,6 +12,8 @@ interface HintDockProps {
   state: HintLadderState;
   /** Play: подвал «Эта партия отмечена…»; Today/архив: «Этот день отмечен…». */
   play?: boolean;
+  /** Док на нескроллящемся экране партии (Play, Today, архив): страницу не двигаем. По умолчанию — как `play`. */
+  fit?: boolean;
 }
 
 /**
@@ -24,7 +26,7 @@ interface HintDockProps {
  * фокуса: озвучивается «Шаг 3 из 4. …». Видимый счётчик — `aria-hidden`: его дубль уже в live-регионе. `→` / `Enter` на
  * самом доке — следующая ступень; `Esc` и `H` обрабатывает `handleGameKey` (controls.tsx).
  */
-export function HintDock({ ladder, state, play = false }: HintDockProps) {
+export function HintDock({ ladder, state, play = false, fit = play }: HintDockProps) {
   const { t } = useTranslation();
   const heading = useRef<HTMLHeadingElement>(null);
   const dock = useRef<HTMLElement>(null);
@@ -37,8 +39,8 @@ export function HintDock({ ladder, state, play = false }: HintDockProps) {
     // Док выше свободного места (iPhone SE): показать целиком; там, где он помещается, прокрутки нет — поле не двигается.
     // PD-144: экран партии Play НЕ прокручивается никогда (`overflow:hidden` скроллится и скриптом — это и был D2 «док
     // докручивает страницу»): там док сам сжимается и прокручивает текст внутри себя, а страницу не трогаем.
-    if (!play) dock.current?.scrollIntoView?.({ block: "nearest" });
-  }, [session, state.open, play]);
+    if (!fit) dock.current?.scrollIntoView?.({ block: "nearest" });
+  }, [session, state.open, fit]);
 
   // Новая ступень: текст начинается сверху (на AX3 док скроллится внутри себя, кнопка внизу — ступень не должна открываться «с середины»).
   const scroller = useRef<HTMLDivElement>(null);

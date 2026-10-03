@@ -13,7 +13,7 @@ import type { GenerateRequest, GenerateResponse } from "./generate.worker";
 import type { PlaySnapshot } from "./gameStore";
 import { DEFAULT_DIFFICULTY, GameStore, initialSnapshot } from "./gameStore";
 import type { PlayState } from "./logic";
-import { CELLS, firstOpenCell } from "./logic";
+import { CELLS, resumeSelection } from "./logic";
 
 export type { Phase, PlaySnapshot } from "./gameStore";
 
@@ -201,7 +201,7 @@ export class PlayStore extends GameStore<PlayScreenSnapshot> {
       restoring: false,
       difficulty: saved.difficulty,
       startedOn: new Date(saved.startedOn),
-      selected: saved.selected ?? firstOpenCell(saved.play),
+      selected: resumeSelection(saved.play, saved.selected),
       notesMode: saved.notesMode,
       hints: saved.hints ?? 0,
       assisted: saved.assisted === true,

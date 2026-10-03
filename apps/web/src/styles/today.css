@@ -16,6 +16,67 @@
   font-size: 0.8rem;
   text-align: center;
 }
+/* PD-147: на экране партии (нескроллящемся, play.css) в зазоре между полем и панелью заложена одна строка статуса (+ резерв под док
+   `--extra`). Строка источника — вторая; при AX3 она там не помещается (две строки по 40 px), поэтому уходит только визуально: имя
+   для скринридера остаётся, а в карточке дня источник виден всегда. */
+:root[data-type="ax3"] .play-fit .today-status .source {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+/* PD-147: архивный день — над заголовком ряд «‹ Year» (кнопка 44 pt, отрицательный верхний отступ 8 px); он входит в обвязку поля. */
+.today.archive.play-fit {
+  --bar: calc(max(44px, 1.2rem) - 8px);
+}
+/* PD-147: заголовок на нескроллящемся экране — ровно одна строка (в --chrome заложена одна: 2rem). «Сегодня»/«Сьогодні» при крупном
+   тексте на 320 pt переносились (по буквам), и ряд действий уходил под таб-бар, а прокрутки уже нет. Кегль не больше 11vw (на
+   обычном тексте 1.62rem меньше — ничего не меняется; только uk/ru: «Today» при AX3 помещается и остаётся того же размера, что
+   «Play»), перенос запрещён, крайний случай — многоточие. */
+:root:not(:lang(en)) .today.play-fit .title {
+  font-size: min(1.62rem, 11vw);
+}
+.today.play-fit .title {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+/* PD-147: строка «Ink mode» (вход в Чернильный режим, до первого хода) стоит в том же зазоре. В зазоре — одна строка статуса и
+   резерв под док; полная строка (46 px) + сноска «Ink нельзя стереть» (ещё ~40 px) туда не входили и наезжали на поле и панель.
+   На экране партии строка компактнее (цель 44 px, отступы зазора 4 px), сноска остаётся только для скринридера: то же самое
+   прочитает шит правил, который открывает строка. При AX3 не помещается и подпись строки («Чернильный режим» рвалась по буквам
+   в колонке 20 px): остаются перо, значение и шеврон; имя кнопки для скринридера прежнее. */
+.play-fit > .gap:has(.ink-entry) {
+  padding-block: 4px;
+}
+.play-fit .ink-entry .ink-row {
+  min-height: 44px;
+  padding-block: 6px;
+}
+.play-fit .ink-entry .ink-foot {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+:root[data-type="ax3"] .play-fit .ink-entry .row-t {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
 /* Ярлык источника в карточке дня — под кнопкой Share. */
 .card .source {
   margin-top: 12px;

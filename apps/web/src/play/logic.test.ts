@@ -12,6 +12,7 @@ import {
   eraseCell,
   canFill,
   fillCandidates,
+  firstEmptyCell,
   firstOpenCell,
   isDigitClosed,
   isGridFull,
@@ -19,6 +20,7 @@ import {
   notesOf,
   peersOf,
   remaining,
+  resumeSelection,
   setInkMode,
   toggleNote,
   undo,
@@ -511,5 +513,37 @@ describe("PD-144: canFill (доступность пункта «Fill candidates
     for (let i = 0; i < 81; i++) if (!p.mission[i] && i !== EMPTY_CELL) p = toggleNote(p, i, 9, 100 + i);
     expect(canFill(p)).toBe(fillCandidates(p, 5000) !== p);
     expect(canFill(p)).toBe(true);
+  });
+});
+
+describe("PD-147 (c): выбор при возврате в начатую партию", () => {
+  it("firstEmptyCell — первая клетка без цифры игрока и не заданная; заметки пустоту не отменяют", () => {
+    let s = fresh();
+    expect(firstEmptyCell(s)).toBe(EMPTY_CELL);
+    s = toggleNote(s, EMPTY_CELL, 4, 1);
+    expect(firstEmptyCell(s)).toBe(EMPTY_CELL);
+    s = enterDigit(s, EMPTY_CELL, 4, 2);
+    expect(firstEmptyCell(s)).toBe(OTHER_EMPTY);
+  });
+
+  it("firstEmptyCell: пустых нет — null; firstOpenCell остаётся числом (0) для старта новой партии", () => {
+    let s = fresh();
+    s.mission.forEach((g, i) => {
+      if (g === 0) s = enterDigit(s, i, 1, 10 + i); // любые цифры: клетка занята
+    });
+    expect(firstEmptyCell(s)).toBeNull();
+    expect(firstOpenCell(s)).toBe(0);
+  });
+
+  it("resumeSelection: сохранённая клетка остаётся, если пуста; заполненная/заданная/мусор — первая пустая; решённая — ничего", () => {
+    let s = fresh();
+    s = enterDigit(s, EMPTY_CELL, 4, 1);
+    expect(resumeSelection(s, null)).toBe(OTHER_EMPTY);
+    expect(resumeSelection(s, EMPTY_CELL)).toBe(OTHER_EMPTY); // заполнена
+    expect(resumeSelection(s, 0)).toBe(OTHER_EMPTY); // заданная
+    expect(resumeSelection(s, 40)).toBe(40); // пустая — курсор остаётся
+    expect(resumeSelection(s, 99)).toBe(OTHER_EMPTY);
+    expect(resumeSelection(s, -1)).toBe(OTHER_EMPTY);
+    expect(resumeSelection({ ...s, solved: true }, 40)).toBeNull();
   });
 });

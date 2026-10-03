@@ -499,8 +499,28 @@ export function digitCells(s: PlayState, digit: number): number[] {
  */
 export const isDigitClosed = (s: PlayState, digit: number): boolean => digitCells(s, digit).length === 9;
 
-/** Первая пустая клетка (для стартового выбора), иначе 0. */
+/**
+ * Первая ПУСТАЯ клетка (не заданная и без цифры игрока; заметки пустоту не отменяют) или `null`, если пустых нет. Раньше
+ * искалась первая незаданная клетка: у начатой партии она уже заполнена, и после возврата (перезагрузка) первый же ход
+ * стоил два касания (PD-147).
+ */
+export function firstEmptyCell(s: PlayState): number | null {
+  const i = s.mission.findIndex((g, k) => g === 0 && (s.values[k] ?? 0) === 0);
+  return i < 0 ? null : i;
+}
+
+/** Первая пустая клетка (для стартового выбора новой партии, где пусты все незаданные), иначе 0. */
 export function firstOpenCell(s: PlayState): number {
-  const i = s.mission.findIndex((g) => g === 0);
-  return i < 0 ? 0 : i;
+  return firstEmptyCell(s) ?? 0;
+}
+
+/**
+ * Выбор при возврате в начатую партию (PD-147; одинаков для Play, Today и архива): сохранённая клетка остаётся, только если она
+ * ещё пуста (игрок оставил курсор на клетке, где продолжит), иначе — первая пустая; пустых нет (сетка заполнена, но не
+ * решена) — выбора нет. Решённая партия ничего не выбирает.
+ */
+export function resumeSelection(s: PlayState, saved: number | null = null): number | null {
+  if (s.solved) return null;
+  if (saved !== null && saved >= 0 && saved < CELLS && (s.mission[saved] ?? 1) === 0 && (s.values[saved] ?? 1) === 0) return saved;
+  return firstEmptyCell(s);
 }

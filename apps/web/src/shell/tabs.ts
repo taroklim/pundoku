@@ -76,7 +76,7 @@ const historyState = (): PushState | null => window.history.state as PushState |
 const originOf = (state: PushState | null): TabId => (typeof state?.pdFrom === "string" && isTabId(state.pdFrom) ? state.pdFrom : DEFAULT_TAB);
 
 /** Маршрут по адресу и метке записи: у Settings и справки вкладка — та, с которой их открыли (`pdFrom`), иначе Today. */
-function readRoute(): Route {
+export function readRoute(): Route {
   const route = parseRoute(window.location.hash);
   if (route.settings !== true && route.help === undefined) return route;
   const state = historyState();
