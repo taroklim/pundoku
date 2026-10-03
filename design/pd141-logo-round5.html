@@ -85,7 +85,8 @@ header.top{position:sticky;top:0;z-index:5;background:var(--bg);
 .sz:last-child{border-bottom:0}
 .sz .lab{color:var(--label-2);font-size:.76rem;line-height:1.25;margin:0 0 5px}
 .pair{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-@media (max-width:560px){.pair{grid-template-columns:1fr}}
+@media (max-width:560px){.pair{grid-template-columns:minmax(0,1fr)}}
+.pair>*{min-width:0}
 .pane{padding:12px;border-radius:12px;background:var(--bg)}
 .pane .cap{font-size:.74rem;color:var(--label-2);margin:0 0 8px}
 /* Контексты меряются по настоящей ширине iPhone 16 (393 pt), поэтому колонка
@@ -618,6 +619,7 @@ function svgEl(cls, h) {
     () => build("a", {outline:true}).body, 614);
   /* размерная полоса для 7.3 */
   const row = document.createElement("div"); row.className = "rowwm";
+  row.style.overflowX = "auto"; /* 96 px = 508 px шириной: без прокрутки страница уезжает вбок на 393 pt */
   [28,48,96].forEach(h => {
     const wrap = document.createElement("div");
     const lab = document.createElement("p"); lab.className = "mini"; lab.textContent = h + " px";
