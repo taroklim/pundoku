@@ -78,7 +78,9 @@ describe("PD-116: сохранение и восстановление парт�
     expect(b.hasSlot()).toBe(true);
     expect(after.phase).toBe("playing");
     expect(after.difficulty).toBe("hard");
-    expect(after.pick).toBe("hard");
+    // Low (b): список сложности на хабе — выбор для СЛЕДУЮЩЕЙ сетки, а не сложность сохранённой партии (та — в слоте).
+    expect(after.pick).toBe(new PlayStore().getSnapshot().pick);
+    expect(after.pick).not.toBe("hard");
     expect(after.play).toEqual(before.play);
     expect(after.play!.values[2]).toBe(4);
     expect(after.play!.notes[3]).toBe((1 << 6) | (1 << 9));
@@ -96,6 +98,27 @@ describe("PD-116: сохранение и восстановление парт�
     expect(b.getSnapshot().hub).toBe(false);
     b.undo();
     expect(b.getSnapshot().play!.log.at(-1)!.kind).toBe("undo");
+  });
+
+  it("Low (b): выбор сложности на хабе, сделанный до окончания чтения, восстановление не затирает сложностью партии", async () => {
+    const repo = new InMemoryProgressRepository();
+    const a = started(repo, { difficulty: "hard" });
+    await flush();
+    expect(a.hasSlot()).toBe(true);
+
+    const b = new PlayStore({ storage: repo });
+    b.setDifficulty("expert"); // хаб уже интерактивен для стора (restoring только прячет экран)
+    await b.restore();
+    expect(b.getSnapshot().difficulty).toBe("hard"); // слот — своя сложность
+    expect(b.getSnapshot().pick).toBe("expert"); // выбор хаба — последний выбранный
+
+    // и без выбора — по умолчанию, не «hard» из слота
+    const c = await restored(repo);
+    expect(c.getSnapshot().pick).toBe(new PlayStore().getSnapshot().pick);
+    // выбор на хабе потом живёт сам по себе
+    c.setDifficulty("easy");
+    expect(c.getSnapshot().pick).toBe("easy");
+    expect(c.getSnapshot().difficulty).toBe("hard");
   });
 
   it("PD-119: заметки, автоочистка и Fill переживают перезагрузку; Undo из восстановленного стека откатывает ход вместе с очисткой", async () => {

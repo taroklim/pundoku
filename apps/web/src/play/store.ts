@@ -195,7 +195,8 @@ export class PlayStore extends GameStore<PlayScreenSnapshot> {
     }
     this.resumeGame(saved.play, saved.elapsedMs, {
       hub: true,
-      pick: saved.difficulty,
+      // `pick` не трогаем: список сложности на хабе — выбор ДЛЯ СЛЕДУЮЩЕЙ сетки (по умолчанию или то, что игрок выбрал на хабе),
+      // а не сложность сохранённой партии — она живёт в слоте «Продолжить» и в `difficulty`.
       inkNext: false,
       restoring: false,
       difficulty: saved.difficulty,
