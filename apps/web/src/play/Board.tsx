@@ -1,8 +1,8 @@
 import type { CSSProperties, KeyboardEvent } from "react";
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useHighlightWrong } from "../settings/prefs";
-import { blotsIn, digitAt, isGiven, isWrong, notesOf } from "./logic";
+import { useHighlightPeers, useHighlightWrong } from "../settings/prefs";
+import { blotsIn, digitAt, isGiven, isWrong, notesOf, peersOf } from "./logic";
 import type { GameStore, PlaySnapshot } from "./gameStore";
 import { MOTION_MS } from "./motion";
 
@@ -33,6 +33,8 @@ interface CellProps {
   notes: number;
   selected: boolean;
   same: boolean;
+  /** PD-124: клетка в ряду/столбце/блоке выбранной (очень слабая заливка; настройка устройства). */
+  peer: boolean;
   wrong: boolean;
   /** Ink (PD-74): клетка — клякса (пятно + сколотый угол, клетка заперта; цифра в ней — верная). */
   blot: boolean;
@@ -62,6 +64,7 @@ const Cell = memo(function Cell(p: CellProps) {
   const cls = ["cell"];
   if (p.selected) cls.push("sel");
   if (p.same) cls.push("same");
+  if (p.peer) cls.push("peer");
   if (p.wrong) cls.push("err");
   if (p.blot) cls.push("blot");
   // M3: волна — класс клетки, а не отдельный элемент (раньше <i key=waveId> делил ключ «0» со
@@ -177,7 +180,8 @@ interface BoardProps {
 
 /**
  * Поле B Boxes (утверждённый макет): девять блоков-карточек, зазор 4, радиус 10, hairline внутри;
- * соседи не заливаются; «та же цифра» — чернила 10 %, выбор — 16 % + кольцо (M2 — кольцо едет).
+ * ряд/столбец/блок выбранной клетки — чернила ≈3 % (PD-124, по умолчанию вкл, выключатель в Settings; в PD-7 «соседи не
+ * заливаются» — решение владельца 6.4 это пересмотрело); «та же цифра» — чернила 10 %, выбор — 16 % + кольцо (M2 — кольцо едет).
  * Доступность: одна точка табуляции (roving tabindex), стрелки двигают выбор и фокус.
  */
 export function Board({ snap, store, dim }: BoardProps) {
@@ -188,6 +192,8 @@ export function Board({ snap, store, dim }: BoardProps) {
   // зависит: там ошибка всегда видна (и озвучена) по правилам режима.
   const highlightWrong = useHighlightWrong();
   const showWrong = highlightWrong || play?.ink === true;
+  // PD-124: заливка соседей выбранной клетки — настройка устройства (по умолчанию вкл); и в ink: это не подсказка, а ориентир.
+  const highlightPeers = useHighlightPeers();
   const wrongAt = (p: NonNullable<typeof play>, i: number) => showWrong && isWrong(p, i);
   // M3/M8/M7: события живут ровно столько, сколько играет анимация.
   const wave = useMoment(snap.wave, MOTION_MS.wave);
@@ -198,6 +204,7 @@ export function Board({ snap, store, dim }: BoardProps) {
   const ready = snap.phase === "playing" && play !== null;
   // Ink (PD-74): клетки-кляксы — из лога (единственный источник); клякса инертна — «той же цифры» из неё не берём.
   const blotCells = useMemo(() => new Set(play?.ink === true ? blotsIn(play).map((b) => b.cell) : []), [play]);
+  const peers = useMemo(() => (highlightPeers && selected !== null ? new Set(peersOf(selected)) : null), [highlightPeers, selected]);
   const selDigit = play && selected !== null && !blotCells.has(selected) ? digitAt(play, selected) : 0;
   const blotNow = useMoment(snap.blot ?? null, BLOT_MOMENT_MS, true);
   // Roving: клетка-«единственная остановка» — выбранная (или первая, пока ничего не выбрано).
@@ -276,6 +283,7 @@ export function Board({ snap, store, dim }: BoardProps) {
                   notes={play?.notes[i] ?? 0}
                   selected={ready && selected === i}
                   same={ready && selDigit !== 0 && selected !== i && digit === selDigit && !blotCells.has(i)}
+                  peer={ready && peers !== null && peers.has(i)}
                   wrong={play ? wrongAt(play, i) : false}
                   blot={blotCells.has(i)}
                   blotId={blotNow && blotNow.cell === i ? blotNow.id : 0}

@@ -106,7 +106,13 @@
 .fl {
   transition: opacity 0.16s linear;
 }
-/* Соседи (ряд/колонка/блок) НЕ заливаются — решение по проходу 2. */
+/* PD-124 (решение владельца 6.4, пересмотр «соседи не заливаются» прохода 2): ряд/столбец/блок выбранной клетки — очень
+   слабая заливка чернилами (--fill-peer ≈ 3 %). Идёт ДО .same/.sel и тем же слоем .fl: у клетки не складываются две
+   заливки, «та же цифра» (10 %) и выбор (16 % + кольцо) перекрывают peer. Отдельный класс .peer (не .same) — подсветка
+   подсказок PD-139 получит свой, чтобы не слиться. Выключатель — настройка «Tint row, column and box» (без класса). */
+.cell.peer > .fl {
+  opacity: var(--fill-peer);
+}
 .cell.same > .fl {
   opacity: var(--fill-same);
 }
@@ -473,6 +479,8 @@
   display: flex;
   justify-content: space-between;
   align-items: baseline;
+  flex-wrap: wrap; /* PD-143 (c): не влезло в строку — значение уходит под подпись */
+  gap: 0 12px;
   padding: 9px 0;
   border-bottom: 1px solid var(--hairline);
   font-size: 0.9rem;
@@ -481,31 +489,36 @@
   color: var(--label-2);
   margin: 0;
   font-size: 0.82rem;
+  min-width: 0;
+  overflow-wrap: break-word;
 }
+/* PD-143 (c): при крупном шрифте значение (длинное название техники + «What's this?») уходит под подпись и переносится
+   по словам, а не вылезает за край карточки; break-word — только если одно слово шире строки. */
 .row dd {
-  margin: 0;
+  margin: 0 0 0 auto;
   font-weight: 600;
+  min-width: 0;
+  max-width: 100%;
+  text-align: end;
+  overflow-wrap: break-word;
 }
 .row dd.mono {
   font-variant-numeric: tabular-nums;
 }
+/* PD-129: Share — вторичное действие (тонированная, как «New game»); главная кнопка карточки — «Watch your solve». */
 .share {
-  margin-top: 12px;
+  margin-top: 8px;
   width: 100%;
   min-height: 46px;
   border-radius: 11px;
-  background: var(--ink);
-  color: var(--on-ink);
+  background: var(--ink-tint);
+  color: var(--ink);
   font-size: 0.95rem;
   font-weight: 600;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
-}
-.share:disabled {
-  opacity: 0.4;
-  cursor: default;
 }
 .share svg {
   width: 19px;
@@ -734,6 +747,10 @@
   .cell.same .d {
     text-decoration: underline;
   }
+  /* PD-124: заливка соседей не рисуется (фон принудительный) — а полагаться на неё не нужно: выбор держит кольцо. */
+  .cell.peer > .fl {
+    opacity: 0;
+  }
   .act[aria-pressed="true"] {
     outline: 2px solid Highlight;
   }
@@ -774,8 +791,9 @@
     padding: 4px 0;
   }
   .card .share,
-  .card .newgame {
-    min-height: 40px;
+  .card .newgame,
+  .card .tl-watch {
+    min-height: 44px; /* PD-129: цель ≥ 44 pt и на низком экране (было 40) */
   }
   .card .share {
     margin-top: 8px;

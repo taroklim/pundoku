@@ -1,7 +1,8 @@
 // @vitest-environment jsdom
 import { describe, expect, it, vi } from "vitest";
 import { HINT_MS } from "./gameStore";
-import { createPlay, remaining } from "./logic";
+import { setAutoClearNotes } from "../settings/prefs";
+import { createPlay, notesOf, peersOf, remaining, setInkMode } from "./logic";
 import { PlayStore } from "./store";
 
 const SOLUTION =
@@ -240,4 +241,106 @@ describe("PD-117b: отказ не молчит — тихий отклик в �
       s.input(4);
       expect(s.getSnapshot().play!.log).toBe(log);
     }));
+});
+
+describe("PD-119: автоочистка и Fill candidates в сторе", () => {
+  const withNotes = (s: PlayStore, digit: number, cells: number[]) => {
+    s.toggleNotesMode();
+    for (const c of cells) {
+      s.select(c);
+      s.input(digit);
+    }
+    s.toggleNotesMode();
+  };
+
+  it("настройка вкл (по умолчанию): цифра уходит из заметок соседей, один Undo возвращает ход вместе с заметками", () => {
+    localStorage.clear();
+    const s = playing();
+    withNotes(s, 4, [3, 11, 30]); // 3 — строка, 11 — блок и столбец, 30 — не сосед клетки 2
+    s.select(2);
+    s.input(4);
+    const notes = s.getSnapshot().play!.notes;
+    expect(notesOf(notes[3] ?? 0)).toEqual([]);
+    expect(notesOf(notes[11] ?? 0)).toEqual([]);
+    expect(notesOf(notes[30] ?? 0)).toEqual([4]);
+    s.undo();
+    const back = s.getSnapshot().play!;
+    expect(back.values[2]).toBe(0);
+    expect(notesOf(back.notes[3] ?? 0)).toEqual([4]);
+    expect(notesOf(back.notes[11] ?? 0)).toEqual([4]);
+    expect(s.getSnapshot().selected).toBe(2);
+  });
+
+  it("настройка выкл: заметки соседей остаются, как раньше", () => {
+    localStorage.clear();
+    setAutoClearNotes(false);
+    try {
+      const s = playing();
+      withNotes(s, 4, [3]);
+      s.select(2);
+      s.input(4);
+      expect(notesOf(s.getSnapshot().play!.notes[3] ?? 0)).toEqual([4]);
+    } finally {
+      setAutoClearNotes(true);
+    }
+  });
+
+  it("ink: автоочистки нет даже при включённой настройке, а Fill candidates не действует и ничего не сообщает", () => {
+    localStorage.clear();
+    const s = playing();
+    const inner = s as unknown as { snap: Record<string, unknown> };
+    inner.snap = { ...inner.snap, play: setInkMode(createPlay({ mission: MISSION, solution: SOLUTION }), true) };
+    withNotes(s, 4, [3]);
+    s.select(2);
+    s.input(4);
+    expect(notesOf(s.getSnapshot().play!.notes[3] ?? 0)).toEqual([4]);
+    const before = s.getSnapshot();
+    s.fillCandidates();
+    expect(s.getSnapshot().play).toBe(before.play);
+    expect(s.getSnapshot().hint ?? null).toBeNull();
+  });
+
+  it("Fill candidates: заполняет, сообщает «filled» с числом клеток; выбор не прыгает; один Undo откатывает всё", () => {
+    localStorage.clear();
+    const s = playing();
+    s.select(40);
+    s.fillCandidates();
+    const snap = s.getSnapshot();
+    const empties = [...MISSION].filter((c) => c === "0").length;
+    expect(snap.hint).toMatchObject({ kind: "filled", count: empties });
+    expect(snap.play!.notes.filter((m) => m !== 0)).toHaveLength(empties);
+    s.undo();
+    expect(s.getSnapshot().play!.notes.every((m) => m === 0)).toBe(true);
+    expect(s.getSnapshot().selected).toBe(40); // undo заполнения не уводит выбор на «первую затронутую» клетку
+  });
+
+  it("Fill candidates: тупиковые клетки попадают в итог (hint.dead), без тупиков поля нет", () => {
+    localStorage.clear();
+    const s = playing();
+    s.select(2);
+    s.fillCandidates();
+    expect(s.getSnapshot().hint?.dead).toBeUndefined();
+    s.undo();
+    for (const [cell, d] of [[5, 1], [6, 2], [7, 4]] as const) {
+      s.select(cell);
+      s.input(d);
+    }
+    s.fillCandidates();
+    expect(s.getSnapshot().hint).toMatchObject({ kind: "filled" });
+    expect(s.getSnapshot().hint?.dead).toBeGreaterThanOrEqual(1);
+  });
+
+  it("Fill candidates, когда нечего заполнять: подсказка «fillNone», ход не пишется", () => {
+    localStorage.clear();
+    const s = playing();
+    s.fillCandidates();
+    const logLen = s.getSnapshot().play!.log.length;
+    s.fillCandidates();
+    expect(s.getSnapshot().hint).toMatchObject({ kind: "fillNone" });
+    expect(s.getSnapshot().play!.log).toHaveLength(logLen);
+  });
+
+  it("peersOf согласован с автоочисткой: соседей ровно 20", () => {
+    expect(peersOf(2)).toHaveLength(20);
+  });
 });

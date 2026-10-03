@@ -11,6 +11,12 @@ interface ActionSheetProps {
   cancelLabel: string;
   onAction: () => void;
   onCancel: () => void;
+  /**
+   * Шит открыт жестом, который ещё не закончился (долгий тап/правая кнопка: палец или кнопка мыши могут быть отпущены уже над
+   * кнопками шита). Пока внутри шита не началось НОВОЕ нажатие (pointerdown), указательные click'и — «хвост» открывшего жеста —
+   * не доходят ни до кнопок, ни до затемнения. Клавиатурные клики (`detail === 0`) и Esc не задерживаются.
+   */
+  guardTail?: boolean;
   children?: ReactNode;
 }
 
@@ -21,7 +27,8 @@ const FOCUSABLE = "button:not([disabled])";
  * диалог: фон `inert`, фокус внутри (Tab по кругу), Esc (на document) и тап по фону — отмена, фокус возвращается на кнопку, открывшую шит.
  * Шит над шитом не бывает — поэтому Settings сделан push-экраном.
  */
-export function ActionSheet({ title, message, actionLabel, destructive = false, cancelLabel, onAction, onCancel }: ActionSheetProps) {
+export function ActionSheet({ title, message, actionLabel, destructive = false, cancelLabel, onAction, onCancel, guardTail = false }: ActionSheetProps) {
+  const tail = useRef(guardTail);
   const scrim = useRef<HTMLDivElement>(null);
   const root = useRef<HTMLDivElement>(null);
   const cancelBtn = useRef<HTMLButtonElement>(null);
@@ -78,7 +85,21 @@ export function ActionSheet({ title, message, actionLabel, destructive = false, 
   }, []);
 
   return (
-    <div ref={scrim} className="st-scrim" onClick={onCancel} data-testid="action-sheet-scrim">
+    <div
+      ref={scrim}
+      className="st-scrim"
+      onClick={onCancel}
+      // Capture: гасим хвост жеста раньше, чем он дойдёт до onClick кнопок/затемнения; новое нажатие снимает защиту.
+      onPointerDownCapture={() => {
+        tail.current = false;
+      }}
+      onClickCapture={(e) => {
+        if (!tail.current || e.detail === 0) return;
+        e.stopPropagation();
+        e.preventDefault();
+      }}
+      data-testid="action-sheet-scrim"
+    >
       <div
         ref={root}
         className="st-asheet"

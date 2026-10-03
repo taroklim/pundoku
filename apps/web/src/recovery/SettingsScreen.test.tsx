@@ -7,7 +7,17 @@ import pkg from "../../package.json";
 import i18n from "../i18n";
 import type { RecoveryApi, RecoveryResult, RecoveryStatus } from "./api";
 import { formatCreated, SettingsScreen } from "./SettingsScreen";
-import { HIGHLIGHT_WRONG_KEY, getHighlightWrong, setHighlightWrong } from "../settings/prefs";
+import {
+  AUTO_CLEAR_NOTES_KEY,
+  HIGHLIGHT_PEERS_KEY,
+  HIGHLIGHT_WRONG_KEY,
+  getAutoClearNotes,
+  getHighlightPeers,
+  getHighlightWrong,
+  setAutoClearNotes,
+  setHighlightPeers,
+  setHighlightWrong,
+} from "../settings/prefs";
 import { RecoveryStore } from "./store";
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
@@ -754,5 +764,56 @@ describe("SettingsScreen: проверка записи ключа (PD-142)", ()
     expect(host.querySelector(`label[for="settings-check-0"]`)!.textContent).toMatch(/^Группа \d из 8$/);
     expect(q("key-check-go")!.textContent).toBe("Проверить");
     expect(host.textContent).toContain("не восстановить на другом устройстве");
+  });
+});
+
+describe("SettingsScreen: автоочистка заметок (PD-119) и заливка ряда/столбца/блока (PD-124)", () => {
+  const cases = [
+    ["auto-clear-notes", "Clear notes automatically", AUTO_CLEAR_NOTES_KEY, getAutoClearNotes, setAutoClearNotes, "in the same row, column and box"],
+    ["highlight-peers", "Tint row, column and box", HIGHLIGHT_PEERS_KEY, getHighlightPeers, setHighlightPeers, "Very lightly tints"],
+  ] as const;
+
+  it.each(cases)("%s: нативный switch, ВКЛ по умолчанию, футер через aria-describedby", async (id, label, _key, _get, _set, footText) => {
+    await mount();
+    const el = q<HTMLInputElement>(id)!;
+    expect(el.type).toBe("checkbox");
+    expect(el.getAttribute("role")).toBe("switch");
+    expect(el.checked).toBe(true);
+    expect(el.closest("label")!.textContent).toBe(label);
+    const foot = host.querySelector("#" + el.getAttribute("aria-describedby"))!;
+    expect(foot.textContent).toContain(footText);
+    expect(foot.textContent).toContain("On by default");
+    expect(el.closest("section")!.getAttribute("aria-labelledby")).toBe("settings-h-game");
+  });
+
+  it.each(cases)("%s: выкл пишет «0», повторное включение убирает ключ, значение переживает повторное открытие", async (id, _label, key, get, set) => {
+    await mount();
+    const label = q<HTMLInputElement>(id)!.closest("label")!;
+    await act(async () => label.dispatchEvent(new MouseEvent("click", { bubbles: true })));
+    expect(q<HTMLInputElement>(id)!.checked).toBe(false);
+    expect(localStorage.getItem(key)).toBe("0");
+    expect(get()).toBe(false);
+    act(() => root.unmount());
+    root = createRoot(host);
+    await mount();
+    expect(q<HTMLInputElement>(id)!.checked).toBe(false); // «перезагрузка»: настройка жива
+    await act(async () => q<HTMLInputElement>(id)!.closest("label")!.dispatchEvent(new MouseEvent("click", { bubbles: true })));
+    expect(localStorage.getItem(key)).toBeNull();
+    expect(get()).toBe(true);
+    set(true);
+  });
+
+  it("переключатели независимы друг от друга и от PD-112; подписи на uk и ru", async () => {
+    await mount();
+    await act(async () => q<HTMLInputElement>("auto-clear-notes")!.closest("label")!.dispatchEvent(new MouseEvent("click", { bubbles: true })));
+    expect(q<HTMLInputElement>("highlight-peers")!.checked).toBe(true);
+    expect(q<HTMLInputElement>("highlight-wrong")!.checked).toBe(false);
+    setAutoClearNotes(true);
+    await click("lang-uk");
+    expect(q<HTMLInputElement>("auto-clear-notes")!.closest("label")!.textContent).toBe("Автоочищення нотаток");
+    expect(q<HTMLInputElement>("highlight-peers")!.closest("label")!.textContent).toBe("Підсвічувати рядок, стовпець і блок");
+    await click("lang-ru");
+    expect(q<HTMLInputElement>("auto-clear-notes")!.closest("label")!.textContent).toBe("Автоочистка заметок");
+    expect(q<HTMLInputElement>("highlight-peers")!.closest("label")!.textContent).toBe("Подсвечивать строку, столбец и блок");
   });
 });

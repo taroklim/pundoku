@@ -1,6 +1,16 @@
 // @vitest-environment jsdom
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { getHighlightWrong, HIGHLIGHT_WRONG_KEY, setHighlightWrong } from "./prefs";
+import {
+  AUTO_CLEAR_NOTES_KEY,
+  getAutoClearNotes,
+  getHighlightPeers,
+  getHighlightWrong,
+  HIGHLIGHT_PEERS_KEY,
+  HIGHLIGHT_WRONG_KEY,
+  setAutoClearNotes,
+  setHighlightPeers,
+  setHighlightWrong,
+} from "./prefs";
 
 beforeEach(() => {
   localStorage.clear();
@@ -41,5 +51,55 @@ describe("prefs: highlightWrong (PD-112)", () => {
     expect(getHighlightWrong()).toBe(true);
     setHighlightWrong(false);
     expect(getHighlightWrong()).toBe(false);
+  });
+});
+
+describe.each([
+  ["autoClearNotes (PD-119)", AUTO_CLEAR_NOTES_KEY, getAutoClearNotes, setAutoClearNotes],
+  ["highlightPeers (PD-124)", HIGHLIGHT_PEERS_KEY, getHighlightPeers, setHighlightPeers],
+])("prefs: %s — по умолчанию ВКЛ", (_name, key, get, set) => {
+  beforeEach(() => set(true));
+
+  it("чистый профиль и профиль со старым состоянием — вкл (ключа нет)", () => {
+    localStorage.clear();
+    expect(get()).toBe(true);
+    localStorage.setItem("pundoku.locale", "uk");
+    expect(get()).toBe(true);
+  });
+
+  it("выкл — значение «0» (ключ нужен, раз умолчание вкл); вкл снова удаляет ключ; чужое значение — вкл", () => {
+    set(false);
+    expect(localStorage.getItem(key)).toBe("0");
+    expect(get()).toBe(false);
+    set(true);
+    expect(localStorage.getItem(key)).toBeNull();
+    expect(get()).toBe(true);
+    localStorage.setItem(key, "garbage");
+    expect(get()).toBe(true);
+  });
+
+  it("независима от соседних настроек", () => {
+    set(false);
+    expect(getHighlightWrong()).toBe(false);
+    setHighlightWrong(true);
+    expect(get()).toBe(false);
+    setHighlightWrong(false);
+  });
+
+  it("localStorage недоступен: значение живёт в памяти, ошибок нет", () => {
+    vi.spyOn(Storage.prototype, "getItem").mockImplementation(() => {
+      throw new Error("denied");
+    });
+    vi.spyOn(Storage.prototype, "setItem").mockImplementation(() => {
+      throw new Error("denied");
+    });
+    vi.spyOn(Storage.prototype, "removeItem").mockImplementation(() => {
+      throw new Error("denied");
+    });
+    expect(get()).toBe(true);
+    set(false);
+    expect(get()).toBe(false);
+    set(true);
+    expect(get()).toBe(true);
   });
 });

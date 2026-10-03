@@ -105,9 +105,9 @@ describe("карточка дня", () => {
     await act(() => i18n.changeLanguage("en"));
   });
 
-  it("Share неактивна (PNG-шаринг — отдельный тикет)", () => {
+  it("PD-129: без входа в таймлапс (нечем делиться) Share нет вовсе, а не серая кнопка", () => {
     render(solvedPlay(), 50);
-    const share = host.querySelector<HTMLButtonElement>("button.share")!;
-    expect(share.disabled).toBe(true);
+    expect(host.querySelector("button.share")).toBeNull();
+    expect([...host.querySelectorAll("button")].some((b) => /share/i.test(b.textContent ?? ""))).toBe(false);
   });
 });

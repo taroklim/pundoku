@@ -65,7 +65,19 @@ function isMove(m: unknown): boolean {
 /** Запись стека undo (`play/logic.ts › UndoEntry`). */
 function isUndoEntry(e: unknown): boolean {
   if (!isObj(e)) return false;
-  return isInt(e["cell"], 0, CELL_COUNT - 1) && isInt(e["prevValue"], 0, 9) && isNotesMask(e["prevNotes"]) && (e["digit"] === undefined || isInt(e["digit"], 1, 9));
+  const also = e["also"];
+  // PD-119: `also` — [клетка, заметки до хода][] (автоочистка соседей / «Fill candidates»); `fill` — только `true`. У старых записей их нет.
+  const alsoOk =
+    also === undefined ||
+    (Array.isArray(also) && also.length <= CELL_COUNT && also.every((a) => Array.isArray(a) && a.length === 2 && isInt(a[0], 0, CELL_COUNT - 1) && isNotesMask(a[1])));
+  return (
+    isInt(e["cell"], 0, CELL_COUNT - 1) &&
+    isInt(e["prevValue"], 0, 9) &&
+    isNotesMask(e["prevNotes"]) &&
+    (e["digit"] === undefined || isInt(e["digit"], 1, 9)) &&
+    alsoOk &&
+    (e["fill"] === undefined || e["fill"] === true)
+  );
 }
 
 /** Причина, по которой `play` нечитаем (`null` — годится). Структура — `PlayState` (`play/logic.ts`). */

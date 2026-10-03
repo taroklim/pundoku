@@ -20,9 +20,15 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  flex-wrap: wrap;
   gap: 8px;
   text-align: center;
+  overflow-wrap: break-word; /* PD-143 (c): иконка остаётся слева от текста, длинная подпись переносится, а не выталкивает иконку в столбик */
+}
+/* PD-129: «Watch your solve» — главное действие карточки результата (залитая), Share под ней — тонированная.
+   Тонированная только `.tl-start` (вход в «Replay» у других карточек). */
+.tl-watch {
+  background: var(--ink);
+  color: var(--on-ink);
 }
 .tl-watch svg,
 .tl-start svg {
@@ -507,8 +513,9 @@ input[type="range"].tl-scrub:focus-visible {
     background: Canvas;
     color: CanvasText;
   }
-  .tl-primary {
-    background: Highlight;
+  .tl-primary,
+  .tl-watch {
+    background: Highlight; /* PD-129: главная кнопка карточки результата читается и в forced-colors */
     color: HighlightText;
   }
   .tl-primary:disabled {

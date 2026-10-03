@@ -5,7 +5,14 @@ import { Mark } from "../brand/Mark";
 import { Wordmark } from "../brand/Wordmark";
 import type { Locale } from "../i18n";
 import { setLocale, SUPPORTED_LOCALES } from "../i18n";
-import { setHighlightWrong, useHighlightWrong } from "../settings/prefs";
+import {
+  setAutoClearNotes,
+  setHighlightPeers,
+  setHighlightWrong,
+  useAutoClearNotes,
+  useHighlightPeers,
+  useHighlightWrong,
+} from "../settings/prefs";
 import { ActionSheet } from "./ActionSheet";
 import { KEY_GROUP, KEY_GROUPS, keyGroups, isCompleteKey, spellGroup } from "./key";
 import type { TabId } from "../shell/tabs";
@@ -98,6 +105,8 @@ export function SettingsScreen({ store, onBack, origin = "today", onOpenHelp }: 
   const s = useSyncExternalStore(store.subscribe, store.getSnapshot);
   const locale = (i18n.resolvedLanguage ?? "en") as Locale;
   const highlightWrong = useHighlightWrong();
+  const autoClearNotes = useAutoClearNotes();
+  const highlightPeers = useHighlightPeers();
 
   useEffect(() => {
     store.open();
@@ -557,6 +566,40 @@ export function SettingsScreen({ store, onBack, origin = "today", onOpenHelp }: 
         <h2 className="settings-head" id="settings-h-game">
           {t("settings.game.head")}
         </h2>
+        <div className="settings-card">
+          <label className="settings-row settings-switch">
+            <span className="lab">{t("settings.game.autoClearNotes")}</span>
+            <input
+              type="checkbox"
+              role="switch"
+              className="st-switch"
+              checked={autoClearNotes}
+              onChange={(e) => setAutoClearNotes(e.target.checked)}
+              aria-describedby="settings-autoclear-foot"
+              data-testid="auto-clear-notes"
+            />
+          </label>
+        </div>
+        <p className="settings-foot" id="settings-autoclear-foot">
+          {t("settings.game.autoClearNotesFoot")}
+        </p>
+        <div className="settings-card">
+          <label className="settings-row settings-switch">
+            <span className="lab">{t("settings.game.highlightPeers")}</span>
+            <input
+              type="checkbox"
+              role="switch"
+              className="st-switch"
+              checked={highlightPeers}
+              onChange={(e) => setHighlightPeers(e.target.checked)}
+              aria-describedby="settings-peers-foot"
+              data-testid="highlight-peers"
+            />
+          </label>
+        </div>
+        <p className="settings-foot" id="settings-peers-foot">
+          {t("settings.game.highlightPeersFoot")}
+        </p>
         <div className="settings-card">
           <label className="settings-row settings-switch">
             <span className="lab">{t("settings.game.highlightWrong")}</span>
