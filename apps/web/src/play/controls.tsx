@@ -6,6 +6,7 @@
 import type { CSSProperties, KeyboardEvent } from "react";
 import { memo, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
+import type { TFunction } from "i18next";
 import { ActionSheet } from "../recovery/ActionSheet";
 import { formatClock } from "./format";
 import type { GameStore, PlaySnapshot } from "./gameStore";
@@ -28,6 +29,12 @@ export const prefersReducedMotion = (): boolean => window.matchMedia("(prefers-r
  * (счёт «N cells left = 0» на непустой ошибке врал бы); `hint` — отклик на отказ (PD-117b), на `HINT_MS` вместо счёта.
  * `memo`: перерисовка по тику таймера не должна снимать класс посреди анимации.
  */
+/** Текст отклика; после Fill — ещё и сколько клеток остались пустыми без кандидатов (PD-143 b: «Notes filled in N cells; M have no candidates»). */
+function hintText(t: TFunction, hint: { kind: string; count?: number; dead?: number }): string {
+  const base = t(`play.hint.${hint.kind}`, { count: hint.count });
+  return hint.dead ? `${base}; ${t("play.hint.dead", { count: hint.dead })}` : base;
+}
+
 export const StatusLine = memo(function StatusLine({ left, full = false, hint = null }: { left: number; full?: boolean; hint?: PlaySnapshot["hint"] }) {
   const { t } = useTranslation();
   const state = hint ? `h${hint.id}` : full ? "full" : String(left);
@@ -36,7 +43,7 @@ export const StatusLine = memo(function StatusLine({ left, full = false, hint = 
   useEffect(() => {
     prev.current = state;
   }, [state]);
-  const text = hint ? t(`play.hint.${hint.kind}`, { count: hint.count }) : full ? t("play.gridFull") : t("play.cellsLeft", { count: left });
+  const text = hint ? hintText(t, hint) : full ? t("play.gridFull") : t("play.cellsLeft", { count: left });
   return (
     <p key={MOTION_FLAGS.statusRoll ? state : "static"} className={rolled ? "status roll" : "status"} data-testid="status-line">
       {text}
@@ -115,12 +122,13 @@ export function useHintAnnouncement(hint: PlaySnapshot["hint"]): string {
   const id = hint?.id ?? 0;
   const kind = hint?.kind;
   const count = hint?.count;
+  const dead = hint?.dead;
   useEffect(() => {
     setText("");
     if (id === 0 || !kind) return;
-    const say = window.setTimeout(() => setText(t(`play.hint.${kind}`, { count })), 50);
+    const say = window.setTimeout(() => setText(hintText(t, { kind, count, dead })), 50);
     return () => window.clearTimeout(say);
-  }, [id, kind, count, t]);
+  }, [id, kind, count, dead, t]);
   return text;
 }
 

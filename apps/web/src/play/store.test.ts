@@ -314,6 +314,22 @@ describe("PD-119: автоочистка и Fill candidates в сторе", () =
     expect(s.getSnapshot().selected).toBe(40); // undo заполнения не уводит выбор на «первую затронутую» клетку
   });
 
+  it("Fill candidates: тупиковые клетки попадают в итог (hint.dead), без тупиков поля нет", () => {
+    localStorage.clear();
+    const s = playing();
+    s.select(2);
+    s.fillCandidates();
+    expect(s.getSnapshot().hint?.dead).toBeUndefined();
+    s.undo();
+    for (const [cell, d] of [[5, 1], [6, 2], [7, 4]] as const) {
+      s.select(cell);
+      s.input(d);
+    }
+    s.fillCandidates();
+    expect(s.getSnapshot().hint).toMatchObject({ kind: "filled" });
+    expect(s.getSnapshot().hint?.dead).toBeGreaterThanOrEqual(1);
+  });
+
   it("Fill candidates, когда нечего заполнять: подсказка «fillNone», ход не пишется", () => {
     localStorage.clear();
     const s = playing();

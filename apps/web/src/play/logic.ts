@@ -383,6 +383,15 @@ export function candidatesOf(s: PlayState, cell: number): number {
   return mask;
 }
 
+/** Тупиковые клетки (PD-143 b): пустые, без заметок и без единого допустимого кандидата — «Fill» их пропускает. */
+export function deadEndCount(s: PlayState): number {
+  let n = 0;
+  for (let i = 0; i < CELLS; i++) {
+    if (!isGiven(s, i) && (s.values[i] ?? 0) === 0 && (s.notes[i] ?? 0) === 0 && candidatesOf(s, i) === 0) n++;
+  }
+  return n;
+}
+
 /**
  * «Fill candidates» (PD-119): заполнить заметки всеми допустимыми кандидатами в пустых клетках БЕЗ заметок. Клетки, где игрок уже
  * что-то написал, не трогаются — это его работа (в т. ч. намеренно вычеркнутые кандидаты). Одно действие: одна запись undo

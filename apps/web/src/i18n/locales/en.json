@@ -193,7 +193,9 @@
       "inkFilled": "This cell is filled — ink doesn’t lift",
       "filled_one": "Notes filled in {{count}} cell",
       "filled_other": "Notes filled in {{count}} cells",
-      "fillNone": "Nothing to fill in"
+      "fillNone": "Nothing to fill in",
+      "dead_one": "{{count}} cell has no candidates",
+      "dead_other": "{{count}} cells have no candidates"
     },
     "cellsLeft_one": "{{count}} cell left",
     "cellsLeft_other": "{{count}} cells left"

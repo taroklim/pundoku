@@ -2,6 +2,7 @@ import { heatmap, summary, timelapseFrames } from "@pundoku/engine";
 import { describe, expect, it } from "vitest";
 import {
   candidatesOf,
+  deadEndCount,
   cellsLeft,
   closedUnits,
   createPlay,
@@ -431,6 +432,18 @@ describe("PD-119: Fill candidates", () => {
     }
     for (let i = 0; i < 81; i++) if (s0.mission[i]) expect(s.notes[i]).toBe(0);
     expect(s.values).toEqual(s0.values);
+  });
+
+  it("PD-143 b: deadEndCount — пустые клетки без заметок и без кандидатов; Fill их пропускает", () => {
+    let s0 = fresh();
+    expect(deadEndCount(s0)).toBe(0);
+    for (const [cell, d] of [[5, 1], [6, 2], [7, 4]] as const) s0 = enterDigit(s0, cell, d, 100 + cell); // неверные 1,2,4 в строке клетки 2
+    expect(candidatesOf(s0, EMPTY_CELL)).toBe(0);
+    const dead = deadEndCount(s0);
+    expect(dead).toBeGreaterThanOrEqual(1);
+    const s1 = fillCandidates(s0, 1000);
+    expect(s1.notes[EMPTY_CELL]).toBe(0);
+    expect(deadEndCount(s1)).toBe(dead);
   });
 
   it("одно действие — один undo: откат возвращает ВСЕ клетки; в логе один служебный note_add и один undo, правок 0", () => {

@@ -15,6 +15,7 @@ import {
   digitCells,
   enterDigit,
   eraseCell,
+  deadEndCount,
   fillCandidates as fillNotes,
   firstOpenCell,
   hasPlacedDigit,
@@ -63,7 +64,7 @@ export interface PlaySnapshot {
    * PD-117b: отклик на отказ (цифра без выбранной клетки, заметка в занятую клетку, цифра в чернильную клетку); id — на каждый.
    * PD-119: он же сообщает итог «Fill candidates» (`filled` с числом клеток `count`, `fillNone`).
    */
-  readonly hint?: { readonly kind: HintKind; readonly id: number; readonly count?: number } | null;
+  readonly hint?: { readonly kind: HintKind; readonly id: number; readonly count?: number; readonly dead?: number } | null;
 }
 
 type Mutable<T> = { -readonly [K in keyof T]: T[K] };
@@ -218,10 +219,10 @@ export abstract class GameStore<S extends PlaySnapshot = PlaySnapshot> {
   }
 
   /** PD-117b: показать отклик на отказ; снимается сам через `HINT_MS`, новым ходом или выбором клетки. */
-  private showHint(kind: HintKind, count?: number): void {
+  private showHint(kind: HintKind, count?: number, dead = 0): void {
     if (this.hintTimer !== null) window.clearTimeout(this.hintTimer);
     const id = ++this.effectId;
-    this.setTransient({ hint: { kind, id, ...(count === undefined ? {} : { count }) } } as Partial<S>);
+    this.setTransient({ hint: { kind, id, ...(count === undefined ? {} : { count }), ...(dead > 0 ? { dead } : {}) } } as Partial<S>);
     this.hintTimer = window.setTimeout(() => {
       this.hintTimer = null;
       if (this.snap.hint?.id === id) this.setTransient({ hint: null } as Partial<S>);
@@ -350,13 +351,13 @@ export abstract class GameStore<S extends PlaySnapshot = PlaySnapshot> {
     if (phase !== "playing" || !play || play.ink === true) return;
     const next = fillNotes(play, this.getElapsedMs());
     if (next === play) {
-      this.showHint("fillNone");
+      this.showHint("fillNone", undefined, deadEndCount(play));
       return;
     }
     let count = 0;
     for (let i = 0; i < next.notes.length; i++) if (next.notes[i] !== play.notes[i]) count++;
     this.finishMove(next, { play: next, pop: null, echo: null, ...this.dropHint() });
-    this.showHint("filled", count);
+    this.showHint("filled", count, deadEndCount(next));
   }
 
   /**
