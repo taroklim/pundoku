@@ -1,0 +1,1731 @@
+{
+  "meta": {
+    "date": "2026-10-03T18:22:42.621Z",
+    "build": "main a6b9088 (текущая структура; пакеты A–E не смержены)",
+    "viewport": "393x852 pt, DPR 3, touch (iPhone 16 emulation)",
+    "thumbZone": "нижняя треть окна: y >= 568 pt из 852; mid 284..568; top < 284",
+    "cpu": "Intel(R) Core(TM) i5-5257U CPU @ 2.70GHz x4, без троттлинга; macOS 22.6.0",
+    "loadavgAtStart": [
+      14.53369140625,
+      14.85693359375,
+      17.28955078125
+    ],
+    "note": "Сервер и стенд на localhost (сеть ~0 мс), CPU машины не iPhone и сильно нагружен чужими процессами (см. loadavg в каждом прогоне): секунды — относительные, для сравнения путей, не абсолют для телефона. Тапы и y-координаты от нагрузки не зависят.",
+    "cold": "новый browser context (пустой HTTP/SW-кэш), профиль из storageState (ветеран) или чистый (новичок)",
+    "warm": "тот же context после прогрева (SW активирован, ассеты в кэше), профиль тот же; для новичка IDB/localStorage стёрты после прогрева"
+  },
+  "webkit": {
+    "a_vet_daily": {
+      "taps": 1,
+      "tapsConsistent": true,
+      "extraGestures": [],
+      "zones": {
+        "thumb": 1
+      },
+      "targets": [
+        "digit 9@y682(thumb)"
+      ],
+      "tapList": [
+        {
+          "n": 1,
+          "label": "digit 9",
+          "x": 359,
+          "y": 682,
+          "h": 56,
+          "zone": "thumb"
+        }
+      ],
+      "steps": [
+        {
+          "name": "board_ready",
+          "t": 1135,
+          "taps": 0
+        },
+        {
+          "name": "first_digit",
+          "t": 1633,
+          "taps": 1
+        }
+      ],
+      "times_ms": {
+        "cold": {
+          "nav_to_board": {
+            "median": 457,
+            "min": 403,
+            "max": 1021,
+            "n": 3
+          },
+          "nav_to_board_painted": {
+            "median": 488,
+            "min": 434,
+            "max": 1060,
+            "n": 3
+          },
+          "nav_to_first_digit": {
+            "median": 783,
+            "min": 755,
+            "max": 1579,
+            "n": 3
+          },
+          "tap_to_digit_dom": {
+            "median": 22,
+            "min": 14,
+            "max": 43,
+            "n": 3
+          },
+          "app_time_no_script_gaps": {
+            "median": 502,
+            "min": 477,
+            "max": 1082,
+            "n": 3
+          }
+        },
+        "warm": {
+          "nav_to_board": {
+            "median": 391,
+            "min": 366,
+            "max": 392,
+            "n": 3
+          },
+          "nav_to_board_painted": {
+            "median": 417,
+            "min": 391,
+            "max": 427,
+            "n": 3
+          },
+          "nav_to_first_digit": {
+            "median": 630,
+            "min": 597,
+            "max": 661,
+            "n": 3
+          },
+          "tap_to_digit_dom": {
+            "median": 12,
+            "min": 11,
+            "max": 12,
+            "n": 3
+          },
+          "app_time_no_script_gaps": {
+            "median": 428,
+            "min": 403,
+            "max": 439,
+            "n": 3
+          }
+        }
+      },
+      "info": {
+        "cell": 1,
+        "digit": 9,
+        "selectedBefore": 1,
+        "inventory": {
+          "count": 6,
+          "items": [
+            {
+              "kind": "interactive",
+              "el": "button.gear-btn",
+              "label": "Settings",
+              "y": 0,
+              "cy": 22,
+              "h": 44,
+              "zone": "top"
+            },
+            {
+              "kind": "landmark",
+              "el": "h1.title",
+              "label": "Today",
+              "y": 9,
+              "cy": 23,
+              "h": 27,
+              "zone": "top"
+            },
+            {
+              "kind": "landmark",
+              "el": "p.subline",
+              "label": "Sat 3 Oct · Medium · 0:00",
+              "y": 38,
+              "cy": 45,
+              "h": 14,
+              "zone": "top"
+            },
+            {
+              "kind": "landmark",
+              "el": "div.board",
+              "label": "Sudoku grid",
+              "y": 64,
+              "cy": 245,
+              "h": 361,
+              "zone": "top"
+            },
+            {
+              "kind": "interactive",
+              "el": "board .cell x81",
+              "label": "cells (tap target 39pt)",
+              "y": 64,
+              "cy": 245,
+              "h": 361,
+              "zone": "top",
+              "note": "y 64..425; cell 39pt"
+            },
+            {
+              "kind": "landmark",
+              "el": "div.gap",
+              "label": "Ink modeOffChoose before your first move. No",
+              "y": 425,
+              "cy": 540,
+              "h": 229,
+              "zone": "mid"
+            },
+            {
+              "kind": "interactive",
+              "el": "button.ink-row",
+              "label": "Ink modeOff",
+              "y": 501,
+              "cy": 524,
+              "h": 46,
+              "zone": "mid"
+            },
+            {
+              "kind": "landmark",
+              "el": "p.ink-foot",
+              "label": "Choose before your first move. Not available",
+              "y": 547,
+              "cy": 563,
+              "h": 32,
+              "zone": "mid"
+            },
+            {
+              "kind": "landmark",
+              "el": "div.pad",
+              "label": "Number pad",
+              "y": 654,
+              "cy": 682,
+              "h": 56,
+              "zone": "thumb"
+            },
+            {
+              "kind": "interactive",
+              "el": ".pad .key x9",
+              "label": "digits 1-9 (tap target 37x56pt)",
+              "y": 654,
+              "cy": 682,
+              "h": 56,
+              "zone": "thumb"
+            },
+            {
+              "kind": "interactive",
+              "el": "button.act",
+              "label": "Notes",
+              "y": 720,
+              "cy": 743,
+              "h": 46,
+              "zone": "thumb"
+            },
+            {
+              "kind": "landmark",
+              "el": "div.tabbar",
+              "label": "Sections",
+              "y": 788,
+              "cy": 820,
+              "h": 64,
+              "zone": "thumb"
+            },
+            {
+              "kind": "interactive",
+              "el": "button.tab",
+              "label": "Today",
+              "y": 795,
+              "cy": 821,
+              "h": 51,
+              "zone": "thumb"
+            }
+          ]
+        }
+      },
+      "loadavgRange": [
+        14,
+        15
+      ],
+      "errors": [],
+      "raw": {
+        "cold": [
+          {
+            "nav_to_board": 1021.0000000000001,
+            "nav_to_board_painted": 1060,
+            "nav_to_first_digit": 1579,
+            "tap_to_digit_dom": 22,
+            "app_time_no_script_gaps": 1082
+          },
+          {
+            "nav_to_board": 403,
+            "nav_to_board_painted": 434,
+            "nav_to_first_digit": 783,
+            "tap_to_digit_dom": 43,
+            "app_time_no_script_gaps": 477
+          },
+          {
+            "nav_to_board": 457,
+            "nav_to_board_painted": 488,
+            "nav_to_first_digit": 755,
+            "tap_to_digit_dom": 14,
+            "app_time_no_script_gaps": 502
+          }
+        ],
+        "warm": [
+          {
+            "nav_to_board": 366,
+            "nav_to_board_painted": 391,
+            "nav_to_first_digit": 597,
+            "tap_to_digit_dom": 12,
+            "app_time_no_script_gaps": 403
+          },
+          {
+            "nav_to_board": 392,
+            "nav_to_board_painted": 417,
+            "nav_to_first_digit": 630,
+            "tap_to_digit_dom": 11,
+            "app_time_no_script_gaps": 428
+          },
+          {
+            "nav_to_board": 391,
+            "nav_to_board_painted": 427,
+            "nav_to_first_digit": 661,
+            "tap_to_digit_dom": 12,
+            "app_time_no_script_gaps": 439
+          }
+        ]
+      }
+    },
+    "b_vet_play_hard": {
+      "taps": 4,
+      "tapsConsistent": true,
+      "extraGestures": [
+        "iOS: колесо-пикер: прокрутка до Hard",
+        "iOS: «Done» пикера"
+      ],
+      "zones": {
+        "thumb": 2,
+        "top": 2
+      },
+      "targets": [
+        "tab Play@y821(thumb)",
+        "difficulty select (Hard)@y103(top)",
+        "Start@y242(top)",
+        "digit 7@y682(thumb)"
+      ],
+      "tapList": [
+        {
+          "n": 1,
+          "label": "tab Play",
+          "x": 197,
+          "y": 821,
+          "h": 51,
+          "zone": "thumb"
+        },
+        {
+          "n": 2,
+          "label": "difficulty select (Hard)",
+          "x": 197,
+          "y": 103,
+          "h": 18,
+          "zone": "top",
+          "native": "select"
+        },
+        {
+          "n": 3,
+          "label": "Start",
+          "x": 197,
+          "y": 242,
+          "h": 46,
+          "zone": "top"
+        },
+        {
+          "n": 4,
+          "label": "digit 7",
+          "x": 278,
+          "y": 682,
+          "h": 56,
+          "zone": "thumb"
+        }
+      ],
+      "steps": [
+        {
+          "name": "today_ready",
+          "t": 490,
+          "taps": 0
+        },
+        {
+          "name": "setup_visible",
+          "t": 730,
+          "taps": 1
+        },
+        {
+          "name": "play_board_ready",
+          "t": 1146,
+          "taps": 3
+        },
+        {
+          "name": "first_digit",
+          "t": 1405,
+          "taps": 4
+        }
+      ],
+      "times_ms": {
+        "cold": {
+          "nav_to_play_board": {
+            "median": 1092,
+            "min": 1082,
+            "max": 1923,
+            "n": 3
+          },
+          "tap_play_to_setup": {
+            "median": 15,
+            "min": 15,
+            "max": 32,
+            "n": 3
+          },
+          "start_tap_to_board": {
+            "median": 112,
+            "min": 96,
+            "max": 232,
+            "n": 3
+          },
+          "nav_to_first_digit": {
+            "median": 1375,
+            "min": 1285,
+            "max": 2157,
+            "n": 3
+          },
+          "tap_to_digit_dom": {
+            "median": 10,
+            "min": 9,
+            "max": 12,
+            "n": 3
+          },
+          "app_time_no_script_gaps": {
+            "median": 600,
+            "min": 559,
+            "max": 796,
+            "n": 3
+          }
+        },
+        "warm": {
+          "nav_to_play_board": {
+            "median": 1527,
+            "min": 1524,
+            "max": 2187,
+            "n": 3
+          },
+          "tap_play_to_setup": {
+            "median": 15,
+            "min": 14,
+            "max": 17,
+            "n": 3
+          },
+          "start_tap_to_board": {
+            "median": 198,
+            "min": 180,
+            "max": 227,
+            "n": 3
+          },
+          "nav_to_first_digit": {
+            "median": 1825,
+            "min": 1796,
+            "max": 2446,
+            "n": 3
+          },
+          "tap_to_digit_dom": {
+            "median": 14,
+            "min": 14,
+            "max": 19,
+            "n": 3
+          },
+          "app_time_no_script_gaps": {
+            "median": 959,
+            "min": 913,
+            "max": 1192,
+            "n": 3
+          }
+        }
+      },
+      "info": {
+        "cell": 0,
+        "digit": 7,
+        "selectedBefore": 0,
+        "subline": "Sat 3 Oct · Hard · 0:00",
+        "inventory_setup": {
+          "count": 3,
+          "items": [
+            {
+              "kind": "landmark",
+              "el": "h1.title",
+              "label": "Play",
+              "y": 11,
+              "cy": 24,
+              "h": 27,
+              "zone": "top"
+            },
+            {
+              "kind": "landmark",
+              "el": "p.subline",
+              "label": "A puzzle of your own, any time.",
+              "y": 40,
+              "cy": 47,
+              "h": 14,
+              "zone": "top"
+            },
+            {
+              "kind": "landmark",
+              "el": "p.sect-head",
+              "label": "New puzzle",
+              "y": 60,
+              "cy": 78,
+              "h": 37,
+              "zone": "top"
+            },
+            {
+              "kind": "interactive",
+              "el": "button.ink-row",
+              "label": "Ink modeOff",
+              "y": 143,
+              "cy": 166,
+              "h": 46,
+              "zone": "top"
+            },
+            {
+              "kind": "landmark",
+              "el": "p.ink-foot",
+              "label": "In ink mode there is no undo and no eraser f",
+              "y": 189,
+              "cy": 198,
+              "h": 19,
+              "zone": "top"
+            },
+            {
+              "kind": "interactive",
+              "el": "button.ink-primary",
+              "label": "Start",
+              "y": 222,
+              "cy": 245,
+              "h": 46,
+              "zone": "top"
+            },
+            {
+              "kind": "landmark",
+              "el": "div.tabbar",
+              "label": "Sections",
+              "y": 788,
+              "cy": 820,
+              "h": 64,
+              "zone": "thumb"
+            },
+            {
+              "kind": "interactive",
+              "el": "button.tab",
+              "label": "Today",
+              "y": 795,
+              "cy": 821,
+              "h": 51,
+              "zone": "thumb"
+            }
+          ]
+        },
+        "inventory_board": {
+          "count": 5,
+          "items": [
+            {
+              "kind": "landmark",
+              "el": "h1.title",
+              "label": "Play",
+              "y": 8,
+              "cy": 22,
+              "h": 27,
+              "zone": "top"
+            },
+            {
+              "kind": "interactive",
+              "el": "select.difficulty",
+              "label": "Difficulty",
+              "y": 14,
+              "cy": 24,
+              "h": 19,
+              "zone": "top"
+            },
+            {
+              "kind": "landmark",
+              "el": "p.subline",
+              "label": "Sat 3 Oct · Hard · 0:00",
+              "y": 37,
+              "cy": 44,
+              "h": 14,
+              "zone": "top"
+            },
+            {
+              "kind": "landmark",
+              "el": "div.board",
+              "label": "Sudoku grid",
+              "y": 63,
+              "cy": 244,
+              "h": 361,
+              "zone": "top"
+            },
+            {
+              "kind": "interactive",
+              "el": "board .cell x81",
+              "label": "cells (tap target 39pt)",
+              "y": 63,
+              "cy": 244,
+              "h": 361,
+              "zone": "top",
+              "note": "y 63..424; cell 39pt"
+            },
+            {
+              "kind": "landmark",
+              "el": "div.gap",
+              "label": "55 cells left",
+              "y": 424,
+              "cy": 539,
+              "h": 230,
+              "zone": "mid"
+            },
+            {
+              "kind": "landmark",
+              "el": "p.status",
+              "label": "55 cells left",
+              "y": 532,
+              "cy": 539,
+              "h": 14,
+              "zone": "mid"
+            },
+            {
+              "kind": "landmark",
+              "el": "div.pad",
+              "label": "Number pad",
+              "y": 654,
+              "cy": 682,
+              "h": 56,
+              "zone": "thumb"
+            },
+            {
+              "kind": "interactive",
+              "el": ".pad .key x9",
+              "label": "digits 1-9 (tap target 37x56pt)",
+              "y": 654,
+              "cy": 682,
+              "h": 56,
+              "zone": "thumb"
+            },
+            {
+              "kind": "interactive",
+              "el": "button.act",
+              "label": "Notes",
+              "y": 720,
+              "cy": 743,
+              "h": 46,
+              "zone": "thumb"
+            },
+            {
+              "kind": "landmark",
+              "el": "div.tabbar",
+              "label": "Sections",
+              "y": 788,
+              "cy": 820,
+              "h": 64,
+              "zone": "thumb"
+            },
+            {
+              "kind": "interactive",
+              "el": "button.tab",
+              "label": "Today",
+              "y": 795,
+              "cy": 821,
+              "h": 51,
+              "zone": "thumb"
+            }
+          ]
+        }
+      },
+      "loadavgRange": [
+        13,
+        18
+      ],
+      "errors": [],
+      "raw": {
+        "cold": [
+          {
+            "nav_to_play_board": 1092,
+            "tap_play_to_setup": 15,
+            "start_tap_to_board": 96,
+            "nav_to_first_digit": 1375,
+            "tap_to_digit_dom": 10,
+            "app_time_no_script_gaps": 559
+          },
+          {
+            "nav_to_play_board": 1082,
+            "tap_play_to_setup": 15,
+            "start_tap_to_board": 112,
+            "nav_to_first_digit": 1285,
+            "tap_to_digit_dom": 11.999999999999773,
+            "app_time_no_script_gaps": 599.9999999999998
+          },
+          {
+            "nav_to_play_board": 1923,
+            "tap_play_to_setup": 32,
+            "start_tap_to_board": 232,
+            "nav_to_first_digit": 2157,
+            "tap_to_digit_dom": 9,
+            "app_time_no_script_gaps": 796
+          }
+        ],
+        "warm": [
+          {
+            "nav_to_play_board": 2187,
+            "tap_play_to_setup": 13.999999999999773,
+            "start_tap_to_board": 179.99999999999977,
+            "nav_to_first_digit": 2446,
+            "tap_to_digit_dom": 19,
+            "app_time_no_script_gaps": 1191.9999999999995
+          },
+          {
+            "nav_to_play_board": 1527.0000000000002,
+            "tap_play_to_setup": 15,
+            "start_tap_to_board": 198.00000000000023,
+            "nav_to_first_digit": 1825,
+            "tap_to_digit_dom": 14,
+            "app_time_no_script_gaps": 913.0000000000002
+          },
+          {
+            "nav_to_play_board": 1524,
+            "tap_play_to_setup": 17,
+            "start_tap_to_board": 227,
+            "nav_to_first_digit": 1796,
+            "tap_to_digit_dom": 14,
+            "app_time_no_script_gaps": 959.0000000000001
+          }
+        ]
+      }
+    },
+    "c_newbie": {
+      "taps": 1,
+      "tapsConsistent": true,
+      "extraGestures": [],
+      "zones": {
+        "thumb": 1
+      },
+      "targets": [
+        "digit 9@y682(thumb)"
+      ],
+      "tapList": [
+        {
+          "n": 1,
+          "label": "digit 9",
+          "x": 359,
+          "y": 682,
+          "h": 56,
+          "zone": "thumb"
+        }
+      ],
+      "steps": [
+        {
+          "name": "board_ready",
+          "t": 824,
+          "taps": 0
+        },
+        {
+          "name": "first_digit",
+          "t": 1430,
+          "taps": 1
+        }
+      ],
+      "times_ms": {
+        "cold": {
+          "nav_to_board": {
+            "median": 742,
+            "min": 678,
+            "max": 1076,
+            "n": 3
+          },
+          "nav_to_board_painted": {
+            "median": 807,
+            "min": 748,
+            "max": 1163,
+            "n": 3
+          },
+          "nav_to_first_digit": {
+            "median": 1348,
+            "min": 1167,
+            "max": 1535,
+            "n": 3
+          },
+          "tap_to_digit_dom": {
+            "median": 18,
+            "min": 16,
+            "max": 19,
+            "n": 3
+          },
+          "app_time_no_script_gaps": {
+            "median": 825,
+            "min": 767,
+            "max": 1179,
+            "n": 3
+          }
+        },
+        "warm": {
+          "nav_to_board": {
+            "median": 681,
+            "min": 610,
+            "max": 785,
+            "n": 3
+          },
+          "nav_to_board_painted": {
+            "median": 725,
+            "min": 682,
+            "max": 822,
+            "n": 3
+          },
+          "nav_to_first_digit": {
+            "median": 1131,
+            "min": 1063,
+            "max": 1206,
+            "n": 3
+          },
+          "tap_to_digit_dom": {
+            "median": 16,
+            "min": 11,
+            "max": 23,
+            "n": 3
+          },
+          "app_time_no_script_gaps": {
+            "median": 736,
+            "min": 698,
+            "max": 845,
+            "n": 3
+          }
+        }
+      },
+      "info": {
+        "cell": 1,
+        "digit": 9,
+        "selectedBefore": 1,
+        "textEarly": "",
+        "textAtReady": "Today | Sat 3 Oct · Medium · 0:00 | 2 | 1 | 7 | 4 | 5 | 2 | 6 | 7 | 2 | 9 | 2 | 1 | 5 | 4 | 7 | 6 | 3 | 9 | 3 | 5 | 9 | 7 | 3 | 1 | 6 | 5 | 4 | 7 | 1 | 7 | Ink mode | Off | Choose before your first move. Not available once you have placed a digit. | 1 | 5 | 2 | 5 | 3 | 6 | 4 | 6 | 5 | 5 | 6 | 6 | 7 | 3 | 8 | 9 | 9 | 6 | Notes | Undo | Erase | Today | Play | Year",
+        "dialogsOrTours": 0,
+        "localStorageKeys": [],
+        "probes": {
+          "tapGivenThenDigit_changed": false,
+          "statusAfterGivenTap": "50 cells left | Puzzle from Pundoku’s generator | ",
+          "wrongDigitMarkedRed": false,
+          "statusAfterWrong": "50 cells left | Puzzle from Pundoku’s generator | ",
+          "hasCheckButton": false
+        },
+        "inventory": {
+          "count": 6,
+          "items": [
+            {
+              "kind": "interactive",
+              "el": "button.gear-btn",
+              "label": "Settings",
+              "y": 0,
+              "cy": 22,
+              "h": 44,
+              "zone": "top"
+            },
+            {
+              "kind": "landmark",
+              "el": "h1.title",
+              "label": "Today",
+              "y": 9,
+              "cy": 23,
+              "h": 27,
+              "zone": "top"
+            },
+            {
+              "kind": "landmark",
+              "el": "p.subline",
+              "label": "Sat 3 Oct · Medium · 0:00",
+              "y": 38,
+              "cy": 45,
+              "h": 14,
+              "zone": "top"
+            },
+            {
+              "kind": "landmark",
+              "el": "div.board",
+              "label": "Sudoku grid",
+              "y": 64,
+              "cy": 245,
+              "h": 361,
+              "zone": "top"
+            },
+            {
+              "kind": "interactive",
+              "el": "board .cell x81",
+              "label": "cells (tap target 39pt)",
+              "y": 64,
+              "cy": 245,
+              "h": 361,
+              "zone": "top",
+              "note": "y 64..425; cell 39pt"
+            },
+            {
+              "kind": "landmark",
+              "el": "div.gap",
+              "label": "Ink modeOffChoose before your first move. No",
+              "y": 425,
+              "cy": 540,
+              "h": 229,
+              "zone": "mid"
+            },
+            {
+              "kind": "interactive",
+              "el": "button.ink-row",
+              "label": "Ink modeOff",
+              "y": 501,
+              "cy": 524,
+              "h": 46,
+              "zone": "mid"
+            },
+            {
+              "kind": "landmark",
+              "el": "p.ink-foot",
+              "label": "Choose before your first move. Not available",
+              "y": 547,
+              "cy": 563,
+              "h": 32,
+              "zone": "mid"
+            },
+            {
+              "kind": "landmark",
+              "el": "div.pad",
+              "label": "Number pad",
+              "y": 654,
+              "cy": 682,
+              "h": 56,
+              "zone": "thumb"
+            },
+            {
+              "kind": "interactive",
+              "el": ".pad .key x9",
+              "label": "digits 1-9 (tap target 37x56pt)",
+              "y": 654,
+              "cy": 682,
+              "h": 56,
+              "zone": "thumb"
+            },
+            {
+              "kind": "interactive",
+              "el": "button.act",
+              "label": "Notes",
+              "y": 720,
+              "cy": 743,
+              "h": 46,
+              "zone": "thumb"
+            },
+            {
+              "kind": "landmark",
+              "el": "div.tabbar",
+              "label": "Sections",
+              "y": 788,
+              "cy": 820,
+              "h": 64,
+              "zone": "thumb"
+            },
+            {
+              "kind": "interactive",
+              "el": "button.tab",
+              "label": "Today",
+              "y": 795,
+              "cy": 821,
+              "h": 51,
+              "zone": "thumb"
+            }
+          ]
+        }
+      },
+      "loadavgRange": [
+        17,
+        19
+      ],
+      "errors": [],
+      "raw": {
+        "cold": [
+          {
+            "nav_to_board": 678,
+            "nav_to_board_painted": 748,
+            "nav_to_first_digit": 1348,
+            "tap_to_digit_dom": 19,
+            "app_time_no_script_gaps": 767
+          },
+          {
+            "nav_to_board": 1076,
+            "nav_to_board_painted": 1163,
+            "nav_to_first_digit": 1535.0000000000002,
+            "tap_to_digit_dom": 16,
+            "app_time_no_script_gaps": 1179
+          },
+          {
+            "nav_to_board": 742,
+            "nav_to_board_painted": 807,
+            "nav_to_first_digit": 1167,
+            "tap_to_digit_dom": 18,
+            "app_time_no_script_gaps": 825
+          }
+        ],
+        "warm": [
+          {
+            "nav_to_board": 610,
+            "nav_to_board_painted": 682,
+            "nav_to_first_digit": 1063,
+            "tap_to_digit_dom": 16,
+            "app_time_no_script_gaps": 698
+          },
+          {
+            "nav_to_board": 681,
+            "nav_to_board_painted": 725,
+            "nav_to_first_digit": 1131,
+            "tap_to_digit_dom": 11,
+            "app_time_no_script_gaps": 736
+          },
+          {
+            "nav_to_board": 785,
+            "nav_to_board_painted": 822.0000000000001,
+            "nav_to_first_digit": 1206,
+            "tap_to_digit_dom": 23,
+            "app_time_no_script_gaps": 845.0000000000001
+          }
+        ]
+      }
+    },
+    "g1_ink_today": {
+      "taps": 3,
+      "tapsConsistent": true,
+      "extraGestures": [],
+      "zones": {
+        "mid": 1,
+        "thumb": 2
+      },
+      "targets": [
+        "Ink mode row@y524(mid)",
+        "Play in ink@y769(thumb)",
+        "digit 9@y682(thumb)"
+      ],
+      "tapList": [
+        {
+          "n": 1,
+          "label": "Ink mode row",
+          "x": 197,
+          "y": 524,
+          "h": 46,
+          "zone": "mid"
+        },
+        {
+          "n": 2,
+          "label": "Play in ink",
+          "x": 197,
+          "y": 769,
+          "h": 46,
+          "zone": "thumb"
+        },
+        {
+          "n": 3,
+          "label": "digit 9",
+          "x": 359,
+          "y": 682,
+          "h": 56,
+          "zone": "thumb"
+        }
+      ],
+      "steps": [
+        {
+          "name": "board_ready",
+          "t": 819,
+          "taps": 0
+        },
+        {
+          "name": "sheet_open",
+          "t": 1645,
+          "taps": 1
+        },
+        {
+          "name": "sheet_closed",
+          "t": 2018,
+          "taps": 2
+        },
+        {
+          "name": "first_digit",
+          "t": 2497,
+          "taps": 3
+        }
+      ],
+      "times_ms": {
+        "cold": {
+          "nav_to_first_digit": {
+            "median": 2157,
+            "min": 1901,
+            "max": 2423,
+            "n": 3
+          },
+          "tap_to_digit_dom": {
+            "median": 16,
+            "min": 15,
+            "max": 20,
+            "n": 3
+          }
+        },
+        "warm": {
+          "nav_to_first_digit": {
+            "median": 1700,
+            "min": 1452,
+            "max": 2413,
+            "n": 3
+          },
+          "tap_to_digit_dom": {
+            "median": 13,
+            "min": 11,
+            "max": 14,
+            "n": 3
+          }
+        }
+      },
+      "info": {
+        "cell": 1,
+        "digit": 9,
+        "selectedBefore": 1,
+        "sheetText": "Ink doesn’t lift | In ink mode every digit you place is final. Read this before you start — you can’t switch later. | No undo, and no eraser for digits. | A wrong digit leaves a blot: the cell seals, and the right digit is filled in for you. | Pencil marks still work, and can still be erased. | Once you place a digit you can’t switch back for this puzzle. | Play in ink | Not now",
+        "sublineAfter": "Sat 3 Oct · Medium · ink · 0:00",
+        "gapAfterChoose": " | Ink mode | On | Choose before your first move. Not available once you have placed a digit. | ",
+        "gapAfterFirstDigit": "50 cells left | Puzzle from Pundoku’s generator | ",
+        "ink_row_visible_after_first_move": 0
+      },
+      "loadavgRange": [
+        18,
+        19
+      ],
+      "errors": [],
+      "raw": {
+        "cold": [
+          {
+            "nav_to_first_digit": 2423,
+            "tap_to_digit_dom": 20
+          },
+          {
+            "nav_to_first_digit": 2157,
+            "tap_to_digit_dom": 15
+          },
+          {
+            "nav_to_first_digit": 1901,
+            "tap_to_digit_dom": 16
+          }
+        ],
+        "warm": [
+          {
+            "nav_to_first_digit": 1700,
+            "tap_to_digit_dom": 14
+          },
+          {
+            "nav_to_first_digit": 1452,
+            "tap_to_digit_dom": 11
+          },
+          {
+            "nav_to_first_digit": 2413.0000000000005,
+            "tap_to_digit_dom": 13.000000000000455
+          }
+        ]
+      }
+    },
+    "g2_ink_play": {
+      "taps": 5,
+      "tapsConsistent": true,
+      "extraGestures": [],
+      "zones": {
+        "thumb": 3,
+        "top": 2
+      },
+      "targets": [
+        "tab Play@y821(thumb)",
+        "Ink mode row@y163(top)",
+        "Play in ink@y769(thumb)",
+        "Start@y242(top)",
+        "digit 1@y682(thumb)"
+      ],
+      "tapList": [
+        {
+          "n": 1,
+          "label": "tab Play",
+          "x": 197,
+          "y": 821,
+          "h": 51,
+          "zone": "thumb"
+        },
+        {
+          "n": 2,
+          "label": "Ink mode row",
+          "x": 197,
+          "y": 163,
+          "h": 46,
+          "zone": "top"
+        },
+        {
+          "n": 3,
+          "label": "Play in ink",
+          "x": 197,
+          "y": 769,
+          "h": 46,
+          "zone": "thumb"
+        },
+        {
+          "n": 4,
+          "label": "Start",
+          "x": 197,
+          "y": 242,
+          "h": 46,
+          "zone": "top"
+        },
+        {
+          "n": 5,
+          "label": "digit 1",
+          "x": 34,
+          "y": 682,
+          "h": 56,
+          "zone": "thumb"
+        }
+      ],
+      "steps": [
+        {
+          "name": "setup_visible",
+          "t": 998,
+          "taps": 1
+        },
+        {
+          "name": "sheet_open",
+          "t": 1438,
+          "taps": 2
+        },
+        {
+          "name": "play_board_ready",
+          "t": 2385,
+          "taps": 4
+        },
+        {
+          "name": "first_digit",
+          "t": 2630,
+          "taps": 5
+        }
+      ],
+      "times_ms": {
+        "cold": {
+          "start_tap_to_board": {
+            "median": 128,
+            "min": 127,
+            "max": 225,
+            "n": 3
+          },
+          "nav_to_first_digit": {
+            "median": 2339,
+            "min": 2164,
+            "max": 2586,
+            "n": 3
+          },
+          "tap_to_digit_dom": {
+            "median": 10,
+            "min": 9,
+            "max": 11,
+            "n": 3
+          }
+        },
+        "warm": {
+          "start_tap_to_board": {
+            "median": 123,
+            "min": 123,
+            "max": 150,
+            "n": 3
+          },
+          "nav_to_first_digit": {
+            "median": 2087,
+            "min": 1984,
+            "max": 2307,
+            "n": 3
+          },
+          "tap_to_digit_dom": {
+            "median": 12,
+            "min": 9,
+            "max": 12,
+            "n": 3
+          }
+        }
+      },
+      "info": {
+        "cell": 2,
+        "digit": 1,
+        "selectedBefore": 2,
+        "rowValueAfterChoose": "On",
+        "subline": "Sat 3 Oct · Medium · ink · 0:00"
+      },
+      "loadavgRange": [
+        26,
+        29
+      ],
+      "errors": [],
+      "raw": {
+        "cold": [
+          {
+            "start_tap_to_board": 225,
+            "nav_to_first_digit": 2586,
+            "tap_to_digit_dom": 11
+          },
+          {
+            "start_tap_to_board": 128,
+            "nav_to_first_digit": 2164,
+            "tap_to_digit_dom": 8.999999999999545
+          },
+          {
+            "start_tap_to_board": 127,
+            "nav_to_first_digit": 2339,
+            "tap_to_digit_dom": 10
+          }
+        ],
+        "warm": [
+          {
+            "start_tap_to_board": 123,
+            "nav_to_first_digit": 2307,
+            "tap_to_digit_dom": 12
+          },
+          {
+            "start_tap_to_board": 150.00000000000023,
+            "nav_to_first_digit": 2087,
+            "tap_to_digit_dom": 9
+          },
+          {
+            "start_tap_to_board": 123,
+            "nav_to_first_digit": 1984,
+            "tap_to_digit_dom": 12
+          }
+        ]
+      }
+    },
+    "e_archive_missed": {
+      "taps": 5,
+      "tapsConsistent": true,
+      "extraGestures": [],
+      "zones": {
+        "thumb": 4,
+        "mid": 1
+      },
+      "targets": [
+        "tab Year@y821(thumb)",
+        "month Sep@y352(mid)",
+        "day 2026-09-27@y784(thumb)",
+        "Play this day's puzzle@y811(thumb)",
+        "digit 8@y682(thumb)"
+      ],
+      "tapList": [
+        {
+          "n": 1,
+          "label": "tab Year",
+          "x": 322,
+          "y": 821,
+          "h": 51,
+          "zone": "thumb"
+        },
+        {
+          "n": 2,
+          "label": "month Sep",
+          "x": 320,
+          "y": 352,
+          "h": 105,
+          "zone": "mid"
+        },
+        {
+          "n": 3,
+          "label": "day 2026-09-27",
+          "x": 39,
+          "y": 784,
+          "h": 46,
+          "zone": "thumb"
+        },
+        {
+          "n": 4,
+          "label": "Play this day's puzzle",
+          "x": 197,
+          "y": 811,
+          "h": 46,
+          "zone": "thumb"
+        },
+        {
+          "n": 5,
+          "label": "digit 8",
+          "x": 318,
+          "y": 682,
+          "h": 56,
+          "zone": "thumb"
+        }
+      ],
+      "steps": [
+        {
+          "name": "today_ready",
+          "t": 697,
+          "taps": 0
+        },
+        {
+          "name": "day_card",
+          "t": 1942,
+          "taps": 3
+        },
+        {
+          "name": "archive_board",
+          "t": 2354,
+          "taps": 4
+        },
+        {
+          "name": "first_digit",
+          "t": 3002,
+          "taps": 5
+        }
+      ],
+      "times_ms": {
+        "cold": {
+          "tap_play_to_board": {
+            "median": 114,
+            "min": 109,
+            "max": 127,
+            "n": 3
+          },
+          "nav_to_first_digit": {
+            "median": 2651,
+            "min": 2545,
+            "max": 2750,
+            "n": 3
+          },
+          "tap_to_digit_dom": {
+            "median": 11,
+            "min": 10,
+            "max": 13,
+            "n": 3
+          }
+        },
+        "warm": {
+          "tap_play_to_board": {
+            "median": 117,
+            "min": 106,
+            "max": 145,
+            "n": 3
+          },
+          "nav_to_first_digit": {
+            "median": 2613,
+            "min": 2306,
+            "max": 2619,
+            "n": 3
+          },
+          "tap_to_digit_dom": {
+            "median": 12,
+            "min": 10,
+            "max": 18,
+            "n": 3
+          }
+        }
+      },
+      "info": {
+        "cardText": "Sun 27 September | Before your first entry. | Play this day’s puzzle",
+        "selectedOnOpen": 1,
+        "selectedCellAlreadyFilled": false,
+        "digitsAlreadyThere": 0,
+        "digitsAfterFirstTap": 1,
+        "cell": 1,
+        "digit": 8,
+        "selectedBefore": 1
+      },
+      "loadavgRange": [
+        20,
+        24
+      ],
+      "errors": [],
+      "raw": {
+        "cold": [
+          {
+            "tap_play_to_board": 109,
+            "nav_to_first_digit": 2651.0000000000005,
+            "tap_to_digit_dom": 13.000000000000455
+          },
+          {
+            "tap_play_to_board": 127,
+            "nav_to_first_digit": 2750,
+            "tap_to_digit_dom": 11
+          },
+          {
+            "tap_play_to_board": 114,
+            "nav_to_first_digit": 2545,
+            "tap_to_digit_dom": 10
+          }
+        ],
+        "warm": [
+          {
+            "tap_play_to_board": 106,
+            "nav_to_first_digit": 2306,
+            "tap_to_digit_dom": 12
+          },
+          {
+            "tap_play_to_board": 117,
+            "nav_to_first_digit": 2619,
+            "tap_to_digit_dom": 18
+          },
+          {
+            "tap_play_to_board": 145,
+            "nav_to_first_digit": 2613,
+            "tap_to_digit_dom": 10
+          }
+        ]
+      }
+    },
+    "f_year_sheet": {
+      "taps": 3,
+      "tapsConsistent": true,
+      "extraGestures": [],
+      "zones": {
+        "thumb": 2,
+        "mid": 1
+      },
+      "targets": [
+        "tab Year@y821(thumb)",
+        "month Sep@y352(mid)",
+        "day 29 Sep@y784(thumb)"
+      ],
+      "tapList": [
+        {
+          "n": 1,
+          "label": "tab Year",
+          "x": 322,
+          "y": 821,
+          "h": 51,
+          "zone": "thumb"
+        },
+        {
+          "n": 2,
+          "label": "month Sep",
+          "x": 320,
+          "y": 352,
+          "h": 105,
+          "zone": "mid"
+        },
+        {
+          "n": 3,
+          "label": "day 29 Sep",
+          "x": 144,
+          "y": 784,
+          "h": 46,
+          "zone": "thumb"
+        }
+      ],
+      "steps": [
+        {
+          "name": "today_ready",
+          "t": 904,
+          "taps": 0
+        },
+        {
+          "name": "year_visible",
+          "t": 1386,
+          "taps": 1
+        },
+        {
+          "name": "month_sheet",
+          "t": 2003,
+          "taps": 2
+        },
+        {
+          "name": "day_card",
+          "t": 2461,
+          "taps": 3
+        }
+      ],
+      "times_ms": {
+        "cold": {
+          "tap_year_to_visible": {
+            "median": 33,
+            "min": 32,
+            "max": 38,
+            "n": 3
+          },
+          "tap_month_to_sheet": {
+            "median": 90,
+            "min": 67,
+            "max": 111,
+            "n": 3
+          },
+          "tap_day_to_card": {
+            "median": 27,
+            "min": 19,
+            "max": 32,
+            "n": 3
+          },
+          "nav_to_day_card": {
+            "median": 2271,
+            "min": 2220,
+            "max": 2394,
+            "n": 3
+          }
+        },
+        "warm": {
+          "tap_year_to_visible": {
+            "median": 50,
+            "min": 34,
+            "max": 69,
+            "n": 3
+          },
+          "tap_month_to_sheet": {
+            "median": 65,
+            "min": 61,
+            "max": 108,
+            "n": 3
+          },
+          "tap_day_to_card": {
+            "median": 25,
+            "min": 23,
+            "max": 27,
+            "n": 3
+          },
+          "nav_to_day_card": {
+            "median": 2014,
+            "min": 1965,
+            "max": 2119,
+            "n": 3
+          }
+        }
+      },
+      "info": {
+        "totals": "4 days · 4 clean",
+        "inventory": {
+          "count": 5,
+          "items": [
+            {
+              "kind": "landmark",
+              "el": "h1.title",
+              "label": "Year 2026",
+              "y": 17,
+              "cy": 31,
+              "h": 27,
+              "zone": "top"
+            },
+            {
+              "kind": "landmark",
+              "el": "p.subline",
+              "label": "0 days · 0 clean",
+              "y": 46,
+              "cy": 54,
+              "h": 15,
+              "zone": "top"
+            },
+            {
+              "kind": "interactive",
+              "el": "button.year-month",
+              "label": "January, nothing yet",
+              "y": 73,
+              "cy": 126,
+              "h": 105,
+              "zone": "top"
+            },
+            {
+              "kind": "interactive",
+              "el": "button.year-month",
+              "label": "April, nothing yet",
+              "y": 186,
+              "cy": 239,
+              "h": 105,
+              "zone": "top"
+            },
+            {
+              "kind": "interactive",
+              "el": "button.year-month",
+              "label": "July, nothing yet",
+              "y": 299,
+              "cy": 352,
+              "h": 105,
+              "zone": "mid"
+            },
+            {
+              "kind": "interactive",
+              "el": "button.year-month",
+              "label": "October, nothing yet",
+              "y": 413,
+              "cy": 465,
+              "h": 105,
+              "zone": "mid"
+            },
+            {
+              "kind": "landmark",
+              "el": "ul.year-legend",
+              "label": "What the marks mean",
+              "y": 518,
+              "cy": 531,
+              "h": 26,
+              "zone": "mid"
+            },
+            {
+              "kind": "landmark",
+              "el": "div.tabbar",
+              "label": "Sections",
+              "y": 788,
+              "cy": 820,
+              "h": 64,
+              "zone": "thumb"
+            },
+            {
+              "kind": "interactive",
+              "el": "button.tab",
+              "label": "Today",
+              "y": 795,
+              "cy": 821,
+              "h": 51,
+              "zone": "thumb"
+            }
+          ]
+        }
+      },
+      "loadavgRange": [
+        18,
+        19
+      ],
+      "errors": [],
+      "raw": {
+        "cold": [
+          {
+            "tap_year_to_visible": 33,
+            "tap_month_to_sheet": 90,
+            "tap_day_to_card": 27,
+            "nav_to_day_card": 2394
+          },
+          {
+            "tap_year_to_visible": 32,
+            "tap_month_to_sheet": 111,
+            "tap_day_to_card": 19,
+            "nav_to_day_card": 2271
+          },
+          {
+            "tap_year_to_visible": 38,
+            "tap_month_to_sheet": 67,
+            "tap_day_to_card": 32,
+            "nav_to_day_card": 2220
+          }
+        ],
+        "warm": [
+          {
+            "tap_year_to_visible": 69,
+            "tap_month_to_sheet": 65,
+            "tap_day_to_card": 25.000000000000227,
+            "nav_to_day_card": 2014.0000000000002
+          },
+          {
+            "tap_year_to_visible": 50,
+            "tap_month_to_sheet": 61,
+            "tap_day_to_card": 23,
+            "nav_to_day_card": 2119
+          },
+          {
+            "tap_year_to_visible": 34,
+            "tap_month_to_sheet": 108,
+            "tap_day_to_card": 27,
+            "nav_to_day_card": 1965
+          }
+        ]
+      }
+    }
+  }
+}
