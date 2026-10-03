@@ -368,22 +368,48 @@ button.row:active{ background:var(--ink-tint); }
 }
 /* The rejected four-button variant also carries the review ruler and a taller row. */
 :root[data-fill="c"] .board-wrap{ --extra: 70px; }
+/* VARIANT A NEEDS ITS OWN RESERVE TOO — same class of bug as the one §4.3 fixed for the
+   action row. The gap's standing share of --chrome is one status LINE (1.15rem + 16); the
+   fill plate is a 44 pt TOUCH TARGET plus the gap's 8/8 padding, i.e. 60 px, and that is
+   taller than the line at every text size below ~38 px. Without a reserve the column
+   overflowed on 320 pt, the gap (the only `flex:1 1 auto` item) shrank to its min-height and
+   the 44 px plate spilled over the board above it and the keys below it. The plate now buys
+   its height BEFORE the board is measured, so the board gives way and nothing overlaps.
+   At AX3 the status line is already taller than 44 px, so the reserve is 0 and the AX3
+   geometry of §4.3 is untouched. */
+:root[data-fill="a"][data-notes="on"]:not([data-mode="ink"]) .board-wrap{
+  --extra: max(0px, calc(44px - 1.15rem));
+}
 .board{
   position:relative; display:grid; grid-template-columns:repeat(3,1fr); gap:var(--box-gap);
   width:min(100%, calc(100dvh - var(--chrome)));
   margin:0 auto;
   --s: calc((min(100cqi, 100dvh - var(--chrome)) - 2 * var(--box-gap)) / 9);
 }
+/* THE BOX DOES NOT CLIP ITS CELLS' CONTENT. `border-radius` + `overflow:hidden` on the box
+   used to slice the note in the corner cell of a box (candidate 9 of a 1·5·9 cell): the
+   10 px radius is a fixed constant tuned for a 38.9 px cell on 390 pt, and on 320 pt the
+   cell is ~25 px, so the arc eats the whole bottom-right ninth where that note lives.
+   A rounded corner must shape the SURFACE, never cut the digits on it — the same rule §4.2
+   established for focus rings. So: the box no longer clips (its own background is still
+   painted round — `border-radius` clips an element's own background without `overflow`),
+   and each corner CELL carries the matching corner radius, so its opaque fill and its
+   selection tint keep the rounded silhouette exactly as before. Cell sizes are unchanged. */
 .box{
   position:relative; display:grid; grid-template-columns:repeat(3,1fr);
-  border-radius:var(--box-radius); overflow:hidden;
+  border-radius:var(--box-radius); overflow:visible;
   background:var(--elev); box-shadow:var(--box-shadow);
+  --corner-in: calc(var(--box-radius) * .3);
 }
 .cell{
   position:relative; aspect-ratio:1; min-width:0; min-height:0;
-  display:grid; place-items:center; overflow:hidden; background:var(--elev);
+  display:grid; place-items:center; overflow:visible; background:var(--elev);
   box-shadow: inset -0.5px 0 0 var(--rule-thin), inset 0 -0.5px 0 var(--rule-thin);
 }
+.box .cell:nth-child(1){ border-top-left-radius:var(--box-radius); }
+.box .cell:nth-child(3){ border-top-right-radius:var(--box-radius); }
+.box .cell:nth-child(7){ border-bottom-left-radius:var(--box-radius); }
+.box .cell:nth-child(9){ border-bottom-right-radius:var(--box-radius); }
 .box .cell:nth-child(3n){ box-shadow: inset 0 -0.5px 0 var(--rule-thin); }
 .box .cell:nth-child(n+7){ box-shadow: inset -0.5px 0 0 var(--rule-thin); }
 .box .cell:nth-child(9){ box-shadow:none; }
@@ -405,6 +431,15 @@ button.row:active{ background:var(--ink-tint); }
   font-size:max(7px, calc(var(--s) * .30)); line-height:1;
   color:var(--notes); display:grid; place-items:center;
 }
+/* …and the note grid is pulled in from the rounded corner it shares with the box, so the
+   corner note is not merely un-clipped but never reaches the arc in the first place.
+   0.3 × radius = 3 px keeps the outer corner of the glyph's em box inside the arc at both
+   38.9 px (390 pt) and ~25 px (320 pt) cells; the 7 px floor on the glyph still fits. Only
+   the four corner cells of each box move, and only on their two rounded sides. */
+.box .cell:nth-child(1) .marks{ padding-top:calc(4% + var(--corner-in)); padding-left:calc(4% + var(--corner-in)); }
+.box .cell:nth-child(3) .marks{ padding-top:calc(4% + var(--corner-in)); padding-right:calc(4% + var(--corner-in)); }
+.box .cell:nth-child(7) .marks{ padding-bottom:calc(4% + var(--corner-in)); padding-left:calc(4% + var(--corner-in)); }
+.box .cell:nth-child(9) .marks{ padding-bottom:calc(4% + var(--corner-in)); padding-right:calc(4% + var(--corner-in)); }
 
 /* >= 8 px of air under the board and >= 8 px before the keys, at every text size. `min-height`
    reserves a whole status line plus that padding, so the line can never be squeezed against the
@@ -413,6 +448,13 @@ button.row:active{ background:var(--ink-tint); }
   flex:1 1 auto; min-height:calc(1.15rem + 16px);
   display:flex; align-items:center; justify-content:center;
   padding:8px max(16px, var(--sa-r)) 8px max(16px, var(--sa-l));
+}
+/* The same reserve on the gap itself: while the fill plate is up, the gap's floor is the
+   44 pt target plus its 8/8 padding, not one status line. Kept in sync with the --extra
+   above — the reserve in --chrome and the floor here have to be the same number, or the
+   board is sized for a gap that then refuses to be that small. */
+:root[data-fill="a"][data-notes="on"]:not([data-mode="ink"]) .gap{
+  min-height: max(calc(1.15rem + 16px), 60px);
 }
 .status{ margin:0; color:var(--label-2); font-size:.88rem; font-variant-numeric:tabular-nums; text-align:center; }
 
