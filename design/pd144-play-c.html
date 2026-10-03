@@ -149,6 +149,10 @@ body{
 }
 button{ font:inherit; color:inherit; background:none; border:0; padding:0; cursor:pointer; touch-action:manipulation; -webkit-appearance:none; appearance:none; text-align:left; }
 :focus-visible{ outline:2px solid var(--ink); outline-offset:2px; border-radius:6px; }
+/* A row lives inside a card with `overflow:hidden`, so an outline drawn OUTSIDE the row is
+   clipped on the first and last row. Inside the card the ring is drawn inset instead. */
+.card .row:focus-visible,
+.menu button:focus-visible{ outline-offset:-3px; border-radius:0; }
 
 .frame{
   position:relative; width:100%; height:100dvh;
@@ -265,7 +269,11 @@ button.row:active{ background:var(--ink-tint); }
 /* Continue: two lines — what it is, then how far along. Two INDEPENDENT games (owner decision):
    the day and the free game each keep their own saved state, so neither can destroy the other. */
 .row.two{ flex-direction:column; align-items:stretch; gap:2px; padding-right:38px; }
-.row.two .l1{ display:flex; align-items:center; gap:6px; min-width:0; overflow-wrap:break-word; }
+/* The name of an unfinished game WRAPS; it is never cut by the card. At 320 pt in uk at AX3
+   "Головоломка дня" alone is wider than the row, so the line has to be allowed to break and
+   the chip has to be allowed to fall to the next line. */
+.row.two .l1{ display:flex; flex-wrap:wrap; align-items:center; gap:4px 6px; min-width:0; }
+.row.two .l1 b{ min-width:0; overflow-wrap:break-word; hyphens:auto; }
 .row.two .l2{ color:var(--label-2); font-size:.88rem; overflow-wrap:break-word; font-variant-numeric:tabular-nums; }
 .row.two .chev{ position:absolute; right:16px; top:50%; transform:translateY(-50%); }
 .row.two .glyph{ flex:none; width:19px; height:19px; color:var(--ink); }
@@ -444,11 +452,29 @@ button.row:active{ background:var(--ink-tint); }
   background:var(--elev); border-radius:16px 16px 0 0;
   padding:8px max(20px, var(--sa-r)) calc(16px + var(--sa-bot)) max(20px, var(--sa-l));
   display:flex; flex-direction:column; gap:8px;
-  max-height:calc(100% - var(--sa-top) - 10px);
+  /* At AX3 on a 320x568 screen the sheet may take the whole screen minus 8 px. Only its text
+     scrolls: the grabber, the title and the button are flex:none and can never be pushed off. */
+  max-height:calc(100% - max(var(--sa-top), 8px) - 8px);
 }
 .grabber{ width:36px; height:5px; border-radius:3px; background:var(--hairline); margin:0 auto 6px; flex:none; }
+.sheet > h2, .sheet > .btn-primary{ flex:none; }
 .sheet h2{ margin:0; font-size:1.24rem; font-weight:700; letter-spacing:-.02em; overflow-wrap:break-word; }
-.sheet .sheet-scroll{ overflow-y:auto; min-height:0; display:flex; flex-direction:column; gap:8px; }
+.sheet .sheet-scroll{ overflow-y:auto; overscroll-behavior:contain; min-height:0; display:flex; flex-direction:column; gap:8px; }
+/* "There is more below" without a scrollbar: a sticky fade pinned to the bottom of the scroll
+   area. When the content is shorter than the area it sits over empty space and is invisible,
+   so a screenshot never shows a sentence that looks chopped off by accident. */
+.scroll-fade{
+  position:sticky; bottom:0; flex:none; height:16px; margin-top:-16px; pointer-events:none;
+  background:linear-gradient(to bottom, transparent, var(--elev));
+}
+.sheet-scroll .scroll-fade{ margin-inline:-20px; }
+.asheet-scroll .scroll-fade{ margin-inline:-16px; }
+/* Large text inside a sheet: tighter leading and padding buy whole lines back before anything
+   has to scroll at all. The type itself still scales — nothing here caps Dynamic Type. */
+.sheet p, .mode-opt .md, .asheet-scroll p{ line-height:1.25; }
+:root[data-type="ax3"] .sheet{ padding-left:max(12px, var(--sa-l)); padding-right:max(12px, var(--sa-r)); gap:6px; }
+:root[data-type="ax3"] .mode-opt{ padding:8px 10px; gap:6px; }
+:root[data-type="ax3"] .asheet-scroll{ padding:10px 12px; }
 .mode-opt{
   display:flex; align-items:flex-start; gap:10px; flex-wrap:wrap;
   min-height:56px; padding:10px 12px; border-radius:12px; background:var(--chip-bg);
@@ -469,7 +495,7 @@ button.row:active{ background:var(--ink-tint); }
   position:absolute; left:0; right:0; bottom:0; z-index:31;
   padding: 0 max(10px, var(--sa-l)) calc(10px + var(--sa-bot)) max(10px, var(--sa-r));
   display:flex; flex-direction:column; gap:8px;
-  max-height:calc(100% - var(--sa-top) - 10px);
+  max-height:calc(100% - max(var(--sa-top), 8px) - 8px);
 }
 .asheet-card{
   background:var(--elev); border-radius:14px; overflow:hidden;
@@ -559,6 +585,13 @@ button.row:active{ background:var(--ink-tint); }
   box-shadow:0 6px 18px rgba(0,0,0,.4);
 }
 :root[data-mock="open"] .pill{ display:none; }
+/* Screenshot mode: the review pill must never sit on top of a sheet button. `?shot=1` in the
+   URL, and `window.PD144.reset()` (which only the shots script calls), both switch it off. */
+:root[data-mock="hidden"] .pill,
+:root[data-mock="hidden"] .mock{ display:none; }
+/* While a sheet is up the pill would overlap its buttons — it steps aside (tap the scrim to
+   dismiss the sheet and it comes back). */
+:root:not([data-sheet="none"]) .pill{ display:none; }
 #mockClose{ color:#fff; text-decoration:underline; }
 </style>
 </head>
@@ -747,6 +780,7 @@ button.row:active{ background:var(--ink-tint); }
         <span class="ck"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7"/></svg></span>
         <span class="md" data-t="modeInkSub">No undo and no eraser for digits. A wrong digit leaves a blot.</span>
       </button>
+      <div class="scroll-fade" aria-hidden="true"></div>
     </div>
     <button class="btn-primary" id="modeDone" data-t="done">Done</button>
   </div>
@@ -757,6 +791,7 @@ button.row:active{ background:var(--ink-tint); }
       <div class="asheet-scroll">
         <h2 data-t="discardTitle">Discard your unfinished puzzle?</h2>
         <p data-t="discardMsg">Your progress on it will be lost. Today’s puzzle is not affected.</p>
+        <div class="scroll-fade" aria-hidden="true"></div>
       </div>
       <button class="asheet-act destructive" data-t="discard">Discard</button>
     </div>
@@ -856,7 +891,7 @@ button.row:active{ background:var(--ink-tint); }
       newHead:"Нова сітка",
       modeRow:"Режим", modeClassic:"Класика", modeInk:"Чорнило", inkChip:"Чорнило",
       modeClassicSub:"Скасування, гумка й нотатки працюють.",
-      modeInkSub:"Немає скасування і немає гумки для цифр. Неправильна цифра лишає ляпку.",
+      modeInkSub:"Немає скасування і гумки для цифр. Неправильна цифра лишає ляпку.",
       footClassic:"Власні ігри не потрапляють до вашого року.",
       footInk:"У чорнильному режимі немає скасування і немає гумки для цифр. Власні ігри не потрапляють до вашого року.",
       start:"Почати", done:"Готово",
@@ -867,7 +902,8 @@ button.row:active{ background:var(--ink-tint); }
       fillAction:"Заповнити кандидатами", howWorks:"Як працює Pundoku",
       notes:"Нотатки", undo:"Скасувати", erase:"Стерти",
       discardTitle:"Відкинути незавершену сітку?",
-      discardMsg:"Прогрес у ній буде втрачено. Головоломки дня це не торкається.",
+      /* Short on purpose: at AX3 on 320 pt every word costs a line. */
+      discardMsg:"Прогрес у ній буде втрачено. Головоломка дня не постраждає.",
       discard:"Відкинути", keepPlaying:"Грати далі",
       solvedTitle:"Розв’язано", rTime:"Час", rFixes:"Виправлення", clean:"чисто",
       rTech:"Досягнута техніка", techLocked:"Замкнені кандидати",
@@ -886,7 +922,7 @@ button.row:active{ background:var(--ink-tint); }
       newHead:"Новая сетка",
       modeRow:"Режим", modeClassic:"Классика", modeInk:"Чернила", inkChip:"Чернила",
       modeClassicSub:"Отмена, ластик и заметки работают.",
-      modeInkSub:"Нет отмены и нет ластика для цифр. Неверная цифра оставляет кляксу.",
+      modeInkSub:"Нет отмены и ластика для цифр. Неверная цифра оставляет кляксу.",
       footClassic:"Свои игры не попадают в ваш год.",
       footInk:"В чернильном режиме нет отмены и нет ластика для цифр. Свои игры не попадают в ваш год.",
       start:"Начать", done:"Готово",
@@ -897,7 +933,7 @@ button.row:active{ background:var(--ink-tint); }
       fillAction:"Заполнить кандидатами", howWorks:"Как устроен Pundoku",
       notes:"Заметки", undo:"Отменить", erase:"Стереть",
       discardTitle:"Отбросить незавершённую сетку?",
-      discardMsg:"Прогресс в ней будет потерян. Головоломки дня это не касается.",
+      discardMsg:"Прогресс в ней будет потерян. Головоломка дня не пострадает.",
       discard:"Отбросить", keepPlaying:"Играть дальше",
       solvedTitle:"Решено", rTime:"Время", rFixes:"Исправления", clean:"чисто",
       rTech:"Достигнутая техника", techLocked:"Запертые кандидаты",
@@ -1124,6 +1160,9 @@ button.row:active{ background:var(--ink-tint); }
     guide: drawGuide,
     reset: function(){
       chosen = "hard";
+      /* Only the shots script calls reset(), so this is the safe place to drop the review
+         pill: it used to sit on top of "Done" / "Keep playing" in the rendered frames. */
+      root.setAttribute("data-mock", "hidden");
       ["screen","cont","mode","sheet","fill","notes","menu","slot","lang","type","safearea"].forEach(function(k){
         root.setAttribute("data-" + k, {screen:"hub",cont:"both",mode:"classic",sheet:"none",fill:"a",
           notes:"on",menu:"closed",slot:"off",lang:"en",type:"default",safearea:"sim"}[k]);
@@ -1132,6 +1171,9 @@ button.row:active{ background:var(--ink-tint); }
       render();
     }
   };
+
+  /* ?shot=1 — same thing for a manual check in a browser: no review chrome at all. */
+  if (/[?&]shot=1\b/.test(location.search)) root.setAttribute("data-mock", "hidden");
 
   document.getElementById("board").innerHTML = boardHtml();
   renderHeat();
