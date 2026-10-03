@@ -39,7 +39,6 @@ const shots = [
   { name: 'hub-ink',          vp: BIG, appearance: 'light', mode: 'ink' },
   { name: 'mode-sheet',       vp: BIG, appearance: 'light', sheet: 'mode' },
   { name: 'mode-sheet',       vp: BIG, appearance: 'dark',  sheet: 'mode', lang: 'ru' },
-  { name: 'hub-slot',         vp: BIG, appearance: 'light', slot: 'on', cont: 'none' },
   { name: 'hub',              vp: BIG, appearance: 'light', type: 'ax3' },
   { name: 'hub',              vp: BIG, appearance: 'light', type: 'ax3', lang: 'ru' },
 
@@ -79,7 +78,7 @@ const shots = [
 
 /** The screen each named shot implies, unless the shot says otherwise. */
 const SCREEN_OF = {
-  hub: 'hub', 'hub-empty': 'hub', 'hub-day-only': 'hub', 'hub-ink': 'hub', 'hub-slot': 'hub',
+  hub: 'hub', 'hub-empty': 'hub', 'hub-day-only': 'hub', 'hub-ink': 'hub',
   'mode-sheet': 'hub', discard: 'hub',
   game: 'game', 'game-ink': 'game', 'fill-a': 'game', 'fill-b': 'game', 'fill-c': 'game',
   solved: 'solved', headers: 'headers',
@@ -109,10 +108,9 @@ async function run(engine, prefix) {
       P.set('screen', cfg.screen || cfg.screenOf);
       P.set('cont', cfg.cont || 'both');
       P.set('mode', cfg.mode || 'classic');
-      P.set('fill', cfg.fill || 'a');
+      P.set('fill', cfg.fill || 'b');
       P.set('notes', cfg.notes || 'off');
       P.set('menu', cfg.menu || 'closed');
-      P.set('slot', cfg.slot || 'off');
       P.set('sheet', cfg.sheet || 'none');
       P.guide();
     }, { ...s, screenOf: SCREEN_OF[s.name] || 'hub' });

@@ -1,5 +1,5 @@
 import type { KeyboardEvent } from "react";
-import { useEffect, useMemo, useRef } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { hintStepCopy } from "./hintCopy";
 import type { HintLadder, HintLadderState } from "./hintStore";
@@ -35,13 +35,31 @@ export function HintDock({ ladder, state, play = false }: HintDockProps) {
     if (!state.open) return;
     heading.current?.focus({ preventScroll: true });
     // Док выше свободного места (iPhone SE): показать целиком; там, где он помещается, прокрутки нет — поле не двигается.
-    dock.current?.scrollIntoView?.({ block: "nearest" });
-  }, [session, state.open]);
+    // PD-144: экран партии Play НЕ прокручивается никогда (`overflow:hidden` скроллится и скриптом — это и был D2 «док
+    // докручивает страницу»): там док сам сжимается и прокручивает текст внутри себя, а страницу не трогаем.
+    if (!play) dock.current?.scrollIntoView?.({ block: "nearest" });
+  }, [session, state.open, play]);
 
   // Новая ступень: текст начинается сверху (на AX3 док скроллится внутри себя, кнопка внизу — ступень не должна открываться «с середины»).
+  const scroller = useRef<HTMLDivElement>(null);
+  const [more, setMore] = useState(false);
+  const measureMore = useCallback(() => {
+    const el = scroller.current;
+    if (el) setMore(el.scrollHeight - el.clientHeight > 1 && el.scrollTop + el.clientHeight < el.scrollHeight - 1);
+  }, []);
   useEffect(() => {
     if (dock.current) dock.current.scrollTop = 0;
-  }, [step, hint?.kind]);
+    if (scroller.current) scroller.current.scrollTop = 0;
+    measureMore();
+  }, [step, hint?.kind, state.open, measureMore]);
+  // Док меняет высоту вместе с экраном (поворот, Dynamic Type): пересчитать, есть ли что дочитывать.
+  useEffect(() => {
+    const el = scroller.current;
+    if (!el || typeof ResizeObserver === "undefined") return;
+    const ro = new ResizeObserver(measureMore);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [measureMore, state.open]);
 
   const copy = useMemo(() => (hint ? hintStepCopy(t, hint, step, play) : null), [t, hint, step, play]);
   if (!state.open || !hint || !copy) return null;
@@ -83,25 +101,29 @@ export function HintDock({ ladder, state, play = false }: HintDockProps) {
           {t("hint.close")}
         </button>
       </div>
-      <div role="status" aria-live="polite" aria-atomic="true" className="hint-live" data-testid="hint-live">
-        <span className="sr-only">{counter}. </span>
-        <h3 className="hint-title" data-testid="hint-title">
-          {copy.title}
-        </h3>
-        <p className="hint-body" data-testid="hint-body">
-          {copy.body}
-        </p>
+      {/* Текст ступени + ключ значков: на экране партии Play это единственная прокручиваемая часть дока (кнопки вне неё всегда
+          видны); `data-more` — под нижней кромкой ещё есть текст (затухание, PD-144 D-1). Тут и на Today вёрстка прежняя. */}
+      <div ref={scroller} className="hint-scroll" data-more={more ? "1" : undefined} onScroll={measureMore}>
+        <div role="status" aria-live="polite" aria-atomic="true" className="hint-live" data-testid="hint-live">
+          <span className="sr-only">{counter}. </span>
+          <h3 className="hint-title" data-testid="hint-title">
+            {copy.title}
+          </h3>
+          <p className="hint-body" data-testid="hint-body">
+            {copy.body}
+          </p>
+        </div>
+        {copy.key.length > 0 && (
+          <p className="hint-key" data-testid="hint-key">
+            {copy.key.map((k) => (
+              <span key={k.kind} data-kind={k.kind}>
+                <i className={`g-${k.kind}`} aria-hidden="true" />
+                {k.label}
+              </span>
+            ))}
+          </p>
+        )}
       </div>
-      {copy.key.length > 0 && (
-        <p className="hint-key" data-testid="hint-key">
-          {copy.key.map((k) => (
-            <span key={k.kind} data-kind={k.kind}>
-              <i className={`g-${k.kind}`} aria-hidden="true" />
-              {k.label}
-            </span>
-          ))}
-        </p>
-      )}
       {/* Ветки без лесенки (ошибка, «не нашёл») несут только «Закрыть» — второй, крупной кнопкой, как в макете. */}
       <button type="button" className={`hint-more${lastStep ? " quiet" : ""}`} onClick={() => (branch ? ladder.close() : ladder.next())} data-testid="hint-more">
         {branch ? t("hint.close") : lastStep ? t("hint.done") : t("hint.more")}

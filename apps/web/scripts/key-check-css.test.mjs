@@ -25,11 +25,15 @@ describe("CSS поля проверки ключа (PD-142)", () => {
     expect(fc).toMatch(/\.settings-checkinput\[aria-invalid="true"\] \{[^}]*border-style: double/);
   });
   it("нижний отступ прокрутки не меньше высоты таб-бара и учитывает safe-area (AX3: последний элемент шага выводится выше таб-бара)", () => {
-    const pad = shell.match(/\.scroll \{[^}]*padding-bottom:\s*calc\((\d+)px \+ var\(--sa-bot\)\)/);
+    // PD-144: отступ = 16 px + высота таб-бара (`--tabbar-h`) + нижний inset; `--tabbar-h` не меньше суммы отступов бара и вкладки
+    const pad = shell.match(/\.scroll \{[^}]*padding-bottom:\s*calc\((\d+)px \+ var\(--tabbar-h\) \+ var\(--sa-bot\)\)/);
     expect(pad).not.toBeNull();
+    const barH = shell.match(/--tabbar-h:\s*calc\((\d+)px/);
+    expect(barH).not.toBeNull();
     const tabbar = shell.match(/\.tabbar \{[^}]*padding:\s*(\d+)px [^;]*calc\((\d+)px \+ var\(--sa-bot\)\)/);
     const tabMin = shell.match(/\.tab \{[^}]*min-height:\s*(\d+)px/);
-    // таб-бар: верхний + нижний padding + min-height вкладки (подписи вкладок не растут с Dynamic Type)
-    expect(Number(pad[1])).toBeGreaterThanOrEqual(Number(tabbar[1]) + Number(tabbar[2]) + Number(tabMin[1]));
+    // таб-бар: верхний + нижний padding + min-height вкладки
+    expect(Number(barH[1])).toBeGreaterThanOrEqual(Number(tabbar[1]) + Number(tabbar[2]) + Number(tabMin[1]));
+    expect(Number(pad[1])).toBeGreaterThan(0); // воздух над баром
   });
 });

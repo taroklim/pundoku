@@ -184,8 +184,8 @@
     "failed": "Couldn’t prepare a puzzle.",
     "retry": "Try again",
     "newPuzzle": "New puzzle",
-    "discardTitle": "Discard current puzzle?",
-    "discardMessage": "Your progress on this puzzle will be lost.",
+    "discardTitle": "Discard this puzzle?",
+    "discardMessage": "Your progress on it will be lost. Today’s puzzle is not affected.",
     "discard": "Discard",
     "keepPlaying": "Keep playing",
     "fillTitle": "Fill candidates",
@@ -204,7 +204,35 @@
       "dead_other": "{{count}} cells have no candidates"
     },
     "cellsLeft_one": "{{count}} cell left",
-    "cellsLeft_other": "{{count}} cells left"
+    "cellsLeft_other": "{{count}} cells left",
+    "cellsLeftShort": "{{count}} left",
+    "hub": {
+      "sub": "A puzzle of your own, any time.",
+      "contHead": "Continue",
+      "contDay": "Today’s puzzle",
+      "contFree": "Your own puzzle",
+      "modeClassic": "Classic",
+      "modeInk": "Ink",
+      "modeClassicSub": "Undo, the eraser and notes all work.",
+      "modeInkSub": "No undo and no eraser for digits. A wrong digit leaves a blot.",
+      "footClassic": "Free games aren’t recorded in your year.",
+      "footInk": "In ink mode there is no undo and no eraser for digits. Free games aren’t recorded in your year.",
+      "start": "Start",
+      "done": "Done",
+      "clues_one": "{{count}} clue",
+      "clues_other": "{{count}} clues",
+      "tech": {
+        "singles": "singles",
+        "locked": "locked candidates",
+        "pairs": "pairs",
+        "beyond": "beyond pairs"
+      },
+      "left_one": "{{count}} cell left",
+      "left_other": "{{count}} cells left",
+      "modeSheet": "Mode",
+      "more": "More",
+      "fillInkOff": "Not available in Ink"
+    }
   },
   "pad": {
     "label": "Number pad",
@@ -330,8 +358,7 @@
     "clean": "clean",
     "hints": "Hints",
     "technique": "Technique reached",
-    "share": "Share",
-    "newGame": "New game"
+    "share": "Share"
   },
   "result": {
     "pathSub": "Every cell shaded by when you filled it.",
@@ -446,7 +473,6 @@
     "off": "Off",
     "on": "On",
     "foot": "Choose before you place your first digit. Notes don’t count.",
-    "footPlay": "In ink mode there is no undo and no eraser for digits.",
     "eraseNotes": "Erase notes",
     "rule": {
       "title": "Ink doesn’t lift",
@@ -458,9 +484,6 @@
       "start": "Play in ink",
       "cancel": "Not now"
     },
-    "playSub": "A puzzle of your own, any time.",
-    "playGroup": "New puzzle",
-    "playStart": "Start",
     "chip": "Ink",
     "rowBlots": "Blots",
     "rowMode": "Mode",

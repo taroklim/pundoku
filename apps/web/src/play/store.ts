@@ -11,7 +11,7 @@ import { sync as syncRuntime } from "../sync/runtime";
 import type { SyncStorage } from "../today/repository";
 import type { GenerateRequest, GenerateResponse } from "./generate.worker";
 import type { PlaySnapshot } from "./gameStore";
-import { GameStore, initialSnapshot } from "./gameStore";
+import { DEFAULT_DIFFICULTY, GameStore, initialSnapshot } from "./gameStore";
 import type { PlayState } from "./logic";
 import { CELLS, firstOpenCell } from "./logic";
 
@@ -24,14 +24,21 @@ function randomSeed(): string {
 }
 
 /**
- * Снапшот экрана Play: поверх общего — шаг «New puzzle» (PD-74). Партия не стартует сама при открытии вкладки:
- * игрок выбирает сложность и Чернильный режим (режим выбирают до первого хода) и жмёт «Start».
+ * Снапшот экрана Play: поверх общего — хаб (PD-144, вариант C). Партия не стартует сама при открытии вкладки:
+ * хаб показывает «Продолжить» (своя сетка — слот ниже) и выбор «сложность / Режим / Начать».
+ *
+ * Слот своей сетки — это сама партия снапшота: `hub: true` при живой партии (`phase: "playing"`) значит «партия есть и
+ * сохранена, но игрок на хабе»; `hub: true` без партии — пустой хаб. Слот дня живёт отдельно (`days`, стор Today).
  */
 export interface PlayScreenSnapshot extends PlaySnapshot {
-  /** Показан выбор «сложность / Ink mode / Start», партии нет. */
-  readonly setup: boolean;
-  /** Выбранный на этом шаге Чернильный режим — включится в новой партии. */
+  /** Показан хаб, а не доска. Партия (если есть) стоит на паузе и сохранена. */
+  readonly hub: boolean;
+  /** Сложность, выбранная в хабе для НОВОЙ сетки (`difficulty` выше — сложность текущей партии). */
+  readonly pick: Difficulty;
+  /** Выбранный в хабе Чернильный режим — включится в новой партии. */
   readonly inkNext: boolean;
+  /** Растёт на каждый повторный тап по вкладке Play: экран закрывает оверлеи и (на хабе) прокручивает его наверх. */
+  readonly reselect: number;
   /** Идёт чтение сохранённой партии при старте (PD-116): экран не мигает выбором сложности, пока не ясно, есть ли она. */
   readonly restoring?: boolean;
 }
@@ -102,7 +109,7 @@ export class PlayStore extends GameStore<PlayScreenSnapshot> {
    * боевой `playStore` создаётся с IndexedDB и восстанавливает партию в `restore()`.
    */
   constructor(deps: PlayDeps | null = null) {
-    super({ ...initialSnapshot(), setup: true, inkNext: false, restoring: deps !== null });
+    super({ ...initialSnapshot(), hub: true, pick: DEFAULT_DIFFICULTY, inkNext: false, reselect: 0, restoring: deps !== null });
     this.deps = deps;
   }
 
@@ -115,7 +122,7 @@ export class PlayStore extends GameStore<PlayScreenSnapshot> {
   private persist(): void {
     const { deps } = this;
     const s = this.snap;
-    if (!deps || s.setup || !s.play || (s.phase !== "playing" && s.phase !== "solved")) return;
+    if (!deps || !s.play || (s.phase !== "playing" && s.phase !== "solved")) return;
     const saved: SavedPlay = {
       v: 1,
       difficulty: s.difficulty,
@@ -164,8 +171,10 @@ export class PlayStore extends GameStore<PlayScreenSnapshot> {
   }
 
   /**
-   * Старт приложения: прочитать сохранённую партию и продолжить её — решённая остаётся на экране результата до явного
-   * «New puzzle». Нет записи/битая запись/уже начата новая — обычный выбор сложности. Идемпотентно.
+   * Старт приложения: прочитать сохранённую партию своей сетки. Незавершённая остаётся слотом «Продолжить» на хабе
+   * (после перезагрузки всегда хаб — доска не открывается сама); решённая запись (в т.ч. от версии до PD-144) удаляется:
+   * законченная своя сетка исчезает (макет PD-144 §6.4). Нет записи/битая запись/уже начата новая — пустой хаб. Идемпотентно.
+   * Формат записи не менялся (`SavedPlay` v1, `hints`/`assisted` опциональны): сохранения прежних версий читаются как есть.
    */
   async restore(): Promise<void> {
     const { deps } = this;
@@ -177,26 +186,29 @@ export class PlayStore extends GameStore<PlayScreenSnapshot> {
     } catch {
       saved = null;
     }
-    // Пока читали, игрок уже мог выбрать «Start» — тогда его выбор главнее.
+    // Пока читали, игрок уже мог нажать «Начать» — тогда его выбор главнее.
     if (this.snap.restoring !== true) return;
-    if (!saved) {
+    if (!saved || saved.play.solved) {
+      if (saved) this.clearSaved();
       this.set({ restoring: false });
       return;
     }
     this.resumeGame(saved.play, saved.elapsedMs, {
-      setup: false,
+      hub: true,
+      // `pick` не трогаем: список сложности на хабе — выбор ДЛЯ СЛЕДУЮЩЕЙ сетки (по умолчанию или то, что игрок выбрал на хабе),
+      // а не сложность сохранённой партии — она живёт в слоте «Продолжить» и в `difficulty`.
       inkNext: false,
       restoring: false,
       difficulty: saved.difficulty,
       startedOn: new Date(saved.startedOn),
-      selected: saved.play.solved ? null : (saved.selected ?? firstOpenCell(saved.play)),
-      notesMode: saved.notesMode && !saved.play.solved,
+      selected: saved.selected ?? firstOpenCell(saved.play),
+      notesMode: saved.notesMode,
       hints: saved.hints ?? 0,
       assisted: saved.assisted === true,
     });
   }
 
-  /** Первый показ вкладки Play: слушатели видимости страницы. Партию игрок запускает сам («Start»). Идемпотентно. */
+  /** Первый показ вкладки Play: слушатели видимости страницы. Партию игрок запускает сам («Начать»). Идемпотентно. */
   ensureStarted(): void {
     if (this.started) return;
     this.started = true;
@@ -204,39 +216,76 @@ export class PlayStore extends GameStore<PlayScreenSnapshot> {
     this.watchVisibility();
   }
 
-  /** Выбор сложности на шаге «New puzzle». */
-  setDifficulty(difficulty: Difficulty): void {
-    if (this.snap.setup) this.set({ difficulty });
+  /** Пока игрок на хабе, партия стоит на паузе: таймер не идёт (решение PD-144, README). */
+  protected override holdClock(): boolean {
+    return this.snap.hub;
   }
 
-  /** Чернильный режим на шаге «New puzzle» (правило показывает экран до включения). */
+  /** Подсказок на хабе нет: лесенка слушает стор и закрывается сама, когда партию скрыл хаб. */
+  override hintAllowed(): boolean {
+    return !this.snap.hub && super.hintAllowed();
+  }
+
+  /** Есть ли на хабе слот «Своя сетка»: живая партия, не решённая. */
+  hasSlot(): boolean {
+    return this.snap.phase === "playing" && this.snap.play !== null;
+  }
+
+  /** Выбор сложности на хабе. */
+  setDifficulty(difficulty: Difficulty): void {
+    if (this.snap.hub) this.set({ pick: difficulty });
+  }
+
+  /** Чернильный режим на хабе (правило показывает экран до включения). */
   setInkNext(on: boolean): void {
-    if (this.snap.setup) this.set({ inkNext: on });
+    if (this.snap.hub) this.set({ inkNext: on });
   }
 
   /**
-   * Вернуться к выбору новой партии (кнопка «New game», смена сложности посреди партии): текущая партия
-   * закрывается, режим сбрасывается в «без чернил» — его каждый раз выбирают заново.
+   * Вернуться на хаб (пункт «Новая сетка» меню «⋯», повторный тап по вкладке Play): подтверждения нет. Идущая партия
+   * НЕ выбрасывается — становится слотом «Продолжить» (сохраняется с накопленным временем). Решённая, грузящаяся и
+   * сорвавшаяся партии слотом не становятся: решённая исчезает, генерация отменяется.
    */
-  toSetup(difficulty: Difficulty = this.snap.difficulty): void {
+  toHub(): void {
+    const s = this.snap;
+    if (s.hub) return;
+    if (s.phase === "playing" && s.play) {
+      this.set({ hub: true, pop: null, wave: null, echo: null, blot: null, hint: null });
+      this.persist(); // таймер уже накопился (`holdClock`), `getElapsedMs` вернёт итог
+      return;
+    }
     this.requestId++; // ответ уже запущенной генерации устарел
     this.worker?.terminate();
     this.worker = null;
-    this.resetToLoading({ difficulty, setup: true, inkNext: false, restoring: false });
+    this.resetToLoading({ hub: true, inkNext: false, restoring: false });
     this.clearSaved();
   }
 
-  /** «Start»: генерация по выбранным сложности и режиму. */
-  start(): void {
-    this.newGame(this.snap.difficulty, this.snap.inkNext);
+  /** «Своя сетка» в «Продолжить»: с хаба на доску той же партии. */
+  resume(): void {
+    if (this.snap.hub && this.hasSlot()) this.set({ hub: false });
   }
 
-  newGame(difficulty: Difficulty = this.snap.difficulty, ink: boolean = this.snap.inkNext): void {
+  /**
+   * Повторный тап по уже выбранной вкладке Play: из партии — на хаб, на хабе — только сигнал (экран закрывает оверлеи и
+   * прокручивает хаб наверх). Ничего не выбрасывает и ничего не спрашивает.
+   */
+  reselect(): void {
+    this.toHub();
+    this.set({ reselect: this.snap.reselect + 1 });
+  }
+
+  /** «Начать»: генерация по выбранным сложности и режиму. Слот своей сетки затирается ТОЛЬКО здесь (экран спрашивает до этого). */
+  start(): void {
+    this.newGame(this.snap.pick, this.snap.inkNext);
+  }
+
+  newGame(difficulty: Difficulty = this.snap.pick, ink: boolean = this.snap.inkNext): void {
     const id = ++this.requestId;
     this.worker?.terminate();
     this.worker = null;
-    this.resetToLoading({ difficulty, setup: false, inkNext: ink, restoring: false });
-    this.clearSaved(); // прежняя партия закрыта: до первого хода новой записи нет (перезагрузка вернёт на выбор сложности)
+    this.resetToLoading({ difficulty, pick: difficulty, hub: false, inkNext: ink, restoring: false });
+    this.clearSaved(); // прежняя партия закрыта: до первого хода новой записи нет (перезагрузка вернёт на пустой хаб)
     try {
       const worker = new Worker(new URL("./generate.worker.ts", import.meta.url), { type: "module" });
       this.worker = worker;
@@ -258,8 +307,10 @@ export class PlayStore extends GameStore<PlayScreenSnapshot> {
       return;
     }
     this.beginGame(res.puzzle);
-    // Чернильный режим выбран на шаге «New puzzle»: лог новой партии пуст, режим включается без ограничений.
+    // Чернильный режим выбран на хабе: лог новой партии пуст, режим включается без ограничений.
     if (this.snap.inkNext) this.setInk(true);
+    // Выбор режима одноразовый: к хабу с этой партией в слоте строка «Режим» снова показывает выбор для СЛЕДУЮЩЕЙ сетки.
+    this.set({ inkNext: false });
   }
 }
 

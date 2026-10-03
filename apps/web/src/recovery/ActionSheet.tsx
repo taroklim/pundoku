@@ -26,6 +26,8 @@ const FOCUSABLE = "button:not([disabled])";
  * Action sheet (макет PD-48 §5): подтверждение внизу экрана, действие сверху, «Отмена» отдельной группой. Модальный
  * диалог: фон `inert`, фокус внутри (Tab по кругу), Esc (на document) и тап по фону — отмена, фокус возвращается на кнопку, открывшую шит.
  * Шит над шитом не бывает — поэтому Settings сделан push-экраном.
+ * PD-144: колонка до безопасной высоты экрана; прокручивается ТОЛЬКО текст (`.st-ahead`), кнопки `flex:none` — никогда не
+ * уезжают за край (320×568, AX3, uk/ru), а прокрутка не бывает на кнопке (action-sheets.md).
  */
 export function ActionSheet({ title, message, actionLabel, destructive = false, cancelLabel, onAction, onCancel, guardTail = false }: ActionSheetProps) {
   const tail = useRef(guardTail);
@@ -115,6 +117,8 @@ export function ActionSheet({ title, message, actionLabel, destructive = false, 
           <div className="st-ahead">
             <h3 id={titleId}>{title}</h3>
             <p id={msgId}>{message}</p>
+            {/* PD-144: липкая растушёвка — последний ребёнок прокручиваемого текста (подсказка «ниже есть ещё»). */}
+            <div className="scroll-fade" aria-hidden="true" />
           </div>
           <button type="button" className={destructive ? "destructive" : undefined} onClick={onAction} data-testid="action-sheet-go">
             {actionLabel}

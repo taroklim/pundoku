@@ -214,7 +214,7 @@ export abstract class GameStore<S extends PlaySnapshot = PlaySnapshot> {
   // ---- таймер -------------------------------------------------------------------------------
 
   private syncClock = (): void => {
-    const shouldRun = this.snap.phase === "playing" && this.tabActive && document.visibilityState === "visible";
+    const shouldRun = this.snap.phase === "playing" && this.tabActive && document.visibilityState === "visible" && !this.holdClock();
     if (shouldRun && this.runningSince === null) {
       this.runningSince = performance.now();
     } else if (!shouldRun && this.runningSince !== null) {
@@ -222,6 +222,14 @@ export abstract class GameStore<S extends PlaySnapshot = PlaySnapshot> {
       this.runningSince = null;
     }
   };
+
+  /**
+   * Наследник может придержать таймер при живой партии: Play на хабе («Продолжить») — партия есть, но игрок её не видит
+   * (PD-144), а пока он в хабе, время не идёт.
+   */
+  protected holdClock(): boolean {
+    return false;
+  }
 
   getElapsedMs = (): number =>
     this.elapsedBase + (this.runningSince === null ? 0 : performance.now() - this.runningSince);

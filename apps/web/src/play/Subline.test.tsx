@@ -48,4 +48,29 @@ describe("Subline: слово режима в подписи дня (PD-74)", ()
     expect(text()).toBe("Ср 30 вер · Середня · чернила");
     await act(() => i18n.changeLanguage("en"));
   });
+
+  it("PD-144 D-2: метки схлопываются в значки без потери имени — слово в DOM (.chip-t) и в title; значок aria-hidden", async () => {
+    await act(() => i18n.changeLanguage("en"));
+    act(() => root.render(<Subline day="Wed 30 Sep" difficulty="Medium" help clock="4:12" inkChip />));
+    const help = host.querySelector<HTMLElement>('[data-testid="help-mark"]')!;
+    expect(help.title).toBe(i18n.t("hint.mark"));
+    expect(help.querySelector(".chip-t")!.textContent).toBe(i18n.t("hint.mark"));
+    expect(help.querySelector(".hm-ic")!.getAttribute("aria-hidden")).toBe("true");
+    const chip = host.querySelector<HTMLElement>('[data-testid="ink-chip"]')!;
+    expect(chip.title).toBe(i18n.t("ink.chip"));
+    expect(chip.querySelector(".chip-t")!.textContent).toBe(i18n.t("ink.chip"));
+    expect(chip.querySelector("svg")!.getAttribute("class")).toContain("chip-ic");
+    // Склейка текста не изменилась: значки пусты, слова остаются (для скринридера и для обычного режима).
+    expect(text()).toBe(`Wed 30 Sep · Medium · ${i18n.t("hint.mark")} · 4:12${i18n.t("ink.chip")}`);
+  });
+
+  it("PD-144 D-2: части подписи — отдельные элементы (день, сложность усекается), разделитель с пробелами сохранён", async () => {
+    await act(() => i18n.changeLanguage("en"));
+    act(() => root.render(<Subline day="Wed 30 Sep" difficulty="Medium" clock="4:12" />));
+    expect(host.querySelector(".sub-day")!.textContent).toBe("Wed 30 Sep");
+    expect(host.querySelector(".sub-diff")!.textContent).toBe("Medium");
+    expect([...host.querySelectorAll(".sep")].map((e) => e.textContent)).toEqual([" · ", " · "]);
+    expect(host.querySelector(".hm-ic")).toBeNull();
+    expect(host.querySelector(".chip-ic")).toBeNull();
+  });
 });

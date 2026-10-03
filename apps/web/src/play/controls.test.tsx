@@ -76,6 +76,7 @@ describe("QA PD-23, Low 1: сброс анимаций при размонтир
 
 describe("PD-89 M9: перекат «осталось N»", () => {
   const line = () => host.querySelector<HTMLElement>("[data-testid=status-line]")!;
+  const longText = () => line().querySelector(".st-long")!.textContent;
   afterEach(() => {
     MOTION_FLAGS.statusRoll = true;
   });
@@ -83,10 +84,10 @@ describe("PD-89 M9: перекат «осталось N»", () => {
   it("первый показ без анимации; смена числа ставит класс roll", () => {
     act(() => root.render(<StatusLine left={30} />));
     expect(line().className).toBe("status");
-    expect(line().textContent).toBe("30 cells left");
+    expect(longText()).toBe("30 cells left");
     act(() => root.render(<StatusLine left={29} />));
     expect(line().className).toBe("status roll");
-    expect(line().textContent).toBe("29 cells left");
+    expect(longText()).toBe("29 cells left");
   });
 
   it("повторный рендер с тем же числом (тик таймера) не перезапускает анимацию и не пересоздаёт узел", () => {
@@ -105,7 +106,7 @@ describe("PD-89 M9: перекат «осталось N»", () => {
     act(() => root.render(<StatusLine left={29} />));
     expect(line()).toBe(node);
     expect(line().className).toBe("status");
-    expect(line().textContent).toBe("29 cells left");
+    expect(longText()).toBe("29 cells left");
   });
 });
 
@@ -319,5 +320,23 @@ describe("PD-119: Fill candidates — долгий тап по Notes", () => {
     act(() => root.render(<StatusLine left={30} hint={{ kind: "filled", id: 10, count: 2, dead: 5 }} />));
     expect(line()).toBe("Нотатки заповнено в 2 клітинках; у 5 клітинках немає кандидатів");
     await act(() => i18n.changeLanguage("en"));
+  });
+});
+
+describe("PD-144: строка статуса при AX3 — короткая форма", () => {
+  const line = () => host.querySelector<HTMLElement>("[data-testid=status-line]")!;
+
+  it("обычный счёт несёт длинную форму (доступное имя) и короткую aria-hidden (её CSS показывает при data-type=ax3)", () => {
+    act(() => root.render(<StatusLine left={47} />));
+    expect(line().querySelector(".st-long")!.textContent).toBe("47 cells left");
+    const short = line().querySelector(".st-short")!;
+    expect(short.textContent).toBe("47 left");
+    expect(short.getAttribute("aria-hidden")).toBe("true");
+  });
+
+  it("«Grid full» и подсказки — единым текстом, без короткой формы", () => {
+    act(() => root.render(<StatusLine left={0} full />));
+    expect(line().querySelector(".st-short")).toBeNull();
+    expect(line().textContent).toBe("Grid full — something doesn’t match");
   });
 });

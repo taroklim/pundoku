@@ -44,10 +44,22 @@ export const StatusLine = memo(function StatusLine({ left, full = false, hint = 
   useEffect(() => {
     prev.current = state;
   }, [state]);
+  const plain = !hint && !full;
   const text = hint ? hintText(t, hint) : full ? t("play.gridFull") : t("play.cellsLeft", { count: left });
   return (
     <p key={MOTION_FLAGS.statusRoll ? state : "static"} className={rolled ? "status roll" : "status"} data-testid="status-line">
-      {text}
+      {plain ? (
+        <>
+          {/* PD-144: при AX3 «Осталось 47 клеток» не умещается в строку, а резерв `--chrome` рассчитан на одну — CSS
+              (`:root[data-type="ax3"]`) показывает короткую форму; полная остаётся доступным именем (clip-path, не display:none). */}
+          <span className="st-long">{text}</span>
+          <span className="st-short" aria-hidden="true">
+            {t("play.cellsLeftShort", { count: left })}
+          </span>
+        </>
+      ) : (
+        text
+      )}
     </p>
   );
 });
@@ -180,8 +192,9 @@ export function handleGameKey(
   hint?: Pick<HintLadder, "toggle" | "close" | "getState"> | null,
 ): void {
   const target = e.target as HTMLElement;
-  // Шит поверх экрана (PD-116: «Discard current puzzle?») — его клавиши не ввод в клетку.
-  if (target.closest('select, input, textarea, [role="dialog"]')) return;
+  // Шит поверх экрана (PD-116: «Discard current puzzle?») и меню «⋯» (PD-144) — их клавиши не ввод в клетку
+  // (события порталов всплывают по дереву React до экрана).
+  if (target.closest('select, input, textarea, [role="dialog"], [role="menu"]')) return;
   if ((e.ctrlKey || e.metaKey) && e.code === "KeyZ") {
     e.preventDefault();
     store.undo();
@@ -241,8 +254,9 @@ export function GamePad({ snap, store }: { snap: PlaySnapshot; store: GameStore 
   // M8: пока идёт ответ закрытой цифры, её счётчик ещё показывает последний остаток и уезжает вверх (220 мс), затем «·».
   const echo = useEchoKey(snap.echo ?? null);
   // PD-119: «Fill candidates» — долгий тап по Notes (или правая кнопка/контекстное меню) открывает шит с этим действием.
-  // Четвёртой кнопки в ряду нет (320 pt не вмещает её при цели ≥44), а «⋯» в шапке не нашлось места; шит — подтверждение
-  // намерения: случайный долгий тап ничего не заполняет. В чернилах недоступно: подсказок в ink нет.
+  // Четвёртой кнопки в ряду нет (320 pt не вмещает её при цели ≥44). PD-144: основной вход — пункт «Заполнить кандидатами» в
+  // меню «⋯» шапки (без подтверждения); долгий тап, правый клик и F остаются ускорителями (долгий тап по-прежнему спрашивает,
+  // F заполняет сразу). Шит — подтверждение намерения: случайный долгий тап ничего не заполняет. В чернилах недоступно.
   const [filling, setFilling] = useState(false);
   const fillable = interactive && !ink;
   const press = useRef<{ timer: number; fired: boolean } | null>(null);
@@ -289,6 +303,7 @@ export function GamePad({ snap, store }: { snap: PlaySnapshot; store: GameStore 
         <button
           type="button"
           className="act"
+          aria-label={t("actions.notes")}
           aria-pressed={snap.notesMode}
           disabled={!interactive}
           onPointerDown={() => {
@@ -326,12 +341,12 @@ export function GamePad({ snap, store }: { snap: PlaySnapshot; store: GameStore 
           <span>{t("actions.notes")}</span>
         </button>
         {!ink && (
-          <button type="button" className="act" aria-disabled={!canUndo} onClick={() => store.undo()}>
+          <button type="button" className="act" aria-label={t("actions.undo")} aria-disabled={!canUndo} onClick={() => store.undo()}>
             <UndoIcon />
             <span>{t("actions.undo")}</span>
           </button>
         )}
-        <button type="button" className="act" disabled={!interactive} onClick={() => store.erase()}>
+        <button type="button" className="act" aria-label={ink ? t("ink.eraseNotes") : t("actions.erase")} disabled={!interactive} onClick={() => store.erase()}>
           <EraseIcon />
           <span>{ink ? t("ink.eraseNotes") : t("actions.erase")}</span>
         </button>
