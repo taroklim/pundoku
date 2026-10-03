@@ -1,0 +1,773 @@
+<!doctype html>
+<html lang="ru" data-var="a" data-u2="mono">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Pundoku · клеточные P-u-n в вордмарке · PD-149, раунд 5</title>
+<style>
+/* ─────────────────────────────────────────────────────────────────────────────
+   Страница самодостаточна: ни сети, ни встроенных шрифтов, весь SVG строится
+   из геометрии на месте (см. блок JS внизу) — значит числа в .md и рисунок
+   не могут разойтись.
+   Тема: data-theme на <html> (ставится из системной при загрузке) + локальные
+   двойные классы .th-light.th-light / .th-dark.th-dark для пар «светлая|тёмная»
+   рядом — специфичность (0,2,0) обязана бить html[data-theme] (0,1,1).
+   Та же ошибка исправлялась в PD-93 §10.3 и PD-141 §9.3.
+   ───────────────────────────────────────────────────────────────────────────*/
+:root{
+  --bg:#f2f2f7; --elev:#ffffff; --label:#1c1c1e; --label-2:#6e6e73;
+  --ink:#3b48b0; --doku:#43474f; --hair:rgba(60,60,67,.29); --chip:#f2f2f7;
+  --tint:rgba(59,72,176,.12);
+}
+html[data-theme="dark"]{
+  --bg:#000000; --elev:#1c1c1e; --label:#ffffff; --label-2:#98989d;
+  --ink:#8c96ff; --doku:#a7abb5; --hair:rgba(235,235,245,.22); --chip:#2c2c2e;
+  --tint:rgba(140,150,255,.18);
+}
+.th-light.th-light{
+  --bg:#f2f2f7; --elev:#ffffff; --label:#1c1c1e; --label-2:#6e6e73;
+  --ink:#3b48b0; --doku:#43474f; --hair:rgba(60,60,67,.29); --chip:#f2f2f7;
+  --tint:rgba(59,72,176,.12);
+}
+.th-dark.th-dark{
+  --bg:#000000; --elev:#1c1c1e; --label:#ffffff; --label-2:#98989d;
+  --ink:#8c96ff; --doku:#a7abb5; --hair:rgba(235,235,245,.22); --chip:#2c2c2e;
+  --tint:rgba(140,150,255,.18);
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{
+  background:var(--bg); color:var(--label);
+  font:16px/1.45 system-ui,-apple-system,"SF Pro Text","Helvetica Neue",Arial,sans-serif;
+  padding:max(12px,env(safe-area-inset-top)) max(12px,env(safe-area-inset-right))
+          calc(40px + env(safe-area-inset-bottom)) max(12px,env(safe-area-inset-left));
+  -webkit-text-size-adjust:100%;
+}
+h1{font-size:1.25rem;margin:0 0 10px}
+h2{font-size:1.05rem;margin:0 0 6px}
+h3{font-size:.95rem;margin:14px 0 4px}
+p{margin:6px 0}
+main{max-width:860px;margin:0 auto}
+.card{background:var(--elev);border-radius:14px;padding:14px;margin:12px 0;
+      box-shadow:0 1px 2px rgba(0,0,0,.04)}
+html[data-theme="dark"] .card{box-shadow:none;border:.5px solid var(--hair)}
+.note{color:var(--label-2);font-size:.86rem}
+.mini{color:var(--label-2);font-size:.78rem;margin:4px 0 0}
+code{font-family:ui-monospace,Menlo,monospace;font-size:.84em;background:var(--chip);
+     padding:1px 4px;border-radius:4px}
+table{border-collapse:collapse;width:100%;font-size:.82rem;margin:8px 0}
+th,td{border-bottom:.5px solid var(--hair);padding:5px 6px;text-align:left;vertical-align:top}
+th{color:var(--label-2);font-weight:600}
+td b{font-weight:700}
+.scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+
+/* ── переключатели ───────────────────────────────────────────────────────── */
+header.top{position:sticky;top:0;z-index:5;background:var(--bg);
+           padding:6px 0 8px;margin:0 0 4px}
+.seg{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0}
+.seg button{
+  font:inherit;font-size:.82rem;padding:7px 10px;min-height:34px;border-radius:9px;
+  border:.5px solid var(--hair);background:var(--elev);color:var(--label);cursor:pointer;
+}
+.seg button[aria-pressed="true"]{background:var(--tint);border-color:transparent;font-weight:600}
+
+/* ── вордмарк ────────────────────────────────────────────────────────────── */
+.wm{display:block;--pun:var(--ink);--dk:var(--doku)}
+.wm.fluid{width:100%;height:auto}
+.wm .pun-fill{fill:var(--pun)}
+.wm .dk-fill{fill:var(--dk)}
+.wm .pun-str{fill:none;stroke:var(--pun)}
+.wm .dk-str{fill:none;stroke:var(--dk)}
+.wm .ghost{fill:none;stroke:var(--pun);stroke-width:1.5;opacity:.3}
+.mono1c .wm{--pun:#1c1c1e;--dk:#1c1c1e}
+.rowwm{display:flex;align-items:flex-end;gap:14px;flex-wrap:wrap;margin:10px 0}
+.sz{padding:8px 0;border-bottom:.5px dashed var(--hair);overflow-x:auto}
+.sz:last-child{border-bottom:0}
+.sz .lab{color:var(--label-2);font-size:.76rem;line-height:1.25;margin:0 0 5px}
+.pair{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media (max-width:560px){.pair{grid-template-columns:1fr}}
+.pane{padding:12px;border-radius:12px;background:var(--bg)}
+.pane .cap{font-size:.74rem;color:var(--label-2);margin:0 0 8px}
+/* Контексты меряются по настоящей ширине iPhone 16 (393 pt), поэтому колонка
+   «светлая | тёмная» здесь прокручивается вбок, а не ужимается до ширины экрана. */
+.pairx{display:flex;gap:10px;overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:6px}
+.pairx > .pane{flex:none;width:413px;padding:10px}
+
+/* ── плашка иконки D5 (не меняется; здесь — эталонное изображение) ───────── */
+.plate{width:var(--sz,68px);height:var(--sz,68px);border-radius:22.3%;flex:none;
+       background:linear-gradient(163.3deg,#5a616e 0%,#2b2f38 45%,#14161b 100%)}
+.plate svg{display:block;width:100%;height:100%}
+
+/* ── контексты ───────────────────────────────────────────────────────────── */
+.phone{width:393px;max-width:100%;border-radius:16px;border:.5px solid var(--hair);
+       background:var(--bg);overflow:hidden}
+.toolbar{display:flex;align-items:center;justify-content:space-between;gap:8px;
+         min-height:44px;padding:4px 16px}
+.toolbar .title{font-size:1.62rem;font-weight:700;letter-spacing:-.02em;line-height:1.2;margin:0}
+.gear{width:28px;height:28px;border-radius:50%;border:2px solid var(--label-2);opacity:.65;flex:none}
+.subline{padding:0 16px;margin:2px 0 10px;color:var(--label-2);font-size:.88rem}
+.board{margin:0 16px 14px;height:150px;border-radius:10px;background:var(--elev);
+       display:grid;grid-template-columns:repeat(9,1fr);grid-template-rows:repeat(9,1fr);
+       gap:1px;padding:6px;overflow:hidden}
+.board i{background:var(--chip);border-radius:2px}
+.board i.g{background:transparent;color:var(--label);font-style:normal;font-size:9px;
+           font-family:ui-serif,"New York",Charter,Georgia,serif;display:grid;place-items:center}
+.board i.p{background:transparent;color:var(--ink);font-style:normal;font-size:9px;
+           display:grid;place-items:center;font-weight:600}
+.about{display:flex;flex-direction:column;align-items:center;padding:20px 16px;
+       background:var(--elev);border-radius:14px;text-align:center}
+.about .ver{margin:8px 0 0;font-size:13px;color:var(--label-2)}
+.png{background:#fff;color:#1c1c1e;border-radius:12px;padding:14px;width:393px;max-width:100%}
+.png .capline{display:flex;align-items:center;flex-wrap:wrap;gap:10px 16px;margin-top:10px}
+.png .heat{display:grid;grid-template-columns:repeat(9,1fr);gap:2px}
+.png .heat i{aspect-ratio:1;background:#1c1c1e;border-radius:2px}
+.png .right{margin-left:auto;font-size:11px;color:#6e6e73;text-align:right}
+.splash{width:393px;max-width:100%;height:300px;border-radius:16px;display:grid;place-items:center;
+        background:var(--bg);border:.5px solid var(--hair)}
+.vh{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.flag{display:inline-block;font-size:.7rem;font-weight:700;letter-spacing:.03em;
+      padding:2px 7px;border-radius:6px;background:var(--tint);color:var(--label)}
+.bad{background:rgba(179,38,30,.12)}
+.good{background:rgba(52,120,70,.14)}
+</style>
+</head>
+<body>
+
+<main>
+<header class="top">
+  <h1>Pundoku · клеточные «P u n» в вордмарке · PD-149, раунд 5</h1>
+  <div class="seg" role="group" aria-label="Вариант">
+    <button type="button" data-set="var" data-val="a" aria-pressed="true">A · Общий модуль</button>
+    <button type="button" data-set="var" data-val="b" aria-pressed="false">B · Тонкий зазор</button>
+    <button type="button" data-set="var" data-val="c" aria-pressed="false">C · Светлая сетка</button>
+    <button type="button" data-set="var" data-val="d" aria-pressed="false">D · Одна сетка</button>
+  </div>
+  <div class="seg" role="group" aria-label="Второе u">
+    <button type="button" data-set="u2" data-val="mono" aria-pressed="true">2-е «u» обычное</button>
+    <button type="button" data-set="u2" data-val="cell" aria-pressed="false">2-е «u» клеточное</button>
+  </div>
+  <div class="seg" role="group" aria-label="Тема">
+    <button type="button" data-set="theme" data-val="light" aria-pressed="false">Светлая</button>
+    <button type="button" data-set="theme" data-val="dark" aria-pressed="false">Тёмная</button>
+  </div>
+  <p class="mini">Переключатели меняют всё ниже, кроме раздела «Четыре варианта рядом» и
+  «Отвергнутые эскизы» — там каждый вариант нарисован сам по себе.</p>
+</header>
+
+<noscript><p class="card"><b>Нужен JavaScript.</b> Вордмарки строятся из геометрии прямо на
+странице, чтобы числа в <code>pd141-logo-round5.md</code> и рисунок не могли разойтись.</p></noscript>
+
+<!-- ═══════════════ 1. Что изменилось ═══════════════ -->
+<section class="card">
+  <h2>1. Что изменилось против раунда 4</h2>
+  <p>Утверждено направление <b>P6</b>: «P» в слове сложена из клеток. Здесь клеточными становятся
+  ещё <b>u</b> и <b>n</b> — <b>только в надписи</b>. Иконка — та же D5 «Унос», ни одного пикселя.</p>
+  <div class="rowwm">
+    <div>
+      <p class="mini">было — D5 (все буквы рисованные)</p>
+      <svg class="wm" data-wm="d5" data-h="40" aria-hidden="true"></svg>
+    </div>
+    <div>
+      <p class="mini">раунд 4 — P6 (клеточная только «P»)</p>
+      <svg class="wm" data-wm="p6" data-h="40" aria-hidden="true"></svg>
+    </div>
+  </div>
+  <div class="rowwm">
+    <div>
+      <p class="mini">раунд 5 — текущий вариант (<span data-echo="var"></span>, <span data-echo="u2"></span>)</p>
+      <svg class="wm" data-wm="var" data-h="40" role="img" aria-label="Pundoku"></svg>
+    </div>
+    <div style="display:flex;align-items:flex-end;gap:10px">
+      <div class="plate" style="--sz:56px" aria-hidden="true">
+        <svg viewBox="0 0 1024 1024">
+          <path fill="#e3e3e4" d="M337 347H485A27 27 0 0 1 512 374V485A27 27 0 0 0 539 512H650A27 27 0 0 1 677 539V687A113 113 0 0 1 564 800H337A113 113 0 0 1 224 687V460A113 113 0 0 1 337 347Z"/>
+          <path fill="#838ef9" d="M677 224H759A41 41 0 0 1 800 265V347A41 41 0 0 1 759 388H677A41 41 0 0 1 636 347V265A41 41 0 0 1 677 224Z"/>
+        </svg>
+      </div>
+      <p class="mini" style="max-width:150px">Иконка D5 — без изменений. Здесь она стоит рядом во
+      всех разделах, чтобы это было видно, а не обещано.</p>
+    </div>
+  </div>
+
+  <h3>Главный довод (он же — ответ, зачем это вообще)</h3>
+  <p>Сейчас «Pun» выделен <b>только цветом</b>: чернила <code>#3B48B0</code> против графита
+  <code>#43474F</code>. В одноцветных подачах выделения не остаётся совсем:</p>
+  <ul class="note" style="margin:4px 0 0 0;padding-left:20px">
+    <li>PNG-отпечаток — вордмарк там <b>одноцветный намеренно</b> (PD-111 §4, спецификация 2а:
+      чернила в отпечатке означают путь решения);</li>
+    <li><code>forced-colors</code> / Windows High Contrast — <code>settings.css:693</code>
+      красит весь вордмарк в <code>CanvasText</code>;</li>
+    <li>ч/б печать и 1-битные <code>apple-touch-startup-image</code>.</li>
+  </ul>
+  <p>Клеточные «u» и «n» переносят выделение <b>с цвета на форму</b>. Это ровно требование
+  <code>accessibility.md</code> / Lens 1 скилла <code>apple-design</code>: «Nothing is conveyed by
+  color alone». Та же претензия, которую раунд 4 сам себе выписал в §9.1 про P2.</p>
+</section>
+
+<!-- ═══════════════ 2. Как устроена буква ═══════════════ -->
+<section class="card">
+  <h2>2. Карта клеток — одна на все четыре варианта</h2>
+  <p>«P» — 9 клеток из 12 на решётке <b>3×4</b> (рост прописных, геометрия P6 без изменений).
+  «u» и «n» — по 7 клеток из 9 на решётке <b>3×3</b> (x-высота). Всего 23 клетки из 30.</p>
+  <svg class="wm fluid" data-wm="map" aria-hidden="true" style="max-width:420px;margin:10px 0"></svg>
+  <p class="mini">Серым контуром — пустые гнёзда решётки. Строки «u» и «n» — это строки 2, 3, 4
+  той же решётки, что у «P»: шаг один, базовая линия одна, клетки всего слова стоят на общей
+  горизонтальной сетке.</p>
+
+  <h3>Почему 3×3, а не 3×4 — и почему именно x-высота</h3>
+  <ul class="note" style="padding-left:20px">
+    <li><b>3 строки на x-высоте — это точная арифметика, а не подгонка.</b> Шаг решётки задан
+      «P»: 4 клетки + 3 зазора = 104 (рост прописных). Те же 3 шага дают 76–78 — x-высоту
+      рисованных букв (76). Перелёт 0–1.6 единицы, то есть <b>0.2–0.4 px</b> на высоте вордмарка
+      28 px. Отдельного модуля для строчных заводить не пришлось.</li>
+    <li><b>4 строки на x-высоте ломают вес.</b> Клетка падает до 17.5, ширина буквы — до 56.5
+      против 77 у «P» и 78 у «d»/«o». Строчные становятся заметно уже и легче остального слова.
+      Эскиз — §7.</li>
+    <li><b>Поднять «u» и «n» до роста прописных нельзя не по вкусу, а по букве:</b> у заглавной
+      «N» есть диагональ, а в трёх столбцах клеток диагонали не существует — получается «Π».
+      Строчная «n» — это арка без диагонали, она в клетках выражается точно. Эскиз — §7.</li>
+  </ul>
+</section>
+
+<!-- ═══════════════ 3. Четыре варианта рядом ═══════════════ -->
+<section class="card">
+  <h2>3. Четыре варианта</h2>
+  <p>Отличаются <b>только зазором</b> (и у D — межбуквенным интервалом). Это не выбор из вкуса:
+  высота буквы задана (104 и 76), число строк задано формой буквы, поэтому
+  <b>клетка = (104 + зазор)/4 − зазор</b> — размер клетки сам приходит в вилку 20–24.5 при любом
+  разумном зазоре. Уйти по весу от штриха 22 эти буквы попросту не могут.</p>
+
+  <div class="scroll">
+  <table>
+    <thead><tr><th>Вариант</th><th>Клетка</th><th>Зазор</th><th>Шаг</th><th>Ширина<br>буквы</th>
+      <th>x-высота<br>(рисов. 76)</th><th>Стойка<br>против штриха 22</th><th>Интервал<br>в «Pun»</th>
+      <th>Слово<br>(было 588)</th></tr></thead>
+    <tbody>
+      <tr><td><b>A</b> Общий модуль</td><td>23</td><td>4</td><td>27</td><td>77</td><td>77 (+1)</td>
+        <td>+4.5 %</td><td>14</td><td>614 (+4.4 %)</td></tr>
+      <tr><td><b>B</b> Тонкий зазор</td><td>24.5</td><td>2</td><td>26.5</td><td>77.5</td><td>77.5 (+1.5)</td>
+        <td>+11 %</td><td>14</td><td>615.5 (+4.7 %)</td></tr>
+      <tr><td><b>C</b> Светлая сетка</td><td>20</td><td>8</td><td>28</td><td>76</td><td>76 (+0)</td>
+        <td>−9 %</td><td>20</td><td>629 (+7.0 %)</td></tr>
+      <tr><td><b>D</b> Одна сетка</td><td>23</td><td>4</td><td>27</td><td>77</td><td>77 (+1)</td>
+        <td>+4.5 %</td><td>31 (целый столбец)</td><td>648 (+10.2 %)</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <div id="variants"></div>
+
+  <p class="mini">Во всех четырёх отбивка «P → u» выросла с 6 до 14 (у C — до 20, у D — до 31).
+  Прежние 6 держались на том, что под чашей рисованной «P» много воздуха: в x-высоте от «P»
+  оставалась одна стойка 22. У клеточной «P» на x-высоте стоит полная плита 77 ширины, воздух
+  исчез — отбивка обязана стать нормальной. Это единственная правка метрики слова.</p>
+</section>
+
+<!-- ═══════════════ 4. Размеры ═══════════════ -->
+<section class="card">
+  <h2>4. Размеры: где идея видна, где её уже нет</h2>
+  <p class="note">Это <b>настоящие</b> размеры: на iPhone вордмарк ниже отрисован ровно в тех
+  CSS-пикселях, что подписаны. Смотреть с обычного расстояния, не прищуриваясь.</p>
+  <div class="pair">
+    <div class="pane th-light th-light">
+      <p class="cap">светлая</p>
+      <div data-sizes="1"></div>
+    </div>
+    <div class="pane th-dark th-dark">
+      <p class="cap">тёмная</p>
+      <div data-sizes="1"></div>
+    </div>
+  </div>
+  <div class="scroll">
+  <table>
+    <thead><tr><th>Высота вордмарка</th><th>Где это</th><th>A: клетка / зазор</th>
+      <th>B: клетка / зазор</th><th>C: клетка / зазор</th><th>Зазор A в пикселях экрана (DPR 3)</th></tr></thead>
+    <tbody>
+      <tr><td>21 px</td><td>если бы вордмарк заменил заголовок «Today» (совпадение роста прописных)</td>
+        <td>4.16 / 0.72</td><td>4.44 / 0.36</td><td>3.62 / 1.45</td><td>2.2 px</td></tr>
+      <tr><td><b>28 px</b></td><td>About сейчас (<code>SettingsScreen.tsx:650</code>)</td>
+        <td>5.55 / <b>0.97</b></td><td>5.91 / 0.48</td><td>4.83 / 1.93</td><td><b>2.9 px</b></td></tr>
+      <tr><td>32 px</td><td>About по PD-111 §4</td><td>6.34 / 1.10</td><td>6.76 / 0.55</td>
+        <td>5.52 / 2.21</td><td>3.3 px</td></tr>
+      <tr><td>34 px</td><td>верх вилки шапки</td><td>6.74 / 1.17</td><td>7.18 / 0.59</td>
+        <td>5.86 / 2.34</td><td>3.5 px</td></tr>
+      <tr><td>35 px</td><td>подпись PNG-отпечатка (PD-111 §4, 2а)</td><td>6.94 / 1.21</td>
+        <td>7.39 / 0.60</td><td>6.03 / 2.41</td><td>3.6 px</td></tr>
+      <tr><td>48 px</td><td>пустые состояния / крупная карточка</td><td>9.52 / 1.66</td>
+        <td>10.14 / 0.83</td><td>8.28 / 3.31</td><td>5.0 px</td></tr>
+      <tr><td>120 px</td><td>splash / экран приветствия</td><td>23.8 / 4.14</td><td>25.3 / 2.07</td>
+        <td>20.7 / 8.28</td><td>12.4 px</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <p class="mini"><b>Граница честно.</b> Зазор «есть» с ~2 пикселей экрана. На iPhone (DPR 3):
+  A — клетки раздельны от <b>19 px</b> высоты вордмарка, B — от <b>39 px</b>, C — от <b>10 px</b>.
+  На экране 1× (превью на компьютере, экспорт PNG в 1×) то же самое наступает втрое позже:
+  A — от 58 px, B — от 116, C — от 29. То есть <b>в About на айфоне A клеточный, а на снимке
+  1× — сплошной</b>. Это та же поправка, что developer внёс в раунде 4 (§13): числа «зазор
+  0.6 px» относятся к DPR 1, а не к устройству.</p>
+  <p class="mini"><b>Читаемость слова не ломается нигде</b>, и это проверяемо, а не на глаз:
+  когда зазоры схлопываются, клеточная «u» становится сплошной «u» со стойками 23 и просветом 23
+  — против рисованных 22 и 24. Разница меньше пикселя. Слово «Pundoku» читается на всех размерах
+  таблицы; теряется не буква, а <b>идея</b>.</p>
+</section>
+
+<!-- ═══════════════ 5. Контексты ═══════════════ -->
+<section class="card">
+  <h2>5. В контексте</h2>
+
+  <h3>5.1 Шапка Today, 393 pt — размерный тест</h3>
+  <p class="note"><span class="flag bad">важно</span> Вордмарка в шапке <b>нет и не предлагается</b>:
+  PD-111 §2 вариант 1 отклонён («рабочий экран; чернила знака спорят с чернилами цифр под ним»).
+  Кадры ниже — только чтобы увидеть буквы в вилке 21–34 px на настоящей ширине.</p>
+  <div class="pairx">
+    <div class="pane th-light th-light"><p class="cap">светлая</p><div data-today="1"></div></div>
+    <div class="pane th-dark th-dark"><p class="cap">тёмная</p><div data-today="1"></div></div>
+  </div>
+  <p class="mini">Кадры шириной 393 pt — прокручиваются вбок. Вордмарк в них отрисован в
+  настоящих CSS-пикселях, не масштабирован.</p>
+
+  <h3>5.2 Settings → About (единственное место, где вордмарк живёт в коде)</h3>
+  <div class="pair">
+    <div class="pane th-light th-light"><p class="cap">светлая</p><div data-about="1"></div></div>
+    <div class="pane th-dark th-dark"><p class="cap">тёмная</p><div data-about="1"></div></div>
+  </div>
+  <p class="mini">Плашка 68 px — та же D5, в обеих темах светлая (PD-111 §4: у веб-клипа один
+  <code>apple-touch-icon</code>). Вордмарк 32 px. В тёмной теме графит берёт
+  <code>#A7ABB5</code> (7.40:1 на <code>#1C1C1E</code>), чернила — <code>--ink</code> (6.9:1).</p>
+
+  <h3>5.3 PNG-отпечаток — одноцветная подача</h3>
+  <p class="note">Здесь вся разница и видна: цвета нет, «Pun» держится только формой.</p>
+  <div class="mono1c" data-png="1"></div>
+  <p class="mini">Знак 44 px <code>#6E6E73</code>, вордмарк 35 px <code>#1C1C1E</code> (17.0:1 на
+  белом) — размеры из PD-111 §4. Слева для сравнения показан нынешний одноцветный D5-вордмарк:
+  «Pun» в нём не выделен ничем.</p>
+
+  <h3>5.4 Крупно (splash / экран приветствия 6б)</h3>
+  <p class="note"><span class="flag bad">важно</span> Логотип на экране запуска запрещён
+  (<code>launching.md › Launch screens</code>, разобрано в PD-111 §3). Кадр — проверка крупной
+  подачи, не предложение.</p>
+  <div class="pairx">
+    <div class="pane th-light th-light"><p class="cap">светлая</p><div data-splash="1"></div></div>
+    <div class="pane th-dark th-dark"><p class="cap">тёмная</p><div data-splash="1"></div></div>
+  </div>
+</section>
+
+<!-- ═══════════════ 6. Доступность ═══════════════ -->
+<section class="card">
+  <h2>6. Доступность и одноцветные подачи</h2>
+  <table>
+    <tbody>
+      <tr><th style="width:38%">Экранный диктор</th><td>Логотип — изображение целиком:
+        <code>role="img" aria-label="Pundoku"</code> на <code>&lt;svg&gt;</code>. Клетки,
+        <code>&lt;rect&gt;</code> и буквы диктору не видны вообще. Там, где рядом уже есть текст
+        (About: скрытая строка «Pundoku, Version …»), вордмарк остаётся
+        <code>aria-hidden="true"</code> — иначе название произносится дважды. Это нынешнее
+        поведение <code>Wordmark.tsx</code>, менять не нужно.</td></tr>
+      <tr><th>Текстовая замена</th><td>В PNG-отпечатке <code>alt</code> картинки и подпись
+        содержат слово «Pundoku» текстом. В пустых состояниях знак <code>aria-hidden</code>,
+        смысл несёт соседний <code>role="alert"</code>.</td></tr>
+      <tr><th><code>forced-colors</code></th><td><span class="flag bad">правка нужна</span>
+        <code>settings.css:693</code> сейчас красит только обводки:
+        <code>.settings-about-word path { stroke: CanvasText }</code>. Клетки — это
+        <code>&lt;rect fill&gt;</code>, под правило они не попадут. Нужна вторая строка:
+        <code>.settings-about-word rect { fill: CanvasText }</code>. Без неё в High Contrast
+        «Pun» уедет в свой цвет или исчезнет.</td></tr>
+      <tr><th>Печать и 1 бит</th><td>Единый цвет — и «Pun» по-прежнему выделен формой. Ровно то,
+        чего сейчас нет.</td></tr>
+      <tr><th>Dynamic Type</th><td>Вордмарк — изображение с фиксированной высотой в px, как
+        сейчас; текст рядом растёт. Поведение не меняется.</td></tr>
+      <tr><th>Движение</th><td>Нет и не появляется.</td></tr>
+    </tbody>
+  </table>
+  <p class="note" style="margin-top:8px">Симуляция одноцветной подачи (как в
+  <code>forced-colors</code> и в печати):</p>
+  <div class="pair">
+    <div class="pane th-light th-light mono1c">
+      <p class="cap">один цвет — «Pun» держится формой</p>
+      <svg class="wm fluid" data-wm="var" aria-hidden="true" style="max-width:300px"></svg>
+    </div>
+    <div class="pane th-light th-light mono1c">
+      <p class="cap">как сейчас (D5) — выделения «Pun» нет</p>
+      <svg class="wm fluid" data-wm="d5" aria-hidden="true" style="max-width:300px"></svg>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════ 7. Отвергнутые эскизы ═══════════════ -->
+<section class="card">
+  <h2>7. Отвергнутые эскизы — чтобы вопрос был закрыт</h2>
+  <div id="sketches"></div>
+</section>
+
+<!-- ═══════════════ 8. Рекомендация ═══════════════ -->
+<section class="card">
+  <h2>8. Рекомендация</h2>
+  <p><b>Вариант A, второе «u» — обычное.</b></p>
+  <ul class="note" style="padding-left:20px">
+    <li>Модуль ровно тот, что утверждён в P6: клетка 23, зазор 4, радиус 4. Ничего нового не
+      вводится — «u» и «n» просто встают на строки 2–4 той же решётки.</li>
+    <li>Вес совпадает: стойка 23 против штриха 22 (+4.5 %, то есть 0.24 px на высоте 28).
+      Площадь чернил клеточной «u» — 3703 единицы² против ≈3690 у рисованной: <b>буква весит
+      столько же</b> (длина дуги считана приближённо, допуск ~1 %).</li>
+    <li>Слово растёт на 4.4 % — меньше всех. B почти то же, но на 28 px его зазор 0.48 px
+      превращает буквы в сплошные: идея включается только с 39 px и платит +11 % веса.
+      C легче остального слова на 9 % и требует разогнать интервал до 20. D красивее всех
+      крупно, но +10 % ширины и «Pun» заметно разрежен против «doku».</li>
+    <li>Второе «u» обычное — потому что весь смысл правки в том, что <b>клетки = «Pun»</b>.
+      Сделать клеточным и второе «u» значит снова оставить никнейм только на цвете.</li>
+  </ul>
+  <p class="note"><b>Против чего это идёт.</b> Две «u» в одном слове разной формы — обычно
+  типографская ошибка. Здесь она оправдана ровно одним: разрыв проходит по границе «Pun | doku»,
+  то есть означает что-то. Если владельцу это режет глаз — вариант со вторым клеточным «u»
+  нарисован, он не хуже рисунком, он хуже смыслом.</p>
+</section>
+
+<p class="note" style="text-align:center;margin:18px 0 0">
+  Файл: <code>design/pd141-logo-round5.html</code> · разбор:
+  <code>design/pd141-logo-round5.md</code> · в <code>apps/</code> не тронуто ничего.
+</p>
+</main>
+
+<script>
+/* ═══════════════════════════════════════════════════════════════════════════
+   Геометрия. Канва вордмарка: базовая линия y=200, рост прописных 104 (верх 96),
+   x-высота рисованных букв 76 (верх 124), штрих 22. Группа сдвигается
+   translate(2 -94), чтобы viewBox начинался с 0 0 (PD-93 §10.2).
+   ═══════════════════════════════════════════════════════════════════════════ */
+const MONO = {
+  P:"M11 96V200M11 107H40A26 26 0 0 1 40 159H11",
+  u:"M11 124V167A23 22 0 0 0 57 167M57 124V200",
+  n:"M11 200V157A23 22 0 0 1 57 157V200",
+  d:"M11 162A28 27 0 0 1 67 162A28 27 0 0 1 11 162M67 96V200",
+  o:"M11 162A28 27 0 0 1 67 162A28 27 0 0 1 11 162",
+  k:"M11 96V200M58 124L26 168L62 200"
+};
+/* Карта клеток. 1 — клетка есть, 0 — гнездо пустое. Верхняя строка «P» — рост прописных. */
+const MAP = {
+  P:[[1,1,1],[1,0,1],[1,1,1],[1,0,0]],
+  u:[[1,0,1],[1,0,1],[1,1,1]],
+  n:[[1,1,1],[1,0,1],[1,0,1]],
+  U4:[[1,0,1],[1,0,1],[1,0,1],[1,1,1]],
+  N4:[[1,1,1],[1,0,1],[1,0,1],[1,0,1]]
+};
+const V = {
+  a:{cell:23,  gap:4,rx:4,  cellP:1,cellUN:1,pos:{P:0,u:91,  n:182,d:273,  o:365,  k:457,  u2:542  },w:614,  w2:623},
+  b:{cell:24.5,gap:2,rx:4,  cellP:1,cellUN:1,pos:{P:0,u:91.5,n:183,d:274.5,o:366.5,k:458.5,u2:543.5},w:615.5,w2:625},
+  c:{cell:20,  gap:8,rx:3.3,cellP:1,cellUN:1,pos:{P:0,u:96,  n:192,d:288,  o:380,  k:472,  u2:557  },w:629,  w2:637},
+  d:{cell:23,  gap:4,rx:4,  cellP:1,cellUN:1,pos:{P:0,u:108, n:216,d:307,  o:399,  k:491,  u2:576  },w:648,  w2:657},
+  /* эталоны: нынешний D5 и P6 из раунда 4 — метрика слова 588 без изменений */
+  d5:{cell:23,gap:4,rx:4,cellP:0,cellUN:0,pos:{P:0,u:83,n:165,d:247,o:339,k:431,u2:516},w:588,w2:588},
+  p6:{cell:23,gap:4,rx:4,cellP:1,cellUN:0,pos:{P:0,u:83,n:165,d:247,o:339,k:431,u2:516},w:588,w2:588}
+};
+const NAME = {a:"A · Общий модуль",b:"B · Тонкий зазор",c:"C · Светлая сетка",d:"D · Одна сетка"};
+const U2NAME = {mono:"2-е «u» обычное",cell:"2-е «u» клеточное"};
+const r3 = n => Math.round(n*1000)/1000;
+
+/* Клетки одной буквы. Привязка к базовой линии 200: строка i сверху ->
+   y = 200 − (R−i)·шаг + зазор. Поэтому «P» (4 строки) садится верхом на 96,
+   а «u»/«n» (3 строки) — на x-высоту, и строки обеих букв совпадают. */
+function cells(map, cell, gap, rx, x, ghosts) {
+  const pitch = cell + gap, R = map.length;
+  let on = "", off = "";
+  for (let i = 0; i < R; i++) for (let j = 0; j < 3; j++) {
+    const X = r3(x + j*pitch), Y = r3(200 - (R-i)*pitch + gap);
+    const t = `x="${X}" y="${Y}" width="${cell}" height="${cell}" rx="${rx}"`;
+    if (map[i][j]) on += `<rect ${t}/>`; else if (ghosts) off += `<rect class="ghost" ${t}/>`;
+  }
+  return {on, off};
+}
+function stroke(letter, x) { return `<path transform="translate(${x} 0)" d="${MONO[letter]}"/>`; }
+
+/* Собрать вордмарк. opts: {u2cell, ghosts, outline} */
+function build(key, opts) {
+  opts = opts || {};
+  const v = V[key], u2cell = !!opts.u2cell && v.cellUN;
+  let inkFill = "", inkStr = "", dkFill = "", dkStr = "", ghost = "";
+  if (v.cellP) { const c = cells(MAP.P, v.cell, v.gap, v.rx, v.pos.P, opts.ghosts); inkFill += c.on; ghost += c.off; }
+  else inkStr += stroke("P", v.pos.P);
+  ["u","n"].forEach(L => {
+    if (v.cellUN) { const c = cells(MAP[L], v.cell, v.gap, v.rx, v.pos[L], opts.ghosts); inkFill += c.on; ghost += c.off; }
+    else inkStr += stroke(L, v.pos[L]);
+  });
+  ["d","o","k"].forEach(L => { dkStr += stroke(L, v.pos[L]); });
+  if (u2cell) dkFill += cells(MAP.u, v.cell, v.gap, v.rx, v.pos.u2, false).on;
+  else dkStr += stroke("u", v.pos.u2);
+
+  const fillAttrs = opts.outline
+    ? `style="fill:none;stroke:var(--pun);stroke-width:5"`
+    : `class="pun-fill"`;
+  const SW = `stroke-width="22" stroke-linecap="butt" stroke-linejoin="round"`;
+  const W = u2cell ? v.w2 : v.w;
+  const body =
+    `<g transform="translate(2 -94)">` +
+      (ghost ? `<g>${ghost}</g>` : ``) +
+      (inkFill ? `<g ${fillAttrs}>${inkFill}</g>` : ``) +
+      (inkStr ? `<g class="pun-str" ${SW}>${inkStr}</g>` : ``) +
+      (dkFill ? `<g class="dk-fill">${dkFill}</g>` : ``) +
+      `<g class="dk-str" ${SW}>${dkStr}</g>` +
+    `</g>`;
+  return {w: W, body};
+}
+
+/* Нарисовать в конкретный <svg class="wm">. */
+function paint(svg, key, opts) {
+  const b = build(key, opts);
+  svg.setAttribute("viewBox", `0 0 ${b.w} 116`);
+  svg.innerHTML = b.body;
+  const h = parseFloat(svg.dataset.h || "0");
+  if (h) { svg.setAttribute("height", h); svg.setAttribute("width", (h * b.w / 116).toFixed(1)); }
+}
+function svgEl(cls, h) {
+  const s = document.createElementNS("http://www.w3.org/2000/svg","svg");
+  s.setAttribute("class", "wm" + (cls ? " " + cls : ""));
+  s.setAttribute("focusable","false"); s.setAttribute("aria-hidden","true");
+  if (h) s.dataset.h = h;
+  return s;
+}
+
+/* ── статичные разделы: четыре варианта × два решения про второе «u» ─────── */
+(function variants(){
+  const host = document.getElementById("variants");
+  const WHY = {
+    a:"Модуль P6 целиком. Клетка 23 ≈ штрих 22, строки «u»/«n» совпадают со строками 2–4 у «P». Самый тихий из четырёх и самый дешёвый по метрике слова.",
+    b:"Зазор вдвое меньше, клетка крупнее. Буква почти сплошная: на 28 px это насечка, а не решётка. Идея включается с 39 px, вес +11 % против «doku».",
+    c:"Зазор вдвое больше, клетка мельче. Решётка видна даже в шапке — но буквы начинают рассыпаться, поэтому интервал в «Pun» пришлось разогнать с 14 до 20, а вес ушёл на 9 % ниже «doku».",
+    d:"Тот же модуль, что у A, но между буквами — целый пустой столбец решётки. «Pun» становится буквально полосой сетки. Крупно лучше всех, в шапке — самый разреженный, слово +10 %."
+  };
+  ["a","b","c","d"].forEach(k => {
+    const sec = document.createElement("div");
+    sec.innerHTML = `<h3>${NAME[k]}</h3><p class="note">${WHY[k]}</p>`;
+    [["mono","второе «u» — обычное"],["cell","второе «u» — клеточное"]].forEach(([mode,lab]) => {
+      const row = document.createElement("div");
+      row.style.cssText = "margin:10px 0 2px";
+      const p = document.createElement("p"); p.className = "mini"; p.textContent = lab;
+      const s = svgEl("fluid"); s.style.maxWidth = "420px";
+      row.appendChild(p); row.appendChild(s); sec.appendChild(row);
+      paint(s, k, {u2cell: mode === "cell"});
+    });
+    const small = document.createElement("div");
+    small.className = "rowwm"; small.style.marginTop = "6px";
+    [28,34,48].forEach(h => {
+      const wrap = document.createElement("div");
+      const lab = document.createElement("p"); lab.className = "mini"; lab.textContent = h + " px";
+      const s = svgEl("", h); wrap.appendChild(lab); wrap.appendChild(s);
+      small.appendChild(wrap); paint(s, k, {u2cell:false});
+    });
+    sec.appendChild(small);
+    host.appendChild(sec);
+  });
+})();
+
+/* ── карта клеток ───────────────────────────────────────────────────────── */
+(function(){
+  const s = document.querySelector('[data-wm="map"]');
+  if (s) paint(s, "a", {ghosts:true});
+})();
+
+/* ── отвергнутые эскизы ─────────────────────────────────────────────────── */
+(function sketches(){
+  const host = document.getElementById("sketches");
+  function custom(title, flag, text, bodyFn, w) {
+    const d = document.createElement("div");
+    d.innerHTML = `<h3>${title} <span class="flag bad">${flag}</span></h3><p class="note">${text}</p>`;
+    const s = svgEl("fluid"); s.style.maxWidth = "420px"; s.style.margin = "8px 0 0";
+    s.setAttribute("viewBox", `0 0 ${w} 116`); s.innerHTML = bodyFn();
+    d.appendChild(s); host.appendChild(d);
+  }
+  const SW = `stroke-width="22" stroke-linecap="butt" stroke-linejoin="round"`;
+  /* 7.1 «PUN» в рост прописных */
+  custom("7.1 «u» и «n» в рост прописных (3×4, как «P»)", "не берём",
+    "Клеточная заглавная «N» требует диагонали, а диагонали в трёх столбцах нет — получается «Π». " +
+    "Плюс слово превращается в «PUNdoku»: регистр меняется, никнейм начинает кричать. " +
+    "Это не вкус — буквы просто нет.",
+    () => {
+      const v = V.a, px = 0, ux = 91, nx = 182;
+      const ink = cells(MAP.P, v.cell, v.gap, v.rx, px, 0).on +
+                  cells(MAP.U4, v.cell, v.gap, v.rx, ux, 0).on +
+                  cells(MAP.N4, v.cell, v.gap, v.rx, nx, 0).on;
+      let dk = "";
+      ["d","o","k"].forEach(L => dk += stroke(L, v.pos[L]));
+      dk += stroke("u", v.pos.u2);
+      return `<g transform="translate(2 -94)"><g class="pun-fill">${ink}</g>` +
+             `<g class="dk-str" ${SW}>${dk}</g></g>`;
+    }, 614);
+  /* 7.2 мелкий модуль для строчных */
+  custom("7.2 «u» и «n» на своём мелком модуле (4 строки в x-высоте)", "не берём",
+    "Клетка падает с 23 до 17.5, ширина буквы — с 77 до 56.5 при «d» и «o» шириной 78. " +
+    "В слове оказываются два разных размера клетки, строчные читаются уже и легче остального. " +
+    "Зато у каждой буквы ровно по 9 клеток — красивый факт, который не стоит своей цены.",
+    () => {
+      const v = V.a, C = 17.5, G = 2;
+      const U4 = [[1,0,1],[1,0,1],[1,0,1],[1,1,1]], N4 = [[1,1,1],[1,0,1],[1,0,1],[1,0,1]];
+      const ink = cells(MAP.P, v.cell, v.gap, v.rx, 0, 0).on +
+                  cells(U4, C, G, 3, 91, 0).on +
+                  cells(N4, C, G, 3, 161.5, 0).on;
+      let dk = "";
+      [["d",232],["o",324],["k",416]].forEach(([L,x]) => dk += stroke(L, x));
+      dk += stroke("u", 501);
+      return `<g transform="translate(2 -94)"><g class="pun-fill">${ink}</g>` +
+             `<g class="dk-str" ${SW}>${dk}</g></g>`;
+    }, 573);
+  /* 7.3 контурные клетки */
+  custom("7.3 Клетки контуром, а не заливкой", "вопрос владельцу",
+    "Перекличка с линиями сетки судоку сильнее, но буква теряет массу: при контуре 5 единиц " +
+    "на высоте 28 px это 1.2 px линии и пустая середина — слово уходит в серое кружево и " +
+    "перестаёт держать вес рядом с «doku». Ниже 48 px я бы не ставил. Показано, потому что " +
+    "это ваш вопрос, а не потому, что я это рекомендую.",
+    () => build("a", {outline:true}).body, 614);
+  /* размерная полоса для 7.3 */
+  const row = document.createElement("div"); row.className = "rowwm";
+  [28,48,96].forEach(h => {
+    const wrap = document.createElement("div");
+    const lab = document.createElement("p"); lab.className = "mini"; lab.textContent = h + " px";
+    const s = svgEl("", h);
+    const b = build("a", {outline:true});
+    s.setAttribute("viewBox", `0 0 ${b.w} 116`); s.innerHTML = b.body;
+    s.setAttribute("height", h); s.setAttribute("width", (h*b.w/116).toFixed(1));
+    wrap.appendChild(lab); wrap.appendChild(s); row.appendChild(wrap);
+  });
+  host.appendChild(row);
+})();
+
+/* ── контексты (перерисовываются переключателями) ───────────────────────── */
+const PLATE = `<div class="plate" style="--sz:SZpx" aria-hidden="true"><svg viewBox="0 0 1024 1024">
+  <path fill="#e3e3e4" d="M337 347H485A27 27 0 0 1 512 374V485A27 27 0 0 0 539 512H650A27 27 0 0 1 677 539V687A113 113 0 0 1 564 800H337A113 113 0 0 1 224 687V460A113 113 0 0 1 337 347Z"/>
+  <path fill="#838ef9" d="M677 224H759A41 41 0 0 1 800 265V347A41 41 0 0 1 759 388H677A41 41 0 0 1 636 347V265A41 41 0 0 1 677 224Z"/>
+</svg></div>`;
+function board() {
+  let s = "";
+  const given = {0:"5",4:"7",8:"2",10:"3",19:"9",28:"6",40:"4",52:"8",60:"1",72:"7",76:"5",80:"9"};
+  const mine = {12:"8",30:"2",44:"6",57:"3",65:"1"};
+  for (let i = 0; i < 81; i++)
+    s += given[i] ? `<i class="g">${given[i]}</i>`
+       : mine[i]  ? `<i class="p">${mine[i]}</i>` : `<i></i>`;
+  return s;
+}
+function renderContexts() {
+  const key = document.documentElement.dataset.var;
+  const u2  = document.documentElement.dataset.u2 === "cell";
+
+  document.querySelectorAll('[data-echo="var"]').forEach(e => e.textContent = NAME[key]);
+  document.querySelectorAll('[data-echo="u2"]').forEach(e =>
+    e.textContent = U2NAME[document.documentElement.dataset.u2]);
+
+  /* 4. размерная полоса */
+  document.querySelectorAll('[data-sizes]').forEach(host => {
+    host.innerHTML = "";
+    [[21,"21 px — если бы встал вместо «Today»"],[28,"28 px — About сейчас"],
+     [32,"32 px — About по PD-111"],[34,"34 px — верх вилки шапки"],
+     [48,"48 px — пустое состояние"],[68,"68 px"]].forEach(([h,lab]) => {
+      const row = document.createElement("div"); row.className = "sz";
+      const l = document.createElement("div"); l.className = "lab"; l.textContent = lab;
+      const s = svgEl("", h);
+      row.appendChild(l); row.appendChild(s); host.appendChild(row);
+      paint(s, key, {u2cell:u2});
+    });
+  });
+
+  /* 5.1 шапка Today */
+  document.querySelectorAll('[data-today]').forEach(host => {
+    host.innerHTML = "";
+    [["заголовок как сейчас", null],["вордмарк 28 px", 28],["вордмарк 34 px", 34],
+     ["вордмарк 21 px — совпадение роста прописных с «Today»", 21]].forEach(([lab,h]) => {
+      const ph = document.createElement("div"); ph.className = "phone";
+      ph.style.marginBottom = "10px";
+      const tb = document.createElement("div"); tb.className = "toolbar";
+      if (h === null) { const t = document.createElement("h2"); t.className = "title";
+        t.textContent = "Today"; tb.appendChild(t); }
+      else { const s = svgEl("", h); s.setAttribute("role","img");
+        s.setAttribute("aria-label","Pundoku"); s.removeAttribute("aria-hidden");
+        tb.appendChild(s); paint(s, key, {u2cell:u2}); }
+      const g = document.createElement("div"); g.className = "gear"; tb.appendChild(g);
+      const sub = document.createElement("p"); sub.className = "subline";
+      sub.textContent = "3 Oct · Medium · 00:00";
+      const bd = document.createElement("div"); bd.className = "board"; bd.innerHTML = board();
+      const cap = document.createElement("p"); cap.className = "mini";
+      cap.style.cssText = "padding:0 16px 10px;margin:0"; cap.textContent = lab;
+      ph.appendChild(tb); ph.appendChild(sub); ph.appendChild(bd); ph.appendChild(cap);
+      host.appendChild(ph);
+    });
+  });
+
+  /* 5.2 About */
+  document.querySelectorAll('[data-about]').forEach(host => {
+    host.innerHTML = "";
+    const card = document.createElement("div"); card.className = "about";
+    card.innerHTML = PLATE.replace("SZ","68");
+    const s = svgEl("", 32); s.style.marginTop = "14px";
+    card.appendChild(s);
+    const v = document.createElement("p"); v.className = "ver"; v.textContent = "Version 1.1 (248)";
+    card.appendChild(v);
+    const vh = document.createElement("span"); vh.className = "vh";
+    vh.textContent = "Pundoku, Version 1.1 (248)";
+    card.appendChild(vh);
+    host.appendChild(card); paint(s, key, {u2cell:u2});
+  });
+
+  /* 5.3 PNG-отпечаток */
+  document.querySelectorAll('[data-png]').forEach(host => {
+    host.innerHTML = "";
+    [["новый вордмарк", key],["как сейчас (D5)", "d5"]].forEach(([lab, k]) => {
+      const box = document.createElement("div"); box.className = "png";
+      box.style.marginBottom = "10px";
+      const heat = document.createElement("div"); heat.className = "heat";
+      let cells9 = ""; for (let i = 0; i < 81; i++) {
+        const o = (0.18 + 0.8 * ((i * 37) % 81) / 81).toFixed(2);
+        cells9 += `<i style="opacity:${o}"></i>`;
+      }
+      heat.innerHTML = cells9;
+      const line = document.createElement("div"); line.className = "capline";
+      const mk = document.createElementNS("http://www.w3.org/2000/svg","svg");
+      mk.setAttribute("viewBox","0 0 1024 1024"); mk.setAttribute("width","44");
+      mk.setAttribute("height","44"); mk.setAttribute("aria-hidden","true");
+      mk.innerHTML = `<path fill="#6e6e73" d="M337 347H485A27 27 0 0 1 512 374V485A27 27 0 0 0 539 512H650A27 27 0 0 1 677 539V687A113 113 0 0 1 564 800H337A113 113 0 0 1 224 687V460A113 113 0 0 1 337 347Z"/>
+        <path fill="#6e6e73" d="M677 224H759A41 41 0 0 1 800 265V347A41 41 0 0 1 759 388H677A41 41 0 0 1 636 347V265A41 41 0 0 1 677 224Z" opacity=".55"/>`;
+      const s = svgEl("", 35);
+      const r = document.createElement("div"); r.className = "right";
+      r.textContent = "3 Oct 2026 · 8:14 · 51 moves · clean";
+      line.appendChild(mk); line.appendChild(s); line.appendChild(r);
+      const cap = document.createElement("p"); cap.className = "mini";
+      cap.style.color = "#6e6e73"; cap.textContent = lab;
+      box.appendChild(heat); box.appendChild(line); box.appendChild(cap);
+      host.appendChild(box);
+      paint(s, k, {u2cell: k === "d5" ? false : u2});
+    });
+  });
+
+  /* 5.4 splash */
+  document.querySelectorAll('[data-splash]').forEach(host => {
+    host.innerHTML = "";
+    const b = document.createElement("div"); b.className = "splash";
+    const s = svgEl("fluid"); s.style.maxWidth = "240px";
+    s.setAttribute("role","img"); s.setAttribute("aria-label","Pundoku");
+    s.removeAttribute("aria-hidden");
+    b.appendChild(s); host.appendChild(b); paint(s, key, {u2cell:u2});
+  });
+
+  /* одноцветная симуляция в §6 */
+  document.querySelectorAll('.mono1c [data-wm="var"]').forEach(s => paint(s, key, {u2cell:u2}));
+  document.querySelectorAll('[data-wm="var"]').forEach(s => paint(s, key, {u2cell:u2}));
+  document.querySelectorAll('[data-wm="d5"]').forEach(s => paint(s, "d5", {}));
+  document.querySelectorAll('[data-wm="p6"]').forEach(s => paint(s, "p6", {}));
+}
+
+/* ── переключатели ──────────────────────────────────────────────────────── */
+const root = document.documentElement;
+root.dataset.theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+function sync() {
+  document.querySelectorAll("[data-set]").forEach(b =>
+    b.setAttribute("aria-pressed", String(root.dataset[b.dataset.set] === b.dataset.val)));
+}
+document.addEventListener("click", e => {
+  const b = e.target.closest("[data-set]");
+  if (!b) return;
+  root.dataset[b.dataset.set] = b.dataset.val;
+  sync();
+  if (b.dataset.set !== "theme") renderContexts();
+});
+renderContexts();
+sync();
+</script>
+</body>
+</html>

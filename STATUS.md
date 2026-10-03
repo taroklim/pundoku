@@ -404,6 +404,9 @@ Gates: build → typecheck, lint, тесты web/engine/api (api с TEST_DATABAS
 | PD-146 | S1/S2: ~1 из 10 холодных загрузок WebKit вкладка Year роняет приложение в пустой экран (`TypeError … e.solved`); корневая причина + фикс + ErrorBoundary + циклы ≥30 холодных загрузок webkit/chromium; ветка pd-year-blank; затем QA-перепроверка | developer | P0 | completed (merged b7ff7bf) | — |
 | PD-147 | Повторный QA pd-key: миграции 0007→0008 на БД с данными, идемпотентный повтор confirm, гонка двух устройств, cancel-лимит, UI-путь потерянного ответа, полные прогоны api/web/engine после rebase (--testTimeout=60000) | qa-tester | P1 | completed (PASS; merged fa47ca1) | PD-126 |
 | PD-148 | QA PD-146 (pd-year-blank @ 8ab08a8): детерминированная проверка фикса, циклы ≥30 webkit/chromium, ErrorBoundary-экран (a11y, en/uk/ru, 320, dark), регресс Year/Archive/sync | qa-tester | P0 | completed (PASS; merged b7ff7bf) | PD-146 |
+| PD-149 | Логотип раунд 5: клеточные P-u-n в надписи (иконка D5 не меняется); макет design/pd141-logo-round5.html/.md на согласование владельцу, затем рендер PNG на Desktop; в продукт не вносить | designer | P1 | in_progress (макет готов; рендер PNG) | — |
+| PD-150 | Today-fix (в коммитах ветки pd-today-fix помечен «PD-147» — коллизия номера, верный номер PD-150): скорость старта ветерана, док подсказки без сдвига на Today 320x568, resume выбирает первую пустую клетку, 404 /api/snapshot | developer | P0 | in_progress (QA) | — |
+| PD-151 | QA PD-150 (pd-today-fix @ c94628c): замеры до/после, 320/375/390/393, AX3, en/uk/ru, light/dark, регресс Today/Play/Year/подсказки/ключ | qa-tester | P0 | pending | PD-150 |
 | PD-20 | QA PD-14 (pd-14 @ 0026b2a): PASS с оговорками, блокеров и Medium нет; 4 Low + решение по слиянию → PD-31 | qa-tester | P1 | completed | PD-14 |
 | PD-31 | Фикс-проход pd-14 по QA PD-20 (pd-14 @ c574f13; gates зелёные: web 213, engine 105, api 77+2 skipped, интеграционные 7/7 на живой БД) | developer | P1 | completed | PD-20 |
 | PD-32 | PASS с оговорками (слияние 409 по источникам, 1500 дней без лишних PUT, gates, интеграционные 7/7); Low → PD-37. QA-регресс pd-14 @ c574f13 (перезапуск после сбоя контейнера; worktree /tmp/pundoku-qa/qa-pd32, БД pundoku_qa5, порты 3320/5320): слияние 409 по источникам, отсутствие лишних PUT при 1500 днях, сокращённый регресс PD-20, gates + интеграционные api-тесты | qa-tester | P1 | completed | PD-31 |
@@ -496,6 +499,8 @@ Gates: build → typecheck, lint, тесты web/engine/api (api с `TEST_DATABA
 | Имя | Роль | Статус | Тикет | Обновлено |
 |-----|------|--------|-------|-----------|
 | PM-Pundoku-10 | product-manager | working | пакеты реализации по решениям владельца | 2026-10-02 |
+| Dev-Pundoku-today | developer | done | PD-150 | 2026-10-04 |
+| Des-Pundoku-logo5 | designer | done | PD-149 | 2026-10-04 |
 
 ## Чек-пойнт 2026-10-01 (конец сессии PM-Pundoku-7)
 - **Сделано:** решения владельца по релизу 1.1 зафиксированы; PD-74 (UI ink, pd-74 @ 73444b2), PD-75 (UI таймлапса/PNG Rhythm, pd-75 @ bfeedbf), PD-80 (счёт ходов в ink, pd-80 @ de5a52d) смержены в локальный main; gates на слитом: build/typecheck/lint, web 624, engine 178 (api не затронут, 174+3). PD-78 сделан в PD-74. PD-79 закрыт: не дефект.
