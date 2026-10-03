@@ -193,6 +193,7 @@ button{ font:inherit; color:inherit; background:none; border:0; padding:0; curso
       margin from the line box instead of guessing it — see .titlebtn below.
    ================================================================== */
 .toolbar{
+  flex:none;
   display:flex; align-items:flex-end; justify-content:space-between; gap:12px;
   padding: calc(var(--sa-top) + 8px) max(16px, var(--sa-r)) 0 max(16px, var(--sa-l));
 }
@@ -218,7 +219,7 @@ button{ font:inherit; color:inherit; background:none; border:0; padding:0; curso
 .titlebtn svg{ width:15px; height:15px; color:var(--label-2); flex:none; }
 
 .subline{
-  margin:2px 0 0; padding:0 max(16px, var(--sa-r)) 0 max(16px, var(--sa-l));
+  flex:none; margin:2px 0 0; padding:0 max(16px, var(--sa-r)) 0 max(16px, var(--sa-l));
   color:var(--label-2); font-size:.88rem; overflow-wrap:break-word;
 }
 .subline .dot{ opacity:.6; }
@@ -349,9 +350,24 @@ button.row:active{ background:var(--ink-tint); }
 .board-wrap{
   padding:12px max(16px, var(--sa-r)) 0 max(16px, var(--sa-l));
   container-type:inline-size;
-  /* chrome = toolbar + subline + minimum gap + pad + actions + tab bar + insets */
-  --chrome: calc(var(--sa-top) + var(--sa-bot) + 44px + 24px + 56px + 126px + 51px + 24px);
+  --extra: 0px;
+  /* Everything below the board, in the units it is really built from. The bars grow with
+     Dynamic Type (`rem`), the keys and the tab bar do not — a single fixed 126 px for the
+     controls was right at 17 px and 90 px short at AX3, which is why the bottom row ended up
+     under the tab bar: the whole column overflowed and every shrinkable item lost height. */
+  --chrome: calc(
+      var(--sa-top) + var(--sa-bot)
+      + 2rem + 8px      /* toolbar: title 1.62rem x 1.2, 8 px above it */
+      + 1.15rem + 2px   /* subline */
+      + 1.15rem + 16px  /* gap: one status line + its padding */
+      + 56px            /* the 1-9 keys — fixed, the glyph is capped instead */
+      + 66px            /* actions: 46 pt target + 10 above + 10 below */
+      + 51px            /* tab bar */
+      + 12px            /* slack */
+      + var(--extra));
 }
+/* The rejected four-button variant also carries the review ruler and a taller row. */
+:root[data-fill="c"] .board-wrap{ --extra: 70px; }
 .board{
   position:relative; display:grid; grid-template-columns:repeat(3,1fr); gap:var(--box-gap);
   width:min(100%, calc(100dvh - var(--chrome)));
@@ -390,9 +406,12 @@ button.row:active{ background:var(--ink-tint); }
   color:var(--notes); display:grid; place-items:center;
 }
 
-/* >= 8 px of air under the board before the status line, at every text size. */
+/* >= 8 px of air under the board and >= 8 px before the keys, at every text size. `min-height`
+   reserves a whole status line plus that padding, so the line can never be squeezed against the
+   board when the column is tight (a shrunk content box let the text spill over its padding). */
 .gap{
-  flex:1 1 auto; min-height:32px; display:flex; align-items:center; justify-content:center;
+  flex:1 1 auto; min-height:calc(1.15rem + 16px);
+  display:flex; align-items:center; justify-content:center;
   padding:8px max(16px, var(--sa-r)) 8px max(16px, var(--sa-l));
 }
 .status{ margin:0; color:var(--label-2); font-size:.88rem; font-variant-numeric:tabular-nums; text-align:center; }
@@ -409,7 +428,13 @@ button.row:active{ background:var(--ink-tint); }
 .fill-line svg{ width:18px; height:18px; flex:none; }
 .fill-line:active{ opacity:.8; }
 
-.pad-wrap{ padding:0 max(16px, var(--sa-r)) 0 max(16px, var(--sa-l)); container-type:inline-size; }
+/* `flex:none` is the load-bearing part: the control block is never the thing that gives way.
+   Without it `.pad-wrap` (default `flex:0 1 auto`) shrank below its content and the bottom row
+   was cut by the tab bar, rounded corners and all. Space now comes out of the board. */
+.pad-wrap{
+  flex:none; padding:0 max(16px, var(--sa-r)) 0 max(16px, var(--sa-l));
+  container-type:inline-size;
+}
 .pad{ display:grid; grid-template-columns:repeat(9,1fr); gap:4px; }
 .key{
   min-width:0; min-height:56px; border-radius:9px; background:var(--elev); color:var(--label);
@@ -422,21 +447,38 @@ button.row:active{ background:var(--ink-tint); }
    while on 390 pt the normal 1.24rem still wins — ordinary text sizes are untouched. */
 .key .kd{ font-size:min(1.24rem, 7.5cqi); font-weight:500; line-height:1.05; }
 .key .kr{ font-size:11px; line-height:1; color:var(--label-2); font-variant-numeric:tabular-nums; }
-.actions{ display:grid; grid-template-columns:repeat(3,1fr); gap:8px; padding:10px 0 14px; }
+/* 10 px under the row, so the plate (and its rounded corners) always clears the tab bar. */
+.actions{ display:grid; grid-template-columns:repeat(3,1fr); gap:8px; padding:10px 0; }
 .actions.four{ grid-template-columns:repeat(4,1fr); }
 .act{
   min-width:0; min-height:46px; border-radius:11px;
-  display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px; padding:4px 4px;
-  color:var(--label-2); font-size:.82rem; text-align:center; overflow-wrap:break-word;
+  display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px; padding:5px 4px;
+  color:var(--label-2); font-size:.82rem; line-height:1.2; text-align:center; overflow-wrap:break-word;
 }
 .act svg{ width:19px; height:19px; flex:none; }
 .act[aria-pressed="true"]{ background:var(--ink-tint); color:var(--ink); }
 @media (min-width:360px){ .act{ flex-direction:row; gap:6px; } }
 :root[data-fill="c"] .act{ flex-direction:column; gap:2px; }
+/* Four buttons at 320 pt: the uk label is wider than its column, so it is shown on two lines
+   and then clamped. The clamp IS the evidence against variant C — it is what the review ruler
+   under the row measures — but it is bounded, so the row can never grow into the tab bar. */
+:root[data-fill="c"] .act span{
+  display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;
+}
+/* The last resort, only where no label can fit: AX3 on a narrow screen shows ICONS ONLY.
+   The label is visually hidden, never removed, so it is still the button's accessible name
+   (in production give these buttons an explicit `aria-label` as well). */
+@media (max-width: 360px){
+  :root[data-type="ax3"] .act span{
+    position:absolute; width:1px; height:1px; margin:-1px; padding:0;
+    overflow:hidden; clip-path:inset(50%); white-space:nowrap;
+  }
+  :root[data-type="ax3"] .act{ gap:0; }
+}
 
 /* Review-only ruler, shown with the rejected fourth-button variant. */
 .ruler{
-  margin:0 max(16px, var(--sa-r)) 10px max(16px, var(--sa-l));
+  flex:none; margin:0 max(16px, var(--sa-r)) 10px max(16px, var(--sa-l));
   border:1px dashed var(--wax); border-radius:8px; padding:6px 8px;
   color:var(--wax); font-size:11px; line-height:1.3;
 }
