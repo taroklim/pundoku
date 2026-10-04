@@ -513,6 +513,7 @@ describe("SettingsScreen: язык и навигация", () => {
     const mark = about.querySelector<SVGSVGElement>("svg.settings-about-mark")!;
     expect(mark.getAttribute("width")).toBe("60");
     expect(mark.dataset.optics).toBe("small");
+    expect(mark.querySelectorAll("rect")).toHaveLength(9); // P4: девять клеток
     expect(mark.getAttribute("aria-hidden")).toBe("true");
     const word = about.querySelector<SVGSVGElement>("svg.settings-about-word")!;
     expect(word.getAttribute("height")).toBe("28");

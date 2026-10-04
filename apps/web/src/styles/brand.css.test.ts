@@ -38,6 +38,13 @@ describe("brand.css / settings.css: вордмарк в forced-colors и печ�
     expect(decl(block, ".wordmark rect")).toMatch(/fill:\s*CanvasText/);
   });
 
+  it("PD-155 знак P4: forced-colors — клетки rect и сплошной path красятся CanvasText; печать — чёрные", () => {
+    const fc = mediaBlock(read("brand.css"), "(forced-colors: active)");
+    expect(fc).toMatch(/\.brand-mark rect,\s*\.brand-mark path\s*\{[^}]*fill:\s*CanvasText/);
+    const pr = mediaBlock(read("brand.css"), "print");
+    expect(pr).toMatch(/\.brand-mark rect,\s*\.brand-mark path\s*\{[^}]*fill:\s*#000/);
+  });
+
   it("печать: клетки и штрихи чёрные (ч/б), независимо от темы", () => {
     const block = mediaBlock(read("brand.css"), "print");
     expect(decl(block, ".wordmark path")).toMatch(/stroke:\s*#000/);

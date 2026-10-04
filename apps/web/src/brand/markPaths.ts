@@ -1,10 +1,48 @@
-// Пути знака D5 «Унос» (PD-102, design/pd98-logo-round3.md §18.3) — общие для <Mark> и PNG отпечатка (canvas Path2D).
+// Геометрия знака P4 «Девять клеток» (PD-155; design/pd141-logo-round4.md §2, §P4 «16-сеточные») — общая для <Mark>,
+// PNG отпечатка (canvas Path2D) и теста сверки с public/icons/icon.svg. Буква «P» из девяти клеток на решётке 3×4:
+// 3 + 2 + 3 + 1. Контрформа — пустая клетка (плашка), чернил в знаке нет: букву несёт площадь, а не цвет.
 
-/** Пути на канве 16 (d5-favicon.svg) — для size <= MARK_SMALL_MAX. */
-export const MARK_SMALL_FIELD = "M3 3H9V7H13V13A2 2 0 0 1 11 15H3A2 2 0 0 1 1 13V5A2 2 0 0 1 3 3Z";
-export const MARK_SMALL_CELL = "M12 1H14A1 1 0 0 1 15 2V4A1 1 0 0 1 14 5H12A1 1 0 0 1 11 4V2A1 1 0 0 1 12 1Z";
-/** Пути на канве 1024 (d5-mark.svg) — для size > MARK_SMALL_MAX. */
-export const MARK_FULL_FIELD =
-  "M337 347H485A27 27 0 0 1 512 374V485A27 27 0 0 0 539 512H650A27 27 0 0 1 677 539V687A113 113 0 0 1 564 800H337A113 113 0 0 1 224 687V460A113 113 0 0 1 337 347Z";
-export const MARK_FULL_CELL =
-  "M677 224H759A41 41 0 0 1 800 265V347A41 41 0 0 1 759 388H677A41 41 0 0 1 636 347V265A41 41 0 0 1 677 224Z";
+/** Раскладка по строкам (сверху вниз), `X` — клетка есть: 3 + 2 + 3 + 1 = девять. */
+export const MARK_PATTERN = ["XXX", "X.X", "XXX", "X.."] as const;
+
+export interface MarkCell {
+  x: number;
+  y: number;
+}
+
+function cellsOf(origin: MarkCell, step: number): MarkCell[] {
+  const out: MarkCell[] = [];
+  MARK_PATTERN.forEach((row, r) => {
+    [...row].forEach((ch, c) => {
+      if (ch === "X") out.push({ x: origin.x + c * step, y: origin.y + r * step });
+    });
+  });
+  return out;
+}
+
+/** Полная геометрия, канва 1024: клетка 146, зазор 21 (шаг 167), радиус 30; столбцы 272/439/606, строки 189/356/523/690. */
+export const MARK_FULL_CELL_SIZE = 146;
+export const MARK_FULL_RX = 30;
+export const MARK_FULL_STEP = 167;
+export const MARK_FULL_CELLS: readonly MarkCell[] = cellsOf({ x: 272, y: 189 }, MARK_FULL_STEP);
+/** Габарит знака на канве 1024: x 272..752, y 189..836 (47 % × 63 %); центр по вертикали — 512.5. */
+export const MARK_FULL_BOX = { x: 272, y: 189, w: 480, h: 647 } as const;
+
+/** 16-сеточная клеточная версия (канва 16): клетки 3×3, зазор 1; все края на целых — от 24 px и выше. */
+export const MARK_SMALL_CELL_SIZE = 3;
+export const MARK_SMALL_STEP = 4;
+export const MARK_SMALL_CELLS: readonly MarkCell[] = cellsOf({ x: 3, y: 1 }, MARK_SMALL_STEP);
+/** Те же девять клеток одним путём (для canvas `Path2D`, `fill` без правила — клетки не пересекаются). */
+export const MARK_SMALL_PATH = MARK_SMALL_CELLS.map(
+  (c) => `M${c.x} ${c.y}H${c.x + MARK_SMALL_CELL_SIZE}V${c.y + MARK_SMALL_CELL_SIZE}H${c.x}Z`,
+).join("");
+
+/**
+ * 16-сеточная сплошная версия (канва 16): стойка (3,1,3,14), перекладина (3,1,11,3), правая стенка (11,1,3,9), донце
+ * чаши (3,7,11,3) одним контуром; контрформа 5×3 — второй подпуть обратного обхода (nonzero заливает вокруг неё).
+ * Ниже 24 px зазор в 1 px уже не отличим от шума — буква остаётся сплошной, ни одного сглаженного пикселя.
+ */
+export const MARK_SOLID_PATH = "M3 1H14V10H6V15H3Z" + "M6 4V7H11V4Z";
+
+/** Ниже этого номинального размера (px) знак рисуется сплошным; от него — клетками (design/pd141-logo-round4.md §7). */
+export const MARK_CELLS_MIN = 24;
