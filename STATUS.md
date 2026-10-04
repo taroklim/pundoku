@@ -247,6 +247,7 @@ Gates: build → typecheck, lint, тесты web/engine/api (api с TEST_DATABAS
 - Две «P» подряд (знак P4 перед клеточным «Pun» в About и штампе PNG) — оставляем как есть.
 
 ## Ожидает решения владельца
+- (PD-163/PD-167, блокирует UI режимов) Раскладка режимов на Play: A плитки (вариант владельца) / B Классика + «Другие режимы» / C список с описаниями (рекомендация). Материалы: ~/Desktop/Pundoku-iPhone/pd-modes-layout/.
 (решения 2026-10-01 по PD-81/PD-88 приняты: вариант 2 + клякса 620 мс, кроссфейд вкладок без свайпа, M8/M9 оставить, таймлапс с паузы, финал ≈600 мс, M1 убрать, PD-88 — править текст)
 - (не блокирует, PD-49/PD-58) Тексты, написанные developer'ом вне макета — показать дизайнеру/владельцу: `errGeneric`, `statusFailed`, `keyLabel`, `keyGroup`, `backLabel`, `sheetLeave*`. Два косметических отличия от макета: «Key saved» на всю ширину, формат даты «Создан». Оставить как есть или свести к макету?
 - (не блокирует, PD-54) Год начинается с самой ранней записи, поэтому один ход на «пустом» дне (между firstUse и первой записью) сдвигает старт года и сразу делает ~30 клеток пропусками (missed). Оставить как есть, показать предупреждение перед началом такого дня, или считать такой день не стартом года, а только реальные записи?
@@ -421,6 +422,11 @@ Gates: build → typecheck, lint, тесты web/engine/api (api с TEST_DATABAS
 | PD-158 | Движение между вкладками: слайд (решение владельца 2026-10-04, меняет «кроссфейд без свайпа» 2026-10-01; свайп НЕ делаем). Макет design/pd158-tab-slide.html/.md (2–3 варианта, Reduce Motion), рендер кадров/GIF, копия на Desktop; выбор варианта доверен команде (2026-10-04): рекомендованный дизайнером → реализация → QA, без Desktop/GIF | designer | P2 | completed (макет design/pd158-tab-slide.html/.md, shots.mjs; выбран A «Лента» 300 мс cubic-bezier(0.32,0.72,0,1), Today↔Year напрямую, Reduce Motion кроссфейд 200 мс) | — |
 | PD-161 | Реализация PD-158 вариант A «Лента»: три постоянно смонтированные панели (неактивные visibility:hidden+inert), своя прокрутка панелей, признак активности вкладки (таймер Play, финал Today, initialDate Year), ErrorBoundary на панель, шиты position:fixed (will-change только на переход, cancel()), прерывание WAAPI, Reduce Motion кроссфейд 200 мс из --mo, переписать App.motion.test.tsx; ветка pd-158 в worktree | developer | P2 | in_progress | PD-158 |
 | PD-162 | QA PD-161: Chromium+WebKit, прерывания, Reduce Motion, шиты, сохранение партии/прокрутки, 320–430, a11y, en/uk/ru, light/dark | qa-tester | P2 | pending | PD-161 |
+| PD-163 | Релиз 2: макет размещения режимов на Play (Ink, Лжец, Мелодия, Питомец, Фонарь/Глифы упрощённо): вариант владельца (кнопка на режим → незавершённая игра или попап сложности с описанием) + 1–2 своих, рекомендация; design/pd163-modes-layout.html/.md + pd163-shots.mjs | designer | P1 | completed (A плитки, B Классика+«Другие», C список — рекомендация C) | — |
+| PD-164 | Рендер кадров PD-163 (Chromium/WebKit) + копия HTML+PNG на ~/Desktop/Pundoku-iPhone/pd-modes-layout/ — показ владельцу на выбор | product-manager | P1 | completed (166 кадров wk/cr; check(): только поле <150 px на экране партии 320+AX3+ru во всех вариантах — свойство текущего Play, не раскладки; в макете солнце вместо шестерёнки → заменено на GEAR_PATH приложения; 17 PNG+HTML+md+ПРОЧТИ.txt на Desktop) | PD-163 |
+| PD-165 | Релиз 2: план механик режимов (порядок, engine-зависимости) docs/release2-modes-plan.md + engine первого режима (генератор/валидатор Лжеца в packages/engine); ветка pd-r2-engine | developer | P1 | in_progress | — |
+| PD-166 | QA PD-165 (engine Лжеца: честность, единственность, мутации, gates) | qa-tester | P1 | pending | PD-165 |
+| PD-167 | UI режимов релиза 2 по выбранной владельцем раскладке | developer | P1 | pending | PD-164 (выбор владельца) |
 | PD-159 | Low-пакет из QA PD-151 (без решений владельца): (2) landscape (браузерный Safari, поворот в PWA запрещён PD-132) — Ink/панель не перекрывают доску, доска Today не сжимается до 113 pt (минимальная правка, без двухколонника и без заглушки); (3) AX3 архив — сложность «M...» и скрытый источник: перенос/вертикальная раскладка. Ветка pd-low-2 в worktree | developer | P3 | in_progress | — |
 | PD-160 | QA PD-159: живой webkit+chromium, landscape 844×390/932×430, AX3 en/uk/ru, регресс Today/Play/архив, gates | qa-tester | P3 | pending | PD-159 |
 | PD-20 | QA PD-14 (pd-14 @ 0026b2a): PASS с оговорками, блокеров и Medium нет; 4 Low + решение по слиянию → PD-31 | qa-tester | P1 | completed | PD-14 |
@@ -517,6 +523,7 @@ Gates: build → typecheck, lint, тесты web/engine/api (api с `TEST_DATABA
 | PM-Pundoku-11 | product-manager | working | PD-158 | 2026-10-04 |
 | Dev-Pundoku-slide | developer | working | PD-161 | 2026-10-04 |
 | Dev-Pundoku-low2 | developer | working | PD-159 | 2026-10-04 |
+| Dev-Pundoku-r2engine | developer | working | PD-165 | 2026-10-04 |
 
 ## Чек-пойнт 2026-10-01 (конец сессии PM-Pundoku-7)
 - **Сделано:** решения владельца по релизу 1.1 зафиксированы; PD-74 (UI ink, pd-74 @ 73444b2), PD-75 (UI таймлапса/PNG Rhythm, pd-75 @ bfeedbf), PD-80 (счёт ходов в ink, pd-80 @ de5a52d) смержены в локальный main; gates на слитом: build/typecheck/lint, web 624, engine 178 (api не затронут, 174+3). PD-78 сделан в PD-74. PD-79 закрыт: не дефект.
