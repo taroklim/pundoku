@@ -13,7 +13,9 @@ import "./styles/hint.css";
 import "./styles/hub.css";
 import { App } from "./App";
 import { ErrorBoundary } from "./shell/ErrorBoundary";
+import { readRoute } from "./shell/tabs";
 import { startSync, sync } from "./sync/runtime";
+import { dayStore } from "./today/dayStore";
 import { recordFirstUse } from "./year/firstUse";
 
 const root = document.getElementById("root");
@@ -24,6 +26,10 @@ startSync();
 // Year: дата первого запуска — раньше неё «пропусков» не рисуем (год/firstUse.ts).
 void recordFirstUse(sync.repository);
 
+// PD-147: холодный старт на Today — день грузится параллельно с первым рендером (IndexedDB, снапшот и API идут вне основного
+// потока), а не после него: раньше загрузка начиналась из эффекта экрана, то есть после рендера и первой отрисовки.
+const first = readRoute();
+if (first.tab === "today" && first.archiveDate === null && first.settings !== true && first.help === undefined) dayStore.ensureStarted();
 createRoot(root).render(
   <StrictMode>
     <ErrorBoundary scope="app">

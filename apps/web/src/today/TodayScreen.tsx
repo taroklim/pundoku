@@ -11,6 +11,7 @@ import {
   useClock,
   useHintAnnouncement,
 } from "../play/controls";
+import { fitClassName } from "../play/fitModel";
 import { formatDay } from "../play/format";
 import { HintButton } from "../play/HintButton";
 import { HintDock, HINT_DOCK_ID } from "../play/HintDock";
@@ -136,11 +137,16 @@ export function DayView({ store, archive, onOpenSettings, onOpenHelp }: { store:
     return () => window.clearTimeout(id);
   }, [gridTapped]);
 
+  // PD-147: пока партия на экране (не карточка «решено»), Today — тот же нескроллящийся экран с резервом под док, что и Play
+  // (PD-144): док подсказки занимает место панели и не двигает ни поле, ни заголовок. Резерв постоянный, в том числе в Ink и до
+  // загрузки партии: режим выбирается на самом экране до первого хода, и поле не должно прыгать от выбора или появления сетки.
+  const fitClass = fitClassName({ fit: !(phase === "solved" && cardShown), hintable: true, docked: hint.open });
+
   const sourceLabel = snap.source === null ? null : t(`today.source.${snap.source}`);
   const winRate = snap.serverVerified === false ? null : snap.winRate;
 
   return (
-    <div ref={root} className={`play today${archive ? " archive" : ""}`} onKeyDown={(e) => handleGameKey(e, store, ladder)} data-testid={archive ? "archive-screen" : undefined} data-date={archive ? archive.date : undefined}>
+    <div ref={root} className={`play today${archive ? " archive" : ""}${fitClass}`} onKeyDown={(e) => handleGameKey(e, store, ladder)} data-testid={archive ? "archive-screen" : undefined} data-date={archive ? archive.date : undefined}>
       <p className="sr-only" role="status" aria-live="polite" aria-atomic="true">
         {announcement}
       </p>
@@ -255,7 +261,7 @@ export function DayView({ store, archive, onOpenSettings, onOpenHelp }: { store:
             )}
           </div>
 
-          {!unavailable && (hint.open ? <HintDock ladder={ladder} state={hint} /> : <GamePad snap={snap} store={store} />)}
+          {!unavailable && (hint.open ? <HintDock ladder={ladder} state={hint} fit /> : <GamePad snap={snap} store={store} />)}
         </>
       )}
       {hint.rule && <HintRuleSheet onGo={() => ladder.confirmRule()} onCancel={() => ladder.dismissRule()} />}

@@ -100,6 +100,25 @@ describe("PD-116: сохранение и восстановление парт�
     expect(b.getSnapshot().play!.log.at(-1)!.kind).toBe("undo");
   });
 
+  it("PD-147: курсор на заполненной клетке после перезагрузки уходит на первую пустую; на пустой — остаётся", async () => {
+    const repo = new InMemoryProgressRepository();
+    const a = started(repo);
+    a.select(2);
+    a.input(4); // клетка 2 заполнена, курсор остаётся на ней
+    await flush();
+    const b = await restored(repo);
+    expect(b.getSnapshot().selected).toBe(3); // первая пустая, а не заполненная клетка 2
+
+    const c2 = new InMemoryProgressRepository();
+    const c = started(c2);
+    c.select(40); // пустая клетка
+    c.toggleNotesMode();
+    c.input(1);
+    await flush();
+    const d = await restored(c2);
+    expect(d.getSnapshot().selected).toBe(40);
+  });
+
   it("Low (b): выбор сложности на хабе, сделанный до окончания чтения, восстановление не затирает сложностью партии", async () => {
     const repo = new InMemoryProgressRepository();
     const a = started(repo, { difficulty: "hard" });

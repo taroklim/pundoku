@@ -73,7 +73,7 @@ const DUMP = async () => {
   return out;
 };
 /** Запись дампа: структура воссоздаётся в onupgradeneeded (та же версия, что у приложения -> upgrade у него не сработает), put всех записей, ждём tx.oncomplete. */
-const RESTORE = async (dump) => {
+export const RESTORE = async (dump) => {
   for (const [name, d] of Object.entries(dump)) {
     await new Promise((resolve, reject) => {
       const rq = indexedDB.open(name, d.version);
@@ -135,11 +135,11 @@ export async function snapshotProfile(ctx) {
   return { ls: await ctx.storageState({ indexedDB: false }), idb };
 }
 /** Новый контекст с профилем: localStorage — через storageState, IndexedDB — ручной посев с ожиданием tx.oncomplete. */
-export async function newProfileCtx(browser, engine, profile) {
+export async function newProfileCtx(browser, engine, profile, base = BASE) {
   const ctx = await newCtx(browser, engine, profile);
   if (profile?.idb && Object.keys(profile.idb).length) {
     const p = await ctx.newPage();
-    await p.goto(BASE + "/health");
+    await p.goto(base + "/health");
     await p.evaluate(RESTORE, profile.idb);
     await p.close();
   }

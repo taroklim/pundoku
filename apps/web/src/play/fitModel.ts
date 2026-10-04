@@ -56,3 +56,13 @@ export function boardSide(i: FitInput, _dockOpen = false): number {
 export function dockRoom(i: FitInput): number {
   return FIT.padSlot + 1.15 * i.rem + FIT.gapPad + extra(i) - FIT.dockGap;
 }
+
+/**
+ * Классы корня экрана партии: общие для Play и Today/архива (PD-147: на Today док подсказки сдвигал страницу — экран не был
+ * нескроллящимся и резерва под док не имел). `fit` — партия на экране (не хаб, не карточка «решено»): нескроллящийся экран
+ * `.play-fit`; `hintable` — место под док отложено заранее (`.play-hintable`); `docked` — док открыт (`.play-docked`).
+ * Пустая строка — экран прокручивается (карточка результата, хаб Play имеет собственный `.play-hub`).
+ */
+export function fitClassName({ fit, hintable, docked }: { fit: boolean; hintable: boolean; docked: boolean }): string {
+  return fit ? ` play-fit${hintable ? " play-hintable" : ""}${docked ? " play-docked" : ""}` : "";
+}
