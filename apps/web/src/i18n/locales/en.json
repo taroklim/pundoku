@@ -116,9 +116,6 @@
     "helpHead": "Help",
     "helpRow": "How Pundoku works"
   },
-  "screens": {
-    "soon": "Coming soon"
-  },
   "help": {
     "title": "How Pundoku works",
     "backLabel": "Back to Settings",
@@ -184,10 +181,6 @@
     "failed": "Couldn’t prepare a puzzle.",
     "retry": "Try again",
     "newPuzzle": "New puzzle",
-    "discardTitle": "Discard this puzzle?",
-    "discardMessage": "Your progress on it will be lost. Today’s puzzle is not affected.",
-    "discard": "Discard",
-    "keepPlaying": "Keep playing",
     "fillTitle": "Fill candidates",
     "fillMessage": "Notes go into every empty cell that has none yet, with the digits that still fit. Undo takes it all back in one step.",
     "fillAction": "Fill candidates",
@@ -207,18 +200,8 @@
     "cellsLeft_other": "{{count}} cells left",
     "cellsLeftShort": "{{count}} left",
     "hub": {
-      "sub": "A puzzle of your own, any time.",
       "contHead": "Continue",
       "contDay": "Today’s puzzle",
-      "contFree": "Your own puzzle",
-      "modeClassic": "Classic",
-      "modeInk": "Ink",
-      "modeClassicSub": "Undo, the eraser and notes all work.",
-      "modeInkSub": "No undo and no eraser for digits. A wrong digit leaves a blot.",
-      "footClassic": "Free games aren’t recorded in your year.",
-      "footInk": "In ink mode there is no undo and no eraser for digits. Free games aren’t recorded in your year.",
-      "start": "Start",
-      "done": "Done",
       "clues_one": "{{count}} clue",
       "clues_other": "{{count}} clues",
       "tech": {
@@ -229,7 +212,6 @@
       },
       "left_one": "{{count}} cell left",
       "left_other": "{{count}} cells left",
-      "modeSheet": "Mode",
       "more": "More",
       "fillInkOff": "Not available in Ink"
     }
@@ -533,5 +515,25 @@
     "fpCorrections_other": "{{count}} fixes",
     "hints_one": "{{count}} hint",
     "hints_other": "{{count}} hints"
+  },
+  "modes": {
+    "head": "Modes",
+    "foot": "Free games aren’t recorded in your year.",
+    "status": "In progress · {{meta}}",
+    "difficulty": "Difficulty",
+    "start": "Start",
+    "startNew": "Start new",
+    "cancel": "Cancel",
+    "discard": "Your unfinished puzzle ({{meta}}) will be discarded.",
+    "continue": "Continue",
+    "newPuzzle": "New puzzle…",
+    "classic": {
+      "name": "Classic",
+      "desc": "Plain sudoku: notes, undo and hints are all there."
+    },
+    "ink": {
+      "name": "Ink",
+      "desc": "Every digit is final: no undo and no eraser for digits. A wrong one leaves a blot."
+    }
   }
 }

@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import { Fragment } from "react";
 import { useTranslation } from "react-i18next";
-import { NibIcon } from "./inkIcons";
+import type { ModeDef } from "./modes";
 
 interface SublineProps {
   /** «Wed 30 Sep»; пусто — часть пропускается. */
@@ -14,8 +14,11 @@ interface SublineProps {
   help?: boolean;
   /** Тихий таймер; `null` — не показывать. */
   clock?: string | null;
-  /** PD-144: чип «Ink» в конце подписи партии Play (не часть склейки « · »; Today остаётся со словом режима). */
-  inkChip?: boolean;
+  /**
+   * PD-144/PD-167: чип режима (значок + имя из реестра) в конце подписи партии Play — не часть склейки « · »; Today остаётся
+   * со словом режима. `null`/нет — без чипа (Классика: `ModeDef.chip === false`).
+   */
+  chip?: ModeDef | null;
 }
 
 /**
@@ -24,10 +27,10 @@ interface SublineProps {
  * отдельный элемент `.inkmark`: чернила + Semibold, в forced-colors подчёркнуто (ink.css); по слову, а не по цвету.
  *
  * PD-144 (D-2): на экране партии подпись — ОДНА строка (резерв `--chrome` считает одну): сложность усекается многоточием,
- * время и метки не переносятся, а когда текст не помещается (крупный Dynamic Type, узкий экран) слова «с подсказкой»/«Ink» схлопываются
+ * время и метки не переносятся, а когда текст не помещается (крупный Dynamic Type, узкий экран) слова «с подсказкой»/чип режима схлопываются
  * в значки (`.hm-ic`/`.chip-ic`; слово остаётся именем для скринридера и в `title`). Правила — play.css, контейнер-запрос.
  */
-export function Subline({ day, difficulty, ink = false, help = false, clock = null, inkChip = false }: SublineProps) {
+export function Subline({ day, difficulty, ink = false, help = false, clock = null, chip = null }: SublineProps) {
   const { t } = useTranslation();
   const parts: ReactNode[] = [];
   if (day) parts.push(<span key="day" className="sub-day">{day}</span>);
@@ -62,10 +65,10 @@ export function Subline({ day, difficulty, ink = false, help = false, clock = nu
           {part}
         </Fragment>
       ))}
-      {inkChip && (
-        <span className="mode-chip" data-testid="ink-chip" title={t("ink.chip")}>
-          <NibIcon className="chip-ic" />
-          <span className="chip-t">{t("ink.chip")}</span>
+      {chip && chip.chip && (
+        <span className="mode-chip" data-testid="mode-chip" data-mode={chip.id} title={t(`modes.${chip.textKey}.name`)}>
+          <chip.Icon className="chip-ic" />
+          <span className="chip-t">{t(`modes.${chip.textKey}.name`)}</span>
         </span>
       )}
     </p>
