@@ -1,0 +1,750 @@
+<!DOCTYPE html>
+<html lang="ru" data-variant="A" data-jump="direct" data-motion="system" data-rt="system">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<title>Pundoku — PD-158: слайд между вкладками (3 варианта)</title>
+<!--
+  PD-158 — переход между вкладками Today · Play · Year СЛАЙДОМ (решение владельца 2026-10-04,
+  заменяет «кроссфейд без свайпа» 2026-10-01). Свайп-жеста НЕТ: анимация только по тапу в таб-баре
+  (и по стрелкам клавиатуры в tablist).
+
+  ТОЛЬКО МАКЕТ. В apps/ ничего не подключено. Спецификация, требования к разработке и рекомендация —
+  design/pd158-tab-slide.md. Кадры — design/pd158-shots.mjs.
+
+  Варианты:
+    A «Лента»   — оба экрана едут на всю ширину, 1:1, 300 мс, cubic-bezier(0.32, 0.72, 0, 1)
+    B «Push»    — входящий едет на всю ширину ПОВЕРХ, уходящий — на 30 % с затуханием, 350 мс
+    C «Сдвиг»   — оба смещаются на 32 px и кроссфейдятся (shared axis), 240 мс, cubic-bezier(0.2, 0.7, 0.3, 1)
+  Reduce Motion (любой вариант): кроссфейд 200 мс, без сдвига; пилюля в таб-баре — мгновенно.
+
+  Механика демо — Web Animations API (Element.animate), то же, что рекомендовано в продукт:
+    * прерывание: новый тап читает ТЕКУЩЕЕ положение каждого экрана (computed transform/opacity),
+      отменяет анимации и запускает новые ОТ ЭТОГО положения — без рывка и без очереди;
+    * экраны никогда не размонтируются: неактивный — visibility:hidden + inert (НЕ display:none —
+      он сбрасывает scrollTop); партия на Play и прокрутка Today/Year сохраняются;
+    * после конца анимации на экране не остаётся НИКАКОГО transform/will-change (иначе он станет
+      containing block для position:fixed шитов).
+
+  Токены — дословно из apps/web/src/styles/tokens.css и design/pd144-play-c.html. Новых цветов нет.
+  Окно window.pd158 — API для pd158-shots.mjs.
+-->
+<style>
+[hidden]{ display:none !important; }
+/* ============================ 1. ТОКЕНЫ ============================ */
+:root{
+  --font-sans: system-ui, -apple-system, "SF Pro Text", "Helvetica Neue", Arial, sans-serif;
+  --font-serif: ui-serif, "New York", Charter, Georgia, serif;
+
+  /* Симуляция safe area iPhone 16 (в Safari без standalone env() = 0). */
+  --sa-top: max(env(safe-area-inset-top, 0px), 59px);
+  --sa-bot: max(env(safe-area-inset-bottom, 0px), 34px);
+
+  --bg:#F2F2F7; --elev:#FFFFFF; --chip-bg:#F2F2F7;
+  --label:#1C1C1E; --label-2:#6E6E73; --label-2-grouped:#6A6A6E;
+  --ink:#3B48B0; --on-ink:#FFFFFF; --wax:#B3261E;
+  --hairline:rgba(60,60,67,.29); --rule-thin:rgba(60,60,67,.29);
+  --ink-tint:rgba(59,72,176,.12);
+  --box-shadow:0 1px 2px rgba(0,0,0,.04);
+  --glass-fill:rgba(255,255,255,.72); --glass-solid:#F6F6F9;
+  --mark-ink:#3B48B0; --mark-ink-soft:#8589CE; --mark-wax:#B3261E;
+  --box-gap:4px; --box-radius:10px;
+  --page-bg:#8A8A8E;
+  --tabbar-h:64px;
+  /* Кривые — из tokens.css (PD-89). */
+  --e-out: cubic-bezier(0.2, 0.7, 0.3, 1);
+  --e-ring: cubic-bezier(0.32, 0.72, 0, 1);
+  /* Тень верхнего экрана в варианте B — только светлая тема. */
+  --push-shadow: -10px 0 28px rgba(0,0,0,.10);
+}
+@media (prefers-color-scheme: dark){
+  :root:not(.force-light){
+    --bg:#000000; --elev:#1C1C1E; --chip-bg:#2C2C2E;
+    --label:#FFFFFF; --label-2:#98989D; --label-2-grouped:#98989D;
+    --ink:#8C96FF; --on-ink:#000000; --wax:#FF6B5E;
+    --hairline:rgba(235,235,245,.22); --rule-thin:rgba(235,235,245,.22);
+    --ink-tint:rgba(140,150,255,.18); --box-shadow:none;
+    --glass-fill:rgba(28,28,30,.72); --glass-solid:#141416;
+    --mark-ink:#8C96FF; --mark-ink-soft:#6168AA; --mark-wax:#FF6B5E;
+    --page-bg:#2C2C2E; --push-shadow:none;
+  }
+}
+:root.force-dark{
+  --bg:#000000; --elev:#1C1C1E; --chip-bg:#2C2C2E;
+  --label:#FFFFFF; --label-2:#98989D; --label-2-grouped:#98989D;
+  --ink:#8C96FF; --on-ink:#000000; --wax:#FF6B5E;
+  --hairline:rgba(235,235,245,.22); --rule-thin:rgba(235,235,245,.22);
+  --ink-tint:rgba(140,150,255,.18); --box-shadow:none;
+  --glass-fill:rgba(28,28,30,.72); --glass-solid:#141416;
+  --mark-ink:#8C96FF; --mark-ink-soft:#6168AA; --mark-wax:#FF6B5E;
+  --page-bg:#2C2C2E; --push-shadow:none;
+}
+
+/* ============================ 2. БАЗА ============================ */
+*{ box-sizing:border-box; }
+html{ font:-apple-system-body; font-family:var(--font-sans); line-height:1.3; -webkit-text-size-adjust:100%; }
+body{
+  margin:0; background:var(--page-bg); color:var(--label); font-family:var(--font-sans);
+  touch-action:manipulation; -webkit-tap-highlight-color:transparent;
+}
+button{ font:inherit; color:inherit; background:none; border:0; padding:0; cursor:pointer; touch-action:manipulation; -webkit-appearance:none; appearance:none; }
+:focus-visible{ outline:2px solid var(--ink); outline-offset:2px; border-radius:6px; }
+
+.stage{ display:flex; flex-wrap:wrap; gap:28px; justify-content:center; align-items:flex-start; padding:24px 16px 64px; }
+.frame{
+  position:relative; flex:none; width:390px; height:844px; border-radius:46px; overflow:hidden;
+  background:var(--bg); box-shadow:0 20px 60px rgba(0,0,0,.35); isolation:isolate;
+}
+/* Телефон (и съёмка 390×844): рамка = экран, панель макета — ниже. */
+@media (max-width:439px){
+  .stage{ display:block; padding:0; }
+  .frame{ width:100vw; height:100dvh; border-radius:0; box-shadow:none; }
+}
+
+/* ============================ 3. ЭКРАНЫ ============================ */
+.panes{ position:absolute; inset:0; overflow:hidden; }
+.pane{
+  position:absolute; inset:0; display:flex; flex-direction:column;
+  background:var(--bg);  /* непрозрачный: нужен варианту B (экран поверх экрана) */
+}
+/* Неактивный экран: НЕ display:none (сбросил бы scrollTop и состояние раскладки). */
+.pane.off{ visibility:hidden; }
+html[data-variant="B"] .pane{ box-shadow:var(--push-shadow); }
+.pane-scroll{
+  flex:1; min-height:0; overflow-y:auto; -webkit-overflow-scrolling:touch; overscroll-behavior:contain;
+  padding-bottom:calc(16px + var(--tabbar-h) + var(--sa-bot));
+}
+.pane-fixed{ flex:1; min-height:0; display:flex; flex-direction:column; padding-bottom:calc(var(--tabbar-h) + var(--sa-bot)); }
+
+.toolbar{
+  display:flex; align-items:flex-end; justify-content:space-between; gap:12px;
+  padding:calc(var(--sa-top) + 8px) 16px 0 16px;
+}
+.title{ font-size:1.62rem; font-weight:700; letter-spacing:-.02em; line-height:1.2; margin:0; }
+.toolbar-end{ display:flex; align-items:flex-end; gap:2px; margin-right:-10px; }
+.icon-btn{ width:44px; height:44px; margin-bottom:-6px; display:grid; place-items:center; color:var(--label-2-grouped); border-radius:22px; }
+.icon-btn svg{ width:23px; height:23px; }
+.titlebtn{ display:flex; align-items:center; gap:4px; }
+.titlebtn svg{ width:15px; height:15px; color:var(--label-2); }
+.subline{ margin:2px 0 0; padding:0 16px; color:var(--label-2); font-size:.88rem; }
+
+.sec-head{ margin:22px 0 6px; padding:0 16px; font-size:.82rem; color:var(--label-2-grouped); }
+.card{ margin:12px 16px 0; background:var(--elev); border-radius:12px; box-shadow:var(--box-shadow); padding:14px; }
+.daycard{ display:flex; gap:14px; align-items:center; }
+.daycard .meta{ flex:1; min-width:0; }
+.daycard .k{ font-size:.8rem; color:var(--label-2); }
+.daycard .v{ font-size:1.05rem; font-weight:600; margin:2px 0 10px; }
+.cta{ display:inline-flex; align-items:center; min-height:44px; padding:0 16px; border-radius:11px; background:var(--ink); color:var(--on-ink); font-weight:600; font-size:.95rem; }
+.rows{ margin:0 16px; background:var(--elev); border-radius:12px; overflow:hidden; }
+.rows .r{ display:flex; justify-content:space-between; align-items:center; min-height:48px; padding:0 14px; border-bottom:.5px solid var(--hairline); font-size:.95rem; }
+.rows .r:last-child{ border-bottom:0; }
+.rows .r span:last-child{ color:var(--label-2); font-size:.85rem; }
+.caption{ padding:8px 16px 0; color:var(--label-2-grouped); font-size:.8rem; }
+
+/* Поле — вариант B Boxes (pd7). */
+.bd{ display:grid; grid-template-columns:repeat(3,1fr); gap:var(--box-gap); }
+.bx{ display:grid; grid-template-columns:repeat(3,1fr); background:var(--elev); border-radius:var(--box-radius); box-shadow:var(--box-shadow); overflow:hidden; }
+.cl{
+  aspect-ratio:1; display:grid; place-items:center; position:relative;
+  font-family:var(--font-sans); font-size:21px; font-weight:500; color:var(--ink);
+  border-right:.5px solid var(--rule-thin); border-bottom:.5px solid var(--rule-thin);
+}
+.cl:nth-child(3n){ border-right:0; }
+.cl:nth-child(n+7){ border-bottom:0; }
+.cl.gv{ font-family:var(--font-serif); color:var(--label); font-weight:600; }
+.cl.sel{ background:var(--ink-tint); box-shadow:inset 0 0 0 2px var(--ink); }
+.cl.same{ background:var(--ink-tint); }
+.board-wrap{ padding:14px 12px 0; }
+.bd.mini{ --box-gap:2px; --box-radius:4px; width:132px; flex:none; }
+.bd.mini .cl{ font-size:8px; font-weight:600; }
+.bd.mid .cl{ font-size:17px; }
+
+.status{ text-align:center; color:var(--label-2); font-size:.85rem; padding:10px 0 8px; }
+.pad{ display:grid; grid-template-columns:repeat(9,1fr); gap:5px; padding:0 12px; }
+.key{ height:52px; border-radius:10px; background:var(--elev); box-shadow:var(--box-shadow); font-size:22px; color:var(--ink); }
+.key:active{ background:var(--ink-tint); }
+.acts{ display:grid; grid-template-columns:repeat(3,1fr); gap:6px; padding:10px 12px 0; }
+.act{ min-height:44px; border-radius:10px; color:var(--label-2); font-size:.85rem; }
+
+/* Year */
+.months{ display:grid; grid-template-columns:1fr 1fr; gap:10px; padding:12px 16px 0; }
+.month{ background:var(--elev); border-radius:12px; padding:10px; box-shadow:var(--box-shadow); }
+.month h3{ margin:0 0 6px; font-size:.8rem; font-weight:600; color:var(--label-2); }
+.days{ display:grid; grid-template-columns:repeat(7,1fr); gap:3px; }
+.dd{ aspect-ratio:1; border-radius:3px; background:var(--chip-bg); }
+.dd.i{ background:var(--mark-ink); }
+.dd.s{ background:var(--mark-ink-soft); }
+.dd.w{ background:var(--mark-wax); clip-path:polygon(0 0,70% 0,100% 30%,100% 100%,0 100%); }
+.dd.x{ visibility:hidden; }
+
+/* ============================ 4. ТАБ-БАР ============================ */
+.tabbar{
+  position:absolute; left:0; right:0; bottom:0; z-index:20;
+  display:grid; grid-template-columns:repeat(3,1fr); gap:2px;
+  padding:6px 10px calc(6px + var(--sa-bot)) 10px;
+  background:var(--glass-fill);
+  -webkit-backdrop-filter:blur(24px) saturate(1.4); backdrop-filter:blur(24px) saturate(1.4);
+  border-top:1px solid var(--hairline);
+}
+/* Reduce Transparency — системная и эмулированная: непрозрачная заливка, анимация не меняется. */
+@media (prefers-reduced-transparency: reduce){
+  html:not([data-rt="off"]) .tabbar{ background:var(--glass-solid); -webkit-backdrop-filter:none; backdrop-filter:none; }
+}
+html[data-rt="on"] .tabbar{ background:var(--glass-solid); -webkit-backdrop-filter:none; backdrop-filter:none; }
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))){ .tabbar{ background:var(--glass-solid); } }
+
+/* Индикатор выбранной вкладки — отдельный слой (пилюля), едет transform'ом. */
+.pill{ position:absolute; left:0; top:0; border-radius:14px; background:var(--ink-tint); pointer-events:none; }
+.tab{
+  position:relative; z-index:1; min-height:50px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px;
+  color:var(--label-2); border-radius:14px; padding:4px 2px;
+  transition:color .12s linear;
+}
+.tab svg{ width:26px; height:26px; }
+.tab .lab{ font-size:clamp(11px, .65rem, 13px); letter-spacing:.01em; }
+.tab[aria-selected="true"]{ color:var(--ink); }
+.tab[aria-selected="true"] .lab{ font-weight:600; }
+@media (forced-colors: active){
+  .pill{ display:none; }
+  .tab[aria-selected="true"]{ border:2px solid Highlight; }
+}
+
+/* ============================ 5. СЛУЖЕБНОЕ МАКЕТА ============================ */
+/* Быстрый переключатель — только когда рамка = экран телефона; лежит в зоне статус-бара. */
+.quick{
+  position:absolute; z-index:40; top:10px; left:50%; transform:translateX(-50%);
+  display:none; gap:4px; align-items:center; padding:3px; border-radius:999px;
+  background:var(--elev); box-shadow:0 1px 6px rgba(0,0,0,.18); font-size:13px;
+}
+@media (max-width:439px){ .quick{ display:flex; } }
+html.clean .quick{ display:none !important; }
+.quick button{ min-width:36px; min-height:32px; padding:0 8px; border-radius:999px; font-weight:600; color:var(--label-2); }
+.quick button[aria-pressed="true"]{ background:var(--ink); color:var(--on-ink); }
+
+.ctl{
+  width:min(440px, 100%); background:var(--elev); color:var(--label); border-radius:18px; padding:16px;
+  box-shadow:0 10px 30px rgba(0,0,0,.18); font-size:15px;
+}
+@media (max-width:439px){ .ctl{ width:auto; margin:16px; } }
+.ctl h1{ font-size:17px; margin:0 0 4px; }
+.ctl .lead{ margin:0 0 12px; color:var(--label-2); font-size:13px; }
+.grp{ margin:14px 0 0; }
+.grp > .gl{ font-size:12px; color:var(--label-2-grouped); text-transform:uppercase; letter-spacing:.04em; margin:0 0 6px; }
+.seg{ display:flex; flex-wrap:wrap; gap:6px; }
+.seg button{ min-height:36px; padding:0 12px; border-radius:10px; background:var(--chip-bg); font-size:14px; }
+.seg button[aria-pressed="true"]{ background:var(--ink); color:var(--on-ink); font-weight:600; }
+/* Ряд демо ПЕРЕНОСИТСЯ, а не прокручивается вбок — ничего не обрезано без подсказки (замечание PD-81). */
+.demos{ display:flex; flex-wrap:wrap; gap:8px; }
+.demos button{ min-height:44px; padding:6px 12px; border-radius:11px; background:var(--ink-tint); color:var(--ink); font-size:14px; font-weight:600; text-align:left; }
+.note{ font-size:12.5px; color:var(--label-2); margin:6px 0 0; }
+.spec{ margin:10px 0 0; font-size:13px; border-collapse:collapse; width:100%; }
+.spec td{ padding:5px 0; vertical-align:top; border-top:.5px solid var(--hairline); }
+.spec td:first-child{ color:var(--label-2); width:34%; padding-right:8px; }
+.readout{ margin-top:10px; font:12px/1.4 ui-monospace, Menlo, monospace; color:var(--label-2); background:var(--chip-bg); border-radius:8px; padding:8px; white-space:pre-wrap; }
+#pd158-err{ position:fixed; z-index:999; top:0; left:0; right:0; background:#B3261E; color:#fff; font:13px/1.4 ui-monospace,Menlo,monospace; padding:8px 12px; white-space:pre-wrap; }
+</style>
+</head>
+<body>
+<div class="stage">
+  <div class="frame" id="frame">
+    <div class="quick" role="group" aria-label="Вариант макета">
+      <button type="button" data-q="A">A</button>
+      <button type="button" data-q="B">B</button>
+      <button type="button" data-q="C">C</button>
+      <button type="button" id="q-more" aria-label="К панели макета">⋯</button>
+    </div>
+
+    <div class="panes" id="panes">
+      <!-- TODAY -->
+      <section class="pane" id="panel-today" role="tabpanel" aria-labelledby="tab-today">
+        <div class="pane-scroll" id="scroll-today">
+          <header class="toolbar">
+            <h2 class="title">Today</h2>
+            <div class="toolbar-end"><button class="icon-btn" type="button" aria-label="Settings" data-icon="gear"></button></div>
+          </header>
+          <p class="subline">Saturday, 4 October</p>
+          <div class="card daycard">
+            <div class="bd mini" id="b-today-mini"></div>
+            <div class="meta">
+              <div class="k">Daily · Medium</div>
+              <div class="v">34 of 81 · 06:40</div>
+              <span class="cta">Continue</span>
+            </div>
+          </div>
+          <div class="sec-head">GRID ∞</div>
+          <div class="board-wrap" style="padding-top:0"><div class="bd mid" id="b-today-grid"></div></div>
+          <p class="caption">The last cell of each day opens one hint here.</p>
+          <div class="sec-head">THIS WEEK</div>
+          <div class="rows" id="rows-week"></div>
+        </div>
+      </section>
+
+      <!-- PLAY -->
+      <section class="pane off" id="panel-play" role="tabpanel" aria-labelledby="tab-play">
+        <div class="pane-fixed">
+          <header class="toolbar">
+            <h2 class="title">Play</h2>
+            <div class="toolbar-end">
+              <button class="icon-btn" type="button" aria-label="Hint" data-icon="bulb"></button>
+              <button class="icon-btn" type="button" aria-label="Settings" data-icon="gear"></button>
+            </div>
+          </header>
+          <p class="subline">Medium · <span id="timer">04:12</span></p>
+          <div class="board-wrap"><div class="bd" id="b-play"></div></div>
+          <div class="status" id="play-status">Select a cell, then a digit</div>
+          <div class="pad" id="pad"></div>
+          <div class="acts"><button class="act" type="button" id="undo">Undo</button><button class="act" type="button" id="erase">Erase</button><button class="act" type="button">Notes</button></div>
+        </div>
+      </section>
+
+      <!-- YEAR -->
+      <section class="pane off" id="panel-year" role="tabpanel" aria-labelledby="tab-year">
+        <div class="pane-scroll" id="scroll-year">
+          <header class="toolbar">
+            <button class="titlebtn" type="button"><h2 class="title">2026</h2><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button>
+            <div class="toolbar-end"><button class="icon-btn" type="button" aria-label="Settings" data-icon="gear"></button></div>
+          </header>
+          <p class="subline">214 days · 9 clean this week</p>
+          <div class="months" id="months"></div>
+        </div>
+      </section>
+    </div>
+
+    <nav class="tabbar" id="tabbar" role="tablist" aria-label="Sections">
+      <span class="pill" id="pill" aria-hidden="true"></span>
+      <button class="tab" id="tab-today" role="tab" type="button" aria-selected="true" aria-controls="panel-today" tabindex="0">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="4.8" width="17" height="15.4" rx="3.4"/><path d="M3.5 9.2h17M8 3.2v2.8M16 3.2v2.8"/><circle cx="12" cy="14.7" r="1.9" fill="currentColor" stroke="none"/></svg>
+        <span class="lab">Today</span>
+      </button>
+      <button class="tab" id="tab-play" role="tab" type="button" aria-selected="false" aria-controls="panel-play" tabindex="-1">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="3.5" width="17" height="17" rx="3.4"/><path d="M9.2 3.5v17M14.8 3.5v17M3.5 9.2h17M3.5 14.8h17"/></svg>
+        <span class="lab">Play</span>
+      </button>
+      <button class="tab" id="tab-year" role="tab" type="button" aria-selected="false" aria-controls="panel-year" tabindex="-1">
+        <svg viewBox="0 0 24 24" fill="currentColor" stroke="none" aria-hidden="true"><g id="yr-ico"></g></svg>
+        <span class="lab">Year</span>
+      </button>
+    </nav>
+  </div>
+
+  <aside class="ctl" id="ctl" aria-label="Панель макета">
+    <h1>PD-158 · слайд между вкладками</h1>
+    <p class="lead">Свайпа нет — только тап по таб-бару. Можно тапать прямо по таб-бару в рамке, в том числе посреди анимации (прерывание). На Play можно поставить цифры, на Today/Year — прокрутить: при возврате всё на месте.</p>
+
+    <div class="grp"><p class="gl">Вариант</p>
+      <div class="seg" data-seg="variant">
+        <button type="button" data-v="A">A · Лента</button>
+        <button type="button" data-v="B">B · Push</button>
+        <button type="button" data-v="C">C · Сдвиг</button>
+      </div>
+    </div>
+
+    <div class="grp"><p class="gl">Демо (повтор — тот же тап)</p>
+      <div class="demos">
+        <button type="button" data-demo="0-1">Today → Play</button>
+        <button type="button" data-demo="1-2">Play → Year</button>
+        <button type="button" data-demo="2-1">Year → Play</button>
+        <button type="button" data-demo="1-0">Play → Today</button>
+        <button type="button" data-demo="0-2">Today → Year (через одну)</button>
+        <button type="button" data-demo="2-0">Year → Today (через одну)</button>
+        <button type="button" data-demo="int1">Прерывание: Today→Play, на 40 % — Year</button>
+        <button type="button" data-demo="int2">Прерывание: Today→Year, на 50 % — обратно Today</button>
+        <button type="button" data-demo="burst">Серия тапов: Play, Year, Play, Today</button>
+      </div>
+      <p class="note">Ряд переносится на новую строку — все кнопки видны без прокрутки.</p>
+    </div>
+
+    <div class="grp"><p class="gl">Скорость (для разбора)</p>
+      <div class="seg" data-seg="slow">
+        <button type="button" data-s="1">×1</button>
+        <button type="button" data-s="5">×5 медленнее</button>
+      </div>
+    </div>
+
+    <div class="grp"><p class="gl">Прыжок через одну (только A)</p>
+      <div class="seg" data-seg="jump">
+        <button type="button" data-j="direct">Напрямую (рекоменд.)</button>
+        <button type="button" data-j="through">Через Play</button>
+      </div>
+    </div>
+
+    <div class="grp"><p class="gl">Reduce Motion</p>
+      <div class="seg" data-seg="motion">
+        <button type="button" data-m="system">Как в системе</button>
+        <button type="button" data-m="on">Эмулировать: вкл</button>
+        <button type="button" data-m="off">Выкл</button>
+      </div>
+      <p class="note" id="rm-sys"></p>
+    </div>
+
+    <div class="grp"><p class="gl">Reduce Transparency</p>
+      <div class="seg" data-seg="rt">
+        <button type="button" data-r="system">Как в системе</button>
+        <button type="button" data-r="on">Эмулировать: вкл</button>
+      </div>
+    </div>
+
+    <div class="grp"><p class="gl">Тема</p>
+      <div class="seg" data-seg="theme">
+        <button type="button" data-t="auto">Авто</button>
+        <button type="button" data-t="light">Светлая</button>
+        <button type="button" data-t="dark">Тёмная</button>
+      </div>
+    </div>
+
+    <div class="grp"><p class="gl">Спецификация выбранного варианта</p>
+      <table class="spec" id="spec"></table>
+      <div class="readout" id="readout">Переходов ещё не было.</div>
+    </div>
+  </aside>
+</div>
+
+<script>
+(function(){
+"use strict";
+var root = document.documentElement;
+
+/* ---------- ошибки — красным баннером (его ловит pd158-shots.mjs) ---------- */
+function showErr(msg){
+  var b = document.getElementById("pd158-err");
+  if (!b){ b = document.createElement("div"); b.id = "pd158-err"; document.body.appendChild(b); }
+  b.textContent += (b.textContent ? "\n" : "") + "Ошибка макета: " + msg;
+}
+window.addEventListener("error", function(e){ showErr(e.message); });
+window.addEventListener("unhandledrejection", function(e){
+  var r = e.reason; if (r && r.name === "AbortError") return; showErr(String(r));
+});
+
+/* ---------- иконки ---------- */
+var GEAR = "M10.38 4.98 L10.6 2.6 L13.4 2.6 L13.62 4.98 A7.2 7.2 0 0 1 15.82 5.89 L17.65 4.36 L19.64 6.35 L18.11 8.18 A7.2 7.2 0 0 1 19.02 10.38 L21.4 10.6 L21.4 13.4 L19.02 13.62 A7.2 7.2 0 0 1 18.11 15.82 L19.64 17.65 L17.65 19.64 L15.82 18.11 A7.2 7.2 0 0 1 13.62 19.02 L13.4 21.4 L10.6 21.4 L10.38 19.02 A7.2 7.2 0 0 1 8.18 18.11 L6.35 19.64 L4.36 17.65 L5.89 15.82 A7.2 7.2 0 0 1 4.98 13.62 L2.6 13.4 L2.6 10.6 L4.98 10.38 A7.2 7.2 0 0 1 5.89 8.18 L4.36 6.35 L6.35 4.36 L8.18 5.89 A7.2 7.2 0 0 1 10.38 4.98 Z";
+var SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">';
+var ICONS = {
+  gear: SVG + '<path d="' + GEAR + '"/><circle cx="12" cy="12" r="2.9"/></svg>',
+  bulb: SVG + '<path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3.6 10.8c.6.5 1 1.2 1 2V16h5.2v-.2c0-.8.4-1.5 1-2A6 6 0 0 0 12 3z"/></svg>'
+};
+document.querySelectorAll("[data-icon]").forEach(function(b){ b.innerHTML = ICONS[b.getAttribute("data-icon")]; });
+(function(){
+  var g = document.getElementById("yr-ico"), h = "";
+  [5.2, 10.2, 15.2].forEach(function(y){
+    h += '<rect x="3.2" y="'+y+'" width="3.6" height="3.6" rx="1"/><rect x="8.6" y="'+y+'" width="3.6" height="3.6" rx="1"/><rect x="14" y="'+y+'" width="3.6" height="3.6" rx="1"/><rect x="19.4" y="'+y+'" width="1.4" height="3.6" rx=".7"/>';
+  });
+  g.innerHTML = h;
+})();
+
+/* ---------- содержимое экранов ---------- */
+function boardHTML(str, player, interactive){
+  var h = "";
+  for (var b = 0; b < 9; b++){
+    h += '<div class="bx">';
+    for (var c = 0; c < 9; c++){
+      var r = Math.floor(b/3)*3 + Math.floor(c/3), col = (b%3)*3 + c%3, idx = r*9 + col;
+      var g = str.charAt(idx), p = player && player[idx];
+      var cls = "cl" + (g !== "0" ? " gv" : "");
+      var txt = g !== "0" ? g : (p || "");
+      h += interactive
+        ? '<button type="button" class="'+cls+'" data-i="'+idx+'" aria-label="r'+(r+1)+'c'+(col+1)+'">'+txt+'</button>'
+        : '<span class="'+cls+'">'+txt+'</span>';
+    }
+    h += '</div>';
+  }
+  return h;
+}
+var P_PLAY  = "530070000600195000098000060800060003400803001700020006060000280000419005000080079";
+var P_TODAY = "003020600900305001001806400008102900700000008006708200002609500800203009005010300";
+var P_GRID  = "000000010400000000020000000000050407008000300001090000300400200050100000000806000";
+document.getElementById("b-today-mini").innerHTML = boardHTML(P_TODAY, {0:"4",1:"8",3:"9",5:"1",9:"2",11:"7"}, false);
+document.getElementById("b-today-grid").innerHTML = boardHTML(P_GRID, {9:"7",20:"5"}, false);
+document.getElementById("rows-week").innerHTML = ["Mon · Easy","Tue · Medium","Wed · Medium","Thu · Hard","Fri · Medium","Sat · Today"].map(function(d, i){
+  return '<div class="r"><span>'+d+'</span><span>'+(i < 5 ? ["05:12","08:40","07:03","14:55","09:21"][i] + (i === 3 ? " · 2 fixes" : " · clean") : "in progress")+'</span></div>';
+}).join("");
+(function(){
+  var M = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+  var h = "", seed = 7;
+  function rnd(){ seed = (seed * 9301 + 49297) % 233280; return seed / 233280; }
+  for (var m = 0; m < 12; m++){
+    h += '<div class="month"><h3>'+M[m]+'</h3><div class="days">';
+    var lead = (m * 3) % 7, n = [31,28,31,30,31,30,31,31,30,31,30,31][m];
+    for (var x = 0; x < lead; x++) h += '<span class="dd x"></span>';
+    for (var d = 0; d < n; d++){
+      var past = m < 9 || (m === 9 && d < 4), v = rnd();
+      h += '<span class="dd' + (!past ? "" : v < .55 ? " i" : v < .82 ? " s" : v < .9 ? " w" : "") + '"></span>';
+    }
+    h += '</div></div>';
+  }
+  document.getElementById("months").innerHTML = h;
+})();
+
+/* Play — живая партия: состояние живёт в DOM экрана и обязано пережить переключение вкладок. */
+var playBoard = document.getElementById("b-play");
+playBoard.innerHTML = boardHTML(P_PLAY, null, true);
+var pad = document.getElementById("pad");
+pad.innerHTML = [1,2,3,4,5,6,7,8,9].map(function(n){ return '<button type="button" class="key" data-k="'+n+'">'+n+'</button>'; }).join("");
+var selCell = null, history = [], placed = 0;
+function playStatus(){ document.getElementById("play-status").textContent = placed ? (placed + " placed · switch tabs and come back") : "Select a cell, then a digit"; }
+playBoard.addEventListener("click", function(e){
+  var c = e.target.closest(".cl"); if (!c || c.classList.contains("gv")) return;
+  if (selCell) selCell.classList.remove("sel");
+  selCell = c; c.classList.add("sel");
+});
+pad.addEventListener("click", function(e){
+  var k = e.target.closest(".key"); if (!k || !selCell) return;
+  history.push([selCell, selCell.textContent]);
+  if (!selCell.textContent) placed++;
+  selCell.textContent = k.getAttribute("data-k"); playStatus();
+});
+document.getElementById("undo").addEventListener("click", function(){
+  var h = history.pop(); if (!h) return;
+  if (h[1] === "" && h[0].textContent) placed--;
+  h[0].textContent = h[1]; playStatus();
+});
+document.getElementById("erase").addEventListener("click", function(){
+  if (selCell && selCell.textContent){ history.push([selCell, selCell.textContent]); selCell.textContent = ""; placed--; playStatus(); }
+});
+/* Таймер идёт ТОЛЬКО пока Play — активная вкладка (требование к разработке: скрытая, но смонтированная
+   вкладка обязана получать сигнал «не активна» — экран больше не размонтируется). */
+var secs = 252, frozen = false;
+setInterval(function(){
+  if (frozen || active !== 1 || running.length) return;
+  secs++; document.getElementById("timer").textContent = String(Math.floor(secs/60)).padStart(2,"0") + ":" + String(secs%60).padStart(2,"0");
+}, 1000);
+
+/* ================= ДВИЖОК ПЕРЕХОДА ================= */
+var panesEl = document.getElementById("panes");
+var panes = [document.getElementById("panel-today"), document.getElementById("panel-play"), document.getElementById("panel-year")];
+var tabs = [document.getElementById("tab-today"), document.getElementById("tab-play"), document.getElementById("tab-year")];
+var NAMES = ["Today", "Play", "Year"];
+var pill = document.getElementById("pill");
+var active = 0, token = 0, running = [], slow = 1;
+var mqRM = matchMedia("(prefers-reduced-motion: reduce)");
+
+function reduced(){
+  var m = root.getAttribute("data-motion");
+  return m === "on" ? true : m === "off" ? false : mqRM.matches;
+}
+
+/* Спецификация вариантов: длительность, кривая, и «положение вне экрана» экрана i относительно опорного ref. */
+var V = {
+  A: { name: "A · Лента", dur: 300, ease: "cubic-bezier(0.32, 0.72, 0, 1)",
+       off: function(i, ref, W){ return { x: Math.sign(i - ref) * W, o: 1 }; } },
+  B: { name: "B · Push", dur: 350, ease: "cubic-bezier(0.32, 0.72, 0, 1)",
+       /* Экран с бо́льшим индексом всегда ЛЕЖИТ ВЫШЕ: он уезжает целиком вправо; нижний сдвигается на 30 % и гаснет до .55. */
+       off: function(i, ref, W){ return i > ref ? { x: W, o: 1 } : { x: -0.3 * W, o: 0.55 }; } },
+  C: { name: "C · Сдвиг", dur: 240, ease: "cubic-bezier(0.2, 0.7, 0.3, 1)",
+       off: function(i, ref, W, dist){ return { x: Math.sign(i - ref) * 32 * (dist > 1 ? 1.5 : 1), o: 0 }; } }
+};
+var RM = { name: "Reduce Motion · кроссфейд", dur: 200, ease: "cubic-bezier(0.2, 0.7, 0.3, 1)",
+           off: function(){ return { x: 0, o: 0 }; } };
+
+function readState(el){
+  var cs = getComputedStyle(el), t = cs.transform;
+  var m = (t && t !== "none") ? new DOMMatrixReadOnly(t) : new DOMMatrixReadOnly();
+  return { x: m.m41, o: parseFloat(cs.opacity) };
+}
+function kf(s){ return { transform: "translateX(" + s.x.toFixed(2) + "px)", opacity: s.o }; }
+function frames(variant, rm, start, end, entering){
+  if (!rm && variant === "C"){
+    /* Не двойная экспозиция: уходящий гаснет к 55 % хода, входящий проявляется с 25 %. */
+    return entering ? [kf(start), { opacity: start.o, offset: 0.25 }, kf(end)]
+                    : [kf(start), { opacity: 0, offset: 0.55 }, kf(end)];
+  }
+  return [kf(start), kf(end)];
+}
+
+function layoutPill(){
+  var t0 = tabs[0];
+  pill.style.width = t0.offsetWidth + "px";
+  pill.style.height = t0.offsetHeight + "px";
+  pill.style.top = t0.offsetTop + "px";
+  pill.style.left = t0.offsetLeft + "px";
+  pill.style.transform = "translateX(" + pillX(active) + "px)";
+}
+function pillX(i){ return tabs[i].offsetLeft - tabs[0].offsetLeft; }
+
+function setSelected(i){
+  tabs.forEach(function(t, k){ t.setAttribute("aria-selected", k === i ? "true" : "false"); t.tabIndex = k === i ? 0 : -1; });
+}
+function settle(){
+  running.forEach(function(a){ a.cancel(); });   /* fill:both снимается — на экранах НЕ остаётся transform */
+  running = [];
+  panes.forEach(function(p, i){
+    p.style.willChange = "";
+    p.style.zIndex = "";
+    var on = i === active;
+    p.classList.toggle("off", !on);
+    p.inert = !on;
+    p.setAttribute("aria-hidden", on ? "false" : "true");
+  });
+}
+/* Мгновенно поставить вкладку (для демо и съёмки). */
+function set(i){
+  token++; active = i; setSelected(i); settle(); layoutPill();
+}
+
+function go(to){
+  if (to === active) return;                      /* повторный тап по своей вкладке — не переход (reselect живёт отдельно) */
+  var from = active, W = panesEl.clientWidth, dist = Math.abs(to - from);
+  var variant = root.getAttribute("data-variant"), rm = reduced();
+  var spec = rm ? RM : V[variant];
+  var dur = spec.dur * slow;
+
+  /* 1. Снимок ТЕКУЩЕГО положения всех видимых экранов и пилюли — до отмены анимаций. */
+  var cur = panes.map(function(p){ return p.classList.contains("off") ? null : readState(p); });
+  var px0 = readState(pill).x;
+  running.forEach(function(a){ a.cancel(); });
+  running = [];
+  var my = ++token;
+
+  /* 2. Обратная связь на тап — мгновенно: цвет вкладки меняется сразу, не ждёт конца анимации. */
+  active = to; setSelected(to);
+
+  var atRest = cur.filter(Boolean).length === 1;
+  var through = !rm && variant === "A" && root.getAttribute("data-jump") === "through" && dist === 2 && atRest;
+  var anims = [];
+  panes.forEach(function(p, i){
+    var start, end;
+    if (through){ start = { x: (i - from) * W, o: 1 }; end = { x: (i - to) * W, o: 1 }; }
+    else if (i === to){ start = cur[i] || spec.off(i, from, W, dist); end = { x: 0, o: 1 }; }
+    else if (cur[i]){ start = cur[i]; end = spec.off(i, to, W, dist); }
+    else return;
+    p.classList.remove("off");
+    p.inert = i !== to;
+    p.setAttribute("aria-hidden", i === to ? "false" : "true");
+    p.style.willChange = "transform, opacity";     /* только на время перехода */
+    if (variant === "B" && !rm) p.style.zIndex = String(i + 1);
+    anims.push(p.animate(frames(variant, rm, start, end, i === to), { duration: dur, easing: spec.ease, fill: "both" }));
+  });
+
+  /* 3. Пилюля: едет той же кривой и длительностью; при Reduce Motion — мгновенно. */
+  var px1 = pillX(to);
+  pill.style.transform = "translateX(" + px1 + "px)";
+  if (!rm) anims.push(pill.animate([{ transform: "translateX(" + px0 + "px)" }, { transform: "translateX(" + px1 + "px)" }], { duration: dur, easing: spec.ease }));
+
+  running = anims;
+  Promise.all(anims.map(function(a){ return a.finished; })).then(function(){ if (my === token) settle(); }).catch(function(){});
+  logTransition(from, to, spec, dur, rm, through, !atRest);
+}
+
+/* ---------- таб-бар: тап и клавиатура (как в TabBar.tsx) ---------- */
+tabs.forEach(function(t, i){ t.addEventListener("click", function(){ go(i); }); });
+document.getElementById("tabbar").addEventListener("keydown", function(e){
+  var n;
+  if (e.key === "ArrowRight") n = (active + 1) % 3;
+  else if (e.key === "ArrowLeft") n = (active + 2) % 3;
+  else if (e.key === "Home") n = 0;
+  else if (e.key === "End") n = 2;
+  else return;
+  e.preventDefault(); go(n); tabs[n].focus();
+});
+
+/* ---------- панель макета ---------- */
+var lastDemo = null;
+function demo(id){
+  lastDemo = id;
+  var d = (V[root.getAttribute("data-variant")] || V.A).dur * slow;
+  if (reduced()) d = RM.dur * slow;
+  if (/^\d-\d$/.test(id)){ set(+id[0]); requestAnimationFrame(function(){ go(+id[2]); }); return; }
+  if (id === "int1"){ set(0); requestAnimationFrame(function(){ go(1); setTimeout(function(){ go(2); }, d * 0.4); }); return; }
+  if (id === "int2"){ set(0); requestAnimationFrame(function(){ go(2); setTimeout(function(){ go(0); }, d * 0.5); }); return; }
+  if (id === "burst"){ set(0); var seq = [1, 2, 1, 0], k = 0;
+    (function step(){ if (k >= seq.length) return; go(seq[k++]); setTimeout(step, 140 * slow); })(); }
+}
+document.querySelectorAll("[data-demo]").forEach(function(b){ b.addEventListener("click", function(){ demo(b.getAttribute("data-demo")); }); });
+
+function press(seg, attr, val){
+  document.querySelectorAll('[data-seg="' + seg + '"] button').forEach(function(b){ b.setAttribute("aria-pressed", b.getAttribute(attr) === String(val) ? "true" : "false"); });
+}
+var API = {
+  variant: function(v){ root.setAttribute("data-variant", v); press("variant", "data-v", v);
+    document.querySelectorAll(".quick [data-q]").forEach(function(b){ b.setAttribute("aria-pressed", b.getAttribute("data-q") === v ? "true" : "false"); });
+    renderSpec(); },
+  theme: function(t){ t = t || "auto"; root.classList.toggle("force-light", t === "light"); root.classList.toggle("force-dark", t === "dark"); press("theme", "data-t", t); },
+  motion: function(m){ root.setAttribute("data-motion", m || "system"); press("motion", "data-m", m || "system"); renderSpec(); },
+  rt: function(r){ root.setAttribute("data-rt", r || "system"); press("rt", "data-r", r || "system"); },
+  jump: function(j){ root.setAttribute("data-jump", j); press("jump", "data-j", j); },
+  slow: function(s){ slow = +s; press("slow", "data-s", s); },
+  clean: function(on){ root.classList.toggle("clean", on !== false); frozen = on !== false; },
+  set: set,
+  go: go,
+  /* Съёмка: поставить from, запустить переход к to и заморозить его на доле p ВРЕМЕНИ (0…1). */
+  frame: function(from, to, p){ set(from); go(to); API.seek(p); },
+  /* Прерывание: from→mid, заморозить на p1, затем тап по to, заморозить новый переход на p2. */
+  interrupt: function(from, mid, to, p1, p2){ set(from); go(mid); API.seek(p1); go(to); API.seek(p2); },
+  seek: function(p){
+    document.getAnimations().forEach(function(a){ if (running.indexOf(a) < 0) a.finish(); }); /* CSS-переходы цвета вкладок */
+    running.forEach(function(a){
+      var d = a.effect.getComputedTiming().endTime;
+      a.pause(); a.currentTime = Math.min(p * d, d - 0.5);
+    });
+  },
+  finish: function(){ running.forEach(function(a){ a.pause(); }); settle(); },
+  duration: function(){ return (reduced() ? RM.dur : V[root.getAttribute("data-variant")].dur) * slow; },
+  scroll: function(tab, y){ var s = document.getElementById("scroll-" + tab); if (s) s.scrollTop = y; },
+  state: function(){ return { active: active, running: running.length, variant: root.getAttribute("data-variant"), reduced: reduced(),
+    paneTransforms: panes.map(function(p){ return p.style.transform + "|" + getComputedStyle(p).transform; }) }; }
+};
+window.pd158 = API;
+
+document.querySelectorAll('[data-seg="variant"] button').forEach(function(b){ b.addEventListener("click", function(){ API.variant(b.getAttribute("data-v")); }); });
+document.querySelectorAll(".quick [data-q]").forEach(function(b){ b.addEventListener("click", function(){ API.variant(b.getAttribute("data-q")); }); });
+document.getElementById("q-more").addEventListener("click", function(){ document.getElementById("ctl").scrollIntoView({ behavior: reduced() ? "auto" : "smooth" }); });
+document.querySelectorAll('[data-seg="theme"] button').forEach(function(b){ b.addEventListener("click", function(){ API.theme(b.getAttribute("data-t")); }); });
+document.querySelectorAll('[data-seg="motion"] button').forEach(function(b){ b.addEventListener("click", function(){ API.motion(b.getAttribute("data-m")); }); });
+document.querySelectorAll('[data-seg="rt"] button').forEach(function(b){ b.addEventListener("click", function(){ API.rt(b.getAttribute("data-r")); }); });
+document.querySelectorAll('[data-seg="jump"] button').forEach(function(b){ b.addEventListener("click", function(){ API.jump(b.getAttribute("data-j")); }); });
+document.querySelectorAll('[data-seg="slow"] button').forEach(function(b){ b.addEventListener("click", function(){ API.slow(b.getAttribute("data-s")); }); });
+
+var SPEC = {
+  A: [["Движение", "Оба экрана едут на всю ширину, 1:1, как одна лента"],
+      ["Направление", "Вправо по порядку (Today→Play, Play→Year) — новый экран входит справа; назад — слева"],
+      ["Через одну", "Напрямую: Year входит справа сразу за Today, Play не показывается. Длительность та же"],
+      ["Время / кривая", "300 мс · cubic-bezier(0.32, 0.72, 0, 1) — замедление без отскока"],
+      ["Шапка", "Едет вместе с экраном (она часть экрана)"],
+      ["Таб-бар", "Стоит. Цвет вкладки — сразу; пилюля переезжает 300 мс той же кривой"],
+      ["Прерывание", "Новый тап подхватывает экраны с текущего места, без рывка и без очереди"]],
+  B: [["Движение", "Входящий экран едет на всю ширину ПОВЕРХ; нижний сдвигается на 30 % и гаснет до 55 %"],
+      ["Направление", "Экран правее по порядку всегда лежит сверху: вперёд он наезжает справа, назад — съезжает вправо, открывая нижний"],
+      ["Через одну", "Напрямую: Year наезжает на Today, Play не показывается"],
+      ["Время / кривая", "350 мс · cubic-bezier(0.32, 0.72, 0, 1); тень верхнего края — только в светлой теме"],
+      ["Шапка", "Едет вместе с экраном"],
+      ["Таб-бар", "Стоит; пилюля переезжает 350 мс"],
+      ["Против", "Читается как «провалиться внутрь» (push) — тем же движением в Pundoku открываются Settings/Help/архив"]],
+  C: [["Движение", "Оба экрана смещаются на 32 px в сторону хода и кроссфейдятся (shared axis)"],
+      ["Направление", "Как в A: вперёд — уходящий влево, входящий справа"],
+      ["Через одну", "Смещение 48 px вместо 32 — «дальше», но без показа Play"],
+      ["Время / кривая", "240 мс · cubic-bezier(0.2, 0.7, 0.3, 1) (= --e-out); уходящий гаснет к 55 %, входящий проявляется с 25 %"],
+      ["Шапка", "Едет вместе с экраном — на 32 px почти не заметно, читается как смена заголовка"],
+      ["Таб-бар", "Стоит; пилюля переезжает 240 мс"],
+      ["Прерывание", "Как в A"]]
+};
+function renderSpec(){
+  var v = root.getAttribute("data-variant");
+  var rows = SPEC[v].slice();
+  rows.push(["Reduce Motion", "Кроссфейд 200 мс без сдвига; пилюля — мгновенно" + (reduced() ? " · СЕЙЧАС АКТИВЕН" : "")]);
+  document.getElementById("spec").innerHTML = rows.map(function(r){ return "<tr><td>" + r[0] + "</td><td>" + r[1] + "</td></tr>"; }).join("");
+  document.getElementById("rm-sys").textContent = "Система сейчас: Reduce Motion " + (mqRM.matches ? "ВКЛЮЧЕНО" : "выключено") + ". Эффективно в макете: " + (reduced() ? "кроссфейд" : "слайд") + ".";
+}
+function logTransition(from, to, spec, dur, rm, through, interrupted){
+  document.getElementById("readout").textContent =
+    NAMES[from] + " → " + NAMES[to] + (interrupted ? "  (прерывание, с текущего положения)" : "") + "\n" +
+    spec.name + " · " + Math.round(dur) + " мс" + (slow !== 1 ? " (замедлено ×" + slow + ")" : "") + "\n" +
+    spec.ease + (through ? "\nпрыжок через Play" : "");
+}
+(mqRM.addEventListener ? mqRM.addEventListener("change", renderSpec) : mqRM.addListener(renderSpec));
+window.addEventListener("resize", layoutPill);
+
+/* ---------- старт ---------- */
+var q = new URLSearchParams(location.search);
+API.variant(q.get("v") || "A");
+API.theme(q.get("theme") || "auto");
+API.motion(q.get("rm") || "system");
+API.rt("system");
+API.jump("direct");
+API.slow(1);
+if (q.has("clean")) API.clean(true);
+set(0);
+playStatus();
+})();
+</script>
+</body>
+</html>
