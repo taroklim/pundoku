@@ -504,7 +504,7 @@ describe("SettingsScreen: язык и навигация", () => {
     expect(formatCreated(iso, "ru")).toBe("30 сент. 2026");
   });
 
-  it("About (PD-102): последняя секция, знак 60 (малая оптика) + вордмарк 28, версия из package.json, всё декоративное", async () => {
+  it("About (PD-102): последняя секция, знак 60 (малая оптика) + вордмарк 28 (клеточный, role=img «Pundoku»), версия из package.json", async () => {
     await mount();
     const sections = [...host.querySelectorAll("section.settings-sec")];
     const about = sections[sections.length - 1]!;
@@ -516,13 +516,17 @@ describe("SettingsScreen: язык и навигация", () => {
     expect(mark.getAttribute("aria-hidden")).toBe("true");
     const word = about.querySelector<SVGSVGElement>("svg.settings-about-word")!;
     expect(word.getAttribute("height")).toBe("28");
-    expect(word.getAttribute("width")).toBe("142");
-    expect(word.getAttribute("aria-hidden")).toBe("true");
+    expect(word.getAttribute("width")).toBe("148");
+    // PD-152: вордмарк сам читается как «Pundoku» (role=img), клеток 23, экранная строка — только версия
+    expect(word.getAttribute("role")).toBe("img");
+    expect(word.getAttribute("aria-label")).toBe("Pundoku");
+    expect(word.getAttribute("aria-hidden")).toBeNull();
+    expect(word.querySelectorAll("rect")).toHaveLength(23);
     const { version } = pkg;
     expect(__APP_VERSION__).toBe(version);
     const ver = q("about-version")!;
     expect(ver.querySelector('[aria-hidden="true"]')!.textContent).toBe(`v${version}`);
-    expect(ver.querySelector(".sr-only")!.textContent).toBe(`Pundoku, Version ${version}`);
+    expect(ver.querySelector(".sr-only")!.textContent).toBe(`Version ${version}`);
     // не интерактивен: ни кнопок, ни ссылок внутри
     expect(about.querySelector(".settings-about")!.querySelector("button, a, [tabindex]")).toBeNull();
   });
