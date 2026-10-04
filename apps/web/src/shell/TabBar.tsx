@@ -11,12 +11,14 @@ export const panelDomId = (tab: TabId) => `panel-${tab}`;
 interface TabBarProps {
   active: TabId;
   onSelect: (tab: TabId) => void;
+  /** PD-175: касание вкладки (pointerdown, до тапа) — движок слайда заранее рисует экран-цель за краем. */
+  onPrewarm?: (tab: TabId) => void;
   /** PD-161: пилюля выбранной вкладки — отдельный слой, её двигает движок перехода (`tabSlide.ts`). */
   pillRef?: Ref<HTMLSpanElement>;
 }
 
 /** Таб-бар: role=tablist, roving tabindex, стрелки влево/вправо (+ Home/End), автоактивация. */
-export function TabBar({ active, onSelect, pillRef }: TabBarProps) {
+export function TabBar({ active, onSelect, onPrewarm, pillRef }: TabBarProps) {
   const { t } = useTranslation();
   const refs = useRef<Partial<Record<TabId, HTMLButtonElement | null>>>({});
 
@@ -62,6 +64,7 @@ export function TabBar({ active, onSelect, pillRef }: TabBarProps) {
           aria-selected={id === active}
           aria-controls={panelDomId(id)}
           tabIndex={id === active ? 0 : -1}
+          onPointerDown={onPrewarm && id !== active ? () => onPrewarm(id) : undefined}
           onClick={() => onSelect(id)}
         >
           <TabIcon tab={id} />

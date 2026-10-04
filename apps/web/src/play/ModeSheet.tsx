@@ -1,8 +1,8 @@
 /**
  * Шит режима (PD-167, раскладка C — макет design/pd163-modes-layout.html, кадры wk-C-sheet-*): ОДИН компонент для всех
- * режимов, всё — из реестра (`modes.ts`). Сверху значок + имя режима и «Отмена», ниже описание режима (правило читается до
- * первого хода), предупреждение «Незаконченная сетка (…) будет отброшена», если у режима есть незавершённая игра, и
- * сложность списком; внизу «Начать» / «Начать новую».
+ * режимов, всё — из реестра (`modes.ts`). Сверху значок + имя режима и «Отмена», ниже предупреждение «Незаконченная сетка
+ * (…) будет отброшена», если у режима есть незавершённая игра (PD-175: первым, до описания), описание режима (правило
+ * читается до первого хода) и сложность списком; внизу «Начать» / «Начать новую».
  *
  * Скроллится только середина (`.sheet-scroll`): ручка, заголовок с «Отменой» и «Начать» — `flex:none` и не уезжают за край
  * (320×568, AX3, uk/ru); последний элемент прокрутки — липкая растушёвка `.scroll-fade`.
@@ -37,6 +37,7 @@ export function ModeSheet({ mode, pick, discard, onPick, onStart, onClose, retur
   const root = useRef<HTMLElement>(null);
   const titleId = useId();
   const descId = useId();
+  const warnId = useId();
   const diffId = useId();
   const swipe = useSheetSwipe(root, onClose);
   useModal(scrim, root, { kind: "dialog", onClose, returnFocus, initialFocus: '[data-testid="sheet-cancel"]' });
@@ -51,7 +52,7 @@ export function ModeSheet({ mode, pick, discard, onPick, onStart, onClose, retur
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
-        aria-describedby={descId}
+        aria-describedby={discard ? `${warnId} ${descId}` : descId}
         tabIndex={-1}
         onClick={(e) => e.stopPropagation()}
         data-testid="mode-sheet"
@@ -68,14 +69,17 @@ export function ModeSheet({ mode, pick, discard, onPick, onStart, onClose, retur
           </button>
         </div>
         <div className="sheet-scroll">
-          <p id={descId} className="sh-desc" data-testid="mode-desc">
-            {t(`modes.${mode.textKey}.desc`)}
-          </p>
+          {/* PD-175: предупреждение — ПЕРВЫМ в прокрутке, над описанием: при AX3 на 320×568 описание занимает всю видимую
+              середину, и предупреждение под ним уходило под прокрутку — пользователь видел «Начать новую», не видя, что
+              потеряет. Первым элементом оно видно до разрушительной кнопки при любом размере текста. */}
           {discard && (
-            <p className="sh-warn" data-testid="discard-note">
+            <p id={warnId} className="sh-warn" data-testid="discard-note">
               {t("modes.discard", { meta: slotMeta(t, discard) })}
             </p>
           )}
+          <p id={descId} className="sh-desc" data-testid="mode-desc">
+            {t(`modes.${mode.textKey}.desc`)}
+          </p>
           <p id={diffId} className="hub-head sh-head">
             {t("modes.difficulty")}
           </p>

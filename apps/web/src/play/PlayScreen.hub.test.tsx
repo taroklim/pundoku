@@ -213,6 +213,13 @@ describe("PD-167: режимы на хабе — строка на режим, �
     expect(q("mode-sheet")).not.toBeNull();
     expect(q("discard-note")!.textContent).toContain("Your unfinished puzzle (Medium · 50 cells left");
     expect(q("sheet-start")!.textContent).toBe("Start new");
+    // PD-175: предупреждение — первым в прокрутке, НАД описанием (при AX3 на 320×568 под описанием оно уходило под
+    // прокрутку), и читается экранным диктором вместе с описанием шита.
+    const scroll = q("mode-sheet")!.querySelector(".sheet-scroll")!;
+    expect(scroll.firstElementChild).toBe(q("discard-note"));
+    expect(q("discard-note")!.compareDocumentPosition(q("mode-desc")!) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    const described = q("mode-sheet")!.getAttribute("aria-describedby")!.split(" ");
+    expect(described).toEqual([q("discard-note")!.id, q("mode-desc")!.id]);
   });
 });
 
