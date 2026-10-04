@@ -360,6 +360,25 @@ function run(st: State, maxTier: number): number {
 }
 
 /**
+ * Внутреннее (Лжец, PD-172): вычёркивания техниками ярусов 2..maxTier (locked candidates, пары) до
+ * фикс-точки — без постановок цифр. Меняет `cands` на месте; `vals` только читается. Останавливается
+ * на первой клетке без кандидатов. Возвращает максимальный ярус, который что-то вычеркнул (-1 — ничего).
+ */
+export function eliminateToFixpoint(vals: Uint8Array, cands: Uint16Array, maxTier: number): number {
+  let empty = 0;
+  for (let c = 0; c < 81; c++) if (vals[c] === 0) empty++;
+  const st: State = { vals, cands, empty, contradiction: false, steps: [] };
+  let used = -1;
+  for (;;) {
+    let tier = 2;
+    for (; tier <= maxTier; tier++) if (FINDERS[tier]!(st)) break;
+    if (tier > maxTier) return used;
+    if (tier > used) used = tier;
+    if (st.contradiction) return used;
+  }
+}
+
+/**
  * Внутреннее (для генератора): ярус самой дорогой техники, нужной сетке, при решателе,
  * ограниченном ярусами ≤ maxTier. `TECHNIQUE_ORDER.length` — застрял или противоречие.
  */

@@ -115,7 +115,7 @@ export type {
 
 export {
   LIAR_DEFAULT_MAX_BASES,
-  LIAR_MIN_DEPTH_RATIO,
+  LIAR_MIN_DEPTH,
   LIAR_VERSION,
   LiarGenerationError,
   accuse,

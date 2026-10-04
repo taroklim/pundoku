@@ -8,7 +8,9 @@
 import { describe, expect, it } from "vitest";
 import {
   LIAR_DEFAULT_MAX_BASES,
+  LIAR_MIN_DEPTH,
   LIAR_VERSION,
+  Rng,
   LiarGenerationError,
   accuse,
   candidates,
@@ -25,7 +27,21 @@ import {
 } from "./index.js";
 import type { Accusation, CellValue, Difficulty, Digit, LiarPuzzle, Move } from "./index.js";
 import { lieChecker } from "./liar.js";
-import { CEILING, assertHonestLiar, withCell } from "./liar.test-util.js";
+import {
+  CEILING,
+  assertHonestLiar,
+  earliestWithin,
+  randomOrderDepth,
+  toCells,
+  visibleNow,
+  withCell,
+} from "./liar.test-util.js";
+
+const TIERS = ["naked_single", "hidden_single", "locked_candidates", "naked_pair", "hidden_pair"];
+const tierOf = (d: Difficulty): number => TIERS.indexOf(CEILING[d]);
+
+/** QA PD-166: Лжец v1 для easy seed 'qa166-0' — у клеток 54/61/63 на старте единственный кандидат 5. */
+const QA166_V1_EASY = "690200030008043690304009001000720000400190080800054269002901703009472000100600924";
 
 describe("generateLiar — determinism and contract", () => {
   it("same seed → byte-identical puzzle; different seeds → different", () => {
@@ -53,16 +69,16 @@ describe("generateLiar — determinism and contract", () => {
     const m = generateLiar({ difficulty: "medium", seed: "snapshot" });
     expect({ mission: e.mission, liarCell: e.liarCell, liarDigit: e.liarDigit }).toMatchInlineSnapshot(`
       {
-        "liarCell": 39,
-        "liarDigit": 9,
-        "mission": "150306908600025010004198005270001006001970000008602700427003050800000120006259400",
+        "liarCell": 52,
+        "liarDigit": 1,
+        "mission": "020934000953060200704005030800002050000600308305800612670490100401080006580026700",
       }
     `);
     expect({ mission: m.mission, liarCell: m.liarCell, liarDigit: m.liarDigit }).toMatchInlineSnapshot(`
       {
-        "liarCell": 57,
-        "liarDigit": 2,
-        "mission": "040050100057300400090480523002003000069002000000006802978204000016000340000000090",
+        "liarCell": 17,
+        "liarDigit": 5,
+        "mission": "020000080030681075070040000602000039004958000080063100000510006700020390000009008",
       }
     `);
   }, 60_000);
@@ -96,6 +112,10 @@ describe("daily liar", () => {
     expect(dailyLiarSeed("2026-10-04", "medium")).toBe("2026-10-04/liar/medium");
     expect(() => dailyLiarSeed("2026-02-30", "medium")).toThrow(RangeError);
     expect(() => dailyLiarSeed("04.10.2026", "medium")).toThrow(RangeError);
+    for (const bad of ["nope", "constructor", "toString", 5, undefined]) {
+      expect(() => dailyLiarSeed("2026-10-04", bad as unknown as Difficulty)).toThrow(RangeError);
+      expect(() => dailyLiarPuzzle("2026-10-04", bad as unknown as Difficulty)).toThrow(RangeError);
+    }
     const p = dailyLiarPuzzle("2026-10-04", "medium");
     expect(p).toEqual(generateLiar({ difficulty: "medium", seed: "2026-10-04/liar/medium" }));
     expect(p.honestMission).not.toBe(dailyPuzzle("2026-10-04", "medium").mission);
@@ -117,11 +137,13 @@ describe("lieChecker (generator fast path) == validateLiar on the full candidate
     ["medium", "sweep-2"],
     ["hard", "sweep-3"],
   ] as const) {
-    it(`${difficulty}: every (cell, digit) gets the same verdict`, () => {
+    it(`${difficulty}: every (cell, digit) gets the same verdict (class threshold and threshold 0)`, () => {
       const base = generate({ difficulty, seed });
-      const tier = ["naked_single", "hidden_single", "locked_candidates", "naked_pair", "hidden_pair"].indexOf(CEILING[difficulty]);
-      const check = lieChecker(base.mission, base.solution, tier);
-      let accepted = 0;
+      const tier = tierOf(difficulty);
+      const minDepth = LIAR_MIN_DEPTH[difficulty];
+      const check = lieChecker(base.mission, base.solution, tier, minDepth);
+      const check0 = lieChecker(base.mission, base.solution, tier, 0);
+      let accepted0 = 0;
       let checked = 0;
       for (let c = 0; c < 81; c++) {
         if (base.mission[c] !== "0") continue;
@@ -130,29 +152,33 @@ describe("lieChecker (generator fast path) == validateLiar on the full candidate
             expect(check(c, d as Digit)).toBeNull();
             continue;
           }
-          const fast = check(c, d as Digit) !== null;
-          const full = validateLiar(withCell(base.mission, c, d), { difficulty }).honest;
-          if (fast !== full) throw new Error(`verdict mismatch at ${c}=${d}: fast ${fast}, full ${full}`);
-          if (fast) accepted++;
+          const m = withCell(base.mission, c, d);
+          const fast = check(c, d as Digit);
+          const full = validateLiar(m, { difficulty });
+          if ((fast !== null) !== full.honest) throw new Error(`verdict mismatch at ${c}=${d}: fast ${fast !== null}, full ${full.honest}`);
+          if (fast !== null) expect(fast).toEqual({ depth: full.contradictionDepth, technique: full.contradictionTechnique });
+          const fast0 = check0(c, d as Digit) !== null;
+          if (fast0 !== validateLiar(m, { difficulty, minDepth: 0 }).honest) throw new Error(`verdict mismatch (minDepth 0) at ${c}=${d}`);
+          if (fast0) accepted0++;
           checked++;
         }
       }
       expect(checked).toBeGreaterThan(100);
       // Нетривиальность выборки: проверщик и принимает, и отвергает.
-      expect(accepted).toBeLessThan(checked);
-      if (difficulty !== "hard") expect(accepted).toBeGreaterThan(0);
+      expect(accepted0).toBeLessThan(checked);
+      if (difficulty !== "hard") expect(accepted0).toBeGreaterThan(0);
       // Непустая клетка — не кандидат.
       const given = base.mission.split("").findIndex((ch) => ch !== "0");
       expect(check(given, 1)).toBeNull();
-    }, 120_000);
+    }, 300_000);
   }
 });
 
 describe("lieChecker — slow path and depth boundary", () => {
   it("coverageLimit 1 (every clue checked one by one) gives the same verdicts as the coverage table", () => {
     const base = generate({ difficulty: "medium", seed: "slow-path" });
-    const fast = lieChecker(base.mission, base.solution, 1);
-    const slow = lieChecker(base.mission, base.solution, 1, { coverageLimit: 1 });
+    const fast = lieChecker(base.mission, base.solution, 1, 0);
+    const slow = lieChecker(base.mission, base.solution, 1, 0, { coverageLimit: 1 });
     let accepted = 0;
     let rejectedByAmbiguity = 0;
     for (let c = 0; c < 81; c++) {
@@ -161,7 +187,7 @@ describe("lieChecker — slow path and depth boundary", () => {
         const a = fast(c, d as Digit);
         expect(slow(c, d as Digit)).toEqual(a);
         if (a !== null) accepted++;
-        else if (String(d) !== base.solution[c] && validateLiar(withCell(base.mission, c, d), { difficulty: "medium" }).failures.includes("ambiguous")) {
+        else if (String(d) !== base.solution[c] && validateLiar(withCell(base.mission, c, d), { difficulty: "medium", minDepth: 0 }).failures.includes("ambiguous")) {
           rejectedByAmbiguity++;
         }
       }
@@ -171,13 +197,89 @@ describe("lieChecker — slow path and depth boundary", () => {
   }, 120_000);
 
   it("minDepth boundary: depth == minDepth accepted, minDepth + 1 rejected", () => {
-    const p = generateLiar({ difficulty: "medium", seed: "depth-boundary" });
+    const p = exactDepthLiar();
     const d = p.meta.contradictionDepth;
-    const at = lieChecker(p.honestMission, p.solution, 1, { minDepth: d });
-    const above = lieChecker(p.honestMission, p.solution, 1, { minDepth: d + 1 });
+    const at = lieChecker(p.honestMission, p.solution, 1, d);
+    const above = lieChecker(p.honestMission, p.solution, 1, d + 1);
     expect(at(p.liarCell, p.liarDigit)).toEqual({ depth: d, technique: p.meta.contradictionTechnique });
     expect(above(p.liarCell, p.liarDigit)).toBeNull();
+  }, 60_000);
+});
+
+/** Medium-Лжец, у которого глубина ровно порог (значит, посчитана точно, а не нижней оценкой). */
+function exactDepthLiar(): LiarPuzzle {
+  for (let i = 0; ; i++) {
+    const p = generateLiar({ difficulty: "medium", seed: `depth-boundary-${i}` });
+    if (p.meta.contradictionDepth === LIAR_MIN_DEPTH.medium) return p;
+  }
+}
+
+describe("criterion 4 (PD-172): no early contradiction under ANY order of singles", () => {
+  it("QA PD-166 regression: two forced singles of one digit in a unit are visible at start", () => {
+    const g = toCells(QA166_V1_EASY);
+    for (const c of [54, 61, 63]) expect(candidates(QA166_V1_EASY, c)).toEqual([5]);
+    expect(conflicts(QA166_V1_EASY)).toEqual([]);
+    expect(visibleNow(g)).toMatch(/two singles of 5/);
+    const v = validateLiar(QA166_V1_EASY, { difficulty: "easy" });
+    expect(v.failures).toContain("visible_at_start");
+    expect(v.failures).toContain("too_shallow");
+    expect(v.contradictionDepth).toBe(0);
+    expect(v.honest).toBe(false);
+    // Новый генератор на том же seed даёт другую, честную сетку.
+    const p = generateLiar({ difficulty: "easy", seed: "qa166-0" });
+    expect(p.mission).not.toBe(QA166_V1_EASY);
+    assertHonestLiar(p);
+  }, 60_000);
+
+  it("a cell forced to two digits (two hidden singles) is visible at start", () => {
+    // r1c1 — единственное место для 1 в строке 1 и для 2 в столбце 1; повторов и пустых клеток без кандидатов нет.
+    const g: CellValue[] = Array.from({ length: 81 }, () => 0);
+    g[1] = 3;
+    g[2] = 4;
+    g[9] = 5;
+    g[12] = 1;
+    g[18] = 6;
+    g[24] = 1;
+    g[37] = 2;
+    g[65] = 2;
+    expect(conflicts(g)).toEqual([]);
+    for (let c = 0; c < 81; c++) if (g[c] === 0) expect(candidates(g, c).length).toBeGreaterThan(0);
+    expect(visibleNow(g as number[])).toMatch(/cell 0 forced to/);
+    expect(validateLiar(g).failures).toContain("visible_at_start");
   });
+
+  it("thresholds: per class, documented in README; singles classes are not below 3", () => {
+    expect(LIAR_MIN_DEPTH).toEqual({ easy: 3, medium: 3, hard: 1, expert: 0, master: 0 });
+    expect(Object.isFrozen(LIAR_MIN_DEPTH)).toBe(true);
+  });
+
+  for (const difficulty of ["easy", "medium", "hard"] as const) {
+    it(`${difficulty}: exhaustive and random orders of singles never see the lie before the threshold`, () => {
+      const min = LIAR_MIN_DEPTH[difficulty];
+      const n = difficulty === "hard" ? 8 : 20;
+      const rng = new Rng(`orders-${difficulty}`);
+      const randomDepths: number[] = [];
+      for (let i = 0; i < n; i++) {
+        const p = generateLiar({ difficulty, seed: `orders-${difficulty}-${i}` });
+        expect(visibleNow(toCells(p.mission))).toBeNull();
+        expect(earliestWithin(toCells(p.mission), min - 1)).toBeNull();
+        for (let r = 0; r < 30; r++) {
+          const d = randomOrderDepth(toCells(p.mission), rng);
+          if (d !== null) {
+            expect(d).toBeGreaterThanOrEqual(min);
+            randomDepths.push(d);
+          }
+        }
+      }
+      expect(randomDepths.length).toBeGreaterThan(0);
+    }, 300_000);
+  }
+
+  it("the threshold is tight: the engine's depth equals the exhaustive singles search when it is exact", () => {
+    const p = exactDepthLiar();
+    // singles-класс: глубина критерия = минимум по всем порядкам синглов (независимый перебор).
+    expect(earliestWithin(toCells(p.mission), p.meta.contradictionDepth)).toBe(p.meta.contradictionDepth);
+  }, 60_000);
 });
 
 describe("validateLiar — each criterion is detected", () => {
@@ -273,36 +375,36 @@ describe("validateLiar — each criterion is detected", () => {
   });
 
   it("too_shallow: boundary at minDepth", () => {
-    const d = p.meta.contradictionDepth;
-    expect(validateLiar(p.mission, { difficulty: "medium", minDepth: d }).honest).toBe(true);
-    const v = validateLiar(p.mission, { difficulty: "medium", minDepth: d + 1 });
+    const q = exactDepthLiar();
+    const d = q.meta.contradictionDepth;
+    expect(validateLiar(q.mission, { difficulty: "medium", minDepth: d }).honest).toBe(true);
+    const v = validateLiar(q.mission, { difficulty: "medium", minDepth: d + 1 });
     expect(v.failures).toEqual(["too_shallow"]);
     expect(v.contradictionDepth).toBe(d);
   });
 
-  it("not_deducible: the contradiction needs a technique above the ceiling", () => {
-    let hit: { mission: string } | null = null;
-    for (let i = 0; i < 20 && hit === null; i++) {
-      const q = generateLiar({ difficulty: "hard", seed: `nd-${i}` });
-      const v = validateLiar(q.mission, { maxTechnique: "naked_single" });
-      if (v.failures.includes("not_deducible")) {
-        expect(humanSolve(q.mission, { maxTechnique: "naked_single" }).contradiction).toBe(false);
-        expect(v.contradictionDepth).toBeNull();
-        expect(v.contradictionTechnique).toBeNull();
-        hit = q;
-      }
-    }
-    expect(hit).not.toBeNull();
-  }, 60_000);
+  it("not_deducible: no contradiction is reachable within the ceiling", () => {
+    // Обычная hard-сетка: противоречия нет вообще, а одними naked singles она к тому же не решается.
+    const base = generate({ difficulty: "hard", seed: "nd" });
+    const v = validateLiar(base.mission, { maxTechnique: "naked_single" });
+    expect(v.failures).toContain("not_deducible");
+    expect(v.contradictionDepth).toBeNull();
+    expect(v.contradictionTechnique).toBeNull();
+    expect(humanSolve(base.mission, { maxTechnique: "naked_single" }).contradiction).toBe(false);
+  });
 
-  it("difficulty option sets the ceiling; explicit maxTechnique wins", () => {
-    // Для singles-класса потолок — hidden_single: глубина та же, что у humanSolve с этим потолком.
+  it("difficulty option sets the ceiling and the default threshold; explicit maxTechnique wins", () => {
     const v = validateLiar(p.mission, { difficulty: "medium" });
-    const res = humanSolve(p.mission, { maxTechnique: "hidden_single" });
-    expect(v.contradictionDepth).toBe(res.steps.filter((s) => s.cell !== undefined).length);
-    expect(validateLiar(p.mission, { difficulty: "medium", maxTechnique: "hidden_pair" }).contradictionDepth).toBe(
-      humanSolve(p.mission).steps.filter((s) => s.cell !== undefined).length,
+    expect(v.minDepth).toBe(LIAR_MIN_DEPTH.medium);
+    expect(validateLiar(p.mission).minDepth).toBe(0);
+    expect(validateLiar(p.mission, { difficulty: "expert" }).minDepth).toBe(LIAR_MIN_DEPTH.expert);
+    // Тот же потолок явно — та же глубина.
+    expect(validateLiar(p.mission, { maxTechnique: "hidden_single", minDepth: v.minDepth }).contradictionDepth).toBe(
+      v.contradictionDepth,
     );
+    // Потолок выше — противоречие не позже.
+    const all = validateLiar(p.mission, { difficulty: "medium", maxTechnique: "hidden_pair" });
+    expect(all.contradictionDepth!).toBeLessThanOrEqual(v.contradictionDepth!);
   });
 
   it("rejects bad options", () => {
@@ -363,6 +465,7 @@ describe("liarSummary", () => {
       catchT: null,
       catchPlacement: null,
       invalidAccusations: 0,
+      repeatedAccusations: 0,
     });
     expect(liarSummary(p, [{ t: 10, cell: honestGiven, moveIndex: 0 }], log).wrongAccusations).toBe(1);
   });
@@ -377,12 +480,13 @@ describe("liarSummary", () => {
       catchT: 350,
       catchPlacement: 3,
       invalidAccusations: 0,
+      repeatedAccusations: 0,
     });
     expect(liarSummary(p, [{ t: 0, cell: p.liarCell, moveIndex: 0 }], log).catchPlacement).toBe(0);
     expect(liarSummary(p, [{ t: 999, cell: p.liarCell, moveIndex: log.length }], log).catchPlacement).toBe(4);
   });
 
-  it("wrong then right: not first try; invalid accusations do not count; later catches ignored", () => {
+  it("wrong then right: not first try; invalid accusations do not count; repeats are ignored", () => {
     const acc: Accusation[] = [
       { t: 120, cell: empty, moveIndex: 1 },
       { t: 210, cell: honestGiven, moveIndex: 3 },
@@ -392,11 +496,12 @@ describe("liarSummary", () => {
     ];
     expect(liarSummary(p, acc, log)).toEqual({
       caught: true,
-      wrongAccusations: 2,
+      wrongAccusations: 1,
       firstTry: false,
       catchT: 260,
       catchPlacement: 2,
       invalidAccusations: 1,
+      repeatedAccusations: 2,
     });
     // невалидное обвинение до верного не отнимает «с первой попытки»
     expect(
@@ -409,6 +514,38 @@ describe("liarSummary", () => {
         log,
       ).firstTry,
     ).toBe(true);
+  });
+
+  it("repeated accusation of one cell: deterministic, only the first verdict counts", () => {
+    // Повтор честной подсказки не добавляет неверных и не отнимает «с первой попытки» у следующего верного.
+    const twiceWrong: Accusation[] = [
+      { t: 1, cell: honestGiven, moveIndex: 0 },
+      { t: 2, cell: honestGiven, moveIndex: 0 },
+      { t: 3, cell: p.liarCell, moveIndex: 1 },
+    ];
+    const s = liarSummary(p, twiceWrong, log);
+    expect(s).toMatchObject({ caught: true, wrongAccusations: 1, firstTry: false, catchT: 3, repeatedAccusations: 1 });
+    // Повтор лжеца после поимки — ничего не меняет; повтор пустой клетки — тоже.
+    const twiceLiar: Accusation[] = [
+      { t: 5, cell: p.liarCell, moveIndex: 2 },
+      { t: 6, cell: p.liarCell, moveIndex: 3 },
+      { t: 7, cell: empty, moveIndex: 3 },
+      { t: 8, cell: empty, moveIndex: 3 },
+    ];
+    expect(liarSummary(p, twiceLiar, log)).toEqual({
+      caught: true,
+      wrongAccusations: 0,
+      firstTry: true,
+      catchT: 5,
+      catchPlacement: 1,
+      invalidAccusations: 1,
+      repeatedAccusations: 2,
+    });
+    // Та же последовательность — тот же результат; accuse — чистая функция.
+    expect(liarSummary(p, twiceLiar, log)).toEqual(liarSummary(p, [...twiceLiar], log));
+    expect(accuse(p, p.liarCell)).toEqual(accuse(p, p.liarCell));
+    // Повтор с некорректным moveIndex — всё равно RangeError (валидация до дедупликации).
+    expect(() => liarSummary(p, [twiceLiar[0]!, { t: 9, cell: p.liarCell, moveIndex: -1 }], log)).toThrow(RangeError);
   });
 
   it("RangeError on moveIndex outside the log", () => {

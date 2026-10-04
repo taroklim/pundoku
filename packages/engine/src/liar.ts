@@ -10,16 +10,17 @@
  *    второго кандидата «на лжеца» нет вообще (а не только «нет второго с единственным решением»).
  * 3. Доразрешимость — после удаления лжеца решение ровно одно.
  * 4. Нетривиальность — (а) на старте ложь не видна: нет повтора цифры в строке/столбце/блоке, у каждой
- *    пустой клетки есть кандидат, у каждой цифры есть место в каждом юните; (б) противоречие выводимо
- *    техниками не дороже потолка класса (human-решатель упирается в клетку без кандидатов, а не застревает);
- *    (в) до противоречия решатель честно ставит не меньше `minDepth` цифр.
+ *    пустой клетки есть кандидат, у каждой цифры есть место в каждом юните, нет двух синглов одной цифры в
+ *    юните и клетки, вынужденной к двум цифрам (PD-172); (б) противоречие выводимо техниками не дороже потолка
+ *    класса; (в) при ЛЮБОМ порядке ходов (синглы + вычёркивания потолка класса) видимое противоречие возникает
+ *    не раньше `minDepth` постановок (PD-172: минимум по всем порядкам, а не по одному порядку решателя).
  *
  * Без DOM, чистые функции, детерминированно по seed — как весь пакет.
  */
 import { DIFFICULTY_PROFILES } from "./difficulty.js";
 import { generate, dailySeed } from "./generator.js";
-import { ALL_DIGITS_MASK, GRID_SIZE, UNITS, assertCell, bytesToGrid, peerMask, toBytes } from "./grid.js";
-import { TECHNIQUE_ORDER, humanSolve, techniqueTier } from "./human.js";
+import { ALL_DIGITS_MASK, GRID_SIZE, PEERS, UNITS, assertCell, bytesToGrid, peerMask, toBytes } from "./grid.js";
+import { TECHNIQUE_ORDER, eliminateToFixpoint, techniqueTier } from "./human.js";
 import { Rng } from "./prng.js";
 import { countSolutionsBytes, forEachSolutionBytes, solveBytes } from "./solver.js";
 import type { Cell, Difficulty, Digit, Grid, GridInput, MoveLog, Technique, TechniqueOrBeyond } from "./types.js";
@@ -27,15 +28,26 @@ import type { Cell, Difficulty, Digit, Grid, GridInput, MoveLog, Technique, Tech
 /**
  * Версия алгоритма генерации Лжеца. Любое изменение, меняющее сетку для существующего seed (критерий,
  * пороги, порядок перебора, seed-конвенция), поднимает её (README, «Лжец» → «Версии»). Меняется и при
- * смене `GENERATOR_VERSION` — честная основа берётся из `generate`.
+ * смене `GENERATOR_VERSION` — честная основа берётся из `generate`. 2 — PD-172 (новые (а)/(в), пороги по классам).
  */
-export const LIAR_VERSION = 1;
+export const LIAR_VERSION = 2;
 
 /**
- * Порог нетривиальности (в): доля пустых клеток (без лжеца), которую human-решатель обязан честно
- * заполнить до противоречия. 0.25 — четверть доски «выглядит нормально» (замер распределения — README).
+ * Порог нетривиальности (в) по классам (PD-172): минимальное число постановок до видимого противоречия при
+ * самом удачном для игрока порядке ходов. Выбран как максимум, при котором строгая однозначность (2) ещё
+ * достижима за разумное число основ (замер — README «Лжец → Порог глубины»): у expert/master все строго
+ * однозначные лжи видны уже после вычёркиваний на старте, поэтому для них остаётся только (а).
  */
-export const LIAR_MIN_DEPTH_RATIO = 0.25;
+export const LIAR_MIN_DEPTH: Readonly<Record<Difficulty, number>> = Object.freeze({
+  easy: 3,
+  medium: 3,
+  hard: 1,
+  expert: 0,
+  master: 0,
+});
+
+/** Потолок состояний на уровень точного поиска; превышен — дальше нижняя оценка (детерминированно). */
+const EXACT_LEVEL_LIMIT = 20_000;
 
 /**
  * Потолок честных основ (seed-ретраев) по умолчанию. Доля основ, у которых есть хоть одна честная ложь,
@@ -61,9 +73,12 @@ export interface LiarValidation {
   readonly suspects: readonly Cell[];
   /** Решение после удаления лжеца (81 символ) — только если `liarCell !== null`. */
   readonly solution: string | null;
-  /** Постановок human-решателя до противоречия; null — противоречие не найдено. */
+  /**
+   * Минимум постановок до видимого противоречия по всем порядкам ходов: точный, если ≤ `minDepth`, иначе
+   * нижняя оценка (> `minDepth`); null — противоречие техниками потолка не выводится.
+   */
   readonly contradictionDepth: number | null;
-  /** Самая дорогая техника, понадобившаяся до противоречия; null — шагов не было / не найдено. */
+  /** Самый дешёвый потолок техник, с которым достигается та же глубина; null — противоречие не выводится. */
   readonly contradictionTechnique: Technique | null;
   /** Порог (в), с которым сверялись. */
   readonly minDepth: number;
@@ -78,7 +93,7 @@ export interface ValidateLiarOptions {
    */
   readonly difficulty?: Difficulty;
   readonly maxTechnique?: Technique;
-  /** Порог (в) в постановках; по умолчанию `ceil(LIAR_MIN_DEPTH_RATIO × (пустые клетки + 1))`. */
+  /** Порог (в) в постановках; по умолчанию `LIAR_MIN_DEPTH[difficulty]`, без `difficulty` — 0 (только (а)). */
   readonly minDepth?: number;
 }
 
@@ -142,53 +157,188 @@ function ceilingTier(options: ValidateLiarOptions): number {
   return TECHNIQUE_ORDER.length - 1;
 }
 
-function defaultMinDepth(bytes: Uint8Array): number {
-  let empty = 0;
-  for (let c = 0; c < GRID_SIZE; c++) if (bytes[c] === 0) empty++;
-  // +1: клетка лжеца после снятия тоже пустая — порог считается от честной сетки.
-  return Math.ceil(LIAR_MIN_DEPTH_RATIO * (empty + 1));
+/**
+ * Волновой зонд (PD-172) — нижняя оценка глубины противоречия по ВСЕМ порядкам ходов. Волна: (1) вычёркивания
+ * техниками ярусов 2..maxTier до фикс-точки (для singles-классов их нет); (2) проверка видимого противоречия
+ * (`visibleContradiction`); (3) постановка ВСЕХ вынужденных синглов разом (naked; hidden — если maxTier ≥ 1).
+ * Противоречие на проверке после k волн → глубина k; синглов нет и противоречия нет → null (застряли).
+ *
+ * Почему это нижняя оценка: постановки и вычёркивания только сужают кандидатов, поэтому сингл, вынужденный в
+ * любой момент любой последовательности ходов, к той же волне уже поставлен (или уже виден конфликт), — по
+ * индукции состояние после n ходов любого игрока ⊆ состояния после n волн. Видимое противоречие монотонно (раз
+ * появившись, не исчезает), значит игрок не увидит его раньше, чем через `depth` постановок. `stopAfter` —
+ * остановиться после этой волны без постановок (для (а): `stopAfter = 0`).
+ */
+function waveDepth(bytes: Uint8Array, maxTier: number, stopAfter = Infinity): number | null {
+  const start = initProbe(bytes);
+  if (start === null) return 0;
+  const { vals, cands } = start;
+  const forced = new Uint16Array(GRID_SIZE);
+  for (let wave = 0; ; wave++) {
+    if (maxTier >= 2) eliminateToFixpoint(vals, cands, maxTier);
+    if (visibleContradiction(vals, cands, forced, maxTier >= 1)) return wave;
+    if (wave >= stopAfter) return null;
+    let placed = 0;
+    for (let c = 0; c < GRID_SIZE; c++) {
+      const f = forced[c]!;
+      if (f === 0) continue;
+      vals[c] = 31 - Math.clz32(f);
+      cands[c] = 0;
+      placed++;
+    }
+    if (placed === 0) return null;
+    for (let c = 0; c < GRID_SIZE; c++) {
+      const f = forced[c]!;
+      if (f === 0) continue;
+      const peers = PEERS[c]!;
+      for (let i = 0; i < 20; i++) {
+        const p = peers[i]!;
+        if (vals[p] === 0) cands[p] = cands[p]! & ~f;
+      }
+    }
+  }
 }
 
 /**
- * (а) Ложь не видна на старте: нет повтора в юните, у каждой пустой клетки есть кандидат,
- * у каждой ещё не поставленной цифры есть место в каждом юните (по кандидатам от значений).
+ * Видимое противоречие в состоянии (значения + кандидаты) и заодно вынужденные синглы (`forced`, маска на клетку):
+ * пустая клетка без кандидатов; цифра без места в юните; клетка, вынужденная к двум цифрам; две клетки одного
+ * юнита, вынужденные к одной цифре (PD-172 (а): «два сингла одной цифры в юните» видны так же, как пустая клетка).
+ * Сингл — naked (один кандидат) и, если `hidden`, hidden (единственное место цифры в юните).
  */
-function visibleAtStart(bytes: Uint8Array): boolean {
-  const cands = new Uint16Array(GRID_SIZE);
+function visibleContradiction(vals: Uint8Array, cands: Uint16Array, forced: Uint16Array, hidden: boolean): boolean {
+  forced.fill(0);
   for (let c = 0; c < GRID_SIZE; c++) {
-    const v = bytes[c]!;
-    const m = peerMask(bytes, c);
-    if (v !== 0) {
-      if (!(m & (1 << v))) return true; // та же цифра у соседа
-      continue;
-    }
+    if (vals[c] !== 0) continue;
+    const m = cands[c]!;
     if (m === 0) return true;
-    cands[c] = m;
+    if ((m & (m - 1)) === 0) forced[c] = m;
   }
   for (let u = 0; u < 27; u++) {
     const unit = UNITS[u]!;
-    let covered = 0;
+    let have = 0;
+    let once = 0;
+    let twice = 0;
     for (let i = 0; i < 9; i++) {
       const c = unit[i]!;
-      covered |= bytes[c] !== 0 ? 1 << bytes[c]! : cands[c]!;
+      const v = vals[c]!;
+      if (v !== 0) {
+        have |= 1 << v;
+        continue;
+      }
+      const m = cands[c]!;
+      twice |= once & m;
+      once |= m;
     }
-    if (covered !== ALL_DIGITS_MASK) return true;
+    if ((have | once) !== ALL_DIGITS_MASK) return true; // цифре негде стоять
+    if (!hidden) continue;
+    const single = once & ~twice & ~have;
+    if (single === 0) continue;
+    for (let i = 0; i < 9; i++) {
+      const c = unit[i]!;
+      if (vals[c] === 0) forced[c] = forced[c]! | (cands[c]! & single);
+    }
+  }
+  for (let u = 0; u < 27; u++) {
+    const unit = UNITS[u]!;
+    let seen = 0;
+    for (let i = 0; i < 9; i++) {
+      const f = forced[unit[i]!]!;
+      if (f & (f - 1)) return true; // клетка вынуждена к двум цифрам
+      if (seen & f) return true; // два сингла одной цифры в юните
+      seen |= f;
+    }
   }
   return false;
 }
 
-/** (б)+(в): human-решатель в пределах потолка — постановок до противоречия и максимальная техника. */
-function contradictionProbe(bytes: Uint8Array, maxTier: number): { depth: number | null; technique: Technique | null } {
-  const res = humanSolve(bytesToGrid(bytes), { maxTechnique: TECHNIQUE_ORDER[maxTier]! });
-  if (!res.contradiction) return { depth: null, technique: null };
-  let depth = 0;
-  let top = -1;
-  for (const s of res.steps) {
-    if (s.cell !== undefined) depth++;
-    const t = techniqueTier(s.technique);
-    if (t > top) top = t;
+/** (а) Ложь не видна на старте: волна 0 зонда singles без постановок и вычёркиваний. */
+function visibleAtStart(bytes: Uint8Array): boolean {
+  return waveDepth(bytes, 1, 0) === 0;
+}
+
+/** Состояние точного поиска: значения и кандидаты. */
+interface ProbeState {
+  readonly vals: Uint8Array;
+  readonly cands: Uint16Array;
+}
+
+function initProbe(bytes: Uint8Array): ProbeState | null {
+  const vals = Uint8Array.from(bytes);
+  const cands = new Uint16Array(GRID_SIZE);
+  for (let c = 0; c < GRID_SIZE; c++) {
+    const m = peerMask(vals, c);
+    const v = vals[c]!;
+    if (v === 0) cands[c] = m;
+    else if (!(m & (1 << v))) return null; // повтор цифры в юните
   }
-  return { depth, technique: top < 0 ? null : TECHNIQUE_ORDER[top]! };
+  return { vals, cands };
+}
+
+/**
+ * (в) Точный минимум постановок до видимого противоречия по всем порядкам ходов: BFS по множествам
+ * поставленных синглов (после каждой постановки — вычёркивания потолка до фикс-точки). Ищет до `cap`
+ * постановок; глубже (или если уровень BFS больше `EXACT_LEVEL_LIMIT`) возвращает нижнюю оценку —
+ * максимум из пройденной глубины + 1 и волнового зонда. null — противоречие не выводится вообще (б).
+ */
+function minPlacements(bytes: Uint8Array, maxTier: number, cap: number): number | null {
+  const wave = waveDepth(bytes, maxTier);
+  if (wave === null) return null;
+  if (wave > cap) return wave;
+  const start = initProbe(bytes);
+  if (start === null) return 0;
+  const forced = new Uint16Array(GRID_SIZE);
+  let level: ProbeState[] = [start];
+  for (let k = 0; k <= cap; k++) {
+    const next: ProbeState[] = [];
+    const seen = new Set<string>();
+    for (const st of level) {
+      if (maxTier >= 2) eliminateToFixpoint(st.vals, st.cands, maxTier);
+      if (visibleContradiction(st.vals, st.cands, forced, maxTier >= 1)) return k;
+      if (k === cap) continue;
+      for (let c = 0; c < GRID_SIZE; c++) {
+        const f = forced[c]!;
+        if (f === 0) continue;
+        const vals = Uint8Array.from(st.vals);
+        vals[c] = 31 - Math.clz32(f);
+        const key = String.fromCharCode(...vals);
+        if (seen.has(key)) continue;
+        seen.add(key);
+        const cands = Uint16Array.from(st.cands);
+        cands[c] = 0;
+        const peers = PEERS[c]!;
+        for (let i = 0; i < 20; i++) {
+          const p = peers[i]!;
+          if (vals[p] === 0) cands[p] = cands[p]! & ~f;
+        }
+        next.push({ vals, cands });
+      }
+    }
+    if (next.length === 0 || next.length > EXACT_LEVEL_LIMIT) return Math.max(k + 1, wave);
+    level = next;
+  }
+  return Math.max(cap + 1, wave);
+}
+
+/**
+ * (б)+(в): глубина противоречия (`minPlacements` с поиском до `minDepth` — точная, если ≤ `minDepth`, иначе нижняя
+ * оценка > `minDepth`) и техника — самый дешёвый потолок, с которым та же глубина ещё достигается (что игроку
+ * нужно, чтобы увидеть ложь так рано). `known` — уже посчитанная глубина с тем же `maxTier`/`minDepth`.
+ */
+function contradictionProbe(
+  bytes: Uint8Array,
+  maxTier: number,
+  minDepth: number,
+  known?: number,
+): { depth: number | null; technique: Technique | null } {
+  const depth = known ?? minPlacements(bytes, maxTier, minDepth);
+  if (depth === null) return { depth: null, technique: null };
+  let t = 0;
+  while (t < maxTier && minPlacements(bytes, t, minDepth) !== depth) t++;
+  return { depth, technique: TECHNIQUE_ORDER[t]! };
+}
+
+function minDepthFor(difficulty: Difficulty | undefined): number {
+  return difficulty === undefined ? 0 : LIAR_MIN_DEPTH[difficulty];
 }
 
 function bytesToString(b: Uint8Array): string {
@@ -199,12 +349,12 @@ function bytesToString(b: Uint8Array): string {
 
 /**
  * Полная проверка критерия честности для произвольной сетки (лжец заранее не известен — выводится).
- * Стоимость: (подсказки + 1) вызовов счётчика решений + один проход human-решателя.
+ * Стоимость: (подсказки + 1) вызовов счётчика решений + волновой зонд и точный поиск глубины до `minDepth`.
  */
 export function validateLiar(mission: GridInput, options: ValidateLiarOptions = {}): LiarValidation {
   const bytes = toBytes(mission);
   const maxTier = ceilingTier(options);
-  const minDepth = options.minDepth ?? defaultMinDepth(bytes);
+  const minDepth = options.minDepth ?? minDepthFor(options.difficulty);
   if (!Number.isInteger(minDepth) || minDepth < 0) {
     throw new RangeError(`minDepth must be an integer >= 0, got ${String(minDepth)}`);
   }
@@ -243,7 +393,7 @@ export function validateLiar(mission: GridInput, options: ValidateLiarOptions = 
 
   // 4. Нетривиальность.
   if (visibleAtStart(bytes)) failures.push("visible_at_start");
-  const { depth, technique } = contradictionProbe(bytes, maxTier);
+  const { depth, technique } = contradictionProbe(bytes, maxTier, minDepth);
   if (depth === null) failures.push("not_deducible");
   else if (depth < minDepth) failures.push("too_shallow");
 
@@ -309,19 +459,19 @@ interface LieCheck {
  * клетке оно ≠ digit); проверяются (2) — по таблице покрытия и поштучно для `heavy`, затем (а), (б)/(в).
  * Порядок — от дешёвого к дорогому. Вердикт совпадает с `validateLiar(...).honest` (тест на полном
  * переборе кандидатов). Возвращает null, если кандидат не годится (в т. ч. digit = истинной цифре,
- * клетка не пустая, повтор у соседа). `tuning` — только для тестов: порог (в) и размер таблицы покрытия
- * (`coverageLimit: 1` загоняет все подсказки в поштучную проверку — тест медленного пути).
+ * клетка не пустая, повтор у соседа). `minDepth` — порог (в); `tuning` — только для тестов: размер таблицы
+ * покрытия (`coverageLimit: 1` загоняет все подсказки в поштучную проверку — тест медленного пути).
  */
 export function lieChecker(
   honestMission: GridInput,
   solution: GridInput,
   maxTier: number,
-  tuning: { readonly minDepth?: number; readonly coverageLimit?: number } = {},
+  minDepth: number,
+  tuning: { readonly coverageLimit?: number } = {},
 ): (cell: Cell, digit: Digit) => LieCheck | null {
   const honest = toBytes(honestMission);
   const sol = toBytes(solution);
   const cov = coverage(honest, tuning.coverageLimit ?? COVERAGE_LIMIT);
-  const minDepth = tuning.minDepth ?? defaultMinDepth(honest);
   const liar = Uint8Array.from(honest);
   return (cell, digit) => {
     if (honest[cell] !== 0 || sol[cell] === digit) return null;
@@ -329,7 +479,7 @@ export function lieChecker(
     liar[cell] = digit;
     try {
       if (visibleAtStart(liar)) return null;
-      const { depth, technique } = contradictionProbe(liar, maxTier);
+      const depth = minPlacements(liar, maxTier, minDepth);
       if (depth === null || depth < minDepth) return null;
       for (const c of cov.heavy) {
         const v = liar[c]!;
@@ -338,7 +488,7 @@ export function lieChecker(
         liar[c] = v;
         if (n !== 0) return null;
       }
-      return { depth, technique };
+      return { depth, technique: contradictionProbe(liar, maxTier, minDepth, depth).technique };
     } finally {
       liar[cell] = 0;
     }
@@ -368,6 +518,7 @@ export function generateLiar(options: GenerateLiarOptions): LiarPuzzle {
     throw new RangeError(`maxBases must be an integer >= 1, got ${String(maxBases)}`);
   }
   const maxTier = ceilingTier({ difficulty });
+  const minDepth = LIAR_MIN_DEPTH[difficulty];
   let tried = 0;
   for (let k = 0; k < maxBases; k++) {
     const baseSeed = baseSeedOf(seed, k);
@@ -382,7 +533,7 @@ export function generateLiar(options: GenerateLiarOptions): LiarPuzzle {
       for (let d = 1; d <= 9; d++) if (d !== solution[c] && m & (1 << d)) pairs.push(c * 16 + d);
     }
     new Rng(`liar\0${seed}\0${difficulty}\0${k}`).shuffle(pairs);
-    const check = lieChecker(base.mission, base.solution, maxTier);
+    const check = lieChecker(base.mission, base.solution, maxTier, minDepth);
     for (const p of pairs) {
       tried++;
       const cell = p >> 4;
@@ -409,7 +560,7 @@ export function generateLiar(options: GenerateLiarOptions): LiarPuzzle {
           candidatesTried: tried,
           contradictionDepth: ok.depth,
           contradictionTechnique: ok.technique,
-          minDepth: defaultMinDepth(honest),
+          minDepth,
         },
       };
     }
@@ -419,9 +570,13 @@ export function generateLiar(options: GenerateLiarOptions): LiarPuzzle {
 
 /**
  * Seed Лжеца дня: `<YYYY-MM-DD>/liar/<difficulty>`. Отдельная конвенция от `dailySeed` — сетка Лжеца
- * дня не совпадает с обычной сеткой дня. Дата валидируется как в `dailySeed`.
+ * дня не совпадает с обычной сеткой дня. Дата валидируется как в `dailySeed`, сложность — как в
+ * `generateLiar` (`RangeError`).
  */
 export function dailyLiarSeed(date: string, difficulty: Difficulty): string {
+  if (typeof difficulty !== "string" || !Object.hasOwn(DIFFICULTY_PROFILES, difficulty)) {
+    throw new RangeError(`Unknown difficulty '${String(difficulty)}'`);
+  }
   dailySeed(date, difficulty); // та же валидация даты/формата (RangeError)
   return `${date}/liar/${difficulty}`;
 }
@@ -477,11 +632,17 @@ export interface LiarSummary {
   readonly catchPlacement: number | null;
   /** Обвинения не-подсказок (UI их не должен пропускать; считаются, но не влияют на остальное). */
   readonly invalidAccusations: number;
+  /**
+   * Повторные обвинения уже обвинённой клетки (UI их не пускает). Не считаются ни верными, ни неверными, ни
+   * невалидными и не влияют на `firstTry`: значим только первый вердикт по клетке.
+   */
+  readonly repeatedAccusations: number;
 }
 
 /**
- * Метрики Лжеца по партии. Обвинения обрабатываются в порядке массива; учитывается первое верное.
- * `RangeError`: `moveIndex` вне 0..log.length или не целое.
+ * Метрики Лжеца по партии. Обвинения обрабатываются в порядке массива; учитывается первое верное; повторное
+ * обвинение той же клетки игнорируется (`repeatedAccusations`). `RangeError`: `moveIndex` вне 0..log.length
+ * или не целое, клетка вне 0..80.
  */
 export function liarSummary(
   puzzle: Pick<LiarPuzzle, "mission" | "liarCell" | "trueDigit">,
@@ -494,11 +655,18 @@ export function liarSummary(
   let catchIndex: number | null = null;
   let firstTry = false;
   let valid = 0;
+  let repeated = 0;
+  const seen = new Set<Cell>();
   for (const a of accusations) {
     if (!Number.isInteger(a.moveIndex) || a.moveIndex < 0 || a.moveIndex > log.length) {
       throw new RangeError(`Accusation moveIndex must be an integer in 0..${log.length}, got ${String(a.moveIndex)}`);
     }
     const v = accuse(puzzle, a.cell);
+    if (seen.has(a.cell)) {
+      repeated++;
+      continue;
+    }
+    seen.add(a.cell);
     if (v.kind === "not_a_given") {
       invalid++;
       continue;
@@ -523,5 +691,13 @@ export function liarSummary(
       if (m.kind === "place" && !(m.blot === true && m.correct === true)) catchPlacement++;
     }
   }
-  return { caught: catchT !== null, wrongAccusations: wrong, firstTry, catchT, catchPlacement, invalidAccusations: invalid };
+  return {
+    caught: catchT !== null,
+    wrongAccusations: wrong,
+    firstTry,
+    catchT,
+    catchPlacement,
+    invalidAccusations: invalid,
+    repeatedAccusations: repeated,
+  };
 }
