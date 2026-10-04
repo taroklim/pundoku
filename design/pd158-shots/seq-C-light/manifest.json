@@ -1,0 +1,10 @@
+{
+  "variant": "C",
+  "theme": "light",
+  "fps": 30,
+  "slow": 1,
+  "frames": 82,
+  "holdFrames": 15,
+  "story": "Today → Play → Year → Today (jump)",
+  "gif": "ffmpeg -framerate 30 -i %04d.png -vf \"split[a][b];[a]palettegen[p];[b][p]paletteuse\" seq-C-light.gif"
+}

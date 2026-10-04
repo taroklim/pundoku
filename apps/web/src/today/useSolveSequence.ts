@@ -51,6 +51,8 @@ export function useSolveSequence(
   phase: string,
   store: Pick<DayStore, "getSnapshot" | "acknowledgeLanding">,
   root: RefObject<HTMLElement | null>,
+  /** PD-161: вкладка на экране. В скрытой панели финал не играется; ушли посреди финала — сразу конечное состояние. */
+  active = true,
 ): SolveSequence {
   const [cardShown, setCardShown] = useState(() => phase === "solved");
   const [gridShown, setGridShown] = useState(() => phase === "solved");
@@ -68,14 +70,16 @@ export function useSolveSequence(
       setFlown(false);
       return;
     }
-    if (cardShown) return; // смонтированы на решённом дне
-    // Решённый день подгрузился из сохранённого (loading → solved): не «решили сейчас» — без анимации.
-    if (from !== "playing") {
+    // Решённый день подгрузился из сохранённого (loading → solved): не «решили сейчас» — без анимации. Так же — в скрытой
+    // панели (день решён синхронизацией, пока на экране другая вкладка) и при уходе с вкладки посреди финала (перезапуск
+    // эффекта по `active`: очистка ниже уже закрыла полёт).
+    if (from !== "playing" || !active) {
       setCardShown(true);
       setGridShown(true);
       setFinaleDone(true);
       return;
     }
+    if (cardShown) return; // смонтированы на решённом дне
 
     const reduce = prefersReducedMotion();
     // Источник полёта — клетка последнего хода. Замер — в таймере ниже, пока поле ещё на экране, но до записи карточки.
@@ -198,7 +202,7 @@ export function useSolveSequence(
       if (!finished) store.acknowledgeLanding();
     };
     // cardShown намеренно не в зависимостях: последовательность стартует один раз на переходе в solved.
-  }, [phase, store, root]);
+  }, [phase, store, root, active]);
 
   return { cardShown, gridShown, finaleDone, flown };
 }

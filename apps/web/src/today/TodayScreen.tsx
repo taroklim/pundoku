@@ -23,6 +23,7 @@ import { cellsLeft, isGridFull } from "../play/logic";
 import { ResultCard } from "../play/ResultCard";
 import { Subline } from "../play/Subline";
 import { useDeferredFocus } from "../shell/afterPaint";
+import { useTabActive } from "../shell/tabSlide";
 import { TabHeader } from "../shell/TabHeader";
 import type { DayStore } from "./dayStore";
 import { dayStore } from "./dayStore";
@@ -70,9 +71,11 @@ export function DayView({ store, archive, onOpenSettings, onOpenHelp }: { store:
   // Архив: стор мог ещё держать другую дату (первый кадр до эффекта) — показываем «загрузку», а не чужую партию.
   const stale = archive !== undefined && rawSnap.date !== archive.date;
   const snap = stale ? { ...rawSnap, phase: "loading" as const, play: null, unavailable: false } : rawSnap;
-  const clock = useClock(store);
+  // PD-161: панель Today смонтирована постоянно; архив живёт поверх стопки — для него контекст всегда «активен».
+  const active = useTabActive();
+  const clock = useClock(store, active);
   // PD-139: лесенка подсказок — Today и архив (late разрешён); в Ink и на Grid ∞ её нет. Шит правила не нужен, если на устройстве уже были дни «с помощью».
-  const { ladder, state: hint } = useHintLadder(store, { assistedBefore: () => store.anyAssisted() });
+  const { ladder, state: hint } = useHintLadder(store, { assistedBefore: () => store.anyAssisted() }, active);
   const root = useRef<HTMLDivElement>(null);
   const { phase, play, difficulty } = snap;
   const archiveDate = archive?.date;
@@ -80,6 +83,7 @@ export function DayView({ store, archive, onOpenSettings, onOpenHelp }: { store:
   const unavailable = phase === "error" && snap.unavailable;
 
   useEffect(() => {
+    if (!active) return; // скрытая вкладка: таймер дня стоит, как раньше при размонтировании
     if (archiveDate !== undefined) store.openArchive(archiveDate);
     else store.ensureStarted();
     store.setTabActive(true);
@@ -87,11 +91,11 @@ export function DayView({ store, archive, onOpenSettings, onOpenHelp }: { store:
       store.setTabActive(false);
       if (archiveDate !== undefined) store.closeArchive();
     };
-  }, [store, archiveDate]);
+  }, [store, archiveDate, active]);
   // QA PD-23, Low 1: возврат на вкладку не проигрывает стухшие M1/M3.
-  useClearEffectsOnUnmount(store);
+  useClearEffectsOnUnmount(store, active);
 
-  const { cardShown, gridShown, finaleDone, flown } = useSolveSequence(phase, store, root);
+  const { cardShown, gridShown, finaleDone, flown } = useSolveSequence(phase, store, root, active);
 
   // Фокус на карточку (a11y) — после конца финала и после кадра, не посреди анимации и не в задаче монтажа (PD-95).
   const cardRef = useRef<HTMLElement>(null);

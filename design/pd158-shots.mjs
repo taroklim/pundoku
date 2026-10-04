@@ -38,7 +38,9 @@ import { existsSync, mkdirSync, copyFileSync, writeFileSync } from "node:fs";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { dirname, join } from "node:path";
 
-const PW_HOME = "/tmp/pd16-pw";
+// PD_PW_HOME — альтернативная установка (macOS чистит /tmp раз в несколько дней и выедает файлы
+// из /tmp/pd16-pw частично — тогда поставить заново в другую папку и указать её здесь).
+const PW_HOME = process.env.PD_PW_HOME || "/tmp/pd16-pw";
 if (!process.env.PLAYWRIGHT_BROWSERS_PATH && existsSync(join(PW_HOME, "browsers"))) {
   process.env.PLAYWRIGHT_BROWSERS_PATH = join(PW_HOME, "browsers");
 }

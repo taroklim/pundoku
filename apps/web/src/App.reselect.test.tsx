@@ -34,7 +34,7 @@ let host: HTMLDivElement;
 let root: Root;
 const tab = (i: number) => host.querySelectorAll<HTMLElement>('[role="tab"]')[i]!;
 const PLAY = 1;
-const panelText = () => host.querySelector('[role="tabpanel"]')?.textContent;
+const panelText = () => host.querySelector('[role="tabpanel"]:not([aria-hidden="true"])')?.textContent;
 const mount = async (hash: string) => {
   window.history.replaceState(null, "", hash);
   await act(async () => root.render(<App />));

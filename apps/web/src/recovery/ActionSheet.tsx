@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { useEffect, useId, useRef } from "react";
+import { createPortal } from "react-dom";
 
 interface ActionSheetProps {
   title: string;
@@ -25,7 +26,7 @@ const FOCUSABLE = "button:not([disabled])";
 /**
  * Action sheet (макет PD-48 §5): подтверждение внизу экрана, действие сверху, «Отмена» отдельной группой. Модальный
  * диалог: фон `inert`, фокус внутри (Tab по кругу), Esc (на document) и тап по фону — отмена, фокус возвращается на кнопку, открывшую шит.
- * Шит над шитом не бывает — поэтому Settings сделан push-экраном.
+ * Шит над шитом не бывает — поэтому Settings сделан push-экраном. Рисуется порталом в `body` (PD-161).
  * PD-144: колонка до безопасной высоты экрана; прокручивается ТОЛЬКО текст (`.st-ahead`), кнопки `flex:none` — никогда не
  * уезжают за край (320×568, AX3, uk/ru), а прокрутка не бывает на кнопке (action-sheets.md).
  */
@@ -86,7 +87,9 @@ export function ActionSheet({ title, message, actionLabel, destructive = false, 
     };
   }, []);
 
-  return (
+  // PD-161: порталом в `body`, как остальные шиты: `position: fixed` не зависит от transform предка (панель вкладки во время
+  // слайда), а затемнение гарантированно накрывает таб-бар.
+  return createPortal(
     <div
       ref={scrim}
       className="st-scrim"
@@ -130,6 +133,7 @@ export function ActionSheet({ title, message, actionLabel, destructive = false, 
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }

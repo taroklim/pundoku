@@ -133,4 +133,27 @@ describe("ErrorBoundary (PD-146)", () => {
     host.querySelector<HTMLButtonElement>('[data-testid="mine"]')!.focus();
     expect(document.activeElement).toBe(host.querySelector('[data-testid="mine"]'));
   });
+
+  it("PD-161: панель вкладки не размонтируется — экран сбоя сбрасывается, когда с вкладки ушли (active true → false)", async () => {
+    await render(
+      <ErrorBoundary scope="tab" active>
+        <Bomb explode />
+      </ErrorBoundary>,
+    );
+    expect(host.querySelector('[data-testid="crash-screen"]')).not.toBeNull();
+    // Пока вкладка на экране — экран сбоя держится (новый рендер без ошибки его не снимает).
+    await render(
+      <ErrorBoundary scope="tab" active>
+        <Bomb explode={false} />
+      </ErrorBoundary>,
+    );
+    expect(host.querySelector('[data-testid="crash-screen"]')).not.toBeNull();
+    await render(
+      <ErrorBoundary scope="tab" active={false}>
+        <Bomb explode={false} />
+      </ErrorBoundary>,
+    );
+    expect(host.querySelector('[data-testid="crash-screen"]')).toBeNull();
+    expect(host.querySelector('[data-testid="ok"]')).not.toBeNull();
+  });
 });
