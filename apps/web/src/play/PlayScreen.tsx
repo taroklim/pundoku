@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import type { HelpBlockId } from "../help/blocks";
 import { useDeferredFocus } from "../shell/afterPaint";
 import { swallowGhostClick } from "../shell/ghostClick";
+import { useTabActive } from "../shell/tabSlide";
 import { TabHeader } from "../shell/TabHeader";
 import { localDate } from "../today/dayResolver";
 import { Board } from "./Board";
@@ -40,19 +41,22 @@ import { Subline } from "./Subline";
 export function PlayScreen({ onOpenSettings, onOpenHelp, onOpenToday }: { onOpenSettings?: () => void; onOpenHelp?: (block: HelpBlockId) => void; onOpenToday?: () => void } = {}) {
   const { t } = useTranslation();
   const snap = useSyncExternalStore(playStore.subscribe, playStore.getSnapshot);
-  const clock = useClock(playStore);
+  // PD-161: панель Play смонтирована постоянно; «вкладка на экране» — сигнал из стопки вкладок (таймер, подсказки, эффекты).
+  const active = useTabActive();
+  const clock = useClock(playStore, active);
   const { phase, play, difficulty } = snap;
   // PD-139: лесенка подсказок. В Ink и до старта партии её нет (`hintAllowed`); ушли с вкладки — подсветки снимаются.
-  const { ladder, state: hint } = useHintLadder(playStore);
+  const { ladder, state: hint } = useHintLadder(playStore, {}, active);
 
   useEffect(() => {
+    if (!active) return; // таймер партии стоит, пока Play не на экране
     playStore.ensureStarted();
     playStore.setTabActive(true);
     return () => playStore.setTabActive(false);
-  }, []);
+  }, [active]);
 
   // QA PD-23, Low 1: возврат на вкладку не должен заново проигрывать стухшие M1/M3.
-  useClearEffectsOnUnmount(playStore);
+  useClearEffectsOnUnmount(playStore, active);
 
   // «Решено»: сначала данные гаснут до 60 % (240 мс), затем карточка (финал V2, PD-89); тап прерывает паузу.
   const [cardShown, setCardShown] = useState(false);

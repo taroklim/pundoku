@@ -33,6 +33,11 @@ interface Props {
   children: ReactNode;
   /** `app` — вокруг всего приложения (на весь экран); `tab` — вокруг содержимого вкладки (таб-бар остаётся рабочим). */
   scope: "app" | "tab";
+  /**
+   * PD-161: панели вкладок больше не размонтируются при смене вкладки — экран сбоя сбрасывается явно, когда с вкладки ушли
+   * (`active` true → false): вернувшись, пользователь получает свежую попытку отрисовать вкладку, как раньше при новом маунте.
+   */
+  active?: boolean;
 }
 
 export class ErrorBoundary extends Component<Props, { failed: boolean }> {
@@ -44,6 +49,10 @@ export class ErrorBoundary extends Component<Props, { failed: boolean }> {
 
   override componentDidCatch(error: unknown, info: ErrorInfo): void {
     console.error(`[pundoku] ошибка рендера (${this.props.scope}):`, error, info.componentStack);
+  }
+
+  override componentDidUpdate(prev: Props): void {
+    if (prev.active === true && this.props.active === false && this.state.failed) this.setState({ failed: false });
   }
 
   override render(): ReactNode {

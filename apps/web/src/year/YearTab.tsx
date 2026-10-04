@@ -1,13 +1,14 @@
 import { useEffect, useState } from "react";
 import { localDate } from "../today/dayResolver";
 import type { DayProgress } from "../today/repository";
+import { useTabActive } from "../shell/tabSlide";
 import { sync } from "../sync/runtime";
 import { readFirstUse } from "./firstUse";
 import { YearScreen } from "./YearScreen";
 
 /**
  * Вкладка Year: читает прогресс из `ProgressRepository` (IndexedDB, PD-14) — НЕ из `moveLog` и не из
- * горячего кэша ходов. Перечитывает данные при открытии и когда пришёл снапшот с сервера
+ * горячего кэша ходов. Перечитывает данные при открытии (PD-161: когда вкладка стала активной) и когда пришёл снапшот с сервера
  * (`subscribeRemote`: после чистки хранилища на устройстве год возвращается сам).
  */
 export function YearTab({
@@ -27,7 +28,10 @@ export function YearTab({
   const [firstUse, setFirstUse] = useState<string | null>(null);
   const [today, setToday] = useState(() => localDate());
 
+  // PD-161: вкладка смонтирована постоянно — «при открытии» = когда стала активной; скрытая ничего не слушает.
+  const active = useTabActive();
   useEffect(() => {
+    if (!active) return;
     let alive = true;
     const load = () => {
       setToday(localDate());
@@ -53,7 +57,7 @@ export function YearTab({
       off();
       document.removeEventListener("visibilitychange", onVisible);
     };
-  }, []);
+  }, [active]);
 
   return (
     <YearScreen

@@ -272,10 +272,12 @@ export class HintLadder {
 }
 
 /** Лесенка экрана: создаётся на хранилище, подписывается на него, пока экран жив; строка-намёк проверяется по таймеру. */
-export function useHintLadder(host: HintHost, opts: HintLadderOptions = {}): { ladder: HintLadder; state: HintLadderState } {
+export function useHintLadder(host: HintHost, opts: HintLadderOptions = {}, active = true): { ladder: HintLadder; state: HintLadderState } {
   // `opts` живёт столько же, сколько хранилище: пересоздавать лесенку на каждый рендер нельзя.
   const ladder = useMemo(() => new HintLadder(host, opts), [host]);
   useEffect(() => {
+    // PD-161: скрытая вкладка (смонтирована, но не на экране) лесенку не держит — как раньше размонтированная.
+    if (!active) return;
     const off = ladder.attach();
     const id = window.setInterval(() => ladder.checkNudge(), NUDGE_CHECK_MS);
     return () => {
@@ -283,7 +285,7 @@ export function useHintLadder(host: HintHost, opts: HintLadderOptions = {}): { l
       ladder.close(false); // экран ушёл (смена вкладки): подсветки не остаются висеть
       off();
     };
-  }, [ladder]);
+  }, [ladder, active]);
   const state = useSyncExternalStore(ladder.subscribe, ladder.getState);
   return { ladder, state };
 }
