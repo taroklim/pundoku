@@ -16,7 +16,7 @@ export const includeAssets = ["icons/icon.svg", "icons/favicon-16.png", "icons/f
 export const manifestIcons: NonNullable<ManifestOptions["icons"]> = [
   { src: `icons/icon-192.png?v=${ICON_VERSION}`, sizes: "192x192", type: "image/png" },
   { src: `icons/icon-512.png?v=${ICON_VERSION}`, sizes: "512x512", type: "image/png" },
-  // maskable = тот же icon-512: знак P4 целиком внутри круга 80 % (радиус 409.6 из 1024; замер 390.5, запас 19.1 — тест проверяет по пикселям).
+  // maskable = тот же icon-512: знак P4 целиком внутри круга 80 % (радиус 409.6 из 1024; замер ≈391.3, запас 18.3 — тест проверяет по пикселям).
   { src: `icons/icon-512.png?v=${ICON_VERSION}`, sizes: "512x512", type: "image/png", purpose: "maskable" },
 ];
 
