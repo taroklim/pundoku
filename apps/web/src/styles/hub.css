@@ -426,12 +426,15 @@ button.hub-row:active {
   margin-inline: -4px;
 }
 /* Шапка шита: значок + имя режима слева, «Отмена» справа (HIG sheets.md: альтернатива основному действию). */
+/* Крупный текст (AX3, узкий экран): имя режима и «Отмена» в одну строку не влезают — «Отмена» уходит на свою строку (справа),
+   а не рвёт имя по буквам («Чор/нил/о»). Перенос строки решает max-content имени, поэтому при обычном размере всё в ряд. */
 .mode-sheet > .sh-top {
   flex: none;
   display: flex;
+  flex-wrap: wrap;
   justify-content: space-between;
   align-items: center;
-  gap: 8px;
+  gap: 0 8px;
   min-height: 44px;
   margin: -4px 0;
 }
@@ -453,6 +456,7 @@ button.hub-row:active {
 }
 .sh-cancel {
   flex: none;
+  margin-left: auto;
   min-height: 44px;
   padding: 0 2px;
   color: var(--ink);

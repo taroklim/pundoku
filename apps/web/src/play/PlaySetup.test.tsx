@@ -138,6 +138,9 @@ describe("контекстное меню строки (долгое нажат�
     expect(q("ctx-menu")).not.toBeNull();
     expect(q("ctx-desc")!.textContent).toBe("Plain sudoku: notes, undo and hints are all there.");
     expect(q("ctx-continue")).not.toBeNull();
+    // поднятая копия строки — в разметке строки (`.hub-row.mode`), иначе в портале она теряет стили
+    expect(q("ctx-preview")!.matches(".ctx-lift > .hub-row.mode")).toBe(true);
+    expect(q("ctx-preview")!.textContent).toContain("Classic");
     // хвост жеста: отпускание над строкой и над пунктом меню ничего не делает
     pointer(row, "pointerup");
     click(row);

@@ -119,7 +119,12 @@ export function PlaySetup({ modes, slots, reselect, onOpenMode, onNewInMode, onO
         <ModeMenu
           mode={menu.mode}
           anchor={menu.anchor}
-          preview={<ModeRowBody mode={menu.mode} slot={slots[menu.mode.id] ?? null} />}
+          preview={
+            // Та же разметка, что у строки (`.hub-row.mode`): без неё копия в портале теряет стили строки (огромный значок/шеврон).
+            <div className="hub-row mode" data-testid="ctx-preview">
+              <ModeRowBody mode={menu.mode} slot={slots[menu.mode.id] ?? null} />
+            </div>
+          }
           canContinue={slots[menu.mode.id] !== undefined}
           onContinue={() => onOpenMode(menu.mode.id, menu.row)}
           onNew={() => onNewInMode(menu.mode.id, menu.row)}
