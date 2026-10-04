@@ -54,6 +54,8 @@ interface FakeAnim {
   frames: Keyframe[];
   opts: KeyframeAnimationOptions;
   cancel: ReturnType<typeof vi.fn>;
+  pause: ReturnType<typeof vi.fn>;
+  play: ReturnType<typeof vi.fn>;
   finish: () => void;
   finished: Promise<void>;
 }
@@ -75,7 +77,7 @@ beforeEach(() => {
       reject = rej;
     });
     finished.catch(() => undefined);
-    const a: FakeAnim = { el: this, frames, opts, cancel: vi.fn(() => reject(new Error("cancel"))), finish: () => resolve(), finished };
+    const a: FakeAnim = { el: this, frames, opts, cancel: vi.fn(() => reject(new Error("cancel"))), pause: vi.fn(), play: vi.fn(), finish: () => resolve(), finished };
     anims.push(a);
     return a as unknown as Animation;
   };
@@ -177,6 +179,17 @@ describe("PD-161: слайд «Лента»", () => {
     a = paneAnims();
     expect(x(a.find((v) => v.el === pane("today"))!.frames[1]!)).toBe(0);
     expect(x(a.find((v) => v.el === pane("year"))!.frames[1]!)).toBe(390);
+  });
+
+  it("риск первого кадра: показ скрытой панели — анимации стоят в стартовом положении и трогаются следующим кадром", async () => {
+    act(() => root.render(<App />));
+    act(() => tab(1).click());
+    const a = anims.slice();
+    expect(a.length).toBeGreaterThan(0);
+    for (const v of a) expect(v.pause).toHaveBeenCalled();
+    for (const v of a) expect(v.play).not.toHaveBeenCalled();
+    await act(async () => void (await new Promise((r) => requestAnimationFrame(() => r(null)))));
+    for (const v of a) expect(v.play).toHaveBeenCalled();
   });
 
   it("после конца перехода на панелях нет ни transform, ни will-change, ни data-slide: анимации отменены (cancel, не commitStyles)", async () => {

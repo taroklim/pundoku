@@ -229,6 +229,16 @@ export function useTabSlide(stack: RefObject<HTMLElement | null>, pill: RefObjec
         anims.push(pillEl.animate([{ transform: `translateX(${px0}px)` }, { transform: `translateX(${pillX(bar, tab)}px)` }], { duration, easing }));
       }
     }
+    // 3. Риск первого кадра (md §7): скрытая панель разложена, но не нарисована — её отрисовка съедала бы первый кадр движения.
+    // Экраны встают в стартовое положение сразу (анимация на паузе, fill both), а движение начинается кадром позже: отрисовка
+    // приходится на кадр ДО хода, сам ход идёт ровно. 16 мс невидимы — цвет вкладки уже сменился в момент тапа.
+    if (!current.has(tab) && anims.length > 0 && typeof requestAnimationFrame === "function") {
+      for (const a of anims) a.pause();
+      requestAnimationFrame(() => {
+        if (my !== s.token) return;
+        for (const a of anims) a.play();
+      });
+    }
     run(anims, my);
   }, [tab, covered, stack, pill]);
 }
