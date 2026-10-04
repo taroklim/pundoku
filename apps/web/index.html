@@ -14,10 +14,12 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <meta name="apple-mobile-web-app-title" content="Pundoku" />
     <meta name="format-detection" content="telephone=no" />
-    <!-- Иконки D5 «Унос» (PD-102). ?v= — версия кэша (pwa.config.ts ICON_VERSION): сначала PNG для Safari <= 18.7, затем SVG. -->
-    <link rel="icon" href="/icons/favicon-32.png?v=d5" sizes="32x32" type="image/png" />
-    <link rel="icon" href="/icons/icon.svg?v=d5" type="image/svg+xml" />
-    <link rel="apple-touch-icon" href="/icons/apple-touch-icon-180.png?v=d5" />
+    <!-- Иконки P4 «Девять клеток» (PD-155; до этого D5 «Унос», PD-102). ?v= — версия кэша (pwa.config.ts ICON_VERSION): сначала PNG
+         (16 — сплошная «P», 32 — клетки) для Safari <= 18.7, затем SVG (клетки, 16-сетка). -->
+    <link rel="icon" href="/icons/favicon-16.png?v=p4" sizes="16x16" type="image/png" />
+    <link rel="icon" href="/icons/favicon-32.png?v=p4" sizes="32x32" type="image/png" />
+    <link rel="icon" href="/icons/icon.svg?v=p4" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon-180.png?v=p4" />
     <!-- Фон до загрузки CSS: без светлой вспышки в тёмной теме (значения = tokens.css --bg-grouped). -->
     <style>
       html {

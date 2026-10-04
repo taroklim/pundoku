@@ -138,12 +138,13 @@ describe("пустой год", () => {
     expect(openToday).toHaveBeenCalledTimes(1);
   });
 
-  it("знак D5 над строкой (PD-102): 56 px, малая оптика, декоративный, перед текстом; в непустом году знака нет", () => {
+  it("знак P4 над строкой (PD-102, PD-155): 56 px, клеточная оптика (9 клеток), декоративный, перед текстом; в непустом году знака нет", () => {
     render([], TODAY, TODAY);
     const empty = host.querySelector('[data-testid="year-empty"]')!;
     const mark = empty.querySelector<SVGSVGElement>("svg.year-empty-mark")!;
     expect(mark.getAttribute("width")).toBe("56");
     expect(mark.dataset.optics).toBe("small");
+    expect(mark.querySelectorAll("rect")).toHaveLength(9);
     expect(mark.getAttribute("aria-hidden")).toBe("true");
     expect(empty.firstElementChild).toBe(mark);
     expect(mark.nextElementSibling!.tagName).toBe("P");

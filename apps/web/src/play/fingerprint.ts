@@ -8,7 +8,7 @@
  * даёт Blob; `shareFingerprint` отдаёт файл системному листу (`navigator.share`), иначе скачивание.
  */
 import type { TimelapseFingerprint } from "@pundoku/engine";
-import { MARK_SMALL_CELL, MARK_SMALL_FIELD } from "../brand/markPaths";
+import { MARK_SMALL_PATH } from "../brand/markPaths";
 import {
   WORDMARK_BASELINE,
   WORDMARK_CELL,
@@ -125,13 +125,14 @@ function roundRectPath(ctx: CanvasRenderingContext2D, x: number, y: number, s: n
 
 const RADIUS = 6;
 
-/** Знак D5 в строке подписи (PD-102, §18.5д): 44 px (≈ высота прописных левой подписи), нейтральный --label-2. */
+/** Знак P4 «Девять клеток» в строке подписи (PD-102, §18.5д; PD-155): 44 px (≈ высота прописных левой подписи), нейтральный --label-2. */
 export const FP_MARK = 44;
 export const FP_MARK_GAP = 16;
 
 /**
- * Знак — малая геометрия (16-сетка: в ленте PNG ≈ 16 px на экране), нейтральным цветом, не чернилами: в отпечатке
- * чернила несут данные пути, и знак не должен выглядеть поставленной клеткой. Нижний край — на базовой линии подписи.
+ * Знак — клеточная 16-сетка (девять клеток 3×3, зазор 1; 44 px ≥ 24 — порог клеточной версии), нейтральным цветом, не
+ * чернилами: в отпечатке чернила несут данные пути, и знак не должен выглядеть поставленной клеткой. Нижний край
+ * (клетка-ножка, y = 16 сетки) — на базовой линии подписи.
  * Возвращает `false`, если `Path2D` недоступен (тогда макет подписи не меняется).
  */
 function drawBrandMark(ctx: CanvasRenderingContext2D): boolean {
@@ -140,8 +141,7 @@ function drawBrandMark(ctx: CanvasRenderingContext2D): boolean {
   ctx.translate(FP_PAD, FP_CAPTION_Y - FP_MARK);
   ctx.scale(FP_MARK / 16, FP_MARK / 16);
   ctx.fillStyle = FP_COLORS.label2;
-  ctx.fill(new Path2D(MARK_SMALL_FIELD));
-  ctx.fill(new Path2D(MARK_SMALL_CELL));
+  ctx.fill(new Path2D(MARK_SMALL_PATH));
   ctx.restore();
   return true;
 }

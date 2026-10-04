@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { MARK_SMALL_CELL, MARK_SMALL_FIELD } from "../brand/markPaths";
+import { MARK_SMALL_CELLS, MARK_SMALL_PATH } from "../brand/markPaths";
 import { WORDMARK_DOKU } from "../brand/wordmarkGeometry";
 import {
   drawFingerprint,
@@ -15,7 +15,7 @@ import {
   FP_WORDMARK_W,
 } from "./fingerprint";
 
-// Знак D5 в строке подписи PNG отпечатка (PD-102, §18.5д): рисуется малой геометрией, нейтральным цветом, сдвигает подпись.
+// Знак P4 «Девять клеток» в строке подписи PNG отпечатка (PD-102, §18.5д; PD-155): клеточная 16-сетка, нейтральным цветом, сдвигает подпись.
 class FakePath {
   constructor(readonly d: string) {}
 }
@@ -41,17 +41,19 @@ const layout = { width: FP_WIDTH, height: FP_HEIGHT, squares: [] };
 const caption = { left: "30 Sep", right: "easy · 4:10" };
 
 describe("PNG отпечатка: знак в подписи", () => {
-  it("знак: translate к левому краю на 44 px выше базовой линии, масштаб 44/16, пути малой геометрии, цвет label2", () => {
+  it("знак: translate к левому краю на 44 px выше базовой линии, масштаб 44/16, один путь из девяти клеток 3×3, цвет label2", () => {
     vi.stubGlobal("Path2D", FakePath);
     const { ctx, calls } = fakeCtx();
     drawFingerprint(ctx, layout, caption);
     expect(calls.find((c) => c[0] === "translate")!.slice(1, 3)).toEqual([FP_PAD, FP_CAPTION_Y - FP_MARK]);
     expect(calls.find((c) => c[0] === "scale")!.slice(1, 3)).toEqual([2.75, 2.75]);
     const fills = calls.filter((c) => c[0] === "fill" && c[1] instanceof FakePath).map((c) => [(c[1] as FakePath).d, c[2]]);
-    expect(fills).toEqual([
-      [MARK_SMALL_FIELD, FP_COLORS.label2],
-      [MARK_SMALL_CELL, FP_COLORS.label2],
-    ]);
+    expect(fills).toEqual([[MARK_SMALL_PATH, FP_COLORS.label2]]);
+    // девять клеток 3×3: подпутей 9, каждый — квадрат со стороной 3; чернил (FP_COLORS.ink) в знаке нет
+    expect(MARK_SMALL_PATH.match(/M/g)).toHaveLength(9);
+    expect(MARK_SMALL_PATH.match(/H\d+V\d+H\d+Z/g)).toHaveLength(9);
+    expect(MARK_SMALL_CELLS).toHaveLength(9);
+    expect(fills.some((f) => f[1] === FP_COLORS.ink)).toBe(false);
     expect(calls.some((c) => c[0] === "restore")).toBe(true);
   });
 
