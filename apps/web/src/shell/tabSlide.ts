@@ -1,5 +1,5 @@
 import type { RefObject } from "react";
-import { createContext, useContext, useLayoutEffect, useRef } from "react";
+import { createContext, useCallback, useContext, useLayoutEffect, useRef } from "react";
 import type { TabId } from "./tabs";
 import { TAB_IDS } from "./tabs";
 
@@ -14,7 +14,8 @@ import { TAB_IDS } from "./tabs";
  * Ввод не блокируется никогда. Только transform/opacity.
  *
  * Главный риск (md §6.2): transform или will-change на предке делает его containing block для `position: fixed` (шиты).
- * Поэтому will-change — только на время перехода, а по концу анимации — `cancel()` (не `commitStyles()`): на панелях не
+ * Поэтому will-change — только на время перехода (и прогрева неактивного экрана по касанию вкладки, PD-175: не дольше
+ * WARM_MS, только на скрытой inert-панели), а по концу анимации — `cancel()` (не `commitStyles()`): на панелях не
  * остаётся НИ inline transform, ни opacity.
  */
 export const SLIDE_MS = 300;
@@ -96,14 +97,67 @@ interface Engine {
   visible: Set<TabId>;
   running: Animation[];
   token: number;
+  /** Экран, заранее показанный за краем по касанию вкладки (`prewarm`), пока не пришёл тап; таймер его снятия. */
+  warm: TabId | null;
+  warmTimer: ReturnType<typeof setTimeout> | undefined;
 }
+
+/** Сколько держать экран прогретым, если за касанием так и не последовал тап (палец увели с вкладки). */
+export const WARM_MS = 1000;
+
+const clearPane = (el: HTMLElement): void => {
+  el.removeAttribute(SLIDE_ATTR);
+  el.style.willChange = "";
+  el.style.transform = "";
+  el.style.opacity = "";
+};
 
 /**
  * Переход между панелями стопки вкладок. `stack` — контейнер панелей (`[data-tab]`), `pill` — пилюля в таб-баре.
  * `covered` — поверх стопки открыт Settings/справка/архив (у них свой вход, M10): переход не играется.
  */
-export function useTabSlide(stack: RefObject<HTMLElement | null>, pill: RefObject<HTMLElement | null>, tab: TabId, covered: boolean): void {
-  const engine = useRef<Engine>({ tab, covered, visible: new Set([tab]), running: [], token: 0 });
+export function useTabSlide(
+  stack: RefObject<HTMLElement | null>,
+  pill: RefObject<HTMLElement | null>,
+  tab: TabId,
+  covered: boolean,
+): (to: TabId) => void {
+  const engine = useRef<Engine>({ tab, covered, visible: new Set([tab]), running: [], token: 0, warm: null, warmTimer: undefined });
+
+  const unwarm = useCallback(() => {
+    const s = engine.current;
+    clearTimeout(s.warmTimer);
+    s.warmTimer = undefined;
+    const id = s.warm;
+    s.warm = null;
+    if (id === null || s.visible.has(id)) return; // уже участвует в переходе — его уберёт settle
+    const el = stack.current?.querySelector<HTMLElement>(`[data-tab="${id}"]`);
+    if (el) clearPane(el);
+  }, [stack]);
+
+  // PD-175: прогрев по касанию вкладки (pointerdown, до тапа). Причина задержки слайда — скрытая панель
+  // (`visibility: hidden`) не нарисована: в кадре старта браузер растрирует её целиком, и анимация трогается, только
+  // когда растр готов (или теряет эти кадры). Касание опережает тап на время нажатия (на iPhone ~50–150 мс): ставим
+  // экран-цель видимым ЗА краем (в стартовое положение слайда) — к тапу он уже нарисован, а движение начинается сразу.
+  // Без тапа (палец увели) — снимаем через WARM_MS. inline transform живёт только пока экран за краем, в покое его нет.
+  const prewarm = useCallback(
+    (to: TabId) => {
+      const s = engine.current;
+      if (to === s.tab || s.covered || s.visible.has(to) || s.warm === to) return;
+      const host = stack.current;
+      const el = host?.querySelector<HTMLElement>(`[data-tab="${to}"]`);
+      unwarm();
+      if (!host || !el) return; // первый визит: панели ещё нет (смонтируется тапом)
+      const p = offPos(indexOf(to), indexOf(s.tab), host.clientWidth, motionReduced());
+      el.style.transform = `translateX(${p.x}px)`;
+      el.style.opacity = String(p.o);
+      el.style.willChange = "transform, opacity";
+      el.setAttribute(SLIDE_ATTR, "");
+      s.warm = to;
+      s.warmTimer = setTimeout(unwarm, WARM_MS);
+    },
+    [stack, unwarm],
+  );
 
   // Пилюля: первая раскладка до первой отрисовки и пересчёт при изменении размеров таб-бара (поворот, Dynamic Type).
   useLayoutEffect(() => {
@@ -127,6 +181,16 @@ export function useTabSlide(stack: RefObject<HTMLElement | null>, pill: RefObjec
     const host = stack.current;
     if (!host) return;
     const paneOf = (id: TabId) => host.querySelector<HTMLElement>(`[data-tab="${id}"]`);
+    // Прогретый касанием экран: если тап пришёл на него — он стартует из того же положения за краем (анимация fill:both
+    // перекрывает inline-стиль, settle его снимет); любой другой исход — снять прогрев сейчас.
+    const warmed = s.warm;
+    clearTimeout(s.warmTimer);
+    s.warm = null;
+    s.warmTimer = undefined;
+    if (warmed !== null && (warmed !== tab || from === tab || covered) && !s.visible.has(warmed)) {
+      const el = paneOf(warmed);
+      if (el) clearPane(el);
+    }
 
     const cancelAll = () => {
       for (const a of s.running) a.cancel();
@@ -137,9 +201,7 @@ export function useTabSlide(stack: RefObject<HTMLElement | null>, pill: RefObjec
       cancelAll(); // fill:both снимается — на панелях не остаётся transform/opacity (md §6.2)
       for (const id of TAB_IDS) {
         const el = paneOf(id);
-        if (!el) continue;
-        el.removeAttribute(SLIDE_ATTR);
-        el.style.willChange = "";
+        if (el && id !== s.warm) clearPane(el);
       }
       s.visible = new Set([s.tab]);
     };
@@ -229,16 +291,15 @@ export function useTabSlide(stack: RefObject<HTMLElement | null>, pill: RefObjec
         anims.push(pillEl.animate([{ transform: `translateX(${px0}px)` }, { transform: `translateX(${pillX(bar, tab)}px)` }], { duration, easing }));
       }
     }
-    // 3. Риск первого кадра (md §7): скрытая панель разложена, но не нарисована — её отрисовка съедала бы первый кадр движения.
-    // Экраны встают в стартовое положение сразу (анимация на паузе, fill both), а движение начинается кадром позже: отрисовка
-    // приходится на кадр ДО хода, сам ход идёт ровно. 16 мс невидимы — цвет вкладки уже сменился в момент тапа.
-    if (!current.has(tab) && anims.length > 0 && typeof requestAnimationFrame === "function") {
-      for (const a of anims) a.pause();
-      requestAnimationFrame(() => {
-        if (my !== s.token) return;
-        for (const a of anims) a.play();
-      });
-    }
+    // 3. Старт — сразу, без паузы на кадр (PD-175). Раньше анимации ставились на паузу и запускались play() из rAF:
+    // play() снова делает анимацию pending, и её startTime разрешается ещё кадром-двумя позже — итого 3–6 кадров (50–110 мс)
+    // от тапа до движения. Pending-старт браузера сам разрешает startTime по кадру, в котором анимация впервые отрисована
+    // (у композитных анимаций — когда слой готов), поэтому первый кадр не теряется и рывка нет. Цена отрисовки скрытой
+    // панели снимается прогревом по касанию (`prewarm`).
     run(anims, my);
   }, [tab, covered, stack, pill]);
+
+  useLayoutEffect(() => () => clearTimeout(engine.current.warmTimer), []);
+
+  return prewarm;
 }

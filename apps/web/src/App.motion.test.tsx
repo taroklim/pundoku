@@ -45,7 +45,7 @@ vi.mock("./recovery/SettingsScreen", () => ({
 }));
 
 import { App } from "./App";
-import { FADE_MS, SLIDE_EASE, SLIDE_MS, translateXOf } from "./shell/tabSlide";
+import { FADE_MS, SLIDE_EASE, SLIDE_MS, translateXOf, WARM_MS } from "./shell/tabSlide";
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
@@ -181,15 +181,15 @@ describe("PD-161: слайд «Лента»", () => {
     expect(x(a.find((v) => v.el === pane("year"))!.frames[1]!)).toBe(390);
   });
 
-  it("риск первого кадра: показ скрытой панели — анимации стоят в стартовом положении и трогаются следующим кадром", async () => {
+  it("PD-175: движение стартует сразу — без паузы на кадр и play() из rAF (pending-старт браузера)", () => {
     act(() => root.render(<App />));
     act(() => tab(1).click());
     const a = anims.slice();
     expect(a.length).toBeGreaterThan(0);
-    for (const v of a) expect(v.pause).toHaveBeenCalled();
-    for (const v of a) expect(v.play).not.toHaveBeenCalled();
-    await act(async () => void (await new Promise((r) => requestAnimationFrame(() => r(null)))));
-    for (const v of a) expect(v.play).toHaveBeenCalled();
+    for (const v of a) {
+      expect(v.pause).not.toHaveBeenCalled();
+      expect(v.play).not.toHaveBeenCalled();
+    }
   });
 
   it("после конца перехода на панелях нет ни transform, ни will-change, ни data-slide: анимации отменены (cancel, не commitStyles)", async () => {
@@ -245,6 +245,77 @@ describe("PD-161: слайд «Лента»", () => {
     act(() => tab(2).click());
     const pill = anims.find((v) => (v.el as HTMLElement).classList.contains("tab-pill"));
     expect(pill?.opts).toMatchObject({ duration: SLIDE_MS, easing: SLIDE_EASE });
+  });
+});
+
+describe("PD-175: прогрев экрана по касанию вкладки", () => {
+  const touch = (i: number) => act(() => void tab(i).dispatchEvent(new Event("pointerdown", { bubbles: true })));
+  /** Today активна, Play и Year уже посещены (смонтированы), переходы закончены; ширина стопки 390. */
+  const ready = async () => {
+    act(() => root.render(<App />));
+    Object.defineProperty(host.querySelector(".stack")!, "clientWidth", { value: 390, configurable: true });
+    act(() => tab(1).click());
+    act(() => tab(2).click());
+    act(() => tab(0).click());
+    await finishAll();
+    anims = [];
+  };
+  afterEach(() => void vi.useRealTimers());
+
+  it("касание посещённой вкладки: экран-цель видим за краем (стартовое положение слайда), без анимаций; без тапа — снят через WARM_MS", async () => {
+    await ready();
+    vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] });
+    touch(1);
+    const play = pane("play")!;
+    expect(anims).toHaveLength(0);
+    expect(play.hasAttribute("data-slide")).toBe(true);
+    expect(translateXOf(play.style.transform)).toBe(390);
+    expect(play.style.willChange).toContain("transform");
+    expect(play.hasAttribute("inert")).toBe(true); // по-прежнему неактивна
+    act(() => void vi.advanceTimersByTime(WARM_MS));
+    expect(play.hasAttribute("data-slide")).toBe(false);
+    expect(play.style.transform).toBe("");
+    expect(play.style.willChange).toBe("");
+  });
+
+  it("касание + тап: слайд стартует с того же места за краем; после конца на панелях нет inline-стилей", async () => {
+    await ready();
+    touch(2);
+    act(() => tab(2).click());
+    const year = paneAnims().find((v) => v.el === pane("year"))!;
+    expect(x(year.frames[0]!)).toBe(390);
+    await finishAll();
+    for (const id of ["today", "play", "year"]) {
+      const el = pane(id)!;
+      expect(el.hasAttribute("data-slide")).toBe(false);
+      expect(el.style.transform).toBe("");
+      expect(el.style.opacity).toBe("");
+      expect(el.style.willChange).toBe("");
+    }
+  });
+
+  it("тап ушёл на другую вкладку — прогрев снимается сразу; касание активной или ещё не посещённой вкладки ничего не делает", async () => {
+    act(() => root.render(<App />));
+    touch(0); // активная
+    touch(1); // Play ещё не смонтирована
+    expect(host.querySelectorAll("[data-slide]")).toHaveLength(0);
+    await ready();
+    touch(1);
+    expect(pane("play")!.hasAttribute("data-slide")).toBe(true);
+    act(() => tab(2).click()); // клавиатура/другой палец — на Year
+    const play = pane("play")!;
+    expect(play.hasAttribute("data-slide")).toBe(false);
+    expect(play.style.transform).toBe("");
+    expect(paneAnims().map((v) => (v.el as HTMLElement).dataset.tab).sort()).toEqual(["today", "year"]);
+  });
+
+  it("Reduce Motion: прогретый экран прозрачен и на месте (кроссфейд)", async () => {
+    document.documentElement.style.setProperty("--mo", "0");
+    await ready();
+    touch(1);
+    const play = pane("play")!;
+    expect(translateXOf(play.style.transform)).toBe(0);
+    expect(play.style.opacity).toBe("0");
   });
 });
 

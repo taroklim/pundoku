@@ -66,7 +66,7 @@ export function App() {
   if (!visited.has(tab)) setVisited(new Set([...visited, tab]));
   const stackRef = useRef<HTMLElement>(null);
   const pillRef = useRef<HTMLSpanElement>(null);
-  useTabSlide(stackRef, pillRef, tab, overlay);
+  const prewarm = useTabSlide(stackRef, pillRef, tab, overlay);
 
   // Layout-эффект, не обычный: `lang` задаёт переносы (`hyphens: auto`) и поэтому раскладку текста. Обычный эффект родителя идёт
   // ПОСЛЕ эффектов детей — справка успевала прокрутиться к блоку по раскладке с lang="en", а потом текст перекладывался (WebKit),
@@ -152,7 +152,7 @@ export function App() {
           </div>
         </div>
       )}
-      <TabBar active={tab} onSelect={setTab} pillRef={pillRef} />
+      <TabBar active={tab} onSelect={setTab} onPrewarm={prewarm} pillRef={pillRef} />
     </div>
   );
 }
