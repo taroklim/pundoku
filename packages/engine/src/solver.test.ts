@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
-import { countSolutions, emptyGrid, formatGrid, hasUniqueSolution, solve } from "./index.js";
+import { conflicts, countSolutions, emptyGrid, formatGrid, generate, hasUniqueSolution, solve } from "./index.js";
+import { toBytes } from "./grid.js";
+import { forEachSolutionBytes } from "./solver.js";
 
 /** Project Euler #96, сетка 01 — общеизвестный публичный пример. */
 const PE96_1 = "003020600900305001001806400008102900700000008006708200002609500800203009005010300";
@@ -55,5 +57,39 @@ describe("countSolutions", () => {
     const t0 = Date.now();
     for (let i = 0; i < 100; i++) expect(countSolutions(PE96_1)).toBe(1);
     expect(Date.now() - t0).toBeLessThan(1000);
+  });
+});
+
+describe("forEachSolutionBytes (internal, PD-165)", () => {
+  it("enumerates exactly the solutions countSolutions counts; all distinct, valid and consistent with the givens", () => {
+    const p = generate({ difficulty: "medium", seed: "enum" });
+    // Снимаем 4 подсказки — решений становится много, но немного.
+    const sparse = p.mission.split("");
+    let removed = 0;
+    for (let i = 0; i < 81 && removed < 4; i++) {
+      if (sparse[i] === "0") continue;
+      sparse[i] = "0";
+      removed++;
+    }
+    const m = sparse.join("");
+    const total = countSolutions(m, 100_000);
+    expect(total).toBeGreaterThan(1);
+    const seen = new Set<string>();
+    const n = forEachSolutionBytes(toBytes(m), 100_000, (s) => {
+      const str = Array.from(s).join("");
+      expect(conflicts(str)).toEqual([]);
+      for (let i = 0; i < 81; i++) if (m[i] !== "0") expect(str[i]).toBe(m[i]);
+      seen.add(str);
+    });
+    expect(n).toBe(total);
+    expect(seen.size).toBe(total);
+    // limit обрезает перебор
+    let calls = 0;
+    expect(forEachSolutionBytes(toBytes(m), 2, () => calls++)).toBe(2);
+    expect(calls).toBe(2);
+    // конфликт в данных — 0 решений, колбэк не зовётся
+    const bad = "11" + "0".repeat(79);
+    expect(forEachSolutionBytes(toBytes(bad), 10, () => calls++)).toBe(0);
+    expect(calls).toBe(2);
   });
 });
