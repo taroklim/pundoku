@@ -245,6 +245,7 @@ Gates: build → typecheck, lint, тесты web/engine/api (api с TEST_DATABAS
 - PD-158: выбор варианта слайда доверен команде — берём рекомендованный дизайнером вариант, сразу реализация (developer Opus, обязательный Reduce Motion-фолбэк), затем QA. Копия на Desktop и GIF не нужны, кадров достаточно для QA.
 - Скорость Today: отдельный тикет на разбор бандла НЕ заводим, тема закрыта.
 - Раскладка режимов релиза 2 на Play (PD-163): выбран **C — список** (строка на режим с описанием; тап → незавершённая игра режима или шит сложности). Питомец — переключатель в Настройках, выкл по умолчанию (решение команды, владелец не возражал). Неготовые режимы в списке не показываем (без «скоро»).
+- Фонарь (релиз 2): берём трактовку команды — свои цифры видны только в строке, столбце и блоке выбранной клетки, остальные приглушены, исходные подсказки видны всегда, таймера нет. Последний в очереди (Лжец → Питомец → Глифы → Мелодия → Фонарь), не заблокирован. Записано в docs/release2-modes-plan.md (pd-r2-engine).
 - Две «P» подряд (знак P4 перед клеточным «Pun» в About и штампе PNG) — оставляем как есть.
 
 ## Ожидает решения владельца
@@ -424,11 +425,13 @@ Gates: build → typecheck, lint, тесты web/engine/api (api с TEST_DATABAS
 | PD-162 | QA PD-161: Chromium+WebKit, прерывания, Reduce Motion, шиты, сохранение партии/прокрутки, 320–430, a11y, en/uk/ru, light/dark | qa-tester | P2 | pending | PD-161 |
 | PD-163 | Релиз 2: макет размещения режимов на Play (Ink, Лжец, Мелодия, Питомец, Фонарь/Глифы упрощённо): вариант владельца (кнопка на режим → незавершённая игра или попап сложности с описанием) + 1–2 своих, рекомендация; design/pd163-modes-layout.html/.md + pd163-shots.mjs | designer | P1 | completed (A плитки, B Классика+«Другие», C список — рекомендация C) | — |
 | PD-164 | Рендер кадров PD-163 (Chromium/WebKit) + копия HTML+PNG на ~/Desktop/Pundoku-iPhone/pd-modes-layout/ — показ владельцу на выбор | product-manager | P1 | completed (166 кадров wk/cr; check(): только поле <150 px на экране партии 320+AX3+ru во всех вариантах — свойство текущего Play, не раскладки; в макете солнце вместо шестерёнки → заменено на GEAR_PATH приложения; 17 PNG+HTML+md+ПРОЧТИ.txt на Desktop) | PD-163 |
-| PD-165 | Релиз 2: план механик режимов (порядок, engine-зависимости) docs/release2-modes-plan.md + engine первого режима (генератор/валидатор Лжеца в packages/engine); ветка pd-r2-engine | developer | P1 | in_progress | — |
-| PD-166 | QA PD-165 (engine Лжеца: честность, единственность, мутации, gates) | qa-tester | P1 | pending | PD-165 |
+| PD-165 | Релиз 2: план механик режимов (порядок, engine-зависимости) docs/release2-modes-plan.md + engine первого режима (генератор/валидатор Лжеца в packages/engine); ветка pd-r2-engine | developer | P1 | completed (dev; pd-r2-engine @ 56ae910; план docs/release2-modes-plan.md: Лжец → Питомец → Глифы → Мелодия → Фонарь; engine liar.ts, engine 289 зелёные; Фонарь не начинать — вопрос владельцу у Coordinator) | — |
+| PD-166 | QA PD-165 (engine Лжеца: честность, единственность, мутации, gates) | qa-tester | P1 | in_progress | PD-165 |
 | PD-167 | UI раскладки C (design/pd163-modes-layout.html, вариант C): хаб Play — «Продолжить» (день) + список «Режимы»; реестр режимов + слот незавершённой игры на режим + шит режима (сложность, описание) расширяемые; показываются только готовые режимы (сейчас Классика, Чернила); Ink переезжает из строки «Режим»/чипа в список; без App.tsx (конфликт с PD-161); ветка pd-167 | developer | P1 | in_progress | — |
 | PD-168 | QA PD-167 | qa-tester | P1 | pending | PD-167 |
 | PD-169 | Проверка на текущем main: экран партии 320 + AX3 + ru — поле сжимается до ~120 px? (находка check() PD-163); если подтвердится — тикет на фикс | qa-tester | P2 | completed (НЕ подтверждён на main b9b685c: 108 прогонов, минимум поля 169 px при 320+AX3; ~120 px — свойство макета pd163; артефакты /tmp/pundoku-qa/qa-pd169-out/) | — |
+| PD-170 | Базовые изображения релиза 2 на согласование владельцу ДО реализации: рисунок Питомца-кляксы (только карточка/Year) и набор из 9 Глифов — 2–3 варианта каждого; design/pd170-pet-glyphs.html/.md + shots; копия на ~/Desktop/Pundoku-iPhone/pd-pet-glyphs/ | designer | P1 | in_progress | — |
+| PD-171 | Web-часть Лжеца (UI партии, обвинение, карточка/Year, снапшот liar) на реестре режимов PD-167 + engine PD-165 | developer | P1 | pending | PD-166, PD-167 |
 | PD-159 | Low-пакет из QA PD-151 (без решений владельца): (2) landscape (браузерный Safari, поворот в PWA запрещён PD-132) — Ink/панель не перекрывают доску, доска Today не сжимается до 113 pt (минимальная правка, без двухколонника и без заглушки); (3) AX3 архив — сложность «M...» и скрытый источник: перенос/вертикальная раскладка. Ветка pd-low-2 в worktree | developer | P3 | completed (dev; pd-low-2 @ 77275d7, CSS play/today; gates зелёные со 2-го прогона) | — |
 | PD-160 | QA PD-159: живой webkit+chromium, landscape 844×390/932×430, AX3 en/uk/ru, регресс Today/Play/архив, gates | qa-tester | P3 | in_progress | PD-159 |
 | PD-20 | QA PD-14 (pd-14 @ 0026b2a): PASS с оговорками, блокеров и Medium нет; 4 Low + решение по слиянию → PD-31 | qa-tester | P1 | completed | PD-14 |
@@ -525,7 +528,8 @@ Gates: build → typecheck, lint, тесты web/engine/api (api с `TEST_DATABA
 | PM-Pundoku-11 | product-manager | working | PD-158 | 2026-10-04 |
 | Dev-Pundoku-slide | developer | working | PD-161 | 2026-10-04 |
 | QA-Pundoku-low2 | qa-tester | working | PD-160 | 2026-10-04 |
-| Dev-Pundoku-r2engine | developer | working | PD-165 | 2026-10-04 |
+| QA-Pundoku-liar | qa-tester | working | PD-166 | 2026-10-04 |
+| Des-Pundoku-petglyphs | designer | working | PD-170 | 2026-10-04 |
 | Dev-Pundoku-modesUI | developer | working | PD-167 | 2026-10-04 |
 
 ## Чек-пойнт 2026-10-01 (конец сессии PM-Pundoku-7)
