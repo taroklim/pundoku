@@ -9,6 +9,18 @@
  */
 import type { TimelapseFingerprint } from "@pundoku/engine";
 import { MARK_SMALL_CELL, MARK_SMALL_FIELD } from "../brand/markPaths";
+import {
+  WORDMARK_BASELINE,
+  WORDMARK_CELL,
+  WORDMARK_CELLS,
+  WORDMARK_DOKU,
+  WORDMARK_RATIO,
+  WORDMARK_RX,
+  WORDMARK_SHIFT_X,
+  WORDMARK_SHIFT_Y,
+  WORDMARK_STROKE,
+  WORDMARK_VIEW_H,
+} from "../brand/wordmarkGeometry";
 import { HEAT_MAX, HEAT_MIN } from "./heat";
 import { dwellScales, rhythmScale } from "./timelapseModel";
 
@@ -81,7 +93,7 @@ export function fingerprintLayout(fp: TimelapseFingerprint, mission: string): Fp
 }
 
 export interface FpCaption {
-  /** «Pundoku» — слева. */
+  /** «Pundoku» — слева; рисуется набранным текстом, только если нет `Path2D` (иначе слева вордмарк). */
   readonly left: string;
   /** «30 Sep 2026 · 8:14 · 51 moves · clean» — справа. */
   readonly right: string;
@@ -134,6 +146,43 @@ function drawBrandMark(ctx: CanvasRenderingContext2D): boolean {
   return true;
 }
 
+/** Вордмарк в подписи (PD-152, PD-111 §4 · 2а): высота и ширина по пропорции 614:116. */
+export const FP_WORDMARK_H = 35;
+export const FP_WORDMARK_W = Math.round(FP_WORDMARK_H * WORDMARK_RATIO);
+
+/**
+ * Вордмарк «Pundoku» в подписи PNG: «Pun» — 23 клетки (`roundRect` + `fill`), «doku» — рисованные буквы (`Path2D` +
+ * `stroke`, штрих 22, `butt`/`round`). Одноцветный `label`: чернила в отпечатке означают путь решения, «Pun» чернилами
+ * прочитался бы как ещё один поставленный квадрат — выделение «Pun» здесь держит форма клеток, а не цвет. Базовая
+ * линия — на `FP_CAPTION_Y`, левый край — `x`. Нужен `Path2D`; возвращает `false`, если его нет (подпись набирается).
+ */
+function drawWordmark(ctx: CanvasRenderingContext2D, x: number): boolean {
+  if (typeof Path2D === "undefined") return false;
+  const k = FP_WORDMARK_H / WORDMARK_VIEW_H;
+  ctx.save();
+  // Внутренние координаты букв -> холст: масштаб k, базовая линия (WORDMARK_BASELINE во viewBox) на FP_CAPTION_Y.
+  ctx.translate(x, FP_CAPTION_Y - WORDMARK_BASELINE * k);
+  ctx.scale(k, k);
+  ctx.translate(WORDMARK_SHIFT_X, WORDMARK_SHIFT_Y);
+  ctx.fillStyle = FP_COLORS.label;
+  for (const c of WORDMARK_CELLS) {
+    roundRectPath(ctx, c.x, c.y, WORDMARK_CELL, WORDMARK_RX);
+    ctx.fill();
+  }
+  ctx.strokeStyle = FP_COLORS.label;
+  ctx.lineWidth = WORDMARK_STROKE;
+  ctx.lineCap = "butt";
+  ctx.lineJoin = "round";
+  for (const l of WORDMARK_DOKU) {
+    ctx.save();
+    ctx.translate(l.x, 0);
+    ctx.stroke(new Path2D(l.d));
+    ctx.restore();
+  }
+  ctx.restore();
+  return true;
+}
+
 export function drawFingerprint(ctx: CanvasRenderingContext2D, layout: FpLayout, caption: FpCaption): void {
   ctx.fillStyle = FP_COLORS.paper;
   ctx.fillRect(0, 0, layout.width, layout.height);
@@ -154,14 +203,20 @@ export function drawFingerprint(ctx: CanvasRenderingContext2D, layout: FpLayout,
     ctx.globalAlpha = 1;
   }
   ctx.textBaseline = "alphabetic";
-  ctx.fillStyle = FP_COLORS.label;
-  ctx.font = `600 44px ${SERIF}`;
   ctx.textAlign = "left";
   const markDrawn = drawBrandMark(ctx);
   // Знак 44 px + 16 px отступ сдвигают левую подпись (PD-102, §18.5д); без Path2D всё как раньше.
   const shift = markDrawn ? FP_MARK + FP_MARK_GAP : 0;
-  const leftW = ctx.measureText(caption.left).width;
-  ctx.fillText(caption.left, FP_PAD + shift, FP_CAPTION_Y);
+  let leftW: number;
+  if (drawWordmark(ctx, FP_PAD + shift)) {
+    leftW = FP_WORDMARK_W;
+  } else {
+    // Нет Path2D (старый движок): подпись набранным текстом, как до PD-152.
+    ctx.fillStyle = FP_COLORS.label;
+    ctx.font = `600 44px ${SERIF}`;
+    leftW = ctx.measureText(caption.left).width;
+    ctx.fillText(caption.left, FP_PAD + shift, FP_CAPTION_Y);
+  }
   // Правая часть: по возможности 32 px; не влезает — уменьшаем, но не ниже 18 (PD-139: подпись с подсказками длиннее).
   const room = FP_GRID - shift - leftW - 32;
   let px = 32;

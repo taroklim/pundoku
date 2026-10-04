@@ -693,6 +693,10 @@ button.settings-row:active {
   .settings-about-word path {
     stroke: CanvasText;
   }
+  /* Клетки «Pun» — <rect> с fill (PD-152): правило про path их не покрывает, без этой строки «Pun» пропадёт. */
+  .settings-about-word rect {
+    fill: CanvasText;
+  }
   .settings-card,
   .st-agrp {
     border: 1px solid CanvasText;

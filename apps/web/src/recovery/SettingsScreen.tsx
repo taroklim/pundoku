@@ -640,18 +640,17 @@ export function SettingsScreen({ store, onBack, origin = "today", onOpenHelp }: 
         </section>
       )}
 
-      {/* About (PD-102, §18.5в): знак + вордмарк + версия — там, где о приложении спрашивают. Всё статично и декоративно. */}
+      {/* About (PD-102, §18.5в): знак + вордмарк + версия — там, где о приложении спрашивают. Статично; название
+          читает сам вордмарк (role="img", «Pundoku»), экранная строка — только версия (PD-152). */}
       <section className="settings-sec" aria-labelledby="settings-h-about">
         <h2 className="settings-head" id="settings-h-about">
           {t("settings.about.head")}
         </h2>
         <div className="settings-card settings-about" data-testid="settings-about">
           <Mark size={60} className="settings-about-mark" />
-          <Wordmark height={28} className="settings-about-word" />
+          <Wordmark height={28} title={t("settings.about.name")} className="settings-about-word" />
           <p className="settings-about-ver" data-testid="about-version">
-            <span className="sr-only">
-              {t("settings.about.name")}, {t("settings.about.version", { version: __APP_VERSION__ })}
-            </span>
+            <span className="sr-only">{t("settings.about.version", { version: __APP_VERSION__ })}</span>
             <span aria-hidden="true">v{__APP_VERSION__}</span>
           </p>
         </div>
