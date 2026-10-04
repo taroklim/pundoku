@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 /**
- * Пакет A, экран Play: «New puzzle» вместо select сложности (PD-116b; PD-144: одна кнопка в меню «⋯», без подтверждения,
- * партия встаёт слотом хаба; шит «Отбросить» — только на «Начать» при своей сетке), «Grid full» без счёта неверных (PD-117a),
+ * Пакет A, экран Play: «New puzzle» вместо select сложности (PD-116b; PD-144: одна кнопка в меню «⋯»; PD-167: она открывает
+ * шит режима партии с предупреждением об отбрасывании), «Grid full» без счёта неверных (PD-117a),
  * тихие отклики на отказы (PD-117b), счётчики по поставленным цифрам на строке статуса и паде (PD-118),
  * «Watch your solve» после партии Play (PD-116c), состояние восстановления (PD-116a).
  */
@@ -67,6 +67,7 @@ beforeEach(async () => {
   vi.stubGlobal("cancelAnimationFrame", (id: number) => window.clearTimeout(id));
   window.matchMedia = ((query: string) => ({ matches: false, media: query, addEventListener() {}, removeEventListener() {} })) as never;
   inner.snap = { ...base };
+  (playStore as unknown as { saved: Map<string, unknown> }).saved.clear();
   host = document.createElement("div");
   host.id = "app";
   document.body.append(host);
@@ -81,7 +82,6 @@ afterEach(() => {
 
 const openMenu = () => tap(q('[data-testid="more-button"]')!);
 const dialog = () => document.querySelector<HTMLElement>('[role="dialog"]');
-const inDialog = (label: string) => [...dialog()!.querySelectorAll("button")].find((b) => b.textContent === label)!;
 
 describe("PD-116b / PD-144: «New puzzle» — один пункт меню «⋯», нативного select нет", () => {
   it("в шапке партии нет select и отдельной кнопки «New puzzle»; «⋯» — кнопка меню с именем «More»", () => {
@@ -95,7 +95,7 @@ describe("PD-116b / PD-144: «New puzzle» — один пункт меню «�
     expect(more.getAttribute("aria-expanded")).toBe("false");
   });
 
-  it("пункт меню «New puzzle» ведёт на хаб БЕЗ подтверждения, даже с ходами; партия встаёт слотом «Продолжить»", () => {
+  it("PD-167: пункт «New puzzle» открывает шит ТЕКУЩЕГО режима поверх партии с предупреждением; «Cancel» и Esc — партия цела", () => {
     const play = enterDigit(fresh(), WRONG_CELL, 4, 100);
     playing(play);
     render();
@@ -104,53 +104,50 @@ describe("PD-116b / PD-144: «New puzzle» — один пункт меню «�
     const item = document.querySelector<HTMLElement>('[data-testid="menu-new"]')!;
     expect(item.textContent).toBe("New puzzle");
     tap(item);
-    expect(dialog()).toBeNull();
-    expect(playStore.getSnapshot().hub).toBe(true);
-    expect(playStore.getSnapshot().play).toBe(play); // не выброшена
-    expect(q('[data-testid="hub-scroll"]')).not.toBeNull();
-    expect(q('[data-testid="continue-own"]')).not.toBeNull();
-    expect(q('[data-testid="more-button"]')).toBeNull(); // на хабе «⋯» нет
-  });
-
-  it("«Начать» при своей сетке в слоте — шит «Discard this puzzle?»; «Keep playing» и Esc закрывают его, слот цел", () => {
-    const play = enterDigit(fresh(), WRONG_CELL, 4, 100);
-    playing(play);
-    render();
-    openMenu();
-    tap(document.querySelector('[data-testid="menu-new"]')!);
-    tap(q('[data-testid="setup-start"]')!);
-    expect(dialog()).not.toBeNull();
-    expect(dialog()!.textContent).toContain("Discard this puzzle?");
-    expect([...dialog()!.querySelectorAll("button")].map((b) => b.textContent)).toEqual(["Discard", "Keep playing"]);
-    tap(inDialog("Keep playing"));
+    const sheet = document.querySelector<HTMLElement>('[data-testid="mode-sheet"]')!;
+    expect(sheet.getAttribute("data-mode")).toBe("classic");
+    expect(sheet.querySelector('[data-testid="discard-note"]')!.textContent).toMatch(/^Your unfinished puzzle \(Medium · 50 cells left · \d+:\d\d\) will be discarded\.$/);
+    expect(sheet.querySelector('[data-testid="sheet-start"]')!.textContent).toBe("Start new");
+    expect(playStore.getSnapshot().hub).toBe(false); // под шитом — партия, не хаб
+    tap(sheet.querySelector('[data-testid="sheet-cancel"]')!);
     expect(dialog()).toBeNull();
     expect(playStore.getSnapshot().play).toBe(play);
+    expect(playStore.getSnapshot().hub).toBe(false);
 
-    tap(q('[data-testid="setup-start"]')!);
-    expect(dialog()).not.toBeNull();
+    openMenu();
+    tap(document.querySelector('[data-testid="menu-new"]')!);
     act(() => void document.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true })));
     expect(dialog()).toBeNull();
     expect(playStore.getSnapshot().play).toBe(play);
-    expect(playStore.getSnapshot().hub).toBe(true);
   });
 
-  it("«Discard» — прежняя партия отброшена, запущена новая; без своей сетки «Начать» не спрашивает ничего", () => {
+  it("«Start new» — партия режима отброшена, запущена новая с выбранной в шите сложностью", () => {
     vi.stubGlobal("Worker", class { onmessage = null; onerror = null; postMessage() {} terminate() {} });
-    playing(enterDigit(fresh(), WRONG_CELL, 4, 100), WRONG_CELL, { hub: true });
+    playing(enterDigit(fresh(), WRONG_CELL, 4, 100));
     render();
-    tap(q('[data-testid="setup-start"]')!);
-    tap(inDialog("Discard"));
+    openMenu();
+    tap(document.querySelector('[data-testid="menu-new"]')!);
+    tap(document.querySelector('[data-testid="difficulty-expert"]')!);
+    tap(document.querySelector('[data-testid="sheet-start"]')!);
     expect(dialog()).toBeNull();
-    expect(playStore.getSnapshot().play).toBeNull();
-    expect(playStore.getSnapshot().hub).toBe(false);
-    expect(playStore.getSnapshot().phase).toBe("loading");
+    expect(playStore.getSnapshot()).toMatchObject({ play: null, hub: false, phase: "loading", mode: "classic", difficulty: "expert" });
+    expect(playStore.slots().classic).toBeUndefined();
+  });
 
-    // нет своей сетки: «Начать» сразу запускает
-    setSnap({ hub: true, phase: "loading", play: null });
+  it("Ink: «New puzzle» → шит Чернил; «Start new» → правило PD-74 ПОСЛЕ шита (не поверх); «Play in ink» запускает чернильную", () => {
+    vi.stubGlobal("Worker", class { onmessage = null; onerror = null; postMessage() {} terminate() {} });
+    playing(enterDigit(setInkMode(fresh(), true), WRONG_CELL, 4, 100), WRONG_CELL, { mode: "ink" });
     render();
-    tap(q('[data-testid="setup-start"]')!);
-    expect(dialog()).toBeNull();
-    expect(playStore.getSnapshot().hub).toBe(false);
+    openMenu();
+    tap(document.querySelector('[data-testid="menu-new"]')!);
+    expect(document.querySelector('[data-testid="mode-sheet"]')!.getAttribute("data-mode")).toBe("ink");
+    tap(document.querySelector('[data-testid="sheet-start"]')!);
+    expect(document.querySelector('[data-testid="mode-sheet"]')).toBeNull();
+    expect(document.querySelector('[data-testid="ink-sheet"]')).not.toBeNull();
+    expect(playStore.getSnapshot().play).not.toBeNull(); // до «Play in ink» ничего не отброшено
+    tap(document.querySelector('[data-testid="ink-rule-start"]')!);
+    expect(document.querySelector('[data-testid="ink-sheet"]')).toBeNull();
+    expect(playStore.getSnapshot()).toMatchObject({ play: null, mode: "ink", phase: "loading" });
   });
 
   it("цифра с клавиатуры при открытом меню не попадает в клетку", () => {
@@ -162,26 +159,29 @@ describe("PD-116b / PD-144: «New puzzle» — один пункт меню «�
     expect(playStore.getSnapshot().play!.values[3]).toBe(0);
   });
 
-  it("после решения: на карточке одна «New puzzle» (вторичная), шапка без «⋯»; тап ведёт на хаб без подтверждения", () => {
+  it("после решения: на карточке одна «New puzzle» (вторичная), шапка без «⋯»; тап — шит режима БЕЗ предупреждения, Cancel — карточка", () => {
     playing(solved(), null, { phase: "solved" });
     render();
     wait(300);
     expect(q('[data-testid="more-button"]')).toBeNull();
     expect(host.querySelectorAll('[data-testid="new-puzzle"]')).toHaveLength(1);
     tap(q('[data-testid="new-puzzle"]')!);
+    expect(document.querySelector('[data-testid="mode-sheet"]')).not.toBeNull();
+    expect(document.querySelector('[data-testid="discard-note"]')).toBeNull(); // решённая — не незавершённая
+    expect(document.querySelector('[data-testid="sheet-start"]')!.textContent).toBe("Start");
+    expect(playStore.hasSlot()).toBe(false);
+    tap(document.querySelector('[data-testid="sheet-cancel"]')!);
     expect(dialog()).toBeNull();
-    expect(playStore.getSnapshot().hub).toBe(true);
-    expect(playStore.hasSlot()).toBe(false); // решённая партия слотом не становится
-    expect(q('[data-testid="hub-scroll"]')).not.toBeNull();
+    expect(q('[data-testid="new-puzzle"]')).not.toBeNull();
   });
 
-  it("восстановление: пока партия читается, нет ни хаба, ни «⋯»", () => {
+  it("восстановление: пока слоты читаются, нет ни хаба, ни «⋯»", () => {
     setSnap({ hub: true, restoring: true, phase: "loading", play: null });
     render();
     expect(q('[data-testid="hub-scroll"]')).toBeNull();
     expect(q('[data-testid="more-button"]')).toBeNull();
     setSnap({ restoring: false });
-    act(() => playStore.setDifficulty("hard")); // перерисовать
+    act(() => playStore.setPick("classic", "hard")); // перерисовать
     expect(q('[data-testid="hub-scroll"]')).not.toBeNull();
   });
 });

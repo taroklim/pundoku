@@ -1,16 +1,19 @@
 // @vitest-environment jsdom
 /**
- * PD-144: хаб Play. Два НЕЗАВИСИМЫХ слота «Продолжить» (день → вкладка Today, своя сетка → доска), подпись при пустом хабе,
- * сложность списком (radiogroup, числа/техника из DIFFICULTY_PROFILES), шит «Отбросить» ТОЛЬКО на «Начать» при незавершённой
- * СВОЕЙ сетке, строка «Режим» и повторный тап по вкладке Play (оверлеи закрываются, хаб прокручивается наверх).
+ * PD-167 (раскладка C): хаб Play. «Продолжить» — ТОЛЬКО день; список «Режимы» — строка на каждый готовый режим реестра
+ * (значок, имя, описание; при незавершённой игре — статус «In progress · …» вместо описания), тап → `onOpenMode`,
+ * долгое нажатие / правая кнопка → контекстное меню (описание, «Continue», «New puzzle…»), сноска про год, без закреплённой
+ * «Начать» и без списка сложностей на хабе; повторный тап по вкладке закрывает меню и прокручивает хаб наверх.
  */
-import { DIFFICULTIES, DIFFICULTY_PROFILES } from "@pundoku/engine";
 import { act } from "react";
 import { createRoot } from "react-dom/client";
 import type { Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import i18n from "../i18n";
+import { LONG_PRESS_MS } from "./controls";
 import type { SlotSummary } from "./daySlot";
+import type { ModeDef } from "./modes";
+import { MODES, availableModes } from "./modes";
 import { PlaySetup } from "./PlaySetup";
 import type { PlaySetupProps } from "./PlaySetup";
 
@@ -21,21 +24,23 @@ let daySlot: SlotSummary | null = null;
 vi.mock("./daySlot", async (importOriginal) => ({ ...(await importOriginal<Record<string, unknown>>()), useDaySlot: () => daySlot }));
 
 const DAY: SlotSummary = { difficulty: "hard", left: 41, elapsedMs: 5 * 60_000 + 3_000, ink: false };
-const OWN: SlotSummary = { difficulty: "medium", left: 28, elapsedMs: 12 * 60_000 + 4_000, ink: false };
+const CLASSIC: SlotSummary = { difficulty: "medium", left: 31, elapsedMs: 8 * 60_000 + 40_000, ink: false };
+const INK: SlotSummary = { difficulty: "hard", left: 47, elapsedMs: 3 * 60_000 + 18_000, ink: true };
 
 let host: HTMLDivElement;
 let root: Root;
-const q = <T extends Element = HTMLElement>(id: string) => host.querySelector<T>(`[data-testid="${id}"]`);
-const click = (el: Element) => act(() => void el.dispatchEvent(new MouseEvent("click", { bubbles: true })));
-const key = (el: Element, k: string) => act(() => void el.dispatchEvent(new KeyboardEvent("keydown", { key: k, bubbles: true, cancelable: true })));
-const dialog = () => document.querySelector<HTMLElement>('[role="dialog"]');
+const q = <T extends Element = HTMLElement>(id: string) => document.querySelector<T>(`[data-testid="${id}"]`);
+const click = (el: Element, detail = 1) => act(() => void el.dispatchEvent(new MouseEvent("click", { bubbles: true, detail })));
+const pointer = (el: Element, type: string, x = 10, y = 10) =>
+  act(() => void el.dispatchEvent(Object.assign(new MouseEvent(type, { bubbles: true, clientX: x, clientY: y, button: 0 }), { pointerId: 1 })));
 
-const fns = { onPick: vi.fn(), onInk: vi.fn(), onStart: vi.fn(), onResume: vi.fn(), onOpenToday: vi.fn() };
-const props = (over: Partial<PlaySetupProps> = {}): PlaySetupProps => ({ pick: "medium", ink: false, own: null, reselect: 0, ...fns, ...over });
+const fns = { onOpenMode: vi.fn(), onNewInMode: vi.fn(), onOpenToday: vi.fn() };
+const props = (over: Partial<PlaySetupProps> = {}): PlaySetupProps => ({ modes: availableModes(), slots: {}, reselect: 0, ...fns, ...over });
 const render = (over: Partial<PlaySetupProps> = {}) => act(() => root.render(<PlaySetup {...props(over)} />));
 
 beforeEach(async () => {
   await i18n.changeLanguage("en");
+  vi.useFakeTimers();
   daySlot = null;
   for (const f of Object.values(fns)) f.mockReset();
   host = document.createElement("div");
@@ -46,204 +51,156 @@ beforeEach(async () => {
 afterEach(() => {
   act(() => root.unmount());
   host.remove();
+  vi.useRealTimers();
 });
 
-describe("«Продолжить»: два независимых слота", () => {
-  it("нет ни дня, ни своей сетки — секции нет, под заголовком подпись «A puzzle of your own, any time.»", () => {
-    render();
+describe("«Продолжить» — только день", () => {
+  it("нет дня — секции нет; хаб начинается с «Modes»", () => {
+    render({ slots: { classic: CLASSIC } });
     expect(q("hub-continue")).toBeNull();
-    expect(q("hub-sub")!.textContent).toBe("A puzzle of your own, any time.");
+    expect(host.querySelector(".hub-head")!.textContent).toBe("Modes");
   });
 
-  it("только своя сетка: одна строка, подпись «Medium · 28 cells left · 12:04», подписи под заголовком нет", () => {
-    render({ own: OWN });
-    expect(q("continue-day")).toBeNull();
-    expect(q("hub-sub")).toBeNull();
-    expect(q("continue-own")!.textContent).toContain("Your own puzzle");
-    expect(q("continue-own")!.textContent).toContain("Medium · 28 cells left · 12:04");
-  });
-
-  it("только день: одна строка дня; своей строки нет", () => {
+  it("день есть: одна строка «Today’s puzzle · Hard · 41 cells left · 5:03», тап → onOpenToday; игр режимов в «Продолжить» нет", () => {
     daySlot = DAY;
-    render();
-    expect(q("continue-own")).toBeNull();
+    render({ slots: { classic: CLASSIC, ink: INK } });
+    const sec = q("hub-continue")!;
+    expect(sec.querySelectorAll("button")).toHaveLength(1);
     expect(q("continue-day")!.textContent).toContain("Today’s puzzle");
     expect(q("continue-day")!.textContent).toContain("Hard · 41 cells left · 5:03");
-  });
-
-  it("оба слота рядом, независимо: тап по дню открывает Today (и не трогает свою сетку), тап по своей — доску", () => {
-    daySlot = DAY;
-    render({ own: OWN });
-    expect(host.querySelectorAll(".hub-card .hub-row.two")).toHaveLength(2);
     click(q("continue-day")!);
     expect(fns.onOpenToday).toHaveBeenCalledTimes(1);
-    expect(fns.onResume).not.toHaveBeenCalled();
-    click(q("continue-own")!);
-    expect(fns.onResume).toHaveBeenCalledTimes(1);
-    expect(fns.onOpenToday).toHaveBeenCalledTimes(1);
-  });
-
-  it("чип Ink у слота, где идёт чернильная партия; у классического слота чипа нет", () => {
-    daySlot = { ...DAY, ink: false };
-    render({ own: { ...OWN, ink: true } });
-    expect(q("continue-own")!.querySelector(".mode-chip")!.textContent).toBe("Ink");
-    expect(q("continue-day")!.querySelector(".mode-chip")).toBeNull();
+    expect(fns.onOpenMode).not.toHaveBeenCalled();
   });
 });
 
-describe("шит «Отбросить эту сетку?» — только «Начать» при своей сетке", () => {
-  it("без своей сетки «Начать» запускает сразу, без шита", () => {
+describe("список «Режимы»", () => {
+  it("строка на каждый готовый режим в порядке реестра; неготовые не показываются вовсе", () => {
+    const fake: ModeDef = { ...MODES[0]!, id: "ink", ready: false };
+    render({ modes: availableModes([MODES[0]!, fake]) });
+    const rows = [...host.querySelectorAll('[data-testid^="mode-"].hub-row')];
+    expect(rows.map((r) => r.getAttribute("data-testid"))).toEqual(["mode-classic"]);
     render();
-    click(q("setup-start")!);
-    expect(dialog()).toBeNull();
-    expect(fns.onStart).toHaveBeenCalledTimes(1);
+    const all = [...host.querySelectorAll(".hub-row.mode")].map((r) => r.getAttribute("data-testid"));
+    expect(all).toEqual(["mode-classic", "mode-ink"]);
   });
 
-  it("слот ДНЯ шит не вызывает: день «Начать» не затрагивает", () => {
-    daySlot = DAY;
+  it("без незавершённой игры — имя и описание режима", () => {
     render();
-    click(q("setup-start")!);
-    expect(dialog()).toBeNull();
-    expect(fns.onStart).toHaveBeenCalledTimes(1);
+    expect(q("mode-classic")!.textContent).toContain("Classic");
+    expect(q("mode-desc-classic")!.textContent).toBe("Plain sudoku: notes, undo and hints are all there.");
+    expect(q("mode-desc-ink")!.textContent).toBe("Every digit is final: no undo and no eraser for digits. A wrong one leaves a blot.");
+    expect(q("mode-status-classic")).toBeNull();
   });
 
-  it("со своей сеткой «Начать» спрашивает; «Keep playing» оставляет всё как есть, «Discard» запускает", () => {
-    render({ own: OWN });
-    click(q("setup-start")!);
-    expect(dialog()).not.toBeNull();
-    expect(fns.onStart).not.toHaveBeenCalled();
-    click([...dialog()!.querySelectorAll("button")].find((b) => b.textContent === "Keep playing")!);
-    expect(dialog()).toBeNull();
-    expect(fns.onStart).not.toHaveBeenCalled();
-    click(q("setup-start")!);
-    click([...dialog()!.querySelectorAll("button")].find((b) => b.textContent === "Discard")!);
-    expect(fns.onStart).toHaveBeenCalledTimes(1);
-    expect(dialog()).toBeNull();
+  it("незавершённая игра — статус вместо описания: «In progress · Medium · 31 cells left · 8:40»; у режима без игры — описание", () => {
+    render({ slots: { classic: CLASSIC } });
+    expect(q("mode-desc-classic")).toBeNull();
+    expect(q("mode-status-classic")!.textContent).toBe("In progress · Medium · 31 cells left · 8:40");
+    expect(q("mode-status-classic")!.querySelector(".dot")!.getAttribute("aria-hidden")).toBe("true");
+    expect(q("mode-desc-ink")).not.toBeNull();
+    render({ slots: { classic: CLASSIC, ink: INK } });
+    expect(q("mode-status-ink")!.textContent).toBe("In progress · Hard · 47 cells left · 3:18");
   });
 
-  it("выбор сложности, режима и тап по слотам шит не вызывают", () => {
-    render({ own: OWN });
-    click(q("difficulty-easy")!);
-    click(q("continue-own")!);
-    click(q("mode-row")!);
-    expect(dialog()?.getAttribute("data-testid")).toBe("mode-sheet");
-    expect(document.querySelector("[data-testid=mode-sheet]")).not.toBeNull();
-    expect(host.textContent).not.toContain("Discard this puzzle?");
+  it("тап по строке → onOpenMode(режим, строка)", () => {
+    render({ slots: { ink: INK } });
+    click(q("mode-ink")!);
+    expect(fns.onOpenMode).toHaveBeenCalledWith("ink", q("mode-ink"));
+    click(q("mode-classic")!);
+    expect(fns.onOpenMode).toHaveBeenLastCalledWith("classic", q("mode-classic"));
+  });
+
+  it("сноска про год под списком; ни списка сложностей, ни закреплённой «Начать» на хабе", () => {
+    render();
+    expect(q("hub-foot")!.textContent).toBe("Free games aren’t recorded in your year.");
+    expect(q("difficulty-list")).toBeNull();
+    expect(host.querySelector(".hub-bar")).toBeNull();
+    expect(q("setup-start")).toBeNull();
+  });
+
+  it("uk/ru: тексты из локалей", async () => {
+    await act(() => i18n.changeLanguage("ru"));
+    render({ slots: { ink: INK } });
+    expect(host.querySelector(".hub-head")!.textContent).toBe("Режимы");
+    expect(q("mode-status-ink")!.textContent).toBe("Не закончена · Сложно · осталось 47 · 3:18");
+    await act(() => i18n.changeLanguage("uk"));
+    expect(q("mode-desc-classic")!.textContent).toBe("Звичайне судоку: нотатки, скасування й підказки на місці.");
   });
 });
 
-describe("сложность списком", () => {
-  it("radiogroup из пяти radio, нативного select нет; выбранная — aria-checked, остальные нет", () => {
-    render({ pick: "hard" });
-    expect(host.querySelector("select")).toBeNull();
-    const group = q("difficulty-list")!;
-    expect(group.getAttribute("role")).toBe("radiogroup");
-    const radios = [...group.querySelectorAll('[role="radio"]')];
-    expect(radios).toHaveLength(5);
-    expect(radios.map((r) => r.getAttribute("aria-checked"))).toEqual(DIFFICULTIES.map((d) => String(d === "hard")));
+describe("контекстное меню строки (долгое нажатие)", () => {
+  it("долгое нажатие открывает меню: заголовок — описание; «Continue» только при незавершённой игре; тап-хвост жеста не нажимает", () => {
+    render({ slots: { classic: CLASSIC } });
+    const row = q("mode-classic")!;
+    pointer(row, "pointerdown");
+    act(() => void vi.advanceTimersByTime(LONG_PRESS_MS));
+    expect(q("ctx-menu")).not.toBeNull();
+    expect(q("ctx-desc")!.textContent).toBe("Plain sudoku: notes, undo and hints are all there.");
+    expect(q("ctx-continue")).not.toBeNull();
+    // поднятая копия строки — в разметке строки (`.hub-row.mode`), иначе в портале она теряет стили
+    expect(q("ctx-preview")!.matches(".ctx-lift > .hub-row.mode")).toBe(true);
+    expect(q("ctx-preview")!.textContent).toContain("Classic");
+    // хвост жеста: отпускание над строкой и над пунктом меню ничего не делает
+    pointer(row, "pointerup");
+    click(row);
+    expect(fns.onOpenMode).not.toHaveBeenCalled();
+    click(q("ctx-new")!);
+    expect(fns.onNewInMode).not.toHaveBeenCalled();
+    expect(q("ctx-menu")).not.toBeNull();
+    // новое нажатие внутри меню — пункт работает
+    pointer(q("ctx-new")!, "pointerdown");
+    click(q("ctx-new")!);
+    expect(fns.onNewInMode).toHaveBeenCalledWith("classic", row);
+    expect(q("ctx-menu")).toBeNull();
   });
 
-  it("числа клеток и техника берутся из DIFFICULTY_PROFILES, а не зашиты в интерфейс", () => {
-    render();
-    for (const d of DIFFICULTIES) {
-      const sub = q(`difficulty-${d}`)!.querySelector(".sub")!.textContent!;
-      expect(sub, d).toContain(`${DIFFICULTY_PROFILES[d].clues} clues`);
-    }
-    expect(q("difficulty-easy")!.querySelector(".sub")!.textContent).toContain("singles");
-    expect(q("difficulty-hard")!.querySelector(".sub")!.textContent).toContain("locked candidates");
-    expect(q("difficulty-expert")!.querySelector(".sub")!.textContent).toContain("pairs");
-    expect(q("difficulty-master")!.querySelector(".sub")!.textContent).toContain("beyond pairs");
-  });
-
-  it("тап выбирает; стрелки/Home/End двигают выбор по кругу; roving tabindex", () => {
-    render({ pick: "medium" });
-    expect(q("difficulty-medium")!.getAttribute("tabindex")).toBe("0");
-    expect(q("difficulty-easy")!.getAttribute("tabindex")).toBe("-1");
-    click(q("difficulty-expert")!);
-    expect(fns.onPick).toHaveBeenLastCalledWith("expert");
-    key(q("difficulty-medium")!, "ArrowDown");
-    expect(fns.onPick).toHaveBeenLastCalledWith("hard");
-    key(q("difficulty-medium")!, "ArrowUp");
-    expect(fns.onPick).toHaveBeenLastCalledWith("easy");
-    key(q("difficulty-medium")!, "End");
-    expect(fns.onPick).toHaveBeenLastCalledWith("master");
-    render({ pick: "easy" });
-    key(q("difficulty-easy")!, "ArrowUp");
-    expect(fns.onPick).toHaveBeenLastCalledWith("master"); // по кругу
-    key(q("difficulty-easy")!, "Home");
-    expect(fns.onPick).toHaveBeenLastCalledWith("easy");
-  });
-});
-
-describe("строка «Режим»", () => {
-  it("значение «Classic»/«Ink», сноска зависит от режима; шит с двумя вариантами и описаниями", () => {
-    render({ ink: false });
-    expect(q("mode-value")!.textContent).toBe("Classic");
-    const classic = q("mode-foot")!.textContent;
-    click(q("mode-row")!);
-    const sheet = document.querySelector('[data-testid="mode-sheet"]')!;
-    expect(sheet.getAttribute("role")).toBe("dialog");
-    expect(sheet.querySelectorAll('[role="radio"]')).toHaveLength(2);
-    expect(sheet.querySelector('[data-testid="mode-classic"]')!.getAttribute("aria-checked")).toBe("true");
-    expect(sheet.textContent).toContain("Undo, the eraser and notes all work.");
-    expect(sheet.textContent).toContain("No undo and no eraser for digits. A wrong digit leaves a blot.");
-    render({ ink: true });
-    expect(q("mode-value")!.textContent).toBe("Ink");
-    expect(q("mode-foot")!.textContent).not.toBe(classic);
-    expect(q("mode-foot")!.textContent).toContain("no undo");
-  });
-
-  it("выбор Ink сначала показывает правило PD-74; «Classic» ставится сразу", () => {
-    render({ ink: false });
-    click(q("mode-row")!);
-    click(document.querySelector('[data-testid="mode-ink"]')!);
-    expect(fns.onInk).not.toHaveBeenCalled();
-    click(document.querySelector('[data-testid="ink-rule-start"]')!);
-    expect(fns.onInk).toHaveBeenCalledWith(true);
-  });
-
-  it("Esc закрывает шит и возвращает фокус на строку «Режим»", () => {
-    render();
-    click(q("mode-row")!);
+  it("у режима без игры в меню только «New puzzle…»; «Continue» с клавиатуры (detail 0) открывает игру", () => {
+    render({ slots: { classic: CLASSIC } });
+    act(() => void q("mode-ink")!.dispatchEvent(new MouseEvent("contextmenu", { bubbles: true, cancelable: true })));
+    expect(q("ctx-continue")).toBeNull();
+    expect(q("ctx-new")).not.toBeNull();
     act(() => void document.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true })));
-    expect(document.querySelector('[data-testid="mode-sheet"]')).toBeNull();
-    expect(document.activeElement).toBe(q("mode-row"));
+    expect(q("ctx-menu")).toBeNull();
+    act(() => void q("mode-classic")!.dispatchEvent(new MouseEvent("contextmenu", { bubbles: true, cancelable: true })));
+    click(q("ctx-continue")!, 0);
+    expect(fns.onOpenMode).toHaveBeenCalledWith("classic", q("mode-classic"));
+  });
+
+  it("сдвиг пальца (прокрутка) отменяет долгое нажатие; короткий тап меню не открывает", () => {
+    render();
+    const row = q("mode-classic")!;
+    pointer(row, "pointerdown", 10, 10);
+    pointer(row, "pointermove", 10, 40);
+    act(() => void vi.advanceTimersByTime(LONG_PRESS_MS * 2));
+    expect(q("ctx-menu")).toBeNull();
+    pointer(row, "pointerdown");
+    act(() => void vi.advanceTimersByTime(LONG_PRESS_MS - 100));
+    pointer(row, "pointerup");
+    act(() => void vi.advanceTimersByTime(LONG_PRESS_MS));
+    expect(q("ctx-menu")).toBeNull();
+  });
+
+  it("Esc закрывает меню и возвращает фокус на строку", () => {
+    render();
+    act(() => void q("mode-ink")!.dispatchEvent(new MouseEvent("contextmenu", { bubbles: true, cancelable: true })));
+    expect(document.activeElement).toBe(q("ctx-new"));
+    act(() => void document.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true })));
+    expect(document.activeElement).toBe(q("mode-ink"));
   });
 });
 
 describe("повторный тап по вкладке Play (reselect)", () => {
-  it("закрывает шит «Режим» и шит «Отбросить» без подтверждений; хаб прокручивается наверх", () => {
-    render({ own: OWN });
+  it("закрывает контекстное меню; хаб прокручивается наверх; без изменения счётчика ничего не закрывается", () => {
+    render();
     const scroller = q("hub-scroll")!;
     const scrollTo = vi.fn();
     scroller.scrollTo = scrollTo as never;
-    click(q("mode-row")!);
-    expect(document.querySelector('[data-testid="mode-sheet"]')).not.toBeNull();
-    render({ own: OWN, reselect: 1 });
-    expect(document.querySelector('[data-testid="mode-sheet"]')).toBeNull();
+    act(() => void q("mode-ink")!.dispatchEvent(new MouseEvent("contextmenu", { bubbles: true, cancelable: true })));
+    render({ reselect: 0 });
+    expect(q("ctx-menu")).not.toBeNull();
+    render({ reselect: 1 });
+    expect(q("ctx-menu")).toBeNull();
     expect(scrollTo).toHaveBeenCalledWith({ top: 0 });
-    click(q("setup-start")!);
-    expect(dialog()).not.toBeNull();
-    render({ own: OWN, reselect: 2 });
-    expect(dialog()).toBeNull();
-    expect(fns.onStart).not.toHaveBeenCalled(); // «Начать» не выполнено
-  });
-
-  it("без изменения счётчика ничего не закрывается", () => {
-    render({ own: OWN });
-    click(q("mode-row")!);
-    render({ own: OWN, reselect: 0 });
-    expect(document.querySelector('[data-testid="mode-sheet"]')).not.toBeNull();
-  });
-});
-
-describe("«Начать» и позиция раздела режимов релиза 2", () => {
-  it("«Начать» закреплена в .hub-bar вне прокручиваемого списка; раздела режимов релиза 2 нет — только пустой .hub-slot-gap", () => {
-    render();
-    expect(q("setup-start")!.closest(".hub-bar")).not.toBeNull();
-    expect(q("hub-scroll")!.contains(q("setup-start"))).toBe(false);
-    const gap = host.querySelector(".hub-slot-gap")!;
-    expect(gap.textContent).toBe("");
-    expect(gap.children).toHaveLength(0);
   });
 });

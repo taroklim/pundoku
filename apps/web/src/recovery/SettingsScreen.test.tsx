@@ -36,7 +36,8 @@ let resetCalls: number;
 let onBack: ReturnType<typeof vi.fn>;
 
 const flush = () => act(async () => void (await new Promise((r) => setTimeout(r, 0))));
-const q = <T extends Element = HTMLElement>(id: string) => host.querySelector<T>(`[data-testid="${id}"]`);
+// PD-161: action sheet рисуется порталом в body — ищем по документу, не только в host.
+const q = <T extends Element = HTMLElement>(id: string) => document.querySelector<T>(`[data-testid="${id}"]`);
 const click = async (id: string) => {
   const el = q(id);
   expect(el, id).not.toBeNull();

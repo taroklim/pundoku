@@ -16,18 +16,43 @@
   font-size: 0.8rem;
   text-align: center;
 }
-/* PD-147: на экране партии (нескроллящемся, play.css) в зазоре между полем и панелью заложена одна строка статуса (+ резерв под док
-   `--extra`). Строка источника — вторая; при AX3 она там не помещается (две строки по 40 px), поэтому уходит только визуально: имя
-   для скринридера остаётся, а в карточке дня источник виден всегда. */
-:root[data-type="ax3"] .play-fit .today-status .source {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  margin: -1px;
-  padding: 0;
-  overflow: hidden;
-  clip-path: inset(50%);
-  white-space: nowrap;
+/* PD-159 (QA PD-151, Low 3): при AX3 на экране дня (Today и архив) подпись «Sun 27 Sep · Medium · 0:00» в одну строку не помещалась —
+   сложность усекалась до «M…» (на 320 pt пропадала целиком), а строка источника была скрыта визуально (PD-147). Теперь вертикальная
+   раскладка: дата — своя строка, «сложность · время» — вторая (при нехватке ширины время переносится третьей); источник виден
+   под строкой статуса и переносится. Две строки резервируются в обвязке поля (поле уступает до 160 pt, но не меньше, чем было);
+   чего не хватило (узкий низкий экран, длинный источник) — страница дня прокручивается, ряд действий доходит до таб-бара. Обычный
+   размер текста и Play это не затрагивает. */
+:root[data-type="ax3"] .scroll:has(.today.play-fit) {
+  overflow-y: auto;
+}
+:root[data-type="ax3"] .scroll:has(.today.play-fit) > .panel,
+:root[data-type="ax3"] .scroll:has(.today.play-fit) .play {
+  min-height: auto;
+}
+:root[data-type="ax3"] .today.play-fit > .gap,
+:root[data-type="ax3"] .today.play-fit > .hint-dock {
+  flex-shrink: 0;
+}
+:root[data-type="ax3"] .today.play-fit .subline {
+  flex-wrap: wrap;
+}
+:root[data-type="ax3"] .today.play-fit .subline > .sub-day {
+  flex-basis: 100%;
+}
+:root[data-type="ax3"] .today.play-fit .subline > .sub-day + .sep {
+  display: none;
+}
+@media (orientation: portrait), (min-height: 501px) {
+  :root[data-type="ax3"] .today.play-fit .board {
+    --side: max(min(160px, 100dvh - var(--chrome)), 100dvh - var(--chrome) - 1.15rem - 1rem - 2px);
+    width: min(100%, var(--side));
+    --s: calc((min(100cqi, var(--side)) - 2 * var(--box-gap)) / 9);
+  }
+  /* Ряды бокса — явно по размеру клетки: правило включается атрибутом data-type уже после первой раскладки, и WebKit не
+     пересчитывал высоту рядов сетки с aspect-ratio-клетками (поле 311 × 358 вместо 311 × 311 до следующей перерисовки). */
+  :root[data-type="ax3"] .today.play-fit .box {
+    grid-auto-rows: var(--s);
+  }
 }
 /* PD-147: архивный день — над заголовком ряд «‹ Year» (кнопка 44 pt, отрицательный верхний отступ 8 px); он входит в обвязку поля. */
 .today.archive.play-fit {

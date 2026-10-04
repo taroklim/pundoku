@@ -65,14 +65,16 @@ export const StatusLine = memo(function StatusLine({ left, full = false, hint = 
 });
 
 /** Тихий таймер: перечитывает часы хранилища; ставится на паузу самим хранилищем. */
-export function useClock(store: Pick<GameStore, "getElapsedMs">): string {
+export function useClock(store: Pick<GameStore, "getElapsedMs">, active = true): string {
   const [text, setText] = useState(() => formatClock(store.getElapsedMs()));
+  // PD-161: скрытая (но смонтированная) вкладка часы не тикает — таймер партии там и так стоит.
   useEffect(() => {
+    if (!active) return;
     const tick = () => setText(formatClock(store.getElapsedMs()));
     tick();
     const id = window.setInterval(tick, 500);
     return () => window.clearInterval(id);
-  }, [store]);
+  }, [store, active]);
   return text;
 }
 
@@ -178,8 +180,12 @@ export function useBlotAnnouncement(snap: Pick<PlaySnapshot, "blot" | "play">): 
  * Сбросить `pop`/`wave` хранилища при размонтировании экрана (QA PD-23, Low 1): снапшот живёт
  * выше экрана, и без сброса возврат на вкладку заново проигрывает M1/M3.
  */
-export function useClearEffectsOnUnmount(store: Pick<GameStore, "clearEffects">): void {
-  useEffect(() => () => store.clearEffects(), [store]);
+export function useClearEffectsOnUnmount(store: Pick<GameStore, "clearEffects">, active = true): void {
+  // PD-161: вкладка больше не размонтируется — «ушли с экрана» = стала неактивной (или размонтирована).
+  useEffect(() => {
+    if (!active) return;
+    return () => store.clearEffects();
+  }, [store, active]);
 }
 
 /**

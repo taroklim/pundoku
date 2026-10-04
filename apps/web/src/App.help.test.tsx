@@ -80,7 +80,7 @@ describe("шестерёнка и «назад» на трёх вкладках 
     await press(`${tab}-gear`);
     expect(q("settings-screen")!.getAttribute("data-origin")).toBe(tab);
     expect(selectedTab()).toContain(label);
-    expect(host.querySelector('[role="tabpanel"]')).toBeNull(); // Settings — экран поверх вкладки, не её панель
+    expect(host.querySelector('[role="tabpanel"]:not([aria-hidden="true"])')).toBeNull(); // Settings — экран поверх вкладки, не её панель
     await press("settings-back");
     expect(q("settings-screen")).toBeNull();
     expect(window.location.hash).toBe(`#/${tab}`);

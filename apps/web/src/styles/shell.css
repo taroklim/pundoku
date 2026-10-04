@@ -112,6 +112,32 @@ button {
 .scroll:has(.play-fit, .play-hub) .play {
   min-height: 0;
 }
+/* PD-161: стопка панелей вкладок. Каждая панель — свой `.scroll` (своя прокрутка и своё правило peek/`:has(.play-fit)`),
+   все три лежат друг на друге и не размонтируются. Неактивная — `visibility: hidden` + inert (НЕ display:none: он сбросил бы
+   прокрутку и раскладку). Во время перехода движок (`tabSlide.ts`) ставит на участвующие панели `data-slide` — уходящая
+   остаётся видимой, пока уезжает. Ни transform, ни will-change в покое — иначе панель стала бы containing block для
+   `position: fixed` шитов (md PD-158 §6.2). */
+.stack {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+.tab-pane,
+.push-layer {
+  position: absolute;
+  inset: 0;
+  background: var(--bg);
+}
+.tab-pane.off:not([data-slide]),
+.stack.covered > .tab-pane {
+  visibility: hidden;
+}
+/* Settings / справка / архив — уровень поверх стопки (вход M10 у `.panel.enter`). */
+.push-layer {
+  z-index: 1;
+}
+
 /* Панель вкладки занимает всю прокручиваемую область; фокус на ней не рисуем рамкой. */
 .panel {
   flex: 1;
@@ -121,10 +147,9 @@ button {
 .panel:focus-visible {
   outline-offset: -2px;
 }
-/* M10: смена вкладки — вход новой панели кроссфейдом с подъёмом 6 px, 200 мс; без слайда и свайпа
-   (нативные таб-бары не листаются жестом, движение не должно его обещать). Только после первой
-   навигации (класс ставит App); fill-mode backwards — после конца на панели не остаётся transform,
-   который сделал бы её containing block для position:fixed (шиты). */
+/* M10: вход экрана поверх вкладки (Settings, справка, архив) — кроссфейд с подъёмом 6 px, 200 мс. Смена самой вкладки —
+   слайд (PD-161, `tabSlide.ts`), не этот класс. Только после первой навигации (класс ставит App); fill-mode backwards —
+   после конца на панели не остаётся transform, который сделал бы её containing block для position:fixed (шиты). */
 .panel.enter {
   animation: fadeRise calc(200ms * var(--mk)) var(--e-out) backwards;
 }
@@ -233,9 +258,21 @@ button {
   color: var(--label-2);
   border-radius: 14px;
   padding: 4px 2px;
-  transition:
-    background-color 0.12s linear,
-    color 0.12s linear;
+  /* Над пилюлей. Цвет/жирность подписи меняются мгновенно по тапу — не ждут конца слайда (макет PD-158 §1). */
+  position: relative;
+  z-index: 1;
+  transition: color 0.12s linear;
+}
+/* PD-161: фон выбранной вкладки — отдельная пилюля, переезжает transform'ом (геометрию и положение ставит tabSlide.ts). */
+.tab-pill {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 0;
+  height: 0;
+  border-radius: 14px;
+  background: var(--ink-tint);
+  pointer-events: none;
 }
 .tab svg {
   width: 26px;
@@ -250,7 +287,6 @@ button {
 }
 .tab[aria-selected="true"] {
   color: var(--ink);
-  background: var(--ink-tint);
 }
 .tab[aria-selected="true"] .lab {
   font-weight: 600;
@@ -280,6 +316,9 @@ button {
 /* forced-colors (QA PD-16, low): фон выбранной вкладки система отбрасывает — держим рамку
    и подчёркивание подписи, чтобы выбор не зависел от цвета. */
 @media (forced-colors: active) {
+  .tab-pill {
+    display: none;
+  }
   .tab[aria-selected="true"] {
     border: 2px solid Highlight;
   }

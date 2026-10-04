@@ -1,4 +1,4 @@
-import type { KeyboardEvent } from "react";
+import type { KeyboardEvent, Ref } from "react";
 import { useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { TabIcon } from "./icons";
@@ -11,10 +11,12 @@ export const panelDomId = (tab: TabId) => `panel-${tab}`;
 interface TabBarProps {
   active: TabId;
   onSelect: (tab: TabId) => void;
+  /** PD-161: пилюля выбранной вкладки — отдельный слой, её двигает движок перехода (`tabSlide.ts`). */
+  pillRef?: Ref<HTMLSpanElement>;
 }
 
 /** Таб-бар: role=tablist, roving tabindex, стрелки влево/вправо (+ Home/End), автоактивация. */
-export function TabBar({ active, onSelect }: TabBarProps) {
+export function TabBar({ active, onSelect, pillRef }: TabBarProps) {
   const { t } = useTranslation();
   const refs = useRef<Partial<Record<TabId, HTMLButtonElement | null>>>({});
 
@@ -45,6 +47,8 @@ export function TabBar({ active, onSelect }: TabBarProps) {
 
   return (
     <div className="tabbar" role="tablist" aria-label={t("tabs.label")} onKeyDown={onKeyDown}>
+      {/* Фон выбранной вкладки — пилюля (макет PD-158): переезжает transform'ом вместе со слайдом экрана. */}
+      <span ref={pillRef} className="tab-pill" aria-hidden="true" />
       {TAB_IDS.map((id) => (
         <button
           key={id}

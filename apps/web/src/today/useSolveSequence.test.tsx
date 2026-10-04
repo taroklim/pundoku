@@ -42,9 +42,9 @@ const store = {
 const FRAME_MS = 16;
 
 let latest: SolveSequence;
-function Harness({ phase }: { phase: string }) {
+function Harness({ phase, active = true }: { phase: string; active?: boolean }) {
   const root = useRef<HTMLDivElement>(null);
-  latest = useSolveSequence(phase, store, root);
+  latest = useSolveSequence(phase, store, root, active);
   return (
     <div ref={root}>
       <div className="board">
@@ -325,5 +325,29 @@ describe("финал V2 (PD-89)", () => {
     expect(latest.finaleDone).toBe(true);
     wait(1000);
     expect(animate).not.toHaveBeenCalled();
+  });
+});
+
+describe("PD-161: вкладка Today смонтирована, но скрыта", () => {
+  it("день решён, пока Today не на экране (синхронизация): финал не играется — сразу конечное состояние", () => {
+    act(() => reactRoot.render(<Harness phase="playing" active={false} />));
+    act(() => reactRoot.render(<Harness phase="solved" active={false} />));
+    expect(latest.cardShown).toBe(true);
+    expect(latest.finaleDone).toBe(true);
+    wait(1000);
+    expect(animate).not.toHaveBeenCalled();
+    expect(document.querySelector(".flyer")).toBeNull();
+  });
+
+  it("ушли с вкладки посреди финала (клавиатурой, без касания): полёт снят, состояние конечное, посадка подтверждена", () => {
+    solve();
+    wait(FINALE_DIM_MS + FINALE_FLIGHT_DELAY_MS + FRAME_MS * 4);
+    expect(document.querySelector(".flyer")).not.toBeNull();
+    act(() => reactRoot.render(<Harness phase="solved" active={false} />));
+    expect(document.querySelector(".flyer")).toBeNull();
+    expect(anim.cancel).toHaveBeenCalled();
+    expect(latest.cardShown).toBe(true);
+    expect(latest.finaleDone).toBe(true);
+    expect(acknowledgeLanding).toHaveBeenCalledTimes(1);
   });
 });

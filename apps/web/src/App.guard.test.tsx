@@ -32,7 +32,7 @@ import { App } from "./App";
 let host: HTMLDivElement;
 let root: Root;
 const settle = () => act(async () => void (await new Promise((r) => setTimeout(r, 30))));
-const panelText = () => host.querySelector('[role="tabpanel"]')!.textContent;
+const panelText = () => host.querySelector('[role="tabpanel"]:not([aria-hidden="true"])')!.textContent;
 const tabs = () => host.querySelectorAll<HTMLElement>('[role="tab"]');
 
 beforeEach(() => {

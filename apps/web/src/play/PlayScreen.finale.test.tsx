@@ -156,6 +156,8 @@ describe("финал Play: dim-фаза и тап-прерывание (PD-89)",
   });
   // PD-94: хвост прерывающего касания не должен нажать кнопку, оказавшуюся под пальцем.
   const newGame = () => host.querySelector<HTMLButtonElement>('button[data-testid="new-puzzle"]')!;
+  /** PD-167: «New game» на карточке открывает шит режима (сработала ли кнопка). */
+  const sheetOpen = () => document.querySelector('[data-testid="mode-sheet"]') !== null;
   const tap = (target: Element, detail = 1) => {
     target.dispatchEvent(new Event("pointerup", { bubbles: true }));
     target.dispatchEvent(new MouseEvent("click", { bubbles: true, cancelable: true, detail }));
@@ -168,6 +170,7 @@ describe("финал Play: dim-фаза и тап-прерывание (PD-89)",
     expect(card()).not.toBeNull();
     act(() => tap(newGame()));
     expect(playStore.getSnapshot().phase).toBe("solved");
+    expect(sheetOpen()).toBe(false);
     expect(card()).not.toBeNull();
   });
 
@@ -179,14 +182,14 @@ describe("финал Play: dim-фаза и тап-прерывание (PD-89)",
       newGame().dispatchEvent(new Event("pointerdown", { bubbles: true }));
     });
     act(() => tap(newGame()));
-    expect(playStore.getSnapshot().phase).not.toBe("solved");
+    expect(sheetOpen()).toBe(true);
   });
 
   it("клавиатурная активация «New game» сразу после прерывания не блокируется (detail 0)", () => {
     startAlmostSolved();
     act(() => void document.body.dispatchEvent(new Event("pointerdown", { bubbles: true })));
     act(() => tap(newGame(), 0));
-    expect(playStore.getSnapshot().phase).not.toBe("solved");
+    expect(sheetOpen()).toBe(true);
   });
 
   it("карточка уже показана по таймеру: тап по «New game» работает сразу (перехвата нет)", () => {
@@ -196,7 +199,7 @@ describe("финал Play: dim-фаза и тап-прерывание (PD-89)",
       newGame().dispatchEvent(new Event("pointerdown", { bubbles: true }));
     });
     act(() => tap(newGame()));
-    expect(playStore.getSnapshot().phase).not.toBe("solved");
+    expect(sheetOpen()).toBe(true);
   });
 
   // PD-95: фокус (a11y) — после ближайшего кадра, не в задаче монтажа карточки (форсированный style+layout).
@@ -229,6 +232,7 @@ describe("финал Play: dim-фаза и тап-прерывание (PD-89)",
     expect(document.activeElement).toBe(cardEl());
     act(() => tap(newGame()));
     expect(playStore.getSnapshot().phase).toBe("solved");
+    expect(sheetOpen()).toBe(false);
     expect(card()).not.toBeNull();
   });
 

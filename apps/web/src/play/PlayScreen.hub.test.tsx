@@ -1,13 +1,13 @@
 // @vitest-environment jsdom
 /**
- * PD-144, экран Play целиком: шапка партии (лампочка · шестерёнка · «⋯», отдельной «Новая сетка» нет), меню «⋯» с Fill
- * (и откат Fill через Undo), Ink и «нечего заполнять», слот своей сетки при уходе на хаб и возврате, повторный тап по вкладке
- * Play, фокус после смены экрана, таймер на паузе, решённая партия.
+ * PD-144/PD-167, экран Play целиком: шапка партии (лампочка · шестерёнка · «⋯»), меню «⋯» с Fill (и откат Fill через Undo),
+ * Ink и «нечего заполнять», раскладка режимов C (строка и слот на режим, шит режима, контекстное меню, чип режима),
+ * повторный тап по вкладке Play, фокус после смены экрана, таймер на паузе.
  */
 import { act } from "react";
 import { createRoot } from "react-dom/client";
 import type { Root } from "react-dom/client";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import i18n from "../i18n";
 import { createPlay, enterDigit, setInkMode } from "./logic";
 import type { PlayState } from "./logic";
@@ -26,7 +26,7 @@ interface Inner {
   snap: Record<string, unknown>;
 }
 const inner = playStore as unknown as Inner;
-const base = { ...inner.snap };
+let base: Record<string, unknown> = {};
 const playing = (play: PlayState, extra: Record<string, unknown> = {}) =>
   (inner.snap = { ...inner.snap, hub: false, restoring: false, phase: "playing", play, selected: 2, notesMode: false, startedOn: new Date(2026, 9, 3, 12), ...extra });
 
@@ -38,6 +38,15 @@ const render = (props: Parameters<typeof PlayScreen>[0] = {}) => act(() => root.
 const openMenu = () => tap(q("more-button")!);
 const notesCount = () => playStore.getSnapshot().play!.notes.filter((n) => n !== 0).length;
 
+// Боевой `playStore` при импорте сам запускает `restore()` (общее хранилище в памяти: jsdom без IndexedDB). Дожидаемся
+// его ДО первого теста и берём исходный снимок уже после: иначе поздний `restore()` под нагрузкой полного прогона мог
+// доехать посреди теста (снять `restoring`, подложить слоты) — изоляция не зависела бы от тайминга.
+beforeAll(async () => {
+  await vi.waitFor(() => expect(playStore.getSnapshot().restoring).toBe(false));
+  await playStore.flushed();
+  base = { ...inner.snap };
+});
+
 beforeEach(async () => {
   await i18n.changeLanguage("en");
   vi.useFakeTimers();
@@ -45,6 +54,7 @@ beforeEach(async () => {
   vi.stubGlobal("cancelAnimationFrame", (id: number) => window.clearTimeout(id));
   window.matchMedia = ((query: string) => ({ matches: false, media: query, addEventListener() {}, removeEventListener() {} })) as never;
   inner.snap = { ...base };
+  (playStore as unknown as { saved: Map<string, unknown> }).saved.clear();
   host = document.createElement("div");
   host.id = "app";
   document.body.append(host);
@@ -128,23 +138,81 @@ describe("«Fill candidates» из меню", () => {
   });
 });
 
-describe("слот своей сетки: хаб и возврат", () => {
-  it("«New puzzle» из меню: партия встаёт слотом «Продолжить» (подпись из партии), таймер на паузе; тап по слоту возвращает на доску", () => {
+describe("PD-167: режимы на хабе — строка на режим, слот на режим", () => {
+  it("партия ушла на хаб — строка «Classic» показывает статус, таймер на паузе; тап по строке возвращает на ту же доску", () => {
     const play = enterDigit(fresh(), 2, 4, 100);
     playing(play);
     render();
-    openMenu();
-    tap(q("menu-new")!);
+    act(() => playStore.reselect());
     expect(q("hub-scroll")).not.toBeNull();
-    expect(q("continue-own")!.textContent).toContain("Medium · 50 cells left");
-    // таймер на хабе не идёт
+    expect(q("hub-continue")).toBeNull(); // «Продолжить» — только день
+    expect(q("mode-status-classic")!.textContent).toMatch(/^In progress · Medium · 50 cells left · \d+:\d\d$/);
+    expect(q("mode-desc-ink")).not.toBeNull();
     const t0 = playStore.getElapsedMs();
     act(() => void vi.advanceTimersByTime(5000));
     expect(playStore.getElapsedMs()).toBe(t0);
-    tap(q("continue-own")!);
+    tap(q("mode-classic")!);
     expect(q("hub-scroll")).toBeNull();
-    expect(q("board") ?? host.querySelector(".board")).not.toBeNull();
+    expect(q("mode-sheet")).toBeNull();
     expect(playStore.getSnapshot().play).toBe(play);
+  });
+
+  it("режим без игры — шит режима (описание, сложность, «Start»); Cancel — хаб без изменений", () => {
+    render();
+    tap(q("mode-ink")!);
+    const sheet = q("mode-sheet")!;
+    expect(sheet.getAttribute("data-mode")).toBe("ink");
+    expect(q("mode-desc")!.textContent).toBe("Every digit is final: no undo and no eraser for digits. A wrong one leaves a blot.");
+    expect(q("discard-note")).toBeNull();
+    expect(q("sheet-start")!.textContent).toBe("Start");
+    expect(sheet.querySelectorAll('[role="radio"]')).toHaveLength(5);
+    expect(q("difficulty-medium")!.getAttribute("aria-checked")).toBe("true");
+    tap(q("difficulty-hard")!);
+    expect(q("difficulty-hard")!.getAttribute("aria-checked")).toBe("true");
+    tap(q("sheet-cancel")!);
+    expect(q("mode-sheet")).toBeNull();
+    expect(playStore.getSnapshot().hub).toBe(true);
+    expect(playStore.pickFor("ink")).toBe("hard"); // выбор запомнен для следующего открытия
+    expect(document.activeElement).toBe(q("mode-ink"));
+  });
+
+  it("две незавершённые (Classic + Ink): обе строки со статусом; переход между ними паркует, а не выбрасывает", () => {
+    vi.stubGlobal("Worker", class { onmessage = null; onerror = null; postMessage() {} terminate() {} });
+    const classic = enterDigit(fresh(), 2, 4, 100);
+    playing(classic);
+    render();
+    act(() => playStore.reselect());
+    // новая чернильная сетка с хаба: шит → Start → правило → Play in ink → сетка готова
+    tap(q("mode-ink")!);
+    tap(q("sheet-start")!);
+    tap(q("ink-rule-start")!);
+    const gen = playStore as unknown as { requestId: number; onGenerated(id: number, r: unknown): void };
+    act(() => gen.onGenerated(gen.requestId, { id: gen.requestId, ok: true, puzzle: { mission: MISSION, solution: SOLUTION, difficulty: "medium", seed: "t" } }));
+    expect(playStore.getSnapshot()).toMatchObject({ mode: "ink", hub: false });
+    expect(playStore.getSnapshot().play!.ink).toBe(true);
+    act(() => playStore.reselect());
+    expect(q("mode-status-classic")).not.toBeNull();
+    expect(q("mode-status-ink")!.textContent).toContain("In progress · Medium · 51 cells left");
+    tap(q("mode-classic")!);
+    expect(playStore.getSnapshot().play).toEqual(classic);
+    expect(playStore.getSnapshot().mode).toBe("classic");
+    expect(q("mode-chip")).toBeNull(); // Классика — без чипа
+    act(() => playStore.reselect());
+    tap(q("mode-ink")!);
+    expect(playStore.getSnapshot().mode).toBe("ink");
+    expect(q("mode-chip")!.getAttribute("data-mode")).toBe("ink");
+    expect(q("mode-chip")!.textContent).toBe("Ink");
+  });
+
+  it("контекстное меню «New puzzle…» при незавершённой игре — шит с предупреждением и «Start new»", () => {
+    playing(enterDigit(fresh(), 2, 4, 100));
+    render();
+    act(() => playStore.reselect());
+    act(() => void q("mode-classic")!.dispatchEvent(new MouseEvent("contextmenu", { bubbles: true, cancelable: true })));
+    tap(q("ctx-new")!); // клик без detail — как с клавиатуры (хвост жеста — PlaySetup.test)
+    expect(q("mode-sheet")).not.toBeNull();
+    expect(q("discard-note")!.textContent).toContain("Your unfinished puzzle (Medium · 50 cells left");
+    expect(q("sheet-start")!.textContent).toBe("Start new");
   });
 });
 
@@ -158,14 +226,14 @@ describe("повторный тап по выбранной вкладке Play"
     expect(q("hub-scroll")).not.toBeNull();
     expect(playStore.getSnapshot().play).toBe(play);
     const n = playStore.getSnapshot().reselect;
-    tap(q("mode-row")!);
+    tap(q("mode-ink")!);
     expect(q("mode-sheet")).not.toBeNull();
     act(() => playStore.reselect()); // уже на хабе
     expect(playStore.getSnapshot().reselect).toBe(n + 1);
     expect(q("mode-sheet")).toBeNull();
   });
 
-  it("открытое меню «⋯»: повторный тап по вкладке закрывает меню и уводит на хаб", () => {
+  it("открытое меню «⋯» или шит режима поверх партии: повторный тап по вкладке закрывает их и уводит на хаб", () => {
     playing(fresh());
     render();
     openMenu();
@@ -173,15 +241,22 @@ describe("повторный тап по выбранной вкладке Play"
     act(() => playStore.reselect());
     expect(q("more-menu")).toBeNull();
     expect(q("hub-scroll")).not.toBeNull();
+    tap(q("mode-classic")!); // назад в партию
+    openMenu();
+    tap(q("menu-new")!);
+    expect(q("mode-sheet")).not.toBeNull();
+    act(() => playStore.reselect());
+    expect(q("mode-sheet")).toBeNull();
+    expect(q("hub-scroll")).not.toBeNull();
   });
 });
 
 describe("фокус при смене экрана", () => {
-  it("после «New puzzle» из меню фокус на заголовке вкладки, а не на <body>", () => {
+  it("после возврата на хаб из партии фокус на заголовке вкладки, а не на <body>", () => {
     playing(fresh());
     render();
-    openMenu();
-    tap(q("menu-new")!);
+    (document.activeElement as HTMLElement | null)?.blur();
+    act(() => playStore.reselect());
     expect(document.activeElement).toBe(host.querySelector("h1.title"));
   });
 });

@@ -2,14 +2,16 @@
 /**
  * PD-116: партия Play переживает перезагрузку/вытеснение PWA — пишется локально (IndexedDB `kv`, без `days`),
  * восстанавливается при старте со всем: поле, заметки, undo-стек и лог, таймер, ink, сложность.
- * PD-144: после перезагрузки всегда хаб, незавершённая партия — слот «Продолжить» (`resume()` открывает доску);
- * «Начать» (`start`/`newGame`) стирает запись, возврат на хаб из партии (`toHub`) — нет; решённая запись удаляется.
- * Формат записи (`SavedPlay` v1, `hints`/`assisted` опциональны) не менялся — старые сохранения читаются как есть.
+ * PD-144: после перезагрузки всегда хаб; «Начать» (`startNew`/`newGame`) стирает запись, возврат на хаб (`toHub`) — нет;
+ * решённая запись удаляется. PD-167: слот на каждый режим (`meta:playGame:<режим>`), после перезагрузки незавершённая игра —
+ * строка режима на хабе (`slots()`), `open(режим)` поднимает её на доску. Формат записи — `SavedPlay` v1 (+ `mode`).
  */
 import { describe, expect, it } from "vitest";
 import { progressOf } from "../sync/fixtures";
 import { InMemoryProgressRepository } from "../today/repository";
-import { PLAY_META_KEY, PlayStore, parseSavedPlay } from "./store";
+import { PLAY_META_KEY, PlayStore, parseSavedPlay, slotKey } from "./store";
+
+const CLASSIC = slotKey("classic");
 
 const SOLUTION =
   "534678912" + "672195348" + "198342567" + "859761423" + "426853791" + "713924856" + "961537284" + "287419635" + "345286179";
@@ -28,7 +30,7 @@ const inner = (s: PlayStore) => s as unknown as Inner;
 function started(repo: InMemoryProgressRepository, patch: { ink?: boolean; difficulty?: "hard" } = {}): PlayStore {
   const s = new PlayStore({ storage: repo });
   // как `start()` без генератора: выход с хаба + новая партия
-  (s as unknown as { snap: Record<string, unknown> }).snap = { ...s.getSnapshot(), hub: false, restoring: false, difficulty: patch.difficulty ?? "medium" };
+  (s as unknown as { snap: Record<string, unknown> }).snap = { ...s.getSnapshot(), hub: false, restoring: false, difficulty: patch.difficulty ?? "medium", mode: patch.ink ? "ink" : "classic" };
   inner(s).beginGame({ mission: MISSION, solution: SOLUTION });
   if (patch.ink) s.setInk(true);
   return s;
@@ -40,12 +42,21 @@ const restored = async (repo: InMemoryProgressRepository): Promise<PlayStore> =>
   return s;
 };
 
+/** Перезагрузка + тап по строке режима на хабе: незавершённая игра поднимается на доску, затем — обратно на хаб (пауза). */
+const reopened = async (repo: InMemoryProgressRepository, mode: "classic" | "ink" = "classic"): Promise<PlayStore> => {
+  const s = await restored(repo);
+  expect(s.open(mode)).toBe(true);
+  s.toHub();
+  return s;
+};
+
 describe("PD-116: сохранение и восстановление партии Play", () => {
   it("без записи — пустой хаб; restoring снимается", async () => {
     const s = await restored(new InMemoryProgressRepository());
     expect(s.getSnapshot().restoring).toBe(false);
     expect(s.getSnapshot().hub).toBe(true);
     expect(s.hasSlot()).toBe(false);
+    expect(s.slots()).toEqual({});
     expect(s.getSnapshot().phase).toBe("loading");
   });
 
@@ -72,15 +83,17 @@ describe("PD-116: сохранение и восстановление парт�
     const before = a.getSnapshot();
 
     const b = await restored(repo);
+    expect(b.getSnapshot().restoring).toBe(false);
+    expect(b.getSnapshot().hub).toBe(true); // после перезагрузки — хаб, партия — строка своего режима
+    expect(b.slots().classic).toMatchObject({ difficulty: "hard", left: 50 });
+    expect(b.slots().ink).toBeUndefined();
+    expect(b.open("classic")).toBe(true);
+    b.toHub();
     const after = b.getSnapshot();
-    expect(after.restoring).toBe(false);
-    expect(after.hub).toBe(true); // после перезагрузки — хаб, партия в слоте «Продолжить»
     expect(b.hasSlot()).toBe(true);
     expect(after.phase).toBe("playing");
     expect(after.difficulty).toBe("hard");
-    // Low (b): список сложности на хабе — выбор для СЛЕДУЮЩЕЙ сетки, а не сложность сохранённой партии (та — в слоте).
-    expect(after.pick).toBe(new PlayStore().getSnapshot().pick);
-    expect(after.pick).not.toBe("hard");
+    expect(after.mode).toBe("classic");
     expect(after.play).toEqual(before.play);
     expect(after.play!.values[2]).toBe(4);
     expect(after.play!.notes[3]).toBe((1 << 6) | (1 << 9));
@@ -93,7 +106,7 @@ describe("PD-116: сохранение и восстановление парт�
     const held = b.getElapsedMs();
     expect(held).toBeGreaterThanOrEqual(83_000);
     expect(b.getElapsedMs()).toBe(held);
-    // «Продолжить» открывает доску, игра продолжается: undo из восстановленного стека работает
+    // строка режима открывает доску, игра продолжается: undo из восстановленного стека работает
     b.resume();
     expect(b.getSnapshot().hub).toBe(false);
     b.undo();
@@ -106,7 +119,7 @@ describe("PD-116: сохранение и восстановление парт�
     a.select(2);
     a.input(4); // клетка 2 заполнена, курсор остаётся на ней
     await flush();
-    const b = await restored(repo);
+    const b = await reopened(repo);
     expect(b.getSnapshot().selected).toBe(3); // первая пустая, а не заполненная клетка 2
 
     const c2 = new InMemoryProgressRepository();
@@ -115,29 +128,27 @@ describe("PD-116: сохранение и восстановление парт�
     c.toggleNotesMode();
     c.input(1);
     await flush();
-    const d = await restored(c2);
+    const d = await reopened(c2);
     expect(d.getSnapshot().selected).toBe(40);
   });
 
-  it("Low (b): выбор сложности на хабе, сделанный до окончания чтения, восстановление не затирает сложностью партии", async () => {
+  it("предвыбор шита: последняя выбранная сложность режима → сложность его незавершённой игры → по умолчанию; режимы независимы", async () => {
     const repo = new InMemoryProgressRepository();
-    const a = started(repo, { difficulty: "hard" });
+    started(repo, { difficulty: "hard" });
     await flush();
-    expect(a.hasSlot()).toBe(true);
 
     const b = new PlayStore({ storage: repo });
-    b.setDifficulty("expert"); // хаб уже интерактивен для стора (restoring только прячет экран)
+    b.setPick("classic", "expert"); // выбор в шите до окончания чтения слотов
     await b.restore();
-    expect(b.getSnapshot().difficulty).toBe("hard"); // слот — своя сложность
-    expect(b.getSnapshot().pick).toBe("expert"); // выбор хаба — последний выбранный
+    expect(b.pickFor("classic")).toBe("expert");
+    expect(b.slots().classic!.difficulty).toBe("hard"); // слот — своя сложность
 
-    // и без выбора — по умолчанию, не «hard» из слота
     const c = await restored(repo);
-    expect(c.getSnapshot().pick).toBe(new PlayStore().getSnapshot().pick);
-    // выбор на хабе потом живёт сам по себе
-    c.setDifficulty("easy");
-    expect(c.getSnapshot().pick).toBe("easy");
-    expect(c.getSnapshot().difficulty).toBe("hard");
+    expect(c.pickFor("classic")).toBe("hard"); // нет выбора — сложность незавершённой игры режима
+    expect(c.pickFor("ink")).toBe("medium"); // у Чернил игры нет — по умолчанию
+    c.setPick("ink", "easy");
+    expect(c.pickFor("ink")).toBe("easy");
+    expect(c.pickFor("classic")).toBe("hard");
   });
 
   it("PD-119: заметки, автоочистка и Fill переживают перезагрузку; Undo из восстановленного стека откатывает ход вместе с очисткой", async () => {
@@ -155,7 +166,7 @@ describe("PD-116: сохранение и восстановление парт�
     await flush();
     const before = a.getSnapshot().play!;
 
-    const b = await restored(repo);
+    const b = await reopened(repo);
     b.resume();
     expect(b.getSnapshot().play).toEqual(before);
     expect(b.getSnapshot().play!.notes[3]).not.toBe(0); // Fill записал кандидатов в клетку 3
@@ -172,7 +183,10 @@ describe("PD-116: сохранение и восстановление парт�
     a.select(2);
     a.input(1); // клякса (верная 4 вписывается сама)
     await flush();
-    const b = await restored(repo);
+    expect(await repo.getMeta(CLASSIC)).toBeNull(); // Чернила — в своём слоте
+    const b = await reopened(repo, "ink");
+    expect(b.getSnapshot().mode).toBe("ink");
+    b.resume();
     const p = b.getSnapshot().play!;
     expect(p.ink).toBe(true);
     expect(p.values[2]).toBe(4);
@@ -186,7 +200,7 @@ describe("PD-116: сохранение и восстановление парт�
     const repo = new InMemoryProgressRepository();
     started(repo, { ink: true });
     await flush();
-    const b = await restored(repo);
+    const b = await reopened(repo, "ink");
     expect(b.getSnapshot().play!.log).toHaveLength(0);
     expect(b.getSnapshot().play!.ink).toBe(true);
   });
@@ -197,19 +211,20 @@ describe("PD-116: сохранение и восстановление парт�
     a.select(2);
     a.input(4);
     await flush();
-    expect(await repo.getMeta(PLAY_META_KEY)).not.toBeNull();
+    expect(await repo.getMeta(CLASSIC)).not.toBeNull();
     a.toHub();
     await flush();
     expect(a.getSnapshot().hub).toBe(true);
     expect(a.hasSlot()).toBe(true);
-    expect(await repo.getMeta(PLAY_META_KEY)).not.toBeNull(); // слот жив
-    expect((await restored(repo)).hasSlot()).toBe(true);
-    a.newGame("easy", false); // «Начать» после подтверждения «Отбросить»
+    expect(await repo.getMeta(CLASSIC)).not.toBeNull(); // слот жив
+    expect((await restored(repo)).slots().classic).toBeDefined();
+    a.startNew("classic", "easy"); // «Начать новую» в шите режима
     await flush();
-    expect(await repo.getMeta(PLAY_META_KEY)).toBeNull();
+    expect(await repo.getMeta(CLASSIC)).toBeNull();
     const b = await restored(repo);
     expect(b.getSnapshot().hub).toBe(true);
     expect(b.getSnapshot().play).toBeNull();
+    expect(b.slots()).toEqual({});
     a.toHub(); // идёт генерация: возврат на хаб отменяет её, слота нет
     expect(a.getSnapshot().hub).toBe(true);
     expect(a.getSnapshot().phase).toBe("loading");
@@ -227,41 +242,39 @@ describe("PD-116: сохранение и восстановление парт�
     expect(a.getSnapshot().phase).toBe("solved");
     expect(a.hasSlot()).toBe(false); // решённая слотом не бывает
     await flush();
-    expect(await repo.getMeta(PLAY_META_KEY)).toMatchObject({ v: 1 });
+    expect(await repo.getMeta(CLASSIC)).toMatchObject({ v: 1, mode: "classic" });
+    expect(a.slots()).toEqual({});
     const b = await restored(repo);
     await flush();
     expect(b.getSnapshot().hub).toBe(true);
     expect(b.getSnapshot().play).toBeNull();
-    expect(b.hasSlot()).toBe(false);
-    expect(await repo.getMeta(PLAY_META_KEY)).toBeNull();
+    expect(b.slots()).toEqual({});
+    expect(await repo.getMeta(CLASSIC)).toBeNull();
   });
 
-  it("МИГРАЦИЯ: запись формата до PD-144 (v1 без hints/assisted) читается как есть и становится слотом хаба", async () => {
+  it("МИГРАЦИЯ: запись формата до PD-144 (v1 без hints/assisted, без mode) в старом ключе читается и становится слотом Классики", async () => {
     const src = new InMemoryProgressRepository();
     const a = started(src, { difficulty: "hard" });
     a.select(2);
     a.input(4);
     await flush();
-    const raw = { ...((await src.getMeta(PLAY_META_KEY)) as Record<string, unknown>) };
+    const raw = { ...((await src.getMeta(CLASSIC)) as Record<string, unknown>) };
     delete raw.hints; // старые записи этих полей не знали
     delete raw.assisted;
+    delete raw.mode;
     expect(raw.v).toBe(1);
     const old = new InMemoryProgressRepository();
     await old.setMeta(PLAY_META_KEY, raw);
     const b = await restored(old);
-    expect(b.hasSlot()).toBe(true);
-    expect(b.getSnapshot().hub).toBe(true);
+    expect(b.slots().classic).toMatchObject({ difficulty: "hard", left: 50 });
+    expect(b.open("classic")).toBe(true);
     expect(b.getSnapshot().play!.values[2]).toBe(4);
     expect(b.getSnapshot().difficulty).toBe("hard");
     expect(b.getSnapshot().hints ?? 0).toBe(0);
     expect(b.getSnapshot().assisted).not.toBe(true);
-    // формат записи после PD-144 прежний (тот же ключ и версия): партию читает и сборка до PD-144
-    b.resume();
-    b.select(3);
-    b.input(6);
-    await flush();
-    expect(await old.getMeta(PLAY_META_KEY)).toMatchObject({ v: 1, difficulty: "hard" });
-    expect(parseSavedPlay(await old.getMeta(PLAY_META_KEY))).not.toBeNull();
+    await b.flushed();
+    expect(await old.getMeta(PLAY_META_KEY)).toBeNull(); // старый ключ убран только после записи нового
+    expect(await old.getMeta(CLASSIC)).toMatchObject({ v: 1, mode: "classic", difficulty: "hard" });
   });
 
   it("слот своей сетки не трогает слот дня: запись `days` байт в байт прежняя после всех переходов хаба", async () => {
@@ -275,7 +288,9 @@ describe("PD-116: сохранение и восстановление парт�
     a.toHub();
     a.resume();
     a.toHub();
-    a.newGame("easy", false);
+    a.startNew("ink", "easy");
+    a.toHub();
+    a.open("classic");
     a.toHub();
     await flush();
     expect(JSON.stringify(await repo.listDays())).toBe(before);
@@ -288,7 +303,7 @@ describe("PD-116: сохранение и восстановление парт�
     a.input(4);
     await flush();
     expect(await repo.listDays()).toEqual([]);
-    expect(await repo.getMeta(PLAY_META_KEY)).toMatchObject({ v: 1, difficulty: "medium" });
+    expect(await repo.getMeta(CLASSIC)).toMatchObject({ v: 1, difficulty: "medium" });
   });
 
   it("выбор клетки и отклик на отказ — не прогресс: записи не плодят", async () => {
@@ -317,7 +332,10 @@ describe("PD-116: сохранение и восстановление парт�
     for (const junk of ["x", 42, { v: 2 }, { v: 1, play: {} }, { v: 1, difficulty: "nope" }]) {
       const repo = new InMemoryProgressRepository();
       await repo.setMeta(PLAY_META_KEY, junk);
+      await repo.setMeta(CLASSIC, junk);
+      await repo.setMeta(slotKey("ink"), junk);
       const s = await restored(repo);
+      expect(s.slots()).toEqual({});
       expect(s.getSnapshot().hub).toBe(true);
       expect(s.hasSlot()).toBe(false);
       expect(s.getSnapshot().restoring).toBe(false);
@@ -330,8 +348,11 @@ describe("PD-116: сохранение и восстановление парт�
     a.select(2);
     a.input(4);
     await flush();
-    const raw = (await repo.getMeta(PLAY_META_KEY)) as Record<string, unknown>;
+    const raw = (await repo.getMeta(CLASSIC)) as Record<string, unknown>;
     expect(parseSavedPlay(raw)).not.toBeNull();
+    expect(parseSavedPlay({ ...raw, mode: "liar" })).toBeNull(); // режим, которого эта версия не знает, не подменяется Классикой
+    expect(parseSavedPlay({ ...raw, mode: undefined, play: { ...(raw.play as object), ink: true } })!.mode).toBe("ink");
+    expect(parseSavedPlay({ ...raw, mode: "classic" }, "ink")!.mode).toBe("ink"); // ключ слота главнее поля
     expect(parseSavedPlay({ ...raw, elapsedMs: -1 })).toBeNull();
     expect(parseSavedPlay({ ...raw, startedOn: "never" })).toBeNull();
     expect(parseSavedPlay({ ...raw, play: { ...(raw.play as object), values: [1, 2, 3] } })).toBeNull();

@@ -20,13 +20,41 @@ describe("Today на экране партии: резерв держится п
     expect(css).toMatch(/:root\[data-type="ax3"\] \.play-fit \.ink-entry \.row-t \{ position: absolute/);
   });
 
-  it("источник сетки при AX3 не занимает вторую строку зазора", () => {
-    expect(css).toMatch(/:root\[data-type="ax3"\] \.play-fit \.today-status \.source \{ position: absolute/);
+  it("PD-159: при AX3 экран дня — дата своей строкой, сложность не усекается, источник виден; не влезло — страница прокручивается", () => {
+    expect(css).not.toMatch(/\.today-status \.source \{ position: absolute/);
+    expect(css).toMatch(/:root\[data-type="ax3"\] \.today\.play-fit \.subline \{ flex-wrap: wrap/);
+    expect(css).toMatch(/:root\[data-type="ax3"\] \.today\.play-fit \.subline > \.sub-day \{ flex-basis: 100%/);
+    expect(css).toMatch(/:root\[data-type="ax3"\] \.today\.play-fit \.subline > \.sub-day \+ \.sep \{ display: none/);
+    expect(css).toMatch(/:root\[data-type="ax3"\] \.scroll:has\(\.today\.play-fit\) \{ overflow-y: auto/);
+    expect(css).toMatch(/:root\[data-type="ax3"\] \.today\.play-fit > \.gap, :root\[data-type="ax3"\] \.today\.play-fit > \.hint-dock \{ flex-shrink: 0/);
+    // поле уступает две добавочные строки, но не глубже min(160 px, прежнего размера); правило не действует в ландшафте (там своё)
+    expect(css).toMatch(
+      /@media \(orientation: portrait\), \(min-height: 501px\) \{ :root\[data-type="ax3"\] \.today\.play-fit \.board \{ --side: max\(min\(160px, 100dvh - var\(--chrome\)\), 100dvh - var\(--chrome\) - 1\.15rem - 1rem - 2px\); width: min\(100%, var\(--side\)\); --s: calc\(\(min\(100cqi, var\(--side\)\) - 2 \* var\(--box-gap\)\) \/ 9\)/,
+    );
   });
 
   it("архивный день: ряд «‹ Year» над заголовком входит в обвязку поля (--bar), иначе ряд действий уходит под таб-бар", () => {
     expect(css).toMatch(/\.today\.archive\.play-fit \{ --bar: calc\(max\(44px, 1\.2rem\) - 8px\)/);
     const play = fs.readFileSync(new URL("../styles/play.css", import.meta.url), "utf8").replace(/\/\*[\s\S]*?\*\//g, "").replace(/\s+/g, " ");
     expect(play).toMatch(/\.play-fit \{ --extra: 0px; --bar: 0px; --chrome0: calc\( var\(--bar\) \+ var\(--sa-top\)/);
+  });
+
+  it("PD-159: при AX3 ряды бокса заданы размером клетки (WebKit не пересчитывал aspect-ratio-ряды после включения data-type)", () => {
+    expect(css).toMatch(/:root\[data-type="ax3"\] \.today\.play-fit \.box \{ grid-auto-rows: var\(--s\)/);
+  });
+
+  it("PD-159: ландшафт телефона — экран партии прокручивается, поле по высоте окна (≥ 160 pt), ничего не сжимается; портрет не затронут", () => {
+    const play = fs.readFileSync(new URL("../styles/play.css", import.meta.url), "utf8").replace(/\/\*[\s\S]*?\*\//g, "").replace(/\s+/g, " ");
+    const m = play.match(/@media \(orientation: landscape\) and \(max-height: 500px\) \{(.*)\} *$/);
+    expect(m, "ландшафтный блок в конце play.css").not.toBeNull();
+    const land = m![1]!;
+    expect(land).toMatch(/\.scroll:has\(\.play-fit\) \{ overflow-y: auto; \}/);
+    expect(land).toMatch(/\.scroll:has\(\.play-fit\) > \.panel, \.scroll:has\(\.play-fit\) \.play \{ min-height: auto; \}/);
+    expect(land).toMatch(/\.play-fit > \.gap, \.play-fit > \.hint-dock \{ flex-shrink: 0; \}/);
+    expect(land).toMatch(/--side: max\( 160px, 100dvh - var\(--bar\) - var\(--sa-top\) - var\(--sa-bot\) - 2rem - 8px - 1\.15rem - 2px - 12px - var\(--tabbar-h\) - 8px \)/);
+    expect(land).toMatch(/width: min\(100%, var\(--side\)\)/);
+    expect(land).toMatch(/\.play-fit \.box \{ grid-auto-rows: var\(--s\); \}/); // WebKit: ряды сетки не пересчитывались после смены поля
+    // портретная формула поля прежняя (её держит pd144.css.test.ts) — ландшафт её только перекрывает
+    expect(play).toMatch(/\.play-fit \.board \{ width: min\(100%, calc\(100dvh - var\(--chrome\)\)\)/);
   });
 });
