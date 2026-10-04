@@ -1,0 +1,1894 @@
+[
+ {
+  "tag": "chromium-en-320-light",
+  "yeN": 1,
+  "yinfo": {
+   "box": [
+    56,
+    56
+   ],
+   "optics": "small",
+   "rects": 9,
+   "ariaHidden": "true",
+   "role": null,
+   "fill": "rgb(110, 110, 115)",
+   "left": 16,
+   "right": 72,
+   "ovX": false
+  },
+  "ainfo": {
+   "mark": [
+    60,
+    60,
+    "small",
+    "true",
+    null,
+    null
+   ],
+   "word": [
+    148,
+    28,
+    "img",
+    "Pundoku"
+   ],
+   "inCard": true,
+   "overlap": false,
+   "ovX": false,
+   "card": [
+    288,
+    167.0625
+   ],
+   "text": "Version 0.1.0 | v0.1.0"
+  },
+  "errs": []
+ },
+ {
+  "tag": "chromium-en-320-light-ax",
+  "yeN": 1,
+  "yinfo": {
+   "box": [
+    56,
+    56
+   ],
+   "optics": "small",
+   "rects": 9,
+   "ariaHidden": "true",
+   "role": null,
+   "fill": "rgb(110, 110, 115)",
+   "left": 16,
+   "right": 72,
+   "ovX": false
+  },
+  "ainfo": {
+   "mark": [
+    60,
+    60,
+    "small",
+    "true",
+    null,
+    null
+   ],
+   "word": [
+    148,
+    28,
+    "img",
+    "Pundoku"
+   ],
+   "inCard": true,
+   "overlap": false,
+   "ovX": false,
+   "card": [
+    288,
+    184.09375
+   ],
+   "text": "Version 0.1.0 | v0.1.0"
+  },
+  "errs": []
+ },
+ {
+  "tag": "chromium-en-320-dark",
+  "yeN": 1,
+  "yinfo": {
+   "box": [
+    56,
+    56
+   ],
+   "optics": "small",
+   "rects": 9,
+   "ariaHidden": "true",
+   "role": null,
+   "fill": "rgb(152, 152, 157)",
+   "left": 16,
+   "right": 72,
+   "ovX": false
+  },
+  "ainfo": {
+   "mark": [
+    60,
+    60,
+    "small",
+    "true",
+    null,
+    null
+   ],
+   "word": [
+    148,
+    28,
+    "img",
+    "Pundoku"
+   ],
+   "inCard": true,
+   "overlap": false,
+   "ovX": false,
+   "card": [
+    288,
+    167.0625
+   ],
+   "text": "Version 0.1.0 | v0.1.0"
+  },
+  "errs": []
+ },
+ {
+  "tag": "chromium-en-393-light",
+  "yeN": 1,
+  "yinfo": {
+   "box": [
+    56,
+    56
+   ],
+   "optics": "small",
+   "rects": 9,
+   "ariaHidden": "true",
+   "role": null,
+   "fill": "rgb(110, 110, 115)",
+   "left": 16,
+   "right": 72,
+   "ovX": false
+  },
+  "ainfo": {
+   "mark": [
+    60,
+    60,
+    "small",
+    "true",
+    null,
+    null
+   ],
+   "word": [
+    148,
+    28,
+    "img",
+    "Pundoku"
+   ],
+   "inCard": true,
+   "overlap": false,
+   "ovX": false,
+   "card": [
+    361,
+    167.0625
+   ],
+   "text": "Version 0.1.0 | v0.1.0"
+  },
+  "errs": []
+ },
+ {
+  "tag": "chromium-en-393-light-ax",
+  "yeN": 1,
+  "yinfo": {
+   "box": [
+    56,
+    56
+   ],
+   "optics": "small",
+   "rects": 9,
+   "ariaHidden": "true",
+   "role": null,
+   "fill": "rgb(110, 110, 115)",
+   "left": 16,
+   "right": 72,
+   "ovX": false
+  },
+  "ainfo": {
+   "mark": [
+    60,
+    60,
+    "small",
+    "true",
+    null,
+    null
+   ],
+   "word": [
+    148,
+    28,
+    "img",
+    "Pundoku"
+   ],
+   "inCard": true,
+   "overlap": false,
+   "ovX": false,
+   "card": [
+    361,
+    184.09375
+   ],
+   "text": "Version 0.1.0 | v0.1.0"
+  },
+  "errs": []
+ },
+ {
+  "tag": "chromium-en-393-dark",
+  "yeN": 1,
+  "yinfo": {
+   "box": [
+    56,
+    56
+   ],
+   "optics": "small",
+   "rects": 9,
+   "ariaHidden": "true",
+   "role": null,
+   "fill": "rgb(152, 152, 157)",
+   "left": 16,
+   "right": 72,
+   "ovX": false
+  },
+  "ainfo": {
+   "mark": [
+    60,
+    60,
+    "small",
+    "true",
+    null,
+    null
+   ],
+   "word": [
+    148,
+    28,
+    "img",
+    "Pundoku"
+   ],
+   "inCard": true,
+   "overlap": false,
+   "ovX": false,
+   "card": [
+    361,
+    167.0625
+   ],
+   "text": "Version 0.1.0 | v0.1.0"
+  },
+  "errs": []
+ },
+ {
+  "tag": "chromium-uk-320-light",
+  "yeN": 1,
+  "yinfo": {
+   "box": [
+    56,
+    56
+   ],
+   "optics": "small",
+   "rects": 9,
+   "ariaHidden": "true",
+   "role": null,
+   "fill": "rgb(110, 110, 115)",
+   "left": 16,
+   "right": 72,
+   "ovX": false
+  },
+  "ainfo": {
+   "mark": [
+    60,
+    60,
+    "small",
+    "true",
+    null,
+    null
+   ],
+   "word": [
+    148,
+    28,
+    "img",
+    "Pundoku"
+   ],
+   "inCard": true,
+   "overlap": false,
+   "ovX": false,
+   "card": [
+    288,
+    167.0625
+   ],
+   "text": "Версія 0.1.0 | v0.1.0"
+  },
+  "errs": []
+ },
+ {
+  "tag": "chromium-uk-320-light-ax",
+  "yeN": 1,
+  "yinfo": {
+   "box": [
+    56,
+    56
+   ],
+   "optics": "small",
+   "rects": 9,
+   "ariaHidden": "true",
+   "role": null,
+   "fill": "rgb(110, 110, 115)",
+   "left": 16,
+   "right": 72,
+   "ovX": false
+  },
+  "ainfo": {
+   "mark": [
+    60,
+    60,
+    "small",
+    "true",
+    null,
+    null
+   ],
+   "word": [
+    148,
+    28,
+    "img",
+    "Pundoku"
+   ],
+   "inCard": true,
+   "overlap": false,
+   "ovX": false,
+   "card": [
+    288,
+    184.09375
+   ],
+   "text": "Версія 0.1.0 | v0.1.0"
+  },
+  "errs": []
+ },
+ {
+  "tag": "chromium-uk-320-dark",
+  "yeN": 1,
+  "yinfo": {
+   "box": [
+    56,
+    56
+   ],
+   "optics": "small",
+   "rects": 9,
+   "ariaHidden": "true",
+   "role": null,
+   "fill": "rgb(152, 152, 157)",
+   "left": 16,
+   "right": 72,
+   "ovX": false
+  },
+  "ainfo": {
+   "mark": [
+    60,
+    60,
+    "small",
+    "true",
+    null,
+    null
+   ],
+   "word": [
+    148,
+    28,
+    "img",
+    "Pundoku"
+   ],
+   "inCard": true,
+   "overlap": false,
+   "ovX": false,
+   "card": [
+    288,
+    167.0625
+   ],
+   "text": "Версія 0.1.0 | v0.1.0"
+  },
+  "errs": []
+ },
+ {
+  "tag": "chromium-uk-320-dark-ax",
+  "yeN": 1,
+  "yinfo": {
+   "box": [
+    56,
+    56
+   ],
+   "optics": "small",
+   "rects": 9,
+   "ariaHidden": "true",
+   "role": null,
+   "fill": "rgb(152, 152, 157)",
+   "left": 16,
+   "right": 72,
+   "ovX": false
+  },
+  "ainfo": {
+   "mark": [
+    60,
+    60,
+    "small",
+    "true",
+    null,
+    null
+   ],
+   "word": [
+    148,
+    28,
+    "img",
+    "Pundoku"
+   ],
+   "inCard": true,
+   "overlap": false,
+   "ovX": false,
+   "card": [
+    288,
+    184.09375
+   ],
+   "text": "Версія 0.1.0 | v0.1.0"
+  },
+  "errs": []
+ },
+ {
+  "tag": "chromium-uk-393-light",
+  "yeN": 1,
+  "yinfo": {
+   "box": [
+    56,
+    56
+   ],
+   "optics": "small",
+   "rects": 9,
+   "ariaHidden": "true",
+   "role": null,
+   "fill": "rgb(110, 110, 115)",
+   "left": 16,
+   "right": 72,
+   "ovX": false
+  },
+  "ainfo": {
+   "mark": [
+    60,
+    60,
+    "small",
+    "true",
+    null,
+    null
+   ],
+   "word": [
+    148,
+    28,
+    "img",
+    "Pundoku"
+   ],
+   "inCard": true,
+   "overlap": false,
+   "ovX": false,
+   "card": [
+    361,
+    167.0625
+   ],
+   "text": "Версія 0.1.0 | v0.1.0"
+  },
+  "errs": []
+ },
+ {
+  "tag": "chromium-uk-393-light-ax",
+  "yeN": 1,
+  "yinfo": {
+   "box": [
+    56,
+    56
+   ],
+   "optics": "small",
+   "rects": 9,
+   "ariaHidden": "true",
+   "role": null,
+   "fill": "rgb(110, 110, 115)",
+   "left": 16,
+   "right": 72,
+   "ovX": false
+  },
+  "ainfo": {
+   "mark": [
+    60,
+    60,
+    "small",
+    "true",
+    null,
+    null
+   ],
+   "word": [
+    148,
+    28,
+    "img",
+    "Pundoku"
+   ],
+   "inCard": true,
+   "overlap": false,
+   "ovX": false,
+   "card": [
+    361,
+    184.09375
+   ],
+   "text": "Версія 0.1.0 | v0.1.0"
+  },
+  "errs": []
+ },
+ {
+  "tag": "chromium-uk-393-dark",
+  "yeN": 1,
+  "yinfo": {
+   "box": [
+    56,
+    56
+   ],
+   "optics": "small",
+   "rects": 9,
+   "ariaHidden": "true",
+   "role": null,
+   "fill": "rgb(152, 152, 157)",
+   "left": 16,
+   "right": 72,
+   "ovX": false
+  },
+  "ainfo": {
+   "mark": [
+    60,
+    60,
+    "small",
+    "true",
+    null,
+    null
+   ],
+   "word": [
+    148,
+    28,
+    "img",
+    "Pundoku"
+   ],
+   "inCard": true,
+   "overlap": false,
+   "ovX": false,
+   "card": [
+    361,
+    167.0625
+   ],
+   "text": "Версія 0.1.0 | v0.1.0"
+  },
+  "errs": []
+ },
+ {
+  "tag": "chromium-uk-393-dark-ax",
+  "yeN": 1,
+  "yinfo": {
+   "box": [
+    56,
+    56
+   ],
+   "optics": "small",
+   "rects": 9,
+   "ariaHidden": "true",
+   "role": null,
+   "fill": "rgb(152, 152, 157)",
+   "left": 16,
+   "right": 72,
+   "ovX": false
+  },
+  "ainfo": {
+   "mark": [
+    60,
+    60,
+    "small",
+    "true",
+    null,
+    null
+   ],
+   "word": [
+    148,
+    28,
+    "img",
+    "Pundoku"
+   ],
+   "inCard": true,
+   "overlap": false,
+   "ovX": false,
+   "card": [
+    361,
+    184.09375
+   ],
+   "text": "Версія 0.1.0 | v0.1.0"
+  },
+  "errs": []
+ },
+ {
+  "tag": "chromium-ru-320-light",
+  "yeN": 1,
+  "yinfo": {
+   "box": [
+    56,
+    56
+   ],
+   "optics": "small",
+   "rects": 9,
+   "ariaHidden": "true",
+   "role": null,
+   "fill": "rgb(110, 110, 115)",
+   "left": 16,
+   "right": 72,
+   "ovX": false
+  },
+  "ainfo": {
+   "mark": [
+    60,
+    60,
+    "small",
+    "true",
+    null,
+    null
+   ],
+   "word": [
+    148,
+    28,
+    "img",
+    "Pundoku"
+   ],
+   "inCard": true,
+   "overlap": false,
+   "ovX": false,
+   "card": [
+    288,
+    167.0625
+   ],
+   "text": "Версия 0.1.0 | v0.1.0"
+  },
+  "errs": []
+ },
+ {
+  "tag": "chromium-ru-320-light-ax",
+  "yeN": 1,
+  "yinfo": {
+   "box": [
+    56,
+    56
+   ],
+   "optics": "small",
+   "rects": 9,
+   "ariaHidden": "true",
+   "role": null,
+   "fill": "rgb(110, 110, 115)",
+   "left": 16,
+   "right": 72,
+   "ovX": false
+  },
+  "ainfo": {
+   "mark": [
+    60,
+    60,
+    "small",
+    "true",
+    null,
+    null
+   ],
+   "word": [
+    148,
+    28,
+    "img",
+    "Pundoku"
+   ],
+   "inCard": true,
+   "overlap": false,
+   "ovX": false,
+   "card": [
+    288,
+    184.09375
+   ],
+   "text": "Версия 0.1.0 | v0.1.0"
+  },
+  "errs": []
+ },
+ {
+  "tag": "chromium-ru-320-dark",
+  "yeN": 1,
+  "yinfo": {
+   "box": [
+    56,
+    56
+   ],
+   "optics": "small",
+   "rects": 9,
+   "ariaHidden": "true",
+   "role": null,
+   "fill": "rgb(152, 152, 157)",
+   "left": 16,
+   "right": 72,
+   "ovX": false
+  },
+  "ainfo": {
+   "mark": [
+    60,
+    60,
+    "small",
+    "true",
+    null,
+    null
+   ],
+   "word": [
+    148,
+    28,
+    "img",
+    "Pundoku"
+   ],
+   "inCard": true,
+   "overlap": false,
+   "ovX": false,
+   "card": [
+    288,
+    167.0625
+   ],
+   "text": "Версия 0.1.0 | v0.1.0"
+  },
+  "errs": []
+ },
+ {
+  "tag": "chromium-ru-320-dark-ax",
+  "yeN": 1,
+  "yinfo": {
+   "box": [
+    56,
+    56
+   ],
+   "optics": "small",
+   "rects": 9,
+   "ariaHidden": "true",
+   "role": null,
+   "fill": "rgb(152, 152, 157)",
+   "left": 16,
+   "right": 72,
+   "ovX": false
+  },
+  "ainfo": {
+   "mark": [
+    60,
+    60,
+    "small",
+    "true",
+    null,
+    null
+   ],
+   "word": [
+    148,
+    28,
+    "img",
+    "Pundoku"
+   ],
+   "inCard": true,
+   "overlap": false,
+   "ovX": false,
+   "card": [
+    288,
+    184.09375
+   ],
+   "text": "Версия 0.1.0 | v0.1.0"
+  },
+  "errs": []
+ },
+ {
+  "tag": "chromium-ru-393-light",
+  "yeN": 1,
+  "yinfo": {
+   "box": [
+    56,
+    56
+   ],
+   "optics": "small",
+   "rects": 9,
+   "ariaHidden": "true",
+   "role": null,
+   "fill": "rgb(110, 110, 115)",
+   "left": 16,
+   "right": 72,
+   "ovX": false
+  },
+  "ainfo": {
+   "mark": [
+    60,
+    60,
+    "small",
+    "true",
+    null,
+    null
+   ],
+   "word": [
+    148,
+    28,
+    "img",
+    "Pundoku"
+   ],
+   "inCard": true,
+   "overlap": false,
+   "ovX": false,
+   "card": [
+    361,
+    167.0625
+   ],
+   "text": "Версия 0.1.0 | v0.1.0"
+  },
+  "errs": []
+ },
+ {
+  "tag": "chromium-ru-393-light-ax",
+  "yeN": 1,
+  "yinfo": {
+   "box": [
+    56,
+    56
+   ],
+   "optics": "small",
+   "rects": 9,
+   "ariaHidden": "true",
+   "role": null,
+   "fill": "rgb(110, 110, 115)",
+   "left": 16,
+   "right": 72,
+   "ovX": false
+  },
+  "ainfo": {
+   "mark": [
+    60,
+    60,
+    "small",
+    "true",
+    null,
+    null
+   ],
+   "word": [
+    148,
+    28,
+    "img",
+    "Pundoku"
+   ],
+   "inCard": true,
+   "overlap": false,
+   "ovX": false,
+   "card": [
+    361,
+    184.09375
+   ],
+   "text": "Версия 0.1.0 | v0.1.0"
+  },
+  "errs": []
+ },
+ {
+  "tag": "chromium-ru-393-dark",
+  "yeN": 1,
+  "yinfo": {
+   "box": [
+    56,
+    56
+   ],
+   "optics": "small",
+   "rects": 9,
+   "ariaHidden": "true",
+   "role": null,
+   "fill": "rgb(152, 152, 157)",
+   "left": 16,
+   "right": 72,
+   "ovX": false
+  },
+  "ainfo": {
+   "mark": [
+    60,
+    60,
+    "small",
+    "true",
+    null,
+    null
+   ],
+   "word": [
+    148,
+    28,
+    "img",
+    "Pundoku"
+   ],
+   "inCard": true,
+   "overlap": false,
+   "ovX": false,
+   "card": [
+    361,
+    167.0625
+   ],
+   "text": "Версия 0.1.0 | v0.1.0"
+  },
+  "errs": []
+ },
+ {
+  "tag": "chromium-ru-393-dark-ax",
+  "yeN": 1,
+  "yinfo": {
+   "box": [
+    56,
+    56
+   ],
+   "optics": "small",
+   "rects": 9,
+   "ariaHidden": "true",
+   "role": null,
+   "fill": "rgb(152, 152, 157)",
+   "left": 16,
+   "right": 72,
+   "ovX": false
+  },
+  "ainfo": {
+   "mark": [
+    60,
+    60,
+    "small",
+    "true",
+    null,
+    null
+   ],
+   "word": [
+    148,
+    28,
+    "img",
+    "Pundoku"
+   ],
+   "inCard": true,
+   "overlap": false,
+   "ovX": false,
+   "card": [
+    361,
+    184.09375
+   ],
+   "text": "Версия 0.1.0 | v0.1.0"
+  },
+  "errs": []
+ },
+ {
+  "tag": "webkit-en-320-light",
+  "yeN": 1,
+  "yinfo": {
+   "box": [
+    56,
+    56
+   ],
+   "optics": "small",
+   "rects": 9,
+   "ariaHidden": "true",
+   "role": null,
+   "fill": "rgb(110, 110, 115)",
+   "left": 16,
+   "right": 72,
+   "ovX": false
+  },
+  "ainfo": {
+   "mark": [
+    60,
+    60,
+    "small",
+    "true",
+    null,
+    null
+   ],
+   "word": [
+    148,
+    28,
+    "img",
+    "Pundoku"
+   ],
+   "inCard": true,
+   "overlap": false,
+   "ovX": false,
+   "card": [
+    288,
+    166
+   ],
+   "text": " | Version 0.1.0v0.1.0 | "
+  },
+  "errs": []
+ },
+ {
+  "tag": "webkit-en-320-light-ax",
+  "yeN": 1,
+  "yinfo": {
+   "box": [
+    56,
+    56
+   ],
+   "optics": "small",
+   "rects": 9,
+   "ariaHidden": "true",
+   "role": null,
+   "fill": "rgb(110, 110, 115)",
+   "left": 16,
+   "right": 72,
+   "ovX": false
+  },
+  "ainfo": {
+   "mark": [
+    60,
+    60,
+    "small",
+    "true",
+    null,
+    null
+   ],
+   "word": [
+    148,
+    28,
+    "img",
+    "Pundoku"
+   ],
+   "inCard": true,
+   "overlap": false,
+   "ovX": false,
+   "card": [
+    288,
+    184
+   ],
+   "text": " | Version 0.1.0v0.1.0 | "
+  },
+  "errs": []
+ },
+ {
+  "tag": "webkit-en-320-dark",
+  "yeN": 1,
+  "yinfo": {
+   "box": [
+    56,
+    56
+   ],
+   "optics": "small",
+   "rects": 9,
+   "ariaHidden": "true",
+   "role": null,
+   "fill": "rgb(152, 152, 157)",
+   "left": 16,
+   "right": 72,
+   "ovX": false
+  },
+  "ainfo": {
+   "mark": [
+    60,
+    60,
+    "small",
+    "true",
+    null,
+    null
+   ],
+   "word": [
+    148,
+    28,
+    "img",
+    "Pundoku"
+   ],
+   "inCard": true,
+   "overlap": false,
+   "ovX": false,
+   "card": [
+    288,
+    166
+   ],
+   "text": " | Version 0.1.0v0.1.0 | "
+  },
+  "errs": []
+ },
+ {
+  "tag": "webkit-en-393-light",
+  "yeN": 1,
+  "yinfo": {
+   "box": [
+    56,
+    56
+   ],
+   "optics": "small",
+   "rects": 9,
+   "ariaHidden": "true",
+   "role": null,
+   "fill": "rgb(110, 110, 115)",
+   "left": 16,
+   "right": 72,
+   "ovX": false
+  },
+  "ainfo": {
+   "mark": [
+    60,
+    60,
+    "small",
+    "true",
+    null,
+    null
+   ],
+   "word": [
+    148,
+    28,
+    "img",
+    "Pundoku"
+   ],
+   "inCard": true,
+   "overlap": false,
+   "ovX": false,
+   "card": [
+    361,
+    166
+   ],
+   "text": " | Version 0.1.0v0.1.0 | "
+  },
+  "errs": []
+ },
+ {
+  "tag": "webkit-en-393-light-ax",
+  "yeN": 1,
+  "yinfo": {
+   "box": [
+    56,
+    56
+   ],
+   "optics": "small",
+   "rects": 9,
+   "ariaHidden": "true",
+   "role": null,
+   "fill": "rgb(110, 110, 115)",
+   "left": 16,
+   "right": 72,
+   "ovX": false
+  },
+  "ainfo": {
+   "mark": [
+    60,
+    60,
+    "small",
+    "true",
+    null,
+    null
+   ],
+   "word": [
+    148,
+    28,
+    "img",
+    "Pundoku"
+   ],
+   "inCard": true,
+   "overlap": false,
+   "ovX": false,
+   "card": [
+    361,
+    184
+   ],
+   "text": " | Version 0.1.0v0.1.0 | "
+  },
+  "errs": []
+ },
+ {
+  "tag": "webkit-en-393-dark",
+  "yeN": 1,
+  "yinfo": {
+   "box": [
+    56,
+    56
+   ],
+   "optics": "small",
+   "rects": 9,
+   "ariaHidden": "true",
+   "role": null,
+   "fill": "rgb(152, 152, 157)",
+   "left": 16,
+   "right": 72,
+   "ovX": false
+  },
+  "ainfo": {
+   "mark": [
+    60,
+    60,
+    "small",
+    "true",
+    null,
+    null
+   ],
+   "word": [
+    148,
+    28,
+    "img",
+    "Pundoku"
+   ],
+   "inCard": true,
+   "overlap": false,
+   "ovX": false,
+   "card": [
+    361,
+    166
+   ],
+   "text": " | Version 0.1.0v0.1.0 | "
+  },
+  "errs": []
+ },
+ {
+  "tag": "webkit-uk-320-light",
+  "yeN": 1,
+  "yinfo": {
+   "box": [
+    56,
+    56
+   ],
+   "optics": "small",
+   "rects": 9,
+   "ariaHidden": "true",
+   "role": null,
+   "fill": "rgb(110, 110, 115)",
+   "left": 16,
+   "right": 72,
+   "ovX": false
+  },
+  "ainfo": {
+   "mark": [
+    60,
+    60,
+    "small",
+    "true",
+    null,
+    null
+   ],
+   "word": [
+    148,
+    28,
+    "img",
+    "Pundoku"
+   ],
+   "inCard": true,
+   "overlap": false,
+   "ovX": false,
+   "card": [
+    288,
+    166
+   ],
+   "text": " | Версія 0.1.0v0.1.0 | "
+  },
+  "errs": []
+ },
+ {
+  "tag": "webkit-uk-320-light-ax",
+  "yeN": 1,
+  "yinfo": {
+   "box": [
+    56,
+    56
+   ],
+   "optics": "small",
+   "rects": 9,
+   "ariaHidden": "true",
+   "role": null,
+   "fill": "rgb(110, 110, 115)",
+   "left": 16,
+   "right": 72,
+   "ovX": false
+  },
+  "ainfo": {
+   "mark": [
+    60,
+    60,
+    "small",
+    "true",
+    null,
+    null
+   ],
+   "word": [
+    148,
+    28,
+    "img",
+    "Pundoku"
+   ],
+   "inCard": true,
+   "overlap": false,
+   "ovX": false,
+   "card": [
+    288,
+    184
+   ],
+   "text": " | Версія 0.1.0v0.1.0 | "
+  },
+  "errs": []
+ },
+ {
+  "tag": "webkit-uk-320-dark",
+  "yeN": 1,
+  "yinfo": {
+   "box": [
+    56,
+    56
+   ],
+   "optics": "small",
+   "rects": 9,
+   "ariaHidden": "true",
+   "role": null,
+   "fill": "rgb(152, 152, 157)",
+   "left": 16,
+   "right": 72,
+   "ovX": false
+  },
+  "ainfo": {
+   "mark": [
+    60,
+    60,
+    "small",
+    "true",
+    null,
+    null
+   ],
+   "word": [
+    148,
+    28,
+    "img",
+    "Pundoku"
+   ],
+   "inCard": true,
+   "overlap": false,
+   "ovX": false,
+   "card": [
+    288,
+    166
+   ],
+   "text": " | Версія 0.1.0v0.1.0 | "
+  },
+  "errs": []
+ },
+ {
+  "tag": "webkit-uk-320-dark-ax",
+  "yeN": 1,
+  "yinfo": {
+   "box": [
+    56,
+    56
+   ],
+   "optics": "small",
+   "rects": 9,
+   "ariaHidden": "true",
+   "role": null,
+   "fill": "rgb(152, 152, 157)",
+   "left": 16,
+   "right": 72,
+   "ovX": false
+  },
+  "ainfo": {
+   "mark": [
+    60,
+    60,
+    "small",
+    "true",
+    null,
+    null
+   ],
+   "word": [
+    148,
+    28,
+    "img",
+    "Pundoku"
+   ],
+   "inCard": true,
+   "overlap": false,
+   "ovX": false,
+   "card": [
+    288,
+    184
+   ],
+   "text": " | Версія 0.1.0v0.1.0 | "
+  },
+  "errs": []
+ },
+ {
+  "tag": "webkit-uk-393-light",
+  "yeN": 1,
+  "yinfo": {
+   "box": [
+    56,
+    56
+   ],
+   "optics": "small",
+   "rects": 9,
+   "ariaHidden": "true",
+   "role": null,
+   "fill": "rgb(110, 110, 115)",
+   "left": 16,
+   "right": 72,
+   "ovX": false
+  },
+  "ainfo": {
+   "mark": [
+    60,
+    60,
+    "small",
+    "true",
+    null,
+    null
+   ],
+   "word": [
+    148,
+    28,
+    "img",
+    "Pundoku"
+   ],
+   "inCard": true,
+   "overlap": false,
+   "ovX": false,
+   "card": [
+    361,
+    166
+   ],
+   "text": " | Версія 0.1.0v0.1.0 | "
+  },
+  "errs": []
+ },
+ {
+  "tag": "webkit-uk-393-light-ax",
+  "yeN": 1,
+  "yinfo": {
+   "box": [
+    56,
+    56
+   ],
+   "optics": "small",
+   "rects": 9,
+   "ariaHidden": "true",
+   "role": null,
+   "fill": "rgb(110, 110, 115)",
+   "left": 16,
+   "right": 72,
+   "ovX": false
+  },
+  "ainfo": {
+   "mark": [
+    60,
+    60,
+    "small",
+    "true",
+    null,
+    null
+   ],
+   "word": [
+    148,
+    28,
+    "img",
+    "Pundoku"
+   ],
+   "inCard": true,
+   "overlap": false,
+   "ovX": false,
+   "card": [
+    361,
+    184
+   ],
+   "text": " | Версія 0.1.0v0.1.0 | "
+  },
+  "errs": []
+ },
+ {
+  "tag": "webkit-uk-393-dark",
+  "yeN": 1,
+  "yinfo": {
+   "box": [
+    56,
+    56
+   ],
+   "optics": "small",
+   "rects": 9,
+   "ariaHidden": "true",
+   "role": null,
+   "fill": "rgb(152, 152, 157)",
+   "left": 16,
+   "right": 72,
+   "ovX": false
+  },
+  "ainfo": {
+   "mark": [
+    60,
+    60,
+    "small",
+    "true",
+    null,
+    null
+   ],
+   "word": [
+    148,
+    28,
+    "img",
+    "Pundoku"
+   ],
+   "inCard": true,
+   "overlap": false,
+   "ovX": false,
+   "card": [
+    361,
+    166
+   ],
+   "text": " | Версія 0.1.0v0.1.0 | "
+  },
+  "errs": []
+ },
+ {
+  "tag": "webkit-uk-393-dark-ax",
+  "yeN": 1,
+  "yinfo": {
+   "box": [
+    56,
+    56
+   ],
+   "optics": "small",
+   "rects": 9,
+   "ariaHidden": "true",
+   "role": null,
+   "fill": "rgb(152, 152, 157)",
+   "left": 16,
+   "right": 72,
+   "ovX": false
+  },
+  "ainfo": {
+   "mark": [
+    60,
+    60,
+    "small",
+    "true",
+    null,
+    null
+   ],
+   "word": [
+    148,
+    28,
+    "img",
+    "Pundoku"
+   ],
+   "inCard": true,
+   "overlap": false,
+   "ovX": false,
+   "card": [
+    361,
+    184
+   ],
+   "text": " | Версія 0.1.0v0.1.0 | "
+  },
+  "errs": []
+ },
+ {
+  "tag": "webkit-ru-320-light",
+  "yeN": 1,
+  "yinfo": {
+   "box": [
+    56,
+    56
+   ],
+   "optics": "small",
+   "rects": 9,
+   "ariaHidden": "true",
+   "role": null,
+   "fill": "rgb(110, 110, 115)",
+   "left": 16,
+   "right": 72,
+   "ovX": false
+  },
+  "ainfo": {
+   "mark": [
+    60,
+    60,
+    "small",
+    "true",
+    null,
+    null
+   ],
+   "word": [
+    148,
+    28,
+    "img",
+    "Pundoku"
+   ],
+   "inCard": true,
+   "overlap": false,
+   "ovX": false,
+   "card": [
+    288,
+    166
+   ],
+   "text": " | Версия 0.1.0v0.1.0 | "
+  },
+  "errs": []
+ },
+ {
+  "tag": "webkit-ru-320-light-ax",
+  "yeN": 1,
+  "yinfo": {
+   "box": [
+    56,
+    56
+   ],
+   "optics": "small",
+   "rects": 9,
+   "ariaHidden": "true",
+   "role": null,
+   "fill": "rgb(110, 110, 115)",
+   "left": 16,
+   "right": 72,
+   "ovX": false
+  },
+  "ainfo": {
+   "mark": [
+    60,
+    60,
+    "small",
+    "true",
+    null,
+    null
+   ],
+   "word": [
+    148,
+    28,
+    "img",
+    "Pundoku"
+   ],
+   "inCard": true,
+   "overlap": false,
+   "ovX": false,
+   "card": [
+    288,
+    184
+   ],
+   "text": " | Версия 0.1.0v0.1.0 | "
+  },
+  "errs": []
+ },
+ {
+  "tag": "webkit-ru-320-dark",
+  "yeN": 1,
+  "yinfo": {
+   "box": [
+    56,
+    56
+   ],
+   "optics": "small",
+   "rects": 9,
+   "ariaHidden": "true",
+   "role": null,
+   "fill": "rgb(152, 152, 157)",
+   "left": 16,
+   "right": 72,
+   "ovX": false
+  },
+  "ainfo": {
+   "mark": [
+    60,
+    60,
+    "small",
+    "true",
+    null,
+    null
+   ],
+   "word": [
+    148,
+    28,
+    "img",
+    "Pundoku"
+   ],
+   "inCard": true,
+   "overlap": false,
+   "ovX": false,
+   "card": [
+    288,
+    166
+   ],
+   "text": " | Версия 0.1.0v0.1.0 | "
+  },
+  "errs": []
+ },
+ {
+  "tag": "webkit-ru-320-dark-ax",
+  "yeN": 1,
+  "yinfo": {
+   "box": [
+    56,
+    56
+   ],
+   "optics": "small",
+   "rects": 9,
+   "ariaHidden": "true",
+   "role": null,
+   "fill": "rgb(152, 152, 157)",
+   "left": 16,
+   "right": 72,
+   "ovX": false
+  },
+  "ainfo": {
+   "mark": [
+    60,
+    60,
+    "small",
+    "true",
+    null,
+    null
+   ],
+   "word": [
+    148,
+    28,
+    "img",
+    "Pundoku"
+   ],
+   "inCard": true,
+   "overlap": false,
+   "ovX": false,
+   "card": [
+    288,
+    184
+   ],
+   "text": " | Версия 0.1.0v0.1.0 | "
+  },
+  "errs": []
+ },
+ {
+  "tag": "webkit-ru-393-light",
+  "yeN": 1,
+  "yinfo": {
+   "box": [
+    56,
+    56
+   ],
+   "optics": "small",
+   "rects": 9,
+   "ariaHidden": "true",
+   "role": null,
+   "fill": "rgb(110, 110, 115)",
+   "left": 16,
+   "right": 72,
+   "ovX": false
+  },
+  "ainfo": {
+   "mark": [
+    60,
+    60,
+    "small",
+    "true",
+    null,
+    null
+   ],
+   "word": [
+    148,
+    28,
+    "img",
+    "Pundoku"
+   ],
+   "inCard": true,
+   "overlap": false,
+   "ovX": false,
+   "card": [
+    361,
+    166
+   ],
+   "text": " | Версия 0.1.0v0.1.0 | "
+  },
+  "errs": []
+ },
+ {
+  "tag": "webkit-ru-393-light-ax",
+  "yeN": 1,
+  "yinfo": {
+   "box": [
+    56,
+    56
+   ],
+   "optics": "small",
+   "rects": 9,
+   "ariaHidden": "true",
+   "role": null,
+   "fill": "rgb(110, 110, 115)",
+   "left": 16,
+   "right": 72,
+   "ovX": false
+  },
+  "ainfo": {
+   "mark": [
+    60,
+    60,
+    "small",
+    "true",
+    null,
+    null
+   ],
+   "word": [
+    148,
+    28,
+    "img",
+    "Pundoku"
+   ],
+   "inCard": true,
+   "overlap": false,
+   "ovX": false,
+   "card": [
+    361,
+    184
+   ],
+   "text": " | Версия 0.1.0v0.1.0 | "
+  },
+  "errs": []
+ },
+ {
+  "tag": "webkit-ru-393-dark",
+  "yeN": 1,
+  "yinfo": {
+   "box": [
+    56,
+    56
+   ],
+   "optics": "small",
+   "rects": 9,
+   "ariaHidden": "true",
+   "role": null,
+   "fill": "rgb(152, 152, 157)",
+   "left": 16,
+   "right": 72,
+   "ovX": false
+  },
+  "ainfo": {
+   "mark": [
+    60,
+    60,
+    "small",
+    "true",
+    null,
+    null
+   ],
+   "word": [
+    148,
+    28,
+    "img",
+    "Pundoku"
+   ],
+   "inCard": true,
+   "overlap": false,
+   "ovX": false,
+   "card": [
+    361,
+    166
+   ],
+   "text": " | Версия 0.1.0v0.1.0 | "
+  },
+  "errs": []
+ },
+ {
+  "tag": "webkit-ru-393-dark-ax",
+  "yeN": 1,
+  "yinfo": {
+   "box": [
+    56,
+    56
+   ],
+   "optics": "small",
+   "rects": 9,
+   "ariaHidden": "true",
+   "role": null,
+   "fill": "rgb(152, 152, 157)",
+   "left": 16,
+   "right": 72,
+   "ovX": false
+  },
+  "ainfo": {
+   "mark": [
+    60,
+    60,
+    "small",
+    "true",
+    null,
+    null
+   ],
+   "word": [
+    148,
+    28,
+    "img",
+    "Pundoku"
+   ],
+   "inCard": true,
+   "overlap": false,
+   "ovX": false,
+   "card": [
+    361,
+    184
+   ],
+   "text": " | Версия 0.1.0v0.1.0 | "
+  },
+  "errs": []
+ }
+]
