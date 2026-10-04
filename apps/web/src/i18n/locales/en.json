@@ -533,5 +533,26 @@
     "fpCorrections_other": "{{count}} fixes",
     "hints_one": "{{count}} hint",
     "hints_other": "{{count}} hints"
+  },
+  "modes": {
+    "head": "Modes",
+    "foot": "Free games aren’t recorded in your year.",
+    "inProgress": "In progress",
+    "status": "In progress · {{meta}}",
+    "difficulty": "Difficulty",
+    "start": "Start",
+    "startNew": "Start new",
+    "cancel": "Cancel",
+    "discard": "Your unfinished puzzle ({{meta}}) will be discarded.",
+    "continue": "Continue",
+    "newPuzzle": "New puzzle…",
+    "classic": {
+      "name": "Classic",
+      "desc": "Plain sudoku: notes, undo and hints are all there."
+    },
+    "ink": {
+      "name": "Ink",
+      "desc": "Every digit is final: no undo and no eraser for digits. A wrong one leaves a blot."
+    }
   }
 }

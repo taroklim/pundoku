@@ -1,5 +1,6 @@
 /*
- * Хаб вкладки Play, меню «⋯» и шит «Режим» (PD-144) — по утверждённому макету design/pd144-play-c.html (разделы 4, 7).
+ * Хаб вкладки Play, меню «⋯» (PD-144, design/pd144-play-c.html) и раскладка режимов C (PD-167, design/pd163-modes-layout.html):
+ * строки режимов, шит режима, контекстное меню строки.
  * Только токены tokens.css, ни одного нового цвета. Правила, которые здесь важны:
  *  - кольцо фокуса — ВНУТРЬ в каждом режущем контейнере (скругление/overflow:hidden/прокрутка срезают внешнее кольцо);
  *  - длинный текст ПЕРЕНОСИТСЯ (`overflow-wrap: break-word`, без `anywhere` и без `hyphens:auto`), а не обрезается;
@@ -187,27 +188,69 @@ button.hub-row:active {
   margin-left: 0;
 }
 
-/* «Начать» закреплена над таб-баром (большой палец, HIG); хаб прокручивается под ней. Стекло с непрозрачным запасным цветом. */
-.hub-bar {
+/* ---------- PD-167: строки режимов (раскладка C) ---------- */
+/* Значок · имя · описание (или статус незавершённой игры) · шеврон. Шеврон абсолютом справа, текст переносится, а не режется.
+   Долгое нажатие открывает НАШЕ меню: системные выноска и лупа iOS на строке подавлены. */
+.hub-row.mode {
+  flex-wrap: nowrap;
+  align-items: flex-start;
+  padding-right: 38px;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+.hub-row.mode .mg {
   flex: none;
-  padding: 10px max(16px, var(--sa-r)) 8px max(16px, var(--sa-l));
-  background: var(--glass-solid);
-  border-top: 0.5px solid var(--hairline);
+  width: 26px;
+  height: 26px;
+  margin-top: 1px;
+  color: var(--ink);
 }
-@supports (backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px)) {
-  .hub-bar {
-    background: var(--glass-fill);
-    -webkit-backdrop-filter: blur(20px) saturate(1.8);
-    backdrop-filter: blur(20px) saturate(1.8);
-  }
+.hub-row.mode .mg svg {
+  width: 26px;
+  height: 26px;
 }
-@media (prefers-reduced-transparency: reduce), (prefers-contrast: more) {
-  .hub-bar {
-    background: var(--glass-solid);
-    -webkit-backdrop-filter: none;
-    backdrop-filter: none;
-  }
+.hub-row.mode .l1 {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 2px 8px;
 }
+.hub-row.mode .l1 b {
+  min-width: 0;
+  font-weight: 600;
+  overflow-wrap: break-word;
+}
+.hub-row.mode .sub {
+  margin-top: 1px;
+  line-height: 1.3;
+}
+/* Статус незавершённой игры — цветом чернил и словом («Не закончена»), не только точкой. */
+.hub-row .sub.prog {
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+.hub-row .dot {
+  display: inline-block;
+  width: 0.45em;
+  height: 0.45em;
+  margin-right: 0.35em;
+  border-radius: 50%;
+  background: currentColor;
+  vertical-align: 0.12em;
+}
+.hub-row.mode .chev {
+  position: absolute;
+  right: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+}
+:root[data-type="ax3"] .hub-row.mode .chev {
+  top: 14px;
+  transform: none;
+}
+
+/* Основная кнопка шита режима («Начать» / «Начать новую»): внизу, в зоне большого пальца (HIG), закреплённой на хабе больше нет. */
 .hub-primary {
   display: block;
   width: 100%;
@@ -224,11 +267,6 @@ button.hub-row:active {
 .hub-primary:active {
   opacity: 0.85;
 }
-/* Позиция раздела режимов релиза 2: ничего не нарисовано (решение владельца 2026-10-03) — только место над закреплённой кнопкой. */
-.hub-slot-gap {
-  height: 20px;
-}
-
 /* ---------- Кнопка «⋯» в шапке партии ---------- */
 .more-btn {
   width: 44px;
@@ -322,7 +360,7 @@ button.hub-row:active {
   overflow-wrap: break-word;
 }
 
-/* ---------- Шит «Режим»: два варианта с описаниями ---------- */
+/* ---------- Шит режима (PD-167): описание + предупреждение + сложность + «Начать» ---------- */
 .sheet-scrim {
   position: fixed;
   inset: 0;
@@ -387,42 +425,81 @@ button.hub-row:active {
 .mode-sheet .sheet-scroll .scroll-fade {
   margin-inline: -4px;
 }
-.mode-opt {
+/* Шапка шита: значок + имя режима слева, «Отмена» справа (HIG sheets.md: альтернатива основному действию). */
+.mode-sheet > .sh-top {
+  flex: none;
   display: flex;
-  align-items: flex-start;
-  flex-wrap: wrap;
-  gap: 10px;
-  min-height: 56px;
-  padding: 10px 12px;
-  border-radius: 12px;
-  background: var(--chip-bg);
-  text-align: left;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  margin: -4px 0;
 }
-.mode-opt .mt {
-  font-size: 1rem;
-  font-weight: 600;
-  overflow-wrap: break-word;
+.mode-sheet .sh-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
 }
-.mode-opt .md {
-  flex-basis: 100%;
-  color: var(--label-2);
-  font-size: 0.85rem;
-  line-height: 1.25;
-  overflow-wrap: break-word;
-}
-.mode-opt .ck {
-  margin-left: auto;
+.mode-sheet .sh-title .sh-ic {
+  width: 1.2em;
+  height: 1.2em;
+  flex: none;
   color: var(--ink);
 }
-.mode-opt .ck svg {
-  width: 20px;
-  height: 20px;
+.mode-sheet .sh-title span {
+  min-width: 0;
+  overflow-wrap: break-word;
 }
-.mode-opt[aria-checked="false"] .ck {
-  visibility: hidden;
+.sh-cancel {
+  flex: none;
+  min-height: 44px;
+  padding: 0 2px;
+  color: var(--ink);
+  font-size: 1rem;
+  border-radius: 8px;
 }
-.mode-opt:active {
-  opacity: 0.85;
+.sh-cancel:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: -2px;
+}
+.mode-sheet .sh-desc {
+  margin: 0;
+  font-size: 0.95rem;
+  line-height: 1.3;
+  color: var(--label);
+  overflow-wrap: break-word;
+}
+/* Предупреждение «Незаконченная сетка (…) будет отброшена» — сургучной подложкой (токен ошибки/необратимого). */
+.mode-sheet .sh-warn {
+  margin: 0;
+  padding: 8px 10px;
+  border-radius: 10px;
+  background: var(--wax-tint);
+  color: var(--label);
+  font-size: 0.85rem;
+  line-height: 1.3;
+  overflow-wrap: break-word;
+}
+.mode-sheet .sh-head {
+  margin: 6px 0 0;
+  padding: 0;
+}
+/* Сложности в шите — на углублённой плашке (как варианты шита PD-144), не на «карточке с тенью». */
+.mode-sheet .hub-card {
+  margin: 0;
+  background: var(--chip-bg);
+  box-shadow: none;
+}
+.mode-sheet .hub-row {
+  padding-left: 16px;
+  padding-right: 16px;
+}
+.mode-sheet .hub-row + .hub-row::before {
+  left: 16px;
+}
+.mode-sheet > .hub-primary {
+  margin-top: 4px;
 }
 /* Крупный текст в шите: плотнее отступы возвращают целые строки раньше, чем что-то придётся прокручивать (шрифт не ограничен). */
 :root[data-type="ax3"] .mode-sheet {
@@ -430,38 +507,66 @@ button.hub-row:active {
   padding-right: max(12px, var(--sa-r));
   gap: 6px;
 }
-:root[data-type="ax3"] .mode-opt {
-  padding: 8px 10px;
-  gap: 6px;
+
+/* ---------- PD-167: контекстное меню строки режима ---------- */
+/* Фон размыт (как у системного контекстного меню), нажатая строка «поднята» над ним; Reduce Transparency — без размытия. */
+.ctx-scrim {
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
+}
+@media (prefers-reduced-transparency: reduce), (prefers-contrast: more) {
+  .ctx-scrim {
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+}
+.ctx-lift {
+  position: fixed;
+  display: flex;
+  border-radius: 14px;
+  background: var(--card);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.25);
+  overflow: hidden;
+  pointer-events: none;
+}
+.ctx-lift > * {
+  flex: 1;
+}
+.ctx-menu {
+  position: fixed;
+  left: max(10px, var(--sa-l));
+  right: max(10px, var(--sa-r));
+  max-width: none;
+}
+.ctx-menu .mt {
+  margin: 0;
+  padding: 10px 14px 8px;
+  font-size: 0.78rem;
+  line-height: 1.3;
+  color: var(--label-2);
+  border-bottom: 1px solid var(--hairline);
+  overflow-wrap: break-word;
 }
 
 /* ---------- Кольцо фокуса ВНУТРЬ: карточки хаба, меню и шит режима режут содержимое (overflow:hidden / прокрутка) ---------- */
 .hub-row:focus-visible,
-.menu button:focus-visible,
-.mode-opt:focus-visible {
+.menu button:focus-visible {
   outline: 2px solid transparent; /* прозрачный outline остаётся для forced-colors: там box-shadow отключён */
   outline-offset: -2px;
   border-radius: 0;
   box-shadow: inset 0 0 0 2px var(--ink);
 }
-.mode-opt:focus-visible {
-  border-radius: 12px;
-}
 @media (forced-colors: active) {
   .hub-row:focus-visible,
-  .menu button:focus-visible,
-  .mode-opt:focus-visible {
+  .menu button:focus-visible {
     outline-color: Highlight;
   }
   .hub-card,
   .menu {
     border: 1px solid CanvasText;
   }
-  .mode-opt {
+  .mode-sheet .hub-card {
     border: 1px solid CanvasText;
-  }
-  .mode-opt[aria-checked="true"] {
-    border-width: 2px;
   }
   .mode-chip {
     border: 1px solid CanvasText;

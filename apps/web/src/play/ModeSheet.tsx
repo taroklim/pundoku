@@ -1,106 +1,92 @@
 /**
- * Шит «Режим» хаба Play (PD-144): два варианта с описаниями — Классика и Чернила. Выбор действует сразу, «Готово»
- * закрывает. Выбор Чернил при выключенных — шит правила PD-74 «Ink doesn’t lift» ПОВЕРХ этого шита (необратимость режима
- * объясняется до выбора). Скроллится только список вариантов (`.sheet-scroll`), ручка, заголовок и «Готово» — `flex:none`;
- * последний элемент прокрутки — липкая растушёвка `.scroll-fade`.
+ * Шит режима (PD-167, раскладка C — макет design/pd163-modes-layout.html, кадры wk-C-sheet-*): ОДИН компонент для всех
+ * режимов, всё — из реестра (`modes.ts`). Сверху значок + имя режима и «Отмена», ниже описание режима (правило читается до
+ * первого хода), предупреждение «Незаконченная сетка (…) будет отброшена», если у режима есть незавершённая игра, и
+ * сложность списком; внизу «Начать» / «Начать новую».
+ *
+ * Скроллится только середина (`.sheet-scroll`): ручка, заголовок с «Отменой» и «Начать» — `flex:none` и не уезжают за край
+ * (320×568, AX3, uk/ru); последний элемент прокрутки — липкая растушёвка `.scroll-fade`.
  */
-import type { KeyboardEvent, RefObject } from "react";
-import { useId, useRef, useState } from "react";
+import type { Difficulty } from "@pundoku/engine";
+import type { RefObject } from "react";
+import { useId, useRef } from "react";
 import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
 import { useModal } from "../shell/useModal";
 import { useSheetSwipe } from "../shell/useSheetSwipe";
-import { CheckGlyph } from "./hubIcons";
-import { InkRuleSheet } from "./InkEntry";
+import type { SlotSummary } from "./daySlot";
+import { DifficultyList } from "./DifficultyList";
+import type { ModeDef } from "./modes";
+import { slotMeta } from "./slotMeta";
 
 export interface ModeSheetProps {
-  readonly ink: boolean;
-  readonly onPick: (ink: boolean) => void;
+  readonly mode: ModeDef;
+  readonly pick: Difficulty;
+  /** Незавершённая игра режима, которую «Начать новую» отбросит; `null` — отбрасывать нечего. */
+  readonly discard: SlotSummary | null;
+  readonly onPick: (d: Difficulty) => void;
+  readonly onStart: () => void;
   readonly onClose: () => void;
-  /** Строка «Режим» в хабе: туда возвращается фокус. */
-  readonly returnFocus: RefObject<HTMLElement | null>;
+  /** Куда вернуть фокус (строка режима, кнопка «⋯»). */
+  readonly returnFocus?: RefObject<HTMLElement | null>;
 }
 
-export function ModeSheet({ ink, onPick, onClose, returnFocus }: ModeSheetProps) {
+export function ModeSheet({ mode, pick, discard, onPick, onStart, onClose, returnFocus }: ModeSheetProps) {
   const { t } = useTranslation();
   const scrim = useRef<HTMLDivElement>(null);
   const root = useRef<HTMLElement>(null);
-  const group = useRef<HTMLDivElement>(null);
-  const [rule, setRule] = useState(false);
-  const ruleOpen = useRef(false);
-  ruleOpen.current = rule;
   const titleId = useId();
+  const descId = useId();
+  const diffId = useId();
   const swipe = useSheetSwipe(root, onClose);
-  useModal(scrim, root, { kind: "dialog", onClose, returnFocus, initialFocus: '[role="radio"][aria-checked="true"]', suspended: () => ruleOpen.current });
+  useModal(scrim, root, { kind: "dialog", onClose, returnFocus, initialFocus: '[data-testid="sheet-cancel"]' });
+  const { Icon } = mode;
+  const name = t(`modes.${mode.textKey}.name`);
 
-  const options = [
-    { ink: false, name: t("play.hub.modeClassic"), desc: t("play.hub.modeClassicSub"), testid: "mode-classic" },
-    { ink: true, name: t("play.hub.modeInk"), desc: t("play.hub.modeInkSub"), testid: "mode-ink" },
-  ] as const;
-
-  const choose = (wantInk: boolean) => {
-    if (wantInk === ink) return;
-    if (wantInk) setRule(true);
-    else onPick(false);
-  };
-  // Радиогруппа: стрелки только переносят фокус (выбор — тапом/Enter/пробелом: Чернила спрашивают подтверждение правилом).
-  const onKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
-    const keys = ["ArrowDown", "ArrowRight", "ArrowUp", "ArrowLeft"];
-    if (!keys.includes(e.key)) return;
-    const items = [...(group.current?.querySelectorAll<HTMLElement>('[role="radio"]') ?? [])];
-    const at = items.indexOf(document.activeElement as HTMLElement);
-    if (at < 0) return;
-    e.preventDefault();
-    const step = e.key === "ArrowDown" || e.key === "ArrowRight" ? 1 : -1;
-    items[(at + step + items.length) % items.length]!.focus();
-  };
-
-  return (
-    <>
-      {createPortal(
-        <div ref={scrim} className="sheet-scrim" onClick={onClose} data-testid="mode-sheet-scrim">
-          <section ref={root} className="mode-sheet" role="dialog" aria-modal="true" aria-labelledby={titleId} tabIndex={-1} onClick={(e) => e.stopPropagation()} data-testid="mode-sheet">
-            <div className="grabber sheet-handle" aria-hidden="true" {...swipe} />
-            <h2 id={titleId} className="sheet-handle" {...swipe}>
-              {t("ink.rowMode")}
-            </h2>
-            <div ref={group} className="sheet-scroll" role="radiogroup" aria-labelledby={titleId} onKeyDown={onKeyDown}>
-              {options.map((o) => (
-                <button
-                  key={o.testid}
-                  type="button"
-                  className="mode-opt"
-                  role="radio"
-                  aria-checked={o.ink === ink}
-                  tabIndex={o.ink === ink ? 0 : -1}
-                  onClick={() => choose(o.ink)}
-                  data-testid={o.testid}
-                >
-                  <span className="mt">{o.name}</span>
-                  <span className="ck">
-                    <CheckGlyph />
-                  </span>
-                  <span className="md">{o.desc}</span>
-                </button>
-              ))}
-              <div className="scroll-fade" aria-hidden="true" />
-            </div>
-            <button type="button" className="hub-primary" onClick={onClose} data-testid="mode-done">
-              {t("play.hub.done")}
-            </button>
-          </section>
-        </div>,
-        document.body,
-      )}
-      {rule && (
-        <InkRuleSheet
-          onStart={() => {
-            setRule(false);
-            onPick(true);
-          }}
-          onCancel={() => setRule(false)}
-        />
-      )}
-    </>
+  return createPortal(
+    <div ref={scrim} className="sheet-scrim" onClick={onClose} data-testid="mode-sheet-scrim">
+      <section
+        ref={root}
+        className="mode-sheet"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={titleId}
+        aria-describedby={descId}
+        tabIndex={-1}
+        onClick={(e) => e.stopPropagation()}
+        data-testid="mode-sheet"
+        data-mode={mode.id}
+      >
+        <div className="grabber sheet-handle" aria-hidden="true" {...swipe} />
+        <div className="sh-top sheet-handle" {...swipe}>
+          <h2 id={titleId} className="sh-title">
+            <Icon className="sh-ic" />
+            <span>{name}</span>
+          </h2>
+          <button type="button" className="sh-cancel" onClick={onClose} data-testid="sheet-cancel">
+            {t("modes.cancel")}
+          </button>
+        </div>
+        <div className="sheet-scroll">
+          <p id={descId} className="sh-desc" data-testid="mode-desc">
+            {t(`modes.${mode.textKey}.desc`)}
+          </p>
+          {discard && (
+            <p className="sh-warn" data-testid="discard-note">
+              {t("modes.discard", { meta: slotMeta(t, discard) })}
+            </p>
+          )}
+          <p id={diffId} className="hub-head sh-head">
+            {t("modes.difficulty")}
+          </p>
+          <DifficultyList options={mode.difficulties} pick={pick} onPick={onPick} labelledBy={diffId} />
+          <div className="scroll-fade" aria-hidden="true" />
+        </div>
+        <button type="button" className="hub-primary" onClick={onStart} data-testid="sheet-start">
+          {discard ? t("modes.startNew") : t("modes.start")}
+        </button>
+      </section>
+    </div>,
+    document.body,
   );
 }

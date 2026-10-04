@@ -1,3 +1,4 @@
+import type { Difficulty } from "@pundoku/engine";
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { useTranslation } from "react-i18next";
 import type { HelpBlockId } from "../help/blocks";
@@ -23,6 +24,9 @@ import { HintDock, HINT_DOCK_ID } from "./HintDock";
 import { HintRuleSheet, boldParts } from "./HintRuleSheet";
 import { useHintLadder } from "./hintStore";
 import { canFill, cellsLeft, isGridFull } from "./logic";
+import { ModeSheet } from "./ModeSheet";
+import type { ModeId } from "./modes";
+import { availableModes, modeDef } from "./modes";
 import { MoreMenu } from "./MoreMenu";
 import { PlaySetup } from "./PlaySetup";
 import { ResultCard } from "./ResultCard";
@@ -30,8 +34,11 @@ import { playStore } from "./store";
 import { Subline } from "./Subline";
 
 /**
- * Экран Play (PD-11). PD-144 (вариант C): вкладка открывается ХАБОМ (`PlaySetup`: «Продолжить» / сложность / «Режим» /
- * «Начать»), партию запускает игрок. Партия — нескроллящийся экран (`.play-fit`): подпись → поле B Boxes → строка статуса
+ * Экран Play (PD-11). PD-144 → PD-167 (раскладка C): вкладка открывается ХАБОМ (`PlaySetup`: «Продолжить» — день, список
+ * «Режимы»), партию запускает игрок из шита режима (`ModeSheet`: описание + сложность + «Начать»). Шит открывается тапом по
+ * режиму без незавершённой игры, «Новой сеткой…» контекстного меню строки, «⋯ → Новая сетка» в партии и «Новой сеткой» на
+ * карточке результата — всегда для режима, к которому относится действие; при незавершённой игре режима — с предупреждением.
+ * Правило необратимого режима (`ModeDef.Rule`, Ink — PD-74) показывается ПОСЛЕ шита, не поверх. Партия — нескроллящийся экран (`.play-fit`): подпись → поле B Boxes → строка статуса
  * «N cells left» → панель 1–9 → Notes / Undo / Erase; обвязка `flex:none`, уступает только поле. Шапка партии:
  * лампочка · шестерёнка · «⋯» (меню «Новая сетка» / «Заполнить кандидатами»). Решённая партия — карточка результата
  * с одной кнопкой «Новая сетка». PD-116: партия переживает перезагрузку (`store.ts`); после неё всегда хаб, а идущая
@@ -44,6 +51,25 @@ export function PlayScreen({ onOpenSettings, onOpenHelp, onOpenToday }: { onOpen
   const { phase, play, difficulty } = snap;
   // PD-139: лесенка подсказок. В Ink и до старта партии её нет (`hintAllowed`); ушли с вкладки — подсветки снимаются.
   const { ladder, state: hint } = useHintLadder(playStore);
+  const def = modeDef(snap.mode);
+  // Шит режима и правило перед стартом. Повторный тап по вкладке закрывает оба (как прочие оверлеи).
+  const [sheet, setSheet] = useState<{ mode: ModeId; opener: HTMLElement | null } | null>(null);
+  const [rule, setRule] = useState<{ mode: ModeId; difficulty: Difficulty } | null>(null);
+  const sheetOpener = useRef<HTMLElement | null>(null);
+  sheetOpener.current = sheet?.opener ?? null;
+  const seenReselect = useRef(snap.reselect);
+  useEffect(() => {
+    if (seenReselect.current === snap.reselect) return;
+    seenReselect.current = snap.reselect;
+    setSheet(null);
+    setRule(null);
+  }, [snap.reselect]);
+  const openSheet = (mode: ModeId, opener: HTMLElement | null = document.activeElement instanceof HTMLElement ? document.activeElement : null) => setSheet({ mode, opener });
+  const startMode = (mode: ModeId, difficulty: Difficulty) => {
+    setSheet(null);
+    if (modeDef(mode).Rule) setRule({ mode, difficulty });
+    else playStore.startNew(mode, difficulty);
+  };
 
   useEffect(() => {
     playStore.ensureStarted();
@@ -115,13 +141,12 @@ export function PlayScreen({ onOpenSettings, onOpenHelp, onOpenToday }: { onOpen
   const restoring = snap.restoring === true;
   const cardView = !hub && phase === "solved" && cardShown;
   const fillState = ink ? "ink" : play && canFill(play) ? "ready" : "empty";
-  const own = playStore.hasSlot() && play ? { difficulty, left: cellsLeft(play), elapsedMs: playStore.getElapsedMs(), ink } : null;
   const showLamp = !hub && !restoring && playStore.hintAllowed();
   const showMore = !hub && !restoring && phase !== "solved";
 
   // PD-144 (D-1): место под док подсказки отложено постоянно, пока подсказки возможны (партия не в Ink): поле не зависит от дока.
-  // До загрузки партии `play` нет — режим берётся из выбора на хабе, чтобы поле не прыгало при появлении партии.
-  const hintable = !hub && !(play ? ink : snap.inkNext);
+  // До загрузки партии `play` нет — подсказки берутся из реестра режима, чтобы поле не прыгало при появлении партии.
+  const hintable = !hub && (play ? !ink : def.hints);
   const fitClass = hub ? " play-hub" : fitClassName({ fit: !cardView, hintable, docked: hint.open });
 
   return (
@@ -138,28 +163,27 @@ export function PlayScreen({ onOpenSettings, onOpenHelp, onOpenToday }: { onOpen
         }
         onOpenSettings={onOpenSettings}
         actions={showLamp && <HintButton open={hint.open} used={snap.hints ?? 0} play onPress={() => ladder.toggle()} controls={HINT_DOCK_ID} />}
-        trailing={showMore && <MoreMenu fill={fillState} onNew={() => playStore.toHub()} onFill={() => playStore.fillCandidates()} />}
+        trailing={showMore && <MoreMenu fill={fillState} onNew={() => openSheet(snap.mode)} onFill={() => playStore.fillCandidates()} />}
       />
       {restoring ? null : hub ? (
         <PlaySetup
-          pick={snap.pick}
-          ink={snap.inkNext}
-          own={own}
+          modes={availableModes()}
+          slots={playStore.slots()}
           reselect={snap.reselect}
-          onPick={(d) => playStore.setDifficulty(d)}
-          onInk={(on) => playStore.setInkNext(on)}
-          onStart={() => playStore.start()}
-          onResume={() => playStore.resume()}
+          onOpenMode={(mode, row) => {
+            if (!playStore.open(mode)) openSheet(mode, row);
+          }}
+          onNewInMode={(mode, row) => openSheet(mode, row)}
           onOpenToday={() => onOpenToday?.()}
         />
       ) : (
         <>
-          <Subline day="" difficulty={diffLabel} inkChip={ink} help={snap.assisted === true} clock={showClock ? clock : null} />
+          <Subline day="" difficulty={diffLabel} chip={play ? (ink ? modeDef("ink") : def) : def} help={snap.assisted === true} clock={showClock ? clock : null} />
           {cardView ? (
             play && (
               <ResultCard play={play} cardRef={cardRef} title={t("solved.title")} timelapse={{ date: localDate(snap.startedOn), difficulty }} hints={snap.hints} onOpenHelp={onOpenHelp}>
-                {/* PD-144: единственная кнопка нового пазла на экране (шапка на решённой партии действий не несёт). */}
-                <button type="button" className="btn-plain newgrid" onClick={() => playStore.toHub()} data-testid="new-puzzle">
+                {/* PD-144: единственная кнопка нового пазла на экране (шапка на решённой партии действий не несёт). PD-167: шит режима партии. */}
+                <button type="button" className="btn-plain newgrid" onClick={(e) => openSheet(snap.mode, e.currentTarget)} data-testid="new-puzzle">
                   {t("play.newPuzzle")}
                 </button>
               </ResultCard>
@@ -198,7 +222,34 @@ export function PlayScreen({ onOpenSettings, onOpenHelp, onOpenToday }: { onOpen
           )}
         </>
       )}
+      {sheet && (
+        <ModeSheet
+          mode={modeDef(sheet.mode)}
+          pick={playStore.pickFor(sheet.mode)}
+          discard={playStore.slots()[sheet.mode] ?? null}
+          onPick={(d) => playStore.setPick(sheet.mode, d)}
+          onStart={() => startMode(sheet.mode, playStore.pickFor(sheet.mode))}
+          onClose={() => setSheet(null)}
+          returnFocus={sheetOpener}
+        />
+      )}
+      {rule && <RuleSheet rule={rule} onDone={() => setRule(null)} />}
       {hint.rule && <HintRuleSheet play onGo={() => ladder.confirmRule()} onCancel={() => ladder.dismissRule()} />}
     </div>
+  );
+}
+
+/** Правило необратимого режима перед стартом (`ModeDef.Rule`): «Играть» начинает партию, отмена — ничего не меняет. */
+function RuleSheet({ rule, onDone }: { rule: { mode: ModeId; difficulty: Difficulty }; onDone: () => void }) {
+  const Rule = modeDef(rule.mode).Rule;
+  if (!Rule) return null;
+  return (
+    <Rule
+      onStart={() => {
+        onDone();
+        playStore.startNew(rule.mode, rule.difficulty);
+      }}
+      onCancel={onDone}
+    />
   );
 }

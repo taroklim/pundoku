@@ -24,12 +24,12 @@ function body(css: string, selector: string): string {
 }
 
 describe("кольцо фокуса внутрь", () => {
-  it("строки хаба, пункты меню и варианты режима: inset-тень, отрицательный offset, прозрачный outline", () => {
-    const b = body(hub, ".hub-row:focus-visible,\n.menu button:focus-visible,\n.mode-opt:focus-visible");
+  it("строки хаба (и шита режима), пункты меню: inset-тень, отрицательный offset, прозрачный outline", () => {
+    const b = body(hub, ".hub-row:focus-visible,\n.menu button:focus-visible");
     expect(b).toMatch(/outline-offset: -2px/);
     expect(b).toMatch(/box-shadow: inset 0 0 0 2px var\(--ink\)/);
     expect(b).toMatch(/outline: 2px solid transparent/);
-    expect(squash(hub)).toMatch(/@media \(forced-colors: active\) \{ \.hub-row:focus-visible, \.menu button:focus-visible, \.mode-opt:focus-visible \{ outline-color: Highlight/);
+    expect(squash(hub)).toMatch(/@media \(forced-colors: active\) \{ \.hub-row:focus-visible, \.menu button:focus-visible \{ outline-color: Highlight/);
   });
 
   it("кнопки ActionSheet: то же, плюс forced-colors", () => {
@@ -121,8 +121,16 @@ describe("без новых цветов и токенов", () => {
     expect(hub).not.toMatch(/^\s*--[\w-]+\s*:/m);
   });
 
-  it("раздел режимов релиза 2 — только пустая позиция 20 px", () => {
-    expect(body(hub, ".hub-slot-gap")).toBe("height: 20px;");
+  it("PD-167: пустой позиции под раздел режимов больше нет — раздел и есть «Режимы»; закреплённой «Начать» на хабе нет", () => {
+    expect(hub).not.toMatch(/\.hub-slot-gap/);
+    expect(hub).not.toMatch(/\.hub-bar/);
+  });
+
+  it("PD-167: строки режимов — без системной выноски/лупы iOS (долгое нажатие открывает наше меню); размытие меню снимается при Reduce Transparency", () => {
+    const row = body(hub, ".hub-row.mode");
+    expect(row).toMatch(/-webkit-touch-callout: none/);
+    expect(row).toMatch(/user-select: none/);
+    expect(squash(hub)).toMatch(/@media \(prefers-reduced-transparency: reduce\), \(prefers-contrast: more\) \{ \.ctx-scrim \{ -webkit-backdrop-filter: none; backdrop-filter: none;/);
   });
 });
 
