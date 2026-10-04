@@ -413,6 +413,7 @@ Gates: build → typecheck, lint, тесты web/engine/api (api с TEST_DATABAS
 | PD-155 | Иконка приложения P4 «Девять клеток» (round 4) вместо D5 — решение владельца 2026-10-04: apple-touch-icon 180, 192/512, maskable, favicon, splash/startup-image, Mark в приложении (Year пусто, About/help), штамп PNG-отпечатка, manifest, docs бренда; рендер 29/32/60/87/180 px, forced-colors; D5-файлы не удалять до мержа; ветка pd-icon-p4 | developer | P1 | completed (merged 37fb0c0) | PD-152 |
 | PD-156 | QA PD-155: визуальная сверка иконки на всех размерах light/dark, маска iOS/maskable, favicon, splash, регресс | qa-tester | P1 | completed (PASS с замечаниями; merged 37fb0c0) | PD-155 |
 | PD-157 | Чек-лист iOS: пп. 62–73 (разделы М вордмарк, Н иконка P4), исправить старые пункты про иконку D5 (59–63 в build-checklist) на P4, selftest, Desktop; поправить «19.1»→18.3 в pwa.config.ts/icons.test.mjs/pd155-icons.mjs | developer | P1 | completed (672e1ac; 126 карточек, владельцу 108) | PD-155 |
+| PD-158 | Движение между вкладками: слайд (решение владельца 2026-10-04, меняет «кроссфейд без свайпа» 2026-10-01; свайп НЕ делаем). Макет design/pd158-tab-slide.html/.md (2–3 варианта, Reduce Motion), рендер кадров/GIF, копия на Desktop; реализация только после выбора варианта | designer | P2 | in_progress (макет) | — |
 | PD-20 | QA PD-14 (pd-14 @ 0026b2a): PASS с оговорками, блокеров и Medium нет; 4 Low + решение по слиянию → PD-31 | qa-tester | P1 | completed | PD-14 |
 | PD-31 | Фикс-проход pd-14 по QA PD-20 (pd-14 @ c574f13; gates зелёные: web 213, engine 105, api 77+2 skipped, интеграционные 7/7 на живой БД) | developer | P1 | completed | PD-20 |
 | PD-32 | PASS с оговорками (слияние 409 по источникам, 1500 дней без лишних PUT, gates, интеграционные 7/7); Low → PD-37. QA-регресс pd-14 @ c574f13 (перезапуск после сбоя контейнера; worktree /tmp/pundoku-qa/qa-pd32, БД pundoku_qa5, порты 3320/5320): слияние 409 по источникам, отсутствие лишних PUT при 1500 днях, сокращённый регресс PD-20, gates + интеграционные api-тесты | qa-tester | P1 | completed | PD-31 |
@@ -504,7 +505,8 @@ Gates: build → typecheck, lint, тесты web/engine/api (api с `TEST_DATABA
 ## Агенты (текущий статус)
 | Имя | Роль | Статус | Тикет | Обновлено |
 |-----|------|--------|-------|-----------|
-| PM-Pundoku-10 | product-manager | idle | релиз 2026-10-04 выкачен, доска закрыта | 2026-10-04 |
+| PM-Pundoku-10 | product-manager | working | PD-158 | 2026-10-04 |
+| Des-Pundoku-slide | designer | working | PD-158 | 2026-10-04 |
 
 ## Чек-пойнт 2026-10-01 (конец сессии PM-Pundoku-7)
 - **Сделано:** решения владельца по релизу 1.1 зафиксированы; PD-74 (UI ink, pd-74 @ 73444b2), PD-75 (UI таймлапса/PNG Rhythm, pd-75 @ bfeedbf), PD-80 (счёт ходов в ink, pd-80 @ de5a52d) смержены в локальный main; gates на слитом: build/typecheck/lint, web 624, engine 178 (api не затронут, 174+3). PD-78 сделан в PD-74. PD-79 закрыт: не дефект.
