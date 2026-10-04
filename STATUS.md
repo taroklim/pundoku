@@ -428,9 +428,9 @@ Gates: build → typecheck, lint, тесты web/engine/api (api с TEST_DATABAS
 | PD-166 | QA PD-165 (engine Лжеца: честность, единственность, мутации, gates) | qa-tester | P1 | pending | PD-165 |
 | PD-167 | UI раскладки C (design/pd163-modes-layout.html, вариант C): хаб Play — «Продолжить» (день) + список «Режимы»; реестр режимов + слот незавершённой игры на режим + шит режима (сложность, описание) расширяемые; показываются только готовые режимы (сейчас Классика, Чернила); Ink переезжает из строки «Режим»/чипа в список; без App.tsx (конфликт с PD-161); ветка pd-167 | developer | P1 | in_progress | — |
 | PD-168 | QA PD-167 | qa-tester | P1 | pending | PD-167 |
-| PD-169 | Проверка на текущем main: экран партии 320 + AX3 + ru — поле сжимается до ~120 px? (находка check() PD-163); если подтвердится — тикет на фикс | qa-tester | P2 | in_progress | — |
-| PD-159 | Low-пакет из QA PD-151 (без решений владельца): (2) landscape (браузерный Safari, поворот в PWA запрещён PD-132) — Ink/панель не перекрывают доску, доска Today не сжимается до 113 pt (минимальная правка, без двухколонника и без заглушки); (3) AX3 архив — сложность «M...» и скрытый источник: перенос/вертикальная раскладка. Ветка pd-low-2 в worktree | developer | P3 | in_progress | — |
-| PD-160 | QA PD-159: живой webkit+chromium, landscape 844×390/932×430, AX3 en/uk/ru, регресс Today/Play/архив, gates | qa-tester | P3 | pending | PD-159 |
+| PD-169 | Проверка на текущем main: экран партии 320 + AX3 + ru — поле сжимается до ~120 px? (находка check() PD-163); если подтвердится — тикет на фикс | qa-tester | P2 | completed (НЕ подтверждён на main b9b685c: 108 прогонов, минимум поля 169 px при 320+AX3; ~120 px — свойство макета pd163; артефакты /tmp/pundoku-qa/qa-pd169-out/) | — |
+| PD-159 | Low-пакет из QA PD-151 (без решений владельца): (2) landscape (браузерный Safari, поворот в PWA запрещён PD-132) — Ink/панель не перекрывают доску, доска Today не сжимается до 113 pt (минимальная правка, без двухколонника и без заглушки); (3) AX3 архив — сложность «M...» и скрытый источник: перенос/вертикальная раскладка. Ветка pd-low-2 в worktree | developer | P3 | completed (dev; pd-low-2 @ 77275d7, CSS play/today; gates зелёные со 2-го прогона) | — |
+| PD-160 | QA PD-159: живой webkit+chromium, landscape 844×390/932×430, AX3 en/uk/ru, регресс Today/Play/архив, gates | qa-tester | P3 | in_progress | PD-159 |
 | PD-20 | QA PD-14 (pd-14 @ 0026b2a): PASS с оговорками, блокеров и Medium нет; 4 Low + решение по слиянию → PD-31 | qa-tester | P1 | completed | PD-14 |
 | PD-31 | Фикс-проход pd-14 по QA PD-20 (pd-14 @ c574f13; gates зелёные: web 213, engine 105, api 77+2 skipped, интеграционные 7/7 на живой БД) | developer | P1 | completed | PD-20 |
 | PD-32 | PASS с оговорками (слияние 409 по источникам, 1500 дней без лишних PUT, gates, интеграционные 7/7); Low → PD-37. QA-регресс pd-14 @ c574f13 (перезапуск после сбоя контейнера; worktree /tmp/pundoku-qa/qa-pd32, БД pundoku_qa5, порты 3320/5320): слияние 409 по источникам, отсутствие лишних PUT при 1500 днях, сокращённый регресс PD-20, gates + интеграционные api-тесты | qa-tester | P1 | completed | PD-31 |
@@ -524,10 +524,9 @@ Gates: build → typecheck, lint, тесты web/engine/api (api с `TEST_DATABA
 |-----|------|--------|-------|-----------|
 | PM-Pundoku-11 | product-manager | working | PD-158 | 2026-10-04 |
 | Dev-Pundoku-slide | developer | working | PD-161 | 2026-10-04 |
-| Dev-Pundoku-low2 | developer | working | PD-159 | 2026-10-04 |
+| QA-Pundoku-low2 | qa-tester | working | PD-160 | 2026-10-04 |
 | Dev-Pundoku-r2engine | developer | working | PD-165 | 2026-10-04 |
 | Dev-Pundoku-modesUI | developer | working | PD-167 | 2026-10-04 |
-| QA-Pundoku-ax3 | qa-tester | working | PD-169 | 2026-10-04 |
 
 ## Чек-пойнт 2026-10-01 (конец сессии PM-Pundoku-7)
 - **Сделано:** решения владельца по релизу 1.1 зафиксированы; PD-74 (UI ink, pd-74 @ 73444b2), PD-75 (UI таймлапса/PNG Rhythm, pd-75 @ bfeedbf), PD-80 (счёт ходов в ink, pd-80 @ de5a52d) смержены в локальный main; gates на слитом: build/typecheck/lint, web 624, engine 178 (api не затронут, 174+3). PD-78 сделан в PD-74. PD-79 закрыт: не дефект.
@@ -555,3 +554,6 @@ Gates: build → typecheck, lint, тесты web/engine/api (api с `TEST_DATABA
 ## Релиз 2026-10-04 (выкачен)
 Выкачено 2026-10-04: main `63afcc5`, прод до этого `41f7e73`. Автодеплой (Deploy self-hosted, run 37209298808) success; смоук прода: / 200, manifest 200 (icons ?v=p4, orientation portrait), /api/snapshot без авторизации 401, /api/daily 200. Миграции 0007/0008 применены деплоем. В релизе: подсказки лесенкой, проверка записи/замена ключа, автозаметки и Fill candidates, Play по варианту C, Today-fix (PD-150), вордмарк round 5 (PD-152), иконка P4 (PD-155). Все тикеты PD-1xx доски закрыты; открытое - только Low-бэклог выше и решение владельца по скорости Today (разбор бандла, отдельный тикет). Откат: revert merge-коммитов к `41f7e73` (миграции остаются, обратно-совместимые); старые D5-файлы в design/pd98-assets/shipped-d5/.
 Уборка worktree/веток pd-*/qa-*: все смерженные, кроме pd-ia-measure (1 коммит 36eacc5: исходные замеры IA, не смержен намеренно - перемер 4ff0869 в main), ждёт разрешения на удаление (классификатор заблокировал git worktree remove).
+
+## Бэклог по QA PD-169 (2026-10-04; P3, не блокер)
+- Экран партии при AX3 на компактной высоте: теоретический риск — 320 в standalone с 20px статус-баром → поле ~149 px; AX4/AX5 → ~113 px по расчёту (не прогонялось); iPhone 16 не затронут. Идея фикса: на компактной высоте при AX3 ограничить шрифт заголовка/подписи/«осталось N» (например `min(1.62rem, 34px)`) или слить «осталось N» в подпись → +60–90 px полю (резерв высоты — `--chrome` в play.css / fitModel.ts). Учесть в PD-167, если по пути.
