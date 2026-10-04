@@ -7,7 +7,7 @@
 import { act } from "react";
 import { createRoot } from "react-dom/client";
 import type { Root } from "react-dom/client";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import i18n from "../i18n";
 import { createPlay, enterDigit, setInkMode } from "./logic";
 import type { PlayState } from "./logic";
@@ -26,7 +26,7 @@ interface Inner {
   snap: Record<string, unknown>;
 }
 const inner = playStore as unknown as Inner;
-const base = { ...inner.snap };
+let base: Record<string, unknown> = {};
 const playing = (play: PlayState, extra: Record<string, unknown> = {}) =>
   (inner.snap = { ...inner.snap, hub: false, restoring: false, phase: "playing", play, selected: 2, notesMode: false, startedOn: new Date(2026, 9, 3, 12), ...extra });
 
@@ -37,6 +37,15 @@ const tap = (el: Element) => act(() => void el.dispatchEvent(new MouseEvent("cli
 const render = (props: Parameters<typeof PlayScreen>[0] = {}) => act(() => root.render(<PlayScreen {...props} />));
 const openMenu = () => tap(q("more-button")!);
 const notesCount = () => playStore.getSnapshot().play!.notes.filter((n) => n !== 0).length;
+
+// Боевой `playStore` при импорте сам запускает `restore()` (общее хранилище в памяти: jsdom без IndexedDB). Дожидаемся
+// его ДО первого теста и берём исходный снимок уже после: иначе поздний `restore()` под нагрузкой полного прогона мог
+// доехать посреди теста (снять `restoring`, подложить слоты) — изоляция не зависела бы от тайминга.
+beforeAll(async () => {
+  await vi.waitFor(() => expect(playStore.getSnapshot().restoring).toBe(false));
+  await playStore.flushed();
+  base = { ...inner.snap };
+});
 
 beforeEach(async () => {
   await i18n.changeLanguage("en");
