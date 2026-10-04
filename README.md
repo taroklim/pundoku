@@ -65,7 +65,7 @@ Docker — `apps/api/README.md`.
 - Экраны и UI — `apps/web/src/` (после утверждения макета владельцем; PD-0 — только оболочка).
 - Переводы — `apps/web/src/i18n/locales/{en,uk,ru}.json`, язык определяется по `navigator.language`.
 - PWA-манифест и service worker — `apps/web/vite.config.ts` (`VitePWA`, autoUpdate).
-- Иконки — `apps/web/public/icons/` (D5 «Унос», PD-102). PNG растеризуются из `design/pd98-assets/d5-*.svg` скриптом `design/pd98-icons.mjs` (Playwright, запуск руками при смене иконки; инструкция в шапке скрипта) и лежат в git; в сборке не участвуют. `pnpm icons` убран.
+- Иконки — `apps/web/public/icons/` (P4 «Девять клеток», PD-155; была D5 «Унос», PD-102). Все PNG/`icon.svg` собирает скрипт `design/pd155-icons.mjs` из одной геометрии (Playwright, запуск руками при смене иконки; инструкция в шапке скрипта; эталонные SVG light/dark/tinted, слой для Icon Composer, знак и favicon — `design/pd155-assets/`) и лежат в git; в сборке не участвуют. Геометрия знака в приложении — `apps/web/src/brand/markPaths.ts`. Откат на D5 — копии в `design/pd98-assets/shipped-d5/` (удалить после мержа и подтверждения владельца); `pnpm icons` убран.
 - HTTP-эндпоинты — `apps/api/src/app.ts` (роуты по модулям `daily/`, `devices/`, `snapshot/`; описание — `apps/api/README.md`).
 - Логика судоку — `packages/engine/src/`. Никакого GPL-кода (HoDoKu, Sudoku Explainer) — только
   переписанная по описанию логика техник.
