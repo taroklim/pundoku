@@ -410,8 +410,9 @@ Gates: build → typecheck, lint, тесты web/engine/api (api с TEST_DATABAS
 | PD-152 | Реализация вордмарка round 5, вариант A (зазор 4), клеточные P-u-n, «doku» шрифтом, второе u обычное; иконка D5 не меняется; везде где надпись Pundoku; a11y aria-label, forced-colors (settings.css:693 + rect), темы, reduced-transparency, 28px; ветка pd-logo5 | developer | P1 | completed (merged c105435 вместе с QA-скриптами) | PD-149 |
 | PD-153 | QA PD-152 (вордмарк): все места, a11y, forced-colors, темы, 28/32px, регресс; iOS-пункты | qa-tester | P1 | completed (PASS; merged c105435) | PD-152 |
 | PD-154 | Пересборка ios-checklist.html: пп. 57–61 (раздел Л, Today-fix), проверка нумерации 1–61, копия на Desktop | developer | P1 | completed (b9e9364; 118 карточек, владельцу 100) | — |
-| PD-155 | Иконка приложения P4 «Девять клеток» (round 4) вместо D5 — решение владельца 2026-10-04: apple-touch-icon 180, 192/512, maskable, favicon, splash/startup-image, Mark в приложении (Year пусто, About/help), штамп PNG-отпечатка, manifest, docs бренда; рендер 29/32/60/87/180 px, forced-colors; D5-файлы не удалять до мержа; ветка pd-icon-p4 | developer | P1 | completed (pd-icon-p4 @ ec4579b, ждёт QA) | PD-152 |
-| PD-156 | QA PD-155: визуальная сверка иконки на всех размерах light/dark, маска iOS/maskable, favicon, splash, регресс | qa-tester | P1 | in_progress | PD-155 |
+| PD-155 | Иконка приложения P4 «Девять клеток» (round 4) вместо D5 — решение владельца 2026-10-04: apple-touch-icon 180, 192/512, maskable, favicon, splash/startup-image, Mark в приложении (Year пусто, About/help), штамп PNG-отпечатка, manifest, docs бренда; рендер 29/32/60/87/180 px, forced-colors; D5-файлы не удалять до мержа; ветка pd-icon-p4 | developer | P1 | completed (merged 37fb0c0) | PD-152 |
+| PD-156 | QA PD-155: визуальная сверка иконки на всех размерах light/dark, маска iOS/maskable, favicon, splash, регресс | qa-tester | P1 | completed (PASS с замечаниями; merged 37fb0c0) | PD-155 |
+| PD-157 | Чек-лист iOS: пп. 62–73 (разделы М вордмарк, Н иконка P4), исправить старые пункты про иконку D5 (59–63 в build-checklist) на P4, selftest, Desktop; поправить «19.1»→18.3 в pwa.config.ts/icons.test.mjs/pd155-icons.mjs | developer | P1 | in_progress | PD-155 |
 | PD-20 | QA PD-14 (pd-14 @ 0026b2a): PASS с оговорками, блокеров и Medium нет; 4 Low + решение по слиянию → PD-31 | qa-tester | P1 | completed | PD-14 |
 | PD-31 | Фикс-проход pd-14 по QA PD-20 (pd-14 @ c574f13; gates зелёные: web 213, engine 105, api 77+2 skipped, интеграционные 7/7 на живой БД) | developer | P1 | completed | PD-20 |
 | PD-32 | PASS с оговорками (слияние 409 по источникам, 1500 дней без лишних PUT, gates, интеграционные 7/7); Low → PD-37. QA-регресс pd-14 @ c574f13 (перезапуск после сбоя контейнера; worktree /tmp/pundoku-qa/qa-pd32, БД pundoku_qa5, порты 3320/5320): слияние 409 по источникам, отсутствие лишних PUT при 1500 днях, сокращённый регресс PD-20, gates + интеграционные api-тесты | qa-tester | P1 | completed | PD-31 |
@@ -504,7 +505,7 @@ Gates: build → typecheck, lint, тесты web/engine/api (api с `TEST_DATABA
 | Имя | Роль | Статус | Тикет | Обновлено |
 |-----|------|--------|-------|-----------|
 | PM-Pundoku-10 | product-manager | working | пакеты реализации по решениям владельца | 2026-10-02 |
-| QA-Pundoku-icon | qa-tester | working | PD-156 | 2026-10-04 |
+| Dev-Pundoku-checklist2 | developer | working | PD-157 | 2026-10-04 |
 
 ## Чек-пойнт 2026-10-01 (конец сессии PM-Pundoku-7)
 - **Сделано:** решения владельца по релизу 1.1 зафиксированы; PD-74 (UI ink, pd-74 @ 73444b2), PD-75 (UI таймлапса/PNG Rhythm, pd-75 @ bfeedbf), PD-80 (счёт ходов в ink, pd-80 @ de5a52d) смержены в локальный main; gates на слитом: build/typecheck/lint, web 624, engine 178 (api не затронут, 174+3). PD-78 сделан в PD-74. PD-79 закрыт: не дефект.
@@ -518,3 +519,12 @@ Gates: build → typecheck, lint, тесты web/engine/api (api с `TEST_DATABA
 - (2) Landscape: доска на Today сжимается до 113 pt, Ink перекрывает доску (то же в Play на main).
 - (3) AX3, архив: сложность «M...», источник визуально скрыт.
 - (5) Коммиты ветки pd-today-fix помечены PD-147 вместо PD-150 (в таблице тикетов верный номер PD-150).
+
+
+## Бэклог по QA PD-153/PD-156 (вордмарк и иконка P4, 2026-10-04; Low)
+- Maskable-запас иконки P4 фактически 18,1-18,3 (в макете round 4 заявлено 19,1) - клетки не обрезаются ни кругом, ни маской iOS; тест проверяет только диапазон радиуса.
+- Две «P» подряд: знак P4 стоит перед клеточным «Pun» в About и в штампе PNG-отпечатка. Вариант: в About показать плашку-тайл, в штампе убрать знак. Решение дизайнерское, за владельцем.
+- Chrome (headless) всегда берёт icon.svg?v=p4, favicon-16 (сплошная P) не используется; на 16 px чёткий, на 20 px (Windows 125%) зазоры неровные. Safari favicon не проверен.
+- Нижняя клетка касается нижнего края 16-сетки в icon.svg и favicon-32; штамп знака в PNG со слегка мягкими краями (44/16 не целый масштаб).
+- В превью листа экспорта (~25 px) «u n» слипаются плотнее, чем в файле; правило `.wordmark rect` в brand.css дублирует `.settings-about-word rect` в settings.css.
+- Splash (26 startup-image) сплошной фон без знака - не менялся; шапка Today вордмарка не содержит (по §9.3 макета).
