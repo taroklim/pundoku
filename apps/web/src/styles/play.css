@@ -990,3 +990,36 @@
     margin-top: 8px;
   }
 }
+
+/* ---------- PD-159: ландшафт телефона (QA PD-151, Low 2) ----------
+   В установленной PWA поворот запрещён (manifest `orientation: portrait`, PD-132), но в Safari без установки экран поворачивается.
+   Нескроллящаяся модель портрета (поле = высота окна − обвязка) на высоте 320–430 давала поле 27–150 pt, а строка «Ink mode» и
+   ряд действий наезжали на поле и уходили под таб-бар. Двух колонок и заглушки «поверните телефон» нет (решение PD-132): в ландшафте
+   экран партии просто прокручивается. Поле — по высоте окна за вычетом шапки, подписи и таб-бара (целиком видно сразу, не меньше
+   160 pt), всё ниже поля — в естественном потоке, ничего не сжимается и не перекрывается. Портрет не затронут (orientation). */
+@media (orientation: landscape) and (max-height: 500px) {
+  .scroll:has(.play-fit) {
+    overflow-y: auto;
+  }
+  .scroll:has(.play-fit) > .panel,
+  .scroll:has(.play-fit) .play {
+    min-height: auto;
+  }
+  .play-fit > .gap,
+  .play-fit > .hint-dock {
+    flex-shrink: 0;
+  }
+  .play-fit .board {
+    --side: max(
+      160px,
+      100dvh - var(--bar) - var(--sa-top) - var(--sa-bot) - 2rem - 8px - 1.15rem - 2px - 12px - var(--tabbar-h) - 8px
+    );
+    width: min(100%, var(--side));
+    --s: calc((min(100cqi, var(--side)) - 2 * var(--box-gap)) / 9);
+  }
+  /* Ряды бокса — явно по размеру клетки (поворот меняет поле без перезагрузки; WebKit не пересчитывает ряды сетки с
+     aspect-ratio-клетками, см. today.css, AX3). */
+  .play-fit .box {
+    grid-auto-rows: var(--s);
+  }
+}

@@ -1,0 +1,2482 @@
+[
+ {
+  "name": "portrait-chromium-320x568-today",
+  "board": {
+   "t": 71,
+   "b": 313,
+   "w": 242
+  },
+  "ink": {
+   "t": 326,
+   "b": 370,
+   "w": 288
+  },
+  "pad": {
+   "t": 382,
+   "b": 438,
+   "w": 288
+  },
+  "actions": {
+   "t": 438,
+   "b": 504,
+   "w": 288
+  },
+  "tab": {
+   "t": 504,
+   "b": 568,
+   "w": 320
+  },
+  "overlapInk": 0,
+  "scroll": {
+   "top": 0,
+   "h": 568,
+   "ch": 568,
+   "oy": "hidden"
+  },
+  "sub": {
+   "lines": 1,
+   "text": "Sun 4 Oct · Medium · 0:00",
+   "h": 18
+  },
+  "diffTrunc": false,
+  "srcVisible": null,
+  "src": null,
+  "bottomOk": true
+ },
+ {
+  "name": "portrait-chromium-320x568-today-ax3",
+  "board": {
+   "t": 146,
+   "b": 315,
+   "w": 169
+  },
+  "ink": {
+   "t": 317,
+   "b": 376,
+   "w": 288
+  },
+  "pad": {
+   "t": 379,
+   "b": 435,
+   "w": 288
+  },
+  "actions": {
+   "t": 435,
+   "b": 501,
+   "w": 288
+  },
+  "tab": {
+   "t": 501,
+   "b": 568,
+   "w": 320
+  },
+  "overlapInk": 0,
+  "scroll": {
+   "top": 0,
+   "h": 568,
+   "ch": 568,
+   "oy": "hidden"
+  },
+  "sub": {
+   "lines": 1,
+   "text": "Sun 4 Oct · Medium · 0:00",
+   "h": 46
+  },
+  "diffTrunc": true,
+  "srcVisible": null,
+  "src": null,
+  "bottomOk": true
+ },
+ {
+  "name": "portrait-chromium-320x568-play",
+  "board": {
+   "t": 71,
+   "b": 313,
+   "w": 242
+  },
+  "ink": null,
+  "pad": {
+   "t": 382,
+   "b": 438,
+   "w": 288
+  },
+  "actions": {
+   "t": 438,
+   "b": 504,
+   "w": 288
+  },
+  "tab": {
+   "t": 504,
+   "b": 568,
+   "w": 320
+  },
+  "overlapInk": null,
+  "scroll": {
+   "top": 0,
+   "h": 568,
+   "ch": 568,
+   "oy": "hidden"
+  },
+  "sub": {
+   "lines": 1,
+   "text": "Medium · 0:01",
+   "h": 18
+  },
+  "diffTrunc": false,
+  "srcVisible": null,
+  "src": null,
+  "bottomOk": true
+ },
+ {
+  "name": "portrait-chromium-320x568-play-ax3",
+  "board": {
+   "t": 146,
+   "b": 315,
+   "w": 169
+  },
+  "ink": null,
+  "pad": {
+   "t": 379,
+   "b": 435,
+   "w": 288
+  },
+  "actions": {
+   "t": 435,
+   "b": 501,
+   "w": 288
+  },
+  "tab": {
+   "t": 501,
+   "b": 568,
+   "w": 320
+  },
+  "overlapInk": null,
+  "scroll": {
+   "top": 0,
+   "h": 568,
+   "ch": 568,
+   "oy": "hidden"
+  },
+  "sub": {
+   "lines": 1,
+   "text": "Medium · 0:00",
+   "h": 46
+  },
+  "diffTrunc": false,
+  "srcVisible": null,
+  "src": null,
+  "bottomOk": true
+ },
+ {
+  "name": "portrait-chromium-320x568-day_2026-09-27",
+  "board": {
+   "t": 107,
+   "b": 347,
+   "w": 239
+  },
+  "ink": null,
+  "pad": {
+   "t": 382,
+   "b": 438,
+   "w": 288
+  },
+  "actions": {
+   "t": 438,
+   "b": 504,
+   "w": 288
+  },
+  "tab": {
+   "t": 504,
+   "b": 568,
+   "w": 320
+  },
+  "overlapInk": null,
+  "scroll": {
+   "top": 0,
+   "h": 568,
+   "ch": 568,
+   "oy": "hidden"
+  },
+  "sub": {
+   "lines": 1,
+   "text": "Sun 27 Sep · Medium · 0:00",
+   "h": 18
+  },
+  "diffTrunc": false,
+  "srcVisible": true,
+  "src": "Puzzle from Sudoku.com",
+  "bottomOk": true
+ },
+ {
+  "name": "portrait-chromium-320x568-day_2026-09-27-ax3",
+  "board": {
+   "t": 187,
+   "b": 316,
+   "w": 129
+  },
+  "ink": null,
+  "pad": {
+   "t": 379,
+   "b": 435,
+   "w": 288
+  },
+  "actions": {
+   "t": 435,
+   "b": 501,
+   "w": 288
+  },
+  "tab": {
+   "t": 501,
+   "b": 568,
+   "w": 320
+  },
+  "overlapInk": null,
+  "scroll": {
+   "top": 0,
+   "h": 568,
+   "ch": 568,
+   "oy": "hidden"
+  },
+  "sub": {
+   "lines": 1,
+   "text": "Sun 27 Sep · Medium · 0:00",
+   "h": 46
+  },
+  "diffTrunc": true,
+  "srcVisible": false,
+  "src": "Puzzle from Sudoku.com",
+  "bottomOk": true
+ },
+ {
+  "name": "portrait-chromium-375x667-today",
+  "board": {
+   "t": 71,
+   "b": 412,
+   "w": 341
+  },
+  "ink": {
+   "t": 424,
+   "b": 468,
+   "w": 343
+  },
+  "pad": {
+   "t": 481,
+   "b": 537,
+   "w": 343
+  },
+  "actions": {
+   "t": 537,
+   "b": 603,
+   "w": 343
+  },
+  "tab": {
+   "t": 603,
+   "b": 667,
+   "w": 375
+  },
+  "overlapInk": 0,
+  "scroll": {
+   "top": 0,
+   "h": 667,
+   "ch": 667,
+   "oy": "hidden"
+  },
+  "sub": {
+   "lines": 1,
+   "text": "Sun 4 Oct · Medium · 0:00",
+   "h": 18
+  },
+  "diffTrunc": false,
+  "srcVisible": null,
+  "src": null,
+  "bottomOk": true
+ },
+ {
+  "name": "portrait-chromium-375x667-today-ax3",
+  "board": {
+   "t": 146,
+   "b": 408,
+   "w": 262
+  },
+  "ink": {
+   "t": 413,
+   "b": 472,
+   "w": 343
+  },
+  "pad": {
+   "t": 478,
+   "b": 534,
+   "w": 343
+  },
+  "actions": {
+   "t": 534,
+   "b": 600,
+   "w": 343
+  },
+  "tab": {
+   "t": 600,
+   "b": 667,
+   "w": 375
+  },
+  "overlapInk": 0,
+  "scroll": {
+   "top": 0,
+   "h": 667,
+   "ch": 667,
+   "oy": "hidden"
+  },
+  "sub": {
+   "lines": 1,
+   "text": "Sun 4 Oct · Medium · 0:00",
+   "h": 46
+  },
+  "diffTrunc": true,
+  "srcVisible": null,
+  "src": null,
+  "bottomOk": true
+ },
+ {
+  "name": "portrait-chromium-375x667-play",
+  "board": {
+   "t": 71,
+   "b": 412,
+   "w": 341
+  },
+  "ink": null,
+  "pad": {
+   "t": 481,
+   "b": 537,
+   "w": 343
+  },
+  "actions": {
+   "t": 537,
+   "b": 603,
+   "w": 343
+  },
+  "tab": {
+   "t": 603,
+   "b": 667,
+   "w": 375
+  },
+  "overlapInk": null,
+  "scroll": {
+   "top": 0,
+   "h": 667,
+   "ch": 667,
+   "oy": "hidden"
+  },
+  "sub": {
+   "lines": 1,
+   "text": "Medium · 0:00",
+   "h": 18
+  },
+  "diffTrunc": false,
+  "srcVisible": null,
+  "src": null,
+  "bottomOk": true
+ },
+ {
+  "name": "portrait-chromium-375x667-play-ax3",
+  "board": {
+   "t": 146,
+   "b": 408,
+   "w": 262
+  },
+  "ink": null,
+  "pad": {
+   "t": 478,
+   "b": 534,
+   "w": 343
+  },
+  "actions": {
+   "t": 534,
+   "b": 600,
+   "w": 343
+  },
+  "tab": {
+   "t": 600,
+   "b": 667,
+   "w": 375
+  },
+  "overlapInk": null,
+  "scroll": {
+   "top": 0,
+   "h": 667,
+   "ch": 667,
+   "oy": "hidden"
+  },
+  "sub": {
+   "lines": 1,
+   "text": "Medium · 0:01",
+   "h": 46
+  },
+  "diffTrunc": false,
+  "srcVisible": null,
+  "src": null,
+  "bottomOk": true
+ },
+ {
+  "name": "portrait-chromium-375x667-day_2026-09-27",
+  "board": {
+   "t": 107,
+   "b": 412,
+   "w": 305
+  },
+  "ink": null,
+  "pad": {
+   "t": 481,
+   "b": 537,
+   "w": 343
+  },
+  "actions": {
+   "t": 537,
+   "b": 603,
+   "w": 343
+  },
+  "tab": {
+   "t": 603,
+   "b": 667,
+   "w": 375
+  },
+  "overlapInk": null,
+  "scroll": {
+   "top": 0,
+   "h": 667,
+   "ch": 667,
+   "oy": "hidden"
+  },
+  "sub": {
+   "lines": 1,
+   "text": "Sun 27 Sep · Medium · 0:00",
+   "h": 18
+  },
+  "diffTrunc": false,
+  "srcVisible": true,
+  "src": "Puzzle from Sudoku.com",
+  "bottomOk": true
+ },
+ {
+  "name": "portrait-chromium-375x667-day_2026-09-27-ax3",
+  "board": {
+   "t": 187,
+   "b": 415,
+   "w": 228
+  },
+  "ink": null,
+  "pad": {
+   "t": 478,
+   "b": 534,
+   "w": 343
+  },
+  "actions": {
+   "t": 534,
+   "b": 600,
+   "w": 343
+  },
+  "tab": {
+   "t": 600,
+   "b": 667,
+   "w": 375
+  },
+  "overlapInk": null,
+  "scroll": {
+   "top": 0,
+   "h": 667,
+   "ch": 667,
+   "oy": "hidden"
+  },
+  "sub": {
+   "lines": 1,
+   "text": "Sun 27 Sep · Medium · 0:00",
+   "h": 46
+  },
+  "diffTrunc": true,
+  "srcVisible": false,
+  "src": "Puzzle from Sudoku.com",
+  "bottomOk": true
+ },
+ {
+  "name": "portrait-chromium-390x844-today",
+  "board": {
+   "t": 71,
+   "b": 429,
+   "w": 358
+  },
+  "ink": {
+   "t": 522,
+   "b": 566,
+   "w": 358
+  },
+  "pad": {
+   "t": 658,
+   "b": 714,
+   "w": 358
+  },
+  "actions": {
+   "t": 714,
+   "b": 780,
+   "w": 358
+  },
+  "tab": {
+   "t": 780,
+   "b": 844,
+   "w": 390
+  },
+  "overlapInk": 0,
+  "scroll": {
+   "top": 0,
+   "h": 844,
+   "ch": 844,
+   "oy": "hidden"
+  },
+  "sub": {
+   "lines": 1,
+   "text": "Sun 4 Oct · Medium · 0:00",
+   "h": 18
+  },
+  "diffTrunc": false,
+  "srcVisible": null,
+  "src": null,
+  "bottomOk": true
+ },
+ {
+  "name": "portrait-chromium-390x844-today-ax3",
+  "board": {
+   "t": 146,
+   "b": 504,
+   "w": 358
+  },
+  "ink": {
+   "t": 550,
+   "b": 609,
+   "w": 358
+  },
+  "pad": {
+   "t": 655,
+   "b": 711,
+   "w": 358
+  },
+  "actions": {
+   "t": 711,
+   "b": 777,
+   "w": 358
+  },
+  "tab": {
+   "t": 777,
+   "b": 844,
+   "w": 390
+  },
+  "overlapInk": 0,
+  "scroll": {
+   "top": 0,
+   "h": 844,
+   "ch": 844,
+   "oy": "hidden"
+  },
+  "sub": {
+   "lines": 1,
+   "text": "Sun 4 Oct · Medium · 0:00",
+   "h": 46
+  },
+  "diffTrunc": true,
+  "srcVisible": null,
+  "src": null,
+  "bottomOk": true
+ },
+ {
+  "name": "portrait-chromium-390x844-play",
+  "board": {
+   "t": 71,
+   "b": 429,
+   "w": 358
+  },
+  "ink": null,
+  "pad": {
+   "t": 658,
+   "b": 714,
+   "w": 358
+  },
+  "actions": {
+   "t": 714,
+   "b": 780,
+   "w": 358
+  },
+  "tab": {
+   "t": 780,
+   "b": 844,
+   "w": 390
+  },
+  "overlapInk": null,
+  "scroll": {
+   "top": 0,
+   "h": 844,
+   "ch": 844,
+   "oy": "hidden"
+  },
+  "sub": {
+   "lines": 1,
+   "text": "Medium · 0:00",
+   "h": 18
+  },
+  "diffTrunc": false,
+  "srcVisible": null,
+  "src": null,
+  "bottomOk": true
+ },
+ {
+  "name": "portrait-chromium-390x844-play-ax3",
+  "board": {
+   "t": 146,
+   "b": 504,
+   "w": 358
+  },
+  "ink": null,
+  "pad": {
+   "t": 655,
+   "b": 711,
+   "w": 358
+  },
+  "actions": {
+   "t": 711,
+   "b": 777,
+   "w": 358
+  },
+  "tab": {
+   "t": 777,
+   "b": 844,
+   "w": 390
+  },
+  "overlapInk": null,
+  "scroll": {
+   "top": 0,
+   "h": 844,
+   "ch": 844,
+   "oy": "hidden"
+  },
+  "sub": {
+   "lines": 1,
+   "text": "Medium · 0:01",
+   "h": 46
+  },
+  "diffTrunc": false,
+  "srcVisible": null,
+  "src": null,
+  "bottomOk": true
+ },
+ {
+  "name": "portrait-chromium-390x844-day_2026-09-27",
+  "board": {
+   "t": 107,
+   "b": 465,
+   "w": 358
+  },
+  "ink": null,
+  "pad": {
+   "t": 658,
+   "b": 714,
+   "w": 358
+  },
+  "actions": {
+   "t": 714,
+   "b": 780,
+   "w": 358
+  },
+  "tab": {
+   "t": 780,
+   "b": 844,
+   "w": 390
+  },
+  "overlapInk": null,
+  "scroll": {
+   "top": 0,
+   "h": 844,
+   "ch": 844,
+   "oy": "hidden"
+  },
+  "sub": {
+   "lines": 1,
+   "text": "Sun 27 Sep · Medium · 0:00",
+   "h": 18
+  },
+  "diffTrunc": false,
+  "srcVisible": true,
+  "src": "Puzzle from Sudoku.com",
+  "bottomOk": true
+ },
+ {
+  "name": "portrait-chromium-390x844-day_2026-09-27-ax3",
+  "board": {
+   "t": 187,
+   "b": 545,
+   "w": 358
+  },
+  "ink": null,
+  "pad": {
+   "t": 655,
+   "b": 711,
+   "w": 358
+  },
+  "actions": {
+   "t": 711,
+   "b": 777,
+   "w": 358
+  },
+  "tab": {
+   "t": 777,
+   "b": 844,
+   "w": 390
+  },
+  "overlapInk": null,
+  "scroll": {
+   "top": 0,
+   "h": 844,
+   "ch": 844,
+   "oy": "hidden"
+  },
+  "sub": {
+   "lines": 1,
+   "text": "Sun 27 Sep · Medium · 0:00",
+   "h": 46
+  },
+  "diffTrunc": true,
+  "srcVisible": false,
+  "src": "Puzzle from Sudoku.com",
+  "bottomOk": true
+ },
+ {
+  "name": "portrait-chromium-393x852-today",
+  "board": {
+   "t": 71,
+   "b": 432,
+   "w": 361
+  },
+  "ink": {
+   "t": 527,
+   "b": 571,
+   "w": 361
+  },
+  "pad": {
+   "t": 666,
+   "b": 722,
+   "w": 361
+  },
+  "actions": {
+   "t": 722,
+   "b": 788,
+   "w": 361
+  },
+  "tab": {
+   "t": 788,
+   "b": 852,
+   "w": 393
+  },
+  "overlapInk": 0,
+  "scroll": {
+   "top": 0,
+   "h": 852,
+   "ch": 852,
+   "oy": "hidden"
+  },
+  "sub": {
+   "lines": 1,
+   "text": "Sun 4 Oct · Medium · 0:00",
+   "h": 18
+  },
+  "diffTrunc": false,
+  "srcVisible": null,
+  "src": null,
+  "bottomOk": true
+ },
+ {
+  "name": "portrait-chromium-393x852-today-ax3",
+  "board": {
+   "t": 146,
+   "b": 506,
+   "w": 361
+  },
+  "ink": {
+   "t": 555,
+   "b": 614,
+   "w": 361
+  },
+  "pad": {
+   "t": 663,
+   "b": 719,
+   "w": 361
+  },
+  "actions": {
+   "t": 719,
+   "b": 785,
+   "w": 361
+  },
+  "tab": {
+   "t": 785,
+   "b": 852,
+   "w": 393
+  },
+  "overlapInk": 0,
+  "scroll": {
+   "top": 0,
+   "h": 852,
+   "ch": 852,
+   "oy": "hidden"
+  },
+  "sub": {
+   "lines": 1,
+   "text": "Sun 4 Oct · Medium · 0:00",
+   "h": 46
+  },
+  "diffTrunc": true,
+  "srcVisible": null,
+  "src": null,
+  "bottomOk": true
+ },
+ {
+  "name": "portrait-chromium-393x852-play",
+  "board": {
+   "t": 71,
+   "b": 432,
+   "w": 361
+  },
+  "ink": null,
+  "pad": {
+   "t": 666,
+   "b": 722,
+   "w": 361
+  },
+  "actions": {
+   "t": 722,
+   "b": 788,
+   "w": 361
+  },
+  "tab": {
+   "t": 788,
+   "b": 852,
+   "w": 393
+  },
+  "overlapInk": null,
+  "scroll": {
+   "top": 0,
+   "h": 852,
+   "ch": 852,
+   "oy": "hidden"
+  },
+  "sub": {
+   "lines": 1,
+   "text": "Medium · 0:00",
+   "h": 18
+  },
+  "diffTrunc": false,
+  "srcVisible": null,
+  "src": null,
+  "bottomOk": true
+ },
+ {
+  "name": "portrait-chromium-393x852-play-ax3",
+  "board": {
+   "t": 146,
+   "b": 506,
+   "w": 361
+  },
+  "ink": null,
+  "pad": {
+   "t": 663,
+   "b": 719,
+   "w": 361
+  },
+  "actions": {
+   "t": 719,
+   "b": 785,
+   "w": 361
+  },
+  "tab": {
+   "t": 785,
+   "b": 852,
+   "w": 393
+  },
+  "overlapInk": null,
+  "scroll": {
+   "top": 0,
+   "h": 852,
+   "ch": 852,
+   "oy": "hidden"
+  },
+  "sub": {
+   "lines": 1,
+   "text": "Medium · 0:01",
+   "h": 46
+  },
+  "diffTrunc": false,
+  "srcVisible": null,
+  "src": null,
+  "bottomOk": true
+ },
+ {
+  "name": "portrait-chromium-393x852-day_2026-09-27",
+  "board": {
+   "t": 107,
+   "b": 468,
+   "w": 361
+  },
+  "ink": null,
+  "pad": {
+   "t": 666,
+   "b": 722,
+   "w": 361
+  },
+  "actions": {
+   "t": 722,
+   "b": 788,
+   "w": 361
+  },
+  "tab": {
+   "t": 788,
+   "b": 852,
+   "w": 393
+  },
+  "overlapInk": null,
+  "scroll": {
+   "top": 0,
+   "h": 852,
+   "ch": 852,
+   "oy": "hidden"
+  },
+  "sub": {
+   "lines": 1,
+   "text": "Sun 27 Sep · Medium · 0:00",
+   "h": 18
+  },
+  "diffTrunc": false,
+  "srcVisible": true,
+  "src": "Puzzle from Sudoku.com",
+  "bottomOk": true
+ },
+ {
+  "name": "portrait-chromium-393x852-day_2026-09-27-ax3",
+  "board": {
+   "t": 187,
+   "b": 548,
+   "w": 361
+  },
+  "ink": null,
+  "pad": {
+   "t": 663,
+   "b": 719,
+   "w": 361
+  },
+  "actions": {
+   "t": 719,
+   "b": 785,
+   "w": 361
+  },
+  "tab": {
+   "t": 785,
+   "b": 852,
+   "w": 393
+  },
+  "overlapInk": null,
+  "scroll": {
+   "top": 0,
+   "h": 852,
+   "ch": 852,
+   "oy": "hidden"
+  },
+  "sub": {
+   "lines": 1,
+   "text": "Sun 27 Sep · Medium · 0:00",
+   "h": 46
+  },
+  "diffTrunc": true,
+  "srcVisible": false,
+  "src": "Puzzle from Sudoku.com",
+  "bottomOk": true
+ },
+ {
+  "name": "portrait-chromium-430x932-today",
+  "board": {
+   "t": 71,
+   "b": 469,
+   "w": 398
+  },
+  "ink": {
+   "t": 586,
+   "b": 630,
+   "w": 398
+  },
+  "pad": {
+   "t": 746,
+   "b": 802,
+   "w": 398
+  },
+  "actions": {
+   "t": 802,
+   "b": 868,
+   "w": 398
+  },
+  "tab": {
+   "t": 868,
+   "b": 932,
+   "w": 430
+  },
+  "overlapInk": 0,
+  "scroll": {
+   "top": 0,
+   "h": 932,
+   "ch": 932,
+   "oy": "hidden"
+  },
+  "sub": {
+   "lines": 1,
+   "text": "Sun 4 Oct · Medium · 0:00",
+   "h": 18
+  },
+  "diffTrunc": false,
+  "srcVisible": null,
+  "src": null,
+  "bottomOk": true
+ },
+ {
+  "name": "portrait-chromium-430x932-today-ax3",
+  "board": {
+   "t": 146,
+   "b": 543,
+   "w": 398
+  },
+  "ink": {
+   "t": 614,
+   "b": 673,
+   "w": 398
+  },
+  "pad": {
+   "t": 743,
+   "b": 799,
+   "w": 398
+  },
+  "actions": {
+   "t": 799,
+   "b": 865,
+   "w": 398
+  },
+  "tab": {
+   "t": 865,
+   "b": 932,
+   "w": 430
+  },
+  "overlapInk": 0,
+  "scroll": {
+   "top": 0,
+   "h": 932,
+   "ch": 932,
+   "oy": "hidden"
+  },
+  "sub": {
+   "lines": 1,
+   "text": "Sun 4 Oct · Medium · 0:00",
+   "h": 46
+  },
+  "diffTrunc": false,
+  "srcVisible": null,
+  "src": null,
+  "bottomOk": true
+ },
+ {
+  "name": "portrait-chromium-430x932-play",
+  "board": {
+   "t": 71,
+   "b": 469,
+   "w": 398
+  },
+  "ink": null,
+  "pad": {
+   "t": 746,
+   "b": 802,
+   "w": 398
+  },
+  "actions": {
+   "t": 802,
+   "b": 868,
+   "w": 398
+  },
+  "tab": {
+   "t": 868,
+   "b": 932,
+   "w": 430
+  },
+  "overlapInk": null,
+  "scroll": {
+   "top": 0,
+   "h": 932,
+   "ch": 932,
+   "oy": "hidden"
+  },
+  "sub": {
+   "lines": 1,
+   "text": "Medium · 0:01",
+   "h": 18
+  },
+  "diffTrunc": false,
+  "srcVisible": null,
+  "src": null,
+  "bottomOk": true
+ },
+ {
+  "name": "portrait-chromium-430x932-play-ax3",
+  "board": {
+   "t": 146,
+   "b": 543,
+   "w": 398
+  },
+  "ink": null,
+  "pad": {
+   "t": 743,
+   "b": 799,
+   "w": 398
+  },
+  "actions": {
+   "t": 799,
+   "b": 865,
+   "w": 398
+  },
+  "tab": {
+   "t": 865,
+   "b": 932,
+   "w": 430
+  },
+  "overlapInk": null,
+  "scroll": {
+   "top": 0,
+   "h": 932,
+   "ch": 932,
+   "oy": "hidden"
+  },
+  "sub": {
+   "lines": 1,
+   "text": "Medium · 0:00",
+   "h": 46
+  },
+  "diffTrunc": false,
+  "srcVisible": null,
+  "src": null,
+  "bottomOk": true
+ },
+ {
+  "name": "portrait-chromium-430x932-day_2026-09-27",
+  "board": {
+   "t": 107,
+   "b": 505,
+   "w": 398
+  },
+  "ink": null,
+  "pad": {
+   "t": 746,
+   "b": 802,
+   "w": 398
+  },
+  "actions": {
+   "t": 802,
+   "b": 868,
+   "w": 398
+  },
+  "tab": {
+   "t": 868,
+   "b": 932,
+   "w": 430
+  },
+  "overlapInk": null,
+  "scroll": {
+   "top": 0,
+   "h": 932,
+   "ch": 932,
+   "oy": "hidden"
+  },
+  "sub": {
+   "lines": 1,
+   "text": "Sun 27 Sep · Medium · 0:00",
+   "h": 18
+  },
+  "diffTrunc": false,
+  "srcVisible": true,
+  "src": "Puzzle from Sudoku.com",
+  "bottomOk": true
+ },
+ {
+  "name": "portrait-chromium-430x932-day_2026-09-27-ax3",
+  "board": {
+   "t": 187,
+   "b": 585,
+   "w": 398
+  },
+  "ink": null,
+  "pad": {
+   "t": 743,
+   "b": 799,
+   "w": 398
+  },
+  "actions": {
+   "t": 799,
+   "b": 865,
+   "w": 398
+  },
+  "tab": {
+   "t": 865,
+   "b": 932,
+   "w": 430
+  },
+  "overlapInk": null,
+  "scroll": {
+   "top": 0,
+   "h": 932,
+   "ch": 932,
+   "oy": "hidden"
+  },
+  "sub": {
+   "lines": 1,
+   "text": "Sun 27 Sep · Medium · 0:00",
+   "h": 46
+  },
+  "diffTrunc": true,
+  "srcVisible": false,
+  "src": "Puzzle from Sudoku.com",
+  "bottomOk": true
+ },
+ {
+  "name": "portrait-webkit-320x568-today",
+  "board": {
+   "t": 64,
+   "b": 315,
+   "w": 251
+  },
+  "ink": {
+   "t": 327,
+   "b": 371,
+   "w": 288
+  },
+  "pad": {
+   "t": 382,
+   "b": 438,
+   "w": 288
+  },
+  "actions": {
+   "t": 438,
+   "b": 504,
+   "w": 288
+  },
+  "tab": {
+   "t": 504,
+   "b": 568,
+   "w": 320
+  },
+  "overlapInk": 0,
+  "scroll": {
+   "top": 0,
+   "h": 568,
+   "ch": 568,
+   "oy": "hidden"
+  },
+  "sub": {
+   "lines": 1,
+   "text": "Sun 4 Oct · Medium · 0:00",
+   "h": 14
+  },
+  "diffTrunc": false,
+  "srcVisible": null,
+  "src": null,
+  "bottomOk": true
+ },
+ {
+  "name": "portrait-webkit-320x568-today-ax3",
+  "board": {
+   "t": 144,
+   "b": 313,
+   "w": 169
+  },
+  "ink": {
+   "t": 317,
+   "b": 375,
+   "w": 288
+  },
+  "pad": {
+   "t": 379,
+   "b": 435,
+   "w": 288
+  },
+  "actions": {
+   "t": 435,
+   "b": 501,
+   "w": 288
+  },
+  "tab": {
+   "t": 502,
+   "b": 568,
+   "w": 320
+  },
+  "overlapInk": 0,
+  "scroll": {
+   "top": 0,
+   "h": 568,
+   "ch": 568,
+   "oy": "hidden"
+  },
+  "sub": {
+   "lines": 1,
+   "text": "Sun 4 Oct · Medium · 0:00",
+   "h": 45
+  },
+  "diffTrunc": true,
+  "srcVisible": null,
+  "src": null,
+  "bottomOk": true
+ },
+ {
+  "name": "portrait-webkit-320x568-play",
+  "board": {
+   "t": 64,
+   "b": 315,
+   "w": 251
+  },
+  "ink": null,
+  "pad": {
+   "t": 382,
+   "b": 438,
+   "w": 288
+  },
+  "actions": {
+   "t": 438,
+   "b": 504,
+   "w": 288
+  },
+  "tab": {
+   "t": 504,
+   "b": 568,
+   "w": 320
+  },
+  "overlapInk": null,
+  "scroll": {
+   "top": 0,
+   "h": 568,
+   "ch": 568,
+   "oy": "hidden"
+  },
+  "sub": {
+   "lines": 1,
+   "text": "Medium · 0:00",
+   "h": 14
+  },
+  "diffTrunc": false,
+  "srcVisible": null,
+  "src": null,
+  "bottomOk": true
+ },
+ {
+  "name": "portrait-webkit-320x568-play-ax3",
+  "board": {
+   "t": 144,
+   "b": 313,
+   "w": 169
+  },
+  "ink": null,
+  "pad": {
+   "t": 379,
+   "b": 435,
+   "w": 288
+  },
+  "actions": {
+   "t": 435,
+   "b": 501,
+   "w": 288
+  },
+  "tab": {
+   "t": 502,
+   "b": 568,
+   "w": 320
+  },
+  "overlapInk": null,
+  "scroll": {
+   "top": 0,
+   "h": 568,
+   "ch": 568,
+   "oy": "hidden"
+  },
+  "sub": {
+   "lines": 1,
+   "text": "Medium · 0:00",
+   "h": 45
+  },
+  "diffTrunc": false,
+  "srcVisible": null,
+  "src": null,
+  "bottomOk": true
+ },
+ {
+  "name": "portrait-webkit-320x568-day_2026-09-27",
+  "board": {
+   "t": 97,
+   "b": 337,
+   "w": 240
+  },
+  "ink": null,
+  "pad": {
+   "t": 382,
+   "b": 438,
+   "w": 288
+  },
+  "actions": {
+   "t": 438,
+   "b": 504,
+   "w": 288
+  },
+  "tab": {
+   "t": 504,
+   "b": 568,
+   "w": 320
+  },
+  "overlapInk": null,
+  "scroll": {
+   "top": 0,
+   "h": 568,
+   "ch": 568,
+   "oy": "hidden"
+  },
+  "sub": {
+   "lines": 1,
+   "text": "Sun 27 Sep · Medium · 0:00",
+   "h": 14
+  },
+  "diffTrunc": false,
+  "srcVisible": true,
+  "src": "Puzzle from Sudoku.com",
+  "bottomOk": true
+ },
+ {
+  "name": "portrait-webkit-320x568-day_2026-09-27-ax3",
+  "board": {
+   "t": 185,
+   "b": 314,
+   "w": 129
+  },
+  "ink": null,
+  "pad": {
+   "t": 379,
+   "b": 435,
+   "w": 288
+  },
+  "actions": {
+   "t": 435,
+   "b": 501,
+   "w": 288
+  },
+  "tab": {
+   "t": 502,
+   "b": 568,
+   "w": 320
+  },
+  "overlapInk": null,
+  "scroll": {
+   "top": 0,
+   "h": 568,
+   "ch": 568,
+   "oy": "hidden"
+  },
+  "sub": {
+   "lines": 1,
+   "text": "Sun 27 Sep · Medium · 0:00",
+   "h": 45
+  },
+  "diffTrunc": true,
+  "srcVisible": false,
+  "src": "Puzzle from Sudoku.com",
+  "bottomOk": true
+ },
+ {
+  "name": "portrait-webkit-375x667-today",
+  "board": {
+   "t": 64,
+   "b": 407,
+   "w": 343
+  },
+  "ink": {
+   "t": 422,
+   "b": 466,
+   "w": 343
+  },
+  "pad": {
+   "t": 481,
+   "b": 537,
+   "w": 343
+  },
+  "actions": {
+   "t": 537,
+   "b": 603,
+   "w": 343
+  },
+  "tab": {
+   "t": 603,
+   "b": 667,
+   "w": 375
+  },
+  "overlapInk": 0,
+  "scroll": {
+   "top": 0,
+   "h": 667,
+   "ch": 667,
+   "oy": "hidden"
+  },
+  "sub": {
+   "lines": 1,
+   "text": "Sun 4 Oct · Medium · 0:00",
+   "h": 14
+  },
+  "diffTrunc": false,
+  "srcVisible": null,
+  "src": null,
+  "bottomOk": true
+ },
+ {
+  "name": "portrait-webkit-375x667-today-ax3",
+  "board": {
+   "t": 144,
+   "b": 406,
+   "w": 262
+  },
+  "ink": {
+   "t": 413,
+   "b": 471,
+   "w": 343
+  },
+  "pad": {
+   "t": 478,
+   "b": 534,
+   "w": 343
+  },
+  "actions": {
+   "t": 534,
+   "b": 600,
+   "w": 343
+  },
+  "tab": {
+   "t": 601,
+   "b": 667,
+   "w": 375
+  },
+  "overlapInk": 0,
+  "scroll": {
+   "top": 0,
+   "h": 667,
+   "ch": 667,
+   "oy": "hidden"
+  },
+  "sub": {
+   "lines": 1,
+   "text": "Sun 4 Oct · Medium · 0:00",
+   "h": 45
+  },
+  "diffTrunc": true,
+  "srcVisible": null,
+  "src": null,
+  "bottomOk": true
+ },
+ {
+  "name": "portrait-webkit-375x667-play",
+  "board": {
+   "t": 64,
+   "b": 407,
+   "w": 343
+  },
+  "ink": null,
+  "pad": {
+   "t": 481,
+   "b": 537,
+   "w": 343
+  },
+  "actions": {
+   "t": 537,
+   "b": 603,
+   "w": 343
+  },
+  "tab": {
+   "t": 603,
+   "b": 667,
+   "w": 375
+  },
+  "overlapInk": null,
+  "scroll": {
+   "top": 0,
+   "h": 667,
+   "ch": 667,
+   "oy": "hidden"
+  },
+  "sub": {
+   "lines": 1,
+   "text": "Medium · 0:00",
+   "h": 14
+  },
+  "diffTrunc": false,
+  "srcVisible": null,
+  "src": null,
+  "bottomOk": true
+ },
+ {
+  "name": "portrait-webkit-375x667-play-ax3",
+  "board": {
+   "t": 144,
+   "b": 406,
+   "w": 262
+  },
+  "ink": null,
+  "pad": {
+   "t": 478,
+   "b": 534,
+   "w": 343
+  },
+  "actions": {
+   "t": 534,
+   "b": 600,
+   "w": 343
+  },
+  "tab": {
+   "t": 601,
+   "b": 667,
+   "w": 375
+  },
+  "overlapInk": null,
+  "scroll": {
+   "top": 0,
+   "h": 667,
+   "ch": 667,
+   "oy": "hidden"
+  },
+  "sub": {
+   "lines": 1,
+   "text": "Medium · 0:00",
+   "h": 45
+  },
+  "diffTrunc": false,
+  "srcVisible": null,
+  "src": null,
+  "bottomOk": true
+ },
+ {
+  "name": "portrait-webkit-375x667-day_2026-09-27",
+  "board": {
+   "t": 97,
+   "b": 411,
+   "w": 314
+  },
+  "ink": null,
+  "pad": {
+   "t": 481,
+   "b": 537,
+   "w": 343
+  },
+  "actions": {
+   "t": 537,
+   "b": 603,
+   "w": 343
+  },
+  "tab": {
+   "t": 603,
+   "b": 667,
+   "w": 375
+  },
+  "overlapInk": null,
+  "scroll": {
+   "top": 0,
+   "h": 667,
+   "ch": 667,
+   "oy": "hidden"
+  },
+  "sub": {
+   "lines": 1,
+   "text": "Sun 27 Sep · Medium · 0:00",
+   "h": 14
+  },
+  "diffTrunc": false,
+  "srcVisible": true,
+  "src": "Puzzle from Sudoku.com",
+  "bottomOk": true
+ },
+ {
+  "name": "portrait-webkit-375x667-day_2026-09-27-ax3",
+  "board": {
+   "t": 185,
+   "b": 413,
+   "w": 228
+  },
+  "ink": null,
+  "pad": {
+   "t": 478,
+   "b": 534,
+   "w": 343
+  },
+  "actions": {
+   "t": 534,
+   "b": 600,
+   "w": 343
+  },
+  "tab": {
+   "t": 601,
+   "b": 667,
+   "w": 375
+  },
+  "overlapInk": null,
+  "scroll": {
+   "top": 0,
+   "h": 667,
+   "ch": 667,
+   "oy": "hidden"
+  },
+  "sub": {
+   "lines": 1,
+   "text": "Sun 27 Sep · Medium · 0:00",
+   "h": 45
+  },
+  "diffTrunc": true,
+  "srcVisible": false,
+  "src": "Puzzle from Sudoku.com",
+  "bottomOk": true
+ },
+ {
+  "name": "portrait-webkit-390x844-today",
+  "board": {
+   "t": 64,
+   "b": 422,
+   "w": 358
+  },
+  "ink": {
+   "t": 518,
+   "b": 562,
+   "w": 358
+  },
+  "pad": {
+   "t": 658,
+   "b": 714,
+   "w": 358
+  },
+  "actions": {
+   "t": 714,
+   "b": 780,
+   "w": 358
+  },
+  "tab": {
+   "t": 780,
+   "b": 844,
+   "w": 390
+  },
+  "overlapInk": 0,
+  "scroll": {
+   "top": 0,
+   "h": 844,
+   "ch": 844,
+   "oy": "hidden"
+  },
+  "sub": {
+   "lines": 1,
+   "text": "Sun 4 Oct · Medium · 0:00",
+   "h": 14
+  },
+  "diffTrunc": false,
+  "srcVisible": null,
+  "src": null,
+  "bottomOk": true
+ },
+ {
+  "name": "portrait-webkit-390x844-today-ax3",
+  "board": {
+   "t": 144,
+   "b": 502,
+   "w": 358
+  },
+  "ink": {
+   "t": 550,
+   "b": 608,
+   "w": 358
+  },
+  "pad": {
+   "t": 655,
+   "b": 711,
+   "w": 358
+  },
+  "actions": {
+   "t": 711,
+   "b": 777,
+   "w": 358
+  },
+  "tab": {
+   "t": 778,
+   "b": 844,
+   "w": 390
+  },
+  "overlapInk": 0,
+  "scroll": {
+   "top": 0,
+   "h": 844,
+   "ch": 844,
+   "oy": "hidden"
+  },
+  "sub": {
+   "lines": 1,
+   "text": "Sun 4 Oct · Medium · 0:00",
+   "h": 45
+  },
+  "diffTrunc": true,
+  "srcVisible": null,
+  "src": null,
+  "bottomOk": true
+ },
+ {
+  "name": "portrait-webkit-390x844-play",
+  "board": {
+   "t": 64,
+   "b": 422,
+   "w": 358
+  },
+  "ink": null,
+  "pad": {
+   "t": 658,
+   "b": 714,
+   "w": 358
+  },
+  "actions": {
+   "t": 714,
+   "b": 780,
+   "w": 358
+  },
+  "tab": {
+   "t": 780,
+   "b": 844,
+   "w": 390
+  },
+  "overlapInk": null,
+  "scroll": {
+   "top": 0,
+   "h": 844,
+   "ch": 844,
+   "oy": "hidden"
+  },
+  "sub": {
+   "lines": 1,
+   "text": "Medium · 0:00",
+   "h": 14
+  },
+  "diffTrunc": false,
+  "srcVisible": null,
+  "src": null,
+  "bottomOk": true
+ },
+ {
+  "name": "portrait-webkit-390x844-play-ax3",
+  "board": {
+   "t": 144,
+   "b": 502,
+   "w": 358
+  },
+  "ink": null,
+  "pad": {
+   "t": 655,
+   "b": 711,
+   "w": 358
+  },
+  "actions": {
+   "t": 711,
+   "b": 777,
+   "w": 358
+  },
+  "tab": {
+   "t": 778,
+   "b": 844,
+   "w": 390
+  },
+  "overlapInk": null,
+  "scroll": {
+   "top": 0,
+   "h": 844,
+   "ch": 844,
+   "oy": "hidden"
+  },
+  "sub": {
+   "lines": 1,
+   "text": "Medium · 0:00",
+   "h": 45
+  },
+  "diffTrunc": false,
+  "srcVisible": null,
+  "src": null,
+  "bottomOk": true
+ },
+ {
+  "name": "portrait-webkit-390x844-day_2026-09-27",
+  "board": {
+   "t": 97,
+   "b": 455,
+   "w": 358
+  },
+  "ink": null,
+  "pad": {
+   "t": 658,
+   "b": 714,
+   "w": 358
+  },
+  "actions": {
+   "t": 714,
+   "b": 780,
+   "w": 358
+  },
+  "tab": {
+   "t": 780,
+   "b": 844,
+   "w": 390
+  },
+  "overlapInk": null,
+  "scroll": {
+   "top": 0,
+   "h": 844,
+   "ch": 844,
+   "oy": "hidden"
+  },
+  "sub": {
+   "lines": 1,
+   "text": "Sun 27 Sep · Medium · 0:00",
+   "h": 14
+  },
+  "diffTrunc": false,
+  "srcVisible": true,
+  "src": "Puzzle from Sudoku.com",
+  "bottomOk": true
+ },
+ {
+  "name": "portrait-webkit-390x844-day_2026-09-27-ax3",
+  "board": {
+   "t": 185,
+   "b": 543,
+   "w": 358
+  },
+  "ink": null,
+  "pad": {
+   "t": 655,
+   "b": 711,
+   "w": 358
+  },
+  "actions": {
+   "t": 711,
+   "b": 777,
+   "w": 358
+  },
+  "tab": {
+   "t": 778,
+   "b": 844,
+   "w": 390
+  },
+  "overlapInk": null,
+  "scroll": {
+   "top": 0,
+   "h": 844,
+   "ch": 844,
+   "oy": "hidden"
+  },
+  "sub": {
+   "lines": 1,
+   "text": "Sun 27 Sep · Medium · 0:00",
+   "h": 45
+  },
+  "diffTrunc": true,
+  "srcVisible": false,
+  "src": "Puzzle from Sudoku.com",
+  "bottomOk": true
+ },
+ {
+  "name": "portrait-webkit-393x852-today",
+  "board": {
+   "t": 64,
+   "b": 425,
+   "w": 361
+  },
+  "ink": {
+   "t": 524,
+   "b": 568,
+   "w": 361
+  },
+  "pad": {
+   "t": 666,
+   "b": 722,
+   "w": 361
+  },
+  "actions": {
+   "t": 722,
+   "b": 788,
+   "w": 361
+  },
+  "tab": {
+   "t": 788,
+   "b": 852,
+   "w": 393
+  },
+  "overlapInk": 0,
+  "scroll": {
+   "top": 0,
+   "h": 852,
+   "ch": 852,
+   "oy": "hidden"
+  },
+  "sub": {
+   "lines": 1,
+   "text": "Sun 4 Oct · Medium · 0:00",
+   "h": 14
+  },
+  "diffTrunc": false,
+  "srcVisible": null,
+  "src": null,
+  "bottomOk": true
+ },
+ {
+  "name": "portrait-webkit-393x852-today-ax3",
+  "board": {
+   "t": 144,
+   "b": 505,
+   "w": 361
+  },
+  "ink": {
+   "t": 555,
+   "b": 613,
+   "w": 361
+  },
+  "pad": {
+   "t": 663,
+   "b": 719,
+   "w": 361
+  },
+  "actions": {
+   "t": 719,
+   "b": 785,
+   "w": 361
+  },
+  "tab": {
+   "t": 786,
+   "b": 852,
+   "w": 393
+  },
+  "overlapInk": 0,
+  "scroll": {
+   "top": 0,
+   "h": 852,
+   "ch": 852,
+   "oy": "hidden"
+  },
+  "sub": {
+   "lines": 1,
+   "text": "Sun 4 Oct · Medium · 0:00",
+   "h": 45
+  },
+  "diffTrunc": true,
+  "srcVisible": null,
+  "src": null,
+  "bottomOk": true
+ },
+ {
+  "name": "portrait-webkit-393x852-play",
+  "board": {
+   "t": 64,
+   "b": 425,
+   "w": 361
+  },
+  "ink": null,
+  "pad": {
+   "t": 666,
+   "b": 722,
+   "w": 361
+  },
+  "actions": {
+   "t": 722,
+   "b": 788,
+   "w": 361
+  },
+  "tab": {
+   "t": 788,
+   "b": 852,
+   "w": 393
+  },
+  "overlapInk": null,
+  "scroll": {
+   "top": 0,
+   "h": 852,
+   "ch": 852,
+   "oy": "hidden"
+  },
+  "sub": {
+   "lines": 1,
+   "text": "Medium · 0:00",
+   "h": 14
+  },
+  "diffTrunc": false,
+  "srcVisible": null,
+  "src": null,
+  "bottomOk": true
+ },
+ {
+  "name": "portrait-webkit-393x852-play-ax3",
+  "board": {
+   "t": 144,
+   "b": 505,
+   "w": 361
+  },
+  "ink": null,
+  "pad": {
+   "t": 663,
+   "b": 719,
+   "w": 361
+  },
+  "actions": {
+   "t": 719,
+   "b": 785,
+   "w": 361
+  },
+  "tab": {
+   "t": 786,
+   "b": 852,
+   "w": 393
+  },
+  "overlapInk": null,
+  "scroll": {
+   "top": 0,
+   "h": 852,
+   "ch": 852,
+   "oy": "hidden"
+  },
+  "sub": {
+   "lines": 1,
+   "text": "Medium · 0:00",
+   "h": 45
+  },
+  "diffTrunc": false,
+  "srcVisible": null,
+  "src": null,
+  "bottomOk": true
+ },
+ {
+  "name": "portrait-webkit-393x852-day_2026-09-27",
+  "board": {
+   "t": 97,
+   "b": 458,
+   "w": 361
+  },
+  "ink": null,
+  "pad": {
+   "t": 666,
+   "b": 722,
+   "w": 361
+  },
+  "actions": {
+   "t": 722,
+   "b": 788,
+   "w": 361
+  },
+  "tab": {
+   "t": 788,
+   "b": 852,
+   "w": 393
+  },
+  "overlapInk": null,
+  "scroll": {
+   "top": 0,
+   "h": 852,
+   "ch": 852,
+   "oy": "hidden"
+  },
+  "sub": {
+   "lines": 1,
+   "text": "Sun 27 Sep · Medium · 0:00",
+   "h": 14
+  },
+  "diffTrunc": false,
+  "srcVisible": true,
+  "src": "Puzzle from Sudoku.com",
+  "bottomOk": true
+ },
+ {
+  "name": "portrait-webkit-393x852-day_2026-09-27-ax3",
+  "board": {
+   "t": 185,
+   "b": 546,
+   "w": 361
+  },
+  "ink": null,
+  "pad": {
+   "t": 663,
+   "b": 719,
+   "w": 361
+  },
+  "actions": {
+   "t": 719,
+   "b": 785,
+   "w": 361
+  },
+  "tab": {
+   "t": 786,
+   "b": 852,
+   "w": 393
+  },
+  "overlapInk": null,
+  "scroll": {
+   "top": 0,
+   "h": 852,
+   "ch": 852,
+   "oy": "hidden"
+  },
+  "sub": {
+   "lines": 1,
+   "text": "Sun 27 Sep · Medium · 0:00",
+   "h": 45
+  },
+  "diffTrunc": true,
+  "srcVisible": false,
+  "src": "Puzzle from Sudoku.com",
+  "bottomOk": true
+ },
+ {
+  "name": "portrait-webkit-430x932-today",
+  "board": {
+   "t": 64,
+   "b": 462,
+   "w": 398
+  },
+  "ink": {
+   "t": 582,
+   "b": 626,
+   "w": 398
+  },
+  "pad": {
+   "t": 746,
+   "b": 802,
+   "w": 398
+  },
+  "actions": {
+   "t": 802,
+   "b": 868,
+   "w": 398
+  },
+  "tab": {
+   "t": 868,
+   "b": 932,
+   "w": 430
+  },
+  "overlapInk": 0,
+  "scroll": {
+   "top": 0,
+   "h": 932,
+   "ch": 932,
+   "oy": "hidden"
+  },
+  "sub": {
+   "lines": 1,
+   "text": "Sun 4 Oct · Medium · 0:00",
+   "h": 14
+  },
+  "diffTrunc": false,
+  "srcVisible": null,
+  "src": null,
+  "bottomOk": true
+ },
+ {
+  "name": "portrait-webkit-430x932-today-ax3",
+  "board": {
+   "t": 144,
+   "b": 542,
+   "w": 398
+  },
+  "ink": {
+   "t": 614,
+   "b": 672,
+   "w": 398
+  },
+  "pad": {
+   "t": 743,
+   "b": 799,
+   "w": 398
+  },
+  "actions": {
+   "t": 799,
+   "b": 865,
+   "w": 398
+  },
+  "tab": {
+   "t": 866,
+   "b": 932,
+   "w": 430
+  },
+  "overlapInk": 0,
+  "scroll": {
+   "top": 0,
+   "h": 932,
+   "ch": 932,
+   "oy": "hidden"
+  },
+  "sub": {
+   "lines": 1,
+   "text": "Sun 4 Oct · Medium · 0:00",
+   "h": 45
+  },
+  "diffTrunc": false,
+  "srcVisible": null,
+  "src": null,
+  "bottomOk": true
+ },
+ {
+  "name": "portrait-webkit-430x932-play",
+  "board": {
+   "t": 64,
+   "b": 462,
+   "w": 398
+  },
+  "ink": null,
+  "pad": {
+   "t": 746,
+   "b": 802,
+   "w": 398
+  },
+  "actions": {
+   "t": 802,
+   "b": 868,
+   "w": 398
+  },
+  "tab": {
+   "t": 868,
+   "b": 932,
+   "w": 430
+  },
+  "overlapInk": null,
+  "scroll": {
+   "top": 0,
+   "h": 932,
+   "ch": 932,
+   "oy": "hidden"
+  },
+  "sub": {
+   "lines": 1,
+   "text": "Medium · 0:00",
+   "h": 14
+  },
+  "diffTrunc": false,
+  "srcVisible": null,
+  "src": null,
+  "bottomOk": true
+ },
+ {
+  "name": "portrait-webkit-430x932-play-ax3",
+  "board": {
+   "t": 144,
+   "b": 542,
+   "w": 398
+  },
+  "ink": null,
+  "pad": {
+   "t": 743,
+   "b": 799,
+   "w": 398
+  },
+  "actions": {
+   "t": 799,
+   "b": 865,
+   "w": 398
+  },
+  "tab": {
+   "t": 866,
+   "b": 932,
+   "w": 430
+  },
+  "overlapInk": null,
+  "scroll": {
+   "top": 0,
+   "h": 932,
+   "ch": 932,
+   "oy": "hidden"
+  },
+  "sub": {
+   "lines": 1,
+   "text": "Medium · 0:00",
+   "h": 45
+  },
+  "diffTrunc": false,
+  "srcVisible": null,
+  "src": null,
+  "bottomOk": true
+ },
+ {
+  "name": "portrait-webkit-430x932-day_2026-09-27",
+  "board": {
+   "t": 97,
+   "b": 495,
+   "w": 398
+  },
+  "ink": null,
+  "pad": {
+   "t": 746,
+   "b": 802,
+   "w": 398
+  },
+  "actions": {
+   "t": 802,
+   "b": 868,
+   "w": 398
+  },
+  "tab": {
+   "t": 868,
+   "b": 932,
+   "w": 430
+  },
+  "overlapInk": null,
+  "scroll": {
+   "top": 0,
+   "h": 932,
+   "ch": 932,
+   "oy": "hidden"
+  },
+  "sub": {
+   "lines": 1,
+   "text": "Sun 27 Sep · Medium · 0:00",
+   "h": 14
+  },
+  "diffTrunc": false,
+  "srcVisible": true,
+  "src": "Puzzle from Sudoku.com",
+  "bottomOk": true
+ },
+ {
+  "name": "portrait-webkit-430x932-day_2026-09-27-ax3",
+  "board": {
+   "t": 185,
+   "b": 583,
+   "w": 398
+  },
+  "ink": null,
+  "pad": {
+   "t": 743,
+   "b": 799,
+   "w": 398
+  },
+  "actions": {
+   "t": 799,
+   "b": 865,
+   "w": 398
+  },
+  "tab": {
+   "t": 866,
+   "b": 932,
+   "w": 430
+  },
+  "overlapInk": null,
+  "scroll": {
+   "top": 0,
+   "h": 932,
+   "ch": 932,
+   "oy": "hidden"
+  },
+  "sub": {
+   "lines": 1,
+   "text": "Sun 27 Sep · Medium · 0:00",
+   "h": 45
+  },
+  "diffTrunc": true,
+  "srcVisible": false,
+  "src": "Puzzle from Sudoku.com",
+  "bottomOk": true
+ }
+]
