@@ -57,6 +57,12 @@ export interface PlayState {
    */
   readonly glyphs?: true;
   /**
+   * Мелодия (PD-201, план режимов §4): партия со звуком (нота на постановку, арпеджио юнита, мелодия пути на карточке). Правила,
+   * лог и решение те же, что у Классики. Ставится на старте партии режима `melody` и не меняется. Только `true`, по прецеденту
+   * `glyphs`.
+   */
+  readonly melody?: true;
+  /**
    * Лог восстановлен из `heat` записи снапшота (`sync/schema.ts › logFromHeat`), а не сыгран: нужен
    * карточке дня, но не настоящий ход партии — не уходит в `moveLog` снапшота и не годится для Таймлапса
    * (PD-70). Отсутствует у настоящих партий.
@@ -146,6 +152,15 @@ export const isGlyphs = (s: Pick<PlayState, "glyphs">): boolean => s.glyphs === 
 export function setGlyphMode(s: PlayState): PlayState {
   if (s.glyphs === true || s.solved || s.liar !== undefined || s.log.length > 0) return s;
   return { ...s, glyphs: true };
+}
+
+/** PD-201: партия режима Мелодия (со звуком). */
+export const isMelody = (s: Pick<PlayState, "melody">): boolean => s.melody === true;
+
+/** PD-201: пометить свежую партию режимом Мелодия (до первого хода; решённую, Лжеца и Глифы не трогаем — режимы не комбинируются). */
+export function setMelodyMode(s: PlayState): PlayState {
+  if (s.melody === true || s.solved || s.liar !== undefined || s.glyphs === true || s.log.length > 0) return s;
+  return { ...s, melody: true };
 }
 
 /** Кляксы партии (пусто у обычной партии) — из лога, единственного источника. */

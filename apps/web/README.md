@@ -921,3 +921,27 @@ UI поверх движка `nextHint` (`packages/engine`). Состояние 
 - **VoiceOver** — имена форм (`glyphs.shape.*`, en/uk/ru): клетка «…, круг, дано» / «…, круг, ваш знак» / «заметки круг, ромб»,
   клавиша «круг, осталось: 5».
 - Живая проверка — `design/pd194-check.mjs` (кадры `design/pd194-shots/`).
+
+## Мелодия: звуковое ядро и слот (PD-201, план `docs/release2-modes-plan.md` §4, без UI)
+
+UI (строка хаба, звук в партии, кнопка «Сыграть» на карточке, настройка звука) — PD-203 после выбора визуала/тембра (PD-202).
+
+- **Звук — `src/melody/audio.ts`**, только синтез Web Audio, без файлов. `createMelodyAudio(opts?) → MelodyAudio`:
+  `unlock()` (вызывать из обработчика жеста; создаёт/резюмирует `AudioContext`), `attachUnlock(target = document)` (вешает
+  `unlock` на pointerup/touchend/click/keydown, capture), `playNote(digit)`, `playUnit(digits)` (арпеджио, шаг 80 мс),
+  `playPath(events, { onStep, onEnd, fromMs })` → `{ stop(), done }` (события `melodyOf` движка, `t` — шкала таймлапса;
+  новый вызов останавливает предыдущий; шаги идут и без звука — синхронизация с таймлапсом), `setMuted`, `setTimbre`,
+  `state()` (`locked | running | suspended | unsupported | disposed`), `dispose()`. `scheduleNote(ctx, out, digit, at, timbre)`
+  — одна нота (годится для `OfflineAudioContext`).
+- **Ноты:** цифра 1–9 → мажорная пентатоника по возрастанию от C4: C4 D4 E4 G4 A4 C5 D5 E5 G5 (`noteFrequency`). Громкость
+  тихая (`DEFAULT_VOLUME` 0.18, пик сигнала ≈ 0.1). Огибающая: 0 → пик за ≥ 5 мс → экспоненциально к тишине → 0 — без щелчков.
+- **Тембры (`TIMBRES`):** `soft` «мягкий синус» (по умолчанию), `bell` «колокольчик» (негармоничный обертон ≈ 2.76),
+  `marimba` (треугольник + обертон ×4, короткий хвост). Меняются только числа пресета.
+- **iOS:** до жеста контекста нет и ноты молчат (`false`); перед созданием контекста `navigator.audioSession.type = 'ambient'`
+  (iOS 17+: уважает беззвучный режим, не глушит чужую музыку); прерывание (звонок, сон PWA → `interrupted`/`suspended`) —
+  тишина без ошибок, следующий жест резюмирует; закрытый системой контекст пересоздаётся; отказ `resume()` глотается.
+- **Слот и флаг:** режим `melody` в реестре (`play/modes.ts`) с `ready: false` — на хабе строки нет; слот `playGame:melody`,
+  `PlayState.melody: true` (`setMelodyMode`, строгий разбор слота, граница хранилища дня), `DayRecord.melody: true` (санитайзер,
+  восстановление, слияние атомарно) — по прецеденту `glyphs`. Значок и тексты `modes.melody.*` — из макета PD-163.
+- **Dev-стенд (не в сборке):** `npx vite --port 5201 --strictPort` → `http://localhost:5201/dev/melody.html` (кнопки нот,
+  арпеджио, путь дневной easy, mute, тембр); живая проверка chromium + webkit — `design/pd201-audio-check.mjs`.

@@ -46,6 +46,17 @@ export function LiarModeIcon({ className }: ModeIconProps) {
   );
 }
 
+/** Мелодия — нота (макет PD-163, `I.melody`). PD-201: режим в реестре, но ещё не готов (`ready: false`) — строку хаба добавит PD-203. */
+export function MelodyModeIcon({ className }: ModeIconProps) {
+  return (
+    <svg {...line} className={className}>
+      <path d="M9 18V5.5l10-2v12.5" />
+      <circle cx="6.6" cy="18" r="2.4" />
+      <circle cx="16.6" cy="16" r="2.4" />
+    </svg>
+  );
+}
+
 /** Глифы — четыре фигуры (макет PD-163, `I.glyphs`). */
 export function GlyphsModeIcon({ className }: ModeIconProps) {
   return (

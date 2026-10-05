@@ -17,6 +17,7 @@
  * - таймлапс и отпечаток прохождения (`timelapse.ts`): `timelapseFrames`, `timelapseFingerprint`.
  * - Лжец (`liar.ts`, PD-165): `generateLiar`, `dailyLiarPuzzle`, `validateLiar`, `accuse`, `liarSummary`.
  * - Питомец-клякса (`pet.ts`, PD-180): `petMood`, `isPersonalBest`.
+ * - Мелодия сетки (`melody.ts`, PD-201): `melodyOf`, `unitsCompletedBy`.
  */
 export type {
   Cell,
@@ -140,3 +141,6 @@ export type {
 
 export { PET_MOODS, PET_TIRED_CORRECTIONS, isPersonalBest, petMood } from "./pet.js";
 export type { PetDay, PetMood } from "./pet.js";
+
+export { melodyOf, unitsCompletedBy } from "./melody.js";
+export type { CompletedUnit, MelodyEvent, MelodyNote, MelodyOptions, MelodyUnit, MelodyUnitKind } from "./melody.js";

@@ -555,6 +555,10 @@
     "glyphs": {
       "name": "Glyphs",
       "desc": "Nine shapes instead of digits. The same logic, without a single number."
+    },
+    "melody": {
+      "name": "Melody",
+      "desc": "Each digit you place sounds a note. A solved grid plays its own tune."
     }
   },
   "liar": {

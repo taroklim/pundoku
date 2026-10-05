@@ -41,7 +41,9 @@ describe("реестр режимов", () => {
     expect(isModeId("liar")).toBe(true);
     expect(isModeId("glyphs")).toBe(true);
     expect(slotKey("glyphs")).toBe("playGame:glyphs");
-    expect(isModeId("melody")).toBe(false);
+    expect(isModeId("melody")).toBe(true); // PD-201: слот есть, строки на хабе нет (ready: false)
+    expect(slotKey("melody")).toBe("playGame:melody");
+    expect(isModeId("lantern")).toBe(false);
     expect(isModeId(undefined)).toBe(false);
     expect(modeDef("nope" as never).id).toBe("classic");
   });
@@ -73,6 +75,19 @@ describe("реестр режимов", () => {
     expect(ink.Rule).toBeDefined();
     const prepared = ink.prepare!(createPlay({ mission: MISSION, solution: SOLUTION }));
     expect(prepared.ink).toBe(true);
+  });
+
+  it("Мелодия (PD-201): в реестре со слотом, но не готова — на хабе её нет; подготовка ставит `melody`, не в архиве", () => {
+    const m = modeDef("melody");
+    expect(m.id).toBe("melody");
+    expect(m.ready).toBe(false);
+    expect(availableModes().some((x) => x.id === "melody")).toBe(false);
+    expect(m.allowInArchive).toBe(false);
+    expect(m.hints).toBe(true);
+    const fresh = createPlay({ mission: MISSION, solution: SOLUTION });
+    expect(m.prepare!(fresh).melody).toBe(true);
+    expect(modeDef("classic").prepare).toBeUndefined();
+    expect(legacyModeOf({ melody: true })).toBe("melody");
   });
 
   it("Классика: подсказки есть, чипа нет, партия как сгенерирована, все сложности", () => {

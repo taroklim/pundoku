@@ -220,6 +220,57 @@ function visiblyDiffers(a: CellState, b: CellState, withNotes: boolean): boolean
 }
 
 /**
+ * Время каждого хода лога в шкале воспроизведения таймлапса (мс): сжатие пауз по `maxGapMs`, затем `durationMs`
+ * либо `speed` — ровно как у кадров {@link timelapseFrames}. Внутренний помощник (Мелодия, PD-201, синхронна с
+ * таймлапсом по этому же времени); из `index.ts` не экспортируется.
+ *
+ * @throws {RangeError} некорректные `maxGapMs`/`speed`/`durationMs`.
+ */
+export function playbackTimes(log: MoveLog, opts: Omit<TimelapseOptions, "notes"> = {}): number[] {
+  const maxGap = checkGap(opts.maxGapMs);
+  const speed = opts.speed ?? 1;
+  if (typeof speed !== "number" || !(speed > 0) || !Number.isFinite(speed)) throw new RangeError(`speed must be > 0, got ${String(opts.speed)}`);
+  const target = opts.durationMs;
+  if (target !== undefined && (typeof target !== "number" || !Number.isFinite(target) || target < 0)) {
+    throw new RangeError(`durationMs must be a finite number >= 0, got ${String(target)}`);
+  }
+  const compressed = compressedTimes(log, maxGap);
+  const total = compressed.length === 0 ? 0 : compressed[compressed.length - 1]!;
+  const n = log.length;
+  const playback = compressed.map((c, i) => {
+    if (target !== undefined) return total > 0 ? Math.round((c * target) / total) : Math.round((target * (i + 1)) / n);
+    return Math.round(c / speed);
+  });
+  if (target !== undefined && n > 0) playback[n - 1] = Math.round(target);
+  return playback;
+}
+
+/** Итоговая собственная постановка клетки к концу лога (после всех undo/erase/перезаписей). */
+export interface FinalPlacement {
+  readonly cell: Cell;
+  readonly digit: number;
+  /** Цифра верна (по `Move.correct`, иначе по решению, иначе верно). */
+  readonly ok: boolean;
+  /** Индекс хода лога, поставившего эту цифру. */
+  readonly index: number;
+}
+
+/**
+ * Итоговые постановки игрока к концу лога, по возрастанию индекса хода (тот же прогон, что у таймлапса: undo по
+ * стеку, erase, перезапись, кляксы). Внутренний помощник Мелодии (PD-201); из `index.ts` не экспортируется.
+ *
+ * @throws {RangeError} клетка хода вне 0..80.
+ */
+export function finalPlacements(log: MoveLog, puzzle: { mission: GridInput; solution?: GridInput }): FinalPlacement[] {
+  const sim = simulate(log, puzzle, false, () => undefined);
+  const out: FinalPlacement[] = [];
+  sim.cells.forEach((s, cell) => {
+    if (s.entry !== null && sim.mission[cell] === 0) out.push({ cell, digit: s.entry.digit, ok: s.entry.ok, index: s.entry.index });
+  });
+  return out.sort((a, b) => a.index - b.index || a.cell - b.cell);
+}
+
+/**
  * Кадры таймлапса по логу ходов.
  *
  * Время: сначала паузы длиннее `maxGapMs` сжимаются (в т. ч. от старта до первого хода), затем шкала
@@ -236,23 +287,9 @@ export function timelapseFrames(
   puzzle: { mission: GridInput; solution?: GridInput },
   opts: TimelapseOptions = {},
 ): Timelapse {
-  const maxGap = checkGap(opts.maxGapMs);
-  const speed = opts.speed ?? 1;
-  if (typeof speed !== "number" || !(speed > 0) || !Number.isFinite(speed)) throw new RangeError(`speed must be > 0, got ${String(opts.speed)}`);
-  const target = opts.durationMs;
-  if (target !== undefined && (typeof target !== "number" || !Number.isFinite(target) || target < 0)) {
-    throw new RangeError(`durationMs must be a finite number >= 0, got ${String(target)}`);
-  }
   const withNotes = opts.notes === true;
-
-  const compressed = compressedTimes(log, maxGap);
-  const total = compressed.length === 0 ? 0 : compressed[compressed.length - 1]!;
+  const playback = playbackTimes(log, opts);
   const n = log.length;
-  const playback = compressed.map((c, i) => {
-    if (target !== undefined) return total > 0 ? Math.round((c * target) / total) : Math.round((target * (i + 1)) / n);
-    return Math.round(c / speed);
-  });
-  if (target !== undefined && n > 0) playback[n - 1] = Math.round(target);
   const sourceDurationMs = n === 0 ? 0 : Math.max(0, ...log.map((m) => (Number.isFinite(m.t) ? m.t : 0)));
 
   const snapshot = (sim: Sim): { values: number[]; wrong: Cell[]; notes?: number[] } => {
