@@ -1,4 +1,4 @@
-import type { CSSProperties, KeyboardEvent } from "react";
+import type { CSSProperties, KeyboardEvent, ReactNode } from "react";
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useHighlightPeers, useHighlightWrong } from "../settings/prefs";
@@ -266,6 +266,8 @@ interface BoardProps {
   onAccuse?: (cell: number, el: HTMLElement) => void;
   /** PD-171: можно ли обвинить клетку (необвинённая подсказка, лжец не пойман). */
   canAccuse?: (cell: number) => boolean;
+  /** PD-189: слой поверх поля (панель ожидания генерации Play) — в `.board-wrap`, центр по квадрату поля. */
+  overlay?: ReactNode;
 }
 
 /**
@@ -274,7 +276,7 @@ interface BoardProps {
  * заливаются» — решение владельца 6.4 это пересмотрело); «та же цифра» — чернила 10 %, выбор — 16 % + кольцо (M2 — кольцо едет).
  * Доступность: одна точка табуляции (roving tabindex), стрелки двигают выбор и фокус.
  */
-export function Board({ snap, store, dim, hintMarks = null, onAccuse, canAccuse }: BoardProps) {
+export function Board({ snap, store, dim, hintMarks = null, onAccuse, canAccuse, overlay }: BoardProps) {
   const { t } = useTranslation();
   const ref = useRef<HTMLDivElement>(null);
   const { play, selected, pop } = snap;
@@ -432,6 +434,7 @@ export function Board({ snap, store, dim, hintMarks = null, onAccuse, canAccuse 
           />
         )}
       </div>
+      {overlay}
     </div>
   );
 }

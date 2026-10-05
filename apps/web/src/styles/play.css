@@ -407,6 +407,206 @@
   animation: calm 1.6s ease-in-out infinite;
 }
 
+/* ---------- PD-189: ожидание генерации (макет design/pd188-loading.md, вариант B — знак P4 с «уносом» клетки) ----------
+   Пока партия готовится (и первые 600 мс — пустота, `pre`), поле, строка статуса и панель цифр скрыты, но место за ними
+   держится: поле потом не прыгает. Панель — слой в `.board-wrap`: ширина — колонка контента, строка — высотой с квадрат поля, группа по центру поля; не помещается
+   (320 pt AX3: поле ~150 px) — `safe center` прижимает её к верху поля, и она течёт вниз в пустое место панели цифр, никогда
+   вверх под подпись. Все длительности × --mk, амплитуды × --mo (tokens.css): при Reduce Motion клетки не двигаются. */
+.play-waiting .board,
+.play-waiting > .gap,
+.play-waiting > .pad-wrap {
+  visibility: hidden;
+}
+.play-waiting .board {
+  animation: none;
+}
+/* Поле и панель цифр появляются после ожидания (fadeRise, 220 мс). `backwards`: по окончании на них не остаётся transform. */
+.play-in .board,
+.play-in > .pad-wrap {
+  animation: fadeRise calc(220ms * var(--mk)) var(--e-out) backwards;
+}
+.play-waiting .board-wrap {
+  position: relative;
+}
+.wait {
+  position: absolute;
+  top: 12px;
+  left: max(16px, var(--sa-l));
+  right: max(16px, var(--sa-r));
+  height: min(100cqi, 100dvh - var(--chrome, 0px));
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  justify-content: safe center;
+  z-index: 1;
+}
+/* Партия готова — панель гаснет 160 мс (только прозрачность). */
+.wait.out {
+  opacity: 0;
+  transition: opacity calc(160ms * var(--mk)) linear;
+  pointer-events: none;
+}
+.wait-grp {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  max-width: 100%;
+  animation: waitIn calc(200ms * var(--mk)) var(--e-out) both;
+}
+@keyframes waitIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+.wait-text {
+  margin: 0;
+  max-width: 18em;
+  color: var(--label-2);
+  font-size: 1rem;
+  line-height: 1.2;
+  text-align: center;
+  text-wrap: balance;
+  overflow-wrap: break-word;
+}
+.wait-text.err {
+  color: var(--label);
+}
+/* Второй текст ЗАМЕНЯЕТ первый (на экране одна мысль) и проявляется, как и кнопки. */
+.wait-t2,
+.wait-btns {
+  animation: waitIn calc(200ms * var(--mk)) linear both;
+}
+.wait-btns {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 4px 16px;
+  max-width: 100%;
+}
+.wait-btn {
+  min-width: 44px;
+  min-height: 44px;
+  max-width: 100%;
+  padding: 0 8px;
+  border-radius: 10px;
+  color: var(--ink);
+  font-size: 1rem;
+  font-weight: 400;
+  overflow-wrap: break-word;
+}
+.wait-btn.primary {
+  font-weight: 600;
+}
+.wait-btn:active {
+  background: var(--ink-tint);
+}
+
+/* Знак: 56 px (на 320 pt при AX3 — 44: поле там ~150 px). С Dynamic Type не растёт — он декоративный, растёт текст. */
+.wait-mark {
+  display: block;
+  flex: none;
+  width: 56px;
+  height: 56px;
+  overflow: visible;
+  /* Reduce Motion «только прозрачность»: клетки стоят, весь знак дышит 1 → .55 → 1. Без Reduce Motion (--mo: 1) — ровно 1. */
+  animation: waitPulse calc(2400ms * var(--mk)) var(--e-io) infinite;
+}
+@media (max-width: 359px) {
+  :root[data-type="ax3"] .wait-mark {
+    width: 44px;
+    height: 44px;
+  }
+}
+@keyframes waitPulse {
+  50% {
+    opacity: calc(1 - 0.45 * (1 - var(--mo)));
+  }
+}
+.wm-b {
+  fill: var(--label-2);
+  opacity: 0.45;
+}
+.wm-h {
+  fill: var(--ink);
+  opacity: 0;
+}
+/* Унос: стаггер 200 мс, клетка — к пику за 216 мс (--e-out), обратно за 304 мс (--e-io), цикл 2400 мс (обход 2120 + пауза).
+   Сдвиг 1.4 единицы 16-сетки вверх-вправо (4.9 px на 56 px) × --mo; чернила проявляются на пике. Кривые внутри @keyframes —
+   литералами (те же значения, что токены --e-out / --e-io): var() в animation-timing-function кадра поддержан не везде. */
+.wm-cell,
+.wm-cell .wm-h {
+  animation-duration: calc(2400ms * var(--mk));
+  animation-iteration-count: infinite;
+  animation-fill-mode: both;
+  animation-delay: calc(var(--i) * 200ms * var(--mk));
+}
+.wm-cell {
+  animation-name: p4Carry;
+}
+.wm-cell .wm-h {
+  animation-name: p4Ink;
+}
+/* Правая верхняя клетка чаши: при Reduce Motion (--mo: 0) стоит чернилами — «стоп-кадр уноса»; без него — как все. */
+.wm-cell.wm-still .wm-h {
+  animation-name: p4InkStill;
+}
+@keyframes p4Carry {
+  0% {
+    transform: translate(0, 0);
+    animation-timing-function: cubic-bezier(0.2, 0.7, 0.3, 1);
+  }
+  9% {
+    transform: translate(calc(var(--mo) * 1.4px), calc(var(--mo) * -1.4px));
+    animation-timing-function: cubic-bezier(0.45, 0, 0.55, 1);
+  }
+  21.7%,
+  100% {
+    transform: translate(0, 0);
+  }
+}
+@keyframes p4Ink {
+  0% {
+    opacity: 0;
+    animation-timing-function: cubic-bezier(0.2, 0.7, 0.3, 1);
+  }
+  9% {
+    opacity: var(--mo);
+    animation-timing-function: cubic-bezier(0.45, 0, 0.55, 1);
+  }
+  21.7%,
+  100% {
+    opacity: 0;
+  }
+}
+@keyframes p4InkStill {
+  0% {
+    opacity: calc(1 - var(--mo));
+    animation-timing-function: cubic-bezier(0.2, 0.7, 0.3, 1);
+  }
+  9% {
+    opacity: 1;
+    animation-timing-function: cubic-bezier(0.45, 0, 0.55, 1);
+  }
+  21.7%,
+  100% {
+    opacity: calc(1 - var(--mo));
+  }
+}
+/* Ошибка: движение останавливается, знак серый целиком. */
+.wait-mark.still,
+.wait-mark.still .wm-cell,
+.wait-mark.still .wm-cell .wm-h {
+  animation: none;
+}
+.wait-mark.still .wm-h {
+  opacity: 0;
+}
+
 /* ---------- Зазор между полем и панелью: статус ---------- */
 .gap {
   flex: 1 1 auto;
@@ -1023,6 +1223,13 @@
     );
     width: min(100%, var(--side));
     --s: calc((min(100cqi, var(--side)) - 2 * var(--box-gap)) / 9);
+  }
+  /* PD-189: строка панели ожидания — высотой с поле ландшафта (та же формула, что --side поля). */
+  .play-fit .board-wrap > .wait {
+    height: min(
+      100cqi,
+      max(160px, 100dvh - var(--bar) - var(--sa-top) - var(--sa-bot) - 2rem - 8px - 1.15rem - 2px - 12px - var(--tabbar-h) - 8px)
+    );
   }
   /* Ряды бокса — явно по размеру клетки (поворот меняет поле без перезагрузки; WebKit не пересчитывает ряды сетки с
      aspect-ratio-клетками, см. today.css, AX3). */
