@@ -21,8 +21,10 @@ import { ResultCard } from "../play/ResultCard";
 import { playStore } from "../play/store";
 import { getMelodySound, MELODY_SOUND_KEY, setMelodySound } from "../settings/prefs";
 import type { MelodyAudio, MelodyAudioOptions, PathEvent, PlayPathOptions } from "./audio";
+import { TabActiveContext } from "../shell/tabSlide";
 import { setMelodyAudioFactory } from "./factory";
 import { ringLifetimeMs, ringSchedule, UNIT_LEAD_MS } from "./game";
+import { END_RELEASE_MS, STOP_RELEASE_MS } from "./MelodyTune";
 import { cardTuneOf, TUNE_MAX_MS, timelapseTuneOf } from "./tune";
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
@@ -148,16 +150,23 @@ describe("партия на экране", () => {
     expect(q("menu-sound")).toBeNull();
   });
 
-  it("Мелодия: при входе — ядро + разблокировка на жестах документа; нота на постановку (и ошибочную); undo/стирание/заметки молчат", () => {
+  it("Мелодия: при входе — ядро без контекста; нота на постановку (и ошибочную); undo/стирание/заметки молчат", () => {
     start("melody");
     expect(playStore.getSnapshot().play?.melody).toBe(true);
     expect(fakes).toHaveLength(1);
     const f = fakes[0]!;
-    expect(kinds(f, "attach")[0]![1]).toBe(document);
+    // PD-206: никакой разблокировки на любом жесте документа — контекст создаётся только при первой ноте.
+    expect(kinds(f, "attach")).toHaveLength(0);
+    act(() => playStore.select(2)); // выбор клетки — тоже жест, но контекста не создаёт
+    tap(q("more-button")!);
+    tap(q("more-button")!);
+    expect(kinds(f, "unlock")).toHaveLength(0);
     expect(f.opts?.muted).toBe(false);
     // До первого хода — строка о звуке вместо «осталось N».
     expect(q("melody-hint")!.textContent).toContain("Each digit you place plays a note.");
     place(2, 4);
+    // Первая цифра: unlock и её нота — в одном обработчике (тем же тапом).
+    expect(f.calls.filter((c) => c[0] === "unlock" || c[0] === "note").slice(0, 2)).toEqual([["unlock"], ["note", 4]]);
     expect(kinds(f, "note")).toEqual([["note", 4]]);
     expect(q("melody-hint")).toBeNull();
     place(3, 9); // ошибка (верная — 6): звучит так же
@@ -172,6 +181,50 @@ describe("партия на экране", () => {
     place(5, 7); // заметка
     expect(f.calls.length).toBe(before);
     expect(kinds(f, "unit")).toHaveLength(0);
+  });
+
+  it("PD-206: строка о звуке — три формы (полная / короткая / «осталось N»); видимые замены aria-hidden, полная — доступное имя", () => {
+    start("melody");
+    const h = q("melody-hint")!;
+    expect(h.querySelector(".mh-long")!.textContent).toBe("Each digit you place plays a note. Mute: the ⋯ menu or the silent switch.");
+    expect(h.querySelector(".mh-long")!.getAttribute("aria-hidden")).toBeNull();
+    expect(h.querySelector(".mh-short")!.textContent).toBe("Each digit plays a note");
+    expect(h.querySelector(".mh-short")!.getAttribute("aria-hidden")).toBe("true");
+    expect(h.querySelector(".mh-left")!.textContent).toBe(`${MISSION.split("").filter((c) => c === "0").length} left`);
+    expect(h.querySelector(".mh-left")!.getAttribute("aria-hidden")).toBe("true");
+    // Зазор тот же (одна строка статуса в --chrome): подсказка уходит — элемент-зазор прежний, место не меняется.
+    const gap = h.parentElement!;
+    expect(gap.classList.contains("gap")).toBe(true);
+    place(2, 4);
+    expect(q("melody-hint")).toBeNull();
+    expect(q("status-line")!.parentElement).toBe(gap);
+  });
+
+  it("PD-206: при AX3 (data-type=ax3) строка о звуке — та же разметка, CSS показывает «осталось N»", () => {
+    document.documentElement.setAttribute("data-type", "ax3");
+    try {
+      start("melody");
+      const h = q("melody-hint")!;
+      expect(h.classList.contains("melody-hint")).toBe(true);
+      expect(h.querySelector(".mh-left")).not.toBeNull();
+      expect(h.querySelector(".mh-long")!.textContent).toContain("Each digit you place plays a note.");
+    } finally {
+      document.documentElement.removeAttribute("data-type");
+    }
+  });
+
+  it("PD-206: «Звук» выкл — цифры не создают и не будят контекст; включили — следующая цифра звучит тем же тапом", () => {
+    setMelodySound(false);
+    start("melody");
+    const f = fakes[0]!;
+    place(2, 4);
+    place(3, 6);
+    expect(kinds(f, "unlock")).toHaveLength(0);
+    expect(kinds(f, "note")).toHaveLength(0);
+    tap(q("more-button")!);
+    tap(q("menu-sound")!);
+    place(5, 8);
+    expect(f.calls.filter((c) => c[0] === "unlock" || c[0] === "note")).toEqual([["unlock"], ["note", 8]]);
   });
 
   it("закрыт юнит: после ноты — арпеджио (задержка 350 мс), на поле кольцо по 9 клеткам строки в порядке арпеджио", () => {
@@ -292,6 +345,75 @@ describe("карточка: «♪ Сыграть мелодию» (вариан�
     expect(kinds(f, "dispose")).toHaveLength(1);
   });
 
+  describe("PD-206: контекст карточки живёт только пока мелодия звучит", () => {
+    beforeEach(() => void vi.useFakeTimers());
+    afterEach(() => void vi.useRealTimers());
+
+    it("«Остановить» — ядро закрыто после затухания шины; следующее «Сыграть» — новое ядро в своём жесте", () => {
+      card(solvedMelody());
+      tap(q("melody-tune")!);
+      const f = fakes[0]!;
+      tap(q("melody-tune")!); // стоп
+      expect(f.paths[0]!.stopped).toBe(true);
+      expect(kinds(f, "dispose")).toHaveLength(0); // шина ещё гаснет — без щелчка
+      act(() => void vi.advanceTimersByTime(STOP_RELEASE_MS));
+      expect(kinds(f, "dispose")).toHaveLength(1);
+      tap(q("melody-tune")!);
+      expect(fakes).toHaveLength(2);
+      expect(kinds(fakes[1]!, "unlock")).toHaveLength(1);
+    });
+
+    it("конец мелодии — ядро закрыто, когда последняя нота отзвучала; «Сыграть» в хвосте берёт живое ядро", () => {
+      card(solvedMelody());
+      tap(q("melody-tune")!);
+      const f = fakes[0]!;
+      act(() => f.paths[0]!.end());
+      act(() => void vi.advanceTimersByTime(END_RELEASE_MS - 1));
+      expect(kinds(f, "dispose")).toHaveLength(0);
+      tap(q("melody-tune")!); // повтор в хвосте — то же ядро, закрытие отменено
+      expect(fakes).toHaveLength(1);
+      act(() => void vi.advanceTimersByTime(END_RELEASE_MS * 2));
+      expect(kinds(f, "dispose")).toHaveLength(0);
+      act(() => f.paths[1]!.end());
+      act(() => void vi.advanceTimersByTime(END_RELEASE_MS));
+      expect(kinds(f, "dispose")).toHaveLength(1);
+    });
+
+    it("сворачивание (visibilitychange → hidden) и pagehide — стоп и ядро закрыто сразу", () => {
+      card(solvedMelody());
+      tap(q("melody-tune")!);
+      const f = fakes[0]!;
+      const vis = vi.spyOn(document, "visibilityState", "get").mockReturnValue("hidden");
+      act(() => void document.dispatchEvent(new Event("visibilitychange")));
+      vis.mockRestore();
+      expect(f.paths[0]!.stopped).toBe(true);
+      expect(kinds(f, "dispose")).toHaveLength(1);
+      tap(q("melody-tune")!);
+      const g = fakes[1]!;
+      act(() => void window.dispatchEvent(new Event("pagehide")));
+      expect(kinds(g, "dispose")).toHaveLength(1);
+    });
+
+    it("уход на Today/Year (карточка смонтирована, вкладка неактивна) — стоп и ядро закрыто", () => {
+      const play = solvedMelody();
+      const at = (active: boolean) =>
+        act(() =>
+          root.render(
+            <TabActiveContext.Provider value={active}>
+              <ResultCard play={play} cardRef={{ current: null }} title="Solved" timelapse={{ date: "2026-10-05", difficulty: "medium" }} />
+            </TabActiveContext.Provider>,
+          ),
+        );
+      at(true);
+      tap(q("melody-tune")!);
+      const f = fakes[0]!;
+      at(false);
+      expect(f.paths[0]!.stopped).toBe(true);
+      expect(kinds(f, "dispose")).toHaveLength(1);
+      expect(q("melody-tune")!.textContent).toBe("Play the tune");
+    });
+  });
+
   it("мелодии нет — кнопки нет: лог синтетический/урезан, а у Классики — нет вовсе", () => {
     card({ ...solvedMelody(), logSynthetic: true });
     expect(q("melody-tune")).toBeNull();
@@ -365,7 +487,7 @@ describe("мелодия пути (tune.ts)", () => {
 });
 
 describe("тексты en/uk/ru", () => {
-  const keys = ["sound", "soundOn", "soundOff", "chipMuted", "hint", "tune", "stop", "livePlaying", "liveStopped", "tlNote"];
+  const keys = ["sound", "soundOn", "soundOff", "chipMuted", "hint", "hintShort", "tune", "stop", "livePlaying", "liveStopped", "tlNote"];
   it("все строки Мелодии есть во всех трёх локалях", () => {
     for (const loc of [en, uk, ru] as unknown as { melody: Record<string, string> }[]) {
       for (const k of keys) expect(loc.melody[k], k).toEqual(expect.any(String));

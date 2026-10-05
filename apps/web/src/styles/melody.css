@@ -61,7 +61,17 @@
   visibility: hidden;
 }
 
-/* ---------- Подсказка о звуке в новой партии (вместо «осталось N», до первого хода) ---------- */
+/* ---------- Подсказка о звуке в новой партии (вместо «осталось N», до первого хода) ----------
+   PD-206 (QA PD-204): в `--chrome` зазор держит ОДНУ строку статуса, а полная подсказка — 2–4 строки; с xxxL (23 px) и на AX3
+   она налезала на поле и пад. Как у статус-строки (PD-144 `.st-short`, PD-147 строка Ink): зазор с подсказкой — size-контейнер
+   (его размер не зависит от содержимого: поле не сжимается и не прыгает, когда подсказка уходит на первом ходу), форма —
+   контейнер-запросом по месту, которое у зазора есть (числа — melody/hintFit.ts, тест держит их вместе):
+   по умолчанию «осталось N» (`.mh-left`, как статус-строка при AX3) → короткая форма в одну строку (`.mh-short`) → полная
+   (`.mh-long`), только когда ширина гарантирует ≤ 3 (≤ 2) строки и высота их вмещает. AX3 — всегда «осталось N».
+   Полный текст — всегда доступное имя (clip-path, не display:none); видимые замены aria-hidden. */
+.play-fit > .gap:has(> .melody-hint) {
+  container-type: size;
+}
 .status.melody-hint {
   display: flex;
   align-items: center;
@@ -70,12 +80,83 @@
   line-height: 1.3;
   padding: 0 max(16px, var(--sa-r)) 0 max(16px, var(--sa-l));
   overflow-wrap: break-word;
+  min-width: 0;
+  max-width: 100%;
 }
 .status.melody-hint svg {
   width: 1.05em;
   height: 1.05em;
   flex: none;
   color: var(--ink);
+}
+/* Состояние «нет места»: значка и подсказки не видно, «осталось N» — одна строка. */
+.status.melody-hint > svg,
+.status.melody-hint > .mh-short {
+  display: none;
+}
+.status.melody-hint > .mh-long {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+.status.melody-hint > .mh-left {
+  white-space: nowrap;
+}
+/* Короткая форма: одна строка без переноса (отступы зазора уже есть — свои не нужны); не влезла бы — многоточие, не перенос. */
+@container (min-width: 10.2em) {
+  .status.melody-hint {
+    padding: 0;
+  }
+  .status.melody-hint > svg {
+    display: block;
+  }
+  .status.melody-hint > .mh-short {
+    display: block;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .status.melody-hint > .mh-left {
+    display: none;
+  }
+}
+/* Полная форма — макет PD-202 §2 п. 2: ширина гарантирует ≤ 4 / ≤ 3 / ≤ 2 строки, и зазор столько вмещает. */
+@container ((min-width: 13.8em) and (min-height: 4.7em)) or ((min-width: 17.5em) and (min-height: 3.5em)) or ((min-width: 23em) and (min-height: 2.35em)) {
+  .status.melody-hint {
+    padding: 0 max(16px, var(--sa-r)) 0 max(16px, var(--sa-l));
+  }
+  .status.melody-hint > .mh-long {
+    position: static;
+    width: auto;
+    height: auto;
+    overflow: visible;
+    clip-path: none;
+    white-space: normal;
+    min-width: 0;
+  }
+  .status.melody-hint > .mh-short {
+    display: none;
+  }
+}
+/* AX3 — всегда «осталось N» (как статус-строка, PD-144): ни одна форма подсказки в строку не входит. */
+:root[data-type="ax3"] .status.melody-hint > svg,
+:root[data-type="ax3"] .status.melody-hint > .mh-short {
+  display: none;
+}
+:root[data-type="ax3"] .status.melody-hint > .mh-left {
+  display: inline;
+}
+:root[data-type="ax3"] .status.melody-hint > .mh-long {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
 }
 
 /* ---------- Карточка: «♪ Сыграть мелодию» под картой пути; проявление карты под ноты ---------- */

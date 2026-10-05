@@ -636,6 +636,7 @@
     "soundOff": "Sound off",
     "chipMuted": "Melody · muted",
     "hint": "Each digit you place plays a note. Mute: the ⋯ menu or the silent switch.",
+    "hintShort": "Each digit plays a note",
     "tune": "Play the tune",
     "stop": "Stop",
     "livePlaying": "Playing the tune",

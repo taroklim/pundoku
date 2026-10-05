@@ -323,9 +323,16 @@ export function PlayScreen({ onOpenSettings, onOpenHelp, onOpenToday }: { onOpen
                   </p>
                 ) : melodyHint && !snap.hint ? (
                   // PD-203: новая партия Мелодии, до первого хода — одна строка о звуке вместо «осталось N» (макет PD-202 §2 п. 2).
+                  // PD-206: форма по месту в зазоре (melody.css, melody/hintFit.ts): полная → короткая → «осталось N»; AX3 — «осталось N».
                   <p className="status melody-hint" data-testid="melody-hint">
                     <MelodyModeIcon />
-                    <span>{t("melody.hint")}</span>
+                    <span className="mh-long">{t("melody.hint")}</span>
+                    <span className="mh-short" aria-hidden="true">
+                      {t("melody.hintShort")}
+                    </span>
+                    <span className="mh-left" aria-hidden="true">
+                      {t("play.cellsLeftShort", { count: left })}
+                    </span>
                   </p>
                 ) : (
                   <StatusLine left={left} full={full} hint={snap.hint} />

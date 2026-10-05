@@ -227,7 +227,10 @@ async function flow(name, type, c) {
     const sol = solve(g).join("");
     const empty = new Set([...g].flatMap((ch, i) => (ch === "0" ? [i] : [])));
     // Юнит с наименьшим числом пустых клеток (≥ 2): его закроем; первую цифру ставим вне него.
-    const unit = UNITS.map((u) => u.filter((i) => empty.has(i))).filter((u) => u.length >= 2).sort((a, b) => a.length - b.length)[0];
+    // PD-206: держим и сам юнит (все 9 клеток), а не только его пустые клетки — по пустым `UNITS.find` находил первую
+    // строку, где они лежат, хотя закрывали блок (213/213 → 212/213 на части сеток).
+    const pick = UNITS.map((u) => ({ u, e: u.filter((i) => empty.has(i)) })).filter((x) => x.e.length >= 2).sort((a, b) => a.e.length - b.e.length)[0];
+    const unit = pick.e;
     const other = [...empty].filter((i) => !unit.includes(i));
 
     // 1) первая цифра = жест
@@ -274,7 +277,7 @@ async function flow(name, type, c) {
         shadow: rs[0] ? getComputedStyle(rs[0]).boxShadow : null,
       };
     }, BOARD);
-    const unitSorted = [...UNITS.find((u) => unit.every((i) => u.includes(i)))].sort((a, b) => a - b);
+    const unitSorted = [...pick.u].sort((a, b) => a - b);
     ok(`${tag} кольцо на всех 9 клетках закрытого юнита`, ring.n >= 9 && unitSorted.every((i) => ring.cells.includes(i)), `${ring.n} колец, клетки ${ring.cells}`);
     ok(`${tag} кольцо — тонкая обводка 2 px`, /inset/.test(ring.shadow ?? "") && /2px/.test(ring.shadow ?? ""), ring.shadow);
     if (c.rm) {

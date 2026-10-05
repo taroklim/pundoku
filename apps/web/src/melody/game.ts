@@ -4,8 +4,9 @@
  * - Звук живёт ТОЛЬКО в партии Мелодии: ядро (`createMelodyAudio`) создаётся, когда экран входит в такую партию, и
  *   уничтожается (контекст закрывается), когда партия уходит с экрана. В Классике и других режимах ядра нет вовсе, а
  *   значит нет и `AudioContext`.
- * - Отдельной кнопки «включить звук» нет: при входе ядро вешает разблокировку на жесты документа (`attachUnlock`) — первая
- *   поставленная цифра и есть жест, её нота звучит тем же тапом.
+ * - Отдельной кнопки «включить звук» нет: первая поставленная цифра и есть жест, её нота звучит тем же тапом. PD-206:
+ *   `AudioContext` создаётся лениво — `unlock` зовётся только при ноте (синхронно в обработчике тапа/клавиши, что поставил
+ *   цифру), а не на любом жесте документа (выбор клетки, меню); при выключенном звуке контекст не создаётся вовсе.
  * - Нота — на каждую постановку (`snap.melodyCue`, ставит `GameStore.input`); ошибочная цифра звучит как верная; undo,
  *   стирание и заметки молчат (они `melodyCue` не ставят). Юнит, заполненный постановкой, — арпеджио после ноты; если
  *   закрыто несколько — по очереди (шаги — {@link ringSchedule}, их же рисует кольцо на поле).
@@ -103,8 +104,8 @@ export function useMelodyGame(store: Store, enabled: boolean, muted: boolean): v
     live.add(handle);
     const ensure = (): MelodyAudio => {
       if (audio === null) {
+        // Ядро без контекста: Web Audio появится в первом `unlock` (при ноте), не на любом жесте.
         audio = makeMelodyAudio({ muted: mutedRef.current });
-        audio.attachUnlock(document);
         audioRef.current = audio;
       }
       return audio;
@@ -117,8 +118,9 @@ export function useMelodyGame(store: Store, enabled: boolean, muted: boolean): v
       if (!cue || cue.id === lastId) return;
       lastId = cue.id;
       if (document.visibilityState === "hidden") return;
+      if (mutedRef.current) return; // «Звук» выкл: контекст не создаём и не будим
       const a = ensure();
-      a.unlock(); // мы и так в обработчике жеста; attachUnlock уже сработал в фазе захвата — повтор безвреден
+      a.unlock(); // мы в обработчике жеста, поставившего цифру: контекст создаётся/резюмируется здесь, нота — тем же тапом
       a.playNote(cue.digit);
       cue.units.forEach((u, k) => a.playUnit(unitDigits(snap, u), unitDelayMs(k)));
     });
