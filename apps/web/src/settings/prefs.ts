@@ -103,7 +103,16 @@ export function setPetEnabled(on: boolean): void {
   notify();
 }
 
-const WATCHED_KEYS: readonly string[] = [HIGHLIGHT_WRONG_KEY, AUTO_CLEAR_NOTES_KEY, HIGHLIGHT_PEERS_KEY, PET_KEY];
+/**
+ * PD-203: звук в партиях Мелодии (пункт «Звук» в меню ⋯, макет PD-202 вариант C). По умолчанию ВКЛ: выкл хранится «0».
+ * Настройка этого устройства, как остальные: в снапшот не идёт. На карточку и таймлапс не действует (там звук запускается явно).
+ */
+export const MELODY_SOUND_KEY = "pundoku.melodySound";
+const melodySoundPref = defaultOnPref(MELODY_SOUND_KEY);
+export const getMelodySound = melodySoundPref.get;
+export const setMelodySound = melodySoundPref.set;
+
+const WATCHED_KEYS: readonly string[] = [HIGHLIGHT_WRONG_KEY, AUTO_CLEAR_NOTES_KEY, HIGHLIGHT_PEERS_KEY, PET_KEY, MELODY_SOUND_KEY];
 
 function subscribe(listener: () => void): () => void {
   listeners.add(listener);
@@ -132,4 +141,8 @@ export function useHighlightPeers(): boolean {
 
 export function usePetEnabled(): boolean {
   return useSyncExternalStore(subscribe, getPetEnabled, () => false);
+}
+
+export function useMelodySound(): boolean {
+  return useSyncExternalStore(subscribe, getMelodySound, () => true);
 }

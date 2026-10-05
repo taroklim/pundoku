@@ -555,6 +555,10 @@
     "glyphs": {
       "name": "Glyphs",
       "desc": "Nine shapes instead of digits. The same logic, without a single number."
+    },
+    "melody": {
+      "name": "Melody",
+      "desc": "Each digit you place sounds a note. A solved grid plays its own tune."
     }
   },
   "liar": {
@@ -625,5 +629,18 @@
     "cellYours": "Row {{row}}, column {{col}}, {{shape}}, yours",
     "cellWrong": "Row {{row}}, column {{col}}, {{shape}}, yours, wrong",
     "key": "{{shape}}, {{n}} left"
+  },
+  "melody": {
+    "sound": "Sound",
+    "soundOn": "Sound on",
+    "soundOff": "Sound off",
+    "chipMuted": "Melody · muted",
+    "hint": "Each digit you place plays a note. Mute: the ⋯ menu or the silent switch.",
+    "hintShort": "Each digit plays a note",
+    "tune": "Play the tune",
+    "stop": "Stop",
+    "livePlaying": "Playing the tune",
+    "liveStopped": "Stopped",
+    "tlNote": "Real rhythm, long pauses shortened. The tune follows the replay."
   }
 }

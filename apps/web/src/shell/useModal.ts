@@ -58,7 +58,7 @@ export function useModal(scrim: RefObject<HTMLElement | null>, root: RefObject<H
       if (!el) return;
       const active = document.activeElement;
       if (opts.current.kind === "menu" && (event.key === "ArrowDown" || event.key === "ArrowUp" || event.key === "Home" || event.key === "End")) {
-        const items = [...el.querySelectorAll<HTMLElement>('[role="menuitem"]')];
+        const items = [...el.querySelectorAll<HTMLElement>('[role="menuitem"], [role="menuitemcheckbox"]')];
         if (items.length === 0) return;
         event.preventDefault();
         const at = active instanceof HTMLElement ? items.indexOf(active) : -1;

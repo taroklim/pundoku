@@ -21,8 +21,8 @@ type Tree = { [k: string]: string | Tree };
 const get = (t: Tree, path: string): unknown => path.split(".").reduce<unknown>((n, k) => (n as Tree | undefined)?.[k], t);
 
 describe("реестр режимов", () => {
-  it("сейчас готовы Классика, Чернила, Лжец (PD-171) и Глифы (PD-194), в этом порядке; Классика — режим по умолчанию", () => {
-    expect(availableModes().map((m) => m.id)).toEqual(["classic", "ink", "liar", "glyphs"]);
+  it("сейчас готовы Классика, Чернила, Лжец (PD-171), Мелодия (PD-203) и Глифы (PD-194) — в порядке PD-163; Классика — по умолчанию", () => {
+    expect(availableModes().map((m) => m.id)).toEqual(["classic", "ink", "liar", "melody", "glyphs"]);
     expect(DEFAULT_MODE).toBe("classic");
     expect(MODES[0]!.id).toBe(DEFAULT_MODE);
   });
@@ -41,7 +41,9 @@ describe("реестр режимов", () => {
     expect(isModeId("liar")).toBe(true);
     expect(isModeId("glyphs")).toBe(true);
     expect(slotKey("glyphs")).toBe("playGame:glyphs");
-    expect(isModeId("melody")).toBe(false);
+    expect(isModeId("melody")).toBe(true);
+    expect(slotKey("melody")).toBe("playGame:melody");
+    expect(isModeId("lantern")).toBe(false);
     expect(isModeId(undefined)).toBe(false);
     expect(modeDef("nope" as never).id).toBe("classic");
   });
@@ -73,6 +75,20 @@ describe("реестр режимов", () => {
     expect(ink.Rule).toBeDefined();
     const prepared = ink.prepare!(createPlay({ mission: MISSION, solution: SOLUTION }));
     expect(prepared.ink).toBe(true);
+  });
+
+  it("Мелодия (PD-203): готова, на хабе между Лжецом и Глифами; подготовка ставит `melody`, не в архиве, с чипом и подсказками", () => {
+    const m = modeDef("melody");
+    expect(m.id).toBe("melody");
+    expect(m.ready).toBe(true);
+    expect(m.chip).toBe(true);
+    expect(availableModes().map((x) => x.id).indexOf("melody")).toBe(3);
+    expect(m.allowInArchive).toBe(false);
+    expect(m.hints).toBe(true);
+    const fresh = createPlay({ mission: MISSION, solution: SOLUTION });
+    expect(m.prepare!(fresh).melody).toBe(true);
+    expect(modeDef("classic").prepare).toBeUndefined();
+    expect(legacyModeOf({ melody: true })).toBe("melody");
   });
 
   it("Классика: подсказки есть, чипа нет, партия как сгенерирована, все сложности", () => {

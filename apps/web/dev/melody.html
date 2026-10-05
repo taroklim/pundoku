@@ -1,0 +1,36 @@
+<!doctype html>
+<!--
+  PD-201: dev-стенд звукового ядра Мелодии. ТОЛЬКО для `vite` dev-сервера: в сборку не входит (вход сборки — index.html).
+  Открыть: cd apps/web && npx vite --port 5201 --strictPort → http://localhost:5201/dev/melody.html
+  Живая проверка в chromium/webkit: design/pd201-audio-check.mjs.
+-->
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>Pundoku — melody audio dev stand</title>
+    <style>
+      body { font: 16px system-ui, sans-serif; margin: 16px; touch-action: manipulation; }
+      button, select { font: inherit; min-height: 44px; min-width: 44px; margin: 2px; }
+      #log { white-space: pre-wrap; font: 12px ui-monospace, monospace; background: #f3f3f3; padding: 8px; max-height: 40vh; overflow: auto; }
+    </style>
+  </head>
+  <body>
+    <h1>Melody audio — dev stand (PD-201)</h1>
+    <p>State: <b id="state">—</b> · audioSession: <b id="session">—</b></p>
+    <p>
+      <button id="unlock">Unlock (gesture)</button>
+      <label><input type="checkbox" id="mute" /> mute</label>
+      <select id="timbre"></select>
+    </p>
+    <p id="digits"></p>
+    <p>
+      <button id="unit">Unit arpeggio (row 1–9)</button>
+      <button id="path">Play path (daily easy)</button>
+      <button id="stop">Stop path</button>
+      <button id="dispose">Dispose</button>
+    </p>
+    <div id="log"></div>
+    <script type="module" src="../src/melody/devStand.ts"></script>
+  </body>
+</html>

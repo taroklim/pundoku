@@ -1,0 +1,240 @@
+/*
+ * Мелодия (PD-203) — макет design/pd202-melody.html, решения владельца 2026-10-05: партия C (звук в меню ⋯, чип «без звука»),
+ * кольцо по закрытому юниту, карточка A («♪ Сыграть мелодию» под картой пути), кнопка звука в шапке таймлапса.
+ * Новых цветов и токенов нет: кольцо — `--ink` 2 px (заливка остаётся за выбором, `--wax` — за ошибкой), серый чип — `--chip-bg`
+ * + `--label-2`. Движение — через `--mo`/`--mk` (tokens.css): отдельных правил под prefers-reduced-motion нет.
+ */
+
+/* ---------- Кольцо по закрытому юниту ----------
+   Тонкое кольцо 2 px внутри клетки, только прозрачность (цифры, заливка, размеры не меняются). Обычно: 0 → 95 % → 0 за 560 мс,
+   клетки зажигаются с шагом 110 мс ровно в ноты арпеджио (`--mi` — позиция клетки, `--mu` — старт арпеджио юнита, мс).
+   Reduce Motion (`--mo: 0`): шаг обнуляется — весь юнит загорается разом, держится и гаснет за 1 с, без бега. */
+.cell > .mring {
+  position: absolute;
+  z-index: 2;
+  inset: 1px;
+  border-radius: var(--r-tl, 3px) var(--r-tr, 3px) var(--r-br, 3px) var(--r-bl, 3px);
+  box-shadow: inset 0 0 0 2px var(--ink);
+  pointer-events: none;
+  opacity: 0;
+  --mpeak: calc(0.95 * var(--mo) + 0.7 * (1 - var(--mo)));
+  --mhold: calc(0.3 * var(--mo) + 0.7 * (1 - var(--mo)));
+  animation: melodyRing calc(560ms * var(--mo) + 1000ms * (1 - var(--mo))) linear both;
+  animation-delay: calc(var(--mu, 0) * 1ms + var(--mi, 0) * 110ms * var(--mo));
+}
+@keyframes melodyRing {
+  0% {
+    opacity: 0;
+  }
+  15% {
+    opacity: var(--mpeak);
+  }
+  70% {
+    opacity: var(--mhold);
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+/* ---------- Чип «Мелодия · без звука» ---------- */
+.mode-chip.off {
+  background: var(--chip-bg);
+  color: var(--label-2);
+}
+
+/* ---------- Пункт «Звук» в меню ⋯: под разделителем, галочка справа ---------- */
+.menu .menu-sep {
+  height: 8px;
+  background: var(--chip-bg);
+}
+.menu .menu-sep + button {
+  border-top: none;
+}
+.menu [role="menuitemcheckbox"] .mi {
+  flex: 1;
+}
+.menu svg.ck {
+  color: var(--ink);
+}
+.menu svg.ck.off {
+  visibility: hidden;
+}
+
+/* ---------- Подсказка о звуке в новой партии (вместо «осталось N», до первого хода) ----------
+   PD-206 (QA PD-204): в `--chrome` зазор держит ОДНУ строку статуса, а полная подсказка — 2–4 строки; с xxxL (23 px) и на AX3
+   она налезала на поле и пад. Как у статус-строки (PD-144 `.st-short`, PD-147 строка Ink): зазор с подсказкой — size-контейнер
+   (его размер не зависит от содержимого: поле не сжимается и не прыгает, когда подсказка уходит на первом ходу), форма —
+   контейнер-запросом по месту, которое у зазора есть (числа — melody/hintFit.ts, тест держит их вместе):
+   по умолчанию «осталось N» (`.mh-left`, как статус-строка при AX3) → короткая форма в одну строку (`.mh-short`) → полная
+   (`.mh-long`), только когда ширина гарантирует ≤ 3 (≤ 2) строки и высота их вмещает. AX3 — всегда «осталось N».
+   Полный текст — всегда доступное имя (clip-path, не display:none); видимые замены aria-hidden. */
+.play-fit > .gap:has(> .melody-hint) {
+  container-type: size;
+}
+.status.melody-hint {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  line-height: 1.3;
+  padding: 0 max(16px, var(--sa-r)) 0 max(16px, var(--sa-l));
+  overflow-wrap: break-word;
+  min-width: 0;
+  max-width: 100%;
+}
+.status.melody-hint svg {
+  width: 1.05em;
+  height: 1.05em;
+  flex: none;
+  color: var(--ink);
+}
+/* Состояние «нет места»: значка и подсказки не видно, «осталось N» — одна строка. */
+.status.melody-hint > svg,
+.status.melody-hint > .mh-short {
+  display: none;
+}
+.status.melody-hint > .mh-long {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+.status.melody-hint > .mh-left {
+  white-space: nowrap;
+}
+/* Короткая форма: одна строка без переноса (отступы зазора уже есть — свои не нужны); не влезла бы — многоточие, не перенос. */
+@container (min-width: 10.2em) {
+  .status.melody-hint {
+    padding: 0;
+  }
+  .status.melody-hint > svg {
+    display: block;
+  }
+  .status.melody-hint > .mh-short {
+    display: block;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .status.melody-hint > .mh-left {
+    display: none;
+  }
+}
+/* Полная форма — макет PD-202 §2 п. 2: ширина гарантирует ≤ 4 / ≤ 3 / ≤ 2 строки, и зазор столько вмещает. */
+@container ((min-width: 13.8em) and (min-height: 4.7em)) or ((min-width: 17.5em) and (min-height: 3.5em)) or ((min-width: 23em) and (min-height: 2.35em)) {
+  .status.melody-hint {
+    padding: 0 max(16px, var(--sa-r)) 0 max(16px, var(--sa-l));
+  }
+  .status.melody-hint > .mh-long {
+    position: static;
+    width: auto;
+    height: auto;
+    overflow: visible;
+    clip-path: none;
+    white-space: normal;
+    min-width: 0;
+  }
+  .status.melody-hint > .mh-short {
+    display: none;
+  }
+}
+/* AX3 — всегда «осталось N» (как статус-строка, PD-144): ни одна форма подсказки в строку не входит. */
+:root[data-type="ax3"] .status.melody-hint > svg,
+:root[data-type="ax3"] .status.melody-hint > .mh-short {
+  display: none;
+}
+:root[data-type="ax3"] .status.melody-hint > .mh-left {
+  display: inline;
+}
+:root[data-type="ax3"] .status.melody-hint > .mh-long {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* ---------- Карточка: «♪ Сыграть мелодию» под картой пути; проявление карты под ноты ---------- */
+.tune {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  margin: 4px auto 0;
+  min-height: 44px;
+  padding: 0 16px;
+  border-radius: 22px;
+  color: var(--ink);
+  font-size: 0.95rem;
+  font-weight: 600;
+  text-align: center;
+  overflow-wrap: break-word;
+}
+.tune svg {
+  width: 20px;
+  height: 20px;
+  flex: none;
+}
+.tune:active {
+  background: var(--ink-tint);
+}
+.heat.revealing i {
+  transition: opacity calc(250ms * var(--mk)) linear;
+}
+.heat i.pend {
+  opacity: 0.06;
+}
+.heat i.cur {
+  position: relative;
+  opacity: 1;
+  z-index: 1;
+  box-shadow:
+    0 0 0 1.5px var(--elev),
+    0 0 0 3px var(--ink);
+}
+
+/* ---------- Таймлапс: кнопка звука в шапке шита, между заголовком и «Готово» ---------- */
+.tl-sound {
+  flex: none;
+  align-self: center;
+  display: grid;
+  place-items: center;
+  min-width: 44px;
+  min-height: 44px;
+  color: var(--label-2);
+}
+.tl-sound[aria-pressed="true"] {
+  color: var(--ink);
+}
+.tl-sound svg {
+  width: 24px;
+  height: 24px;
+}
+@container (max-width: 22rem) {
+  .tl-head .tl-sound {
+    order: 1;
+    margin-left: auto;
+  }
+  .tl-head .tl-sound ~ .tl-done {
+    order: 2;
+    margin-left: 0;
+  }
+}
+
+@media (forced-colors: active) {
+  .cell > .mring {
+    forced-color-adjust: none;
+    box-shadow: inset 0 0 0 2px Highlight;
+  }
+  .heat i.cur {
+    outline: 2px solid Highlight;
+  }
+  .mode-chip.off {
+    color: GrayText;
+  }
+}

@@ -4,6 +4,8 @@
  * «Новая сетка» (на хаб, без подтверждения) и «Заполнить кандидатами» (без подтверждения). PD-171: в партии Лжеца до поимки —
  * третий, «Обвинить подсказку…» (открывает то же меню-подтверждение, что долгое нажатие; путь для VoiceOver и клавиатуры).
  *
+ * PD-203: в партии Мелодии — пункт «Звук» с галочкой (`menuitemcheckbox`) под разделителем (макет PD-202, вариант C).
+ *
  * Недоступный пункт НЕ исчезает: он остаётся на месте с `aria-disabled="true"`, приглушён и объяснён строкой-причиной
  * («Недоступно в чернилах» / «Нечего заполнять»). Тап и Enter по нему ничего не делают; в круге фокуса он остаётся.
  */
@@ -12,6 +14,7 @@ import { useId, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
 import { useModal } from "../shell/useModal";
+import { CheckIcon, SpeakerIcon } from "../melody/icons";
 import { SealGlyph } from "./AccuseMenu";
 import { GridGlyph, MoreIcon, NewGridGlyph } from "./hubIcons";
 
@@ -27,13 +30,15 @@ export interface MoreMenuProps {
   readonly onFill: () => void;
   /** PD-171: партия Лжеца до поимки — пункт «Обвинить подсказку…»; нет — пункта нет. */
   readonly accuse?: { readonly state: AccuseState; readonly onAccuse: () => void } | null;
+  /** PD-203: партия Мелодии — пункт «Звук» (вкл/выкл, настройка устройства); нет — пункта нет. */
+  readonly sound?: { readonly on: boolean; readonly onToggle: () => void } | null;
 }
 
 interface Anchor {
   readonly top: number;
 }
 
-export function MoreMenu({ fill, onNew, onFill, accuse = null }: MoreMenuProps) {
+export function MoreMenu({ fill, onNew, onFill, accuse = null, sound = null }: MoreMenuProps) {
   const { t } = useTranslation();
   const [anchor, setAnchor] = useState<Anchor | null>(null);
   const btn = useRef<HTMLButtonElement>(null);
@@ -59,7 +64,7 @@ export function MoreMenu({ fill, onNew, onFill, accuse = null }: MoreMenuProps) 
       >
         <MoreIcon />
       </button>
-      {anchor && createPortal(<Popup id={menuId} top={anchor.top} fill={fill} accuse={accuse} returnFocus={btn} onClose={close} onNew={onNew} onFill={onFill} />, document.body)}
+      {anchor && createPortal(<Popup id={menuId} top={anchor.top} fill={fill} accuse={accuse} sound={sound} returnFocus={btn} onClose={close} onNew={onNew} onFill={onFill} />, document.body)}
     </>
   );
 }
@@ -69,6 +74,7 @@ function Popup({
   top,
   fill,
   accuse,
+  sound,
   returnFocus,
   onClose,
   onNew,
@@ -77,7 +83,7 @@ function Popup({
   const { t } = useTranslation();
   const scrim = useRef<HTMLDivElement>(null);
   const root = useRef<HTMLDivElement>(null);
-  useModal(scrim, root, { kind: "menu", onClose, returnFocus, initialFocus: '[role="menuitem"]' });
+  useModal(scrim, root, { kind: "menu", onClose, returnFocus, initialFocus: '[role="menuitem"], [role="menuitemcheckbox"]' });
   const blocked = fill !== "ready";
   const why = fill === "ink" ? t("play.hub.fillInkOff") : fill === "empty" ? t("play.hint.fillNone") : null;
   return (
@@ -148,6 +154,28 @@ function Popup({
               )}
             </span>
           </button>
+        )}
+        {sound && (
+          <>
+            <div className="menu-sep" role="separator" />
+            <button
+              type="button"
+              role="menuitemcheckbox"
+              aria-checked={sound.on}
+              aria-label={t("melody.sound")}
+              onClick={() => {
+                onClose();
+                sound.onToggle();
+              }}
+              data-testid="menu-sound"
+            >
+              <SpeakerIcon />
+              <span className="mi">
+                <span>{t("melody.sound")}</span>
+              </span>
+              <CheckIcon className={`ck${sound.on ? "" : " off"}`} />
+            </button>
+          </>
         )}
       </div>
     </div>

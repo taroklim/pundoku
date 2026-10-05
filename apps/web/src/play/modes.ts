@@ -3,7 +3,7 @@
  * шита режима (описание + сложность + «Начать»), чипа в шапке партии и слотов незавершённых игр в хранилище.
  *
  * Добавить режим = значок (`modeIcons.tsx`) + запись здесь + тексты `modes.<id>.name|desc` в трёх локалях + экран механики.
- * Порядок записей — порядок строк на хабе (фиксированный, новые режимы — в конец, решение 5 макета PD-163).
+ * Порядок записей — порядок строк на хабе (фиксированный, решение 5 макета PD-163: Классика, Чернила, Лжец, Мелодия, Фонарь, Глифы).
  * В список попадают ТОЛЬКО готовые режимы (`ready`): никаких «скоро» и мёртвых кнопок.
  */
 import type { Difficulty } from "@pundoku/engine";
@@ -11,12 +11,12 @@ import { DIFFICULTIES, INK_RULES } from "@pundoku/engine";
 import type { ComponentType } from "react";
 import { InkRuleSheet } from "./InkEntry";
 import type { PlayState } from "./logic";
-import { setGlyphMode, setInkMode } from "./logic";
+import { setGlyphMode, setInkMode, setMelodyMode } from "./logic";
 import type { ModeIconProps } from "./modeIcons";
-import { ClassicModeIcon, GlyphsModeIcon, InkModeIcon, LiarModeIcon } from "./modeIcons";
+import { ClassicModeIcon, GlyphsModeIcon, InkModeIcon, LiarModeIcon, MelodyModeIcon } from "./modeIcons";
 
 /** Идентификатор режима: часть ключа слота в хранилище (`playGame:<id>`) — однажды выпущенный id не переименовывать. */
-export type ModeId = "classic" | "ink" | "liar" | "glyphs";
+export type ModeId = "classic" | "ink" | "liar" | "glyphs" | "melody";
 
 /** Шит-подтверждение перед стартом (правило режима длиннее описания, PD-74): показывается ПОСЛЕ шита режима, не поверх. */
 export type ModeRuleSheet = ComponentType<{ onStart: () => void; onCancel: () => void }>;
@@ -85,6 +85,20 @@ export const MODES: readonly ModeDef[] = [
     grid: "liar",
   },
   {
+    // PD-201/PD-203 (план режимов §4): классическая сетка со звуком — цифра = нота, закрытый юнит = арпеджио + кольцо на поле,
+    // решённая сетка — «мелодия пути» на карточке и в таймлапсе (`melodyOf` движка, звук — `melody/`). Место в списке — по
+    // фиксированному порядку PD-163 (Классика, Чернила, Лжец, Мелодия, Фонарь, Глифы), а не в конец: id слота от порядка не зависит.
+    id: "melody",
+    Icon: MelodyModeIcon,
+    textKey: "melody",
+    ready: true,
+    difficulties: DIFFICULTIES,
+    allowInArchive: false,
+    chip: true,
+    hints: true,
+    prepare: (play) => setMelodyMode(play),
+  },
+  {
     // PD-194 (план режимов §3): классическая сетка, показанная знаками набора A «Фигуры» (PD-170) — только рендер, правила,
     // лог и подсказки те же, что у Классики. Флаг `play.glyphs` ставится на старте и едет с партией (слот, таймлапс).
     id: "glyphs",
@@ -116,8 +130,9 @@ export function availableModes(registry: readonly ModeDef[] = MODES): readonly M
 }
 
 /** Режим партии, записанной до PD-167 (один слот на всё): Чернила узнаются по самой партии, остальное — Классика. */
-export function legacyModeOf(play: Pick<PlayState, "ink" | "glyphs">): ModeId {
+export function legacyModeOf(play: Pick<PlayState, "ink" | "glyphs" | "melody">): ModeId {
   if (play.glyphs === true) return "glyphs"; // PD-194: глифов до PD-167 не было — только на случай записи без `mode`
+  if (play.melody === true) return "melody"; // PD-201: так же
   return play.ink === true ? "ink" : "classic";
 }
 

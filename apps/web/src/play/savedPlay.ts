@@ -115,7 +115,14 @@ export function parseSavedPlay(raw: unknown, slot?: ModeId): SavedPlay | null {
   // PD-194: флаг глифов — только `true` и только у партии режима `glyphs`. Партия режима без флага (оборвалось между стартом и
   // пометкой, `ModeDef.prepare`) не выбрасывается: флаг восстанавливается по слоту.
   if (p.glyphs !== undefined && (p.glyphs !== true || mode !== "glyphs")) return null;
-  const play: PlayState = mode === "glyphs" && p.glyphs !== true ? { ...(p as PlayState), glyphs: true } : (p as PlayState);
+  // PD-201: флаг Мелодии — по тому же правилу, что у глифов.
+  if (p.melody !== undefined && (p.melody !== true || mode !== "melody")) return null;
+  const play: PlayState =
+    mode === "glyphs" && p.glyphs !== true
+      ? { ...(p as PlayState), glyphs: true }
+      : mode === "melody" && p.melody !== true
+        ? { ...(p as PlayState), melody: true }
+        : (p as PlayState);
   if (r.daily !== undefined && (typeof r.daily !== "string" || !DATE_RE.test(r.daily) || mode !== "liar")) return null;
   const selected = typeof r.selected === "number" && Number.isInteger(r.selected) && r.selected >= 0 && r.selected < CELLS ? r.selected : null;
   const hints = typeof r.hints === "number" && Number.isInteger(r.hints) && r.hints > 0 && r.hints <= 999 ? r.hints : 0;

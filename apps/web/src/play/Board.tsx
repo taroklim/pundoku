@@ -1,6 +1,8 @@
 import type { CSSProperties, KeyboardEvent, ReactNode } from "react";
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
+import type { RingMark } from "../melody/game";
+import { ringLifetimeMs, ringSchedule } from "../melody/game";
 import { useHighlightPeers, useHighlightWrong } from "../settings/prefs";
 import { LONG_PRESS_MS } from "./controls";
 import { Glyph, glyphName } from "./glyphs";
@@ -74,6 +76,12 @@ interface CellProps {
   accusable: boolean;
   /** PD-194: партия режима Глифы — знаки вместо цифр (дано залитым, ваше контуром, заметки — залитые мини-знаки). */
   glyphs: boolean;
+  /**
+   * PD-203 (Мелодия): кольца по клетке — юниты, закрытые последней постановкой (клетка на пересечении — два кольца); `ringId` —
+   * id постановки (ключ: новая постановка перезапускает кольцо). Нет — колец нет.
+   */
+  rings: readonly RingMark[] | undefined;
+  ringId: number;
   onAccuse?: (cell: number, el: HTMLElement) => void;
   onPick: (cell: number) => void;
   /** Нажатие на клетку: запоминаем точку касания для M7. */
@@ -172,6 +180,9 @@ const Cell = memo(function Cell(p: CellProps) {
       <i className="fl" aria-hidden="true" />
       {p.hintStrip && <i className="hint-strip" aria-hidden="true" />}
       {p.hintRing && <i className="hint-ring" aria-hidden="true" />}
+      {p.rings?.map((r, k) => (
+        <i key={`m${p.ringId}-${k}`} className="mring" style={{ "--mu": r.unitMs, "--mi": r.step } as CSSProperties} aria-hidden="true" data-testid="mring" />
+      ))}
       {p.blot && <i key={`s${p.blotId}`} className={`stain${p.blotId ? " anim" : ""}`} aria-hidden="true" />}
       {(p.acquitted || p.lie !== 0) && <i key={`w${p.sealId}`} className={`seal${p.sealId ? " anim" : ""}`} aria-hidden="true" />}
       {p.lie !== 0 && (
@@ -307,6 +318,10 @@ export function Board({ snap, store, dim, hintMarks = null, onAccuse, canAccuse,
   const acquitted = useMemo(() => (play ? acquittedCells(play) : new Set<number>()), [play]);
   const caught = play ? caughtLie(play) : null;
   const sealNow = useMoment(snap.accusation ?? null, MOTION_MS.seal);
+  // PD-203: кольцо по юнитам, закрытым постановкой в Мелодии (в такт арпеджио), живёт, пока идёт; без звука — тоже.
+  const cue = snap.melodyCue ?? null;
+  const ringNow = useMoment(cue && cue.units.length > 0 ? cue : null, cue ? ringLifetimeMs(cue.units) : 0);
+  const rings = useMemo(() => (ringNow ? ringSchedule(ringNow.units) : null), [ringNow]);
   // Roving: клетка-«единственная остановка» — выбранная (или первая, пока ничего не выбрано).
   const stop = selected ?? 0;
 
@@ -427,6 +442,8 @@ export function Board({ snap, store, dim, hintMarks = null, onAccuse, canAccuse,
                   sealId={sealNow && sealNow.cell === i ? sealNow.id : 0}
                   accusable={ready && onAccuse !== undefined && (canAccuse?.(i) ?? false)}
                   glyphs={glyphs}
+                  rings={rings?.get(i)}
+                  ringId={ringNow?.id ?? 0}
                   onAccuse={onAccuse}
                   onPick={pick}
                   onTouch={onTouch}

@@ -26,11 +26,26 @@ export function blotCellSet(play: PlayState): ReadonlySet<number> {
 }
 
 /** Тепловая карта: обычные клетки — чернила по порядку, givens — контур, кляксы — сургуч со сколотым углом (`.b`), клетки подсказки — полая середина (`.h`). */
-export function HeatCells({ heat, blots, hinted }: { heat: readonly HeatCell[]; blots: ReadonlySet<number>; hinted?: ReadonlySet<number> }) {
+export function HeatCells({
+  heat,
+  blots,
+  hinted,
+  reveal = null,
+}: {
+  heat: readonly HeatCell[];
+  blots: ReadonlySet<number>;
+  hinted?: ReadonlySet<number>;
+  /** PD-203: мелодия играет — карта проявляется под ноты: ещё не прозвучавшие клетки гаснут, текущая — в кольце. */
+  reveal?: { readonly shown: ReadonlySet<number>; readonly cur: number } | null;
+}) {
   return (
     <>
       {heat.map((o, i) =>
-        blots.has(i) ? (
+        reveal && o !== null && !reveal.shown.has(i) ? (
+          <i key={i} className="pend" data-o={o} />
+        ) : reveal && reveal.cur === i ? (
+          <i key={i} className="cur" data-o={o} data-testid="heat-cur" />
+        ) : blots.has(i) ? (
           <i key={i} className="b" data-blot="true" />
         ) : o === null ? (
           <i key={i} className="g" />

@@ -76,6 +76,12 @@ export interface DayRecord {
    * атомарно, `merge.ts`) и возвращается в партию при восстановлении (`progressFromRecord`).
    */
   glyphs?: true;
+  /**
+   * Мелодия (PD-201, план режимов §4): партия сыграна со звуком. Только `true`, по прецеденту `glyphs` (у обычного дня поля
+   * нет; слияние атомарно; возвращается в партию при восстановлении). Мелодия пути строится из `moveLog`; без него (бюджет)
+   * её нет — `melodyOf(…, { synthetic })` вернёт `null`.
+   */
+  melody?: true;
 }
 
 export interface SnapshotData {
@@ -185,6 +191,7 @@ export function sanitizeDayRecord(raw: unknown): DayRecord | null {
     if (typeof blots === "number" && Number.isInteger(blots) && blots >= 0 && blots <= 81) rec.blots = blots;
   }
   if (raw["glyphs"] === true) rec.glyphs = true;
+  if (raw["melody"] === true) rec.melody = true;
   if (status === "solved") {
     const solvedAt = raw["solvedAt"];
     if (typeof solvedAt !== "string" || !ISO_RE.test(solvedAt) || Number.isNaN(Date.parse(solvedAt))) return null;
@@ -237,6 +244,7 @@ export function dayRecordFromProgress(p: DayProgress, _now: Date): DayRecord | n
     mission: p.mission,
     ...(p.play.ink === true ? { ink: true, blots: blotsOf(log).length } : {}),
     ...(p.play.glyphs === true ? { glyphs: true as const } : {}),
+    ...(p.play.melody === true ? { melody: true as const } : {}),
   };
   if (!p.solved) {
     return { status: "unfinished", timeMs: Math.round(p.elapsedMs), late: false, ...base };
@@ -330,6 +338,7 @@ export function progressFromRecord(date: string, rec: DayRecord): DayProgress | 
     solved: true,
     ...(rec.ink === true ? { ink: true } : {}),
     ...(rec.glyphs === true ? { glyphs: true as const } : {}),
+    ...(rec.melody === true ? { melody: true as const } : {}),
     ...(decoded === null ? { logSynthetic: true as const } : {}),
   };
   return {
