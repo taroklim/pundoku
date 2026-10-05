@@ -7,6 +7,7 @@ import { swallowGhostClick } from "../shell/ghostClick";
 import { useTabActive } from "../shell/tabSlide";
 import { TabHeader } from "../shell/TabHeader";
 import { localDate } from "../today/dayResolver";
+import { AccuseMenu } from "./AccuseMenu";
 import { Board } from "./Board";
 import {
   GamePad,
@@ -24,7 +25,8 @@ import { HintButton } from "./HintButton";
 import { HintDock, HINT_DOCK_ID } from "./HintDock";
 import { HintRuleSheet, boldParts } from "./HintRuleSheet";
 import { useHintLadder } from "./hintStore";
-import { canFill, cellsLeft, isGridFull } from "./logic";
+import { accusedCells, liarHidden, liarSummaryOf } from "./liar";
+import { canFill, cellsLeft, isGiven, isGridFull } from "./logic";
 import { ModeSheet } from "./ModeSheet";
 import type { ModeId } from "./modes";
 import { availableModes, modeDef } from "./modes";
@@ -60,14 +62,26 @@ export function PlayScreen({ onOpenSettings, onOpenHelp, onOpenToday }: { onOpen
   const [rule, setRule] = useState<{ mode: ModeId; difficulty: Difficulty } | null>(null);
   const sheetOpener = useRef<HTMLElement | null>(null);
   sheetOpener.current = sheet?.opener ?? null;
+  // PD-171: меню «Обвинить» у клетки (долгое нажатие, «⋯ → Обвинить подсказку…», клавиша A).
+  const [accuseAt, setAccuseAt] = useState<{ cell: number; digit: number; anchor: { top: number; bottom: number; left: number; width: number; height: number }; opener: HTMLElement | null } | null>(null);
+  const accuseOpener = useRef<HTMLElement | null>(null);
+  accuseOpener.current = accuseAt?.opener ?? null;
   const seenReselect = useRef(snap.reselect);
   useEffect(() => {
     if (seenReselect.current === snap.reselect) return;
     seenReselect.current = snap.reselect;
     setSheet(null);
     setRule(null);
+    setAccuseAt(null);
   }, [snap.reselect]);
-  const openSheet = (mode: ModeId, opener: HTMLElement | null = document.activeElement instanceof HTMLElement ? document.activeElement : null) => setSheet({ mode, opener });
+  const openSheet = (mode: ModeId, opener: HTMLElement | null = document.activeElement instanceof HTMLElement ? document.activeElement : null) => {
+    if (modeDef(mode).grid === "liar") {
+      // Вход в режим Лжеца: заготовить тяжёлые сетки (§1.5) и перечитать Лжеца дня (мог прийти из синхронизации).
+      playStore.warmLiar();
+      playStore.refreshDaily();
+    }
+    setSheet({ mode, opener });
+  };
   const startMode = (mode: ModeId, difficulty: Difficulty) => {
     setSheet(null);
     if (modeDef(mode).Rule) setRule({ mode, difficulty });
@@ -116,6 +130,23 @@ export function PlayScreen({ onOpenSettings, onOpenHelp, onOpenToday }: { onOpen
   useDeferredFocus(cardRef, cardShown);
 
   const interactive = phase === "playing" && play !== null;
+  // PD-171: Лжец. Обвинять можно, пока лжец не пойман; открыть меню — по клетке (жест) или по выбранной подсказке («⋯», A).
+  const liarOpen = interactive && play !== null && play.liar !== undefined && liarHidden(play);
+  const openAccuse = (cell: number, el: HTMLElement | null) => {
+    if (!play || !playStore.canAccuse(cell)) return;
+    playStore.select(cell);
+    const cellEl = el ?? document.querySelector<HTMLElement>(`.board [data-i="${cell}"]`);
+    const r = cellEl?.getBoundingClientRect();
+    const anchor = r ? { top: r.top, bottom: r.bottom, left: r.left, width: r.width, height: r.height } : { top: 80, bottom: 120, left: 20, width: 40, height: 40 };
+    setAccuseAt({ cell, digit: play.mission[cell] ?? 0, anchor, opener: cellEl });
+  };
+  const sel = snap.selected;
+  const liarSum = play?.liar && phase === "solved" ? liarSummaryOf(play) : null;
+  // Лжец пойман / партия ушла с доски — открытое меню обвинения больше ни к чему.
+  useEffect(() => {
+    if (!liarOpen || snap.hub) setAccuseAt(null);
+  }, [liarOpen, snap.hub]);
+  const accuseState = !liarOpen || !play ? null : sel !== null && isGiven(play, sel) ? (accusedCells(play).has(sel) ? "accused" : "ready") : "pick";
   const left = play ? cellsLeft(play) : 81;
   // PD-117a: заполнена, но не решена — честная фраза вместо «0 cells left» и без счёта неверных клеток.
   const full = interactive && play !== null && isGridFull(play);
@@ -154,7 +185,22 @@ export function PlayScreen({ onOpenSettings, onOpenHelp, onOpenToday }: { onOpen
   const fitClass = hub ? " play-hub" : fitClassName({ fit: !cardView, hintable, docked: hint.open });
 
   return (
-    <div className={`play${fitClass}`} onKeyDown={hub ? undefined : (e) => handleGameKey(e, playStore, ladder)}>
+    <div
+      className={`play${fitClass}`}
+      onKeyDown={
+        hub
+          ? undefined
+          : (e) => {
+              // PD-171: A — обвинить выбранную подсказку (то же меню-подтверждение, что долгое нажатие).
+              if (liarOpen && e.code === "KeyA" && !e.ctrlKey && !e.metaKey && !e.altKey && !(e.target as HTMLElement).closest('[role="dialog"], [role="menu"]')) {
+                e.preventDefault();
+                if (sel !== null) openAccuse(sel, null);
+                return;
+              }
+              handleGameKey(e, playStore, ladder);
+            }
+      }
+    >
       {/* Live-регион для скринридера: «N cells left» только на порогах (см. хук выше). */}
       <p className="sr-only" role="status" aria-live="polite" aria-atomic="true">
         {announcement}
@@ -167,12 +213,23 @@ export function PlayScreen({ onOpenSettings, onOpenHelp, onOpenToday }: { onOpen
         }
         onOpenSettings={onOpenSettings}
         actions={showLamp && <HintButton open={hint.open} used={snap.hints ?? 0} play onPress={() => ladder.toggle()} controls={HINT_DOCK_ID} />}
-        trailing={showMore && <MoreMenu fill={fillState} onNew={() => openSheet(snap.mode)} onFill={() => playStore.fillCandidates()} />}
+        trailing={
+          showMore && (
+            <MoreMenu
+              fill={fillState}
+              onNew={() => openSheet(snap.mode)}
+              onFill={() => playStore.fillCandidates()}
+              accuse={accuseState ? { state: accuseState, onAccuse: () => sel !== null && openAccuse(sel, null) } : null}
+            />
+          )
+        }
       />
       {restoring ? null : hub ? (
         <PlaySetup
           modes={availableModes()}
           slots={playStore.slots()}
+          liarDay={playStore.liarDaySlot()}
+          onOpenLiarDay={() => playStore.startDaily()}
           reselect={snap.reselect}
           onOpenMode={(mode, row) => {
             if (!playStore.open(mode)) openSheet(mode, row);
@@ -185,7 +242,15 @@ export function PlayScreen({ onOpenSettings, onOpenHelp, onOpenToday }: { onOpen
           <Subline day="" difficulty={diffLabel} chip={play ? (ink ? modeDef("ink") : def) : def} help={snap.assisted === true} clock={showClock ? clock : null} />
           {cardView ? (
             play && (
-              <ResultCard play={play} cardRef={cardRef} title={t("solved.title")} timelapse={{ date: localDate(snap.startedOn), difficulty }} hints={snap.hints} onOpenHelp={onOpenHelp}>
+              <ResultCard
+                play={play}
+                cardRef={cardRef}
+                title={play.liar ? t("liar.solvedTitle") : t("solved.title")}
+                timelapse={{ date: snap.daily ?? localDate(snap.startedOn), difficulty }}
+                hints={snap.hints}
+                onOpenHelp={onOpenHelp}
+                liar={liarSum ? { info: liarSum, average: playStore.liarAverage() } : null}
+              >
                 {/* PD-144: единственная кнопка нового пазла на экране (шапка на решённой партии действий не несёт). PD-167: шит режима партии. */}
                 <button type="button" className="btn-plain newgrid" onClick={(e) => openSheet(snap.mode, e.currentTarget)} data-testid="new-puzzle">
                   {t("play.newPuzzle")}
@@ -194,7 +259,14 @@ export function PlayScreen({ onOpenSettings, onOpenHelp, onOpenToday }: { onOpen
             )
           ) : (
             <>
-              <Board snap={snap} store={playStore} dim={phase === "solved"} hintMarks={hint.marks} />
+              <Board
+                snap={snap}
+                store={playStore}
+                dim={phase === "solved"}
+                hintMarks={hint.marks}
+                onAccuse={liarOpen ? openAccuse : undefined}
+                canAccuse={liarOpen ? (cell) => playStore.canAccuse(cell) : undefined}
+              />
 
               {/* Свободное место — МЕЖДУ полем и панелью (макет, находка 1); в зазоре — статус. Гибкий — только он (и поле). */}
               <div className="gap">
@@ -206,7 +278,7 @@ export function PlayScreen({ onOpenSettings, onOpenHelp, onOpenToday }: { onOpen
                 {phase === "error" && (
                   <p className="status" role="alert">
                     {t("play.failed")}{" "}
-                    <button type="button" className="link" onClick={() => playStore.newGame()}>
+                    <button type="button" className="link" onClick={() => playStore.retry()}>
                       {t("play.retry")}
                     </button>
                   </p>
@@ -235,6 +307,27 @@ export function PlayScreen({ onOpenSettings, onOpenHelp, onOpenToday }: { onOpen
           onStart={() => startMode(sheet.mode, playStore.pickFor(sheet.mode))}
           onClose={() => setSheet(null)}
           returnFocus={sheetOpener}
+          daily={
+            modeDef(sheet.mode).grid === "liar"
+              ? {
+                  state: playStore.liarDay(),
+                  onOpen: () => {
+                    setSheet(null);
+                    playStore.startDaily();
+                  },
+                }
+              : null
+          }
+        />
+      )}
+      {accuseAt && (
+        <AccuseMenu
+          cell={accuseAt.cell}
+          digit={accuseAt.digit}
+          anchor={accuseAt.anchor}
+          onAccuse={() => playStore.accuse(accuseAt.cell)}
+          onClose={() => setAccuseAt(null)}
+          returnFocus={accuseOpener}
         />
       )}
       {rule && <RuleSheet rule={rule} onDone={() => setRule(null)} />}

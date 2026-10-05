@@ -1,0 +1,123 @@
+/*
+ * Лжец (PD-171, визуал v2 п. 6): печать «сургуч» после обвинения. Ни нового цвета, ни нового токена: сургуч (--wax) — «ошибка,
+ * обвинение», вторичный текст (--label-2) — «оправдана». Классы с префиксом `liar-` и `.seal/.lie` на клетке поля.
+ *
+ * - Пойманная ложь: клетка — уже истинная подсказка (сериф, как все данные), ложная цифра — мелко в левом верхнем углу сургучом,
+ *   зачёркнута; в правом верхнем углу — залитая печать. Смысл не держится на цвете: зачёркивание + форма печати.
+ * - Оправданная подсказка: та же печать контуром, цветом вторичного текста (форма «пусто/залито» различима без цвета).
+ * Печать проявляется (scale 0.6 → 1 + прозрачность); амплитуда через --mo, длительность через --mk — под Reduce Motion
+ * остаётся только проявление (правило PD-89, play.css).
+ */
+.cell .seal {
+  position: absolute;
+  z-index: 2;
+  top: 9%;
+  right: 9%;
+  width: max(6px, calc(var(--s) * 0.2));
+  height: max(6px, calc(var(--s) * 0.2));
+  box-sizing: border-box;
+  border-radius: 50%;
+  border: 1.5px solid var(--label-2);
+  pointer-events: none;
+}
+.cell.caught .seal {
+  border-color: var(--wax);
+  background: var(--wax);
+}
+.cell .seal.anim {
+  animation: sealIn calc(260ms * var(--mk)) var(--e-out, ease-out) both;
+}
+@keyframes sealIn {
+  from {
+    transform: scale(calc(1 - 0.4 * var(--mo)));
+    opacity: 0;
+  }
+  to {
+    transform: none;
+    opacity: 1;
+  }
+}
+
+/* Зачёркнутая ложная цифра — размером заметки, в углу: истинная подсказка остаётся главной в клетке. */
+.cell .lie {
+  position: absolute;
+  z-index: 2;
+  top: 6%;
+  left: 10%;
+  font-family: var(--font-serif);
+  font-weight: 600;
+  font-size: max(7px, calc(var(--s) * 0.3));
+  line-height: 1;
+  color: var(--wax);
+  text-decoration: line-through;
+  text-decoration-thickness: 1.5px;
+  pointer-events: none;
+}
+.cell.sealing .d.given {
+  animation: fadeIn calc(260ms * var(--mk)) linear both;
+}
+
+/* Долгое нажатие на подсказку — наше контекстное меню, не системная выноска/лупа iOS. */
+.cell {
+  -webkit-touch-callout: none;
+}
+
+/* «Поднятая» клетка над размытием (как строка режима в `ModeMenu`): квадрат с цифрой серифом. */
+.liar-lift {
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--cell-r, 6px);
+}
+.liar-lift .d.given {
+  flex: none;
+  font-family: var(--font-serif);
+  font-weight: 600;
+  color: var(--label);
+  font-size: 1.4rem;
+  line-height: 1;
+}
+
+/* Пункт «Обвинить» — сургучом: действие с последствием (обвинение не отменяется). */
+.menu .accuse-item,
+.menu .accuse-item svg {
+  color: var(--wax);
+}
+
+.liar-compare {
+  margin-top: 4px;
+}
+
+@media (forced-colors: active) {
+  .cell .seal {
+    border-color: CanvasText;
+  }
+  .cell.caught .seal {
+    background: CanvasText;
+  }
+  .cell .lie {
+    color: CanvasText;
+  }
+}
+
+/* Year: день, в который пойман Лжец дня, — вторичная отметка (план §1.3): точка-печать сургучом в свободном правом нижнем углу
+   клетки (верхний правый — скол «исправления», нижний левый — срез «с помощью», центр — ядро «решено позже»). Цвет клетки
+   остаётся цветом качества классики. Ободок цвета карточки отделяет точку от заливки. */
+.ymark > .ylie {
+  position: absolute;
+  z-index: 1;
+  right: -2px;
+  bottom: -2px;
+  width: 46%;
+  height: 46%;
+  border-radius: 50%;
+  background: var(--wax);
+  box-shadow: 0 0 0 1px var(--card);
+}
+.liar-year {
+  margin-bottom: 8px;
+}
+@media (forced-colors: active) {
+  .ymark > .ylie {
+    background: CanvasText;
+  }
+}

@@ -8,6 +8,8 @@ import { useSheetSwipe } from "../shell/useSheetSwipe";
 import { heatLegend, heatOpacities } from "../play/heat";
 import { hintCellSet, hintCount, HintsRow } from "../play/hintCard";
 import { blotCellSet, HeatCells, InkModeValueRow } from "../play/inkCard";
+import { LiarYearRow } from "../play/liarCard";
+import type { LiarInfo } from "../play/savedPlay";
 import { unsettledCells } from "../play/logic";
 import { WatchRow, useTimelapseEntry } from "../play/TimelapseEntry";
 import type { DayProgress } from "../today/repository";
@@ -33,6 +35,8 @@ interface YearSheetProps {
   closing: boolean;
   ctx: YearContext;
   progress: ReadonlyMap<string, DayProgress>;
+  /** PD-171: Лжец дня по датам (отметка на клетке дня и строка в карточке дня). */
+  liar?: ReadonlyMap<string, LiarInfo>;
   onOpenDay: (date: string) => void;
   onBack: () => void;
   onClose: () => void;
@@ -48,7 +52,9 @@ interface YearSheetProps {
  * поверх первого (modality.md). Модальный: фон `inert`, фокус в шите, Esc и «Done» закрывают.
  * Рисуется порталом в `body` (вне `.scroll`), поэтому таб-бар и прокрутка полотна не мешают.
  */
-export function YearSheet({ year, month, date, closing, ctx, progress, onOpenDay, onBack, onClose, onOpenToday, onPlayDay, inertTarget }: YearSheetProps) {
+const NO_LIAR: ReadonlyMap<string, LiarInfo> = new Map();
+
+export function YearSheet({ year, month, date, closing, ctx, progress, liar = NO_LIAR, onOpenDay, onBack, onClose, onOpenToday, onPlayDay, inertTarget }: YearSheetProps) {
   const { t, i18n } = useTranslation();
   const locale = i18n.resolvedLanguage ?? "en";
   const sheetRef = useRef<HTMLElement>(null);
@@ -127,9 +133,9 @@ export function YearSheet({ year, month, date, closing, ctx, progress, onOpenDay
         </header>
         <div className="ysheet-body">
           {mark ? (
-            <DayCard mark={mark} ctx={ctx} progress={progress.get(mark.date)} headRef={headRef} onOpenToday={onOpenToday} onPlayDay={onPlayDay} />
+            <DayCard mark={mark} ctx={ctx} progress={progress.get(mark.date)} liar={liar.get(mark.date) ?? null} headRef={headRef} onOpenToday={onOpenToday} onPlayDay={onPlayDay} />
           ) : (
-            <MonthPage year={year} month={month} ctx={ctx} onOpenDay={onOpenDay} />
+            <MonthPage year={year} month={month} ctx={ctx} liar={liar} onOpenDay={onOpenDay} />
           )}
         </div>
       </section>
@@ -138,7 +144,7 @@ export function YearSheet({ year, month, date, closing, ctx, progress, onOpenDay
   );
 }
 
-function MonthPage({ year, month, ctx, onOpenDay }: { year: number; month: YearMonth; ctx: YearContext; onOpenDay: (date: string) => void }) {
+function MonthPage({ year, month, ctx, liar, onOpenDay }: { year: number; month: YearMonth; ctx: YearContext; liar: ReadonlyMap<string, LiarInfo>; onOpenDay: (date: string) => void }) {
   const { t, i18n } = useTranslation();
   const locale = i18n.resolvedLanguage ?? "en";
   const initials = useMemo(() => weekdayInitials(locale), [locale]);
@@ -160,13 +166,15 @@ function MonthPage({ year, month, ctx, onOpenDay }: { year: number; month: YearM
             type="button"
             className={`ycell${d.today ? " today" : ""}`}
             data-date={d.date}
-            aria-label={`${dayLong(d.date, locale)}, ${t(`year.state.${dayStateKey(d, ctx)}`)}`}
+            aria-label={`${dayLong(d.date, locale)}, ${t(`year.state.${dayStateKey(d, ctx)}`)}${liar.get(d.date)?.caught === true ? `, ${t("liar.dayTail")}` : ""}`}
             onClick={() => onOpenDay(d.date)}
           >
             <span className="n" aria-hidden="true">
               {d.day}
             </span>
-            <i className={markClass(d, false)} aria-hidden="true" />
+            <i className={markClass(d, false)} aria-hidden="true">
+              {liar.get(d.date)?.caught === true && <b className="ylie" />}
+            </i>
           </button>
         ))}
       </div>
@@ -184,6 +192,7 @@ function DayCard({
   mark,
   ctx,
   progress,
+  liar,
   headRef,
   onOpenToday,
   onPlayDay,
@@ -191,6 +200,7 @@ function DayCard({
   mark: DayMark;
   ctx: YearContext;
   progress: DayProgress | undefined;
+  liar: LiarInfo | null;
   headRef: RefObject<HTMLHeadingElement | null>;
   onOpenToday: () => void;
   onPlayDay: (date: string) => void;
@@ -230,6 +240,11 @@ function DayCard({
         {dayLong(mark.date, locale)}
       </h3>
       {sub && <p className="sub">{sub}</p>}
+      {liar && (
+        <dl className="rows liar-year">
+          <LiarYearRow info={liar} />
+        </dl>
+      )}
 
       {progress && solved && sum && heat ? (
         <>

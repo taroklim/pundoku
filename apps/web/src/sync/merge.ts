@@ -19,6 +19,7 @@
  */
 import { landingCell } from "../today/permanent";
 import type { PermanentGridState } from "../today/permanent";
+import { mergeLiar, sameLiar } from "./liarSchema";
 import type { DayRecord, SnapshotData } from "./schema";
 import { SNAPSHOT_SCHEMA_VERSION } from "./schema";
 
@@ -98,10 +99,13 @@ export interface MergeOptions {
 }
 
 export function mergeSnapshots(local: SnapshotData, server: SnapshotData, o: MergeOptions): SnapshotData {
+  // PD-171: Лжец дня — объединение по датам, запись дня атомарна (`pickLiarRecord`); раздела нет у обеих сторон — нет и в итоге.
+  const liar = local.liar || server.liar ? mergeLiar(local.liar, server.liar) : null;
   return {
     schemaVersion: SNAPSHOT_SCHEMA_VERSION,
     grid: mergeGrid(local.grid, server.grid, o.serverNewer),
     days: mergeDays(local.days, server.days),
+    ...(liar && Object.keys(liar).length > 0 ? { liar } : {}),
   };
 }
 
@@ -120,5 +124,5 @@ export const sameGrid = (a: PermanentGridState | null, b: PermanentGridState | n
 export const sameSnapshotData = (a: SnapshotData, b: SnapshotData): boolean => {
   const da = Object.keys(a.days);
   if (da.length !== Object.keys(b.days).length) return false;
-  return sameGrid(a.grid, b.grid) && da.every((d) => sameDayRecord(a.days[d], b.days[d]));
+  return sameGrid(a.grid, b.grid) && da.every((d) => sameDayRecord(a.days[d], b.days[d])) && sameLiar(a.liar, b.liar);
 };

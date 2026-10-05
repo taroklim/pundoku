@@ -5,6 +5,7 @@ import { Mark } from "../brand/Mark";
 import { TabHeader } from "../shell/TabHeader";
 import type { DayProgress } from "../today/repository";
 import { sanitizeDays } from "../today/repository";
+import type { LiarInfo } from "../play/savedPlay";
 import { monthName } from "./format";
 import { markClass, monthAriaLabel } from "./labels";
 import type { YearEntry } from "./model";
@@ -17,6 +18,8 @@ export interface YearScreenProps {
   days: readonly DayProgress[] | null;
   /** Дата первого запуска (`year/firstUse.ts`); `null` — неизвестна. */
   firstUse: string | null;
+  /** PD-171: Лжец дня по датам — пойманный получает вторичную отметку на клетке дня (цвет клетки — качество классики). */
+  liar?: ReadonlyMap<string, LiarInfo>;
   /** Локальная сегодняшняя дата `YYYY-MM-DD`. */
   today: string;
   /** «Open today's puzzle» / «Continue» — переключить вкладку на Today. */
@@ -38,7 +41,15 @@ const MONTH_SLOTS = 35; // 7 × 5: дни месяца идут подряд, б
  * тап по месяцу → шит месяца с клетками ~46 pt → тап по дню → карточка дня (вторая страница шита).
  * Формы и цвет меток — `year/model.ts` и `styles/year.css`. Никаких серий и процентов: только нейтральные итоги.
  */
-export function YearScreen({ days, firstUse, today, onOpenToday, onPlayDay, initialDate = null, onInitialDateConsumed, onOpenSettings }: YearScreenProps) {
+const NO_LIAR: ReadonlyMap<string, LiarInfo> = new Map();
+
+/** Подпись месяца + «лжецов поймано: N» (PD-171), если в месяце есть пойманные Лжецы дня. */
+function liarMonthLabel(t: (k: string, o?: Record<string, unknown>) => string, days: readonly { date: string }[], liar: ReadonlyMap<string, LiarInfo>, base: string): string {
+  const n = days.filter((d) => liar.get(d.date)?.caught === true).length;
+  return n > 0 ? `${base}, ${t("liar.monthCaught", { count: n })}` : base;
+}
+
+export function YearScreen({ days, firstUse, liar = NO_LIAR, today, onOpenToday, onPlayDay, initialDate = null, onInitialDateConsumed, onOpenSettings }: YearScreenProps) {
   const { t, i18n } = useTranslation();
   const locale = i18n.resolvedLanguage ?? "en";
   const root = useRef<HTMLDivElement>(null);
@@ -156,7 +167,7 @@ export function YearScreen({ days, firstUse, today, onOpenToday, onPlayDay, init
             type="button"
             className="year-month"
             data-month={m.index}
-            aria-label={monthAriaLabel(t, m, locale)}
+            aria-label={liarMonthLabel(t, m.days, liar, monthAriaLabel(t, m, locale))}
             onClick={() => openMonth(m.index)}
           >
             <span className="mlab" aria-hidden="true">
@@ -164,7 +175,9 @@ export function YearScreen({ days, firstUse, today, onOpenToday, onPlayDay, init
             </span>
             <span className="mgrid" aria-hidden="true">
               {m.days.map((d) => (
-                <i key={d.date} className={markClass(d)} data-date={d.date} />
+                <i key={d.date} className={markClass(d)} data-date={d.date}>
+                  {liar.get(d.date)?.caught === true && <b className="ylie" data-testid="year-liar-mark" />}
+                </i>
               ))}
               {Array.from({ length: MONTH_SLOTS - m.days.length }, (_, i) => (
                 <i key={`p${i}`} className="ymark is-void" />
@@ -208,6 +221,14 @@ export function YearScreen({ days, firstUse, today, onOpenToday, onPlayDay, init
             <i className="ymark is-missed" aria-hidden="true" />
             {t("year.legend.missed")}
           </li>
+          {[...liar.values()].some((x) => x.caught) && (
+            <li data-testid="year-legend-liar">
+              <i className="ymark is-void" aria-hidden="true">
+                <b className="ylie" />
+              </i>
+              {t("liar.yearLegend")}
+            </li>
+          )}
         </ul>
       )}
 
@@ -219,6 +240,7 @@ export function YearScreen({ days, firstUse, today, onOpenToday, onPlayDay, init
           closing={sheet.closing}
           ctx={ctx}
           progress={progress}
+          liar={liar}
           onOpenDay={(date) => setSheet((s) => (s ? { ...s, date } : s))}
           onBack={() => setSheet((s) => (s ? { ...s, date: null } : s))}
           onClose={closeSheet}

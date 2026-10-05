@@ -52,6 +52,30 @@ export class IndexedDbProgressRepository implements PersistentStore {
   async setMeta(key: string, value: unknown): Promise<void> {
     await withStore(this.db, STORE_KV, "readwrite", (s) => s.put(value, `meta:${key}`));
   }
+  /** PD-171: записи `meta:<prefix>…` одной транзакцией (курсор по диапазону ключей). Пустые (`null`) пропускаются. */
+  async listMeta(prefix: string): Promise<[string, unknown][]> {
+    const lo = `meta:${prefix}`;
+    return new Promise((resolve, reject) => {
+      const out: [string, unknown][] = [];
+      let tx: IDBTransaction;
+      try {
+        tx = this.db.transaction(STORE_KV, "readonly");
+        const req = tx.objectStore(STORE_KV).openCursor(IDBKeyRange.bound(lo, `${lo}\uffff`));
+        req.onsuccess = () => {
+          const cur = req.result;
+          if (!cur) return;
+          if (cur.value !== null && cur.value !== undefined) out.push([String(cur.key).slice("meta:".length), cur.value as unknown]);
+          cur.continue();
+        };
+      } catch (err) {
+        reject(err instanceof Error ? err : new Error(String(err)));
+        return;
+      }
+      tx.oncomplete = () => resolve(out);
+      tx.onerror = () => reject(tx.error ?? new Error("indexedDB transaction failed"));
+      tx.onabort = () => reject(tx.error ?? new Error("indexedDB transaction aborted"));
+    });
+  }
   async setMetaIfAbsent(key: string, value: unknown): Promise<unknown> {
     return readWrite<unknown>(this.db, STORE_KV, (s, done) => {
       const k = `meta:${key}`;
@@ -111,5 +135,9 @@ export class LazyProgressRepository implements PersistentStore {
   }
   async setMetaIfAbsent(key: string, value: unknown) {
     return (await this.r()).setMetaIfAbsent(key, value);
+  }
+  async listMeta(prefix: string): Promise<[string, unknown][]> {
+    const r = await this.r();
+    return r.listMeta ? r.listMeta(prefix) : [];
   }
 }

@@ -198,7 +198,14 @@
       "dead_one": "в {{count}} клетке нет кандидатов",
       "dead_few": "в {{count}} клетках нет кандидатов",
       "dead_many": "в {{count}} клетках нет кандидатов",
-      "dead_other": "в {{count}} клетках нет кандидатов"
+      "dead_other": "в {{count}} клетках нет кандидатов",
+      "liarHonest_one": "Оправдана · неверных: {{count}}",
+      "liarHonest_few": "Оправдана · неверных: {{count}}",
+      "liarHonest_many": "Оправдана · неверных: {{count}}",
+      "liarHonest_other": "Оправдана · неверных: {{count}}",
+      "liarCaught": "Лжец пойман",
+      "liarCaughtShort": "Пойман",
+      "liarHonestShort": "Оправдана"
     },
     "cellsLeft_one": "Осталась {{count}} клетка",
     "cellsLeft_few": "Осталось {{count}} клетки",
@@ -564,6 +571,48 @@
     "ink": {
       "name": "Чернила",
       "desc": "Каждая цифра окончательна: без отмены и без ластика для цифр. Неверная оставляет кляксу."
+    },
+    "liar": {
+      "name": "Лжец",
+      "desc": "Одна из данных цифр лжёт. Найдите её и удерживайте, чтобы обвинить."
     }
+  },
+  "liar": {
+    "cellCaught": "Строка {{row}}, столбец {{col}}, заданная {{digit}}; ложь {{lie}} зачёркнута",
+    "cellAcquitted": "Строка {{row}}, столбец {{col}}, заданная {{digit}}, оправдана",
+    "cellAccuseHint": "удерживайте, чтобы обвинить",
+    "menuLabel": "Обвинить цифру {{digit}}",
+    "menuDesc": "{{digit}} в строке {{row}}, столбце {{col}}. Если она честная — её оправдают, без штрафа.",
+    "accuse": "Обвинить",
+    "menuItem": "Обвинить эту цифру…",
+    "whyPick": "Сначала выберите данную цифру",
+    "whyAccused": "Эту цифру уже обвиняли",
+    "daily": "Лжец дня",
+    "dailyHead": "Сегодня",
+    "dailyNew": "{{difficulty}} · сегодня одинаковый у всех",
+    "dailyDone": "Пойман · {{time}}",
+    "solvedTitle": "Лжец пойман",
+    "rowMove": "Ход обвинения",
+    "rowAccusations": "Обвинения",
+    "firstTry": "с первого раза",
+    "wrong_one": "{{count}} неверное",
+    "wrong_few": "{{count}} неверных",
+    "wrong_many": "{{count}} неверных",
+    "wrong_other": "{{count}} неверного",
+    "rowCaughtAt": "Пойман на",
+    "compare_one": "Ваш средний ход обвинения: {{avg}} ({{count}} прошлая партия)",
+    "compare_few": "Ваш средний ход обвинения: {{avg}} ({{count}} прошлые партии)",
+    "compare_many": "Ваш средний ход обвинения: {{avg}} ({{count}} прошлых партий)",
+    "compare_other": "Ваш средний ход обвинения: {{avg}} ({{count}} прошлой партии)",
+    "compareFirst": "Первый пойманный лжец — сравнивать пока не с чем.",
+    "yearRow": "Лжец дня",
+    "yearCaught": "пойман, ход {{move}}",
+    "yearNotCaught": "не пойман",
+    "yearLegend": "Лжец пойман",
+    "dayTail": "лжец пойман",
+    "monthCaught_one": "лжецов поймано: {{count}}",
+    "monthCaught_few": "лжецов поймано: {{count}}",
+    "monthCaught_many": "лжецов поймано: {{count}}",
+    "monthCaught_other": "лжецов поймано: {{count}}"
   }
 }

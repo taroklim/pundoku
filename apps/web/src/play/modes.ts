@@ -13,10 +13,10 @@ import { InkRuleSheet } from "./InkEntry";
 import type { PlayState } from "./logic";
 import { setInkMode } from "./logic";
 import type { ModeIconProps } from "./modeIcons";
-import { ClassicModeIcon, InkModeIcon } from "./modeIcons";
+import { ClassicModeIcon, InkModeIcon, LiarModeIcon } from "./modeIcons";
 
 /** Идентификатор режима: часть ключа слота в хранилище (`playGame:<id>`) — однажды выпущенный id не переименовывать. */
-export type ModeId = "classic" | "ink";
+export type ModeId = "classic" | "ink" | "liar";
 
 /** Шит-подтверждение перед стартом (правило режима длиннее описания, PD-74): показывается ПОСЛЕ шита режима, не поверх. */
 export type ModeRuleSheet = ComponentType<{ onStart: () => void; onCancel: () => void }>;
@@ -41,6 +41,11 @@ export interface ModeDef {
   readonly prepare?: (play: PlayState) => PlayState;
   /** Правило перед стартом (необратимые режимы). */
   readonly Rule?: ModeRuleSheet;
+  /**
+   * Источник сетки: `classic` (по умолчанию) — `generate`; `liar` — `generateLiar` (PD-171: другой тип сетки, своя партия
+   * с секретом, обвинения, Лжец дня в шите режима, prefetch тяжёлых классов).
+   */
+  readonly grid?: "classic" | "liar";
 }
 
 export const MODES: readonly ModeDef[] = [
@@ -65,6 +70,19 @@ export const MODES: readonly ModeDef[] = [
     hints: false,
     prepare: (play) => setInkMode(play, true),
     Rule: InkRuleSheet,
+  },
+  {
+    // PD-171 (план режимов §1): другой тип сетки — одна из данных подсказок лжёт. Несовместим с Чернилами (`setInkMode`
+    // отвергает ink у партии с `liar`). Лесенка подсказок есть, но включается только после поимки — место под док держим.
+    id: "liar",
+    Icon: LiarModeIcon,
+    textKey: "liar",
+    ready: true,
+    difficulties: DIFFICULTIES,
+    allowInArchive: false,
+    chip: true,
+    hints: true,
+    grid: "liar",
   },
 ];
 

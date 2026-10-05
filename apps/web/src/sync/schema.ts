@@ -9,7 +9,8 @@
  * data = {
  *   schemaVersion: 1,
  *   grid: { installSeed, index, cells: [{ cell, date }] } | null,   // Grid ∞: счётчики — производные от cells
- *   days: { "YYYY-MM-DD": DayRecord }
+ *   days: { "YYYY-MM-DD": DayRecord },
+ *   liar?: { "YYYY-MM-DD": LiarDayRecord }   // PD-171, только если есть (`liarSchema.ts`)
  * }
  * ```
  */
@@ -21,6 +22,8 @@ import type { DaySource } from "../today/dayResolver";
 import type { PermanentGridState } from "../today/permanent";
 import type { DayProgress } from "../today/repository";
 import { decodeHeat, decodeMoveLog, encodeHeat, encodeMoveLog } from "./codec";
+import type { LiarDayRecord } from "./liarSchema";
+import { sanitizeLiar } from "./liarSchema";
 
 export const SNAPSHOT_SCHEMA_VERSION = 1;
 
@@ -72,6 +75,8 @@ export interface SnapshotData {
   schemaVersion: number;
   grid: PermanentGridState | null;
   days: Record<string, DayRecord>;
+  /** PD-171: Лжец дня по датам. Нет раздела — нет Лжеца дня (старые снапшоты равны побайтно, схему не версионируем). */
+  liar?: Record<string, LiarDayRecord>;
 }
 
 export const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
@@ -194,7 +199,8 @@ function sanitize(raw: Record<string, unknown>, schemaVersion: number): Snapshot
       if (r) days[date] = r;
     }
   }
-  return { schemaVersion, grid: sanitizeGrid(raw["grid"]), days };
+  const liar = sanitizeLiar(raw["liar"]);
+  return { schemaVersion, grid: sanitizeGrid(raw["grid"]), days, ...(Object.keys(liar).length > 0 ? { liar } : {}) };
 }
 
 // ---- DayProgress ⇄ DayRecord -----------------------------------------------------------------
@@ -345,11 +351,11 @@ export const MOVE_LOG_MAX_CHARS = 48 * 1024;
  * `MOVE_LOG_ALWAYS_LAST_DAYS` — всегда). Остальным `moveLog` снимается: карточке дня достаточно `heat` + сводки,
  * полный лог нужен только будущему Таймлапсу и хранится локально.
  */
-export function applyMoveLogBudget(
-  days: Record<string, DayRecord>,
+export function applyMoveLogBudget<R extends { status: string; moveLog?: string }>(
+  days: Record<string, R>,
   budget: number = MOVE_LOG_BUDGET_CHARS,
   alwaysLast: number = MOVE_LOG_ALWAYS_LAST_DAYS,
-): Record<string, DayRecord> {
+): Record<string, R> {
   const solvedDesc = Object.keys(days)
     .filter((d) => days[d]!.status === "solved")
     .sort()
@@ -364,7 +370,7 @@ export function applyMoveLogBudget(
       used += len;
     }
   });
-  const out: Record<string, DayRecord> = {};
+  const out: Record<string, R> = {};
   for (const [date, rec] of Object.entries(days)) {
     if (rec.moveLog !== undefined && !keep.has(date)) {
       const rest = { ...rec };
@@ -376,13 +382,16 @@ export function applyMoveLogBudget(
 }
 
 export function buildSnapshotData(
-  local: { grid: PermanentGridState | null; days: Record<string, DayRecord> },
+  local: { grid: PermanentGridState | null; days: Record<string, DayRecord>; liar?: Record<string, LiarDayRecord> },
   moveLogBudget: number = MOVE_LOG_BUDGET_CHARS,
   alwaysLast: number = MOVE_LOG_ALWAYS_LAST_DAYS,
 ): SnapshotData {
+  // PD-171: логи Лжеца дня — свой бюджет (десятая часть общего): партия Лжеца бывает раз в день, а дни остаются главными.
+  const liar = local.liar && Object.keys(local.liar).length > 0 ? applyMoveLogBudget(local.liar, Math.floor(moveLogBudget / 10), alwaysLast) : null;
   return {
     schemaVersion: SNAPSHOT_SCHEMA_VERSION,
     grid: local.grid,
     days: applyMoveLogBudget(local.days, moveLogBudget, alwaysLast),
+    ...(liar ? { liar } : {}),
   };
 }

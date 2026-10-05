@@ -27,6 +27,7 @@ import {
   undo as undoMove,
   waveOf,
 } from "./logic";
+import { accuseCell, canAccuse, liarHidden } from "./liar";
 
 export type Phase = "loading" | "playing" | "solved" | "error";
 
@@ -34,7 +35,7 @@ export type Phase = "loading" | "playing" | "solved" | "error";
  * Тихий отклик на отказ (PD-117b): что именно не получилось. Тексты — `play.hint.<kind>` (строка статуса вместо
  * «N cells left» на `HINT_MS`, тот же aria-live; без модалки, без вибрации, без движения сверх обычного M9).
  */
-export type HintKind = "pickCell" | "noteFilled" | "inkFilled" | "filled" | "fillNone";
+export type HintKind = "pickCell" | "noteFilled" | "inkFilled" | "filled" | "fillNone" | "liarCaught" | "liarHonest";
 
 /** Сколько строка статуса показывает отклик, прежде чем вернуться к «N cells left», мс. */
 export const HINT_MS = 2600;
@@ -73,6 +74,11 @@ export interface PlaySnapshot {
   readonly hints?: number;
   /** PD-139: партия «с помощью» — выставляется первой результативной подсказкой и больше не снимается. Не выводится из `hints`. */
   readonly assisted?: boolean;
+  /**
+   * Лжец (PD-171): только что сделанное обвинение — «сургуч» на клетке (id меняется на каждое). Вердикт игрок видит сразу,
+   * это не утечка: до обвинения здесь ничего нет.
+   */
+  readonly accusation?: { readonly kind: "liar" | "honest"; readonly cell: number; readonly id: number } | null;
 }
 
 type Mutable<T> = { -readonly [K in keyof T]: T[K] };
@@ -148,8 +154,9 @@ export abstract class GameStore<S extends PlaySnapshot = PlaySnapshot> {
   }
 
   /** Начать партию с готовой сеткой: таймер с нуля, выбор — первая пустая клетка. */
-  protected beginGame(puzzle: { mission: string; solution: string }, patch: Partial<S> = {}): PlayState {
-    const play = createPlay(puzzle);
+  protected beginGame(puzzle: { mission: string; solution: string }, patch: Partial<S> = {}, prepared?: PlayState): PlayState {
+    // `prepared` — партия уже собрана под режим (Лжец: с секретом, PD-171), иначе — обычная из сетки.
+    const play = prepared ?? createPlay(puzzle);
     this.elapsedBase = 0;
     this.runningSince = null;
     this.set({
@@ -165,6 +172,7 @@ export abstract class GameStore<S extends PlaySnapshot = PlaySnapshot> {
       hint: null,
       hints: 0,
       assisted: false,
+      accusation: null,
       ...patch,
     } as Partial<S>);
     return play;
@@ -187,6 +195,7 @@ export abstract class GameStore<S extends PlaySnapshot = PlaySnapshot> {
       hint: null,
       hints: 0,
       assisted: false,
+      accusation: null,
       ...patch,
     } as Partial<S>);
   }
@@ -207,6 +216,7 @@ export abstract class GameStore<S extends PlaySnapshot = PlaySnapshot> {
       hint: null,
       hints: 0,
       assisted: false,
+      accusation: null,
       startedOn: new Date(),
       ...patch,
     } as Partial<S>);
@@ -280,7 +290,7 @@ export abstract class GameStore<S extends PlaySnapshot = PlaySnapshot> {
   setInk(on: boolean): boolean {
     const { play, phase } = this.snap;
     if (phase !== "playing" || !play) return false;
-    if (on && (!this.inkAllowed() || this.snap.assisted === true)) return (play.ink === true) === on;
+    if (on && (!this.inkAllowed() || this.snap.assisted === true || play.liar !== undefined)) return (play.ink === true) === on;
     const next = setInkMode(play, on);
     if (next !== play) this.set({ play: next } as Partial<S>);
     return (next.ink === true) === on;
@@ -293,7 +303,7 @@ export abstract class GameStore<S extends PlaySnapshot = PlaySnapshot> {
    */
   inkChoosable(): boolean {
     const { play, phase } = this.snap;
-    return phase === "playing" && play !== null && !play.solved && !hasPlacedDigit(play) && this.inkAllowed() && this.snap.assisted !== true;
+    return phase === "playing" && play !== null && !play.solved && !hasPlacedDigit(play) && this.inkAllowed() && this.snap.assisted !== true && play.liar === undefined;
   }
 
   /**
@@ -302,7 +312,8 @@ export abstract class GameStore<S extends PlaySnapshot = PlaySnapshot> {
    */
   hintAllowed(): boolean {
     const { play, phase } = this.snap;
-    return phase === "playing" && play !== null && !play.solved && play.ink !== true;
+    // PD-171: в Лжеце до поимки подсказок нет — `MistakeHint` по решению и шаги из ложной цифры выдали бы ответ (план §1.2).
+    return phase === "playing" && play !== null && !play.solved && play.ink !== true && !liarHidden(play);
   }
 
   /**
@@ -355,7 +366,9 @@ export abstract class GameStore<S extends PlaySnapshot = PlaySnapshot> {
     if (blot) patch.blot = { cell: blot.cell, digit: blot.digit ?? digit, id: ++this.effectId };
     if (placed) {
       patch.pop = { cell: selected, id: ++this.effectId };
-      if (next.solution[selected] === digit) {
+      // PD-171: в Лжеце до поимки волн «юнит собран верно» и «цифра закрыта» нет — их отсутствие на собранном юните выдало бы,
+      // что цифра выведена из лжи (сверка с решением). Вернутся после поимки.
+      if (next.solution[selected] === digit && !liarHidden(next)) {
         // M3: волна по ВСЕМ собранным ходом юнитам (ряд + столбец + блок), от поставленной клетки наружу.
         const units = closedUnits(next, selected);
         if (units.length > 0) patch.wave = { ...waveOf(units, selected), id: ++this.waveSeq };
@@ -406,14 +419,43 @@ export abstract class GameStore<S extends PlaySnapshot = PlaySnapshot> {
     this.showHint("filled", count, deadEndCount(next));
   }
 
+  /** Лжец: можно ли обвинить клетку (партия идёт, клетка — необвинённая подсказка, лжец ещё не пойман). */
+  canAccuse(cell: number): boolean {
+    const { play, phase } = this.snap;
+    return phase === "playing" && play !== null && canAccuse(play, cell);
+  }
+
+  /**
+   * Лжец: обвинить подсказку (после подтверждения в меню). Повтор, пустая клетка, после поимки — `null`, ничего не меняется
+   * (UI такие обвинения и не предлагает). Верное обвинение может закончить партию (все остальные клетки уже верны).
+   */
+  accuse(cell: number): "liar" | "honest" | null {
+    const { play, phase } = this.snap;
+    if (phase !== "playing" || !play) return null;
+    const res = accuseCell(play, cell, this.getElapsedMs());
+    if (!res) return null;
+    const accusation = { kind: res.result.kind, cell, id: ++this.effectId };
+    this.finishMove(res.play, { play: res.play, accusation, pop: null, echo: null, ...this.dropHint() });
+    this.showHint(res.result.kind === "liar" ? "liarCaught" : "liarHonest", (res.play.accusations ?? []).length);
+    return res.result.kind;
+  }
+
   /**
    * Сбросить данные одноразовых анимаций M1/M3/M7/M8 (QA PD-23, Low 1). `pop`/`wave`/`echo`/`blot` живут в снапшоте
    * выше экрана: при возврате на вкладку экран монтируется заново и без сброса заново проиграл бы
    * стухшие «чернила впитались»/«волна». Экран зовёт это при размонтировании.
    */
   clearEffects(): void {
-    if (this.snap.pop === null && this.snap.wave === null && (this.snap.echo ?? null) === null && (this.snap.blot ?? null) === null && (this.snap.hint ?? null) === null) return;
-    this.set({ pop: null, wave: null, echo: null, blot: null, ...this.dropHint() } as Partial<S>);
+    if (
+      this.snap.pop === null &&
+      this.snap.wave === null &&
+      (this.snap.echo ?? null) === null &&
+      (this.snap.blot ?? null) === null &&
+      (this.snap.hint ?? null) === null &&
+      (this.snap.accusation ?? null) === null
+    )
+      return;
+    this.set({ pop: null, wave: null, echo: null, blot: null, accusation: null, ...this.dropHint() } as Partial<S>);
   }
 
   private finishMove(next: PlayState, patch: Partial<PlaySnapshot>): void {

@@ -12,7 +12,7 @@
  * здесь только их применение к состоянию; docs/pd-71-ink-rules.md. В ink-партии `undo` и стирание цифр —
  * no-op (отвергаются самой логикой, не только UI), заполненная клетка заблокирована, ошибка — клякса.
  */
-import type { Blot, Digit, InkRules, Move, MoveLog, TechniqueOrBeyond } from "@pundoku/engine";
+import type { Accusation, Blot, Digit, InkRules, Move, MoveLog, TechniqueOrBeyond } from "@pundoku/engine";
 import { INK_RULES, appendMove, blotsOf, createMoveLog, inkAllows, techniqueForCell } from "@pundoku/engine";
 
 export const CELLS = 81;
@@ -63,6 +63,24 @@ export interface PlayState {
    * Опционально: старые записи и дни без подсказок — без поля.
    */
   readonly hintLog?: readonly HintEvent[];
+  /**
+   * Лжец (PD-171, план режимов §1.2): секрет партии — какая подсказка лжёт. `mission[liar.liarCell]` до поимки — ложная
+   * цифра `liarDigit`, после верного обвинения — истинная `trueDigit` (доска «досчитывается»). **Ответ:** до поимки ни одно
+   * поле отсюда не уходит в UI/DOM/aria/логи — UI читает только производные `liar.ts` (поймана ли, оправданные клетки).
+   * Поле есть только у партий Лжеца; у остальных его нет (старые записи читаются как раньше).
+   */
+  readonly liar?: LiarSecret;
+  /** Лжец: обвинения партии по порядку (`Accusation` движка, `moveIndex = log.length` в момент обвинения). Не ходы лога. */
+  readonly accusations?: readonly Accusation[];
+}
+
+/** Секрет партии Лжеца (`LiarPuzzle` движка без того, что уже есть в `PlayState`). */
+export interface LiarSecret {
+  readonly liarCell: number;
+  readonly liarDigit: Digit;
+  readonly trueDigit: Digit;
+  /** Честная сетка (81 символ): `mission` без лжеца. */
+  readonly honestMission: string;
 }
 
 /** Запись журнала подсказок (`PlayState.hintLog`). */
@@ -135,7 +153,8 @@ export const hasPlacedDigit = (s: Pick<PlayState, "log">): boolean => s.log.some
  * как есть. Разрешён ли режим для этого экрана (архив) — решает хранилище (`GameStore.setInk`), не логика.
  */
 export function setInkMode(s: PlayState, on: boolean): PlayState {
-  if (hasPlacedDigit(s) || s.solved || isInk(s) === on) return s;
+  // Лжец × Чернила несовместимы (план режимов): клякса по `solution` выдала бы лжеца.
+  if (hasPlacedDigit(s) || s.solved || isInk(s) === on || (on && s.liar !== undefined)) return s;
   if (!on) {
     const rest = { ...s };
     delete rest.ink;
@@ -200,7 +219,8 @@ function withCell(arr: readonly number[], cell: number, v: number): number[] {
   return next;
 }
 
-function finish(s: PlayState): PlayState {
+/** Пересчитать `solved` (все клетки закрыты). Экспорт — для обвинения Лжеца (`liar.ts`), которое тоже может закончить партию. */
+export function finish(s: PlayState): PlayState {
   let solved = true;
   for (let i = 0; i < CELLS; i++) {
     if (!isSettled(s, i)) {

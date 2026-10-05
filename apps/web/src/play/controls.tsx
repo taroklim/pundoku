@@ -46,6 +46,17 @@ export const StatusLine = memo(function StatusLine({ left, full = false, hint = 
   }, [state]);
   const plain = !hint && !full;
   const text = hint ? hintText(t, hint) : full ? t("play.gridFull") : t("play.cellsLeft", { count: left });
+  // PD-171: вердикт обвинения длиннее строки при AX3 на 320 pt — там короткая форма («Оправдана»), полная — доступное имя.
+  if (hint && (hint.kind === "liarCaught" || hint.kind === "liarHonest")) {
+    return (
+      <p key={MOTION_FLAGS.statusRoll ? state : "static"} className={rolled ? "status roll" : "status"} data-testid="status-line">
+        <span className="st-long">{text}</span>
+        <span className="st-short" aria-hidden="true">
+          {t(`play.hint.${hint.kind}Short`)}
+        </span>
+      </p>
+    );
+  }
   return (
     <p key={MOTION_FLAGS.statusRoll ? state : "static"} className={rolled ? "status roll" : "status"} data-testid="status-line">
       {plain ? (

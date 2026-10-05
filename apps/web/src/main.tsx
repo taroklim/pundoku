@@ -11,6 +11,7 @@ import "./styles/ink.css";
 import "./styles/timelapse.css";
 import "./styles/hint.css";
 import "./styles/hub.css";
+import "./styles/liar.css";
 import "./styles/brand.css";
 import { App } from "./App";
 import { ErrorBoundary } from "./shell/ErrorBoundary";

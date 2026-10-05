@@ -16,6 +16,9 @@ import { useModal } from "../shell/useModal";
 import { useSheetSwipe } from "../shell/useSheetSwipe";
 import type { SlotSummary } from "./daySlot";
 import { DifficultyList } from "./DifficultyList";
+import { formatClock } from "./format";
+import { CalendarGlyph } from "./hubIcons";
+import { ChevronIcon } from "./inkIcons";
 import type { ModeDef } from "./modes";
 import { slotMeta } from "./slotMeta";
 
@@ -29,9 +32,17 @@ export interface ModeSheetProps {
   readonly onClose: () => void;
   /** Куда вернуть фокус (строка режима, кнопка «⋯»). */
   readonly returnFocus?: RefObject<HTMLElement | null>;
+  /**
+   * PD-171: Лжец дня (medium, одинаковый у всех) — отдельная строка над сложностью: тап открывает его (новый, идущий или
+   * решённый — карточку). Только у режима Лжец.
+   */
+  readonly daily?: {
+    readonly state: { kind: "none" } | { kind: "playing"; summary: SlotSummary } | { kind: "solved"; timeMs: number };
+    readonly onOpen: () => void;
+  } | null;
 }
 
-export function ModeSheet({ mode, pick, discard, onPick, onStart, onClose, returnFocus }: ModeSheetProps) {
+export function ModeSheet({ mode, pick, discard, onPick, onStart, onClose, returnFocus, daily = null }: ModeSheetProps) {
   const { t } = useTranslation();
   const scrim = useRef<HTMLDivElement>(null);
   const root = useRef<HTMLElement>(null);
@@ -80,6 +91,27 @@ export function ModeSheet({ mode, pick, discard, onPick, onStart, onClose, retur
           <p id={descId} className="sh-desc" data-testid="mode-desc">
             {t(`modes.${mode.textKey}.desc`)}
           </p>
+          {daily && (
+            <>
+              <p className="hub-head sh-head">{t("liar.dailyHead")}</p>
+              <div className="hub-card">
+                <button type="button" className="hub-row two" onClick={daily.onOpen} data-testid="liar-daily" data-state={daily.state.kind}>
+                  <span className="l1">
+                    <CalendarGlyph className="glyph" />
+                    <b>{t("liar.daily")}</b>
+                  </span>
+                  <span className={`l2${daily.state.kind === "playing" ? " prog" : ""}`}>
+                    {daily.state.kind === "none"
+                      ? t("liar.dailyNew", { difficulty: t("difficulty.medium") })
+                      : daily.state.kind === "playing"
+                        ? t("modes.status", { meta: slotMeta(t, daily.state.summary) })
+                        : t("liar.dailyDone", { time: formatClock(daily.state.timeMs) })}
+                  </span>
+                  <ChevronIcon className="chev" />
+                </button>
+              </div>
+            </>
+          )}
           <p id={diffId} className="hub-head sh-head">
             {t("modes.difficulty")}
           </p>

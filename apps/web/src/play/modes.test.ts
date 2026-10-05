@@ -21,8 +21,8 @@ type Tree = { [k: string]: string | Tree };
 const get = (t: Tree, path: string): unknown => path.split(".").reduce<unknown>((n, k) => (n as Tree | undefined)?.[k], t);
 
 describe("реестр режимов", () => {
-  it("сейчас готовы ровно Классика и Чернила, в этом порядке; Классика — режим по умолчанию", () => {
-    expect(availableModes().map((m) => m.id)).toEqual(["classic", "ink"]);
+  it("сейчас готовы Классика, Чернила и Лжец (PD-171), в этом порядке; Классика — режим по умолчанию", () => {
+    expect(availableModes().map((m) => m.id)).toEqual(["classic", "ink", "liar"]);
     expect(DEFAULT_MODE).toBe("classic");
     expect(MODES[0]!.id).toBe(DEFAULT_MODE);
   });
@@ -38,7 +38,8 @@ describe("реестр режимов", () => {
     expect(new Set(ids).size).toBe(ids.length);
     expect(slotKey("ink")).toBe("playGame:ink");
     expect(isModeId("ink")).toBe(true);
-    expect(isModeId("liar")).toBe(false);
+    expect(isModeId("liar")).toBe(true);
+    expect(isModeId("melody")).toBe(false);
     expect(isModeId(undefined)).toBe(false);
     expect(modeDef("nope" as never).id).toBe("classic");
   });

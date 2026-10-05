@@ -29,6 +29,9 @@ import {
   MOVE_LOG_BUDGET_CHARS,
   progressFromRecord,
 } from "./schema";
+import type { LiarDayRecord } from "./liarSchema";
+import { liarRecordsFromMeta, savedFromLiarRecord } from "./liarSchema";
+import { LIAR_DAY_PREFIX, liarDayKey } from "../play/savedPlay";
 import type { PullResult, PushResult, RemoteSnapshot, SyncApi } from "./syncApi";
 import type { PersistentStore } from "../today/repository";
 import { sanitizeDays } from "../today/repository";
@@ -65,6 +68,8 @@ export interface RemoteApplied {
   /** Даты, чей прогресс переписан данными сервера. */
   dates: string[];
   gridChanged: boolean;
+  /** PD-171: даты Лжеца дня, записанные с сервера. */
+  liarDates?: string[];
 }
 
 export interface SyncDeps {
@@ -101,7 +106,7 @@ const BUDGET_STEPS: readonly { budget: number; alwaysLast: number }[] = [
   { budget: 0, alwaysLast: 0 },
 ];
 
-const isEmpty = (d: SnapshotData): boolean => d.grid === null && Object.keys(d.days).length === 0;
+const isEmpty = (d: SnapshotData): boolean => d.grid === null && Object.keys(d.days).length === 0 && Object.keys(d.liar ?? {}).length === 0;
 
 export class SyncManager {
   private status: SyncStatus = { device: "none", phase: "idle", unsynced: false, lastSyncedAt: null, version: 0, error: null };
@@ -444,15 +449,22 @@ export class SyncManager {
     return { version: snap.version, data: emptySnapshotData() }; // мусор на сервере — заменим слитым
   }
 
-  private async collectLocal(): Promise<{ data: SnapshotData; records: Record<string, DayRecord> }> {
+  private async collectLocal(): Promise<{ data: SnapshotData; records: Record<string, DayRecord>; liar: Record<string, LiarDayRecord> }> {
     const now = this.deps.now();
     const records: Record<string, DayRecord> = {};
-    const [days, grid] = await Promise.all([this.deps.storage.listDays(), this.deps.storage.getPermanent()]);
+    const storage = this.deps.storage;
+    const [days, grid, liarMeta] = await Promise.all([
+      storage.listDays(),
+      storage.getPermanent(),
+      storage.listMeta ? storage.listMeta(LIAR_DAY_PREFIX).catch(() => [] as [string, unknown][]) : Promise.resolve([] as [string, unknown][]),
+    ]);
     for (const p of sanitizeDays(days, "SyncManager.collectLocal")) {
       const rec = dayRecordFromProgress(p, now);
       if (rec) records[p.date] = rec;
     }
-    return { data: { ...emptySnapshotData(), grid, days: records }, records };
+    // PD-171: Лжец дня — записи `meta:liar:*` (раздел `liar` снапшота; нет записей — нет и раздела).
+    const liar = liarRecordsFromMeta(liarMeta, now);
+    return { data: { ...emptySnapshotData(), grid, days: records, ...(Object.keys(liar).length > 0 ? { liar } : {}) }, records, liar };
   }
 
   /**
@@ -482,7 +494,7 @@ export class SyncManager {
     return merged;
   }
 
-  private async applyLocally(merged: SnapshotData, local: { data: SnapshotData; records: Record<string, DayRecord> }): Promise<void> {
+  private async applyLocally(merged: SnapshotData, local: { data: SnapshotData; records: Record<string, DayRecord>; liar: Record<string, LiarDayRecord> }): Promise<void> {
     const dates: string[] = [];
     for (const [date, rec] of Object.entries(merged.days)) {
       if (rec.status !== "solved") continue;
@@ -498,7 +510,20 @@ export class SyncManager {
       await this.deps.storage.savePermanent(merged.grid);
       gridChanged = true;
     }
-    if (dates.length > 0 || gridChanged) this.deps.onRemoteApplied?.({ dates, gridChanged });
+    // PD-171: решённый Лжец дня с сервера пишется, только если локально его нет решённым (или решён позже): восстановленная из
+    // записи партия не совпадает с ней побайтно (лог мог быть урезан), и сравнение «как у дней» переписывало бы её на каждом цикле.
+    const liarDates: string[] = [];
+    for (const [date, rec] of Object.entries(merged.liar ?? {})) {
+      if (rec.status !== "solved" || !this.deps.storage.listMeta) continue;
+      const mine = local.liar[date];
+      if (mine && mine.status === "solved" && mine.solvedAt === rec.solvedAt) continue;
+      if (mine && mine.status === "solved" && Date.parse(mine.solvedAt ?? "") <= Date.parse(rec.solvedAt ?? "")) continue;
+      const saved = savedFromLiarRecord(date, rec);
+      if (!saved) continue;
+      await this.deps.storage.setMeta(liarDayKey(date), saved);
+      liarDates.push(date);
+    }
+    if (dates.length > 0 || gridChanged || liarDates.length > 0) this.deps.onRemoteApplied?.({ dates, gridChanged, ...(liarDates.length > 0 ? { liarDates } : {}) });
   }
 
   private async persistState(): Promise<void> {

@@ -1,4 +1,4 @@
-import { IDBFactory } from "fake-indexeddb";
+import { IDBFactory, IDBKeyRange as FakeKeyRange } from "fake-indexeddb";
 import { describe, expect, it, vi } from "vitest";
 import { progressOf } from "./fixtures";
 import { IndexedDbProgressRepository, LazyProgressRepository } from "./idbRepository";
@@ -178,5 +178,28 @@ describe("IndexedDbProgressRepository: нечитаемые записи (PD-146
     }
     expect(err).toHaveBeenCalled();
     err.mockRestore();
+  });
+});
+
+describe("listMeta (PD-171: записи Лжеца дня)", () => {
+  it("IndexedDB: только ключи с префиксом, без пустых, одной транзакцией; Lazy и память — то же", async () => {
+    vi.stubGlobal("IDBKeyRange", FakeKeyRange); // в браузере — глобальный; в node его даёт fake-indexeddb
+    const repo = await IndexedDbProgressRepository.open(new IDBFactory());
+    await repo.setMeta("liar:2026-10-04", { a: 1 });
+    await repo.setMeta("liar:2026-10-05", { a: 2 });
+    await repo.setMeta("liar:2026-10-06", null); // «удалено»
+    await repo.setMeta("liarReady:expert", { x: 1 }); // другой префикс
+    await repo.setMeta("playGame:liar", { y: 1 });
+    expect(await repo.listMeta("liar:")).toEqual([
+      ["liar:2026-10-04", { a: 1 }],
+      ["liar:2026-10-05", { a: 2 }],
+    ]);
+    const lazy = new LazyProgressRepository(async () => repo);
+    expect(await lazy.listMeta("liar:")).toHaveLength(2);
+    const mem = new InMemoryProgressRepository();
+    await mem.setMeta("liar:2026-10-04", { a: 1 });
+    await mem.setMeta("liarReady:expert", { a: 1 });
+    expect(await mem.listMeta("liar:")).toEqual([["liar:2026-10-04", { a: 1 }]]);
+    vi.unstubAllGlobals();
   });
 });
