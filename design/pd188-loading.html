@@ -1,0 +1,403 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>PD-188 — экран ожидания генерации</title>
+<!--
+  PD-188 · Pundoku · экран ожидания генерации головоломки (Play → expert/master/Лжец без заготовки).
+  Самодостаточная страница: ни сети, ни встроенных шрифтов. Описание движения и решения — pd188-loading.md.
+  ?shot=1 — режим съёмки (панель и пояснения скрыты, рамка = вьюпорт); API для скрипта — window.PD188.
+-->
+<style>
+/* ---------------------------------------------------------------- страница макета */
+*{ box-sizing:border-box; }
+html,body{ margin:0; }
+body{ font:14px/1.45 system-ui,-apple-system,"SF Pro Text","Helvetica Neue",Arial,sans-serif; background:#e9e9ee; color:#1c1c1e; }
+body.dark-page{ background:#111; color:#eee; }
+.doc{ max-width:1180px; margin:0 auto; padding:16px 20px; }
+.doc h1{ font-size:20px; margin:0 0 4px; }
+.doc p{ margin:4px 0; max-width:80ch; }
+.ctl{ max-width:1180px; margin:0 auto; padding:0 20px 8px; display:flex; flex-wrap:wrap; gap:8px 18px; }
+.ctl .g{ display:flex; align-items:center; gap:4px; flex-wrap:wrap; }
+.ctl .g > span{ font-weight:600; margin-right:2px; }
+.ctl button{ font:inherit; padding:5px 9px; border-radius:7px; border:1px solid #b9b9c2; background:#fff; color:#1c1c1e; cursor:pointer; }
+.ctl button[aria-pressed="true"]{ background:#3b48b0; border-color:#3b48b0; color:#fff; }
+body.dark-page .ctl button{ background:#222; color:#eee; border-color:#444; }
+body.dark-page .ctl button[aria-pressed="true"]{ background:#8c96ff; color:#000; border-color:#8c96ff; }
+.stage{ max-width:1180px; margin:0 auto; padding:8px 20px 24px; display:flex; gap:24px; align-items:flex-start; flex-wrap:wrap; }
+.side{ flex:1 1 300px; min-width:280px; }
+.side h2{ font-size:15px; margin:12px 0 6px; }
+.log{ font:12px/1.5 ui-monospace,Menlo,monospace; background:rgba(127,127,127,.12); border-radius:8px; padding:8px 10px; min-height:9em; white-space:pre-wrap; }
+.note{ font-size:13px; padding:8px 10px; border-left:3px solid #3b48b0; background:rgba(59,72,176,.07); border-radius:0 8px 8px 0; margin:8px 0; }
+.story{ max-width:1180px; margin:0 auto; padding:0 20px 40px; }
+.story h2{ font-size:16px; }
+.strip{ display:flex; gap:14px; flex-wrap:wrap; align-items:flex-end; margin-bottom:14px; }
+.strip figure{ margin:0; text-align:center; font-size:12px; }
+.strip .fr{ width:96px; height:96px; border-radius:14px; display:grid; place-items:center; background:var(--bg); }
+#pd188-err{ position:fixed; left:0; right:0; top:0; z-index:99; background:#b3261e; color:#fff; padding:8px 12px; font:13px/1.4 ui-monospace,monospace; }
+body.shot .doc, body.shot .ctl, body.shot .side, body.shot .story{ display:none; }
+body.shot .stage{ padding:0; max-width:none; }
+body.shot{ background:transparent; }
+
+/* ---------------------------------------------------------------- токены (копия tokens.css, без новых значений) */
+.tk, .phone{
+  --font-sans: system-ui,-apple-system,"SF Pro Text","Helvetica Neue",Arial,sans-serif;
+  --font-serif: ui-serif,"New York",Charter,Georgia,serif;
+  --bg:#f2f2f7; --elev:#ffffff; --label:#1c1c1e; --label-2:#6e6e73; --ink:#3b48b0; --on-ink:#fff; --wax:#b3261e;
+  --hairline:rgba(60,60,67,.29); --glass-solid:#f6f6f9; --ink-tint:rgba(59,72,176,.12); --box-shadow:0 1px 2px rgba(0,0,0,.04);
+  --mo:1; --mk:1; --rmf:0;
+  --e-out:cubic-bezier(.2,.7,.3,1); --e-spring:cubic-bezier(.22,1,.36,1); --e-ring:cubic-bezier(.32,.72,0,1);
+  --e-io:cubic-bezier(.45,0,.55,1);
+}
+.tk[data-theme="dark"], .phone[data-theme="dark"]{
+  --bg:#000; --elev:#1c1c1e; --label:#fff; --label-2:#98989d; --ink:#8c96ff; --on-ink:#000; --wax:#ff6b5e;
+  --hairline:rgba(235,235,245,.22); --glass-solid:#141416; --ink-tint:rgba(140,150,255,.18); --box-shadow:none;
+}
+/* Reduce Motion: в приложении это делает tokens.css (--mo:0, --mk:.72). Здесь — тумблер, чтобы смотреть оба. */
+.phone.rm, .tk.rm{ --mo:0; --mk:.72; }
+.phone.rm-fade{ --rmf:1; }
+
+/* ---------------------------------------------------------------- рамка телефона */
+.phone{ position:relative; overflow:hidden; display:flex; flex-direction:column; background:var(--bg); color:var(--label);
+  font-family:var(--font-sans); font-size:17px; line-height:1.25; border-radius:36px; box-shadow:0 0 0 1px rgba(0,0,0,.12), 0 18px 40px rgba(0,0,0,.18);
+  --sa-top:47px; --sa-bot:34px; }
+.phone[data-w="320"]{ border-radius:18px; --sa-top:20px; --sa-bot:0px; }
+.phone[data-type="ax3"]{ font-size:40px; }
+body.shot .phone{ border-radius:0; box-shadow:none; }
+.phone > *{ flex:none; }
+.sb{ height:var(--sa-top); }
+.hd{ display:flex; align-items:flex-end; justify-content:space-between; padding:8px 16px 0; height:calc(2em + 8px); }
+.hd h1{ margin:0; font-size:1.62em; line-height:1.2; font-weight:700; letter-spacing:.01em; }
+.hd .more{ width:44px; height:44px; border:0; background:none; color:var(--ink); font-size:22px; line-height:1; }
+.sub{ margin:0; padding:0 16px; height:calc(1.15em + 2px); color:var(--label-2); font-size:.88em; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; display:flex; gap:.4em; align-items:baseline; }
+.sub .chip{ font-size:.82em; padding:0 .45em; border-radius:999px; background:var(--ink-tint); color:var(--ink); }
+.main{ flex:1 1 auto; position:relative; padding:12px 16px 0; display:flex; flex-direction:column; min-height:0; }
+.board{ width:var(--bs); height:var(--bs); margin:0 auto; display:grid; grid-template-columns:repeat(3,1fr); gap:4px; flex:none; }
+.board .bx{ background:var(--elev); border-radius:10px; box-shadow:var(--box-shadow); display:grid; grid-template-columns:repeat(3,1fr); }
+.board .c{ display:grid; place-items:center; font-family:var(--font-serif); font-weight:600; font-size:calc(var(--bs) / 15); color:var(--label); }
+.gapz{ flex:1 1 auto; min-height:calc(1.15em + 16px); }
+.pad{ flex:none; }
+.keys{ height:56px; display:grid; grid-template-columns:repeat(9,1fr); gap:4px; }
+.keys b{ display:grid; place-items:center; background:var(--elev); border-radius:8px; color:var(--ink); font-weight:500; font-size:min(1em,26px); }
+.acts{ height:66px; display:flex; justify-content:space-around; align-items:center; color:var(--ink); font-size:min(.8em,20px); }
+.tab{ height:calc(64px + var(--sa-bot)); padding-bottom:var(--sa-bot); background:var(--glass-solid); border-top:.5px solid var(--hairline);
+  display:flex; justify-content:space-around; align-items:center; font-size:min(.62em,16px); color:var(--label-2); }
+.tab .on{ color:var(--ink); font-weight:600; }
+
+/* фазы партии: pre — ничего; wait/long/error — панель ожидания; ready — поле. */
+.phone:not([data-state="ready"]) .board .c{ visibility:hidden; }
+.phone:not([data-state="ready"]) .board, .phone:not([data-state="ready"]) .pad{ visibility:hidden; }
+.phone[data-state="ready"] .board, .phone[data-state="ready"] .pad{ animation:fadeRise calc(220ms * var(--mk)) var(--e-out) both; }
+@keyframes fadeRise{ from{ opacity:0; transform:translateY(calc(var(--mo) * 6px)); } to{ opacity:1; transform:none; } }
+.phone[data-state="hub"] .main > :not(.hub){ display:none; }
+.hub{ display:none; padding:8px 0; color:var(--label-2); font-size:.8em; }
+.phone[data-state="hub"] .hub{ display:block; }
+
+/* ---------------------------------------------------------------- панель ожидания */
+.wait{ position:absolute; left:16px; right:16px; top:12px; bottom:0; display:none; flex-direction:column; align-items:center; pointer-events:none; }
+.phone[data-state="wait"] .wait, .phone[data-state="long"] .wait, .phone[data-state="error"] .wait{ display:flex; }
+.wait.out{ display:flex; opacity:0; transition:opacity calc(160ms * var(--mk)) linear; }
+.wait .row{ height:var(--bs); width:100%; display:flex; flex-direction:column; align-items:center; justify-content:center; justify-content:safe center; overflow:visible; }
+.wait .grp{ display:flex; flex-direction:column; align-items:center; gap:12px; pointer-events:auto; max-width:100%;
+  animation:waitIn calc(200ms * var(--mk)) var(--e-out) both; }
+@keyframes waitIn{ from{ opacity:0; } to{ opacity:1; } }
+.ind{ width:var(--is); height:var(--is); display:grid; place-items:center; flex:none; }
+.ind svg{ display:block; width:100%; height:100%; overflow:visible; animation:rmFade calc(2400ms * var(--mk)) var(--e-io) infinite; }
+@keyframes rmFade{ 50%{ opacity:calc(1 - .45 * var(--rmf)); } }
+.wt{ margin:0; text-align:center; color:var(--label-2); font-size:1em; line-height:1.2; max-width:18em; text-wrap:balance; }
+.wt .t2{ display:none; }
+.phone[data-state="long"] .wt .t1{ display:none; }
+.phone[data-state="long"] .wt .t2{ display:inline; animation:waitIn calc(200ms * var(--mk)) linear both; }
+.phone[data-state="error"] .wt{ color:var(--label); }
+.wb{ display:none; gap:4px 16px; flex-wrap:wrap; justify-content:center; }
+.phone[data-state="long"] .wb, .phone[data-state="error"] .wb{ display:flex; animation:waitIn calc(200ms * var(--mk)) linear both; }
+.wb button{ font:inherit; font-size:1em; min-height:44px; min-width:44px; padding:0 8px; border:0; background:none; color:var(--ink); }
+.wb .retry{ display:none; font-weight:600; }
+.phone[data-state="error"] .wb .retry{ display:inline-block; }
+
+/* ---------- A · Капля (геометрия PD-170/PD-180 «happy»/«tired», без новых рисунков) */
+.pet .body{ fill:var(--ink); }
+.pet .eye{ fill:none; stroke:var(--bg); stroke-width:2.6; stroke-linecap:round; }
+.pet .eyef{ fill:var(--bg); }
+.pet .breathe{ transform-box:view-box; transform-origin:24px 39px; animation:petBreathe calc(2800ms * var(--mk)) var(--e-io) infinite; }
+@keyframes petBreathe{ 0%,100%{ transform:scale(1,1); } 50%{ transform:scale(calc(1 - .01 * var(--mo)), calc(1 + .035 * var(--mo))); } }
+/* Моргание: смена формы глаз (дуги «доволен» -> черта «спит»), 140 мс раз в 3.6 с; первое — через ~1.1 с после показа.
+   При --mo:0 закрытые глаза не появляются вовсе (opacity * --mo) — Reduce Motion убирает моргание целиком. */
+.pet .open{ animation:blinkOpen calc(3600ms * var(--mk)) linear infinite; }
+.pet .shut{ opacity:0; animation:blinkShut calc(3600ms * var(--mk)) linear infinite; }
+@keyframes blinkOpen{ 0%,30%{ opacity:1; } 30.01%,33.9%{ opacity:calc(1 - var(--mo)); } 34%,100%{ opacity:1; } }
+@keyframes blinkShut{ 0%,30%{ opacity:0; } 30.01%,33.9%{ opacity:var(--mo); } 34%,100%{ opacity:0; } }
+
+/* ---------- B · знак P4 «Девять клеток» + унос клетки (16-сетка, как Mark.tsx 24–60 px) */
+.p4 .b{ fill:var(--label-2); opacity:.45; }
+.p4 .h{ fill:var(--ink); opacity:0; }
+.p4 .cell{ animation:p4Carry calc(2400ms * var(--mk)) infinite both; animation-delay:calc(var(--i) * 200ms * var(--mk)); }
+.p4 .cell .h{ animation:p4Ink calc(2400ms * var(--mk)) infinite both; animation-delay:calc(var(--i) * 200ms * var(--mk)); }
+@keyframes p4Carry{
+  0%{ transform:translate(0,0); animation-timing-function:cubic-bezier(.2,.7,.3,1); }
+  9%{ transform:translate(calc(var(--mo) * 1.4px), calc(var(--mo) * -1.4px)); animation-timing-function:cubic-bezier(.45,0,.55,1); }
+  21.7%,100%{ transform:translate(0,0); }
+}
+@keyframes p4Ink{ 0%{ opacity:0; animation-timing-function:cubic-bezier(.2,.7,.3,1); } 9%{ opacity:1; animation-timing-function:cubic-bezier(.45,0,.55,1); } 21.7%,100%{ opacity:0; } }
+
+/* ---------- B' · архивный D5 «Унос» (снят PD-155): клетка возвращается в выемку и уносится снова */
+.d5 .f{ fill:var(--label-2); opacity:.45; }
+.d5 .dc{ fill:var(--ink); animation:d5Carry calc(2400ms * var(--mk)) var(--e-ring) infinite both; }
+@keyframes d5Carry{
+  0%,8%{ transform:translate(0,0); }
+  34%,58%{ transform:translate(calc(var(--mo) * -124px), calc(var(--mo) * 124px)); }
+  84%,100%{ transform:translate(0,0); }
+}
+
+/* ---------- Reduce Motion «статично» (по ТЗ): анимаций нет вовсе, стоит выбранный кадр */
+.phone.rm:not(.rm-fade) .ind svg, .phone.rm:not(.rm-fade) .ind svg *{ animation:none !important; }
+.phone.rm:not(.rm-fade) .p4 .still .h{ opacity:1; }
+/* RM «только прозрачность» (вариант к обсуждению): движения нет, весь знак медленно дышит прозрачностью 1 -> .55 */
+.phone.rm.rm-fade .ind svg *{ animation:none !important; }
+.phone.rm.rm-fade .p4 .still .h{ opacity:1; }
+/* Ошибка: движение останавливается, знак серый целиком (у A — поза «устал»). */
+.phone[data-state="error"] .ind svg, .phone[data-state="error"] .ind svg *{ animation:none !important; }
+.phone[data-state="error"] .p4 .h{ opacity:0 !important; }
+.phone[data-state="error"] .d5 .dc{ fill:var(--label-2); opacity:.45; }
+.phone[data-state="error"] .pet .body{ fill:var(--label-2); }
+</style>
+</head>
+<body>
+<div id="pd188-err" hidden></div>
+
+<div class="doc">
+  <h1>PD-188 · экран ожидания генерации</h1>
+  <p>Play → expert/master или «Лжец», когда готовой заготовки нет. Панель появляется только если ждём дольше <b>600 мс</b>, держится минимум <b>700 мс</b>; через <b>4 с</b> текст меняется и появляется «Отмена»; таймаут 45 с → «Не удалось / Повторить». Подробности — <code>pd188-loading.md</code>.</p>
+  <p>«Сценарий» прогоняет настоящую логику порогов в реальном времени; «Кадр» замораживает движение на заданной миллисекунде.</p>
+</div>
+
+<div class="ctl" id="ctl">
+  <div class="g" data-k="variant"><span>Вариант</span><button data-v="A">A · Капля</button><button data-v="P4">B · знак P4 + унос</button><button data-v="D5">B′ · архивный D5</button></div>
+  <div class="g" data-k="pet"><span>Питомец в Настройках</span><button data-v="on">вкл</button><button data-v="off">выкл</button></div>
+  <div class="g" data-k="theme"><span>Тема</span><button data-v="light">light</button><button data-v="dark">dark</button></div>
+  <div class="g" data-k="w"><span>Ширина</span><button data-v="390">390</button><button data-v="320">320</button></div>
+  <div class="g" data-k="type"><span>Шрифт</span><button data-v="17">17</button><button data-v="ax3">AX3</button></div>
+  <div class="g" data-k="rm"><span>Reduce Motion</span><button data-v="off">выкл</button><button data-v="static">статично</button><button data-v="fade">только прозрачность</button></div>
+  <div class="g" data-k="lang"><span>Язык</span><button data-v="en">en</button><button data-v="uk">uk</button><button data-v="ru">ru</button></div>
+  <div class="g" data-k="mode"><span>Режим</span><button data-v="expert">Классика · Expert</button><button data-v="liar">Лжец</button></div>
+  <div class="g" data-k="state"><span>Кадр</span><button data-v="pre">0–600 мс</button><button data-v="wait">ожидание</button><button data-v="long">&gt; 4 с</button><button data-v="error">ошибка</button><button data-v="ready">готово</button></div>
+  <div class="g" id="scen"><span>Сценарий</span><button data-ms="350">0,35 с</button><button data-ms="900">0,9 с</button><button data-ms="1800">1,8 с</button><button data-ms="10000">10 с</button><button data-ms="-1">таймаут (45 с → 8 с)</button></div>
+</div>
+
+<div class="stage">
+  <div class="phone" id="ph" data-theme="light" data-w="390" data-type="17" data-state="wait">
+    <div class="sb"></div>
+    <header class="hd"><h1 id="ttl">Play</h1><button class="more" aria-label="More">⋯</button></header>
+    <p class="sub"><span id="diff">Expert</span><span class="chip" id="chip" hidden>Liar</span></p>
+    <div class="main" id="main">
+      <div class="board" id="board"></div>
+      <div class="gapz"></div>
+      <div class="pad"><div class="keys" id="keys"></div><div class="acts" id="acts"><span>Notes</span><span>Undo</span><span>Erase</span></div></div>
+      <div class="wait" id="wait">
+        <div class="row">
+          <div class="grp">
+            <div class="ind" id="ind" aria-hidden="true"></div>
+            <p class="wt" id="wt" role="status" aria-live="polite"><span class="t1"></span><span class="t2"></span></p>
+            <div class="wb"><button type="button" class="retry" id="bRetry">Try again</button><button type="button" class="cancel" id="bCancel">Cancel</button></div>
+          </div>
+        </div>
+      </div>
+      <div class="hub" id="hub">Хаб Play (генерация отменена, слот режима не создан)</div>
+    </div>
+    <nav class="tab"><span id="tb1">Today</span><span class="on" id="tb2">Play</span><span id="tb3">Year</span></nav>
+  </div>
+
+  <div class="side">
+    <h2>Лента событий сценария</h2>
+    <div class="log" id="log">—</div>
+    <div class="note" id="petNote" hidden>Питомец выключен в Настройках → вместо «Капли» показан знак (вариант B). Так работает рекомендация §3 pd188-loading.md.</div>
+    <div class="note">Кривые и длительности — токены системы движения (<code>--e-out</code>, <code>--e-ring</code>, множители <code>--mo/--mk</code>), новых значений в tokens.css нет; одна локальная кривая <code>--e-io</code> = ease-in-out (дыхание/возврат).</div>
+  </div>
+</div>
+
+<div class="story" id="story">
+  <h2>Раскадровка (замороженные кадры движения, текущая тема)</h2>
+  <div id="strips"></div>
+</div>
+
+<script>
+(() => {
+"use strict";
+const err = (m) => { const b = document.getElementById("pd188-err"); b.hidden = false; b.textContent += (b.textContent ? " | " : "") + m; };
+window.addEventListener("error", (e) => err(String(e.message)));
+
+/* ------------------------------------------------------------ тексты */
+const TXT = {
+  en: { title:"Play", t1:"Preparing a puzzle…", t2:"Some puzzles take a little longer.", failed:"Couldn’t prepare a puzzle.", retry:"Try again", cancel:"Cancel", expert:"Expert", master:"Master", liar:"Liar", tabs:["Today","Play","Year"], acts:["Notes","Undo","Erase"] },
+  uk: { title:"Гра", t1:"Готуємо головоломку…", t2:"Деякі головоломки готуються трохи довше.", failed:"Не вдалося підготувати головоломку.", retry:"Повторити", cancel:"Скасувати", expert:"Експерт", master:"Майстер", liar:"Брехун", tabs:["Сьогодні","Гра","Рік"], acts:["Нотатки","Назад","Стерти"] },
+  ru: { title:"Игра", t1:"Готовим головоломку…", t2:"Некоторые головоломки готовятся чуть дольше.", failed:"Не удалось подготовить головоломку.", retry:"Повторить", cancel:"Отмена", expert:"Эксперт", master:"Мастер", liar:"Лжец", tabs:["Сегодня","Игра","Год"], acts:["Заметки","Отменить","Стереть"] },
+};
+
+/* ------------------------------------------------------------ A · Капля: геометрия перенесена дословно из apps/web/src/pet/petGeometry.ts (ветка pd-180) */
+const MOOD = { happy:{ ry:13, rx:15, widen:.12, lift:0 }, tired:{ ry:10.5, rx:16.5, widen:.18, lift:0 } };
+const GROUND = 39, HARM = [[2,.03,.4],[3,.035,1.3],[5,.015,2.1]], N = 40, f = (v) => v.toFixed(2);
+function smoothClosed(pts){ const n = pts.length, at = (i) => pts[((i % n) + n) % n]; let d = `M${f(at(0)[0])} ${f(at(0)[1])}`;
+  for (let i = 0; i < n; i++){ const p0 = at(i-1), p1 = at(i), p2 = at(i+1), p3 = at(i+2);
+    d += `C${f(p1[0]+(p2[0]-p0[0])/6)} ${f(p1[1]+(p2[1]-p0[1])/6)} ${f(p2[0]-(p3[0]-p1[0])/6)} ${f(p2[1]-(p3[1]-p1[1])/6)} ${f(p2[0])} ${f(p2[1])}`; }
+  return d + "z"; }
+function pet(mood){ const m = MOOD[mood], cx = 24, cy = GROUND - .82*m.ry - m.lift, pts = [];
+  for (let i = 0; i < N; i++){ const t = 2*Math.PI*i/N, s = Math.sin(t), c = Math.cos(t); let r = 1; for (const [k,a,ph] of HARM) r += a*Math.cos(k*t+ph);
+    pts.push([cx + m.rx*c*r*(1 + m.widen*Math.max(0,s)), cy + m.ry*s*r*(s > 0 ? .82 : 1)]); }
+  const ex = Math.max(4.6, m.rx*.33), ey = cy - m.ry*.12, L = cx-ex, R = cx+ex, top = cy-m.ry, bot = cy+.82*m.ry;
+  return { body: smoothClosed(pts),
+    open: mood === "happy" ? `M${f(L-2.6)} ${f(ey+1.2)}q2.6-3.6 5.2 0M${f(R-2.6)} ${f(ey+1.2)}q2.6-3.6 5.2 0` : null,
+    tiredFill: mood === "tired" ? `M${f(L-3)} ${f(ey)}h6a3 3 0 0 1-6 0zM${f(R-3)} ${f(ey)}h6a3 3 0 0 1-6 0z` : null,
+    shut: `M${f(L-2.7)} ${f(ey)}h5.4M${f(R-2.7)} ${f(ey)}h5.4`,
+    drops: mood === "happy" ? [[cx+m.rx+4, bot-3.5, 1.7]] : [[cx-m.rx-3.4, bot-1.6, 1.5],[cx+m.rx+3, bot-1, 1.1]] }; }
+function svgPet(mood){ const p = pet(mood);
+  const eyes = p.open ? `<path class="eye open" d="${p.open}"/><path class="eye shut" d="${p.shut}"/>` : `<path class="eyef" d="${p.tiredFill}"/>`;
+  return `<svg class="pet" viewBox="0 0 48 48"><g class="breathe"><path class="body" d="${p.body}"/>${p.drops.map(([x,y,r]) => `<circle class="body" cx="${f(x)}" cy="${f(y)}" r="${r}"/>`).join("")}${eyes}</g></svg>`; }
+
+/* ------------------------------------------------------------ B · P4: 9 клеток 3×3, шаг 4, начало (3,1) — как MARK_SMALL_CELLS.
+   Порядок уноса — непрерывный обход буквы: стойка снизу вверх, затем чаша по часовой (каждая следующая клетка — соседняя). */
+const P4_ORDER = [[0,3],[0,2],[0,1],[0,0],[1,0],[2,0],[2,1],[2,2],[1,2]];
+const P4_STILL = "2,0"; // кадр Reduce Motion: правая верхняя клетка чаши — чернилами (та, что «уносится» в D5)
+function svgP4(){ return `<svg class="p4" viewBox="0 0 16 16">${P4_ORDER.map(([c,r],i) => { const x = 3+4*c, y = 1+4*r;
+  return `<g class="cell${`${c},${r}` === P4_STILL ? " still" : ""}" style="--i:${i}"><rect class="b" x="${x}" y="${y}" width="3" height="3"/><rect class="h" x="${x}" y="${y}" width="3" height="3"/></g>`; }).join("")}</svg>`; }
+
+/* ------------------------------------------------------------ B′ · D5 «Унос» (design/pd98-logo-round3.md §2.2): поле 453 r113 с выемкой 165, клетка 164 r41 снаружи */
+const D5_FIELD = "M337 347H492A20 20 0 0 1 512 367V485A27 27 0 0 0 539 512H657A20 20 0 0 1 677 532V687A113 113 0 0 1 564 800H337A113 113 0 0 1 224 687V460A113 113 0 0 1 337 347Z";
+function svgD5(){ return `<svg class="d5" viewBox="200 200 624 624"><path class="f" d="${D5_FIELD}"/><rect class="dc" x="636" y="223" width="164" height="164" rx="41"/></svg>`; }
+
+/* ------------------------------------------------------------ поле (для кадра «готово») */
+const MISSION = "530070000600195000098000060800060003400803001700020006060000280000419005000080079";
+
+const ph = document.getElementById("ph");
+const S = { variant:"P4", pet:"off", theme:"light", w:"390", type:"17", rm:"off", lang:"en", mode:"expert", state:"wait" };
+const VIEW = { 390:[390,844], 320:[320,568] };
+
+function boardSize(){ // та же модель, что --chrome в play.css (fitModel.ts): обвязка вычитается из высоты, поле — квадрат
+  const [W,H] = VIEW[S.w], fs = S.type === "ax3" ? 40 : 17, saT = S.w === "390" ? 47 : 20, saB = S.w === "390" ? 34 : 0;
+  const chrome = saT + saB + 2*fs + 8 + 1.15*fs + 2 + 1.15*fs + 16 + 56 + 66 + 64 + 12;
+  return Math.max(120, Math.floor(Math.min(W - 32, H - chrome)));
+}
+function effVariant(){ return S.variant === "A" && S.pet === "off" ? "P4" : S.variant; }
+
+function render(){
+  const T = TXT[S.lang], [W,H] = VIEW[S.w];
+  document.body.classList.toggle("dark-page", S.theme === "dark");
+  Object.assign(ph.dataset, { theme:S.theme, w:S.w, type:S.type, state:S.state, variant:effVariant() });
+  ph.style.width = W + "px"; ph.style.height = H + "px";
+  ph.classList.toggle("rm", S.rm !== "off"); ph.classList.toggle("rm-fade", S.rm === "fade");
+  const bs = boardSize(); ph.style.setProperty("--bs", bs + "px");
+  ph.style.setProperty("--is", (S.w === "320" && S.type === "ax3" ? 44 : 56) * (effVariant() === "A" ? 64/56 : 1) + "px");
+  document.getElementById("ttl").textContent = T.title;
+  document.getElementById("diff").textContent = T.expert;
+  const chip = document.getElementById("chip"); chip.hidden = S.mode !== "liar"; chip.textContent = T.liar;
+  ["tb1","tb2","tb3"].forEach((id,i) => document.getElementById(id).textContent = T.tabs[i]);
+  document.getElementById("acts").innerHTML = T.acts.map((a) => `<span>${a}</span>`).join("");
+  const wt = document.getElementById("wt");
+  wt.querySelector(".t1").textContent = S.state === "error" ? T.failed : T.t1;
+  wt.querySelector(".t2").textContent = T.t2;
+  wt.setAttribute("role", S.state === "error" ? "alert" : "status");
+  document.getElementById("bRetry").textContent = T.retry; document.getElementById("bCancel").textContent = T.cancel;
+  const v = effVariant(), ind = document.getElementById("ind");
+  ind.innerHTML = v === "A" ? svgPet(S.state === "error" ? "tired" : "happy") : v === "D5" ? svgD5() : svgP4();
+  document.getElementById("petNote").hidden = !(S.variant === "A" && S.pet === "off");
+  for (const g of document.querySelectorAll(".ctl .g[data-k]")) for (const b of g.querySelectorAll("button")) b.setAttribute("aria-pressed", String(S[g.dataset.k] === b.dataset.v));
+  renderStory();
+}
+
+function buildStatic(){
+  const board = document.getElementById("board"); let html = "";
+  for (let b = 0; b < 9; b++){ html += `<div class="bx">`; for (let k = 0; k < 9; k++){ const r = Math.floor(b/3)*3 + Math.floor(k/3), c = (b%3)*3 + k%3, d = MISSION[r*9+c]; html += `<div class="c">${d === "0" ? "" : d}</div>`; } html += `</div>`; }
+  board.innerHTML = html;
+  document.getElementById("keys").innerHTML = [1,2,3,4,5,6,7,8,9].map((d) => `<b>${d}</b>`).join("");
+}
+
+/* ------------------------------------------------------------ сценарий: настоящая логика порогов */
+const SHOW_AFTER = 600, MIN_SHOWN = 700, LONG_AFTER = 4000, TIMEOUT_DEMO = 8000;
+let timers = [], t0 = 0, shownAt = null, logLines = [];
+const log = (m) => { logLines.push(`${String(Math.round(performance.now() - t0)).padStart(6)} мс  ${m}`); document.getElementById("log").textContent = logLines.join("\n"); };
+const clear = () => { timers.forEach(clearTimeout); timers = []; document.getElementById("wait").classList.remove("out"); };
+const at = (ms, fn) => timers.push(setTimeout(fn, ms));
+const setState = (st) => { S.state = st; render(); };
+function show(){ shownAt = performance.now(); setState("wait"); log("панель ожидания показана (fade-in 200 мс)"); }
+function finish(){
+  if (shownAt === null){ setState("ready"); log("готово до порога: панель не показывалась, поле сразу"); return; }
+  const left = Math.max(0, shownAt + MIN_SHOWN - performance.now());
+  if (left > 0) log(`готово; держим панель ещё ${Math.round(left)} мс (минимум показа)`);
+  at(left, () => { document.getElementById("wait").classList.add("out"); log("панель гаснет 160 мс");
+    at(160, () => { document.getElementById("wait").classList.remove("out"); setState("ready"); log("поле и панель цифр появляются (fadeRise 220 мс)"); }); });
+}
+function run(genMs, immediate = false){
+  clear(); logLines = []; t0 = performance.now(); shownAt = null;
+  const timeout = genMs < 0; log(timeout ? "старт; генерация не уложится (таймаут показан сжато: 45 с → 8 с)" : `старт; генерация займёт ${genMs} мс`);
+  if (immediate) show(); else { setState("pre"); at(SHOW_AFTER, show); }
+  at(LONG_AFTER, () => { if (S.state === "wait"){ setState("long"); log("4 с: второй текст + «Отмена»"); } });
+  if (timeout) at(TIMEOUT_DEMO, () => { setState("error"); log("таймаут → «Не удалось» + «Повторить» / «Отмена»"); });
+  else at(genMs, finish);
+}
+document.getElementById("bRetry").addEventListener("click", () => { log("Повторить → панель сразу, без порога"); run(1800, true); });
+document.getElementById("bCancel").addEventListener("click", () => { clear(); setState("hub"); log("Отмена → хаб Play, генерация остановлена"); });
+for (const b of document.querySelectorAll("#scen button")) b.addEventListener("click", () => run(Number(b.dataset.ms)));
+for (const g of document.querySelectorAll(".ctl .g[data-k]")) for (const b of g.querySelectorAll("button")) b.addEventListener("click", () => {
+  if (g.dataset.k === "state") clear(); S[g.dataset.k] = b.dataset.v; render(); });
+
+/* ------------------------------------------------------------ раскадровка */
+const FRAMES = {
+  A: [[0,"0 — вдох"],[700,"700 — пик вдоха"],[1150,"1150 — моргание"],[1400,"1400 — выдох"],[2100,"2100"]],
+  P4: [[0,"0"],[216,"216 — клетка 1 унесена"],[616,"616 — клетка 3"],[1016,"1016 — клетка 5"],[1816,"1816 — клетка 9"],[2300,"2300 — пауза"]],
+  D5: [[0,"0 — снаружи (знак)"],[500,"500 — летит"],[1000,"1000 — в выемке"],[1700,"1700 — уносится"],[2200,"2200 — снаружи"]],
+};
+function renderStory(){
+  const box = document.getElementById("strips"); if (!box || document.body.classList.contains("shot")) return;
+  box.innerHTML = "";
+  for (const v of ["A","P4","D5"]){
+    const wrap = document.createElement("div"); wrap.className = "tk"; wrap.dataset.theme = S.theme;
+    wrap.innerHTML = `<p><b>${v === "A" ? "A · Капля (дыхание 2.8 с, моргание 3.6 с)" : v === "P4" ? "B · P4 + унос (цикл 2.4 с)" : "B′ · D5 (цикл 2.4 с)"}</b></p><div class="strip"></div>`;
+    const strip = wrap.querySelector(".strip");
+    for (const [t,label] of [...FRAMES[v], [-1,"Reduce Motion"]]){
+      const fig = document.createElement("figure");
+      fig.innerHTML = `<div class="fr ${t < 0 ? "rmx" : ""}"><div class="ind" style="--is:${v === "A" ? 64 : 56}px">${v === "A" ? svgPet("happy") : v === "D5" ? svgD5() : svgP4()}</div></div><figcaption>${label}</figcaption>`;
+      strip.appendChild(fig);
+      const svg = fig.querySelector("svg");
+      requestAnimationFrame(() => { for (const a of svg.getAnimations({ subtree:true })){ a.pause(); a.currentTime = t < 0 ? 0 : t; }
+        if (t < 0){ for (const a of svg.getAnimations({ subtree:true })) a.cancel(); const s = svg.querySelector(".still .h"); if (s) s.style.opacity = 1; } });
+    }
+    box.appendChild(wrap);
+  }
+}
+
+/* ------------------------------------------------------------ API съёмки */
+window.PD188 = {
+  reset(){ clear(); Object.assign(S, { variant:"P4", pet:"off", theme:"light", w:"390", type:"17", rm:"off", lang:"en", mode:"expert", state:"wait" }); render(); },
+  apply(o){ clear(); Object.assign(S, o); render(); },
+  /** Заморозить всё движение в рамке на t мс от появления панели (задержки стаггера учитываются сами). */
+  freeze(t){ for (const a of ph.getAnimations({ subtree:true })){
+    if (a.animationName === "waitIn" || a.animationName === "fadeRise") a.finish(); // появление панели/поля — не предмет кадра
+    else { a.pause(); a.currentTime = t; } } },
+  check(){
+    const out = [], r = ph.getBoundingClientRect();
+    if (ph.scrollWidth > ph.clientWidth + 1) out.push("горизонтальное переполнение рамки");
+    const vis = getComputedStyle(document.getElementById("wait")).display !== "none";
+    if (vis){
+      const svg = document.querySelector("#ind svg"); const bb = svg && svg.getBBox();
+      if (!bb || !(bb.width > 0 && bb.height > 0)) out.push("индикатор не отрисован");
+      if (svg && /NaN/.test(svg.innerHTML)) out.push("NaN в геометрии");
+      const tab = ph.querySelector(".tab").getBoundingClientRect();
+      for (const el of ph.querySelectorAll(".wait .ind, .wait .wt, .wait .wb button")){
+        const e = el.getBoundingClientRect(); if (!e.width) continue;
+        if (e.bottom > tab.top + .5) out.push(`${el.className || el.tagName} заходит под таб-бар (${Math.round(e.bottom - tab.top)} px)`);
+        if (e.left < r.left - .5 || e.right > r.right + .5) out.push(`${el.className} выходит за рамку`);
+        if (el.tagName === "BUTTON" && e.height < 44) out.push(`кнопка ниже 44 pt (${e.height})`);
+      }
+      const ind = ph.querySelector(".wait .ind").getBoundingClientRect(), tx = ph.querySelector(".wait .wt").getBoundingClientRect();
+      if (ind.bottom > tx.top + .5) out.push("индикатор налезает на текст");
+    }
+    return out;
+  },
+};
+
+if (new URLSearchParams(location.search).has("shot")) document.body.classList.add("shot");
+buildStatic(); render();
+})();
+</script>
+</body>
+</html>
