@@ -494,6 +494,11 @@ Gates: build → typecheck, lint, тесты web/engine/api (api с TEST_DATABAS
 | PD-20 | QA PD-14 (pd-14 @ 0026b2a): PASS с оговорками, блокеров и Medium нет; 4 Low + решение по слиянию → PD-31 | qa-tester | P1 | completed | PD-14 |
 | PD-31 | Фикс-проход pd-14 по QA PD-20 (pd-14 @ c574f13; gates зелёные: web 213, engine 105, api 77+2 skipped, интеграционные 7/7 на живой БД) | developer | P1 | completed | PD-20 |
 | PD-32 | PASS с оговорками (слияние 409 по источникам, 1500 дней без лишних PUT, gates, интеграционные 7/7); Low → PD-37. QA-регресс pd-14 @ c574f13 (перезапуск после сбоя контейнера; worktree /tmp/pundoku-qa/qa-pd32, БД pundoku_qa5, порты 3320/5320): слияние 409 по источникам, отсутствие лишних PUT при 1500 днях, сокращённый регресс PD-20, gates + интеграционные api-тесты | qa-tester | P1 | completed | PD-31 |
+| PD-194 | Глифы (режим списка Play, набор A «Фигуры» из PD-170): web — слот режима `glyphs`, подмена цифр знаками в клетке/заметках/панели/таймлапсе/отпечатке, дано залитым / поставлено контуром, VoiceOver-имена en/uk/ru, флаг `glyphs` в записи дня; ветка `pd-194` | developer | P1 | in_progress | — |
+| PD-195 | QA PD-194: живой webkit+chromium, light/dark, AX3 320×568, заметки, ink/лжец не комбинируются, таймлапс/PNG, VoiceOver-подписи, регресс классики, gates | qa-tester | P1 | pending | PD-194 |
+| PD-196 | Мерж pd-194 в локальный main + gates на слитом (push — Coordinator после владельца) | product-manager | P1 | pending | PD-195 |
+| PD-197 | Low-пакет Питомца/рекорда: (1) пустой solvedAt — personalBestOf и sync/schema.ts не подставляют now; (2) брошенная классика + Лжец пойман не с 1-й → не «спит»; ветка `pd-197` | developer | P3 | completed (pd-197 @ b56c952: solvedAt=начало дня в today/sync/liarSchema, personalBestOf стабильный; Питомец не «спит» при брошенной классике + пойманном Лжеце; web 1419/1419) | — |
+| PD-198 | QA PD-197 | qa-tester | P3 | completed (PASS: синк без solvedAt 1 PUT/5 циклов, слияние детерминировано, рекорд 24 перестановки, живой webkit+chromium; смержено в main c1dd1cb) | PD-197 |
 
 ### Бриф PD-8 (developer, P1 — пункт (a) блокирует UI-тикеты поля/Today)
 Движок: (a) зафиксировать и реализовать контракт `undo` в `MoveLog` — undo после `erase` не должен
@@ -582,7 +587,8 @@ Gates: build → typecheck, lint, тесты web/engine/api (api с `TEST_DATABA
 ## Агенты (текущий статус)
 | Имя | Роль | Статус | Тикет | Обновлено |
 |-----|------|--------|-------|-----------|
-| PM-Pundoku-14 | product-manager | done | — | 2026-10-05 15:40 |
+| PM-Pundoku-15 | product-manager | waiting | PD-194 | 2026-10-05 16:12 |
+| Dev-Pundoku-Glyphs | developer | working | PD-194 | 2026-10-05 16:10 |
 
 ## Чек-пойнт 2026-10-01 (конец сессии PM-Pundoku-7)
 - **Сделано:** решения владельца по релизу 1.1 зафиксированы; PD-74 (UI ink, pd-74 @ 73444b2), PD-75 (UI таймлапса/PNG Rhythm, pd-75 @ bfeedbf), PD-80 (счёт ходов в ink, pd-80 @ de5a52d) смержены в локальный main; gates на слитом: build/typecheck/lint, web 624, engine 178 (api не затронут, 174+3). PD-78 сделан в PD-74. PD-79 закрыт: не дефект.
@@ -631,5 +637,9 @@ Gates: build → typecheck, lint, тесты web/engine/api (api с `TEST_DATABA
 - Info: фикстура IDB `seed verify failed` флакает (и на main).
 - Low PD-175 (3): резерв под строку источника Today AX3 375×667 не убираем — прыжок поля на первом ходу запрещён PD-147.
 
+## Релиз 2 — Глифы (2026-10-05, PM-15), НЕ запушено
+- main c1dd1cb: Low-пакет PD-197 (QA PD-198 PASS) поверх прода fb02425. Глифы PD-194 — в работе (ветка pd-194). Push — только через Coordinator после владельца.
+- Info QA PD-198: комментарий к solvedAtOrDayStart (today/repository.ts:44-49) «день нельзя решить раньше его даты» неточен для UTC+ — уточнить при случае, поведение не затронуто.
+
 ## Процесс (2026-10-04)
-- Все брифы: браузеры закрывать в finally, по окончании проверить `ps`, что своих процессов не осталось; не больше 2 тяжёлых прогонов параллельно. Зависшие Playwright с 2.10 (/tmp/pkgd2-pw) давали load до 465 → таймауты тестов; закрывает владелец. Рабочий Playwright: /tmp/pd161-pw (PD_PW_HOME) и /tmp/pd16-pw. 9 headless webkit из /tmp/pd16-pw — сироты с 2026-10-02, агентам не трогать (шум при замерах).
+- Все брифы: браузеры закрывать в finally, по окончании проверить `ps`, что своих процессов не осталось; не больше 2 тяжёлых прогонов параллельно. Зависшие Playwright с 2.10 (/tmp/pkgd2-pw) давали load до 465 → таймауты тестов; закрывает владелец. Рабочий Playwright (после перезагрузки 2026-10-05 /tmp/pd161-pw и /tmp/pd16-pw исчезли): /tmp/pundoku-qa/pw (1.52). 9 headless webkit из /tmp/pd16-pw — сироты с 2026-10-02, агентам не трогать (шум при замерах).
