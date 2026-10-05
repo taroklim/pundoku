@@ -501,7 +501,7 @@ Gates: build → typecheck, lint, тесты web/engine/api (api с TEST_DATABAS
 | PD-32 | PASS с оговорками (слияние 409 по источникам, 1500 дней без лишних PUT, gates, интеграционные 7/7); Low → PD-37. QA-регресс pd-14 @ c574f13 (перезапуск после сбоя контейнера; worktree /tmp/pundoku-qa/qa-pd32, БД pundoku_qa5, порты 3320/5320): слияние 409 по источникам, отсутствие лишних PUT при 1500 днях, сокращённый регресс PD-20, gates + интеграционные api-тесты | qa-tester | P1 | completed | PD-31 |
 | PD-194 | Глифы (режим списка Play, набор A «Фигуры» из PD-170): web — слот режима `glyphs`, подмена цифр знаками в клетке/заметках/панели/таймлапсе/отпечатке, дано залитым / поставлено контуром, VoiceOver-имена en/uk/ru, флаг `glyphs` в записи дня; ветка `pd-194` | developer | P1 | completed (pd-194 @ 5526a86; web 1437/1437, engine 364/364, живой pd194-check 112/112; кадры вне макета design/pd194-shots/) | — |
 | PD-195 | QA PD-194: живой webkit+chromium, light/dark, AX3 320×568, заметки, ink/лжец не комбинируются, таймлапс/PNG, VoiceOver-подписи, регресс классики, gates | qa-tester | P1 | completed (PASS: 304 живые проверки chromium+webkit, gates web 1437/engine 364; Minor: pd194-check.mjs в webkit 110/112 и стирает ручные кадры → в PD-196; Low → PD-199/PD-200; iPhone пп. 67–71) | PD-194 |
-| PD-196 | Мерж pd-194 в локальный main + gates на слитом + живой смоук Глифов на настоящем Worker (expert/master, экран ожидания); попутно фикс pd194-check.mjs (фильтр консоли webkit, не удалять ручные кадры) (push — Coordinator после владельца) | developer | P1 | in_progress | PD-195 |
+| PD-196 | Мерж pd-194 в локальный main + gates на слитом + живой смоук Глифов на настоящем Worker (expert/master, экран ожидания); попутно фикс pd194-check.mjs (фильтр консоли webkit, не удалять ручные кадры) (push — Coordinator после владельца) | developer | P1 | completed (main 92b3b49: merge 82449c9 + доводка pd194-check; gates web 1441/1441, engine 364, api 151+49 skipped; живой смоук на настоящем Worker 55/55 chromium+webkit, экран ожидания при >600 мс; pd194-check 112/112) | PD-195 |
 | PD-197 | Low-пакет Питомца/рекорда: (1) пустой solvedAt — personalBestOf и sync/schema.ts не подставляют now; (2) брошенная классика + Лжец пойман не с 1-й → не «спит»; ветка `pd-197` | developer | P3 | completed (pd-197 @ b56c952: solvedAt=начало дня в today/sync/liarSchema, personalBestOf стабильный; Питомец не «спит» при брошенной классике + пойманном Лжеце; web 1419/1419) | — |
 | PD-198 | QA PD-197 | qa-tester | P3 | completed (PASS: синк без solvedAt 1 PUT/5 циклов, слияние детерминировано, рекорд 24 перестановки, живой webkit+chromium; смержено в main c1dd1cb) | PD-197 |
 | PD-199 | Глифы: тексты лесенки подсказок говорят «цифра» — в режиме Глифы говорить «знак» (en/uk/ru) | developer | P3 | pending | — |
@@ -594,8 +594,7 @@ Gates: build → typecheck, lint, тесты web/engine/api (api с `TEST_DATABA
 ## Агенты (текущий статус)
 | Имя | Роль | Статус | Тикет | Обновлено |
 |-----|------|--------|-------|-----------|
-| PM-Pundoku-15 | product-manager | waiting | PD-196 | 2026-10-05 16:12 |
-| Dev-Pundoku-Merge | developer | working | PD-196 | 2026-10-05 18:20 |
+| PM-Pundoku-15 | product-manager | done | — | 2026-10-05 16:12 |
 
 ## Чек-пойнт 2026-10-01 (конец сессии PM-Pundoku-7)
 - **Сделано:** решения владельца по релизу 1.1 зафиксированы; PD-74 (UI ink, pd-74 @ 73444b2), PD-75 (UI таймлапса/PNG Rhythm, pd-75 @ bfeedbf), PD-80 (счёт ходов в ink, pd-80 @ de5a52d) смержены в локальный main; gates на слитом: build/typecheck/lint, web 624, engine 178 (api не затронут, 174+3). PD-78 сделан в PD-74. PD-79 закрыт: не дефект.
@@ -645,7 +644,7 @@ Gates: build → typecheck, lint, тесты web/engine/api (api с `TEST_DATABA
 - Low PD-175 (3): резерв под строку источника Today AX3 375×667 не убираем — прыжок поля на первом ходу запрещён PD-147.
 
 ## Релиз 2 — Глифы (2026-10-05, PM-15), НЕ запушено
-- main c1dd1cb: Low-пакет PD-197 (QA PD-198 PASS) поверх прода fb02425. Глифы PD-194 — в работе (ветка pd-194). Push — только через Coordinator после владельца.
+- main 92b3b49 (НЕ запушен, прод fb02425): Low-пакет PD-197 (c1dd1cb, QA PD-198 PASS) + Глифы PD-194 (merge 82449c9, QA PD-195 PASS, смоук PD-196 на настоящем Worker). Push — только через Coordinator после владельца. iPhone: чек-лист пп. 67–71. Бэклог P3: PD-199, PD-200. Следующий режим — Мелодия.
 - Info QA PD-198: комментарий к solvedAtOrDayStart (today/repository.ts:44-49) «день нельзя решить раньше его даты» неточен для UTC+ — уточнить при случае, поведение не затронуто.
 
 ## Процесс (2026-10-04)
