@@ -295,6 +295,181 @@ export function waveReaches(g: number[], tier = 1): number | null {
   }
 }
 
+/**
+ * Замкнутые (монотонные) формы техник яруса ≥ 2 до фикс-точки (на месте) — независимая модель нижней оценки
+ * (PD-177). Заполненная клетка участвует в правилах как клетка с одним кандидатом — своей цифрой:
+ * locked — все места цифры в юните (≥ 1) в одном пересекающем юните → вычеркнуть в остальной его части; naked pair —
+ * две клетки юнита, объединение кандидатов ≤ 2 → вычеркнуть их у остальных; hidden pair — две цифры, объединение
+ * мест ≤ 2 клеток → у этих клеток только эти цифры. Фикс-точка монотонных правил от порядка не зависит.
+ */
+function eliminateClosed(st: St, tier: number): void {
+  const { g, k } = st;
+  const maskOf = (c: number): number => (g[c] !== 0 ? 1 << g[c]! : k[c]!);
+  const remove = (cells: number[], mask: number): boolean => {
+    let changed = false;
+    for (const x of cells) if (g[x] === 0 && k[x]! & mask) {
+      k[x] = k[x]! & ~mask;
+      changed = true;
+    }
+    return changed;
+  };
+  for (let changed = true; changed; ) {
+    changed = false;
+    for (const cells of UNIT_CELLS) {
+      for (let d = 1; d <= 9; d++) {
+        if (cells.some((c) => g[c] === d)) continue;
+        const where = cells.filter((c) => maskOf(c) & (1 << d));
+        if (where.length === 0) continue;
+        for (const key of [rowOf, colOf, boxOf]) {
+          const v = key(where[0]!);
+          if (!where.every((c) => key(c) === v)) continue;
+          const other = UNIT_CELLS.find((u) => u !== cells && u.every((c) => key(c) === v) && where.every((c) => u.includes(c)));
+          if (other) changed = remove(other.filter((c) => !cells.includes(c)), 1 << d) || changed;
+        }
+      }
+    }
+    if (tier >= 3) {
+      for (const cells of UNIT_CELLS) {
+        for (let i = 0; i < 9; i++) {
+          for (let j = i + 1; j < 9; j++) {
+            const m = maskOf(cells[i]!) | maskOf(cells[j]!);
+            if (m === 0 || bits(m).length > 2) continue;
+            changed = remove(cells.filter((_, x) => x !== i && x !== j), m) || changed;
+          }
+        }
+      }
+    }
+    if (tier >= 4) {
+      for (const cells of UNIT_CELLS) {
+        const where = (d: number): number[] => cells.filter((c) => maskOf(c) & (1 << d));
+        for (let d1 = 1; d1 <= 9; d1++) {
+          for (let d2 = d1 + 1; d2 <= 9; d2++) {
+            const w = [...new Set([...where(d1), ...where(d2)])];
+            if (where(d1).length === 0 || where(d2).length === 0 || w.length > 2) continue;
+            const keep = (1 << d1) | (1 << d2);
+            for (const c of w) if (g[c] === 0 && k[c]! & ~keep) {
+              k[c] = k[c]! & keep;
+              changed = true;
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+/**
+ * Волна в замкнутой форме (PD-177): вычёркивания `eliminateClosed` → проверка → все вынужденные синглы разом. Число
+ * волн до видимого противоречия — нижняя оценка глубины по всем игрокам; null — застряли.
+ */
+export function closedWaveReaches(g: number[], tier: number): number | null {
+  let st = fromGrid(g);
+  for (let wave = 0; ; wave++) {
+    if (tier >= 2) eliminateClosed(st, tier);
+    if (visibleIn(st) !== null) return wave;
+    const f = forcedOf(st);
+    if (f.length === 0) return null;
+    for (const [c, d] of f) st = place(st, c, d);
+  }
+}
+
+/**
+ * Стандартные шаги яруса ≥ 2 (как в `eliminate`), которые что-то вычёркивают: список [клетка, маска] на шаг.
+ */
+function stepsOf(st: St, tier: number): [number, number][][] {
+  const { g, k } = st;
+  const out: [number, number][][] = [];
+  const hit = (cells: number[], mask: number): [number, number][] =>
+    cells.filter((x) => g[x] === 0 && k[x]! & mask).map((x) => [x, k[x]! & mask]);
+  for (const cells of UNIT_CELLS) {
+    for (let d = 1; d <= 9; d++) {
+      const where = cells.filter((c) => g[c] === 0 && k[c]! & (1 << d));
+      if (where.length < 2) continue;
+      for (const key of [rowOf, colOf, boxOf]) {
+        const v = key(where[0]!);
+        if (!where.every((c) => key(c) === v)) continue;
+        const other = UNIT_CELLS.find((u) => u !== cells && u.every((c) => key(c) === v) && where.every((c) => u.includes(c)));
+        if (!other) continue;
+        const s = hit(other.filter((c) => !cells.includes(c)), 1 << d);
+        if (s.length > 0) out.push(s);
+      }
+    }
+  }
+  if (tier >= 3) {
+    for (const cells of UNIT_CELLS) {
+      const empty = cells.filter((c) => g[c] === 0);
+      for (let i = 0; i < empty.length; i++) {
+        for (let j = i + 1; j < empty.length; j++) {
+          const m = k[empty[i]!]!;
+          if (bits(m).length !== 2 || k[empty[j]!] !== m) continue;
+          const s = hit(empty.filter((_, x) => x !== i && x !== j), m);
+          if (s.length > 0) out.push(s);
+        }
+      }
+    }
+  }
+  if (tier >= 4) {
+    for (const cells of UNIT_CELLS) {
+      for (let d1 = 1; d1 <= 9; d1++) {
+        for (let d2 = d1 + 1; d2 <= 9; d2++) {
+          const w1 = cells.filter((c) => g[c] === 0 && k[c]! & (1 << d1));
+          const w2 = cells.filter((c) => g[c] === 0 && k[c]! & (1 << d2));
+          if (w1.length !== 2 || w2.length !== 2 || w1[0] !== w2[0] || w1[1] !== w2[1]) continue;
+          const s = hit(w1, ~((1 << d1) | (1 << d2)) & ALL);
+          if (s.length > 0) out.push(s);
+        }
+      }
+    }
+  }
+  return out;
+}
+
+/** Вычёркивания до фикс-точки, каждый шаг — случайный из применимых (игрок в «своём» порядке). */
+function eliminateRandomly(st: St, tier: number, rng: Rng): void {
+  for (;;) {
+    const steps = stepsOf(st, tier);
+    if (steps.length === 0) return;
+    for (const [c, m] of steps[rng.int(steps.length)]!) st.k[c] = st.k[c]! & ~m;
+  }
+}
+
+/**
+ * Перебор порядков ходов И порядков вычёркиваний (PD-177, по мотивам QA PD-166b): BFS по постановкам синглов; после
+ * каждой постановки — `orders` вариантов вычёркиваний до фикс-точки (0 — фиксированный порядок `eliminate`, остальные —
+ * случайный шаг за шагом), состояния склеиваются по значениям и кандидатам. Минимальное число постановок до видимого
+ * противоречия, если оно ≤ k; иначе null. Выборка порядков, не полный перебор.
+ */
+export function earliestWithinOrders(g: number[], k: number, tier: number, orders: number, seed: string): number | null {
+  const rng = new Rng(seed);
+  const settled = (st: St, o: number): St => {
+    const s = { g: [...st.g], k: [...st.k] };
+    if (o === 0) eliminate(s, tier);
+    else eliminateRandomly(s, tier, rng);
+    return s;
+  };
+  const dedupe = (sts: St[]): St[] => {
+    const seen = new Set<string>();
+    return sts.filter((s) => {
+      const key = `${s.g.join("")}|${s.k.join(",")}`;
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+  };
+  const start = fromGrid(g);
+  let level = dedupe(Array.from({ length: orders }, (_, o) => settled(start, o)));
+  for (let depth = 0; depth <= k; depth++) {
+    if (level.some((st) => visibleIn(st) !== null)) return depth;
+    if (depth === k) break;
+    const next: St[] = [];
+    for (const st of level) for (const [c, d] of forcedOf(st)) for (let o = 0; o < orders; o++) next.push(settled(place(st, c, d), o));
+    level = dedupe(next);
+    if (level.length > LEVEL_LIMIT) throw new Error(`earliestWithinOrders: level ${depth + 1} has ${level.length} states`);
+    if (level.length === 0) return null;
+  }
+  return null;
+}
+
 /** Случайный игрок (синглы + вычёркивания яруса `tier`): постановок до видимого противоречия; null — застрял/решил. */
 export function randomOrderDepth(g: number[], rng: Rng, tier = 1): number | null {
   let st = fromGrid(g);

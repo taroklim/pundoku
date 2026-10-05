@@ -26,11 +26,13 @@ import {
   validateLiar,
 } from "./index.js";
 import type { Accusation, CellValue, Difficulty, Digit, LiarPuzzle, Move } from "./index.js";
-import { lieChecker } from "./liar.js";
+import { contradictionWave, lieChecker } from "./liar.js";
 import {
   CEILING,
   TIER,
   assertHonestLiar,
+  closedWaveReaches,
+  earliestWithinOrders,
   earliestWithin,
   randomOrderDepth,
   toCells,
@@ -496,6 +498,100 @@ describe("validateLiar — each criterion is detected", () => {
     expect(() => validateLiar(p.mission, { difficulty: "toString" as Difficulty })).toThrow(RangeError);
     expect(() => validateLiar("123")).toThrow(RangeError);
   });
+});
+
+describe("mutation guards (PD-177, QA PD-166b M4/M5/M17)", () => {
+  /**
+   * Hard-ложь, сгенерированная под мутацией M4 (hard считается в порядке решателя, seed `qa-m4-0`): в порядке
+   * решателя глубина 6, в замкнутой форме locked candidates (PD-174) — 4 < порога 5. Лжец 4 = цифра 5.
+   */
+  const HARD_CLOSED_DEPTH_4 = "600580720907300500000000001046000082700006000320000100000100403004025007000003000";
+
+  it("M4: hard depth is the closed locked-candidates form (PD-174), not the solver order", () => {
+    const g = toCells(HARD_CLOSED_DEPTH_4);
+    // Независимая замкнутая волна — нижняя оценка по всем игрокам — уже ниже порога.
+    expect(closedWaveReaches(g, TIER.hard)).toBeLessThan(LIAR_MIN_DEPTH.hard);
+    const v = validateLiar(HARD_CLOSED_DEPTH_4, { difficulty: "hard" });
+    expect(v.suspects).toEqual([4]);
+    expect(v.contradictionDepth).toBe(4);
+    expect(v.failures).toEqual(["too_shallow"]);
+    expect(v.honest).toBe(false);
+  }, 60_000);
+
+  it("M5: exactly two suspects is already ambiguous", () => {
+    // Medium-основа `amb2` + ложь 4 в r1c8: удаление r1c8 и r4c4 даёт по единственному решению.
+    const m = "506021749003000201000000060061205807900006300070010000600000008400560900002003006";
+    const independent: number[] = [];
+    for (let x = 0; x < 81; x++) if (m[x] !== "0" && countSolutions(withCell(m, x, 0), 2) === 1) independent.push(x);
+    expect(independent).toEqual([7, 30]);
+    const v = validateLiar(m);
+    expect(v.suspects).toEqual([7, 30]);
+    expect(v.failures).toEqual(["ambiguous", "not_resolvable"]);
+    expect(v.liarCell).toBeNull();
+    expect(v.honest).toBe(false);
+  });
+
+  it("M17: the wave probe uses closed hidden pairs (expert/master lower bound = independent closed model)", () => {
+    // Expert-основа `wave-1` + ложь 6 в r2c3: противоречие видно на старте только через замкнутую hidden pair.
+    const m = "070060045506900000003080000090800361007090000000302000004001800000050100900000007";
+    expect(closedWaveReaches(toCells(m), 3)).toBe(2);
+    expect(closedWaveReaches(toCells(m), 4)).toBe(0);
+    expect(contradictionWave(m, 3)).toBe(2);
+    expect(contradictionWave(m, 4)).toBe(0);
+    // Сверка на всех лжах одной expert-основы: фикс-точка монотонных правил не зависит от порядка — совпадение точное.
+    const base = generate({ difficulty: "expert", seed: "wave-1" });
+    let checked = 0;
+    let pairsMatter = 0;
+    for (let c = 0; c < 81; c++) {
+      if (base.mission[c] !== "0") continue;
+      for (const d of candidates(base.mission, c)) {
+        if (String(d) === base.solution[c]) continue;
+        const lie = withCell(base.mission, c, d);
+        for (const t of [2, 3, 4]) {
+          const mine = contradictionWave(lie, t);
+          if (mine !== closedWaveReaches(toCells(lie), t)) throw new Error(`wave mismatch at ${c}=${d}, tier ${t}`);
+          checked++;
+        }
+        if (contradictionWave(lie, 4) !== contradictionWave(lie, 3)) pairsMatter++;
+      }
+    }
+    expect(checked).toBeGreaterThan(300);
+    expect(pairsMatter).toBeGreaterThan(0);
+  }, 120_000);
+});
+
+describe("PD-177: expert/master — other orders of eliminations (QA PD-166b)", () => {
+  // Сетки `LIAR_VERSION` 3 (только порядок решателя): другой порядок вычёркиваний пар/locked видел ложь на 3-й
+  // постановке при пороге 4.
+  const V3 = {
+    "qa166b-4655096ef6f8": "000000073008500000047019200800060000005002090200700000060003009090607180000000400",
+    "2026-10-09/liar/master": "230010000008700030070000405000060000000504009002001380000000000080103096607000050",
+  } as const;
+
+  it("(a) in other orders: a lie the solver order does not see at start, but another order does — visible_at_start, depth 0", () => {
+    // Expert-основа `vis-sweep-0` + ложь 3 в r1c5: порядок решателя на старте противоречия не видит (глубина 1),
+    // применение другого шага первым — видит.
+    const m = "700030200000000409100058000000079002060003900970004601000821000030000000000090700";
+    const v = validateLiar(m, { difficulty: "expert", minDepth: 0 });
+    expect(v.failures).toEqual(["visible_at_start"]);
+    expect(v.contradictionDepth).toBe(0);
+    expect(validateLiar(m, { difficulty: "expert" }).failures).toEqual(["visible_at_start", "too_shallow"]);
+  }, 60_000);
+
+  for (const [seed, mission] of Object.entries(V3)) {
+    it(`master ${seed} (v3): too_shallow — depth 3 in another order`, () => {
+      // Независимая модель: свой порядок вычёркиваний, состояния склеиваются по значениям И кандидатам.
+      expect(earliestWithinOrders(toCells(mission), 3, TIER.master, 1, "pd177")).toBe(3);
+      const v = validateLiar(mission, { difficulty: "master" });
+      expect(v.contradictionDepth).toBe(3);
+      expect(v.failures).toEqual(["too_shallow"]);
+      // Генератор тот же seed больше не принимает: новая сетка, глубже порога и в той же независимой модели.
+      const p = generateLiar({ difficulty: "master", seed });
+      expect(p.mission).not.toBe(mission);
+      expect(p.meta.contradictionDepth).toBeGreaterThanOrEqual(LIAR_MIN_DEPTH.master);
+      expect(earliestWithinOrders(toCells(p.mission), LIAR_MIN_DEPTH.master - 1, TIER.master, 1, "pd177")).toBeNull();
+    }, 300_000);
+  }
 });
 
 describe("accuse", () => {
