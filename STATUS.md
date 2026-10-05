@@ -517,8 +517,10 @@ Gates: build → typecheck, lint, тесты web/engine/api (api с TEST_DATABAS
 | PD-201 | Мелодия: engine `melodyOf(log, puzzle)` + `unitsCompletedBy(grid, cell)` и web-аудиоядро без UI (Web Audio синтез пентатоники, разблокировка после жеста, `audioSession.type='ambient'`, тихая громкость, арпеджио юнита, проигрывание мелодии пути); ветка `pd-201` | developer | P1 | completed (pd-201 @ 8a958ee: engine melodyOf/unitsCompletedBy, web melody/audio.ts, слот melody ready:false; engine 378, web 1473, стенд pd201-audio-check 40/40) | — |
 | PD-202 | Мелодия: 2–3 варианта UI с кадрами + рекомендация (кнопка «Сыграть» на карточке, индикатор/выключатель звука в партии, визуальный отклик на арпеджио юнита) + HTML-демо 2–3 тембров — на выбор владельцу через Coordinator | designer | P1 | completed (design/pd202-melody.html/.md, кадры design/pd202-shots/; решения владельца 2026-10-05 — см. раздел «Решения владельца по Мелодии») | — |
 | PD-203 | Мелодия: web-режим в списке Play (слот `melody`, звук только в этом режиме, UI по выбору владельца из PD-202); ветка `pd-201` поверх 8a958ee | developer | P1 | completed (pd-201 @ c2b37e3; web 1490, engine 378, живой pd203-check 213/213; отклонения от макета приняты Coordinator'ом) | PD-201, PD-202 |
-| PD-204 | QA PD-203 (живая генерация без заглушки, Web Audio в chromium/webkit, регресс режимов, iPhone-чек-лист звука) | qa-tester | P1 | in_progress | PD-203 |
-| PD-205 | Мерж Мелодии в локальный main + gates на слитом | product-manager | P1 | pending | PD-204 |
+| PD-204 | QA PD-203 (живая генерация без заглушки, Web Audio в chromium/webkit, регресс режимов, iPhone-чек-лист звука) | qa-tester | P1 | completed (FAIL: Major — подсказка о звуке до первого хода налезает на поле при крупном шрифте/AX3; Minor — AudioContext карточки running после стопа/ухода; Low — webkit ended осцилляторов; скрипт pd203-check UNITS.find → PD-206) | PD-203 |
+| PD-206 | Фикс по QA PD-204 в pd-201: (1) Major melody-hint × AX/крупный шрифт, (2) dispose/suspend AudioContext карточки, (3) ended осцилляторов webkit, скрипт pd203-check; Info — ленивый контекст при первой ноте/не при mute | developer | P1 | in_progress | PD-204 |
+| PD-207 | Ре-тест PD-206 (п. 8 AX/крупный шрифт, контексты карточки, быстрый регресс) | qa-tester | P1 | pending | PD-206 |
+| PD-205 | Мерж Мелодии в локальный main + gates на слитом | product-manager | P1 | pending | PD-207 |
 
 ### Бриф PD-8 (developer, P1 — пункт (a) блокирует UI-тикеты поля/Today)
 Движок: (a) зафиксировать и реализовать контракт `undo` в `MoveLog` — undo после `erase` не должен
@@ -607,8 +609,8 @@ Gates: build → typecheck, lint, тесты web/engine/api (api с `TEST_DATABA
 ## Агенты (текущий статус)
 | Имя | Роль | Статус | Тикет | Обновлено |
 |-----|------|--------|-------|-----------|
-| PM-Pundoku-15 | product-manager | waiting | PD-204 | 2026-10-05 16:12 |
-| QA-Pundoku-Melody | qa-tester | working | PD-204 | 2026-10-05 19:30 |
+| PM-Pundoku-15 | product-manager | waiting | PD-206 | 2026-10-05 16:12 |
+| Dev-Pundoku-Melody | developer | working | PD-206 | 2026-10-05 19:30 |
 
 ## Чек-пойнт 2026-10-01 (конец сессии PM-Pundoku-7)
 - **Сделано:** решения владельца по релизу 1.1 зафиксированы; PD-74 (UI ink, pd-74 @ 73444b2), PD-75 (UI таймлапса/PNG Rhythm, pd-75 @ bfeedbf), PD-80 (счёт ходов в ink, pd-80 @ de5a52d) смержены в локальный main; gates на слитом: build/typecheck/lint, web 624, engine 178 (api не затронут, 174+3). PD-78 сделан в PD-74. PD-79 закрыт: не дефект.
