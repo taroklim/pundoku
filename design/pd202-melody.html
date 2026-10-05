@@ -1,0 +1,779 @@
+<!DOCTYPE html>
+<html lang="en" class="force-light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<title>Pundoku — Melody mode (PD-202)</title>
+<!--
+  PD-202 — Melody mode UI, variants for the owner. DESIGN ONLY, no product code.
+  Notes, rationale, recommendation, question for the owner: design/pd202-melody.md.
+  Shots + self-check: design/pd202-shots.mjs  (window.PD202 = { reset, apply, check, state }).
+
+  Mechanic (decided, docs/release2-modes-plan.md §4): digit = pentatonic note; closing a row/column/box plays
+  its 9 notes as an arpeggio in cell order; a solved grid has a "path tune" (notes in the order you placed
+  them, pauses compressed) played from the card, in sync with the timelapse. Sound only in Melody games.
+
+  1. In the game — variants:   A «System only» · B «Speaker in the toolbar» · C «Sound in ⋯» (recommended)
+  2. Result card — variants:   A «Under the path map» (recommended) · B «Watch and listen» · C «Second action»
+     The timelapse player gets one sound button in its header in every card variant.
+  3. Sound lab (panel, outside the phone): 3 timbres on the pentatonic 1–9 + unit arpeggio + path tune.
+     Sound ONLY on a button press. Nothing plays on load. In ?shot=1 no AudioContext is created at all.
+
+  Tokens: verbatim from design/pd163-modes-layout.html / pd170 (= tokens.css). No new colour, no new token,
+  no new font. Icons: stroke 1.7, like pd163.
+-->
+<style>
+[hidden]{ display:none !important; }
+:root{
+  --font-sans: system-ui, -apple-system, "SF Pro Text", "Helvetica Neue", Arial, sans-serif;
+  --font-serif: ui-serif, "New York", Charter, Georgia, serif;
+  --sa-top: 59px; --sa-bot: 34px;
+  --bg:#F2F2F7; --elev:#FFFFFF; --chip-bg:#F2F2F7;
+  --label:#1C1C1E; --label-2:#6E6E73; --label-2-grouped:#6A6A6E; --notes:#6E6E73;
+  --ink:#3B48B0; --on-ink:#FFFFFF; --wax:#B3261E;
+  --hairline:rgba(60,60,67,.29);
+  --ink-tint:rgba(59,72,176,.12); --wax-tint:rgba(179,38,30,.10);
+  --box-shadow:0 1px 2px rgba(0,0,0,.04);
+  --glass-fill:rgba(255,255,255,.72); --glass-solid:#F6F6F9;
+  --scrim:rgba(0,0,0,.28); --page-bg:#8A8A8E; --switch-off:#E9E9EA;
+}
+:root.force-dark{
+  --bg:#000000; --elev:#1C1C1E; --chip-bg:#2C2C2E;
+  --label:#FFFFFF; --label-2:#98989D; --label-2-grouped:#98989D; --notes:#98989D;
+  --ink:#8C96FF; --on-ink:#000000; --wax:#FF6B5E;
+  --hairline:rgba(235,235,245,.22);
+  --ink-tint:rgba(140,150,255,.18); --wax-tint:rgba(255,107,94,.16);
+  --box-shadow:none;
+  --glass-fill:rgba(28,28,30,.72); --glass-solid:#141416;
+  --scrim:rgba(0,0,0,.5); --page-bg:#2C2C2E; --switch-off:#39393D;
+}
+@media (prefers-contrast: more){ :root{ --label-2:#3C3C43; --label-2-grouped:#3C3C43; --hairline:rgba(60,60,67,.55); } }
+
+*{ box-sizing:border-box; }
+html{ font-size:17px; font-family:var(--font-sans); line-height:1.3; -webkit-text-size-adjust:100%; }
+body{ margin:0; background:var(--page-bg); color:var(--label); touch-action:manipulation; -webkit-tap-highlight-color:transparent; }
+button{ font:inherit; color:inherit; background:none; border:0; padding:0; cursor:pointer; -webkit-appearance:none; appearance:none; text-align:left; touch-action:manipulation; }
+:focus-visible{ outline:2px solid var(--ink); outline-offset:2px; border-radius:6px; }
+.sr{ position:absolute; width:1px; height:1px; overflow:hidden; clip-path:inset(50%); white-space:nowrap; }
+
+/* ---------- page: panel + phone frame ---------- */
+.page{ display:flex; gap:28px; align-items:flex-start; justify-content:center; padding:24px 16px 80px; }
+.frame{ position:relative; flex:none; width:var(--fw,390px); height:var(--fh,844px); display:flex; flex-direction:column;
+  background:var(--bg); overflow:hidden; border-radius:46px; box-shadow:0 20px 60px rgba(0,0,0,.35); }
+:root.shot body{ background:var(--bg); }
+:root.shot .page{ display:block; padding:0; }
+:root.shot .frame{ width:100vw; height:100vh; border-radius:0; box-shadow:none; }
+:root.shot .panel{ display:none; }
+:root.shot *, :root.shot *::after, :root.shot *::before{ animation:none !important; transition:none !important; }
+.panel{ width:340px; flex:none; position:sticky; top:16px; max-height:calc(100vh - 32px); overflow:auto; background:#fff; color:#1C1C1E;
+  border-radius:14px; padding:14px 14px 18px; font-size:13px; box-shadow:0 8px 30px rgba(0,0,0,.25); }
+.panel h3{ margin:0 0 2px; font-size:15px; }
+.panel h4{ margin:16px 0 2px; font-size:13px; padding-top:10px; border-top:1px solid #E5E5EA; }
+.panel .hint{ margin:6px 0 0; color:#6E6E73; font-size:12px; line-height:1.35; }
+.panel .grp{ margin-top:10px; }
+.panel .grp > span{ display:block; font-weight:600; margin-bottom:4px; }
+.panel .seg{ display:flex; flex-wrap:wrap; gap:4px; }
+.panel .seg button{ padding:5px 8px; border-radius:7px; background:#F2F2F7; font-size:12px; }
+.panel .seg button[aria-pressed="true"]{ background:#3B48B0; color:#fff; }
+.panel .seg button[aria-disabled="true"]{ opacity:.4; }
+.lab-notes{ display:grid; grid-template-columns:repeat(9,1fr); gap:3px; margin-top:4px; }
+.lab-notes button{ height:34px; border-radius:7px; background:#F2F2F7; text-align:center; font-size:13px; font-variant-numeric:tabular-nums; }
+.lab-notes button small{ display:block; font-size:9px; color:#6E6E73; line-height:1; }
+.lab-acts{ display:flex; flex-wrap:wrap; gap:4px; margin-top:6px; }
+.lab-acts button{ padding:7px 10px; border-radius:8px; background:#3B48B0; color:#fff; font-size:12px; }
+.lab-acts button.stop{ background:#F2F2F7; color:#1C1C1E; }
+.rec{ display:inline-block; margin-left:4px; padding:0 5px; border-radius:5px; background:#E8EAF7; color:#3B48B0; font-size:10px; font-weight:600; }
+
+/* ---------- screen shell (pd163) ---------- */
+.screen{ flex:1; min-height:0; display:flex; flex-direction:column; position:relative; }
+.toolbar{ flex:none; display:flex; align-items:flex-end; justify-content:space-between; gap:12px; padding:calc(var(--sa-top) + 8px) 16px 0; }
+.title{ font-size:1.62rem; font-weight:700; letter-spacing:-.02em; line-height:1.2; margin:0; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.toolbar-end{ display:flex; align-items:flex-end; gap:2px; margin-right:-10px; flex:none; }
+.icon-btn{ width:44px; height:44px; flex:none; margin-bottom:-6px; display:grid; place-items:center; color:var(--label-2-grouped); border-radius:22px; }
+.icon-btn svg{ width:23px; height:23px; }
+.icon-btn[aria-expanded="true"]{ color:var(--ink); background:var(--ink-tint); }
+.icon-btn.snd[aria-pressed="true"]{ color:var(--ink); }
+.subline{ flex:none; margin:2px 0 0; padding:0 16px; color:var(--label-2); font-size:.88rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.mode-chip{ display:inline-flex; align-items:center; gap:4px; margin-left:8px; vertical-align:baseline; padding:1px 8px 1px 6px; border-radius:999px;
+  background:var(--ink-tint); color:var(--ink); font-size:.76rem; font-weight:600; }
+.mode-chip svg{ width:1.05em; height:1.05em; flex:none; }
+.mode-chip.off{ background:var(--chip-bg); color:var(--label-2); }
+
+/* ---------- game ---------- */
+.game{ flex:1; min-height:0; display:flex; flex-direction:column; overflow:hidden; }
+.board-wrap{ flex:1 1 auto; min-height:0; container-type:size; display:grid; place-items:center; padding:10px 16px 0; }
+.board{ width:min(100cqw,100cqh); height:min(100cqw,100cqh); display:grid; grid-template-columns:repeat(3,1fr); gap:4px; }
+.box{ display:grid; grid-template-columns:repeat(3,1fr); gap:1px; background:var(--hairline); border-radius:10px; overflow:hidden; box-shadow:var(--box-shadow); }
+.cell{ position:relative; background:var(--elev); display:grid; place-items:center; min-width:0; min-height:0; line-height:1;
+  font-size:calc(min(100cqw,100cqh) / 9 * .58); }
+.cell.g{ font-family:var(--font-serif); font-weight:500; color:var(--label); }
+.cell.p{ font-family:var(--font-sans); color:var(--ink); }
+.cell.sel{ background:var(--ink-tint); }
+/* ECHO: the "playhead" — a 2 px ink ring inside the cell, opacity only. It never changes the fill, so it
+   cannot be confused with selection (fill = ink-tint) or with an error (wax). */
+.cell::after{ content:""; position:absolute; inset:1px; border-radius:3px; box-shadow:inset 0 0 0 2px var(--ink);
+  opacity:var(--wo,0); pointer-events:none; }
+.cell.wv::after{ animation:wv 560ms ease-out var(--wd,0ms) both; }
+.cell.wvr::after{ animation:wvr 1000ms linear both; }
+@keyframes wv{ 0%{ opacity:0 } 14%{ opacity:.95 } 100%{ opacity:0 } }
+@keyframes wvr{ 0%{ opacity:0 } 20%{ opacity:.7 } 70%{ opacity:.7 } 100%{ opacity:0 } }
+.cell.cur::after{ opacity:1; }
+.status{ flex:none; text-align:center; color:var(--label-2); font-size:.82rem; padding:6px 16px; min-height:2.9em; display:flex; align-items:center; justify-content:center; line-height:1.3; }
+.status.hint{ color:var(--label-2); }
+.status.hint svg{ width:1.05em; height:1.05em; flex:none; color:var(--ink); margin-right:6px; }
+.pad{ flex:none; display:grid; grid-template-columns:repeat(9,1fr); gap:4px; padding:0 12px; container-type:inline-size; }
+.pad button{ height:48px; border-radius:10px; background:var(--elev); text-align:center; color:var(--ink); font-size:min(1.24rem, 7.5cqi); box-shadow:var(--box-shadow); }
+.pad button:active{ background:var(--ink-tint); }
+.acts{ flex:none; display:flex; justify-content:space-around; padding:8px 12px 10px; }
+.acts button{ min-width:46px; min-height:46px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px; color:var(--label-2); font-size:.72rem; text-align:center; }
+.acts svg{ width:22px; height:22px; }
+
+/* ---------- menu (pd163) ---------- */
+.scrim{ position:absolute; inset:0; background:var(--scrim); z-index:30; }
+.scrim.clear{ background:transparent; }
+.menu{ position:absolute; z-index:31; min-width:236px; max-width:calc(100% - 20px); background:var(--elev); border-radius:13px; box-shadow:0 10px 34px rgba(0,0,0,.22); overflow:hidden; }
+.menu button{ display:flex; align-items:center; gap:10px; width:100%; min-height:44px; padding:10px 14px; font-size:.95rem; overflow-wrap:break-word; }
+.menu button + button{ border-top:1px solid var(--hairline); }
+.menu .sep{ height:8px; background:var(--chip-bg); }
+.menu svg{ width:18px; height:18px; flex:none; color:var(--label-2); }
+.menu .mi{ flex:1; min-width:0; }
+.menu .ck{ width:18px; height:18px; color:var(--ink); }
+.menu .ck.off{ visibility:hidden; }
+
+/* ---------- solved card (pd144) ---------- */
+.solved{ flex:1; min-height:0; overflow-y:auto; overflow-x:hidden; padding-bottom:16px; }
+.rcard{ margin:12px 16px 0; background:var(--elev); border-radius:18px; padding:16px; box-shadow:var(--box-shadow); }
+.rcard h2{ font-size:1.12rem; font-weight:700; margin:0 0 2px; letter-spacing:-.01em; }
+.rcard .sub{ color:var(--label-2); font-size:.8rem; margin:0 0 12px; overflow-wrap:break-word; }
+.heat{ display:grid; grid-template-columns:repeat(9,1fr); gap:2px; width:min(100%, 248px); margin:0 auto; }
+.heat i{ aspect-ratio:1; border-radius:2px; display:block; background:var(--ink); position:relative; transition:opacity .25s; }
+.heat i.cur{ opacity:1 !important; box-shadow:0 0 0 1.5px var(--elev), 0 0 0 3px var(--ink); z-index:1; }
+.legend{ display:flex; align-items:center; justify-content:center; gap:8px; margin:8px 0 0; font-size:.72rem; color:var(--label-2); }
+.legend .bar{ display:flex; gap:2px; }
+.legend .bar i{ width:12px; height:8px; border-radius:2px; background:var(--ink); }
+.tune{ display:flex; align-items:center; justify-content:center; gap:7px; margin:4px auto 0; min-height:44px; padding:0 16px; border-radius:22px;
+  color:var(--ink); font-weight:600; font-size:.95rem; text-align:center; }
+.tune svg{ width:20px; height:20px; flex:none; }
+.tune:active{ background:var(--ink-tint); }
+.rows{ margin:10px 0 0; display:flex; flex-direction:column; }
+.r{ display:flex; justify-content:space-between; gap:12px; align-items:baseline; flex-wrap:wrap; padding:9px 0; font-size:.9rem; border-top:1px solid var(--hairline); }
+.r .k{ color:var(--label-2); } .r .v{ font-weight:600; font-variant-numeric:tabular-nums; }
+.cacts{ margin-top:14px; display:flex; flex-direction:column; gap:8px; }
+.btn-primary{ display:flex; align-items:center; justify-content:center; gap:8px; width:100%; min-height:50px; border-radius:13px; background:var(--ink); color:var(--on-ink);
+  font-size:1rem; font-weight:600; text-align:center; padding:12px 14px; overflow-wrap:break-word; }
+.btn-tinted{ display:flex; align-items:center; justify-content:center; gap:8px; width:100%; min-height:50px; border-radius:13px; background:var(--ink-tint); color:var(--ink);
+  font-size:1rem; font-weight:600; text-align:center; padding:12px 14px; overflow-wrap:break-word; }
+.btn-plain{ display:block; width:100%; min-height:48px; border-radius:13px; padding:10px 14px; color:var(--ink); font-size:1rem; font-weight:500; text-align:center; overflow-wrap:break-word; }
+.btn-primary svg, .btn-tinted svg{ width:20px; height:20px; flex:none; }
+.nolog{ margin:10px 0 0; color:var(--label-2); font-size:.8rem; text-align:center; }
+
+/* ---------- timelapse sheet (pd69, header gains ONE sound button) ---------- */
+.sheet{ position:absolute; left:0; right:0; bottom:0; z-index:31; background:var(--bg); border-radius:16px 16px 0 0;
+  max-height:calc(100% - var(--sa-top) - 10px); display:flex; flex-direction:column; padding-bottom:calc(10px + var(--sa-bot)); }
+.grab{ flex:none; width:36px; height:5px; border-radius:3px; background:var(--hairline); margin:6px auto 0; }
+.sheet-head{ flex:none; display:flex; align-items:center; gap:4px; padding:4px 10px 0 16px; }
+.sheet-head h2{ flex:1; min-width:0; margin:0; font-size:1.18rem; font-weight:700; letter-spacing:-.01em; overflow-wrap:anywhere; }
+.sheet-head .done{ color:var(--ink); font-weight:600; font-size:.95rem; min-height:44px; padding:0 6px; flex:none; }
+.tbtn{ width:44px; height:44px; border-radius:22px; display:grid; place-items:center; color:var(--ink); flex:none; }
+.tbtn svg{ width:24px; height:24px; }
+.tbtn.big svg{ width:30px; height:30px; }
+.tbtn:active{ background:var(--ink-tint); }
+.tbtn.snd[aria-pressed="false"]{ color:var(--label-2); }
+.sheet-sub{ flex:none; margin:0 16px; color:var(--label-2-grouped); font-size:.84rem; font-variant-numeric:tabular-nums; }
+.sheet-body{ flex:1; min-height:0; overflow-y:auto; overflow-x:hidden; padding:8px 0 0; }
+.tl-board{ padding:4px 16px 0; container-type:inline-size; }
+.tl-board .board{ width:100%; height:auto; aspect-ratio:1; }
+.tl-board .cell{ font-size:calc(100cqw / 9 * .58); }
+.tl-meta{ display:flex; justify-content:space-between; gap:10px; padding:10px 16px 0; color:var(--label-2-grouped); font-size:.82rem; font-variant-numeric:tabular-nums; }
+.scrub-wrap{ padding:0 16px; }
+input[type=range].scrub{ -webkit-appearance:none; appearance:none; width:100%; height:40px; background:transparent; display:block; margin:0; }
+input[type=range].scrub::-webkit-slider-runnable-track{ height:4px; border-radius:2px; background:var(--hairline); }
+input[type=range].scrub::-webkit-slider-thumb{ -webkit-appearance:none; appearance:none; width:26px; height:26px; border-radius:13px; background:var(--elev); box-shadow:0 0 0 1px var(--hairline), 0 1px 3px rgba(0,0,0,.2); margin-top:-11px; }
+input[type=range].scrub::-moz-range-track{ height:4px; border-radius:2px; background:var(--hairline); }
+input[type=range].scrub::-moz-range-thumb{ width:26px; height:26px; border:1px solid var(--hairline); border-radius:13px; background:var(--elev); }
+.transport{ display:flex; align-items:center; justify-content:center; gap:6px; padding:0 16px; flex-wrap:wrap; }
+.seg-ui{ display:flex; background:var(--chip-bg); border-radius:9px; padding:2px; gap:2px; margin-left:auto; flex:none; }
+.seg-ui button{ min-height:36px; padding:0 9px; border-radius:7px; font-size:.78rem; color:var(--label); }
+.seg-ui button[aria-pressed="true"]{ background:var(--elev); font-weight:600; box-shadow:0 1px 2px rgba(0,0,0,.08); }
+.tl-note{ padding:8px 16px 0; margin:0; color:var(--label-2-grouped); font-size:.78rem; overflow-wrap:anywhere; }
+
+/* ---------- tab bar (the only glass) ---------- */
+.tabbar{ flex:none; display:grid; grid-template-columns:repeat(3,1fr); background:var(--glass-solid); border-top:.5px solid var(--hairline); padding:7px 0 calc(2px + var(--sa-bot)); }
+@supports (backdrop-filter: blur(20px)) or (-webkit-backdrop-filter: blur(20px)){
+  .tabbar{ background:var(--glass-fill); -webkit-backdrop-filter:saturate(180%) blur(20px); backdrop-filter:saturate(180%) blur(20px); }
+}
+@media (prefers-reduced-transparency: reduce){ .tabbar{ background:var(--glass-solid) !important; -webkit-backdrop-filter:none !important; backdrop-filter:none !important; } }
+.tab{ display:flex; flex-direction:column; align-items:center; gap:2px; color:var(--label-2-grouped); font-size:10px; min-height:44px; text-align:center; }
+.tab.sel{ color:var(--ink); font-weight:600; }
+.tab svg{ width:25px; height:25px; }
+
+@media (forced-colors: active){
+  .cell::after{ box-shadow:inset 0 0 0 2px Highlight; }
+  .heat i.cur{ outline:2px solid Highlight; }
+  .mode-chip, .btn-tinted, .tbtn, .icon-btn{ border:1px solid CanvasText; }
+}
+#pd202-err{ position:fixed; left:0; right:0; top:0; z-index:200; background:#B3261E; color:#fff; font:12px/1.3 ui-monospace,monospace; padding:6px 10px; white-space:pre-wrap; }
+</style>
+</head>
+<body>
+<div class="page">
+  <aside class="panel" aria-label="Mockup controls">
+    <h3>PD-202 · Мелодия</h3>
+    <p class="hint">Макет для выбора, не код. Рамка 390×844 (iPhone 16) / 320×568. Заметки, рекомендация и вопрос владельцу — pd202-melody.md. <b>Звук — только по кнопке</b>: в лаборатории ниже или в самой рамке (клавиши 1–9, «Сыграть мелодию», плеер таймлапса).</p>
+    <div id="controls"></div>
+    <h4>Лаборатория звука</h4>
+    <p class="hint">Пентатоника до-мажор: 1=C4 2=D4 3=E4 4=G4 5=A4 6=C5 7=D5 8=E5 9=G5. Синтез Web Audio, без файлов. Тембр и громкость отсюда же действуют на рамку.</p>
+    <div id="lab"></div>
+  </aside>
+  <div class="frame" id="frame"></div>
+</div>
+<p class="sr" role="status" aria-live="polite" id="live"></p>
+<script>
+"use strict";
+(function(){
+/* ============================================================ errors → banner */
+function banner(msg){
+  let b = document.getElementById("pd202-err");
+  if (!b){ b = document.createElement("div"); b.id = "pd202-err"; document.body.appendChild(b); }
+  b.textContent += (b.textContent ? "\n" : "") + msg;
+}
+window.addEventListener("error", (e) => banner("JS: " + (e.message || e)));
+const SHOT = new URLSearchParams(location.search).get("shot") === "1";
+if (SHOT) document.documentElement.classList.add("shot");
+
+/* ============================================================ icons (stroke 1.7, pd163) */
+const I = {
+  melody:'<path d="M9 18V5.5l10-2v12.5"/><circle cx="6.6" cy="18" r="2.4"/><circle cx="16.6" cy="16" r="2.4"/>',
+  melodyOff:'<path d="M9 18V5.5l10-2v12.5"/><circle cx="6.6" cy="18" r="2.4"/><circle cx="16.6" cy="16" r="2.4"/><path d="M3.5 3.5l17 17"/>',
+  speaker:'<path d="M4 9.3h3.3L12 5.2v13.6l-4.7-4.1H4z"/><path d="M15.4 9.2a4 4 0 0 1 0 5.6M18 6.6a7.6 7.6 0 0 1 0 10.8"/>',
+  speakerOff:'<path d="M4 9.3h3.3L12 5.2v13.6l-4.7-4.1H4z"/><path d="M16 9.5l5 5M21 9.5l-5 5"/>',
+  stop:'<rect x="6.5" y="6.5" width="11" height="11" rx="2" fill="currentColor" stroke="none"/>',
+  playT:'<path d="M8 5.5v13l10.5-6.5z" fill="currentColor"/>',
+  pause:'<rect x="6.5" y="5.5" width="4" height="13" rx="1" fill="currentColor" stroke="none"/><rect x="13.5" y="5.5" width="4" height="13" rx="1" fill="currentColor" stroke="none"/>',
+  prev:'<path d="M6 6v12M18 6l-9 6 9 6z" fill="currentColor"/>',
+  next:'<path d="M18 6v12M6 6l9 6-9 6z" fill="currentColor"/>',
+  bulb:'<path d="M9 18h6M10 21h4"/><path d="M12 3a6 6 0 0 0-3.6 10.8c.6.5 1 1.2 1 2V16h5.2v-.2c0-.8.4-1.5 1-2A6 6 0 0 0 12 3z"/>',
+  gear:'<path d="M10.38 4.98 L10.6 2.6 L13.4 2.6 L13.62 4.98 A7.2 7.2 0 0 1 15.82 5.89 L17.65 4.36 L19.64 6.35 L18.11 8.18 A7.2 7.2 0 0 1 19.02 10.38 L21.4 10.6 L21.4 13.4 L19.02 13.62 A7.2 7.2 0 0 1 18.11 15.82 L19.64 17.65 L17.65 19.64 L15.82 18.11 A7.2 7.2 0 0 1 13.62 19.02 L13.4 21.4 L10.6 21.4 L10.38 19.02 A7.2 7.2 0 0 1 8.18 18.11 L6.35 19.64 L4.36 17.65 L5.89 15.82 A7.2 7.2 0 0 1 4.98 13.62 L2.6 13.4 L2.6 10.6 L4.98 10.38 A7.2 7.2 0 0 1 5.89 8.18 L4.36 6.35 L6.35 4.36 L8.18 5.89 A7.2 7.2 0 0 1 10.38 4.98 Z"/><circle cx="12" cy="12" r="2.9"/>',
+  more:'<circle cx="5.5" cy="12" r="1.6" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.6" fill="currentColor" stroke="none"/><circle cx="18.5" cy="12" r="1.6" fill="currentColor" stroke="none"/>',
+  gridplus:'<rect x="3.5" y="3.5" width="12" height="12" rx="2"/><path d="M7.5 3.5v12M11.5 3.5v12M3.5 7.5h12M3.5 11.5h12"/><path d="M18.5 14.5v6M15.5 17.5h6"/>',
+  griddots:'<rect x="3.5" y="3.5" width="17" height="17" rx="3"/><circle cx="8" cy="8" r="1" fill="currentColor"/><circle cx="12" cy="8" r="1" fill="currentColor"/><circle cx="16" cy="8" r="1" fill="currentColor"/><circle cx="8" cy="12" r="1" fill="currentColor"/><circle cx="16" cy="16" r="1" fill="currentColor"/>',
+  check:'<path d="M4.5 12.5l4.6 4.6L19.5 6.8"/>',
+  pencil:'<path d="M4 20l1-4L16 5l3 3L8 19z"/><path d="M14 7l3 3"/>',
+  undo:'<path d="M9 6L4 11l5 5"/><path d="M4 11h10a5 5 0 0 1 0 10h-3"/>',
+  eraser:'<path d="M8 20h12"/><path d="M4.5 15.5l9-9 5 5-7 7H8z"/>',
+  tToday:'<rect x="3.5" y="4.5" width="17" height="16" rx="3"/><path d="M3.5 9.5h17"/><path d="M8 14h3v3H8z"/>',
+  tPlay:'<rect x="3.5" y="3.5" width="17" height="17" rx="3"/><path d="M9.2 3.5v17M14.8 3.5v17M3.5 9.2h17M3.5 14.8h17"/>',
+  tYear:'<path d="M4 4h4v4H4zM10 4h4v4h-4zM16 4h4v4h-4zM4 10h4v4H4zM10 10h4v4h-4zM16 10h4v4h-4zM4 16h4v4H4zM10 16h4v4h-4z"/>'
+};
+const svg = (k, extra = "") => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" ${extra}>${I[k]}</svg>`;
+const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;" }[c]));
+
+/* ============================================================ strings */
+const T = {
+  en: {
+    play:"Play", today:"Today", year:"Year", medium:"Medium", melody:"Melody", muted:"muted",
+    left:(n) => `${n} cells left`, notes:"Notes", undo:"Undo", erase:"Erase", hint:"Hint", gear:"Settings", more:"More",
+    hintA:"Each digit you place plays a note. The silent switch mutes it.",
+    hintB:"Each digit you place plays a note. Mute: the speaker above or the silent switch.",
+    hintC:"Each digit you place plays a note. Mute: the ⋯ menu or the silent switch.",
+    sound:"Sound", soundOn:"Sound on", soundOff:"Sound off",
+    menuNew:"New puzzle…", menuFill:"Fill candidates",
+    solved:"Solved", pathSub:"Every cell shaded by when you filled it.", early:"Early", late:"Late",
+    time:"Time", fixes:"Fixes", clean:"clean", tech:"Technique reached", techV:"Locked candidates",
+    watch:"Watch your solve", watchListen:"Watch and listen", tune:"Play the tune", stop:"Stop", newPuzzle:"New puzzle",
+    tlTitle:"Your solve", done:"Done", tlMove:(a, b) => `Move ${a} of ${b}`,
+    tlNote:"Real rhythm, long pauses shortened. The tune follows the replay.",
+    slow:"Slow", normal:"Normal", fast:"Fast", playA:"Play", pauseA:"Pause", prevA:"Previous move", nextA:"Next move",
+    liveTune:"Playing the tune", liveStop:"Stopped"
+  },
+  uk: {
+    play:"Гра", today:"Сьогодні", year:"Рік", medium:"Середньо", melody:"Мелодія", muted:"без звуку",
+    left:(n) => `залишилось ${n}`, notes:"Нотатки", undo:"Скасувати", erase:"Стерти", hint:"Підказка", gear:"Налаштування", more:"Ще",
+    hintA:"Кожна поставлена цифра звучить нотою. Беззвучний режим її вимикає.",
+    hintB:"Кожна поставлена цифра звучить нотою. Вимкнути — динамік угорі або беззвучний режим.",
+    hintC:"Кожна поставлена цифра звучить нотою. Вимкнути — меню ⋯ або беззвучний режим.",
+    sound:"Звук", soundOn:"Звук увімкнено", soundOff:"Звук вимкнено",
+    menuNew:"Нова сітка…", menuFill:"Заповнити кандидатами",
+    solved:"Розв’язано", pathSub:"Кожна клітинка затінена за часом заповнення.", early:"Раніше", late:"Пізніше",
+    time:"Час", fixes:"Виправлення", clean:"чисто", tech:"Найскладніша техніка", techV:"Замкнені кандидати",
+    watch:"Переглянути розв’язання", watchListen:"Дивитися й слухати", tune:"Зіграти мелодію", stop:"Зупинити", newPuzzle:"Нова сітка",
+    tlTitle:"Ваше розв’язання", done:"Готово", tlMove:(a, b) => `Хід ${a} з ${b}`,
+    tlNote:"Справжній ритм, довгі паузи скорочено. Мелодія йде за повтором.",
+    slow:"Повільно", normal:"Звичайно", fast:"Швидко", playA:"Відтворити", pauseA:"Пауза", prevA:"Попередній хід", nextA:"Наступний хід",
+    liveTune:"Грає мелодія", liveStop:"Зупинено"
+  },
+  ru: {
+    play:"Игра", today:"Сегодня", year:"Год", medium:"Средне", melody:"Мелодия", muted:"без звука",
+    left:(n) => `осталось ${n}`, notes:"Заметки", undo:"Отменить", erase:"Стереть", hint:"Подсказка", gear:"Настройки", more:"Ещё",
+    hintA:"Каждая поставленная цифра звучит нотой. Беззвучный режим её выключает.",
+    hintB:"Каждая поставленная цифра звучит нотой. Выключить — динамик вверху или беззвучный режим.",
+    hintC:"Каждая поставленная цифра звучит нотой. Выключить — меню ⋯ или беззвучный режим.",
+    sound:"Звук", soundOn:"Звук включён", soundOff:"Звук выключен",
+    menuNew:"Новая сетка…", menuFill:"Заполнить кандидатами",
+    solved:"Решено", pathSub:"Каждая клетка окрашена по времени заполнения.", early:"Раньше", late:"Позже",
+    time:"Время", fixes:"Исправления", clean:"чисто", tech:"Сложнейшая техника", techV:"Запертые кандидаты",
+    watch:"Посмотреть своё решение", watchListen:"Смотреть и слушать", tune:"Сыграть мелодию", stop:"Остановить", newPuzzle:"Новая сетка",
+    tlTitle:"Ваше решение", done:"Готово", tlMove:(a, b) => `Ход ${a} из ${b}`,
+    tlNote:"Настоящий ритм, длинные паузы сокращены. Мелодия идёт за повтором.",
+    slow:"Медленно", normal:"Обычно", fast:"Быстро", playA:"Воспроизвести", pauseA:"Пауза", prevA:"Предыдущий ход", nextA:"Следующий ход",
+    liveTune:"Играет мелодия", liveStop:"Остановлено"
+  }
+};
+const tx = () => T[S.lang];
+
+/* ============================================================ puzzle data (same grid as pd163/pd170) */
+const PUZ = "530070000600195000098000060800060003400803001700020006060000280000419005000080079";
+const SOL = "534678912672195348198342567859761423426853791713924856961537284287419635345286179";
+const EMPTY = [...Array(81).keys()].filter((i) => PUZ[i] === "0");          // 51 cells
+const MID = [2, 3, 5, 6, 7, 10, 11, 18, 28, 29, 30, 37, 46, 54, 63, 72, 73];  // row 1 is one cell short (cell 8 = "2")
+const MID_SEL = 8;
+function rng(seed){ let x = seed >>> 0; return () => ((x = (x * 1664525 + 1013904223) >>> 0) / 4294967296); }
+const rowCells = (n) => [0,1,2,3,4,5,6,7,8].map((c) => n * 9 + c);
+const colCells = (n) => [0,1,2,3,4,5,6,7,8].map((r) => r * 9 + n);
+const boxCells = (n) => { const br = Math.floor(n / 3) * 3, bc = (n % 3) * 3, o = []; for (let r = 0; r < 3; r++) for (let c = 0; c < 3; c++) o.push((br + r) * 9 + bc + c); return o; };
+function unitsOf(i){ const r = Math.floor(i / 9), c = i % 9; return [rowCells(r), colCells(c), boxCells(Math.floor(r / 3) * 3 + Math.floor(c / 3))]; }
+
+/* the "path": a plausible solve order (seeded) + compressed real pauses, as melodyOf(log) would return */
+const ORDER = (() => { const r = rng(17); return EMPTY.map((i) => ({ i, k: r() * 1.2 + Math.floor(i / 9) * .09 + (i % 9) * .02 })).sort((a, b) => a.k - b.k).map((o) => o.i); })();
+const RANK = {}; ORDER.forEach((i, k) => { RANK[i] = k; });
+const PATH = (() => {
+  const r = rng(29), filled = new Set([...Array(81).keys()].filter((i) => PUZ[i] !== "0")), ev = [];
+  let t = 0;
+  ORDER.forEach((i, k) => {
+    const realSec = 2 + r() * r() * 70;                                // 2…72 s of real thinking
+    if (k > 0) t += Math.min(.45, .12 + .07 * Math.log2(1 + realSec)); // compressed: 0.19…0.45 s
+    filled.add(i);
+    const closes = unitsOf(i).filter((u) => u.every((c) => filled.has(c))).length;
+    ev.push({ t, d: +SOL[i], i, k, accent: closes > 0 });
+    if (closes) t += .12;                                                // a breath after a closed unit
+  });
+  const total = t; if (total > 18) ev.forEach((e) => { e.t *= 18 / total; });
+  return ev;
+})();
+const PATH_LEN = PATH.length ? PATH[PATH.length - 1].t : 0;
+const mmss = (s) => `${Math.floor(s / 60)}:${String(Math.round(s % 60)).padStart(2, "0")}`;
+
+/* ============================================================ SOUND (Web Audio, no files) */
+const FREQ = [261.63, 293.66, 329.63, 392.00, 440.00, 523.25, 587.33, 659.26, 783.99]; // C D E G A c d e g
+const NOTE_NAMES = ["C4","D4","E4","G4","A4","C5","D5","E5","G5"];
+/* each partial: [ratio, gain, attack s, decay s] */
+const TIMBRE = {
+  sine: { label:"A · Мягкий синус", lp:2200, parts:[[1, 1, .015, .95], [2, .06, .015, .35]] },
+  bell: { label:"B · Колокольчик", lp:6000, parts:[[1, 1, .003, 1.7], [2.76, .30, .002, .75], [5.40, .12, .002, .35], [8.93, .05, .001, .18]] },
+  wood: { label:"C · Дерево (маримба)", lp:3200, parts:[[1, 1, .003, .55], [3.93, .20, .002, .11], [9.8, .05, .001, .04]] }
+};
+const VOL = { quiet:.16, medium:.30 };
+let AC = null, OUT = null, SEQ = null, timers = [];
+function audio(){
+  if (SHOT) return null;
+  if (!AC){
+    const C = window.AudioContext || window.webkitAudioContext; if (!C) return null;
+    AC = new C();
+    // iOS 17+: respect the Ring/Silent switch and mix with other audio (HIG "Ambient").
+    try { if (navigator.audioSession) navigator.audioSession.type = "ambient"; } catch (e) {}
+    const comp = AC.createDynamicsCompressor(); comp.threshold.value = -18; comp.ratio.value = 4;
+    OUT = AC.createGain(); OUT.gain.value = 1; OUT.connect(comp); comp.connect(AC.destination);
+  }
+  if (AC.state === "suspended") AC.resume();   // called inside a tap handler = the unlock gesture
+  return AC;
+}
+function note(d, when, bus, accent){
+  const ac = audio(); if (!ac) return;
+  const t = when == null ? ac.currentTime + .005 : when, f = FREQ[d - 1], tm = TIMBRE[S.timbre];
+  const g0 = VOL[S.vol] * (accent ? 1.3 : 1);
+  const lp = ac.createBiquadFilter(); lp.type = "lowpass"; lp.frequency.value = tm.lp; lp.connect(bus || OUT);
+  for (const [ratio, a, att, dec] of tm.parts){
+    const o = ac.createOscillator(); o.type = "sine"; o.frequency.value = f * ratio;
+    const g = ac.createGain(); const dd = dec * (accent ? 1.4 : 1);
+    g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(g0 * a, t + att); g.gain.exponentialRampToValueAtTime(.0001, t + att + dd);
+    o.connect(g); g.connect(lp); o.start(t); o.stop(t + att + dd + .05);
+  }
+}
+/* events: [{t, d, accent, silent}] ; onEvent(e, k) drives the picture in step with the sound */
+function playSeq(events, onEvent, onEnd){
+  stopSeq(true);
+  const ac = audio(), bus = ac ? ac.createGain() : null;
+  if (bus) bus.connect(OUT);
+  const t0 = ac ? ac.currentTime + .06 : 0;
+  events.forEach((e, k) => {
+    if (ac && !e.silent) note(e.d, t0 + e.t, bus, e.accent);
+    timers.push(setTimeout(() => onEvent && onEvent(e, k), 60 + e.t * 1000));
+  });
+  const last = events.length ? events[events.length - 1].t : 0;
+  timers.push(setTimeout(() => { SEQ = null; onEnd && onEnd(); }, 60 + last * 1000 + 500));
+  SEQ = { bus };
+}
+function stopSeq(quiet){
+  timers.forEach(clearTimeout); timers = [];
+  if (SEQ && SEQ.bus && AC){
+    const g = SEQ.bus.gain, now = AC.currentTime, b = SEQ.bus;
+    g.cancelScheduledValues(now); g.setValueAtTime(g.value, now); g.linearRampToValueAtTime(0, now + .06);
+    setTimeout(() => { try { b.disconnect(); } catch (e) {} }, 250);
+  }
+  SEQ = null;
+  if (!quiet){ S.cplaying = false; S.pplaying = false; }
+}
+const live = (m) => { const l = document.getElementById("live"); if (l) l.textContent = m; };
+
+/* ============================================================ state */
+const DEF = { screen:"game", v:"C", gstate:"fresh", muted:false, k:"A", cstate:"idle", cur:21, pidx:21, psound:true,
+  theme:"light", lang:"en", w:"390", rm:false, timbre:"wood", vol:"quiet", speed:"normal", cplaying:false, pplaying:false };
+let S = Object.assign({}, DEF);
+let extra = {}, sel = null;
+const selOf = () => sel != null ? sel : (S.gstate === "fresh" ? 21 : MID_SEL);
+const rmOn = () => S.rm || (window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches);
+
+function baseFilled(){
+  const set = new Set(S.gstate === "fresh" ? [] : MID);
+  if (S.gstate === "wave") set.add(MID_SEL);
+  return set;
+}
+function valueAt(i, filled){
+  if (PUZ[i] !== "0") return +PUZ[i];
+  if (extra[i]) return extra[i];
+  return filled.has(i) ? +SOL[i] : 0;
+}
+
+/* ============================================================ pieces */
+function tabbar(){
+  const t = tx(), tab = (k, ic, s) => `<button type="button" class="tab${s ? " sel" : ""}"${s ? ' aria-current="page"' : ""}>${svg(ic)}<span>${esc(t[k])}</span></button>`;
+  return `<nav class="tabbar" aria-label="Tabs">${tab("today", "tToday", false)}${tab("play", "tPlay", true)}${tab("year", "tYear", false)}</nav>`;
+}
+function iconBtn(ic, label, act, extraAttr = "", cls = ""){
+  return `<button type="button" class="icon-btn ${cls}" aria-label="${esc(label)}" data-act="${act}" ${extraAttr}>${svg(ic)}</button>`;
+}
+/* In-game mute shows on the chip only in C (where the switch is hidden in ⋯) and only in the game:
+   the card / timelapse tune is started explicitly and ignores the in-game mute. */
+function chip(inGame){
+  const t = tx(), off = inGame && S.v === "C" && S.muted;
+  const word = off ? `${t.melody} · ${t.muted}` : t.melody;
+  return `<span class="mode-chip${off ? " off" : ""}" data-testid="mode-chip">${svg(off ? "melodyOff" : "melody")}<span class="ct">${esc(word)}</span></span>`;
+}
+function boardHTML(valueFn, opt = {}){
+  let out = "";
+  for (let b = 0; b < 9; b++){
+    out += `<div class="box">`;
+    for (let c = 0; c < 9; c++){
+      const r = Math.floor(b / 3) * 3 + Math.floor(c / 3), col = (b % 3) * 3 + (c % 3), i = r * 9 + col;
+      const g = PUZ[i] !== "0", v = valueFn(i);
+      const cls = ["cell", g ? "g" : v ? "p" : "", opt.sel === i ? "sel" : "", opt.cur === i ? "cur" : ""].filter(Boolean).join(" ");
+      const wo = opt.wo && opt.wo[i] != null ? ` style="--wo:${opt.wo[i]}"` : "";
+      out += `<div class="${cls}" data-i="${i}"${wo} role="gridcell" aria-label="${v ? v + (g ? ", given" : "") : "empty"}">${v || ""}</div>`;
+    }
+    out += `</div>`;
+  }
+  return `<div class="board" role="grid" aria-label="Board" data-testid="board">${out}</div>`;
+}
+
+/* ---------- 1. the game ---------- */
+function frozenWave(){
+  // A still of the arpeggio over row 1: the playhead is on cell 6, the earlier cells are fading out.
+  // Reduce Motion: no travel, the whole row holds one ring together.
+  const wo = {};
+  const row = rowCells(0);
+  if (rmOn()) row.forEach((i) => { wo[i] = .7; });
+  else [0, .12, .26, .45, .7, .95, 0, 0, 0].forEach((o, k) => { wo[row[k]] = o; });
+  return wo;
+}
+function game(){
+  const t = tx(), filled = baseFilled();
+  const fresh = S.gstate === "fresh" && !Object.keys(extra).length;
+  const placed = EMPTY.filter((i) => valueAt(i, filled)).length;
+  let icons = "";
+  if (S.v === "B") icons += iconBtn(S.muted ? "speakerOff" : "speaker", t.sound, "snd",
+    `aria-pressed="${!S.muted}" title="${esc(S.muted ? t.soundOff : t.soundOn)}" data-testid="snd-btn"`, "snd");
+  icons += iconBtn("bulb", t.hint, "noop") + iconBtn("gear", t.gear, "noop") +
+    iconBtn("more", t.more, "menu", `aria-haspopup="menu" aria-expanded="${S.gstate === "menu"}"`);
+  const status = fresh
+    ? `<p class="status hint" data-testid="hint">${svg("melody")}<span>${esc(t["hint" + S.v])}</span></p>`
+    : `<p class="status" data-testid="left">${esc(t.left(51 - placed))}</p>`;
+  const wo = S.gstate === "wave" && S.v !== "A" ? frozenWave() : null;   // A: no visual echo at all
+  const menu = S.gstate === "menu" ? gameMenu() : "";
+  return `<div class="screen" data-testid="game">
+    <header class="toolbar"><h1 class="title clip">${esc(t.play)}</h1><div class="toolbar-end">${icons}</div></header>
+    <p class="subline clip" data-testid="subline">${esc(t.medium)} · ${fresh ? "00:00" : "14:06"}${chip(true)}</p>
+    <div class="game">
+      <div class="board-wrap">${boardHTML((i) => valueAt(i, filled), { sel: selOf(), wo })}</div>
+      ${status}
+      <div class="pad" data-testid="pad">${[1,2,3,4,5,6,7,8,9].map((n) => `<button type="button" data-d="${n}" aria-label="${n}">${n}</button>`).join("")}</div>
+      <div class="acts">${[["pencil", t.notes], ["undo", t.undo], ["eraser", t.erase]].map(([ic, l]) => `<button type="button" data-act="noop">${svg(ic)}<span>${esc(l)}</span></button>`).join("")}</div>
+    </div>
+    ${tabbar()}${menu}
+  </div>`;
+}
+function gameMenu(){
+  const t = tx();
+  const sound = S.v === "C"
+    ? `<div class="sep" role="separator"></div><button type="button" role="menuitemcheckbox" aria-checked="${!S.muted}" data-act="snd" data-testid="menu-sound">${svg("speaker")}<span class="mi">${esc(t.sound)}</span>${svg("check", `class="ck${S.muted ? " off" : ""}"`)}</button>`
+    : "";
+  return `<div class="scrim clear" data-act="close"></div>
+  <div class="menu" role="menu" style="top:calc(var(--sa-top) + 54px); right:10px" data-testid="game-menu">
+    <button type="button" role="menuitem" data-act="close">${svg("gridplus")}<span class="mi">${esc(t.menuNew)}</span></button>
+    <button type="button" role="menuitem" data-act="close">${svg("griddots")}<span class="mi">${esc(t.menuFill)}</span></button>
+    ${sound}
+  </div>`;
+}
+
+/* ---------- 2. the solved card ---------- */
+function heatHTML(playing){
+  const N = EMPTY.length; let h = "";
+  for (let i = 0; i < 81; i++){
+    if (PUZ[i] !== "0"){ h += `<i style="opacity:.06"></i>`; continue; }
+    const k = RANK[i], base = (.18 + .82 * k / (N - 1)).toFixed(2);
+    if (!playing) h += `<i style="opacity:${base}"></i>`;
+    else if (k === S.cur) h += `<i class="cur" data-testid="heat-cur"></i>`;
+    else h += `<i style="opacity:${k < S.cur ? base : .06}"></i>`;
+  }
+  return `<div class="heat" role="img" aria-label="Your path" data-testid="heat">${h}</div>
+    <div class="legend"><span>${esc(tx().early)}</span><span class="bar" aria-hidden="true">${[.2,.4,.6,.8,1].map((o) => `<i style="opacity:${o}"></i>`).join("")}</span><span>${esc(tx().late)}</span></div>`;
+}
+function card(){
+  const t = tx(), nolog = S.cstate === "nolog";
+  const playing = (S.cstate === "playing" || S.cplaying) && !nolog && S.k !== "B";
+  const tuneLabel = playing ? t.stop : t.tune, tuneIc = playing ? "stop" : "melody";
+  const tuneA = S.k === "A" && !nolog
+    ? `<button type="button" class="tune" data-act="tune" data-testid="tune">${svg(tuneIc)}<span>${esc(tuneLabel)}</span></button>` : "";
+  let acts = "";
+  if (!nolog){
+    if (S.k === "B") acts += `<button type="button" class="btn-primary" data-act="watch" data-testid="watch">${svg("speaker")}<span>${esc(t.watchListen)}</span></button>`;
+    else acts += `<button type="button" class="btn-primary" data-act="watch" data-testid="watch">${esc(t.watch)}</button>`;
+    if (S.k === "C") acts += `<button type="button" class="btn-tinted" data-act="tune" data-testid="tune">${svg(tuneIc)}<span>${esc(tuneLabel)}</span></button>`;
+  }
+  acts += `<button type="button" class="btn-plain" data-act="noop">${esc(t.newPuzzle)}</button>`;
+  return `<div class="screen" data-testid="card">
+    <header class="toolbar"><h1 class="title clip">${esc(t.play)}</h1><div class="toolbar-end">${iconBtn("gear", t.gear, "noop")}</div></header>
+    <p class="subline clip">${esc(t.medium)} · 14:06${chip()}</p>
+    <div class="solved">
+      <section class="rcard" aria-labelledby="rt">
+        <h2 id="rt">${esc(t.solved)}</h2>
+        <p class="sub">${esc(t.pathSub)}</p>
+        ${heatHTML(playing)}
+        ${tuneA}
+        <div class="rows">
+          <div class="r"><span class="k">${esc(t.time)}</span><span class="v">14:06</span></div>
+          <div class="r"><span class="k">${esc(t.fixes)}</span><span class="v">${esc(t.clean)}</span></div>
+          <div class="r"><span class="k">${esc(t.tech)}</span><span class="v">${esc(t.techV)}</span></div>
+        </div>
+        <div class="cacts">${acts}</div>
+      </section>
+    </div>
+    ${tabbar()}
+  </div>`;
+}
+
+/* ---------- 3. timelapse sheet over the card ---------- */
+function player(){
+  const t = tx(), idx = Math.max(0, Math.min(PATH.length, S.pidx));
+  const shown = new Set(ORDER.slice(0, idx)), curI = idx > 0 ? ORDER[idx - 1] : -1;
+  const tNow = idx > 0 ? PATH[idx - 1].t : 0;
+  const sp = (k) => `<button type="button" data-act="speed" data-v="${k}" aria-pressed="${S.speed === k}">${esc(t[k])}</button>`;
+  return card() + `<div class="scrim" data-act="pclose"></div>
+  <section class="sheet" role="dialog" aria-modal="true" aria-labelledby="plh" data-testid="player">
+    <div class="grab" aria-hidden="true"></div>
+    <div class="sheet-head">
+      <h2 id="plh">${esc(t.tlTitle)}</h2>
+      <button type="button" class="tbtn snd" data-act="psnd" aria-pressed="${S.psound}" aria-label="${esc(t.sound)}" title="${esc(S.psound ? t.soundOn : t.soundOff)}" data-testid="player-sound">${svg(S.psound ? "speaker" : "speakerOff")}</button>
+      <button type="button" class="done" data-act="pclose">${esc(t.done)}</button>
+    </div>
+    <p class="sheet-sub">${esc(t.medium)} · 14:06</p>
+    <div class="sheet-body">
+      <div class="tl-board">${boardHTML((i) => PUZ[i] !== "0" ? +PUZ[i] : shown.has(i) ? +SOL[i] : 0, { cur: curI })}</div>
+      <div class="tl-meta"><span>${esc(t.tlMove(idx, PATH.length))}</span><span>${mmss(tNow)} / ${mmss(PATH_LEN)}</span></div>
+      <div class="scrub-wrap"><input type="range" class="scrub" id="scrub" min="0" max="${PATH.length}" value="${idx}" aria-label="${esc(t.tlMove(idx, PATH.length))}"></div>
+      <div class="transport">
+        <button type="button" class="tbtn" data-act="pprev" aria-label="${esc(t.prevA)}">${svg("prev")}</button>
+        <button type="button" class="tbtn big" data-act="pplay" aria-label="${esc(S.pplaying ? t.pauseA : t.playA)}">${svg(S.pplaying ? "pause" : "playT")}</button>
+        <button type="button" class="tbtn" data-act="pnext" aria-label="${esc(t.nextA)}">${svg("next")}</button>
+        <div class="seg-ui" role="group" aria-label="Speed">${sp("slow")}${sp("normal")}${sp("fast")}</div>
+      </div>
+      <p class="tl-note">${esc(t.tlNote)}</p>
+    </div>
+  </section>`;
+}
+
+/* ============================================================ live behaviour (sound only on taps) */
+function placeDigit(d){
+  // every pad tap sounds its note (that tap is also the iOS unlock gesture)
+  const muted = S.v !== "A" && S.muted;
+  if (!muted) note(d);
+  const filled = baseFilled(), at = selOf();
+  if (PUZ[at] !== "0" || valueAt(at, filled)) return;
+  extra[at] = d;
+  render();
+  const done = unitsOf(at).filter((u) => u.every((c) => valueAt(c, baseFilled())));
+  if (!done.length) return;
+  // closed units: arpeggio in cell order (110 ms apart), one unit after another; the echo follows the sound
+  const evs = []; let t0 = .35;
+  done.forEach((u) => { u.forEach((c, k) => evs.push({ t: t0 + k * .11, d: valueAt(c, baseFilled()), c, k, u, silent: muted })); t0 += 1.15; });
+  const rm = rmOn();
+  const flash = (el, cls) => { el.classList.remove(cls); void el.offsetWidth; el.classList.add(cls); };
+  playSeq(evs, (e) => {
+    if (S.v === "A") return;                     // A: sound only, the board stays still
+    if (rm){                                     // Reduce Motion: no travel — the whole unit holds one ring
+      if (e.k === 0) e.u.forEach((c) => { const el = document.querySelector(`.board .cell[data-i="${c}"]`); if (el) flash(el, "wvr"); });
+      return;
+    }
+    const el = document.querySelector(`.board .cell[data-i="${e.c}"]`); if (el) flash(el, "wv");
+  });
+}
+function tunePlay(){
+  if (S.cplaying || S.cstate === "playing"){ stopSeq(); S.cstate = S.cstate === "playing" ? "idle" : S.cstate; S.cplaying = false; live(tx().liveStop); render(); return; }
+  S.cplaying = true; S.cur = -1; render(); live(tx().liveTune);
+  playSeq(PATH, (e, k) => { S.cur = k; render(); }, () => { S.cplaying = false; render(); });
+}
+function playerPlay(){
+  if (S.pplaying){ stopSeq(); S.pplaying = false; render(); return; }
+  if (S.pidx >= PATH.length) S.pidx = 0;
+  const f = { slow:1.6, normal:1, fast:.55 }[S.speed];
+  const from = S.pidx, base = from > 0 ? PATH[from - 1].t : (PATH[0] ? PATH[0].t : 0);
+  const evs = PATH.slice(from).map((e) => ({ t: Math.max(0, (e.t - base) * f), d: e.d, accent: e.accent, silent: !S.psound, k: e.k }));
+  S.pplaying = true; render();
+  playSeq(evs, (e) => { S.pidx = e.k + 1; render(); }, () => { S.pplaying = false; render(); });
+}
+
+/* ============================================================ panel + lab */
+const CTRL = [
+  ["screen", "Экран", [["game", "Партия"], ["card", "Карточка решённой"], ["player", "Таймлапс (шит)"]]],
+  ["v", "1 · В партии: вариант", [["A", "A · только система"], ["B", "B · динамик в тулбаре"], ["C", "C · звук в ⋯ ★"]]],
+  ["gstate", "Партия: состояние", [["fresh", "новая (подсказка)"], ["mid", "середина"], ["wave", "закрыта строка (кадр)"], ["menu", "меню ⋯ открыто"]]],
+  ["muted", "Звук в партии (B, C)", [[false, "вкл"], [true, "выкл"]]],
+  ["k", "2 · Карточка: вариант", [["A", "A · под картой пути ★"], ["B", "B · смотреть и слушать"], ["C", "C · второе действие"]]],
+  ["cstate", "Карточка: состояние", [["idle", "покой"], ["playing", "играет (кадр)"], ["nolog", "лог урезан"]]],
+  ["theme", "Тема", [["light", "светлая"], ["dark", "тёмная"]]],
+  ["lang", "Язык", [["en", "en"], ["uk", "uk"], ["ru", "ru"]]],
+  ["w", "Ширина", [["390", "390"], ["320", "320"]]],
+  ["rm", "Reduce Motion (макет)", [[false, "выкл"], [true, "вкл"]]]
+];
+function disabled(k, v){
+  if (k === "muted" && S.v === "A") return "В A выключателя нет — только системный беззвучный режим";
+  if (k === "cstate" && v === "playing" && S.k === "B") return "В B мелодия играет только в таймлапсе — откройте «Таймлапс»";
+  return "";
+}
+function panel(){
+  document.getElementById("controls").innerHTML = CTRL.map(([k, l, opts]) => `<div class="grp"><span>${l}</span><div class="seg">${opts.map(([v, txt]) => {
+    const why = disabled(k, v);
+    return `<button type="button" data-k="${k}" data-v="${v}" aria-pressed="${String(S[k] === v)}"${why ? ` aria-disabled="true" title="${esc(why)}"` : ""}>${txt}</button>`;
+  }).join("")}</div></div>`).join("") +
+  `<p class="hint">Живая проверка: «Партия» → «середина» → нажмите 2 на паде — закроется строка 1 (арпеджио + отклик). Любая клавиша пада звучит своей нотой. На карточке — «Сыграть мелодию»; в таймлапсе — ▶.</p>`;
+  const timb = Object.entries(TIMBRE).map(([k, v]) => `<button type="button" data-k="timbre" data-v="${k}" aria-pressed="${S.timbre === k}">${v.label}${k === "wood" ? '<span class="rec">реком.</span>' : ""}</button>`).join("");
+  const vol = [["quiet", "тихо (как в продукте)"], ["medium", "погромче"]].map(([k, l]) => `<button type="button" data-k="vol" data-v="${k}" aria-pressed="${S.vol === k}">${l}</button>`).join("");
+  document.getElementById("lab").innerHTML =
+    `<div class="grp"><span>Тембр</span><div class="seg">${timb}</div></div>
+     <div class="grp"><span>Громкость</span><div class="seg">${vol}</div></div>
+     <div class="grp"><span>Ноты 1–9</span><div class="lab-notes">${[1,2,3,4,5,6,7,8,9].map((n) => `<button type="button" data-lab="note" data-d="${n}">${n}<small>${NOTE_NAMES[n - 1]}</small></button>`).join("")}</div></div>
+     <div class="lab-acts">
+       <button type="button" data-lab="arp">Арпеджио строки (1 с)</button>
+       <button type="button" data-lab="arpcol">Арпеджио столбца</button>
+       <button type="button" data-lab="path">Мелодия пути (${PATH.length} ходов, ${PATH_LEN.toFixed(0)} с)</button>
+       <button type="button" class="stop" data-lab="stop">Стоп</button>
+     </div>`;
+}
+function lab(kind, d){
+  if (kind === "note") return note(+d);
+  if (kind === "stop") return stopSeq();
+  if (kind === "arp") return playSeq(rowCells(0).map((c, k) => ({ t: k * .11, d: +SOL[c] })));
+  if (kind === "arpcol") return playSeq(colCells(4).map((c, k) => ({ t: k * .11, d: +SOL[c] })));
+  if (kind === "path") return playSeq(PATH);
+}
+
+/* ============================================================ render */
+function render(){
+  const root = document.documentElement;
+  root.lang = S.lang;
+  root.classList.toggle("force-dark", S.theme === "dark");
+  root.classList.toggle("force-light", S.theme !== "dark");
+  const frame = document.getElementById("frame");
+  const short = S.w === "320";
+  frame.style.setProperty("--fw", S.w + "px");
+  frame.style.setProperty("--fh", short ? "568px" : "844px");
+  frame.style.setProperty("--sa-top", short ? "20px" : "59px");
+  frame.style.setProperty("--sa-bot", short ? "0px" : "34px");
+  frame.innerHTML = { game, card, player }[S.screen]();
+  const sc = document.getElementById("scrub");
+  if (sc) sc.addEventListener("input", () => { stopSeq(); S.pidx = +sc.value; render(); });
+  panel();
+}
+document.addEventListener("click", (e) => {
+  const b = e.target.closest("button, .cell, [data-act]"); if (!b) return;
+  if (b.dataset.k){
+    if (b.getAttribute("aria-disabled") === "true") return;
+    const k = b.dataset.k; let v = b.dataset.v;
+    if (k === "muted" || k === "rm") v = v === "true";
+    if (k !== "timbre" && k !== "vol"){ stopSeq(); extra = {}; sel = null; }
+    S[k] = v; render(); return;
+  }
+  if (b.dataset.lab){ lab(b.dataset.lab, b.dataset.d); return; }
+  if (b.classList.contains("cell") && b.closest("[data-testid=game]")){
+    const i = +b.dataset.i; if (PUZ[i] === "0"){ sel = i; audio(); render(); } return;
+  }
+  if (b.dataset.d && b.closest("[data-testid=pad]")){ placeDigit(+b.dataset.d); return; }
+  const act = b.dataset.act;
+  if (act === "snd"){ S.muted = !S.muted; if (S.gstate === "menu") S.gstate = "mid"; render(); return; }
+  if (act === "menu"){ S.gstate = S.gstate === "menu" ? "mid" : "menu"; render(); return; }
+  if (act === "close"){ if (S.gstate === "menu") S.gstate = "mid"; render(); return; }
+  if (act === "tune"){ tunePlay(); return; }
+  if (act === "watch"){ stopSeq(); S.screen = "player"; S.pidx = 0; S.psound = true; render(); return; }
+  if (act === "pclose"){ stopSeq(); S.screen = "card"; render(); return; }
+  if (act === "psnd"){ S.psound = !S.psound; render(); return; }
+  if (act === "pplay"){ playerPlay(); return; }
+  if (act === "pprev" || act === "pnext"){
+    stopSeq(); S.pidx = Math.max(0, Math.min(PATH.length, S.pidx + (act === "pnext" ? 1 : -1)));
+    if (S.psound && S.pidx > 0) note(PATH[S.pidx - 1].d);
+    render(); return;
+  }
+  if (act === "speed"){ S.speed = b.dataset.v; render(); return; }
+});
+
+/* ============================================================ self-check (for the shots script) */
+function check(){
+  const out = [], frame = document.getElementById("frame"), fr = frame.getBoundingClientRect();
+  frame.querySelectorAll("*").forEach((el) => {
+    if (el.closest("defs")) return;
+    const r = el.getBoundingClientRect();
+    if (r.width === 0 || r.height === 0) return;
+    if (r.right > fr.right + .5 || r.left < fr.left - .5){
+      const cn = el.className && el.className.baseVal !== undefined ? el.className.baseVal : el.className;
+      out.push("overflow: " + el.tagName.toLowerCase() + "." + String(cn).split(" ")[0] + " " + Math.round(r.left) + "…" + Math.round(r.right));
+    }
+  });
+  frame.querySelectorAll(".solved, .sheet-body").forEach((s) => { if (s.scrollWidth > s.clientWidth + 1) out.push("h-scroll in " + s.className); });
+  frame.querySelectorAll(".clip").forEach((el) => { if (el.scrollWidth > el.clientWidth + 1) out.push("clipped text: " + el.textContent.trim().slice(0, 40)); });
+  frame.querySelectorAll("[data-testid=board]").forEach((bd) => {
+    if (bd.querySelectorAll(".cell").length !== 81) out.push("board cells != 81");
+    if (bd.getBoundingClientRect().width < 150) out.push("board < 150 px: " + Math.round(bd.getBoundingClientRect().width));
+  });
+  frame.querySelectorAll(".icon-btn, .tbtn, .pad button, .tune, .btn-primary, .btn-tinted, .menu button").forEach((b) => {
+    const r = b.getBoundingClientRect(); if (r.height && r.height < 43.5) out.push("target < 44: " + (b.getAttribute("aria-label") || b.textContent.trim()).slice(0, 24) + " " + Math.round(r.height));
+  });
+  // the board must be fully on screen in the game (not pushed under the tab bar)
+  const bd = frame.querySelector("[data-testid=game] [data-testid=board]"), tb = frame.querySelector(".tabbar");
+  if (bd && tb && bd.getBoundingClientRect().bottom > tb.getBoundingClientRect().top + .5) out.push("board under the tab bar");
+  const pad = frame.querySelector("[data-testid=pad]");
+  if (pad && tb && pad.getBoundingClientRect().bottom > tb.getBoundingClientRect().top + .5) out.push("pad under the tab bar");
+  if (S.screen === "game"){
+    if (S.gstate === "fresh" && !frame.querySelector("[data-testid=hint]")) out.push("fresh game without the sound hint");
+    if (S.v === "B" && !frame.querySelector("[data-testid=snd-btn]")) out.push("B without speaker button");
+    if (S.v !== "B" && frame.querySelector("[data-testid=snd-btn]")) out.push("speaker button outside B");
+    if (S.gstate === "menu" && S.v === "C" && !frame.querySelector("[data-testid=menu-sound]")) out.push("C menu without Sound");
+    const st = frame.querySelector(".status"); if (st && st.scrollHeight > st.clientHeight + 1) out.push("status text clipped");
+  }
+  if (S.screen !== "game"){
+    const tune = frame.querySelector("[data-testid=tune]");
+    if (S.cstate === "nolog" && (tune || frame.querySelector("[data-testid=watch]"))) out.push("nolog: tune/watch still shown");
+    if (S.cstate !== "nolog" && S.k !== "B" && S.screen === "card" && !tune) out.push("tune button missing");
+    if (S.screen === "player" && !frame.querySelector("[data-testid=player-sound]")) out.push("player without sound button");
+  }
+  return [...new Set(out)].slice(0, 12);
+}
+
+window.PD202 = {
+  reset(){ stopSeq(); extra = {}; sel = null; S = Object.assign({}, DEF); render(); },
+  apply(o){ Object.assign(S, o); render(); },
+  check, state: () => Object.assign({}, S)
+};
+render();
+})();
+</script>
+</body>
+</html>
