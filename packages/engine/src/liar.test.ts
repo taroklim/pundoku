@@ -26,7 +26,7 @@ import {
   validateLiar,
 } from "./index.js";
 import type { Accusation, CellValue, Difficulty, Digit, LiarPuzzle, Move } from "./index.js";
-import { contradictionWave, lieChecker } from "./liar.js";
+import { contradictionDepth, contradictionWave, lieChecker } from "./liar.js";
 import {
   CEILING,
   TIER,
@@ -592,6 +592,43 @@ describe("PD-177: expert/master — other orders of eliminations (QA PD-166b)", 
       expect(earliestWithinOrders(toCells(p.mission), LIAR_MIN_DEPTH.master - 1, TIER.master, 1, "pd177")).toBeNull();
     }, 300_000);
   }
+});
+
+describe("mutation guards: settleSweep (PD-186, QA PD-179 M23/M24/M27)", () => {
+  // Лжи на основах `generate({ difficulty, seed: "pd186-N" })`: ложь видна на 1-й постановке только с вычёркиваниями
+  // `settleSweep`. С поиском до 1 постановки (`cap` 1 — другие порядки только на старте) глубина 2: порядок решателя
+  // ложь на 1-й постановке не видит. Под мутацией — глубина 2+ и с `cap` 2, и критерий (в) с minDepth 2 проходит.
+
+  it("M23: sweep continues each first step in BOTH orders (solver order too, not only reverse)", () => {
+    // Expert-основа `pd186-1` + ложь 1 в r3c1 (единственный кандидат в лжецы — клетка 18).
+    const m = "057080900800460000100200030000002400030000008090035700004070100060190070000000000";
+    expect(contradictionDepth(m, TIER.expert, 1)).toBe(2);
+    expect(contradictionDepth(m, TIER.expert, 2)).toBe(1); // под M23 — 2
+    const v = validateLiar(m, { difficulty: "expert", minDepth: 2 });
+    expect(v.suspects).toEqual([18]);
+    expect(v.contradictionDepth).toBe(1);
+    expect(v.failures).toEqual(["too_shallow"]);
+  }, 60_000);
+
+  it("M24: sweep repeats rounds while the union grows (one round is not the fixpoint)", () => {
+    // Master-основа `pd186-4` + ложь 3 в r7c5.
+    const m = "009000002000400010000010700060370200008000400000501080075030600800004000910006050";
+    expect(contradictionDepth(m, TIER.master, 1)).toBe(2);
+    expect(contradictionDepth(m, TIER.master, 2)).toBe(1); // под M24 — 2
+    const v = validateLiar(m, { difficulty: "master", minDepth: 2 });
+    expect(v.contradictionDepth).toBe(1);
+    expect(v.failures).toEqual(["ambiguous", "not_resolvable", "too_shallow"]);
+  }, 60_000);
+
+  it("M27: player steps of the sweep include naked pairs", () => {
+    // Expert-основа `pd186-0` + ложь 2 в r6c1.
+    const m = "000805002000906100000000370090400805100000090204000600002100400000083200080000001";
+    expect(contradictionDepth(m, TIER.expert, 1)).toBe(2);
+    expect(contradictionDepth(m, TIER.expert, 2)).toBe(1); // под M27 — 2
+    const v = validateLiar(m, { difficulty: "expert", minDepth: 2 });
+    expect(v.contradictionDepth).toBe(1);
+    expect(v.failures).toEqual(["ambiguous", "not_resolvable", "too_shallow"]);
+  }, 60_000);
 });
 
 describe("accuse", () => {
