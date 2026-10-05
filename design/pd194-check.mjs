@@ -120,10 +120,14 @@ async function open(browser, c) {
   );
   const page = await ctx.newPage();
   const errs = [];
-  page.on("pageerror", (e) => errs.push(e.message));
+  // webkit без API: прерванные запросы /api/daily и generate.worker (воркер заглушки при уходе со страницы) пишут
+  // «… due to access control checks» — и в консоль, и как pageerror. Шум стенда, не ошибка приложения.
+  const STAND_NOISE = /access control checks/;
+  page.on("pageerror", (e) => {
+    if (!(STAND_NOISE.test(e.message) && /\/api\/|generate\.worker/.test(e.message))) errs.push(e.message);
+  });
   page.on("console", (m) => {
-    // webkit без API: прерванные запросы /api/daily и generate.worker пишут «… due to access control checks» — шум стенда.
-    if (m.type() === "error" && !/Failed to load resource|\/api\/|ERR_CONNECTION|404|net::|access control checks/.test(m.text())) errs.push(m.text());
+    if (m.type() === "error" && !/Failed to load resource|\/api\/|ERR_CONNECTION|404|net::/.test(m.text()) && !STAND_NOISE.test(m.text())) errs.push(m.text());
   });
   return { ctx, page, errs };
 }
