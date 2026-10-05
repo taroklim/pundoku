@@ -531,6 +531,13 @@
   fill: var(--label-2);
   opacity: 0.45;
 }
+/* Решение владельца 2026-10-05: в тёмной теме серая P «чуть ярче» (0.45 → 0.62 от --label-2), светлая не меняется;
+   знак остаётся тише текста (.wait-text — полный --label-2). Анимация не затронута. */
+@media (prefers-color-scheme: dark) {
+  .wm-b {
+    opacity: 0.62;
+  }
+}
 .wm-h {
   fill: var(--ink);
   opacity: 0;
