@@ -79,6 +79,9 @@ export function useModal(scrim: RefObject<HTMLElement | null>, root: RefObject<H
     document.addEventListener("keydown", onKey);
     return () => {
       document.removeEventListener("keydown", onKey);
+      // PD-185: слой закрыт (или StrictMode симулирует unmount → remount) — при следующем открытии фокус ставится заново,
+      // иначе после remount флаг «уже сфокусировано» остаётся, а фокус ниже уже ушёл на opener.
+      focused.current = false;
       for (const el of inerted) el.removeAttribute("inert"); // до возврата фокуса: inert-элемент не принимает фокус
       if (opener && opener.isConnected) opener.focus({ preventScroll: true });
     };
