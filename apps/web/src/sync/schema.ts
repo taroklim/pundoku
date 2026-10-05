@@ -21,6 +21,7 @@ import { CELLS } from "../play/logic";
 import type { DaySource } from "../today/dayResolver";
 import type { PermanentGridState } from "../today/permanent";
 import type { DayProgress } from "../today/repository";
+import { solvedAtOrDayStart } from "../today/repository";
 import { decodeHeat, decodeMoveLog, encodeHeat, encodeMoveLog } from "./codec";
 import type { LiarDayRecord } from "./liarSchema";
 import { sanitizeLiar } from "./liarSchema";
@@ -211,8 +212,11 @@ const fromRecordSource = (s: RecordSource): DaySource => (s === "device" ? "clie
 /**
  * Запись дня по локальному прогрессу. `null` — день без ходов (в снапшот не попадает).
  * `hadCorrections`/`corrections`/`technique`/`heat` считаются из `MoveLog` (`summary`, `heatmap` движка).
+ * PD-197: решённый день без `solvedAt` (старая запись) выгружается с началом даты дня (`solvedAtOrDayStart`), а не с «сейчас»:
+ * значение стабильно между циклами и устройствами, а схема (обязательный `solvedAt` у `solved`) не меняется — старые клиенты
+ * такую запись принимают. `_now` оставлен ради совместимости сигнатуры.
  */
-export function dayRecordFromProgress(p: DayProgress, now: Date): DayRecord | null {
+export function dayRecordFromProgress(p: DayProgress, _now: Date): DayRecord | null {
   const log = p.play.log;
   if (!p.solved && log.length === 0 && (p.hints ?? 0) === 0) return null; // подсказка без ходов — уже след дня (assisted)
   const sum = summary(log);
@@ -231,7 +235,7 @@ export function dayRecordFromProgress(p: DayProgress, now: Date): DayRecord | nu
   }
   const rec: DayRecord = {
     status: "solved",
-    solvedAt: p.solvedAt ?? now.toISOString(),
+    solvedAt: solvedAtOrDayStart(p),
     timeMs: sum.durationMs,
     technique: sum.maxTechnique,
     late: p.late,

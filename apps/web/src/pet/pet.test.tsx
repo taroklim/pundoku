@@ -121,8 +121,19 @@ describe("petDayOfPlay / dayPetMood / personalBestOf", () => {
     // Классика есть — настроение по ней, как раньше.
     expect(dayPetMood(day("2026-09-10", { withFix: true }), later, [])).toBe("tired");
     expect(dayPetMood(day("2026-09-10"), later, [])).toBe("happy");
-    expect(dayPetMood(day("2026-09-10", { solved: false, moves: 5 }), later, [])).toBe("asleep");
     expect(dayPetMood(day("2026-09-10", { solved: false, moves: 5 }), open, [])).toBe("asleep");
+  });
+
+  it("PD-197: классика начата и брошена, Лжец пойман не с первого обвинения → доволен (брошенная классика не перебивает Лжеца)", () => {
+    const later = { caught: true, firstTry: false, wrongAccusations: 2, catchT: 5000, catchPlacement: 7 };
+    const abandoned = day("2026-09-10", { solved: false, moves: 5 });
+    expect(dayPetMood(abandoned, later, [])).toBe("happy");
+    expect(dayPetMood(day("2026-09-10", { solved: false, moves: 5, withFix: true }), later, [])).toBe("happy");
+    // Лжец не пойман — по классике, как раньше: не закончил → спит.
+    expect(dayPetMood(abandoned, { ...later, caught: false, catchT: null, catchPlacement: null }, [])).toBe("asleep");
+    expect(dayPetMood(abandoned, null, [])).toBe("asleep");
+    // Решённая классика по-прежнему главнее: правки → устал.
+    expect(dayPetMood(day("2026-09-10", { withFix: true }), later, [])).toBe("tired");
   });
 
   it("личный рекорд: быстрее всех прежних дней той же сложности без подсказок; первое решение — не рекорд", () => {
@@ -150,5 +161,24 @@ describe("petDayOfPlay / dayPetMood / personalBestOf", () => {
     const fresh = day("2026-09-10", { solvedAt: "2026-09-10T10:00:00.000Z" });
     expect(personalBestOf(old, [old, fresh])).toBe(true);
     expect(personalBestOf(fresh, [old, fresh])).toBe(false); // первое решение класса на тот момент
+  });
+
+  it("PD-197: пустой solvedAt — порядок по началу даты дня, рекорд прошлого дня не пропадает задним числом", () => {
+    // Старая запись без solvedAt: рекорд против более раннего дня.
+    const a = day("2026-09-05", { solvedAt: "2026-09-05T10:00:00.000Z" });
+    const legacy: DayProgress = { ...withTime(day("2026-09-10"), 0.5), solvedAt: null };
+    expect(personalBestOf(legacy, [a, legacy])).toBe(true);
+    // Позже в архиве решён ещё более ранний день, и быстрее: он решён ПОСЛЕ legacy — рекорд legacy остаётся.
+    const archive = withTime(day("2026-09-01", { solvedAt: "2026-09-20T10:00:00.000Z" }), 0.25);
+    expect(personalBestOf(legacy, [a, legacy, archive])).toBe(true);
+    expect(personalBestOf(archive, [a, legacy, archive])).toBe(true);
+    // Две записи без solvedAt — по дате дня; результат не зависит от порядка перебора.
+    const legacyA: DayProgress = { ...a, solvedAt: null };
+    expect(personalBestOf(legacy, [legacy, legacyA])).toBe(true);
+    expect(personalBestOf(legacy, [legacyA, legacy])).toBe(true);
+    expect(personalBestOf(legacyA, [legacy, legacyA])).toBe(false);
+    // Пустой solvedAt тот же, что начало даты дня в снапшоте (выгрузка синка) — порядок совпадает на другом устройстве.
+    const synced: DayProgress = { ...legacy, solvedAt: "2026-09-10T00:00:00.000Z" };
+    expect(personalBestOf(synced, [a, synced, archive])).toBe(true);
   });
 });
