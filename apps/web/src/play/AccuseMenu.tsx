@@ -33,7 +33,8 @@ export function AccuseMenu({ cell, digit, anchor, onAccuse, onClose, returnFocus
   const root = useRef<HTMLDivElement>(null);
   const armed = useRef(false);
   const [pos, setPos] = useState<{ top: number } | null>(null);
-  useModal(scrim, root, { kind: "menu", onClose, returnFocus, initialFocus: '[role="menuitem"]' });
+  // Фокус — только когда меню стало видимым (до позиционирования оно visibility:hidden, PD-182).
+  useModal(scrim, root, { kind: "menu", onClose, returnFocus, initialFocus: '[role="menuitem"]', ready: pos !== null });
   const where = { row: Math.floor(cell / 9) + 1, col: (cell % 9) + 1 };
 
   useLayoutEffect(() => {

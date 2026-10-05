@@ -21,11 +21,19 @@ export interface ModalOptions {
   readonly initialFocus?: string;
   /** Вложенный слой открыт: Esc/Tab не обрабатываем. */
   readonly suspended?: () => boolean;
+  /**
+   * Слой видим и готов принять фокус (PD-182). Контекстные меню (`ModeMenu`/`AccuseMenu`) первый проход рендерят с
+   * `visibility:hidden`, пока `useLayoutEffect` не измерит и не поставит позицию; фокус на скрытый элемент браузер
+   * молча игнорирует (уходит на <body>). Начальный фокус ставится, когда `ready` впервые стал true. По умолчанию true.
+   */
+  readonly ready?: boolean;
 }
 
 export function useModal(scrim: RefObject<HTMLElement | null>, root: RefObject<HTMLElement | null>, options: ModalOptions): void {
   const opts = useRef(options);
   opts.current = options;
+  const ready = options.ready ?? true;
+  const focused = useRef(false);
 
   useEffect(() => {
     const opener = opts.current.returnFocus?.current ?? (document.activeElement instanceof HTMLElement ? document.activeElement : null);
@@ -39,9 +47,6 @@ export function useModal(scrim: RefObject<HTMLElement | null>, root: RefObject<H
         }
       }
     }
-    const first = opts.current.initialFocus ? root.current?.querySelector<HTMLElement>(opts.current.initialFocus) : null;
-    (first ?? root.current)?.focus({ preventScroll: true });
-
     const onKey = (event: globalThis.KeyboardEvent) => {
       if (opts.current.suspended?.()) return;
       if (event.key === "Escape") {
@@ -78,4 +83,12 @@ export function useModal(scrim: RefObject<HTMLElement | null>, root: RefObject<H
       if (opener && opener.isConnected) opener.focus({ preventScroll: true });
     };
   }, [scrim, root]);
+
+  // Начальный фокус — отдельно и после основного эффекта (opener уже запомнен): один раз, когда слой стал видимым.
+  useEffect(() => {
+    if (!ready || focused.current) return;
+    focused.current = true;
+    const first = opts.current.initialFocus ? root.current?.querySelector<HTMLElement>(opts.current.initialFocus) : null;
+    (first ?? root.current)?.focus({ preventScroll: true });
+  }, [ready, root]);
 }
