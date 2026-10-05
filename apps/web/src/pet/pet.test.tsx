@@ -106,12 +106,23 @@ describe("petDayOfPlay / dayPetMood / personalBestOf", () => {
     expect(dayPetMood(day("2026-09-10", { assisted: true, hints: 1 }), null, [])).toBe("tired");
   });
 
-  it("Лжец даты с первого обвинения — удивлён, даже без классической сетки; не с первого — не особый", () => {
+  it("Лжец даты с первого обвинения — удивлён, даже без классической сетки", () => {
     const first = { caught: true, firstTry: true, wrongAccusations: 0, catchT: 1000, catchPlacement: 3 };
     expect(dayPetMood(undefined, first, [])).toBe("surprised");
     expect(dayPetMood(day("2026-09-10", { withFix: true }), first, [])).toBe("surprised");
-    expect(dayPetMood(undefined, { ...first, firstTry: false, wrongAccusations: 2 }, [])).toBe("asleep");
-    expect(dayPetMood(undefined, { ...first, caught: false, firstTry: false, catchT: null, catchPlacement: null }, [])).toBe("asleep");
+  });
+
+  it("PD-191: Лжец пойман не с первого обвинения, классики нет → день сыгран, доволен; не пойман → спит", () => {
+    const later = { caught: true, firstTry: false, wrongAccusations: 2, catchT: 5000, catchPlacement: 7 };
+    expect(dayPetMood(undefined, later, [])).toBe("happy");
+    const open = { caught: false, firstTry: false, wrongAccusations: 1, catchT: null, catchPlacement: null };
+    expect(dayPetMood(undefined, open, [])).toBe("asleep");
+    expect(dayPetMood(undefined, { ...open, wrongAccusations: 0 }, [])).toBe("asleep");
+    // Классика есть — настроение по ней, как раньше.
+    expect(dayPetMood(day("2026-09-10", { withFix: true }), later, [])).toBe("tired");
+    expect(dayPetMood(day("2026-09-10"), later, [])).toBe("happy");
+    expect(dayPetMood(day("2026-09-10", { solved: false, moves: 5 }), later, [])).toBe("asleep");
+    expect(dayPetMood(day("2026-09-10", { solved: false, moves: 5 }), open, [])).toBe("asleep");
   });
 
   it("личный рекорд: быстрее всех прежних дней той же сложности без подсказок; первое решение — не рекорд", () => {

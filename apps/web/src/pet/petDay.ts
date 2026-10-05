@@ -66,13 +66,16 @@ export function personalBestOf(day: PetHistoryDay, all: Iterable<PetHistoryDay>)
 }
 
 /**
- * Настроение дня в листе Year: по ежедневной сетке даты; Лжец той же даты, пойманный с первого обвинения, делает день особым
- * (даже если классическая сетка не решена — это всё равно событие дня). Не играл и не закончил — спит.
+ * Настроение дня в листе Year — правило (PD-180, PD-191):
+ * - Лжец даты пойман с первого обвинения → удивлён (событие дня; даже если классическая сетка не решена или не начата).
+ * - Есть запись ежедневной (классической) сетки → настроение по ней, как раньше (не решена → спит).
+ * - Классики нет, но Лжец даты пойман (не с первого обвинения) → день сыгран: доволен. В `LiarInfo` нет правок/подсказок
+ *   партии Лжеца (только ложные обвинения — это не правки), поэтому «устал» по Лжецу здесь не выводится.
+ * - Классики нет, Лжец не начат или начат, но не пойман → спит.
  */
 export function dayPetMood(progress: DayProgress | undefined, liar: LiarInfo | null, all: Iterable<PetHistoryDay>): PetMood {
-  // Лжец даты с первого обвинения — событие дня: особый день, даже если классическая сетка не решена или не начата.
   if (liar?.caught === true && liar.firstTry) return petMood({ solved: true, corrections: 0, liarFirstTry: true });
-  if (!progress) return petMood(null);
+  if (!progress) return petMood(liar?.caught === true ? { solved: true, corrections: 0 } : null);
   return petMood(
     petDayOfPlay(progress.play, progress.solved, {
       hints: progress.hints,
