@@ -35,6 +35,8 @@ import { PlaySetup } from "./PlaySetup";
 import { ResultCard } from "./ResultCard";
 import { playStore } from "./store";
 import { Subline } from "./Subline";
+import { WaitPanel } from "./WaitPanel";
+import { useWaitView } from "./waitView";
 
 /**
  * Экран Play (PD-11). PD-144 → PD-167 (раскладка C): вкладка открывается ХАБОМ (`PlaySetup`: «Продолжить» — день, список
@@ -174,21 +176,35 @@ export function PlayScreen({ onOpenSettings, onOpenHelp, onOpenToday }: { onOpen
 
   const hub = snap.hub;
   const restoring = snap.restoring === true;
+  // PD-189: ожидание генерации — панель на месте поля (порог 600 мс, минимум 700 мс, «долго» с 4 с). Пока она (или пустота
+  // первых 600 мс) на экране, поле и панель цифр скрыты, но место за ними держится; ввод не проходит сквозь.
+  const wait = useWaitView(phase, !hub && !restoring);
+  const waiting = wait.view !== "ready";
+  // Фокус стоял на кнопке панели («Повторить», «Отмена» на долгом ожидании), а кнопка исчезла — на заголовок, не на <body>.
+  const waitFocus = useRef(false);
+  useEffect(() => {
+    if (!waitFocus.current) return;
+    const el = document.activeElement;
+    if (el && el !== document.body && el.isConnected) return;
+    waitFocus.current = false;
+    titleRef.current?.focus({ preventScroll: true });
+  }, [wait.view]);
   const cardView = !hub && phase === "solved" && cardShown;
   const fillState = ink ? "ink" : play && canFill(play) ? "ready" : "empty";
-  const showLamp = !hub && !restoring && playStore.hintAllowed();
+  const showLamp = !hub && !restoring && !waiting && playStore.hintAllowed();
   const showMore = !hub && !restoring && phase !== "solved";
 
   // PD-144 (D-1): место под док подсказки отложено постоянно, пока подсказки возможны (партия не в Ink): поле не зависит от дока.
   // До загрузки партии `play` нет — подсказки берутся из реестра режима, чтобы поле не прыгало при появлении партии.
   const hintable = !hub && (play ? !ink : def.hints);
   const fitClass = hub ? " play-hub" : fitClassName({ fit: !cardView, hintable, docked: hint.open });
+  const waitClass = hub || restoring ? "" : waiting ? " play-waiting" : wait.entered ? " play-in" : "";
 
   return (
     <div
-      className={`play${fitClass}`}
+      className={`play${fitClass}${waitClass}`}
       onKeyDown={
-        hub
+        hub || waiting
           ? undefined
           : (e) => {
               // PD-171: A — обвинить выбранную подсказку (то же меню-подтверждение, что долгое нажатие).
@@ -216,10 +232,10 @@ export function PlayScreen({ onOpenSettings, onOpenHelp, onOpenToday }: { onOpen
         trailing={
           showMore && (
             <MoreMenu
-              fill={fillState}
+              fill={waiting ? "empty" : fillState}
               onNew={() => openSheet(snap.mode)}
               onFill={() => playStore.fillCandidates()}
-              accuse={accuseState ? { state: accuseState, onAccuse: () => sel !== null && openAccuse(sel, null) } : null}
+              accuse={accuseState && !waiting ? { state: accuseState, onAccuse: () => sel !== null && openAccuse(sel, null) } : null}
             />
           )
         }
@@ -266,24 +282,25 @@ export function PlayScreen({ onOpenSettings, onOpenHelp, onOpenToday }: { onOpen
                 hintMarks={hint.marks}
                 onAccuse={liarOpen ? openAccuse : undefined}
                 canAccuse={liarOpen ? (cell) => playStore.canAccuse(cell) : undefined}
+                overlay={
+                  waiting && (
+                    <WaitPanel
+                      view={wait.view}
+                      onFocusIn={() => (waitFocus.current = true)}
+                      onRetry={() => {
+                        wait.armImmediate();
+                        playStore.retry();
+                      }}
+                      onCancel={() => playStore.toHub()}
+                    />
+                  )
+                }
               />
 
               {/* Свободное место — МЕЖДУ полем и панелью (макет, находка 1); в зазоре — статус. Гибкий — только он (и поле). */}
               <div className="gap">
-                {phase === "loading" && (
-                  <p className="status" role="status">
-                    {t("play.preparing")}
-                  </p>
-                )}
-                {phase === "error" && (
-                  <p className="status" role="alert">
-                    {t("play.failed")}{" "}
-                    <button type="button" className="link" onClick={() => playStore.retry()}>
-                      {t("play.retry")}
-                    </button>
-                  </p>
-                )}
-                {/* Пока док открыт, строка «N cells left» скрыта: сообщение на экране одно (макет PD-133 §4). */}
+                {/* PD-189: «Готовим…» / «Не удалось» — в панели ожидания на месте поля (`WaitPanel`), не в строке статуса.
+                    Пока док открыт, строка «N cells left» скрыта: сообщение на экране одно (макет PD-133 §4). */}
                 {(phase === "playing" || phase === "solved") && !hint.open && (hint.nudge ? (
                   <p className="status nudge" data-testid="hint-nudge">
                     {boldParts(t("hint.nudge"))}

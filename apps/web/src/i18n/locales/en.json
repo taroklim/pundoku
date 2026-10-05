@@ -184,8 +184,10 @@
   "play": {
     "difficulty": "Difficulty",
     "preparing": "Preparing a puzzle…",
+    "preparingLong": "Some puzzles take a little longer.",
     "failed": "Couldn’t prepare a puzzle.",
     "retry": "Try again",
+    "cancel": "Cancel",
     "newPuzzle": "New puzzle",
     "fillTitle": "Fill candidates",
     "fillMessage": "Notes go into every empty cell that has none yet, with the digits that still fit. Undo takes it all back in one step.",
