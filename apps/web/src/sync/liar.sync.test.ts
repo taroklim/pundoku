@@ -140,6 +140,31 @@ describe("снапшот: раздел liar", () => {
     expect(sameSnapshotData(a, base)).toBe(false);
     expect(sameSnapshotData(a, { ...base, liar: { [DATE]: { ...unfinished } } })).toBe(true);
   });
+
+  it("PD-197: решённый без solvedAt → начало даты дня, а не «сейчас»; слияние двух решённых детерминированно и стабильно", () => {
+    const legacy = savedOf(solvedLiar(), null);
+    const r1 = liarRecordFromSaved(legacy, NOW)!;
+    const r2 = liarRecordFromSaved(legacy, new Date("2027-01-01T12:34:56.000Z"))!;
+    expect(r1.solvedAt).toBe(`${DATE}T00:00:00.000Z`);
+    expect(r2).toEqual(r1); // от «сейчас» не зависит: каждый цикл синка выгружает одно и то же
+    expect(sanitizeLiarRecord(JSON.parse(JSON.stringify(r1)))).toEqual(r1); // схема принимает
+    // Другое устройство решило тот же день с настоящим моментом: запись без него (начало дня) — раньше, выигрывает.
+    const real = liarRecordFromSaved(savedOf(solvedLiar()), NOW)!;
+    expect(pickLiarRecord(r1, real)).toBe(r1);
+    expect(pickLiarRecord(real, r1)).toBe(r1);
+    const base: SnapshotData = { schemaVersion: 1, grid: null, days: {} };
+    const local: SnapshotData = { ...base, liar: { [DATE]: liarRecordFromSaved(legacy, NOW)! } };
+    const server: SnapshotData = { ...base, liar: { [DATE]: real } };
+    const m1 = mergeSnapshots(local, server, { serverNewer: true });
+    expect(m1.liar![DATE]!.solvedAt).toBe(`${DATE}T00:00:00.000Z`);
+    // Следующий цикл (позже): локальная запись выгружается заново — данные не меняются, повторного PUT нет.
+    const local2: SnapshotData = { ...base, liar: { [DATE]: liarRecordFromSaved(legacy, new Date("2026-10-06T08:00:00.000Z"))! } };
+    const m2 = mergeSnapshots(local2, m1, { serverNewer: true });
+    expect(sameSnapshotData(m2, m1)).toBe(true);
+    expect(sameSnapshotData(mergeSnapshots(m1, server, { serverNewer: false }), m1)).toBe(true);
+    // Настоящий solvedAt не трогается.
+    expect(real.solvedAt).toBe("2026-10-05T09:00:00.000Z");
+  });
 });
 
 describe("синхронизация Лжеца дня", () => {
