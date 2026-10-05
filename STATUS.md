@@ -506,9 +506,9 @@ Gates: build → typecheck, lint, тесты web/engine/api (api с TEST_DATABAS
 | PD-198 | QA PD-197 | qa-tester | P3 | completed (PASS: синк без solvedAt 1 PUT/5 циклов, слияние детерминировано, рекорд 24 перестановки, живой webkit+chromium; смержено в main c1dd1cb) | PD-197 |
 | PD-199 | Глифы: тексты лесенки подсказок говорят «цифра» — в режиме Глифы говорить «знак» (en/uk/ru) | developer | P3 | pending | — |
 | PD-200 | Заметки: вычеркнутый кандидат в нижнем ряду лежит на полосе подчёркивания клетки (Глифы и Классика «8 9»), на 320 читается с трудом — qa-195-out/shots/cmp-struck-cell30.png | developer | P3 | pending | — |
-| PD-201 | Мелодия: engine `melodyOf(log, puzzle)` + `unitsCompletedBy(grid, cell)` и web-аудиоядро без UI (Web Audio синтез пентатоники, разблокировка после жеста, `audioSession.type='ambient'`, тихая громкость, арпеджио юнита, проигрывание мелодии пути); ветка `pd-201` | developer | P1 | in_progress | — |
+| PD-201 | Мелодия: engine `melodyOf(log, puzzle)` + `unitsCompletedBy(grid, cell)` и web-аудиоядро без UI (Web Audio синтез пентатоники, разблокировка после жеста, `audioSession.type='ambient'`, тихая громкость, арпеджио юнита, проигрывание мелодии пути); ветка `pd-201` | developer | P1 | completed (pd-201 @ 8a958ee: engine melodyOf/unitsCompletedBy, web melody/audio.ts, слот melody ready:false; engine 378, web 1473, стенд pd201-audio-check 40/40) | — |
 | PD-202 | Мелодия: 2–3 варианта UI с кадрами + рекомендация (кнопка «Сыграть» на карточке, индикатор/выключатель звука в партии, визуальный отклик на арпеджио юнита) + HTML-демо 2–3 тембров — на выбор владельцу через Coordinator | designer | P1 | completed (design/pd202-melody.html/.md, кадры design/pd202-shots/; решения владельца 2026-10-05 — см. раздел «Решения владельца по Мелодии») | — |
-| PD-203 | Мелодия: web-режим в списке Play (слот `melody`, звук только в этом режиме, UI по выбору владельца из PD-202) | developer | P1 | pending | PD-201, PD-202 |
+| PD-203 | Мелодия: web-режим в списке Play (слот `melody`, звук только в этом режиме, UI по выбору владельца из PD-202); ветка `pd-201` поверх 8a958ee | developer | P1 | in_progress | PD-201, PD-202 |
 | PD-204 | QA PD-203 (живая генерация без заглушки, Web Audio в chromium/webkit, регресс режимов, iPhone-чек-лист звука) | qa-tester | P1 | pending | PD-203 |
 | PD-205 | Мерж Мелодии в локальный main + gates на слитом | product-manager | P1 | pending | PD-204 |
 
@@ -599,8 +599,8 @@ Gates: build → typecheck, lint, тесты web/engine/api (api с `TEST_DATABA
 ## Агенты (текущий статус)
 | Имя | Роль | Статус | Тикет | Обновлено |
 |-----|------|--------|-------|-----------|
-| PM-Pundoku-15 | product-manager | waiting | PD-201 | 2026-10-05 16:12 |
-| Dev-Pundoku-Melody | developer | working | PD-201 | 2026-10-05 19:30 |
+| PM-Pundoku-15 | product-manager | waiting | PD-203 | 2026-10-05 16:12 |
+| Dev-Pundoku-Melody | developer | working | PD-203 | 2026-10-05 19:30 |
 
 ## Чек-пойнт 2026-10-01 (конец сессии PM-Pundoku-7)
 - **Сделано:** решения владельца по релизу 1.1 зафиксированы; PD-74 (UI ink, pd-74 @ 73444b2), PD-75 (UI таймлапса/PNG Rhythm, pd-75 @ bfeedbf), PD-80 (счёт ходов в ink, pd-80 @ de5a52d) смержены в локальный main; gates на слитом: build/typecheck/lint, web 624, engine 178 (api не затронут, 174+3). PD-78 сделан в PD-74. PD-79 закрыт: не дефект.
