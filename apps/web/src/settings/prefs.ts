@@ -77,7 +77,33 @@ export const setAutoClearNotes = autoClearPref.set;
 export const getHighlightPeers = peersPref.get;
 export const setHighlightPeers = peersPref.set;
 
-const WATCHED_KEYS: readonly string[] = [HIGHLIGHT_WRONG_KEY, AUTO_CLEAR_NOTES_KEY, HIGHLIGHT_PEERS_KEY];
+/**
+ * PD-180: Питомец-клякса на карточке результата и в листе дня Year. По умолчанию ВЫКЛ (план режимов §0/§6): включено только
+ * значением «1», как подсветка ошибок. Локальная настройка устройства — в снапшот не идёт, настроение не хранится.
+ */
+export const PET_KEY = "pundoku.pet";
+let petMemory = false;
+
+export function getPetEnabled(): boolean {
+  try {
+    return localStorage.getItem(PET_KEY) === "1";
+  } catch {
+    return petMemory;
+  }
+}
+
+export function setPetEnabled(on: boolean): void {
+  petMemory = on;
+  try {
+    if (on) localStorage.setItem(PET_KEY, "1");
+    else localStorage.removeItem(PET_KEY);
+  } catch {
+    /* выбор живёт до перезагрузки */
+  }
+  notify();
+}
+
+const WATCHED_KEYS: readonly string[] = [HIGHLIGHT_WRONG_KEY, AUTO_CLEAR_NOTES_KEY, HIGHLIGHT_PEERS_KEY, PET_KEY];
 
 function subscribe(listener: () => void): () => void {
   listeners.add(listener);
@@ -102,4 +128,8 @@ export function useAutoClearNotes(): boolean {
 
 export function useHighlightPeers(): boolean {
   return useSyncExternalStore(subscribe, getHighlightPeers, () => true);
+}
+
+export function usePetEnabled(): boolean {
+  return useSyncExternalStore(subscribe, getPetEnabled, () => false);
 }

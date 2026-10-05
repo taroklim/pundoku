@@ -8,11 +8,15 @@ import { setLocale, SUPPORTED_LOCALES } from "../i18n";
 import {
   setAutoClearNotes,
   setHighlightPeers,
+  setPetEnabled,
   setHighlightWrong,
   useAutoClearNotes,
   useHighlightPeers,
+  usePetEnabled,
   useHighlightWrong,
 } from "../settings/prefs";
+import { PET_MOODS } from "@pundoku/engine";
+import { PetBlot } from "../pet/PetBlot";
 import { ActionSheet } from "./ActionSheet";
 import { KEY_GROUP, KEY_GROUPS, keyGroups, isCompleteKey, spellGroup } from "./key";
 import type { TabId } from "../shell/tabs";
@@ -107,6 +111,7 @@ export function SettingsScreen({ store, onBack, origin = "today", onOpenHelp }: 
   const highlightWrong = useHighlightWrong();
   const autoClearNotes = useAutoClearNotes();
   const highlightPeers = useHighlightPeers();
+  const petOn = usePetEnabled();
 
   useEffect(() => {
     store.open();
@@ -617,6 +622,43 @@ export function SettingsScreen({ store, onBack, origin = "today", onOpenHelp }: 
         <p className="settings-foot" id="settings-game-foot">
           {t("settings.game.highlightWrongFoot")}
         </p>
+      </section>
+
+      {/* PD-180: «Дополнительно» — Питомец-клякса (опция, не режим; выкл по умолчанию). Превью настроений — честное описание. */}
+      <section className="settings-sec" aria-labelledby="settings-h-extras">
+        <h2 className="settings-head" id="settings-h-extras">
+          {t("settings.extras.head")}
+        </h2>
+        <div className="settings-card">
+          <label className="settings-row settings-switch">
+            <span className="lab">{t("settings.extras.pet")}</span>
+            <input
+              type="checkbox"
+              role="switch"
+              className="st-switch"
+              checked={petOn}
+              onChange={(e) => setPetEnabled(e.target.checked)}
+              aria-describedby="settings-pet-foot"
+              data-testid="pet-toggle"
+            />
+          </label>
+        </div>
+        <p className="settings-foot" id="settings-pet-foot">
+          {t("settings.extras.petFoot")}
+        </p>
+        <div className="settings-card">
+          <div className={`pet-moods${petOn ? "" : " off"}`} role="list" aria-label={t("settings.extras.previewLabel")} data-testid="pet-moods">
+            {PET_MOODS.map((m) => (
+              <figure key={m} role="listitem">
+                <PetBlot mood={m} size={40} decorative />
+                <figcaption>
+                  {t(`pet.mood.${m}`)}
+                  <small>{t(`pet.when.${m}`)}</small>
+                </figcaption>
+              </figure>
+            ))}
+          </div>
+        </div>
       </section>
 
       <section className="settings-sec" aria-labelledby="settings-h-key">

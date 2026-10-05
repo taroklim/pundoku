@@ -1,0 +1,167 @@
+// @vitest-environment jsdom
+/**
+ * PD-180: где живёт клякса. Карточка результата и лист дня Year — да (только при включённом тумблере); страница месяца,
+ * полотно Year и игровое поле — никогда. «Личный рекорд» на карточке Today — хук `usePersonalBest`.
+ */
+import { act } from "react";
+import { createRoot } from "react-dom/client";
+import type { Root } from "react-dom/client";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import i18n from "../i18n";
+import { ResultCard } from "../play/ResultCard";
+import type { LiarInfo } from "../play/savedPlay";
+import { setPetEnabled } from "../settings/prefs";
+import { progressOf } from "../sync/fixtures";
+import type { DayProgress } from "../today/repository";
+import { YearScreen } from "../year/YearScreen";
+import { usePersonalBest } from "./usePersonalBest";
+
+(globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
+
+const TODAY = "2026-09-29";
+let host: HTMLDivElement;
+let root: Root;
+beforeEach(async () => {
+  await i18n.changeLanguage("en");
+  localStorage.clear();
+  setPetEnabled(false);
+  host = document.createElement("div");
+  host.id = "root";
+  document.body.append(host);
+  root = createRoot(host);
+});
+afterEach(() => {
+  act(() => root.unmount());
+  host.remove();
+  setPetEnabled(false);
+});
+
+const pet = (id: string) => document.querySelector(`[data-testid="${id}"] svg.pet-svg`);
+const moodOf = (id: string) => pet(id)?.getAttribute("data-mood") ?? null;
+const LIAR_FIRST: LiarInfo = { caught: true, firstTry: true, wrongAccusations: 0, catchT: 4000, catchPlacement: 12 };
+
+describe("карточка результата", () => {
+  const card = (play: DayProgress["play"], extra: Partial<Parameters<typeof ResultCard>[0]> = {}) =>
+    act(() => root.render(<ResultCard play={play} cardRef={{ current: null }} title="Solved" {...extra} />));
+
+  it("по умолчанию (тумблер выкл) кляксы нет и место под неё не резервируется", () => {
+    card(progressOf("2026-09-10").play);
+    expect(pet("pet-card")).toBeNull();
+    expect(host.querySelector('[data-testid="result-card"]')!.classList.contains("has-pet")).toBe(false);
+  });
+
+  it("включена: чисто → доволен, правка → устал, подсказка → устал; клякса после заголовка в DOM", () => {
+    setPetEnabled(true);
+    card(progressOf("2026-09-10").play);
+    expect(moodOf("pet-card")).toBe("happy");
+    const section = host.querySelector('[data-testid="result-card"]')!;
+    expect(section.classList.contains("has-pet")).toBe(true);
+    expect(section.firstElementChild!.tagName).toBe("H2");
+    expect(pet("pet-card")!.getAttribute("aria-label")).toBe("Blot, pleased");
+    card(progressOf("2026-09-10", { withFix: true }).play);
+    expect(moodOf("pet-card")).toBe("tired");
+    card(progressOf("2026-09-10").play, { hints: 2 });
+    expect(moodOf("pet-card")).toBe("tired");
+  });
+
+  it("особый день: Лжец с первого обвинения или личный рекорд → удивлён", () => {
+    setPetEnabled(true);
+    card(progressOf("2026-09-10", { withFix: true }).play, { liar: { info: LIAR_FIRST, average: null } });
+    expect(moodOf("pet-card")).toBe("surprised");
+    card(progressOf("2026-09-10").play, { personalBest: true });
+    expect(moodOf("pet-card")).toBe("surprised");
+  });
+
+  it("тумблер действует на открытой карточке сразу (подписка на настройку)", () => {
+    card(progressOf("2026-09-10").play);
+    expect(pet("pet-card")).toBeNull();
+    act(() => setPetEnabled(true));
+    expect(moodOf("pet-card")).toBe("happy");
+    act(() => setPetEnabled(false));
+    expect(pet("pet-card")).toBeNull();
+  });
+});
+
+describe("Year: только лист дня", () => {
+  const render = (days: DayProgress[], liar?: ReadonlyMap<string, LiarInfo>) =>
+    act(() => root.render(<YearScreen days={days} firstUse="2026-09-01" today={TODAY} liar={liar} onOpenToday={vi.fn()} onPlayDay={vi.fn()} />));
+  const click = (el: Element | null) => act(() => (el as HTMLElement).click());
+  const openMonth = () => click(host.querySelector('.year-month[data-month="8"]'));
+  const openDay = (date: string) => click(document.querySelector(`.ycell[data-date="${date}"]`));
+
+  it("полотно и страница месяца — без клякс; лист дня — клякса рядом с датой (40 pt)", () => {
+    setPetEnabled(true);
+    render([progressOf("2026-09-10"), progressOf("2026-09-11", { withFix: true })]);
+    expect(document.querySelector("svg.pet-svg")).toBeNull();
+    openMonth();
+    expect(document.querySelector('[data-testid="month-page"]')).not.toBeNull();
+    expect(document.querySelector("svg.pet-svg")).toBeNull();
+    openDay("2026-09-11");
+    expect(moodOf("pet-year")).toBe("tired");
+    expect(pet("pet-year")!.getAttribute("width")).toBe("40");
+    expect(document.querySelectorAll("svg.pet-svg")).toHaveLength(1);
+    expect(document.querySelector(".dc-head h3")).not.toBeNull();
+  });
+
+  it("не играл → спит; не закончил → спит; будущий день — без кляксы", () => {
+    setPetEnabled(true);
+    render([progressOf("2026-09-10"), progressOf("2026-09-12", { solved: false, moves: 4 })]);
+    openMonth();
+    openDay("2026-09-11");
+    expect(moodOf("pet-year")).toBe("asleep");
+    click(document.querySelector(".ysheet .back"));
+    openDay("2026-09-12");
+    expect(moodOf("pet-year")).toBe("asleep");
+    click(document.querySelector(".ysheet .back"));
+    openDay("2026-09-30");
+    expect(pet("pet-year")).toBeNull();
+  });
+
+  it("Лжец даты с первого обвинения → удивлён; выключенный тумблер — кляксы нет", () => {
+    setPetEnabled(true);
+    render([progressOf("2026-09-10")], new Map([["2026-09-10", LIAR_FIRST]]));
+    openMonth();
+    openDay("2026-09-10");
+    expect(moodOf("pet-year")).toBe("surprised");
+    act(() => setPetEnabled(false));
+    expect(pet("pet-year")).toBeNull();
+  });
+});
+
+describe("игровое поле — никогда", () => {
+  const fs = { read: (p: string) => import(/* @vite-ignore */ `${p}?raw`).then((m: { default: string }) => m.default) };
+  it.each(["../play/Board.tsx", "../play/controls.tsx", "../today/MiniBoard.tsx", "../play/ReplayField.tsx"])("%s не импортирует питомца", async (file) => {
+    const src = await fs.read(file);
+    expect(src).not.toMatch(/PetBlot|from "\.\.\/pet\//);
+  });
+});
+
+describe("usePersonalBest", () => {
+  function Probe({ enabled, list, day }: { enabled: boolean; list: () => Promise<DayProgress[]>; day: DayProgress | null }) {
+    const best = usePersonalBest(enabled, list, day && { date: day.date, difficulty: day.difficulty, play: day.play, assisted: day.assisted });
+    return <span data-testid="best">{String(best)}</span>;
+  }
+  const flush = () => act(async () => void (await new Promise((r) => setTimeout(r, 0))));
+  const fast = (d: DayProgress): DayProgress => ({ ...d, play: { ...d.play, log: d.play.log.map((m) => ({ ...m, t: Math.round(m.t / 2) })) } });
+
+  it("выкл — историю не читает; вкл — рекорд по истории (своя запись — из хранилища, иначе из экрана)", async () => {
+    const a = progressOf("2026-09-10");
+    const b = fast(progressOf("2026-09-11"));
+    const list = vi.fn(async () => [a, b]);
+    act(() => root.render(<Probe enabled={false} list={list} day={b} />));
+    await flush();
+    expect(list).not.toHaveBeenCalled();
+    expect(host.textContent).toBe("false");
+    act(() => root.render(<Probe enabled list={list} day={b} />));
+    await flush();
+    expect(host.textContent).toBe("true");
+    // Записи самого дня в хранилище ещё нет — берётся снапшот экрана.
+    const onlyOld = vi.fn(async () => [a]);
+    act(() => root.render(<Probe enabled list={onlyOld} day={b} />));
+    await flush();
+    expect(host.textContent).toBe("true");
+    act(() => root.render(<Probe enabled list={list} day={a} />));
+    await flush();
+    expect(host.textContent).toBe("false");
+  });
+});

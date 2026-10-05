@@ -7,7 +7,10 @@ import {
   getHighlightWrong,
   HIGHLIGHT_PEERS_KEY,
   HIGHLIGHT_WRONG_KEY,
+  PET_KEY,
+  getPetEnabled,
   setAutoClearNotes,
+  setPetEnabled,
   setHighlightPeers,
   setHighlightWrong,
 } from "./prefs";
@@ -101,5 +104,31 @@ describe.each([
     expect(get()).toBe(false);
     set(true);
     expect(get()).toBe(true);
+  });
+});
+
+describe("prefs: питомец-клякса (PD-180)", () => {
+  beforeEach(() => setPetEnabled(false));
+
+  it("по умолчанию ВЫКЛ (ключа нет), включено только значением «1», выкл удаляет ключ", () => {
+    expect(getPetEnabled()).toBe(false);
+    setPetEnabled(true);
+    expect(localStorage.getItem(PET_KEY)).toBe("1");
+    expect(getPetEnabled()).toBe(true);
+    localStorage.setItem(PET_KEY, "true");
+    expect(getPetEnabled()).toBe(false);
+    setPetEnabled(false);
+    expect(localStorage.getItem(PET_KEY)).toBeNull();
+  });
+
+  it("localStorage недоступен: значение живёт в памяти", () => {
+    vi.spyOn(Storage.prototype, "getItem").mockImplementation(() => {
+      throw new Error("denied");
+    });
+    vi.spyOn(Storage.prototype, "setItem").mockImplementation(() => {
+      throw new Error("denied");
+    });
+    setPetEnabled(true);
+    expect(getPetEnabled()).toBe(true);
   });
 });

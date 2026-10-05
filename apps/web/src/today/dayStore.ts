@@ -194,6 +194,20 @@ export class DayStore extends GameStore<DaySnapshot> {
     }
   }
 
+  /**
+   * PD-180: все записи дней (для «личного рекорда» питомца на карточке). Хранилище без списка дней или с ошибкой — пусто:
+   * питомец тогда просто не «удивится» рекордом.
+   */
+  async listDays(): Promise<DayProgress[]> {
+    const repo = this.deps.repo as Partial<SyncStorage>;
+    if (typeof repo.listDays !== "function") return [];
+    try {
+      return await repo.listDays();
+    } catch {
+      return [];
+    }
+  }
+
   /** Ink (PD-71): на Today — да; в архиве — только если правила (`INK_RULES.allowInArchive`) это разрешают. */
   protected override inkAllowed(): boolean {
     return !this.archive || INK_RULES.allowInArchive;
