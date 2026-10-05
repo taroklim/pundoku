@@ -13,7 +13,7 @@
  * Никаких pkill: браузеры закрываются в finally.
  */
 import { createRequire } from "node:module";
-import { existsSync, mkdirSync, rmSync } from "node:fs";
+import { existsSync, mkdirSync, readdirSync, rmSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
@@ -36,8 +36,11 @@ const { dailyPuzzle } = await import(pathToFileURL(join(HERE, "../packages/engin
 
 const BASE = process.env.BASE ?? "http://localhost:5194";
 const OUT = join(HERE, "pd194-shots");
-rmSync(OUT, { recursive: true, force: true });
+// Чистим только собственные кадры прогона (`<cr|wk>-<ширина>-<схема>-…png`, debug-кадры); ручные кадры
+// (например cr-struck-notes-*.png) в той же папке сохраняются.
+const OWN_SHOT = /^(cr|wk)-\d{3}-(light|dark)-.*\.png$/;
 mkdirSync(OUT, { recursive: true });
+for (const f of readdirSync(OUT)) if (OWN_SHOT.test(f)) rmSync(join(OUT, f), { force: true });
 const P = dailyPuzzle("2026-10-05", "easy");
 const PUZZLE = { mission: P.mission, solution: P.solution, difficulty: P.difficulty, seed: P.seed };
 const EMPTY = [...P.mission].flatMap((c, i) => (c === "0" ? [i] : []));
@@ -119,7 +122,8 @@ async function open(browser, c) {
   const errs = [];
   page.on("pageerror", (e) => errs.push(e.message));
   page.on("console", (m) => {
-    if (m.type() === "error" && !/Failed to load resource|\/api\/|ERR_CONNECTION|404|net::/.test(m.text())) errs.push(m.text());
+    // webkit без API: прерванные запросы /api/daily и generate.worker пишут «… due to access control checks» — шум стенда.
+    if (m.type() === "error" && !/Failed to load resource|\/api\/|ERR_CONNECTION|404|net::|access control checks/.test(m.text())) errs.push(m.text());
   });
   return { ctx, page, errs };
 }
