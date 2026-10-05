@@ -4,7 +4,7 @@
  * 700 мс, «долго» с 4 с (второй текст + «Отмена»), отмена (хаб, Worker погашен, поздний ответ проигнорирован), таймаут →
  * «Не удалось» → «Повторить» (панель сразу, без порога). Плюс тексты en/uk/ru и геометрия знака.
  */
-import { act } from "react";
+import { act, useLayoutEffect, useSyncExternalStore } from "react";
 import { createRoot } from "react-dom/client";
 import type { Root } from "react-dom/client";
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
@@ -255,6 +255,80 @@ describe("таймаут → ошибка → повтор", () => {
     tap(q("wait-retry")!);
     tick(WAIT_LONG_AFTER_MS);
     expect(panel()!.dataset.state).toBe("long");
+  });
+});
+
+/**
+ * PD-192: кадр сразу после перехода в загрузку. Проба — соседний компонент на том же сторе: её layout-эффект видит DOM
+ * каждого коммита ДО пассивных эффектов (то, что браузер успевает нарисовать). Поле без `play-waiting` в фазе loading —
+ * мигание пустой сетки с панелью цифр.
+ */
+describe("первый кадр загрузки (PD-192)", () => {
+  interface Frame {
+    phase: string;
+    hub: boolean;
+    cls: string;
+    board: boolean;
+  }
+  let frames: Frame[] = [];
+  function Probe() {
+    const s = useSyncExternalStore(playStore.subscribe, playStore.getSnapshot);
+    useLayoutEffect(() => {
+      const el = host.querySelector<HTMLElement>(".play");
+      frames.push({ phase: s.phase, hub: s.hub, cls: el?.className ?? "", board: !!el?.querySelector(".board") });
+    });
+    return null;
+  }
+  const mount = () =>
+    act(() =>
+      root.render(
+        <>
+          <PlayScreen />
+          <Probe />
+        </>,
+      ),
+    );
+  const flashes = () => frames.filter((f) => !f.hub && f.phase === "loading" && f.board && !/\bplay-waiting\b/.test(f.cls));
+
+  beforeEach(() => {
+    frames = [];
+  });
+
+  it("хаб → Classic: ни одного коммита с полем без play-waiting", () => {
+    mount();
+    act(() => playStore.startNew("classic", "expert"));
+    expect(frames.some((f) => !f.hub && f.phase === "loading")).toBe(true);
+    expect(flashes()).toEqual([]);
+  });
+
+  it("хаб → Лжец и хаб → Лжец дня — то же", () => {
+    mount();
+    act(() => playStore.startNew("liar", "master"));
+    act(() => playStore.toHub());
+    act(() => playStore.startDaily("2026-10-05"));
+    expect(frames.filter((f) => !f.hub && f.phase === "loading").length).toBeGreaterThan(1);
+    expect(flashes()).toEqual([]);
+  });
+
+  it("«Отмена» → повторный старт и «Повторить» после ошибки — то же", () => {
+    mount();
+    act(() => playStore.startNew("classic", "expert"));
+    tick(WAIT_LONG_AFTER_MS);
+    tap(q("wait-cancel")!);
+    act(() => playStore.startNew("classic", "expert"));
+    act(() => last().onerror?.());
+    tap(q("wait-retry")!);
+    expect(flashes()).toEqual([]);
+  });
+
+  it("новая партия с идущей: старое поле не мелькает до пустоты", () => {
+    mount();
+    act(() => playStore.startNew("classic", "expert"));
+    last().done();
+    expect(playStore.getSnapshot().phase).toBe("playing");
+    frames = [];
+    act(() => playStore.startNew("classic", "expert"));
+    expect(flashes()).toEqual([]);
   });
 });
 

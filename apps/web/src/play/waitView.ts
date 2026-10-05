@@ -118,5 +118,9 @@ export function useWaitView(phase: Phase, on: boolean): WaitState {
     immediate.current = true;
   }, []);
 
-  return { view, entered, armImmediate };
+  // PD-192: эффект выше ставит "pre" уже после коммита — до него на экран успевал попасть кадр с полем и панелью цифр
+  // (хаб → «Начать», новая партия с идущей). Пока эффект не догнал фазу, первый кадр загрузки считается пустым здесь же.
+  const shown: WaitView = on && phase === "loading" && view === "ready" ? "pre" : view;
+
+  return { view: shown, entered, armImmediate };
 }
