@@ -14,6 +14,10 @@
  *   <tag>-settings-off|on.png  — Настройки → «Extras»: тумблер выкл (по умолчанию) и вкл; -settings-preview — превью 4 настроений.
  * Проверки: настроение каждой кляксы = ожидаемое; на полотне Year, странице месяца и на поле клякс нет; при Reduce Motion
  * клякса стоит (transform не меняется), без него — дышит; тумблер по умолчанию выкл. Никаких pkill: браузеры закрываются в finally.
+ *
+ * PD-184: PART=year — переснять только кадры листа дня Year (остальные кадры не трогаются). В листе дня Year дополнительно
+ * проверяется: центр кляксы = центр блока даты по вертикали (±1 px), дата не заезжает на кляксу. Конфиг uk + AX3 (320) —
+ * самая длинная дата; для него снимается только Year.
  */
 import { spawnSync } from "node:child_process";
 import { createRequire } from "node:module";
@@ -40,8 +44,10 @@ const { chromium, webkit } = loadPlaywright();
 const BASE = process.env.BASE ?? "http://localhost:4280";
 const OUT = join(HERE, "pd180-shots");
 const ONLY = process.env.ONLY; // cr | wk — перезаписать кадры только своего движка
-if (ONLY && existsSync(OUT)) for (const f of readdirSync(OUT)) if (f.startsWith(`${ONLY}-`)) rmSync(join(OUT, f));
-if (!ONLY) rmSync(OUT, { recursive: true, force: true });
+const PART = process.env.PART; // year — только лист дня Year
+const mine = (f) => (!ONLY || f.startsWith(`${ONLY}-`)) && (!PART || f.includes(`-${PART}-`));
+if ((ONLY || PART) && existsSync(OUT)) for (const f of readdirSync(OUT)) if (mine(f)) rmSync(join(OUT, f));
+if (!ONLY && !PART) rmSync(OUT, { recursive: true, force: true });
 mkdirSync(OUT, { recursive: true });
 
 const localDate = (d = new Date()) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
@@ -64,7 +70,9 @@ const CONFIGS = [
   { w: 390, h: 844, scheme: "dark", lang: "ru" },
   { w: 320, h: 568, scheme: "light", lang: "ru", ax3: true },
   { w: 320, h: 568, scheme: "dark", lang: "en", rm: true },
+  { w: 320, h: 568, scheme: "light", lang: "uk", ax3: true, only: "year" },
 ];
+const runs = (c, part) => (!PART || PART === part) && (!c.only || c.only === part);
 
 async function open(browser, c, { pet, days, firstUse }) {
   const ctx = await browser.newContext({
@@ -72,7 +80,7 @@ async function open(browser, c, { pet, days, firstUse }) {
     deviceScaleFactor: 2,
     colorScheme: c.scheme,
     reducedMotion: c.rm ? "reduce" : "no-preference",
-    locale: { ru: "ru-RU", en: "en-US" }[c.lang],
+    locale: { ru: "ru-RU", en: "en-US", uk: "uk-UA" }[c.lang],
     serviceWorkers: "block",
   });
   await ctx.addInitScript(
@@ -142,7 +150,7 @@ async function runConfig(name, type, c) {
   const tag = `${name}-${c.w}-${c.scheme}-${c.lang}${c.ax3 ? "-ax3" : ""}${c.rm ? "-rm" : ""}`;
   try {
     // ---- карточка результата Today: 3 настроения ----
-    for (const mood of ["happy", "tired", "surprised"]) {
+    for (const mood of runs(c, "card") ? ["happy", "tired", "surprised"] : []) {
       const { ctx, page, errs } = await open(browser, c, { pet: true, days: SEED.card[mood], firstUse: null });
       try {
         await page.goto(`${BASE}/#/today`);
@@ -180,7 +188,7 @@ async function runConfig(name, type, c) {
     }
 
     // ---- Year: лист дня, 4 настроения ----
-    {
+    if (runs(c, "year")) {
       const first = SEED.year.map((d) => d.date).sort()[0];
       const { ctx, page, errs } = await open(browser, c, { pet: true, days: SEED.year, firstUse: first });
       try {
@@ -206,6 +214,17 @@ async function runConfig(name, type, c) {
           ok(`${tag}: Year ${date} — ${mood}`, got === mood, got ?? "");
           const box = await page.locator('[data-testid="pet-year"] svg.pet-svg').boundingBox();
           ok(`${tag}: Year — 40 pt`, Math.round(box.width) === 40, String(box.width));
+          // PD-184: клякса по центру блока даты по вертикали; текст даты не заезжает на слот кляксы.
+          const geo = await page.evaluate(() => {
+            const h = document.querySelector('[data-testid="day-card"] .dc-head h3').getBoundingClientRect();
+            const p = document.querySelector('[data-testid="pet-year"]').getBoundingClientRect();
+            const r = document.createRange();
+            r.selectNodeContents(document.querySelector('[data-testid="day-card"] .dc-head h3'));
+            const t = r.getBoundingClientRect();
+            return { dy: (p.top + p.bottom) / 2 - (h.top + h.bottom) / 2, gap: p.left - t.right, th: t.height };
+          });
+          ok(`${tag}: Year — клякса по центру даты`, Math.abs(geo.dy) <= 1, `dy=${geo.dy.toFixed(2)} th=${geo.th.toFixed(1)}`);
+          ok(`${tag}: Year — дата не наезжает на кляксу`, geo.gap >= 0, `gap=${geo.gap.toFixed(1)}`);
           await page.screenshot({ path: join(OUT, `${tag}-year-${mood}.png`) });
         }
         ok(`${tag}: Year без ошибок консоли`, errs.length === 0, errs.join(" | "));
@@ -215,7 +234,7 @@ async function runConfig(name, type, c) {
     }
 
     // ---- Настройки: тумблер выкл по умолчанию → вкл ----
-    {
+    if (runs(c, "settings")) {
       const { ctx, page, errs } = await open(browser, c, { pet: false, days: [], firstUse: null });
       try {
         await page.goto(`${BASE}/#/settings`);

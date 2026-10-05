@@ -49,10 +49,11 @@
   padding-right: 52px;
 }
 
-/* Лист дня Year: рядом с датой, 40 pt в слоте 44. */
+/* Лист дня Year: рядом с датой, 40 pt в слоте 44, по центру строки даты по вертикали (PD-184, решение владельца);
+   при переносе длинной даты (AX3, uk/ru) — по центру всего блока даты. */
 .daycard .dc-head {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: space-between;
   gap: 12px;
 }
