@@ -21,8 +21,8 @@ type Tree = { [k: string]: string | Tree };
 const get = (t: Tree, path: string): unknown => path.split(".").reduce<unknown>((n, k) => (n as Tree | undefined)?.[k], t);
 
 describe("реестр режимов", () => {
-  it("сейчас готовы Классика, Чернила, Лжец (PD-171) и Глифы (PD-194), в этом порядке; Классика — режим по умолчанию", () => {
-    expect(availableModes().map((m) => m.id)).toEqual(["classic", "ink", "liar", "glyphs"]);
+  it("сейчас готовы Классика, Чернила, Лжец (PD-171), Мелодия (PD-203) и Глифы (PD-194) — в порядке PD-163; Классика — по умолчанию", () => {
+    expect(availableModes().map((m) => m.id)).toEqual(["classic", "ink", "liar", "melody", "glyphs"]);
     expect(DEFAULT_MODE).toBe("classic");
     expect(MODES[0]!.id).toBe(DEFAULT_MODE);
   });
@@ -41,7 +41,7 @@ describe("реестр режимов", () => {
     expect(isModeId("liar")).toBe(true);
     expect(isModeId("glyphs")).toBe(true);
     expect(slotKey("glyphs")).toBe("playGame:glyphs");
-    expect(isModeId("melody")).toBe(true); // PD-201: слот есть, строки на хабе нет (ready: false)
+    expect(isModeId("melody")).toBe(true);
     expect(slotKey("melody")).toBe("playGame:melody");
     expect(isModeId("lantern")).toBe(false);
     expect(isModeId(undefined)).toBe(false);
@@ -77,11 +77,12 @@ describe("реестр режимов", () => {
     expect(prepared.ink).toBe(true);
   });
 
-  it("Мелодия (PD-201): в реестре со слотом, но не готова — на хабе её нет; подготовка ставит `melody`, не в архиве", () => {
+  it("Мелодия (PD-203): готова, на хабе между Лжецом и Глифами; подготовка ставит `melody`, не в архиве, с чипом и подсказками", () => {
     const m = modeDef("melody");
     expect(m.id).toBe("melody");
-    expect(m.ready).toBe(false);
-    expect(availableModes().some((x) => x.id === "melody")).toBe(false);
+    expect(m.ready).toBe(true);
+    expect(m.chip).toBe(true);
+    expect(availableModes().map((x) => x.id).indexOf("melody")).toBe(3);
     expect(m.allowInArchive).toBe(false);
     expect(m.hints).toBe(true);
     const fresh = createPlay({ mission: MISSION, solution: SOLUTION });

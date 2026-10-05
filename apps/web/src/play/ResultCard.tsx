@@ -3,6 +3,7 @@ import type { ReactNode, RefObject } from "react";
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import type { HelpBlockId } from "../help/blocks";
+import { TuneButton, useCardTune } from "../melody/MelodyTune";
 import { PetBlot } from "../pet/PetBlot";
 import { petDayOfPlay } from "../pet/petDay";
 import { usePetEnabled } from "../settings/prefs";
@@ -49,6 +50,12 @@ interface ResultCardProps {
 export function ResultCard({ play, cardRef, title, winRate, winRateScope = "today", timelapse, hints, onOpenHelp, children, liar = null, personalBest = false }: ResultCardProps) {
   const { t } = useTranslation();
   const tl = useTimelapseEntry(play, timelapse?.date ?? null, timelapse?.difficulty ?? null);
+  // PD-203: партия Мелодии — «♪ Сыграть мелодию» под картой пути (вариант A); мелодии нет (лог урезан) — кнопки нет.
+  const tune = useCardTune(play);
+  const openTl = (kind: "player" | "export") => {
+    tune.stop(false); // один источник звука за раз: таймлапс сам решает, звучать ли
+    tl.open(kind);
+  };
   const sum = useMemo(() => summary(play.log), [play.log]);
   const heat = useMemo(
     () => heatOpacities(heatmap(play.log, { mission: play.mission.join(""), solution: play.solution.join("") })),
@@ -82,13 +89,13 @@ export function ResultCard({ play, cardRef, title, winRate, winRateScope = "toda
         </div>
       )}
       <div
-        className={`heat${tl.available ? " tl-tap" : ""}`}
+        className={`heat${tl.available ? " tl-tap" : ""}${tune.reveal ? " revealing" : ""}`}
         role="img"
         aria-label={t("result.heatLabel")}
         data-testid="heat"
-        onClick={tl.available ? () => tl.open("player") : undefined}
+        onClick={tl.available ? () => openTl("player") : undefined}
       >
-        <HeatCells heat={heat} blots={blots} hinted={hinted} />
+        <HeatCells heat={heat} blots={blots} hinted={hinted} reveal={tune.reveal} />
       </div>
       <div className="legend">
         <span>{t("result.early")}</span>
@@ -99,6 +106,7 @@ export function ResultCard({ play, cardRef, title, winRate, winRateScope = "toda
         </span>
         <span>{t("result.late")}</span>
       </div>
+      {tune.available && <TuneButton playing={tune.playing} live={tune.live} onToggle={tune.toggle} />}
       <dl className="rows">
         <div className="row">
           <dt>{t("solved.time")}</dt>
@@ -138,12 +146,12 @@ export function ResultCard({ play, cardRef, title, winRate, winRateScope = "toda
           {t(winRateScope === "day" ? "result.winRateDay" : "result.winRate", { percent: Math.round(winRate) })}
         </p>
       )}
-      {tl.enabled && <WatchRow available={tl.available} onWatch={() => tl.open("player")} />}
+      {tl.enabled && <WatchRow available={tl.available} onWatch={() => openTl("player")} />}
       {/* Share — PNG-отпечаток без цифр (PD-75), вторичное действие (PD-129): главное на карточке — «Watch your solve».
           Нет цельного лога — нечем делиться, и кнопки нет вовсе (не серая: мёртвая кнопка путает; у дня без лога
           вместо Watch — тихая строка). */}
       {tl.available && (
-        <button type="button" className="share" data-testid="share" onClick={() => tl.open("export")}>
+        <button type="button" className="share" data-testid="share" onClick={() => openTl("export")}>
           <ShareIcon />
           {t("solved.share")}
         </button>

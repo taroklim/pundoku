@@ -82,7 +82,7 @@ describe("список «Режимы»", () => {
     expect(rows.map((r) => r.getAttribute("data-testid"))).toEqual(["mode-classic"]);
     render();
     const all = [...host.querySelectorAll(".hub-row.mode")].map((r) => r.getAttribute("data-testid"));
-    expect(all).toEqual(["mode-classic", "mode-ink", "mode-liar", "mode-glyphs"]);
+    expect(all).toEqual(["mode-classic", "mode-ink", "mode-liar", "mode-melody", "mode-glyphs"]);
   });
 
   it("без незавершённой игры — имя и описание режима", () => {

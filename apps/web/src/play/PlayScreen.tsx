@@ -2,6 +2,8 @@ import type { Difficulty } from "@pundoku/engine";
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { useTranslation } from "react-i18next";
 import type { HelpBlockId } from "../help/blocks";
+import { useMelodyGame } from "../melody/game";
+import { setMelodySound, useMelodySound } from "../settings/prefs";
 import { useDeferredFocus } from "../shell/afterPaint";
 import { swallowGhostClick } from "../shell/ghostClick";
 import { useTabActive } from "../shell/tabSlide";
@@ -30,6 +32,7 @@ import { canFill, cellsLeft, isGiven, isGridFull } from "./logic";
 import { ModeSheet } from "./ModeSheet";
 import type { ModeId } from "./modes";
 import { availableModes, modeDef } from "./modes";
+import { MelodyModeIcon } from "./modeIcons";
 import { MoreMenu } from "./MoreMenu";
 import { PlaySetup } from "./PlaySetup";
 import { ResultCard } from "./ResultCard";
@@ -191,6 +194,11 @@ export function PlayScreen({ onOpenSettings, onOpenHelp, onOpenToday }: { onOpen
   }, [wait.view]);
   const cardView = !hub && phase === "solved" && cardShown;
   const fillState = ink ? "ink" : play && canFill(play) ? "ready" : "empty";
+  // PD-203: Мелодия. Звук — только пока партия Мелодии на экране и идёт (иначе ядра нет вовсе); выключатель — пункт «Звук» в ⋯.
+  const melody = !hub && play?.melody === true;
+  const soundOn = useMelodySound();
+  useMelodyGame(playStore, active && melody && !restoring && phase === "playing", !soundOn);
+  const melodyHint = melody && phase === "playing" && play !== null && play.log.length === 0 && !waiting;
   const showLamp = !hub && !restoring && !waiting && playStore.hintAllowed();
   const showMore = !hub && !restoring && phase !== "solved";
 
@@ -236,6 +244,7 @@ export function PlayScreen({ onOpenSettings, onOpenHelp, onOpenToday }: { onOpen
               onNew={() => openSheet(snap.mode)}
               onFill={() => playStore.fillCandidates()}
               accuse={accuseState && !waiting ? { state: accuseState, onAccuse: () => sel !== null && openAccuse(sel, null) } : null}
+              sound={melody ? { on: soundOn, onToggle: () => setMelodySound(!soundOn) } : null}
             />
           )
         }
@@ -255,7 +264,14 @@ export function PlayScreen({ onOpenSettings, onOpenHelp, onOpenToday }: { onOpen
         />
       ) : (
         <>
-          <Subline day="" difficulty={diffLabel} chip={play ? (ink ? modeDef("ink") : def) : def} help={snap.assisted === true} clock={showClock ? clock : null} />
+          <Subline
+            day=""
+            difficulty={diffLabel}
+            chip={play ? (ink ? modeDef("ink") : def) : def}
+            muted={melody && !soundOn && phase !== "solved"}
+            help={snap.assisted === true}
+            clock={showClock ? clock : null}
+          />
           {cardView ? (
             play && (
               <ResultCard
@@ -304,6 +320,12 @@ export function PlayScreen({ onOpenSettings, onOpenHelp, onOpenToday }: { onOpen
                 {(phase === "playing" || phase === "solved") && !hint.open && (hint.nudge ? (
                   <p className="status nudge" data-testid="hint-nudge">
                     {boldParts(t("hint.nudge"))}
+                  </p>
+                ) : melodyHint && !snap.hint ? (
+                  // PD-203: новая партия Мелодии, до первого хода — одна строка о звуке вместо «осталось N» (макет PD-202 §2 п. 2).
+                  <p className="status melody-hint" data-testid="melody-hint">
+                    <MelodyModeIcon />
+                    <span>{t("melody.hint")}</span>
                   </p>
                 ) : (
                   <StatusLine left={left} full={full} hint={snap.hint} />

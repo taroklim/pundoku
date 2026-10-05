@@ -1,10 +1,11 @@
 /**
- * Звуковое ядро режима Мелодия (PD-201, план режимов §4). Без UI: экран, кнопки и настройка звука — PD-203.
+ * Звуковое ядро режима Мелодия (PD-201, план режимов §4). Без UI: экран, кнопки и настройка звука — PD-203 (`melody/game.ts`,
+ * `melody/MelodyTune.tsx`).
  *
  * - Только синтез Web Audio (осциллятор + огибающая + фильтр), никаких файлов: работает офлайн и ничего не весит.
  * - Цифра 1–9 → мажорная пентатоника по возрастанию (до–ре–ми–соль–ля), две октавы от C4: C4 D4 E4 G4 A4 C5 D5 E5 G5.
  *   Любое сочетание этих нот консонансно, поэтому арпеджио юнита и мелодия пути не «фальшивят».
- * - Тембр — пресет ({@link TIMBRES}): «мягкий синус» (по умолчанию), «колокольчик», «маримба». Финальный выберет владелец (PD-202).
+ * - Тембр — пресет ({@link TIMBRES}): «маримба» («Дерево», по умолчанию — выбор владельца по PD-202), «мягкий синус», «колокольчик».
  * - Громкость тихая (мастер {@link DEFAULT_VOLUME}); огибающая начинается и кончается в нуле — без щелчков.
  *
  * Разблокировка (iOS PWA, `reports/sudoku-pwa-research/03-tech.md`): `AudioContext` создаётся и резюмируется ТОЛЬКО в
@@ -21,8 +22,8 @@ export const PENTATONIC_SEMITONES: readonly number[] = [0, 2, 4, 7, 9, 12, 14, 1
 export const BASE_HZ = 261.6255653005986;
 /** Мастер-громкость по умолчанию (0..1): тихо, чтобы звук не спорил с размышлением. */
 export const DEFAULT_VOLUME = 0.18;
-/** Шаг арпеджио юнита, мс. */
-export const UNIT_STEP_MS = 80;
+/** Шаг арпеджио юнита, мс (макет PD-202 §2 п. 8: 9 нот ≈ 1 с; тот же шаг у кольца на поле). */
+export const UNIT_STEP_MS = 110;
 /** В мелодии пути арпеджио юнита начинается через столько мс после ноты, которая его закрыла. */
 export const UNIT_DELAY_MS = 140;
 
@@ -88,7 +89,13 @@ export const TIMBRES: Readonly<Record<TimbreId, Timbre>> = {
   },
 };
 
-export const DEFAULT_TIMBRE: TimbreId = "soft";
+/** PD-202/PD-203: владелец выбрал «Дерево» (маримба). */
+export const DEFAULT_TIMBRE: TimbreId = "marimba";
+
+/** Акцент ноты (мелодия пути, нота, закрывшая юнит — вместо арпеджио, макет PD-202 §2 п. 9): громче и длиннее. */
+export const ACCENT_GAIN = 1.3;
+export const ACCENT_RELEASE = 1.4;
+export const accentOf = (tb: Timbre): Timbre => ({ ...tb, peak: Math.min(1, tb.peak * ACCENT_GAIN), release: tb.release * ACCENT_RELEASE });
 
 /** Событие мелодии пути — совместимо с `MelodyEvent` движка (`melodyOf`). */
 export interface PathEvent {
@@ -97,6 +104,8 @@ export interface PathEvent {
   readonly digit: number;
   /** Цифры юнита в порядке арпеджио (у `unit`). */
   readonly digits?: readonly number[];
+  /** Нота с акцентом (у `note`): громче и длиннее — так мелодия пути отмечает закрытый юнит вместо арпеджио (PD-202 §2 п. 9). */
+  readonly accent?: boolean;
 }
 
 export interface PlayPathOptions<E extends PathEvent> {
@@ -147,8 +156,8 @@ export interface MelodyAudio {
   attachUnlock(target?: EventTarget): () => void;
   /** Нота цифры 1..9. `false` — не прозвучала (до жеста, mute, прерывание, нет Web Audio, цифра вне 1..9). */
   playNote(digit: number): boolean;
-  /** Короткое арпеджио: цифры по порядку с шагом {@link UNIT_STEP_MS}. `false` — как у `playNote`. */
-  playUnit(digits: readonly number[]): boolean;
+  /** Короткое арпеджио: цифры по порядку с шагом {@link UNIT_STEP_MS}, начиная через `delayMs`. `false` — как у `playNote`. */
+  playUnit(digits: readonly number[], delayMs?: number): boolean;
   /** Мелодия пути по событиям `melodyOf` (время `t`, мс). Новый вызов останавливает предыдущий. */
   playPath<E extends PathEvent>(events: readonly E[], opts?: PlayPathOptions<E>): PathPlayback;
   setMuted(muted: boolean): void;
@@ -324,11 +333,11 @@ export function createMelodyAudio(opts: MelodyAudioOptions = {}): MelodyAudio {
 
   const isDigit = (d: unknown): d is number => typeof d === "number" && Number.isInteger(d) && d >= 1 && d <= 9;
 
-  function noteInto(out: AudioNode | null, digit: number, delaySec = 0): boolean {
+  function noteInto(out: AudioNode | null, digit: number, delaySec = 0, accent = false): boolean {
     if (!isDigit(digit)) return false;
     const c = audible();
     if (c === null || master === null) return false;
-    scheduleNote(c, out ?? master, digit, c.currentTime + 0.005 + delaySec, timbre);
+    scheduleNote(c, out ?? master, digit, c.currentTime + 0.005 + delaySec, accent ? accentOf(timbre) : timbre);
     return true;
   }
 
@@ -398,7 +407,7 @@ export function createMelodyAudio(opts: MelodyAudioOptions = {}): MelodyAudio {
         setT(() => {
           if (finished) return;
           if (e.kind === "unit") unitInto(busFor(), e.digits ?? [], UNIT_DELAY_MS / 1000);
-          else noteInto(busFor(), e.digit);
+          else noteInto(busFor(), e.digit, 0, e.accent === true);
           try {
             po.onStep?.(e, i);
           } catch {
@@ -454,7 +463,7 @@ export function createMelodyAudio(opts: MelodyAudioOptions = {}): MelodyAudio {
     unlock,
     attachUnlock,
     playNote: (digit) => noteInto(null, digit),
-    playUnit: (digits) => unitInto(null, digits),
+    playUnit: (digits, delayMs = 0) => unitInto(null, digits, Math.max(0, delayMs) / 1000),
     playPath,
     setMuted,
     isMuted: () => muted,

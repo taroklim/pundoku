@@ -5,8 +5,8 @@
  *
  * Хранилище живёт выше вкладок: переключение Today/Play/Year не сбрасывает партию.
  */
-import type { Difficulty } from "@pundoku/engine";
-import { isBlotMistake } from "@pundoku/engine";
+import type { CompletedUnit, Difficulty } from "@pundoku/engine";
+import { isBlotMistake, unitsCompletedBy } from "@pundoku/engine";
 import { getAutoClearNotes } from "../settings/prefs";
 import type { PlayState } from "./logic";
 import {
@@ -79,6 +79,12 @@ export interface PlaySnapshot {
    * это не утечка: до обвинения здесь ничего нет.
    */
   readonly accusation?: { readonly kind: "liar" | "honest"; readonly cell: number; readonly id: number } | null;
+  /**
+   * Мелодия (PD-203): только что поставленная цифра в партии режима Мелодия — нота `digit` и юниты, которые эта постановка
+   * заполнила целиком (`unitsCompletedBy`: по заполненности, НЕ по верности — иначе звук и кольцо выдавали бы ответ). id — на
+   * каждую постановку. Звучит экран (`melody/game.ts`), кольцо по юнитам рисует поле. Undo/erase/заметки его не ставят.
+   */
+  readonly melodyCue?: { readonly digit: number; readonly cell: number; readonly units: readonly CompletedUnit[]; readonly id: number } | null;
 }
 
 type Mutable<T> = { -readonly [K in keyof T]: T[K] };
@@ -173,6 +179,7 @@ export abstract class GameStore<S extends PlaySnapshot = PlaySnapshot> {
       hints: 0,
       assisted: false,
       accusation: null,
+      melodyCue: null,
       ...patch,
     } as Partial<S>);
     return play;
@@ -196,6 +203,7 @@ export abstract class GameStore<S extends PlaySnapshot = PlaySnapshot> {
       hints: 0,
       assisted: false,
       accusation: null,
+      melodyCue: null,
       ...patch,
     } as Partial<S>);
   }
@@ -217,6 +225,7 @@ export abstract class GameStore<S extends PlaySnapshot = PlaySnapshot> {
       hints: 0,
       assisted: false,
       accusation: null,
+      melodyCue: null,
       startedOn: new Date(),
       ...patch,
     } as Partial<S>);
@@ -366,6 +375,11 @@ export abstract class GameStore<S extends PlaySnapshot = PlaySnapshot> {
     if (blot) patch.blot = { cell: blot.cell, digit: blot.digit ?? digit, id: ++this.effectId };
     if (placed) {
       patch.pop = { cell: selected, id: ++this.effectId };
+      if (next.melody === true) {
+        // PD-203: ошибочная цифра звучит так же, как верная; юнит «закрыт», когда все 9 клеток заполнены (макет PD-202 §2 п. 6).
+        const grid = next.mission.map((g, i) => String(g || next.values[i] || 0)).join("");
+        patch.melodyCue = { digit, cell: selected, units: unitsCompletedBy(grid, selected), id: ++this.effectId };
+      }
       // PD-171: в Лжеце до поимки волн «юнит собран верно» и «цифра закрыта» нет — их отсутствие на собранном юните выдало бы,
       // что цифра выведена из лжи (сверка с решением). Вернутся после поимки.
       if (next.solution[selected] === digit && !liarHidden(next)) {
@@ -452,10 +466,11 @@ export abstract class GameStore<S extends PlaySnapshot = PlaySnapshot> {
       (this.snap.echo ?? null) === null &&
       (this.snap.blot ?? null) === null &&
       (this.snap.hint ?? null) === null &&
-      (this.snap.accusation ?? null) === null
+      (this.snap.accusation ?? null) === null &&
+      (this.snap.melodyCue ?? null) === null
     )
       return;
-    this.set({ pop: null, wave: null, echo: null, blot: null, accusation: null, ...this.dropHint() } as Partial<S>);
+    this.set({ pop: null, wave: null, echo: null, blot: null, accusation: null, melodyCue: null, ...this.dropHint() } as Partial<S>);
   }
 
   private finishMove(next: PlayState, patch: Partial<PlaySnapshot>): void {

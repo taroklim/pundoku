@@ -294,11 +294,11 @@ describe("огибающая и тембры", () => {
     }
   });
 
-  it("пресеты: три, по умолчанию «мягкий синус»; setTimbre меняет", () => {
+  it("пресеты: три, по умолчанию «Дерево» (маримба, выбор владельца PD-202); setTimbre меняет", () => {
     expect(Object.keys(TIMBRES).sort()).toEqual(["bell", "marimba", "soft"]);
-    expect(DEFAULT_TIMBRE).toBe("soft");
+    expect(DEFAULT_TIMBRE).toBe("marimba");
     const { audio } = setup();
-    expect(audio.getTimbre()).toBe("soft");
+    expect(audio.getTimbre()).toBe("marimba");
     audio.setTimbre("bell");
     expect(audio.getTimbre()).toBe("bell");
     audio.setTimbre("nope" as never);
@@ -323,6 +323,35 @@ describe("playUnit", () => {
     const f = fundamentals();
     expect(f.map((o) => o.frequency.value)).toEqual([1, 2, 3, 4, 5, 6, 7, 8, 9].map((d) => noteFrequency(d)));
     for (let i = 1; i < 9; i++) expect(f[i]!.startAt! - f[i - 1]!.startAt!).toBeCloseTo(UNIT_STEP_MS / 1000, 6);
+  });
+});
+
+describe("PD-203: задержка арпеджио и акцент пути", () => {
+  it("playUnit(digits, delayMs): первая нота через delayMs, шаг 110 мс", async () => {
+    const { audio, fundamentals, ctx } = setup();
+    audio.unlock();
+    await Promise.resolve();
+    expect(UNIT_STEP_MS).toBe(110);
+    expect(audio.playUnit([1, 2, 3], 300)).toBe(true);
+    const f = fundamentals();
+    expect(f[0]!.startAt!).toBeCloseTo(ctx().currentTime + 0.005 + 0.3, 6);
+  });
+
+  it("акцентная нота пути громче и длиннее обычной", async () => {
+    const { audio, ctx } = setup();
+    audio.unlock();
+    await Promise.resolve();
+    audio.playPath([
+      { t: 0, kind: "note", digit: 1 },
+      { t: 10, kind: "note", digit: 1, accent: true },
+    ]);
+    vi.advanceTimersByTime(20);
+    const peaks = ctx()
+      .gains.map((g) => g.gain.events.find((e) => e[0] === "lin" && e[1] > 0.3))
+      .filter(Boolean)
+      .map((e) => e![1]);
+    expect(peaks.length).toBe(2);
+    expect(peaks[1]!).toBeCloseTo(peaks[0]! * 1.3, 6);
   });
 });
 

@@ -1,6 +1,10 @@
 import type { Timelapse } from "@pundoku/engine";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
+import type { MelodyAudio } from "../melody/audio";
+import { makeMelodyAudio } from "../melody/factory";
+import { SpeakerIcon, SpeakerOffIcon } from "../melody/icons";
+import { timelapseTuneOf } from "../melody/tune";
 import { formatClock, formatDay } from "./format";
 import type { PlayState } from "./logic";
 import { liarTimelapseLayer } from "./liar";
@@ -73,6 +77,47 @@ export function TimelapseSheet({ play, date, difficulty, onClose }: TimelapseShe
   const effSpeed: TimelapseSpeed = step ? "normal" : speed;
   const effLoop = step ? false : loop;
   const sched = useMemo(() => playbackSchedule(frames, BUDGET_MS[effSpeed]), [frames, effSpeed]);
+  // PD-203: партия Мелодии — одна кнопка звука в шапке (по умолчанию вкл), мелодия идёт за кадрами (ноты на смещениях кадров,
+  // старт `fromMs` с позиции). «‹ / ›» — нота этого хода, ползунок — молча. Лог не сходится / урезан — кнопки нет.
+  const tune = useMemo(() => (play.melody === true && frames.length > 1 ? timelapseTuneOf(play, frames, sched.offsets) : null), [play, frames, sched]);
+  const [sound, setSound] = useState(true);
+  const [loopSeq, setLoopSeq] = useState(0);
+  const audioRef = useRef<MelodyAudio | null>(null);
+  const audio = (): MelodyAudio => (audioRef.current ??= makeMelodyAudio());
+  useEffect(
+    () => () => {
+      audioRef.current?.dispose();
+      audioRef.current = null;
+    },
+    [],
+  );
+  useEffect(() => {
+    if (!playing || mode !== "player" || !sound || tune === null) return;
+    const at = idxRef.current;
+    const from = sched.offsets[at] ?? 0;
+    // Нота текущего (уже показанного) кадра не повторяется: играем ходы после него.
+    const pb = audio().playPath(
+      tune.filter((e) => e.frame > at),
+      { fromMs: from },
+    );
+    // Доиграли до конца — последняя нота дозвучит сама (её не обрываем); пауза, перемотка, закрытие — стоп сразу.
+    return () => {
+      if (idxRef.current < n) pb.stop();
+    };
+    // Позиция читается в момент старта (idxRef), а не на каждом кадре: перезапуск — только по смене этих зависимостей.
+  }, [playing, mode, sound, tune, sched, loopSeq, n]);
+  // Свернули PWA / ушли со вкладки — проигрывание (и мелодия) встаёт без автопродолжения.
+  useEffect(() => {
+    const onHide = () => {
+      if (document.visibilityState === "hidden") setPlaying(false);
+    };
+    document.addEventListener("visibilitychange", onHide);
+    window.addEventListener("pagehide", onHide);
+    return () => {
+      document.removeEventListener("visibilitychange", onHide);
+      window.removeEventListener("pagehide", onHide);
+    };
+  }, []);
 
   const go = useCallback((i: number, anim: boolean) => {
     idxRef.current = i;
@@ -98,6 +143,7 @@ export function TimelapseSheet({ play, date, difficulty, onClose }: TimelapseShe
           base = 0;
           t0 = now;
           go(0, false);
+          setLoopSeq((k) => k + 1);
         }
         raf = requestAnimationFrame(tick);
         return;
@@ -139,16 +185,49 @@ export function TimelapseSheet({ play, date, difficulty, onClose }: TimelapseShe
       return;
     }
     if (idxRef.current >= n) go(0, false);
+    if (sound && tune !== null) audio().unlock(); // ▶ — жест: разблокировать звук здесь, мелодию запустит эффект
     setPlaying(true);
   };
   const stepBy = (d: number) => {
     setPlaying(false);
     const next = (moves.moveNo[idxRef.current] ?? 0) + d;
-    if (next >= 0 && next <= moves.count) go(moves.frameOf[next]!, true);
+    if (next >= 0 && next <= moves.count) {
+      const f = moves.frameOf[next]!;
+      go(f, true);
+      const note = sound && tune !== null ? tune.find((e) => e.frame === f) : undefined;
+      if (note) {
+        const a = audio();
+        a.unlock();
+        a.playNote(note.digit);
+      }
+    }
   };
 
   return (
-    <TimelapseSheetShell title={t("timelapse.title")} sub={dayLine} onClose={onClose} testId="timelapse-sheet">
+    <TimelapseSheetShell
+      title={t("timelapse.title")}
+      sub={dayLine}
+      onClose={onClose}
+      testId="timelapse-sheet"
+      headExtra={
+        tune !== null && (
+          <button
+            type="button"
+            className="tl-sound"
+            aria-pressed={sound}
+            aria-label={t("melody.sound")}
+            title={sound ? t("melody.soundOn") : t("melody.soundOff")}
+            data-testid="tl-sound"
+            onClick={() => {
+              if (!sound) audio().unlock();
+              setSound((v) => !v);
+            }}
+          >
+            {sound ? <SpeakerIcon /> : <SpeakerOffIcon />}
+          </button>
+        )
+      }
+    >
       {mode === "contact" ? (
         <div data-testid="tl-contact">
           <div className="tl-contact" role="group" aria-label={t("timelapse.contactNote")}>
@@ -227,7 +306,7 @@ export function TimelapseSheet({ play, date, difficulty, onClose }: TimelapseShe
             )}
           </div>
           <p className="tl-note" data-testid="tl-note">
-            {step ? t("timelapse.stepNote") : t("timelapse.rhythm")}
+            {step ? t("timelapse.stepNote") : tune !== null ? t("melody.tlNote") : t("timelapse.rhythm")}
           </p>
           <div className="tl-actions">
             <button

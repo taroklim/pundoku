@@ -10,6 +10,8 @@ interface ShellProps {
   onClose: () => void;
   testId: string;
   children: ReactNode;
+  /** PD-203: действие в шапке между заголовком и «Готово» (кнопка звука в партиях Мелодии). */
+  headExtra?: ReactNode;
 }
 
 /**
@@ -19,7 +21,7 @@ interface ShellProps {
  * закрытии; то, что уже было `inert`, не трогаем), Escape закрывает ТОЛЬКО этот шит (перехват на `window` в фазе
  * захвата, до слушателя Year), фокус уходит на заголовок и возвращается на то, что открыло шит.
  */
-export function TimelapseSheetShell({ title, sub, onClose, testId, children }: ShellProps) {
+export function TimelapseSheetShell({ title, sub, onClose, testId, children, headExtra = null }: ShellProps) {
   const { t } = useTranslation();
   const rootRef = useRef<HTMLDivElement>(null);
   const headRef = useRef<HTMLHeadingElement>(null);
@@ -61,6 +63,7 @@ export function TimelapseSheetShell({ title, sub, onClose, testId, children }: S
           <h2 id={titleId} ref={headRef} tabIndex={-1}>
             {title}
           </h2>
+          {headExtra}
           <button type="button" className="tl-done" onClick={() => closeRef.current()}>
             {t("timelapse.done")}
           </button>
