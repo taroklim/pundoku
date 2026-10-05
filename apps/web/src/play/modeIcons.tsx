@@ -45,3 +45,15 @@ export function LiarModeIcon({ className }: ModeIconProps) {
     </svg>
   );
 }
+
+/** Глифы — четыре фигуры (макет PD-163, `I.glyphs`). */
+export function GlyphsModeIcon({ className }: ModeIconProps) {
+  return (
+    <svg {...line} className={className}>
+      <path d="M7 3.6l3.6 6.2H3.4z" />
+      <circle cx="16.8" cy="6.8" r="3.1" />
+      <rect x="3.8" y="14" width="6.2" height="6.2" rx="1.2" />
+      <path d="M14 17.1h6M17 14.1v6" />
+    </svg>
+  );
+}

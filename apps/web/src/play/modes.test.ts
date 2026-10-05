@@ -21,8 +21,8 @@ type Tree = { [k: string]: string | Tree };
 const get = (t: Tree, path: string): unknown => path.split(".").reduce<unknown>((n, k) => (n as Tree | undefined)?.[k], t);
 
 describe("реестр режимов", () => {
-  it("сейчас готовы Классика, Чернила и Лжец (PD-171), в этом порядке; Классика — режим по умолчанию", () => {
-    expect(availableModes().map((m) => m.id)).toEqual(["classic", "ink", "liar"]);
+  it("сейчас готовы Классика, Чернила, Лжец (PD-171) и Глифы (PD-194), в этом порядке; Классика — режим по умолчанию", () => {
+    expect(availableModes().map((m) => m.id)).toEqual(["classic", "ink", "liar", "glyphs"]);
     expect(DEFAULT_MODE).toBe("classic");
     expect(MODES[0]!.id).toBe(DEFAULT_MODE);
   });
@@ -39,6 +39,8 @@ describe("реестр режимов", () => {
     expect(slotKey("ink")).toBe("playGame:ink");
     expect(isModeId("ink")).toBe(true);
     expect(isModeId("liar")).toBe(true);
+    expect(isModeId("glyphs")).toBe(true);
+    expect(slotKey("glyphs")).toBe("playGame:glyphs");
     expect(isModeId("melody")).toBe(false);
     expect(isModeId(undefined)).toBe(false);
     expect(modeDef("nope" as never).id).toBe("classic");
@@ -80,6 +82,25 @@ describe("реестр режимов", () => {
     expect(c.prepare).toBeUndefined();
     expect(c.Rule).toBeUndefined();
     expect(c.difficulties).toEqual(DIFFICULTIES);
+  });
+
+  it("Глифы (PD-194): чип, подсказки как у Классики, все сложности, без правила перед стартом; подготовка ставит флаг `glyphs`", () => {
+    const g = modeDef("glyphs");
+    expect(g.chip).toBe(true);
+    expect(g.hints).toBe(true);
+    expect(g.Rule).toBeUndefined();
+    expect(g.grid ?? "classic").toBe("classic");
+    expect(g.difficulties).toEqual(DIFFICULTIES);
+    const fresh = createPlay({ mission: MISSION, solution: SOLUTION });
+    const prepared = g.prepare!(fresh);
+    expect(prepared.glyphs).toBe(true);
+    expect(prepared.ink).toBeUndefined();
+    // Только рендер: сетка, решение и лог не тронуты.
+    expect(prepared.mission).toEqual(fresh.mission);
+    expect(prepared.solution).toEqual(fresh.solution);
+    expect(prepared.log).toEqual(fresh.log);
+    // Классика флага не получает.
+    expect(createPlay({ mission: MISSION, solution: SOLUTION }).glyphs).toBeUndefined();
   });
 
   it("режим записи до PD-167 выводится из самой партии", () => {

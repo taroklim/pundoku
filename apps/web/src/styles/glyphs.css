@@ -1,0 +1,85 @@
+/* Глифы (PD-194) — режим Play «Глифы», набор A «Фигуры». Правила отрисовки — дословно из макета
+ * design/pd170-pet-glyphs.html («glyph rendering», `.cell .gl`, `.notes .gl`, `.pad .gl`); цвета — существующие токены
+ * клетки через currentColor (дано `--label`, ваше `--ink`, ошибка `--wax`, заметки `--notes`), новых цветов нет.
+ * Знак живёт внутри того же `.d`, что и цифра: анимации M1/M3/M8, затухание перед карточкой, Reduce Motion (`--mk/--mo`)
+ * и цвет ошибки работают без отдельных правил. */
+
+.gl {
+  display: block;
+  overflow: visible;
+}
+.gl .f {
+  fill: currentColor;
+}
+/* Контур: 1,9 ед. из 24 (≈ 1,6 pt в клетке 39 pt), знак ужат до 0,9 к центру (transform в разметке). */
+.gl .o {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.9;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+
+/* Клетка поля и таймлапса: `.d` уже размерен от клетки (0,62 стороны) → 0,92em ≈ 57 % клетки, как в макете. */
+.d.gd {
+  display: grid;
+  place-items: center;
+}
+.d.gd .gl {
+  width: 0.92em;
+  height: 0.92em;
+}
+
+/* Заметки: залитые мини-знаки ≈ 80 % слота 3×3 (макет `.notes .gl`). Позиция в слоте = позиция знака на паде. */
+.gl-marks .gl {
+  width: 0.82em;
+  height: 0.82em;
+}
+/* Вычеркнутый кандидат лесенки подсказок (PD-139): у цифры — line-through, у знака текста нет. Линия чернилами шире знака
+   (видна по бокам и на залитом знаке того же цвета), с ободком цвета клетки там, где проходит по знаку. Макет PD-170 этот
+   случай не рисовал — консервативный перенос «зачёркивания» на знак. */
+.gl-marks span.struck {
+  position: relative;
+}
+.gl-marks span.struck::after {
+  content: "";
+  position: absolute;
+  left: 2%;
+  right: 2%;
+  top: 50%;
+  border-top: 1.5px solid var(--ink);
+  transform: translateY(-50%) rotate(-20deg);
+  box-shadow: 0 0 0 1px var(--surface);
+  pointer-events: none;
+}
+
+/* Пад: контурные знаки 24 pt в клавише (макет: min(24px, 62 %) кнопки 48 pt). Клавиша = (ширина пада − 8 зазоров)/9; на
+   320 pt знак ≈ 19 px, на 390 — 23–24 px. Ширина пада известна контейнеру (`7.5cqi` у цифр — та же опора). */
+.gl-pad .kd .gl {
+  width: min(24px, 6.4cqi);
+  height: min(24px, 6.4cqi);
+  margin-block: 1px;
+}
+
+/* forced-colors (как в макете): знак рисуется системным цветом текста, различие «дано/ваше» держит форма заливки.
+   «Та же цифра» у цифр — подчёркивание; у знака текста нет → рамка снизу. */
+@media (forced-colors: active) {
+  .gl {
+    forced-color-adjust: none;
+    color: CanvasText;
+  }
+  .cell .gl,
+  .key .gl {
+    color: ButtonText;
+  }
+  .key:disabled .gl {
+    color: GrayText;
+  }
+  .cell.same .d.gd {
+    text-decoration: none;
+    border-bottom: 2px solid ButtonText;
+  }
+  .gl-marks span.struck::after {
+    border-top-color: ButtonText;
+  }
+}
