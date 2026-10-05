@@ -112,6 +112,10 @@ export function parseSavedPlay(raw: unknown, slot?: ModeId): SavedPlay | null {
   if (liarProblem(p) !== null) return null;
   const mode: ModeId = slot ?? (isModeId(r.mode) ? r.mode : p.liar ? "liar" : legacyModeOf(p as PlayState));
   if ((mode === "liar") !== (p.liar !== undefined)) return null;
+  // PD-194: флаг глифов — только `true` и только у партии режима `glyphs`. Партия режима без флага (оборвалось между стартом и
+  // пометкой, `ModeDef.prepare`) не выбрасывается: флаг восстанавливается по слоту.
+  if (p.glyphs !== undefined && (p.glyphs !== true || mode !== "glyphs")) return null;
+  const play: PlayState = mode === "glyphs" && p.glyphs !== true ? { ...(p as PlayState), glyphs: true } : (p as PlayState);
   if (r.daily !== undefined && (typeof r.daily !== "string" || !DATE_RE.test(r.daily) || mode !== "liar")) return null;
   const selected = typeof r.selected === "number" && Number.isInteger(r.selected) && r.selected >= 0 && r.selected < CELLS ? r.selected : null;
   const hints = typeof r.hints === "number" && Number.isInteger(r.hints) && r.hints > 0 && r.hints <= 999 ? r.hints : 0;
@@ -123,7 +127,7 @@ export function parseSavedPlay(raw: unknown, slot?: ModeId): SavedPlay | null {
     mode,
     difficulty: r.difficulty as Difficulty,
     startedOn: r.startedOn,
-    play: p as PlayState,
+    play,
     elapsedMs: r.elapsedMs,
     selected,
     notesMode: r.notesMode === true,

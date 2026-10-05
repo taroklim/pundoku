@@ -551,6 +551,10 @@
     "liar": {
       "name": "Liar",
       "desc": "One of the given digits is a lie. Find it, then press and hold it to accuse."
+    },
+    "glyphs": {
+      "name": "Glyphs",
+      "desc": "Nine shapes instead of digits. The same logic, without a single number."
     }
   },
   "liar": {
@@ -604,5 +608,22 @@
       "surprised": "a special day",
       "asleep": "not played or unfinished"
     }
+  },
+  "glyphs": {
+    "shape": {
+      "circle": "circle",
+      "triangle": "triangle",
+      "square": "square",
+      "plus": "plus",
+      "diamond": "diamond",
+      "dome": "dome",
+      "star": "star",
+      "leaf": "leaf",
+      "hourglass": "hourglass"
+    },
+    "cellClue": "Row {{row}}, column {{col}}, {{shape}}, given",
+    "cellYours": "Row {{row}}, column {{col}}, {{shape}}, yours",
+    "cellWrong": "Row {{row}}, column {{col}}, {{shape}}, yours, wrong",
+    "key": "{{shape}}, {{n}} left"
   }
 }

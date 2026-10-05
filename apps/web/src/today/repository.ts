@@ -105,6 +105,7 @@ function playProblem(play: unknown): string | null {
   if (!Array.isArray(stack) || !stack.every(isUndoEntry)) return "play.undoStack";
   if (typeof play["solved"] !== "boolean") return "play.solved";
   if (!isBoolOrUndef(play["ink"])) return "play.ink";
+  if (play["glyphs"] !== undefined && play["glyphs"] !== true) return "play.glyphs"; // PD-194: только `true`
   if (play["logSynthetic"] !== undefined && play["logSynthetic"] !== true) return "play.logSynthetic";
   const hintLog = play["hintLog"];
   if (hintLog !== undefined && (!Array.isArray(hintLog) || !hintLog.every(isHintEvent))) return "play.hintLog";

@@ -1,6 +1,7 @@
 import type { CSSProperties } from "react";
 import type { TimelapseFrame } from "@pundoku/engine";
 import { BOXES, BoxRules } from "./Board";
+import { Glyph } from "./glyphs";
 import type { LiarTimelapseLayer } from "./liar";
 
 interface ReplayFieldProps {
@@ -15,6 +16,8 @@ interface ReplayFieldProps {
   label: string;
   /** PD-171: слой обвинений Лжеца — до поимки в клетке ложная цифра, после — истинная с зачёркнутой ложью; печати оправданных. */
   liar?: LiarTimelapseLayer | null;
+  /** PD-194: партия режима Глифы — знаки вместо цифр, как на игровом поле (дано залитым, ваше контуром). */
+  glyphs?: boolean;
 }
 
 /**
@@ -22,7 +25,7 @@ interface ReplayFieldProps {
  * но без интерактива. Заметки не играются (решение владельца). Последняя поставленная клетка — кольцо выбора (M2).
  * Клякса (ink): пятно + сколотый угол остаются до конца партии; неверная цифра до замены — сургучом.
  */
-export function ReplayField({ frames, idx, mission, blots, animate, label, liar = null }: ReplayFieldProps) {
+export function ReplayField({ frames, idx, mission, blots, animate, label, liar = null, glyphs = false }: ReplayFieldProps) {
   const f = frames[idx]!;
   const wrong = new Set(f.wrong);
   const last = idx > 0 ? f.cell : null;
@@ -61,10 +64,10 @@ export function ReplayField({ frames, idx, mission, blots, animate, label, liar 
                   {v ? (
                     <span
                       key={fresh ? `n${idx}` : "s"}
-                      className={`d ${given ? "given" : "player"}${wrong.has(i) ? " err" : ""}${fresh ? " tl-in" : ""}`}
+                      className={`d ${given ? "given" : "player"}${glyphs ? " gd" : ""}${wrong.has(i) ? " err" : ""}${fresh ? " tl-in" : ""}`}
                       aria-hidden="true"
                     >
-                      {v}
+                      {glyphs ? <Glyph digit={v} kind={given ? "given" : "placed"} /> : v}
                     </span>
                   ) : null}
                 </div>

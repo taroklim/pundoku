@@ -11,6 +11,7 @@ import { ActionSheet } from "../recovery/ActionSheet";
 import { formatClock } from "./format";
 import type { GameStore, PlaySnapshot } from "./gameStore";
 import type { HintLadder } from "./hintStore";
+import { Glyph, glyphName } from "./glyphs";
 import { EraseIcon, NotesIcon, UndoIcon } from "./icons";
 import { remaining } from "./logic";
 import { MOTION_FLAGS, MOTION_MS } from "./motion";
@@ -266,6 +267,8 @@ export function GamePad({ snap, store }: { snap: PlaySnapshot; store: GameStore 
   const { play, phase } = snap;
   const interactive = phase === "playing" && play !== null;
   const ink = play?.ink === true;
+  // PD-194: Глифы — на клавишах контурные знаки (то, что поставится), подпись — имя формы.
+  const glyphs = play?.glyphs === true;
   const rem = play ? remaining(play) : null;
   const canUndo = interactive && (play?.undoStack.length ?? 0) > 0;
   // M8: пока идёт ответ закрытой цифры, её счётчик ещё показывает последний остаток и уезжает вверх (220 мс), затем «·».
@@ -290,7 +293,7 @@ export function GamePad({ snap, store }: { snap: PlaySnapshot; store: GameStore 
   }, [fillable]);
   return (
     <div className="pad-wrap">
-      <div className="pad" role="group" aria-label={t("pad.label")}>
+      <div className={glyphs ? "pad gl-pad" : "pad"} role="group" aria-label={t("pad.label")}>
         {DIGITS.map((d) => {
           const n = rem ? Math.max(0, rem[d] as number) : 9;
           return (
@@ -298,12 +301,12 @@ export function GamePad({ snap, store }: { snap: PlaySnapshot; store: GameStore 
               key={d}
               type="button"
               className={`key${rem && n === 0 ? " done" : ""}`}
-              aria-label={t("pad.key", { digit: d, n })}
+              aria-label={glyphs ? t("glyphs.key", { shape: glyphName(t, d), n }) : t("pad.key", { digit: d, n })}
               disabled={!interactive}
               onClick={() => store.input(d)}
             >
               <span className="kd" aria-hidden="true">
-                {d}
+                {glyphs ? <Glyph digit={d} kind="pad" /> : d}
               </span>
               <span
                 className={echo && echo.digit === d ? "kr out" : "kr"}

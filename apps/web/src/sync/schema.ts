@@ -69,6 +69,12 @@ export interface DayRecord {
   ink?: boolean;
   /** Число клякс (только при `ink`) — для сводки; переживает бюджет `moveLog`. Каждая клякса уже входит в `corrections`. */
   blots?: number;
+  /**
+   * Глифы (PD-194, план режимов §3): партия показана знаками вместо цифр. Только `true` (у обычного дня поля нет — старые
+   * записи равны побайтно, схему не версионируем, как `ink`); отдельной отметки в Year нет. Едет с записью целиком (слияние
+   * атомарно, `merge.ts`) и возвращается в партию при восстановлении (`progressFromRecord`).
+   */
+  glyphs?: true;
 }
 
 export interface SnapshotData {
@@ -177,6 +183,7 @@ export function sanitizeDayRecord(raw: unknown): DayRecord | null {
     const blots = raw["blots"];
     if (typeof blots === "number" && Number.isInteger(blots) && blots >= 0 && blots <= 81) rec.blots = blots;
   }
+  if (raw["glyphs"] === true) rec.glyphs = true;
   if (status === "solved") {
     const solvedAt = raw["solvedAt"];
     if (typeof solvedAt !== "string" || !ISO_RE.test(solvedAt) || Number.isNaN(Date.parse(solvedAt))) return null;
@@ -225,6 +232,7 @@ export function dayRecordFromProgress(p: DayProgress, now: Date): DayRecord | nu
     difficulty: p.difficulty,
     mission: p.mission,
     ...(p.play.ink === true ? { ink: true, blots: blotsOf(log).length } : {}),
+    ...(p.play.glyphs === true ? { glyphs: true as const } : {}),
   };
   if (!p.solved) {
     return { status: "unfinished", timeMs: Math.round(p.elapsedMs), late: false, ...base };
@@ -317,6 +325,7 @@ export function progressFromRecord(date: string, rec: DayRecord): DayProgress | 
     undoStack: [],
     solved: true,
     ...(rec.ink === true ? { ink: true } : {}),
+    ...(rec.glyphs === true ? { glyphs: true as const } : {}),
     ...(decoded === null ? { logSynthetic: true as const } : {}),
   };
   return {

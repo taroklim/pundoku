@@ -51,6 +51,12 @@ export interface PlayState {
    */
   readonly ink?: boolean;
   /**
+   * Глифы (PD-194, план режимов §3): партия показывается знаками вместо цифр (`glyphs.tsx`). Только рендер — правила, лог и
+   * решение те же. Ставится на старте партии режима `glyphs` и не меняется. Только `true` (у обычной партии поля нет —
+   * старые записи читаются как раньше), по прецеденту `ink`.
+   */
+  readonly glyphs?: true;
+  /**
    * Лог восстановлен из `heat` записи снапшота (`sync/schema.ts › logFromHeat`), а не сыгран: нужен
    * карточке дня, но не настоящий ход партии — не уходит в `moveLog` снапшота и не годится для Таймлапса
    * (PD-70). Отсутствует у настоящих партий.
@@ -132,6 +138,15 @@ const isSettled = (s: PlayState, cell: number): boolean =>
   isCorrectAt(s, cell) || (s.ink === true && (s.values[cell] ?? 0) !== 0);
 
 export const isInk = (s: PlayState): boolean => s.ink === true;
+
+/** PD-194: партия показывается глифами. */
+export const isGlyphs = (s: Pick<PlayState, "glyphs">): boolean => s.glyphs === true;
+
+/** PD-194: пометить свежую партию режимом Глифы (до первого хода; решённую и Лжеца не трогаем — режимы не комбинируются). */
+export function setGlyphMode(s: PlayState): PlayState {
+  if (s.glyphs === true || s.solved || s.liar !== undefined || s.log.length > 0) return s;
+  return { ...s, glyphs: true };
+}
 
 /** Кляксы партии (пусто у обычной партии) — из лога, единственного источника. */
 export const blotsIn = (s: PlayState): Blot[] => blotsOf(s.log);

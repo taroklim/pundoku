@@ -3,6 +3,7 @@ import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useHighlightPeers, useHighlightWrong } from "../settings/prefs";
 import { LONG_PRESS_MS } from "./controls";
+import { Glyph, glyphName } from "./glyphs";
 import { acquittedCells, caughtLie, liarHidden } from "./liar";
 import { blotsIn, digitAt, isGiven, isWrong, notesOf, peersOf } from "./logic";
 import type { GameStore, PlaySnapshot } from "./gameStore";
@@ -71,6 +72,8 @@ interface CellProps {
   lie: number;
   sealId: number;
   accusable: boolean;
+  /** PD-194: партия режима Глифы — знаки вместо цифр (дано залитым, ваше контуром, заметки — залитые мини-знаки). */
+  glyphs: boolean;
   onAccuse?: (cell: number, el: HTMLElement) => void;
   onPick: (cell: number) => void;
   /** Нажатие на клетку: запоминаем точку касания для M7. */
@@ -177,23 +180,23 @@ const Cell = memo(function Cell(p: CellProps) {
         </span>
       )}
       {p.blotId !== 0 && p.wrongDigit !== 0 && (
-        <span className="d player wrong leaving" aria-hidden="true">
-          {p.wrongDigit}
+        <span className={`d player wrong leaving${p.glyphs ? " gd" : ""}`} aria-hidden="true">
+          {p.glyphs ? <Glyph digit={p.wrongDigit} kind="placed" /> : p.wrongDigit}
         </span>
       )}
       {digit ? (
         <span
           key={p.popId || p.blotId}
-          className={`d ${p.given ? "given" : "player"}${p.wrong ? " err" : ""}${p.popId ? " anim-in" : ""}${p.blotId ? " swap-in" : ""}`}
+          className={`d ${p.given ? "given" : "player"}${p.glyphs ? " gd" : ""}${p.wrong ? " err" : ""}${p.popId ? " anim-in" : ""}${p.blotId ? " swap-in" : ""}`}
           aria-hidden="true"
         >
-          {digit}
+          {p.glyphs ? <Glyph digit={digit} kind={p.given ? "given" : "placed"} /> : digit}
         </span>
       ) : p.notes ? (
-        <span className="marks" aria-hidden="true">
+        <span className={p.glyphs ? "marks gl-marks" : "marks"} aria-hidden="true">
           {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((d) => (
             <span key={d} className={p.struck & (1 << d) ? "struck" : undefined}>
-              {p.notes & (1 << d) ? d : ""}
+              {p.notes & (1 << d) ? (p.glyphs ? <Glyph digit={d} kind="note" /> : d) : ""}
             </span>
           ))}
         </span>
@@ -328,12 +331,23 @@ export function Board({ snap, store, dim, hintMarks = null, onAccuse, canAccuse,
     if (next !== null) ref.current?.querySelector<HTMLElement>(`[data-i="${next}"]`)?.focus();
   };
 
+  // PD-194: в Глифах подписи называют форму, а не цифру (макет PD-170: «круг, дано» / «круг, ваш» / «заметки: круг, ромб»).
+  const glyphs = play?.glyphs === true;
   const hintRegion = useMemo(() => (hintMarks?.region ? new Set(regionCells(hintMarks.region)) : new Set<number>()), [hintMarks?.region]);
   const baseLabel = (i: number): string => {
     const where = { row: Math.floor(i / 9) + 1, col: (i % 9) + 1 };
     if (!play) return t("board.cellEmpty", where);
     if (caught && caught.cell === i) return t("liar.cellCaught", { ...where, digit: play.mission[i], lie: caught.lie });
     if (acquitted.has(i)) return t("liar.cellAcquitted", { ...where, digit: play.mission[i] });
+    if (glyphs) {
+      // Режимы не комбинируются (Лжец/Чернила × Глифы нет) — ветки Лжеца и кляксы выше/ниже до глифов не доходят.
+      if (isGiven(play, i)) return t("glyphs.cellClue", { ...where, shape: glyphName(t, play.mission[i] ?? 0) });
+      const gv = play.values[i] ?? 0;
+      if (gv) return t(wrongAt(play, i) ? "glyphs.cellWrong" : "glyphs.cellYours", { ...where, shape: glyphName(t, gv) });
+      const gn = notesOf(play.notes[i] ?? 0);
+      if (gn.length) return t("board.cellNotes", { ...where, notes: gn.map((d) => glyphName(t, d)).join(", ") });
+      return t("board.cellEmpty", where);
+    }
     if (isGiven(play, i)) {
       const clue = t("board.cellClue", { ...where, digit: play.mission[i] });
       return ready && onAccuse && canAccuse?.(i) ? `${clue}, ${t("liar.cellAccuseHint")}` : clue;
@@ -412,6 +426,7 @@ export function Board({ snap, store, dim, hintMarks = null, onAccuse, canAccuse,
                   lie={caught && caught.cell === i ? caught.lie : 0}
                   sealId={sealNow && sealNow.cell === i ? sealNow.id : 0}
                   accusable={ready && onAccuse !== undefined && (canAccuse?.(i) ?? false)}
+                  glyphs={glyphs}
                   onAccuse={onAccuse}
                   onPick={pick}
                   onTouch={onTouch}

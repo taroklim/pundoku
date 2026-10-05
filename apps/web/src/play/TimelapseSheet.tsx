@@ -169,7 +169,7 @@ export function TimelapseSheet({ play, date, difficulty, onClose }: TimelapseShe
         </div>
       ) : (
         <div data-testid="tl-player" data-step={step ? "true" : "false"}>
-          <ReplayField frames={frames} idx={idx} mission={play.mission} blots={blots} animate={animate} label={t("timelapse.boardLabel")} liar={liarLayer} />
+          <ReplayField frames={frames} idx={idx} mission={play.mission} blots={blots} animate={animate} label={t("timelapse.boardLabel")} liar={liarLayer} glyphs={play.glyphs === true} />
           <div className="tl-meta">
             <span role="status" aria-live={playing ? "off" : "polite"} data-testid="tl-move">
               {t("timelapse.moveOf", { a: moveNow, b: moves.count })}

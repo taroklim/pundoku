@@ -11,12 +11,12 @@ import { DIFFICULTIES, INK_RULES } from "@pundoku/engine";
 import type { ComponentType } from "react";
 import { InkRuleSheet } from "./InkEntry";
 import type { PlayState } from "./logic";
-import { setInkMode } from "./logic";
+import { setGlyphMode, setInkMode } from "./logic";
 import type { ModeIconProps } from "./modeIcons";
-import { ClassicModeIcon, InkModeIcon, LiarModeIcon } from "./modeIcons";
+import { ClassicModeIcon, GlyphsModeIcon, InkModeIcon, LiarModeIcon } from "./modeIcons";
 
 /** Идентификатор режима: часть ключа слота в хранилище (`playGame:<id>`) — однажды выпущенный id не переименовывать. */
-export type ModeId = "classic" | "ink" | "liar";
+export type ModeId = "classic" | "ink" | "liar" | "glyphs";
 
 /** Шит-подтверждение перед стартом (правило режима длиннее описания, PD-74): показывается ПОСЛЕ шита режима, не поверх. */
 export type ModeRuleSheet = ComponentType<{ onStart: () => void; onCancel: () => void }>;
@@ -84,6 +84,19 @@ export const MODES: readonly ModeDef[] = [
     hints: true,
     grid: "liar",
   },
+  {
+    // PD-194 (план режимов §3): классическая сетка, показанная знаками набора A «Фигуры» (PD-170) — только рендер, правила,
+    // лог и подсказки те же, что у Классики. Флаг `play.glyphs` ставится на старте и едет с партией (слот, таймлапс).
+    id: "glyphs",
+    Icon: GlyphsModeIcon,
+    textKey: "glyphs",
+    ready: true,
+    difficulties: DIFFICULTIES,
+    allowInArchive: false,
+    chip: true,
+    hints: true,
+    prepare: (play) => setGlyphMode(play),
+  },
 ];
 
 export const DEFAULT_MODE: ModeId = "classic";
@@ -103,7 +116,8 @@ export function availableModes(registry: readonly ModeDef[] = MODES): readonly M
 }
 
 /** Режим партии, записанной до PD-167 (один слот на всё): Чернила узнаются по самой партии, остальное — Классика. */
-export function legacyModeOf(play: Pick<PlayState, "ink">): ModeId {
+export function legacyModeOf(play: Pick<PlayState, "ink" | "glyphs">): ModeId {
+  if (play.glyphs === true) return "glyphs"; // PD-194: глифов до PD-167 не было — только на случай записи без `mode`
   return play.ink === true ? "ink" : "classic";
 }
 
