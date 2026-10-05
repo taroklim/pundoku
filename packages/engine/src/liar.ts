@@ -14,7 +14,8 @@
  *    повтора, пустой клетки без кандидатов, цифры без места в юните, двух синглов одной цифры в юните и клетки,
  *    вынужденной к двум цифрам (PD-172); (б) противоречие выводимо техниками не дороже потолка класса; (в) при
  *    ЛЮБОМ порядке ходов (синглы + вычёркивания потолка класса) видимое противоречие возникает не раньше
- *    `minDepth` постановок (PD-172: минимум по всем порядкам, а не по одному порядку решателя).
+ *    `minDepth` постановок (PD-172: минимум по всем порядкам, а не по одному порядку решателя). У expert/master
+ *    порядок вычёркиваний пар тоже перебирается, но не полностью (PD-177, `settleSweep`; остаток — README).
  *
  * Без DOM, чистые функции, детерминированно по seed — как весь пакет.
  */
@@ -30,9 +31,10 @@ import type { Cell, Difficulty, Digit, Grid, GridInput, MoveLog, Technique, Tech
  * Версия алгоритма генерации Лжеца. Любое изменение, меняющее сетку для существующего seed (критерий,
  * пороги, порядок перебора, seed-конвенция), поднимает её (README, «Лжец» → «Версии»). Меняется и при
  * смене `GENERATOR_VERSION` — честная основа берётся из `generate`. 2 — PD-172 (новые (а)/(в), пороги по классам);
- * 3 — PD-174 (однозначность отчёта 05, (а) техниками потолка класса, новые пороги).
+ * 3 — PD-174 (однозначность отчёта 05, (а) техниками потолка класса, новые пороги); 4 — PD-177 (expert/master:
+ * (а) и (в) ещё и в других порядках вычёркиваний, `settleSweep`).
  */
-export const LIAR_VERSION = 3;
+export const LIAR_VERSION = 4;
 
 /**
  * Порог нетривиальности (в) по классам (PD-174): минимальное число постановок до видимого противоречия при
@@ -276,13 +278,19 @@ function visibleContradiction(vals: Uint8Array, cands: Uint16Array, forced: Uint
 
 /**
  * (а) Ложь не видна на старте (PD-174): волна 0 зонда с потолком класса — вычёркивания ярусов 2..maxTier до
- * фикс-точки, без постановок, затем проверка видимого противоречия (синглы — naked и hidden).
+ * фикс-точки, без постановок, затем проверка видимого противоречия (синглы — naked и hidden). У expert/master
+ * (PD-177) — и в порядке решателя, и с перебором первого шага (`settleSweep`).
  */
 function visibleAtStart(bytes: Uint8Array, maxTier: number): boolean {
   const start = initProbe(bytes);
   if (start === null) return true;
-  settle(start.vals, start.cands, maxTier);
-  return visibleContradiction(start.vals, start.cands, new Uint16Array(GRID_SIZE), true);
+  const forced = new Uint16Array(GRID_SIZE);
+  const cands = Uint16Array.from(start.cands);
+  settle(start.vals, cands, maxTier);
+  if (visibleContradiction(start.vals, cands, forced, true)) return true;
+  if (maxTier < 3) return false;
+  settleSweep(start.vals, start.cands, maxTier);
+  return visibleContradiction(start.vals, start.cands, forced, true);
 }
 
 /**
@@ -293,12 +301,162 @@ function visibleAtStart(bytes: Uint8Array, maxTier: number): boolean {
  *   точна по всем таким игрокам. Стандартная форма (от двух мест) немонотонна: замер PD-174 нашёл hard-ложь, где
  *   другой порядок вычёркиваний давал противоречие на постановку раньше, чем порядок решателя;
  * - expert/master (+ пары) — стандартные техники решателя в его порядке (`eliminateToFixpoint`): замкнутая форма
- *   пар разносит следствия синглов без постановок и отсекла бы почти все лжи на старте. Немонотонность пар —
- *   известное ограничение (README «Лжец → Как считается глубина»).
+ *   пар разносит следствия синглов без постановок и отсекла бы почти все лжи на старте. Пары немонотонны, поэтому
+ *   точный поиск у expert/master проходит второй раз с `settleSweep` — другими порядками (PD-177, README «Лжец →
+ *   Как считается глубина»).
  */
 function settle(vals: Uint8Array, cands: Uint16Array, maxTier: number): void {
   if (maxTier === 2) closeEliminations(vals, cands, 2);
   else if (maxTier >= 3) eliminateToFixpoint(vals, cands, maxTier);
+}
+
+/** Рабочие буферы `settleSweep`. */
+const SWEEP_TRY = new Uint16Array(GRID_SIZE);
+const SWEEP_ACC = new Uint16Array(GRID_SIZE);
+
+/**
+ * Вычёркивания игрока expert/master «в разных порядках» (PD-177, ярус ≥ 3, на месте). Пары и стандартные locked
+ * candidates немонотонны: шаг, сделанный раньше, может разрушить шаблон другого шага, поэтому знание игрока зависит
+ * от порядка (QA PD-166b: у ~9 % сеток expert/master другой порядок видел ложь на постановку раньше порядка
+ * решателя). Раунд: для КАЖДОГО применимого стандартного шага — применить его первым и продолжить до фикс-точки
+ * в двух порядках: решателя (locked → naked pair → hidden pair) и обратном (hidden pair → naked pair → locked);
+ * знания всех вариантов объединяются (кандидат вычеркнут хоть в одном). Раунды — пока объединение растёт (каждый
+ * шаг раунда что-то вычёркивает, так что раундов не больше числа кандидатов); итог — фикс-точка всех стандартных
+ * правил, не слабее порядка решателя от того же состояния. Это НЕ нижняя оценка по всем порядкам (её даёт только
+ * замкнутая форма — слишком сильная, см. `closeEliminations`), а расширение модели игрока; остаток — README.
+ */
+function settleSweep(vals: Uint8Array, cands: Uint16Array, maxTier: number): void {
+  for (;;) {
+    const n = playerSteps(vals, cands, maxTier, -1, ALL_STEP_KINDS);
+    if (n === 0) return;
+    SWEEP_ACC.set(cands);
+    for (let i = 0; i < n; i++) {
+      for (let order = 0; order < 2; order++) {
+        SWEEP_TRY.set(cands);
+        playerSteps(vals, SWEEP_TRY, maxTier, i, ALL_STEP_KINDS);
+        if (order === 0) eliminateToFixpoint(vals, SWEEP_TRY, maxTier);
+        else reverseToFixpoint(vals, SWEEP_TRY, maxTier);
+        for (let c = 0; c < GRID_SIZE; c++) SWEEP_ACC[c] = SWEEP_ACC[c]! & SWEEP_TRY[c]!;
+      }
+    }
+    cands.set(SWEEP_ACC);
+    for (let c = 0; c < GRID_SIZE; c++) if (vals[c] === 0 && cands[c] === 0) return; // противоречие уже видно
+  }
+}
+
+/** Стандартные техники до фикс-точки в обратном порядке ярусов: сначала hidden pair, затем naked pair, затем locked. */
+function reverseToFixpoint(vals: Uint8Array, cands: Uint16Array, maxTier: number): void {
+  for (;;) {
+    let applied = false;
+    for (let t = maxTier; t >= 2 && !applied; t--) applied = playerSteps(vals, cands, maxTier, 0, 1 << t) > 0;
+    if (!applied) return;
+  }
+}
+
+/** Виды шагов `playerSteps` — маска ярусов: 2 — locked candidates, 3 — naked pair, 4 — hidden pair. */
+const ALL_STEP_KINDS = (1 << 2) | (1 << 3) | (1 << 4);
+/** Рабочие буферы `playerSteps`: позиции цифры d в юните u по пустым клеткам (`u * 10 + d`), цифры юнита. */
+const STEP_POS = new Uint16Array(27 * 10);
+const STEP_HAVE = new Uint16Array(27);
+
+/** Вычеркнул бы `strike` что-нибудь. */
+function wouldStrike(vals: Uint8Array, cands: Uint16Array, unit: Uint8Array, where: number, mask: number): boolean {
+  for (let i = 0; i < 9; i++) {
+    if (!(where & (1 << i))) continue;
+    const c = unit[i]!;
+    if (vals[c] === 0 && cands[c]! & mask) return true;
+  }
+  return false;
+}
+
+/**
+ * Стандартные шаги игрока ярусов 2..maxTier (виды — маска `kinds`), которые что-то вычёркивают, в фиксированном
+ * порядке перечисления: locked candidates (от ДВУХ мест; pointing и claiming — по юнитам), naked pair (две клетки с
+ * одинаковой парой кандидатов), hidden pair (две цифры ровно в одних и тех же двух клетках). `applyAt` ≥ 0 —
+ * применить шаг с этим номером и вернуть `applyAt + 1`; иначе вернуть число шагов, ничего не меняя.
+ */
+function playerSteps(vals: Uint8Array, cands: Uint16Array, maxTier: number, applyAt: number, kinds: number): number {
+  let n = 0;
+  const take = (unit: Uint8Array, where: number, mask: number): boolean => {
+    if (!wouldStrike(vals, cands, unit, where, mask)) return false;
+    if (n === applyAt) {
+      strike(vals, cands, unit, where, mask);
+      return true;
+    }
+    n++;
+    return false;
+  };
+  STEP_POS.fill(0);
+  for (let u = 0; u < 27; u++) {
+    const unit = UNITS[u]!;
+    let have = 0;
+    for (let i = 0; i < 9; i++) {
+      const c = unit[i]!;
+      if (vals[c] !== 0) {
+        have |= 1 << vals[c]!;
+        continue;
+      }
+      let m = cands[c]!;
+      while (m !== 0) {
+        const low = m & -m;
+        const k = u * 10 + (31 - Math.clz32(low));
+        STEP_POS[k] = STEP_POS[k]! | (1 << i);
+        m ^= low;
+      }
+    }
+    STEP_HAVE[u] = have;
+  }
+  if (maxTier >= 2 && kinds & (1 << 2)) {
+    for (let u = 0; u < 27; u++) {
+      const have = STEP_HAVE[u]!;
+      for (let d = 1; d <= 9; d++) {
+        const bit = 1 << d;
+        if (have & bit) continue;
+        const p = STEP_POS[u * 10 + d]!;
+        if (p === 0 || (p & (p - 1)) === 0) continue; // меньше двух мест
+        if (u >= 18) {
+          const b = u - 18;
+          const rg = confinedTo(p, TRIPLES);
+          if (rg >= 0 && take(UNITS[Math.floor(b / 3) * 3 + rg]!, ~TRIPLES[b % 3]! & 0x1ff, bit)) return n + 1;
+          const cg = confinedTo(p, BOX_COLS);
+          if (cg >= 0 && take(UNITS[9 + (b % 3) * 3 + cg]!, ~TRIPLES[Math.floor(b / 3)]! & 0x1ff, bit)) return n + 1;
+        } else {
+          const g = confinedTo(p, TRIPLES);
+          if (g < 0) continue;
+          const b = u < 9 ? Math.floor(u / 3) * 3 + g : g * 3 + Math.floor((u - 9) / 3);
+          const outside = u < 9 ? ~TRIPLES[u % 3]! & 0x1ff : ~BOX_COLS[(u - 9) % 3]! & 0x1ff;
+          if (take(UNITS[18 + b]!, outside, bit)) return n + 1;
+        }
+      }
+    }
+  }
+  if (maxTier >= 3 && kinds & (1 << 3)) {
+    for (let u = 0; u < 27; u++) {
+      const unit = UNITS[u]!;
+      for (let i = 0; i < 9; i++) {
+        const ma = cands[unit[i]!]!;
+        if (vals[unit[i]!] !== 0 || popcount(ma) !== 2) continue;
+        for (let j = i + 1; j < 9; j++) {
+          if (vals[unit[j]!] !== 0 || cands[unit[j]!] !== ma) continue;
+          if (take(unit, 0x1ff & ~((1 << i) | (1 << j)), ma)) return n + 1;
+        }
+      }
+    }
+  }
+  if (maxTier >= 4 && kinds & (1 << 4)) {
+    for (let u = 0; u < 27; u++) {
+      const unit = UNITS[u]!;
+      for (let d1 = 1; d1 <= 9; d1++) {
+        const p = STEP_POS[u * 10 + d1]!;
+        if (popcount(p) !== 2) continue;
+        for (let d2 = d1 + 1; d2 <= 9; d2++) {
+          if (STEP_POS[u * 10 + d2] !== p) continue;
+          if (take(unit, p, ALL_DIGITS_MASK & ~((1 << d1) | (1 << d2)))) return n + 1;
+        }
+      }
+    }
+  }
+  return n;
 }
 
 /** Рабочие буферы `closeEliminations`: позиции цифры d в юните u (маска индексов 0..8, `u * 10 + d`), цифры юнита. */
@@ -476,14 +634,21 @@ function initProbe(bytes: Uint8Array): { vals: Uint8Array; cands: Uint16Array } 
 
 /**
  * (в) Точный минимум постановок до видимого противоречия по всем порядкам ходов: BFS по последовательностям
- * постановок синглов; после каждой постановки — вычёркивания игрока потолка до фикс-точки (`settle`). Состояния склеиваются по множеству постановок (с вычёркиваниями — и по
- * кандидатам: накопленное знание зависит от пути). Ищет до `cap` постановок; глубже (или если уровень BFS больше
- * `EXACT_LEVEL_LIMIT`) возвращает нижнюю оценку — максимум из пройденной глубины + 1 и волнового зонда. null —
- * противоречие не выводится вообще (б): волна игрока (все вынужденные синглы, вычёркивания игрока) застревает.
+ * постановок синглов; после каждой постановки — вычёркивания игрока потолка до фикс-точки (`settle`). Состояния
+ * склеиваются по множеству постановок (у expert/master — и по кандидатам: накопленное знание зависит от пути). Ищет до
+ * `cap` постановок; глубже (или если уровень BFS больше `EXACT_LEVEL_LIMIT`) возвращает нижнюю оценку — максимум из
+ * пройденной глубины + 1 и волнового зонда. null — противоречие не выводится вообще (б): волна игрока (все
+ * вынужденные синглы, вычёркивания игрока) застревает.
+ *
+ * Expert/master (PD-177): если в порядке решателя глубина d ≥ 1, поиск повторяется до min(d − 1, max(cap − 1, 0))
+ * постановок с вычёркиваниями `settleSweep` (другие порядки шагов); нашёл раньше — глубина та, что нашёл. Итог у
+ * expert/master: точный в порядке решателя, если ≤ cap, и не больше найденного в других порядках до cap − 1, — для
+ * вердикта «глубина ≥ cap» этого достаточно. Второй проход идёт только у кандидатов, переживших первый.
  *
  * Отсечение (PD-174): состояние уровня k не раскрывается, если волновой зонд от него не находит противоречия за
- * `cap − k` волн — волна есть нижняя оценка по всем продолжениям, значит из этого состояния противоречие не
- * раньше чем через `cap − k + 1` постановок, то есть глубже `cap`. Результат тот же, что без отсечения.
+ * `cap − k` волн — волна есть нижняя оценка по всем продолжениям (и по всем порядкам вычёркиваний), значит из этого
+ * состояния противоречие не раньше чем через `cap − k + 1` постановок, то есть глубже `cap`. Результат тот же, что
+ * без отсечения.
  */
 function minPlacements(bytes: Uint8Array, maxTier: number, cap: number): number | null {
   // (б): игрок с техниками потолка доходит до противоречия (у hard+ замкнутая волна сильнее игрока — для (б) не годится).
@@ -491,18 +656,34 @@ function minPlacements(bytes: Uint8Array, maxTier: number, cap: number): number 
   const wave = waveDepth(bytes, maxTier);
   if (wave === null) return null;
   if (wave > cap) return wave;
+  const depth = searchDepth(bytes, maxTier, cap, wave, false);
+  if (maxTier < 3 || depth === 0) return depth;
+  // Другие порядки — до cap − 1: этого достаточно для вердикта «глубина ≥ cap» (порог), а уровень cap — самый
+  // дорогой (замер PD-177: ×1,7 к цене проверки вместо ×2,8, поймано столько же). Уровень 0 (видно на старте, как (а))
+  // проверяется всегда — он дешёвый.
+  const sweepCap = Math.min(depth - 1, Math.max(cap - 1, 0));
+  const early = searchDepth(bytes, maxTier, sweepCap, wave, true);
+  return early <= sweepCap ? early : depth;
+}
+
+/** BFS `minPlacements` до `cap` постановок; `sweep` — вычёркивания `settleSweep` вместо порядка решателя. */
+function searchDepth(bytes: Uint8Array, maxTier: number, cap: number, wave: number, sweep: boolean): number {
   const start = initProbe(bytes);
   if (start === null) return 0;
+  const settleState = (vals: Uint8Array, cands: Uint16Array): void => {
+    if (sweep) settleSweep(vals, cands, maxTier);
+    else settle(vals, cands, maxTier);
+  };
   const forced = new Uint16Array(GRID_SIZE);
   const scratch = new Uint16Array(GRID_SIZE);
   const probeVals = new Uint8Array(GRID_SIZE);
   const probeCands = new Uint16Array(GRID_SIZE);
+  settleState(start.vals, start.cands);
   let level: ProbeState[] = [{ ...start, placed: [] }];
   for (let k = 0; k <= cap; k++) {
     const next: ProbeState[] = [];
     const seen = new Set<string>();
     for (const st of level) {
-      settle(st.vals, st.cands, maxTier);
       if (visibleContradiction(st.vals, st.cands, forced, maxTier >= 1)) return k;
       if (k === cap) continue;
       probeVals.set(st.vals);
@@ -515,7 +696,7 @@ function minPlacements(bytes: Uint8Array, maxTier: number, cap: number): number 
         const digit = 31 - Math.clz32(f);
         // Ключ дедупликации — множество постановок от старта (то же, что значения сетки: старт общий). До яруса 2
         // включительно вычёркивания игрока монотонны и состояние определяется постановками; со стандартными парами
-        // (ярус ≥ 3) накопленное знание зависит от пути — в ключ входят и кандидаты.
+        // (ярус ≥ 3) накопленное знание зависит от пути — в ключ входят и кандидаты после вычёркиваний.
         const code = c * 16 + digit;
         const placed = [...st.placed, code].sort((x, y) => x - y);
         let key = placed.join(",");
@@ -529,6 +710,7 @@ function minPlacements(bytes: Uint8Array, maxTier: number, cap: number): number 
           const p = peers[i]!;
           if (vals[p] === 0) cands[p] = cands[p]! & ~f;
         }
+        settleState(vals, cands);
         if (maxTier >= 3) {
           key += `|${String.fromCharCode(...cands)}`;
           if (seen.has(key)) continue;
@@ -569,6 +751,15 @@ function contradictionProbe(
  */
 export function contradictionDepth(mission: GridInput, maxTier: number, cap: number): number | null {
   return minPlacements(toBytes(mission), maxTier, cap);
+}
+
+/**
+ * Внутреннее (тесты, PD-177): волновой зонд от старта — нижняя оценка глубины (в) по всем игрокам (вычёркивания
+ * ярусов 2..maxTier в замкнутой форме); null — волна застряла. Замкнутые правила монотонны, поэтому их фикс-точка
+ * не зависит от порядка — тест сверяет её с независимой моделью точно.
+ */
+export function contradictionWave(mission: GridInput, maxTier: number): number | null {
+  return waveDepth(toBytes(mission), maxTier);
 }
 
 function minDepthFor(difficulty: Difficulty | undefined): number {
