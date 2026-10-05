@@ -16,7 +16,7 @@ export interface SolvedDayKey {
 /**
  * PD-180: «личный рекорд» решённого дня для питомца на карточке Today/архива. Историю читает только когда питомец включён
  * (выкл — ни одного чтения хранилища). Запись самого дня берётся из хранилища (там `solvedAt`), а пока она не записана —
- * из снапшота экрана.
+ * из снапшота экрана (момент решения — сейчас).
  */
 export function usePersonalBest(enabled: boolean, listDays: () => Promise<DayProgress[]>, day: SolvedDayKey | null): boolean {
   const [best, setBest] = useState(false);
@@ -34,7 +34,8 @@ export function usePersonalBest(enabled: boolean, listDays: () => Promise<DayPro
     void listDays().then((all) => {
       if (!alive) return;
       const saved = all.find((d) => d.date === date && d.solved);
-      const self: PetHistoryDay = saved ?? { date, difficulty, play, assisted, hints, solved: true, solvedAt: null };
+      // Ещё не записан — значит, решён только что: момент решения — сейчас (PD-197: не начало даты дня).
+      const self: PetHistoryDay = saved ?? { date, difficulty, play, assisted, hints, solved: true, solvedAt: new Date().toISOString() };
       setBest(personalBestOf(self, all));
     });
     return () => {

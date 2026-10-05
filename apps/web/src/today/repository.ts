@@ -41,6 +41,14 @@ export interface DayProgress {
   readonly hints?: number;
 }
 
+/**
+ * Момент решения дня для упорядочивания (PD-197): `solvedAt`, а у решённой записи без него (старые записи до появления поля) —
+ * начало даты дня `YYYY-MM-DDT00:00:00.000Z`. Стабильно (не зависит от «сейчас») и не позже любого настоящего решения
+ * других дней, сделанного после него: день нельзя решить раньше его даты. Так же заполняется `solvedAt` при выгрузке в
+ * снапшот — порядок дней одинаков на всех устройствах.
+ */
+export const solvedAtOrDayStart = (p: Pick<DayProgress, "date" | "solvedAt">): string => p.solvedAt ?? `${p.date}T00:00:00.000Z`;
+
 const CELL_COUNT = 81;
 const MOVE_KINDS: readonly unknown[] = ["place", "erase", "note_add", "note_remove", "undo"];
 const TECHNIQUES: readonly unknown[] = [...TECHNIQUE_ORDER, "beyond"];

@@ -15,6 +15,7 @@ import { DIFFICULTIES, validateLiar } from "@pundoku/engine";
 import { liarInfoOf, packAccusations, parseSavedLiarDay } from "../play/savedPlay";
 import type { SavedPlay } from "../play/savedPlay";
 import { CELLS } from "../play/logic";
+import { solvedAtOrDayStart } from "../today/repository";
 import { decodeMoveLog, encodeMoveLog } from "./codec";
 
 export interface LiarDayRecord {
@@ -98,8 +99,14 @@ function missionWithLie(saved: SavedPlay): string {
   return m.join("");
 }
 
-/** Запись снапшота по локальной записи Лжеца дня. `null` — без прогресса (ни хода, ни обвинения): в снапшот не идёт. */
-export function liarRecordFromSaved(saved: SavedPlay, now: Date): LiarDayRecord | null {
+/**
+ * Запись снапшота по локальной записи Лжеца дня. `null` — без прогресса (ни хода, ни обвинения): в снапшот не идёт.
+ * PD-197: решённая партия без `solvedAt` выгружается с началом даты дня (`solvedAtOrDayStart`), а не с «сейчас» — как дни
+ * в `dayRecordFromProgress`: значение стабильно между циклами и устройствами (иначе каждый синк давал бы новую запись, а
+ * слияние «раньше — сильнее» зависело бы от того, какое устройство выгрузило первым); схема не меняется. `_now` оставлен
+ * ради совместимости сигнатуры.
+ */
+export function liarRecordFromSaved(saved: SavedPlay & { daily: string }, _now: Date): LiarDayRecord | null {
   const play = saved.play;
   const acc = play.accusations ?? [];
   if (!play.solved && play.log.length === 0 && acc.length === 0) return null;
@@ -120,7 +127,7 @@ export function liarRecordFromSaved(saved: SavedPlay, now: Date): LiarDayRecord 
   }
   if (acc.length > 0) rec.accusations = packAccusations(acc);
   if (solved) {
-    rec.solvedAt = saved.solvedAt ?? now.toISOString();
+    rec.solvedAt = solvedAtOrDayStart({ date: saved.daily, solvedAt: saved.solvedAt ?? null });
     if (play.log.length > 0 && play.logSynthetic !== true) rec.moveLog = encodeMoveLog(play.log);
   }
   return rec;

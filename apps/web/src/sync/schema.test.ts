@@ -131,6 +131,18 @@ describe("запись дня (поля под Year)", () => {
     expect(progressFromRecord("2026-09-29", rec)).toBeNull(); // не решён — локально не материализуется
   });
 
+  it("PD-197: решённый день без solvedAt (старая запись) → начало даты дня, а не «сейчас»; схема его принимает", () => {
+    const legacy = { ...progressOf("2026-09-20"), solvedAt: null };
+    const a = dayRecordFromProgress(legacy, NOW)!;
+    const b = dayRecordFromProgress(legacy, new Date("2027-01-01T12:34:56.000Z"))!;
+    expect(a.solvedAt).toBe("2026-09-20T00:00:00.000Z");
+    expect(b.solvedAt).toBe(a.solvedAt); // стабильно между циклами/устройствами
+    expect(sanitizeDayRecord(a)).toEqual(a);
+    expect(progressFromRecord("2026-09-20", a)?.solvedAt).toBe("2026-09-20T00:00:00.000Z");
+    // Настоящий solvedAt не трогается.
+    expect(dayRecordFromProgress(progressOf("2026-09-20", { solvedAt: "2026-09-25T08:00:00.000Z" }), NOW)!.solvedAt).toBe("2026-09-25T08:00:00.000Z");
+  });
+
   it("sanitizeDayRecord отбрасывает негодное: нет mission, плохой solvedAt, чужой source", () => {
     const good = recordOf("2026-09-29");
     expect(sanitizeDayRecord(good)).toEqual(good);

@@ -10,6 +10,7 @@ import { blotCellSet } from "../play/inkCard";
 import type { PlayState } from "../play/logic";
 import type { LiarInfo } from "../play/savedPlay";
 import type { DayProgress } from "../today/repository";
+import { solvedAtOrDayStart } from "../today/repository";
 
 export interface PetContext {
   /** Счётчик подсказок записи (`DayProgress.hints`); иначе — по журналу партии. */
@@ -43,10 +44,21 @@ export type PetHistoryDay = Pick<DayProgress, "date" | "solved" | "difficulty" |
 /** Время решённого дня, мс — то же, что строка «Time» карточки (`summary.durationMs`). */
 const timeOf = (d: PetHistoryDay): number => summary(d.play.log).durationMs;
 
-/** `a` решён раньше `b`: по моменту решения, если он есть у обоих, иначе по дате дня. */
+/** Момент решения, мс; у записи без `solvedAt` — начало даты дня (`solvedAtOrDayStart`). */
+const solvedMs = (d: PetHistoryDay): number => {
+  const t = Date.parse(solvedAtOrDayStart(d));
+  return Number.isNaN(t) ? Date.parse(`${d.date}T00:00:00.000Z`) : t;
+};
+
+/**
+ * `a` решён раньше `b` — строгий полный порядок (PD-197): по моменту решения (у записи без `solvedAt` — начало даты дня),
+ * при равенстве — по дате дня. Раньше при пустом `solvedAt` у одной из записей сравнивались даты дней, и порядок не был
+ * транзитивным: архивный день, решённый позже, мог «встать» перед старым рекордом и задним числом отменить его.
+ */
 function solvedBefore(a: PetHistoryDay, b: PetHistoryDay): boolean {
-  if (a.solvedAt && b.solvedAt) return a.solvedAt < b.solvedAt;
-  return a.date < b.date;
+  const ta = solvedMs(a);
+  const tb = solvedMs(b);
+  return ta !== tb ? ta < tb : a.date < b.date;
 }
 
 /**
@@ -68,14 +80,16 @@ export function personalBestOf(day: PetHistoryDay, all: Iterable<PetHistoryDay>)
 /**
  * Настроение дня в листе Year — правило (PD-180, PD-191):
  * - Лжец даты пойман с первого обвинения → удивлён (событие дня; даже если классическая сетка не решена или не начата).
- * - Есть запись ежедневной (классической) сетки → настроение по ней, как раньше (не решена → спит).
- * - Классики нет, но Лжец даты пойман (не с первого обвинения) → день сыгран: доволен. В `LiarInfo` нет правок/подсказок
- *   партии Лжеца (только ложные обвинения — это не правки), поэтому «устал» по Лжецу здесь не выводится.
- * - Классики нет, Лжец не начат или начат, но не пойман → спит.
+ * - Классическая сетка решена → настроение по ней, как раньше.
+ * - Классики нет или она начата и брошена (PD-197: брошенная классика не перебивает завершённую партию), но Лжец даты пойман
+ *   (не с первого обвинения) → день сыгран: доволен. В `LiarInfo` нет правок/подсказок партии Лжеца (только ложные
+ *   обвинения — это не правки), поэтому «устал» по Лжецу здесь не выводится.
+ * - Иначе классика не решена (или не начата), Лжец не пойман → спит.
  */
 export function dayPetMood(progress: DayProgress | undefined, liar: LiarInfo | null, all: Iterable<PetHistoryDay>): PetMood {
   if (liar?.caught === true && liar.firstTry) return petMood({ solved: true, corrections: 0, liarFirstTry: true });
-  if (!progress) return petMood(liar?.caught === true ? { solved: true, corrections: 0 } : null);
+  if (!progress?.solved && liar?.caught === true) return petMood({ solved: true, corrections: 0 });
+  if (!progress) return petMood(null);
   return petMood(
     petDayOfPlay(progress.play, progress.solved, {
       hints: progress.hints,
