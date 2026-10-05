@@ -38,7 +38,8 @@ export function ModeMenu({ mode, anchor, preview, canContinue, onContinue, onNew
   const root = useRef<HTMLDivElement>(null);
   const armed = useRef(false);
   const [pos, setPos] = useState<{ top: number } | null>(null);
-  useModal(scrim, root, { kind: "menu", onClose, returnFocus, initialFocus: '[role="menuitem"]' });
+  // Фокус — только когда меню стало видимым (до позиционирования оно visibility:hidden, PD-182).
+  useModal(scrim, root, { kind: "menu", onClose, returnFocus, initialFocus: '[role="menuitem"]', ready: pos !== null });
 
   // Под строкой, если помещается; иначе над ней; в крайнем случае — прижато к верху (меню само прокручивается).
   useLayoutEffect(() => {

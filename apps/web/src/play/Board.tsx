@@ -2,6 +2,8 @@ import type { CSSProperties, KeyboardEvent } from "react";
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useHighlightPeers, useHighlightWrong } from "../settings/prefs";
+import { LONG_PRESS_MS } from "./controls";
+import { acquittedCells, caughtLie, liarHidden } from "./liar";
 import { blotsIn, digitAt, isGiven, isWrong, notesOf, peersOf } from "./logic";
 import type { GameStore, PlaySnapshot } from "./gameStore";
 import { MOTION_MS } from "./motion";
@@ -60,13 +62,34 @@ interface CellProps {
   struck: number;
   tabStop: boolean;
   label: string;
+  /**
+   * Лжец (PD-171): подсказка оправдана (обвинили — честная), пойманная ложь (`lie` — зачёркнутая ложная цифра, `given` уже
+   * истинная), `sealId` — обвинение этой клетки только что сделано (печать проявляется), `accusable` — долгое нажатие/
+   * контекстное меню на клетке открывает «Обвинить». Всё это — вердикты уже сделанных обвинений, не ответ.
+   */
+  acquitted: boolean;
+  lie: number;
+  sealId: number;
+  accusable: boolean;
+  onAccuse?: (cell: number, el: HTMLElement) => void;
   onPick: (cell: number) => void;
   /** Нажатие на клетку: запоминаем точку касания для M7. */
   onTouch: (cell: number, x: number, y: number) => void;
 }
 
+/** Сдвиг пальца, после которого долгое нажатие на клетке считается прокруткой/жестом, а не нажатием. */
+const MOVE_SLOP_PX = 10;
+
 const Cell = memo(function Cell(p: CellProps) {
   const digit = p.given || p.value;
+  const press = useRef<{ timer: number; x: number; y: number } | null>(null);
+  /** Долгое нажатие открыло меню: хвост этого жеста (contextmenu iOS) — не второе открытие. */
+  const fired = useRef(0);
+  const stopPress = () => {
+    if (press.current) window.clearTimeout(press.current.timer);
+    press.current = null;
+  };
+  useEffect(() => stopPress, []);
   const cls = ["cell"];
   if (p.selected) cls.push("sel");
   if (p.same) cls.push("same");
@@ -81,6 +104,9 @@ const Cell = memo(function Cell(p: CellProps) {
   if (p.echoIdx >= 0) cls.push("echo", p.echoId % 2 ? "echo-a" : "echo-b");
   // M7: клетка на миг вжимается в бумагу, пока идёт момент кляксы.
   if (p.blotId !== 0) cls.push("blotting");
+  if (p.acquitted) cls.push("acquitted");
+  if (p.lie) cls.push("caught");
+  if (p.sealId !== 0) cls.push("sealing");
   const vars: Record<string, string | number> = {};
   if (p.waveIdx >= 0) vars["--wi"] = p.waveIdx;
   if (p.echoIdx >= 0) {
@@ -107,6 +133,35 @@ const Cell = memo(function Cell(p: CellProps) {
           const pct = (v: number) => Math.round(Math.min(100, Math.max(0, v)));
           p.onTouch(p.index, pct(((e.clientX - r.left) / r.width) * 100), pct(((e.clientY - r.top) / r.height) * 100));
         }
+        stopPress();
+        if (!p.accusable || !p.onAccuse || e.button !== 0) return;
+        const el = e.currentTarget;
+        // Лжец: долгое нажатие на подсказку — контекстное меню «Обвинить» (визуал v2 п. 6), не мгновенное действие.
+        press.current = {
+          timer: window.setTimeout(() => {
+            press.current = null;
+            fired.current = Date.now();
+            p.onAccuse?.(p.index, el);
+          }, LONG_PRESS_MS),
+          x: e.clientX,
+          y: e.clientY,
+        };
+      }}
+      onPointerMove={(e) => {
+        const pr = press.current;
+        if (pr && Math.hypot(e.clientX - pr.x, e.clientY - pr.y) > MOVE_SLOP_PX) stopPress();
+      }}
+      onPointerUp={stopPress}
+      onPointerLeave={stopPress}
+      onPointerCancel={stopPress}
+      onContextMenu={(e) => {
+        // iOS/Android отдают долгий тап и как contextmenu; мышь — правой кнопкой; клавиатура — клавишей меню/Shift+F10.
+        if (!p.accusable || !p.onAccuse) return;
+        e.preventDefault();
+        stopPress();
+        if (Date.now() - fired.current < 1500) return; // меню уже открыто таймером
+        fired.current = Date.now();
+        p.onAccuse(p.index, e.currentTarget);
       }}
       onFocus={() => p.onPick(p.index)}
       onClick={() => p.onPick(p.index)}
@@ -115,6 +170,12 @@ const Cell = memo(function Cell(p: CellProps) {
       {p.hintStrip && <i className="hint-strip" aria-hidden="true" />}
       {p.hintRing && <i className="hint-ring" aria-hidden="true" />}
       {p.blot && <i key={`s${p.blotId}`} className={`stain${p.blotId ? " anim" : ""}`} aria-hidden="true" />}
+      {(p.acquitted || p.lie !== 0) && <i key={`w${p.sealId}`} className={`seal${p.sealId ? " anim" : ""}`} aria-hidden="true" />}
+      {p.lie !== 0 && (
+        <span className="lie" aria-hidden="true">
+          {p.lie}
+        </span>
+      )}
       {p.blotId !== 0 && p.wrongDigit !== 0 && (
         <span className="d player wrong leaving" aria-hidden="true">
           {p.wrongDigit}
@@ -201,6 +262,10 @@ interface BoardProps {
   dim: boolean;
   /** PD-139: метки открытой подсказки (область, клетки шага, вычёркивания); нет — поле как обычно. */
   hintMarks?: HintMarks | null;
+  /** PD-171 (Лжец): долгое нажатие на обвиняемую подсказку — открыть меню «Обвинить» у этой клетки. Нет — жеста нет (Today). */
+  onAccuse?: (cell: number, el: HTMLElement) => void;
+  /** PD-171: можно ли обвинить клетку (необвинённая подсказка, лжец не пойман). */
+  canAccuse?: (cell: number) => boolean;
 }
 
 /**
@@ -209,7 +274,7 @@ interface BoardProps {
  * заливаются» — решение владельца 6.4 это пересмотрело); «та же цифра» — чернила 10 %, выбор — 16 % + кольцо (M2 — кольцо едет).
  * Доступность: одна точка табуляции (roving tabindex), стрелки двигают выбор и фокус.
  */
-export function Board({ snap, store, dim, hintMarks = null }: BoardProps) {
+export function Board({ snap, store, dim, hintMarks = null, onAccuse, canAccuse }: BoardProps) {
   const { t } = useTranslation();
   const ref = useRef<HTMLDivElement>(null);
   const { play, selected, pop } = snap;
@@ -219,7 +284,8 @@ export function Board({ snap, store, dim, hintMarks = null }: BoardProps) {
   const showWrong = highlightWrong || play?.ink === true;
   // PD-124: заливка соседей выбранной клетки — настройка устройства (по умолчанию вкл); и в ink: это не подсказка, а ориентир.
   const highlightPeers = useHighlightPeers();
-  const wrongAt = (p: NonNullable<typeof play>, i: number) => showWrong && isWrong(p, i);
+  // PD-171: в Лжеце до поимки ошибок по решению не показываем вовсе — цифра, выведенная из лжи, выдала бы лжеца.
+  const wrongAt = (p: NonNullable<typeof play>, i: number) => showWrong && !liarHidden(p) && isWrong(p, i);
   // M3/M8/M7: события живут ровно столько, сколько играет анимация.
   const wave = useMoment(snap.wave, MOTION_MS.wave);
   const echo = useMoment(snap.echo, MOTION_MS.echo);
@@ -232,6 +298,10 @@ export function Board({ snap, store, dim, hintMarks = null }: BoardProps) {
   const peers = useMemo(() => (highlightPeers && selected !== null ? new Set(peersOf(selected)) : null), [highlightPeers, selected]);
   const selDigit = play && selected !== null && !blotCells.has(selected) ? digitAt(play, selected) : 0;
   const blotNow = useMoment(snap.blot ?? null, BLOT_MOMENT_MS, true);
+  // Лжец (PD-171): вердикты уже сделанных обвинений и пойманная ложь — только они, не секрет партии.
+  const acquitted = useMemo(() => (play ? acquittedCells(play) : new Set<number>()), [play]);
+  const caught = play ? caughtLie(play) : null;
+  const sealNow = useMoment(snap.accusation ?? null, MOTION_MS.seal);
   // Roving: клетка-«единственная остановка» — выбранная (или первая, пока ничего не выбрано).
   const stop = selected ?? 0;
 
@@ -260,7 +330,12 @@ export function Board({ snap, store, dim, hintMarks = null }: BoardProps) {
   const baseLabel = (i: number): string => {
     const where = { row: Math.floor(i / 9) + 1, col: (i % 9) + 1 };
     if (!play) return t("board.cellEmpty", where);
-    if (isGiven(play, i)) return t("board.cellClue", { ...where, digit: play.mission[i] });
+    if (caught && caught.cell === i) return t("liar.cellCaught", { ...where, digit: play.mission[i], lie: caught.lie });
+    if (acquitted.has(i)) return t("liar.cellAcquitted", { ...where, digit: play.mission[i] });
+    if (isGiven(play, i)) {
+      const clue = t("board.cellClue", { ...where, digit: play.mission[i] });
+      return ready && onAccuse && canAccuse?.(i) ? `${clue}, ${t("liar.cellAccuseHint")}` : clue;
+    }
     if (blotCells.has(i)) return t("ink.cellBlot", { ...where, digit: play.values[i] ?? 0 });
     const v = play.values[i] ?? 0;
     if (v) return t(wrongAt(play, i) ? "board.cellWrong" : "board.cellYours", { ...where, digit: v });
@@ -331,6 +406,11 @@ export function Board({ snap, store, dim, hintMarks = null }: BoardProps) {
                   struck={hintMarks?.struck.get(i) ?? 0}
                   tabStop={i === stop}
                   label={cellLabel(i)}
+                  acquitted={acquitted.has(i)}
+                  lie={caught && caught.cell === i ? caught.lie : 0}
+                  sealId={sealNow && sealNow.cell === i ? sealNow.id : 0}
+                  accusable={ready && onAccuse !== undefined && (canAccuse?.(i) ?? false)}
+                  onAccuse={onAccuse}
                   onPick={pick}
                   onTouch={onTouch}
                 />

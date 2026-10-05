@@ -3,6 +3,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { formatClock, formatDay } from "./format";
 import type { PlayState } from "./logic";
+import { liarTimelapseLayer } from "./liar";
 import { MiniField, ReplayField } from "./ReplayField";
 import { timelapseOf } from "./timelapse";
 import { LoopIcon, NextIcon, PauseIcon, PlayIcon, PrevIcon } from "./timelapseIcons";
@@ -55,6 +56,7 @@ export function TimelapseSheet({ play, date, difficulty, onClose }: TimelapseShe
   // Счёт и скраббер — в ходах игрока, не в кадрах (PD-80): пара «клякса → замена» — один ход.
   const moves = useMemo(() => moveIndex(frames), [frames]);
   const ticks = useMemo(() => hintTickMoves(frames, play.hintLog), [frames, play.hintLog]);
+  const liarLayer = useMemo(() => liarTimelapseLayer(play, frames), [play, frames]);
   const helped = Math.max(play.hintLog?.length ?? 0, 0);
   const stages = useMemo(() => contactStages(moves.count).map((m) => moves.frameOf[m]!), [moves]);
 
@@ -167,7 +169,7 @@ export function TimelapseSheet({ play, date, difficulty, onClose }: TimelapseShe
         </div>
       ) : (
         <div data-testid="tl-player" data-step={step ? "true" : "false"}>
-          <ReplayField frames={frames} idx={idx} mission={play.mission} blots={blots} animate={animate} label={t("timelapse.boardLabel")} />
+          <ReplayField frames={frames} idx={idx} mission={play.mission} blots={blots} animate={animate} label={t("timelapse.boardLabel")} liar={liarLayer} />
           <div className="tl-meta">
             <span role="status" aria-live={playing ? "off" : "polite"} data-testid="tl-move">
               {t("timelapse.moveOf", { a: moveNow, b: moves.count })}

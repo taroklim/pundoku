@@ -1,4 +1,6 @@
 import { useEffect, useState } from "react";
+import type { LiarInfo } from "../play/savedPlay";
+import { LIAR_DAY_PREFIX, liarInfoOf, parseSavedLiarDay } from "../play/savedPlay";
 import { localDate } from "../today/dayResolver";
 import type { DayProgress } from "../today/repository";
 import { useTabActive } from "../shell/tabSlide";
@@ -25,6 +27,8 @@ export function YearTab({
   onOpenSettings?: () => void;
 }) {
   const [days, setDays] = useState<DayProgress[] | null>(null);
+  // PD-171: Лжец дня — вторичная отметка на клетке дня и строка в карточке дня.
+  const [liar, setLiar] = useState<ReadonlyMap<string, LiarInfo>>(() => new Map());
   const [firstUse, setFirstUse] = useState<string | null>(null);
   const [today, setToday] = useState(() => localDate());
 
@@ -35,11 +39,12 @@ export function YearTab({
     let alive = true;
     const load = () => {
       setToday(localDate());
-      void Promise.all([sync.repository.listDays(), readFirstUse(sync.repository)])
-        .then(([list, first]) => {
+      void Promise.all([sync.repository.listDays(), readFirstUse(sync.repository), (sync.repository.listMeta?.(LIAR_DAY_PREFIX) ?? Promise.resolve([])).catch((): [string, unknown][] => [])])
+        .then(([list, first, liarMeta]) => {
           if (!alive) return;
           setDays(list);
           setFirstUse(first);
+          setLiar(liarInfoMap(liarMeta));
         })
         .catch(() => {
           // Хранилище недоступно — показываем пустой год, а не вечную загрузку.
@@ -63,6 +68,7 @@ export function YearTab({
     <YearScreen
       days={days}
       firstUse={firstUse}
+      liar={liar}
       today={today}
       onOpenToday={onOpenToday}
       onPlayDay={onPlayDay}
@@ -71,4 +77,17 @@ export function YearTab({
       onOpenSettings={onOpenSettings}
     />
   );
+}
+
+/** Записи `meta:liar:*` → метрики Лжеца дня по датам (только дни с ходом или обвинением). */
+export function liarInfoMap(entries: readonly [string, unknown][]): ReadonlyMap<string, LiarInfo> {
+  const out = new Map<string, LiarInfo>();
+  for (const [key, value] of entries) {
+    const date = key.slice(LIAR_DAY_PREFIX.length);
+    const saved = parseSavedLiarDay(value, date);
+    if (!saved || (saved.play.log.length === 0 && (saved.play.accusations?.length ?? 0) === 0 && !saved.play.solved)) continue;
+    const info = liarInfoOf(saved);
+    if (info) out.set(date, info);
+  }
+  return out;
 }

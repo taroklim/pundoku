@@ -34,3 +34,14 @@ export function InkModeIcon({ className }: ModeIconProps) {
     </svg>
   );
 }
+
+/** Лжец — маска (макет PD-163, чернилами: сургуч зарезервирован за ошибкой/обвинением). */
+export function LiarModeIcon({ className }: ModeIconProps) {
+  return (
+    <svg {...line} className={className}>
+      <path d="M3.8 6.6c4-2 12.4-2 16.4 0 .2 7.4-3.4 12.6-8.2 12.6S3.6 14 3.8 6.6z" />
+      <path d="M7.6 10.6c.8-.7 2.2-.7 3 0M13.4 10.6c.8-.7 2.2-.7 3 0" />
+      <path d="M9.4 15.2c1.6.8 3.6.8 5.2 0" />
+    </svg>
+  );
+}

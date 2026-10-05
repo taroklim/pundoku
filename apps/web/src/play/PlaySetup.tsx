@@ -19,6 +19,7 @@ import type { SlotSummary } from "./daySlot";
 import { useDaySlot } from "./daySlot";
 import { CalendarGlyph } from "./hubIcons";
 import { ChevronIcon } from "./inkIcons";
+import { LiarModeIcon } from "./modeIcons";
 import type { ModeDef, ModeId } from "./modes";
 import { ModeMenu } from "./ModeMenu";
 import { slotMeta } from "./slotMeta";
@@ -35,6 +36,9 @@ export interface PlaySetupProps {
   /** «Новая сетка…» из контекстного меню: шит режима (при незавершённой игре — с предупреждением). */
   readonly onNewInMode: (mode: ModeId, opener: HTMLElement) => void;
   readonly onOpenToday: () => void;
+  /** PD-171: незаконченный Лжец дня (тоже «игра дня») — вторая строка «Продолжить»; `null` — нет. */
+  readonly liarDay?: SlotSummary | null;
+  readonly onOpenLiarDay?: () => void;
 }
 
 /** Сдвиг пальца, после которого долгое нажатие считается прокруткой, а не нажатием. */
@@ -46,7 +50,7 @@ interface MenuState {
   readonly anchor: { top: number; bottom: number; left: number; width: number; height: number };
 }
 
-export function PlaySetup({ modes, slots, reselect, onOpenMode, onNewInMode, onOpenToday }: PlaySetupProps) {
+export function PlaySetup({ modes, slots, reselect, onOpenMode, onNewInMode, onOpenToday, liarDay = null, onOpenLiarDay }: PlaySetupProps) {
   const { t } = useTranslation();
   const day = useDaySlot();
   const scroll = useRef<HTMLDivElement>(null);
@@ -71,25 +75,37 @@ export function PlaySetup({ modes, slots, reselect, onOpenMode, onNewInMode, onO
   return (
     <>
       <div ref={scroll} className="hub-scroll" data-testid="hub-scroll">
-        {day && (
+        {(day || liarDay) && (
           <section className="hub-sec" aria-labelledby="hub-cont-head" data-testid="hub-continue">
             <p id="hub-cont-head" className="hub-head">
               {t("play.hub.contHead")}
             </p>
             <div className="hub-card">
-              <button type="button" className="hub-row two" onClick={onOpenToday} data-testid="continue-day">
-                <span className="l1">
-                  <CalendarGlyph className="glyph" />
-                  <b>{t("play.hub.contDay")}</b>
-                  {day.ink && (
-                    <span className="mode-chip" data-testid="continue-ink-chip">
-                      {t("ink.chip")}
-                    </span>
-                  )}
-                </span>
-                <span className="l2">{slotMeta(t, day)}</span>
-                <ChevronIcon className="chev" />
-              </button>
+              {day && (
+                <button type="button" className="hub-row two" onClick={onOpenToday} data-testid="continue-day">
+                  <span className="l1">
+                    <CalendarGlyph className="glyph" />
+                    <b>{t("play.hub.contDay")}</b>
+                    {day.ink && (
+                      <span className="mode-chip" data-testid="continue-ink-chip">
+                        {t("ink.chip")}
+                      </span>
+                    )}
+                  </span>
+                  <span className="l2">{slotMeta(t, day)}</span>
+                  <ChevronIcon className="chev" />
+                </button>
+              )}
+              {liarDay && (
+                <button type="button" className="hub-row two" onClick={() => onOpenLiarDay?.()} data-testid="continue-liar-day">
+                  <span className="l1">
+                    <LiarModeIcon className="glyph" />
+                    <b>{t("liar.daily")}</b>
+                  </span>
+                  <span className="l2">{slotMeta(t, liarDay)}</span>
+                  <ChevronIcon className="chev" />
+                </button>
+              )}
             </div>
           </section>
         )}

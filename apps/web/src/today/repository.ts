@@ -174,6 +174,11 @@ export interface SyncStorage {
   setMeta(key: string, value: unknown): Promise<void>;
   /** Записать, только если ключа ещё нет (защита от двух вкладок, регистрирующих устройство одновременно). Возвращает итоговое значение. */
   setMetaIfAbsent(key: string, value: unknown): Promise<unknown>;
+  /**
+   * PD-171: все записи `meta` с ключом, начинающимся с `prefix` (`[ключ без «meta:», значение]`): записи Лжеца дня
+   * (`liar:YYYY-MM-DD`) для снапшота и Year. Необязательно: реализация без него — Лжеца дня в снапшоте/Year нет.
+   */
+  listMeta?(prefix: string): Promise<[string, unknown][]>;
 }
 
 export type PersistentStore = ProgressRepository & SyncStorage;
@@ -195,6 +200,9 @@ export class InMemoryProgressRepository implements PersistentStore {
   async setMetaIfAbsent(key: string, value: unknown): Promise<unknown> {
     if (this.meta.get(key) == null) this.meta.set(key, structuredClone(value));
     return structuredClone(this.meta.get(key));
+  }
+  async listMeta(prefix: string): Promise<[string, unknown][]> {
+    return [...this.meta.entries()].filter(([k, v]) => k.startsWith(prefix) && v != null).map(([k, v]): [string, unknown] => [k, structuredClone(v)]);
   }
 
   async getPermanent(): Promise<PermanentGridState | null> {

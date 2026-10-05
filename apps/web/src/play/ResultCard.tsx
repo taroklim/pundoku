@@ -8,7 +8,9 @@ import { heatLegend, heatOpacities } from "./heat";
 import { ShareIcon } from "./icons";
 import { hintCellSet, hintCount, HintsRow } from "./hintCard";
 import { BlotsRow, blotCellSet, HeatCells, InkChip } from "./inkCard";
+import { LiarCompare, LiarRows } from "./liarCard";
 import type { PlayState } from "./logic";
+import type { LiarInfo } from "./savedPlay";
 import { WatchRow, useTimelapseEntry } from "./TimelapseEntry";
 
 interface ResultCardProps {
@@ -30,6 +32,8 @@ interface ResultCardProps {
   onOpenHelp?: (block: HelpBlockId) => void;
   /** Доп. кнопки под Share (Play: «New game»). */
   children?: ReactNode;
+  /** PD-171: партия Лжеца — метрики поимки и сравнение с собой (средний ход обвинения по другим партиям). */
+  liar?: { readonly info: LiarInfo; readonly average: { avg: number; games: number } | null } | null;
 }
 
 /**
@@ -37,7 +41,7 @@ interface ResultCardProps {
  * заполнения (`heatmap(moveLog)` движка), легенда Early/Late, время, «clean»/правки, достигнутая
  * техника (`summary`), «N % solved today» и Share. Общая для Today и Play.
  */
-export function ResultCard({ play, cardRef, title, winRate, winRateScope = "today", timelapse, hints, onOpenHelp, children }: ResultCardProps) {
+export function ResultCard({ play, cardRef, title, winRate, winRateScope = "today", timelapse, hints, onOpenHelp, children, liar = null }: ResultCardProps) {
   const { t } = useTranslation();
   const tl = useTimelapseEntry(play, timelapse?.date ?? null, timelapse?.difficulty ?? null);
   const sum = useMemo(() => summary(play.log), [play.log]);
@@ -91,6 +95,7 @@ export function ResultCard({ play, cardRef, title, winRate, winRateScope = "toda
             <dd>{sum.clean ? t("solved.clean") : sum.corrections}</dd>
           </div>
         )}
+        {liar && <LiarRows info={liar.info} />}
         <HintsRow count={helped} />
         <div className="row">
           <dt>{t("solved.technique")}</dt>
@@ -110,6 +115,7 @@ export function ResultCard({ play, cardRef, title, winRate, winRateScope = "toda
           </dd>
         </div>
       </dl>
+      {liar && <LiarCompare info={liar.info} average={liar.average} />}
       {winRate != null && (
         <p className="winrate" data-testid="winrate">
           {t(winRateScope === "day" ? "result.winRateDay" : "result.winRate", { percent: Math.round(winRate) })}

@@ -350,7 +350,8 @@ describe("PD-116: сохранение и восстановление парт�
     await flush();
     const raw = (await repo.getMeta(CLASSIC)) as Record<string, unknown>;
     expect(parseSavedPlay(raw)).not.toBeNull();
-    expect(parseSavedPlay({ ...raw, mode: "liar" })).toBeNull(); // режим, которого эта версия не знает, не подменяется Классикой
+    expect(parseSavedPlay({ ...raw, mode: "melody" })).toBeNull(); // режим, которого эта версия не знает, не подменяется Классикой
+    expect(parseSavedPlay({ ...raw, mode: "liar" })).toBeNull(); // PD-171: партия Лжеца без секрета — порча записи
     expect(parseSavedPlay({ ...raw, mode: undefined, play: { ...(raw.play as object), ink: true } })!.mode).toBe("ink");
     expect(parseSavedPlay({ ...raw, mode: "classic" }, "ink")!.mode).toBe("ink"); // ключ слота главнее поля
     expect(parseSavedPlay({ ...raw, elapsedMs: -1 })).toBeNull();

@@ -8,23 +8,59 @@
  * «припаркованы» в слотах; открыть режим = припарковать живую и поднять его слот. Единственный слот до PD-167
  * (`meta:playGame`) при старте переносится в слот своего режима (Чернила — по самой партии) и только потом удаляется.
  *
+ * PD-171 (Лжец): режим `liar` строит сетку `generateLiar` (тот же Worker), тяжёлые классы берутся из заготовок (`liarPool.ts`).
+ * Лжец дня (medium, `dailyLiarPuzzle`) — отдельная партия вне слотов: запись `meta:liar:YYYY-MM-DD` переживает решение (Year,
+ * снапшот синхронизации `liar`), незаконченный Лжец дня — строка «Продолжить» хаба. Свободная партия Лжеца — слот `liar`.
+ *
  * Общая механика (ввод, undo, таймер, анимации) — `GameStore`; здесь — источник сетки (генерация в Web Worker) и слоты.
  */
 import type { Difficulty } from "@pundoku/engine";
-import { DIFFICULTIES } from "@pundoku/engine";
+import type { SyncEvent } from "../sync/manager";
 import { sync as syncRuntime } from "../sync/runtime";
+import { localDate } from "../today/dayResolver";
 import type { SyncStorage } from "../today/repository";
 import type { SlotSummary } from "./daySlot";
-import type { GenerateRequest, GenerateResponse } from "./generate.worker";
+import type { GeneratedPuzzle, GenerateRequest, GenerateResponse } from "./generate.worker";
 import type { PlaySnapshot } from "./gameStore";
 import { DEFAULT_DIFFICULTY, GameStore, initialSnapshot } from "./gameStore";
+import { createLiarPlay, liarSummaryOf } from "./liar";
+import { LiarPool } from "./liarPool";
 import type { PlayState } from "./logic";
-import { CELLS, cellsLeft, resumeSelection } from "./logic";
+import { cellsLeft, resumeSelection } from "./logic";
 import type { ModeId } from "./modes";
-import { DEFAULT_MODE, MODES, isModeId, legacyModeOf, modeDef, slotKey } from "./modes";
+import { DEFAULT_MODE, MODES, legacyModeOf, modeDef, slotKey } from "./modes";
+import type { SavedPlay } from "./savedPlay";
+import { liarDayKey, parseSavedLiarDay, parseSavedPlay, summaryOf } from "./savedPlay";
 
 export type { Phase, PlaySnapshot } from "./gameStore";
 export type { ModeId } from "./modes";
+export type { SavedPlay } from "./savedPlay";
+export { parseSavedPlay, summaryOf } from "./savedPlay";
+
+/** Сложность Лжеца дня (план режимов §1.5: medium строится за десятки мс — без заготовки). */
+export const LIAR_DAILY_DIFFICULTY: Difficulty = "medium";
+
+/**
+ * Потолок ожидания генерации партии, мс (план режимов §1.5): easy–hard — p95 ≤ 0,6 с, max < 1 с на десктопе; expert/master —
+ * хвост до ~3 с (на телефоне дольше). Дольше — Worker обрывается, экран показывает «Не удалось» с повтором.
+ */
+export const GENERATION_TIMEOUT_MS: Readonly<Record<Difficulty, number>> = { easy: 15_000, medium: 15_000, hard: 15_000, expert: 45_000, master: 45_000 };
+
+/** Ключ истории поимок (сравнение «с собой» на карточке Лжеца): локально, не синхронизируется. */
+export const LIAR_HISTORY_KEY = "liarHistory";
+const LIAR_HISTORY_MAX = 200;
+
+/** Запись истории: партия Лжеца, где лжец пойман (`id` — момент старта партии, ISO). */
+export interface LiarHistoryEntry {
+  readonly id: string;
+  readonly catchPlacement: number;
+}
+
+/** Лжец дня для шита режима и «Продолжить»: нет записи / идёт / решён (с итогом). */
+export type LiarDayState =
+  | { readonly kind: "none" }
+  | { readonly kind: "playing"; readonly summary: SlotSummary }
+  | { readonly kind: "solved"; readonly timeMs: number };
 
 function randomSeed(): string {
   const a = new Uint32Array(2);
@@ -50,72 +86,22 @@ export interface PlayScreenSnapshot extends PlaySnapshot {
   readonly reselect: number;
   /** Идёт чтение слотов при старте (PD-116): хаб не мигает пустыми строками, пока не ясно, что есть. */
   readonly restoring?: boolean;
+  /** PD-171: живая партия — Лжец дня этой даты (`YYYY-MM-DD`); свободная партия — `null`. */
+  readonly daily?: string | null;
+  /** PD-171: растёт, когда изменились записи Лжеца дня (шит/«Продолжить» перечитывают состояние). */
+  readonly dailyRev?: number;
 }
 
 /** Единственный ключ записи Play до PD-167 (`meta:playGame`): читается только ради переноса в слот режима. */
 export const PLAY_META_KEY = "playGame";
 export { slotKey };
 
-/** Запись партии Play. Структура клонируема (IndexedDB/structuredClone); `v` — версия формата. */
-export interface SavedPlay {
-  readonly v: 1;
-  /** PD-167: режим партии. Записи до PD-167 его не имеют — режим выводится из партии (`legacyModeOf`). */
-  readonly mode?: ModeId;
-  readonly difficulty: Difficulty;
-  /** ISO-момент старта (подпись дня на экране Play). */
-  readonly startedOn: string;
-  readonly play: PlayState;
-  /** Накопленное «тихое» время партии, мс (у решённой — время последнего хода). */
-  readonly elapsedMs: number;
-  readonly selected: number | null;
-  readonly notesMode: boolean;
-  /** PD-139: результативных подсказок в партии и пометка «с помощью» (опционально: записи без них читаются как 0/false). */
-  readonly hints?: number;
-  readonly assisted?: boolean;
-}
-
 export interface PlayDeps {
   storage: Pick<SyncStorage, "getMeta" | "setMeta">;
-}
-
-const isNumArray = (v: unknown): v is number[] => Array.isArray(v) && v.length === CELLS && v.every((n) => Number.isInteger(n));
-
-/**
- * Разобрать запись из хранилища; всё подозрительное — `null` (партия просто не восстановится, а не уронит экран).
- * `slot` — режим слота, из которого прочитана запись: он главнее поля `mode`. Запись неизвестного этой версии режима — `null`.
- */
-export function parseSavedPlay(raw: unknown, slot?: ModeId): SavedPlay | null {
-  if (typeof raw !== "object" || raw === null) return null;
-  const r = raw as Partial<Record<keyof SavedPlay, unknown>>;
-  const p = r.play as Partial<PlayState> | undefined;
-  if (r.v !== 1 || typeof p !== "object" || p === null) return null;
-  if (!isNumArray(p.mission) || !isNumArray(p.solution) || !isNumArray(p.values) || !isNumArray(p.notes)) return null;
-  if (!Array.isArray(p.log) || !Array.isArray(p.undoStack) || typeof p.solved !== "boolean") return null;
-  if (!DIFFICULTIES.includes(r.difficulty as Difficulty)) return null;
-  if (typeof r.elapsedMs !== "number" || !Number.isFinite(r.elapsedMs) || r.elapsedMs < 0) return null;
-  if (typeof r.startedOn !== "string" || Number.isNaN(Date.parse(r.startedOn))) return null;
-  if (r.mode !== undefined && !isModeId(r.mode)) return null;
-  const mode: ModeId = slot ?? (isModeId(r.mode) ? r.mode : legacyModeOf(p as PlayState));
-  const selected = typeof r.selected === "number" && Number.isInteger(r.selected) && r.selected >= 0 && r.selected < CELLS ? r.selected : null;
-  const hints = typeof r.hints === "number" && Number.isInteger(r.hints) && r.hints > 0 && r.hints <= 999 ? r.hints : 0;
-  const assisted = r.assisted === true || hints > 0; // подсказки без пометки — порча записи: пометка важнее
-  return {
-    v: 1,
-    mode,
-    difficulty: r.difficulty as Difficulty,
-    startedOn: r.startedOn,
-    play: p as PlayState,
-    elapsedMs: r.elapsedMs,
-    selected,
-    notesMode: r.notesMode === true,
-    ...(hints > 0 ? { hints } : {}),
-    ...(assisted ? { assisted: true } : {}),
-  };
-}
-
-/** Сводка слота для строки хаба. */
-export function summaryOf(saved: SavedPlay): SlotSummary {
-  return { difficulty: saved.difficulty, left: cellsLeft(saved.play), elapsedMs: saved.elapsedMs, ink: saved.play.ink === true };
+  /** PD-171: Лжец дня входит в снапшот синхронизации — сообщить о прогрессе/решении. Нет — без синхронизации (тесты). */
+  notify?: (event: SyncEvent) => void;
+  /** PD-171: заготовки тяжёлых классов Лжеца. Нет — генерация всегда в момент старта. */
+  pool?: LiarPool | null;
 }
 
 export class PlayStore extends GameStore<PlayScreenSnapshot> {
@@ -128,13 +114,18 @@ export class PlayStore extends GameStore<PlayScreenSnapshot> {
   private listening = false;
   /** Слоты режимов в памяти — зеркало `meta:playGame:<режим>`. Живая партия тоже здесь (обновляется на каждой записи). */
   private readonly saved = new Map<ModeId, SavedPlay>();
+  /** PD-171: записи Лжеца дня в памяти (зеркало `meta:liar:<дата>`): прочитанные и сыгранные в этой сессии. */
+  private readonly dailies = new Map<string, SavedPlay & { daily: string }>();
+  /** PD-171: история поимок (сравнение с собой). */
+  private liarHistory: LiarHistoryEntry[] = [];
+  private generationTimer: number | null = null;
 
   /**
    * `deps` — куда писать партии. Без них (тесты, `new PlayStore()`) хранилище работает только в памяти;
    * боевой `playStore` создаётся с IndexedDB и читает слоты в `restore()`.
    */
   constructor(deps: PlayDeps | null = null) {
-    super({ ...initialSnapshot(), hub: true, mode: DEFAULT_MODE, picks: {}, reselect: 0, restoring: deps !== null });
+    super({ ...initialSnapshot(), hub: true, mode: DEFAULT_MODE, picks: {}, reselect: 0, restoring: deps !== null, daily: null, dailyRev: 0 });
     this.deps = deps;
   }
 
@@ -152,6 +143,10 @@ export class PlayStore extends GameStore<PlayScreenSnapshot> {
   private persist(): void {
     const s = this.snap;
     if (!s.play || (s.phase !== "playing" && s.phase !== "solved")) return;
+    if (s.daily) {
+      this.persistDaily(s.daily);
+      return;
+    }
     const saved: SavedPlay = {
       v: 1,
       mode: s.mode,
@@ -169,6 +164,37 @@ export class PlayStore extends GameStore<PlayScreenSnapshot> {
     if (deps) this.write(() => deps.storage.setMeta(slotKey(s.mode), saved));
   }
 
+  /**
+   * Лжец дня: запись `meta:liar:<дата>` (не слот — переживает решение). Момент решения ставится один раз. Синхронизация узнаёт о
+   * прогрессе (`progress` — только пометка) и о решении (`solved` — отправка), как у дня Today.
+   */
+  private persistDaily(date: string): void {
+    const s = this.snap;
+    if (!s.play) return;
+    const prev = this.dailies.get(date);
+    const solvedAt = s.play.solved ? (prev?.solvedAt ?? new Date().toISOString()) : null;
+    const rec: SavedPlay & { daily: string } = {
+      v: 1,
+      mode: "liar",
+      difficulty: s.difficulty,
+      startedOn: s.startedOn.toISOString(),
+      play: s.play,
+      elapsedMs: this.getElapsedMs(),
+      selected: s.selected,
+      notesMode: s.notesMode,
+      ...((s.hints ?? 0) > 0 ? { hints: s.hints } : {}),
+      ...(s.assisted === true ? { assisted: true } : {}),
+      daily: date,
+      solvedAt,
+    };
+    this.dailies.set(date, rec);
+    const { deps } = this;
+    if (!deps) return;
+    this.write(() => deps.storage.setMeta(liarDayKey(date), rec));
+    if (s.play.solved && !prev?.play.solved) void this.writes.then(() => deps.notify?.("solved"));
+    else if (!s.play.solved && (s.play.log.length > 0 || (s.play.accusations?.length ?? 0) > 0)) deps.notify?.("progress");
+  }
+
   /** Удалить слот режима (новая сетка в нём, решённая партия ушла с экрана): иначе перезагрузка воскресила бы отброшенную. */
   private clearSlot(mode: ModeId): void {
     this.saved.delete(mode);
@@ -182,9 +208,30 @@ export class PlayStore extends GameStore<PlayScreenSnapshot> {
     if (patch.play !== undefined || patch.phase !== undefined || patch.hints !== undefined) this.persist();
   }
 
-  /** Решено: таймер уже остановлен на последнем ходе — дописываем точное время и итог. */
-  protected override onSolved(): void {
+  /** Решено: таймер уже остановлен на последнем ходе — дописываем точное время и итог; Лжец — ещё и в историю поимок. */
+  protected override onSolved(play: PlayState): void {
     this.persist();
+    const sum = liarSummaryOf(play);
+    if (sum && sum.catchPlacement !== null) this.recordCatch({ id: this.snap.startedOn.toISOString(), catchPlacement: sum.catchPlacement });
+  }
+
+  private recordCatch(entry: LiarHistoryEntry): void {
+    if (this.liarHistory.some((e) => e.id === entry.id)) return;
+    this.liarHistory = [...this.liarHistory, entry].slice(-LIAR_HISTORY_MAX);
+    const { deps } = this;
+    const list = this.liarHistory;
+    if (deps) this.write(() => deps.storage.setMeta(LIAR_HISTORY_KEY, list));
+  }
+
+  /**
+   * Сравнение с собой (план режимов §1.2: серверной статистики нет и не будет): средний «ход обвинения» по ДРУГИМ пойманным
+   * партиям этого устройства. `null` — сравнивать не с чем (первая поимка).
+   */
+  liarAverage(): { avg: number; games: number } | null {
+    const id = this.snap.startedOn.toISOString();
+    const other = this.liarHistory.filter((e) => e.id !== id);
+    if (other.length === 0) return null;
+    return { avg: Math.round(other.reduce((a, e) => a + e.catchPlacement, 0) / other.length), games: other.length };
   }
 
   override setTabActive(active: boolean): void {
@@ -246,6 +293,17 @@ export class PlayStore extends GameStore<PlayScreenSnapshot> {
       });
     }
     for (const mode of stale) this.write(() => deps.storage.setMeta(slotKey(mode), null));
+    // PD-171: Лжец дня сегодня (строка «Продолжить» хаба) и история поимок (сравнение с собой на карточке).
+    await this.loadDaily(localDate(), read);
+    const hist = await read(LIAR_HISTORY_KEY);
+    if (Array.isArray(hist)) {
+      const ok = hist.filter(
+        (e): e is LiarHistoryEntry =>
+          typeof e === "object" && e !== null && typeof (e as LiarHistoryEntry).id === "string" && Number.isInteger((e as LiarHistoryEntry).catchPlacement) && (e as LiarHistoryEntry).catchPlacement >= 0,
+      );
+      const known = new Set(this.liarHistory.map((e) => e.id));
+      this.liarHistory = [...ok.filter((e) => !known.has(e.id)), ...this.liarHistory].slice(-LIAR_HISTORY_MAX);
+    }
     // Пока читали, игрок уже мог начать партию — её слот главнее прочитанного.
     for (const [mode, rec] of found) if (!this.saved.has(mode)) this.saved.set(mode, rec);
     if (this.snap.restoring === true) this.set({ restoring: false });
@@ -269,9 +327,106 @@ export class PlayStore extends GameStore<PlayScreenSnapshot> {
     return !this.snap.hub && super.hintAllowed();
   }
 
-  /** Живая партия не решена (она — слот своего режима). */
+  /** Живая партия не решена (она — слот своего режима; Лжец дня — своя запись). */
   hasSlot(): boolean {
     return this.snap.phase === "playing" && this.snap.play !== null;
+  }
+
+  // ---- Лжец дня (PD-171) --------------------------------------------------------------------
+
+  /** Прочитать запись Лжеца дня из хранилища (живая партия этой даты главнее). */
+  private async loadDaily(date: string, read?: (key: string) => Promise<unknown>): Promise<void> {
+    const { deps } = this;
+    if (!deps) return;
+    let raw: unknown;
+    try {
+      raw = read ? await read(liarDayKey(date)) : await deps.storage.getMeta(liarDayKey(date));
+    } catch {
+      return;
+    }
+    const rec = parseSavedLiarDay(raw, date);
+    if (!rec || this.snap.daily === date) return;
+    this.dailies.set(date, rec);
+    this.set({ dailyRev: (this.snap.dailyRev ?? 0) + 1 });
+  }
+
+  /** Перечитать Лжеца дня (открыт шит Лжеца, вернулись на хаб): запись могла прийти из синхронизации. */
+  refreshDaily(date: string = localDate()): void {
+    void this.loadDaily(date);
+  }
+
+  /** Состояние Лжеца дня для шита режима и «Продолжить». */
+  liarDay(date: string = localDate()): LiarDayState {
+    const s = this.snap;
+    if (s.daily === date && s.play && (s.phase === "playing" || s.phase === "solved")) {
+      if (s.play.solved) return { kind: "solved", timeMs: this.getElapsedMs() };
+      return { kind: "playing", summary: { difficulty: s.difficulty, left: cellsLeft(s.play), elapsedMs: this.getElapsedMs(), ink: false } };
+    }
+    const rec = this.dailies.get(date);
+    if (!rec) return { kind: "none" };
+    if (rec.play.solved) return { kind: "solved", timeMs: rec.elapsedMs };
+    return { kind: "playing", summary: summaryOf(rec) };
+  }
+
+  /** «Продолжить» хаба: незаконченный Лжец дня с прогрессом (ход или обвинение). */
+  liarDaySlot(date: string = localDate()): SlotSummary | null {
+    const st = this.liarDay(date);
+    if (st.kind !== "playing") return null;
+    const s = this.snap;
+    const play = s.daily === date && s.play ? s.play : this.dailies.get(date)?.play;
+    if (!play || (play.log.length === 0 && (play.accusations?.length ?? 0) === 0)) return null;
+    return st.summary;
+  }
+
+  /**
+   * Открыть Лжеца дня: есть запись (идёт или решён) — она поднимается на доску (решённый — сразу карточка); нет — строится
+   * `dailyLiarPuzzle(date, medium)` в Worker. Живая свободная партия паркуется в свой слот.
+   */
+  startDaily(date: string = localDate()): void {
+    const s = this.snap;
+    if (s.daily === date && s.play && (s.phase === "playing" || s.phase === "solved")) {
+      if (s.hub) this.set({ hub: false });
+      return;
+    }
+    this.park();
+    this.cancelGeneration();
+    const rec = this.dailies.get(date);
+    if (rec) {
+      this.resumeGame(rec.play, rec.elapsedMs, {
+        hub: false,
+        mode: "liar",
+        daily: date,
+        restoring: false,
+        difficulty: rec.difficulty,
+        startedOn: new Date(rec.startedOn),
+        selected: resumeSelection(rec.play, rec.selected),
+        notesMode: rec.notesMode,
+        hints: rec.hints ?? 0,
+        assisted: rec.assisted === true,
+      });
+      return;
+    }
+    const id = this.requestId;
+    this.resetToLoading({ difficulty: LIAR_DAILY_DIFFICULTY, mode: "liar", daily: date, hub: false, restoring: false });
+    this.spawn(id, { id, difficulty: LIAR_DAILY_DIFFICULTY, date, liar: true });
+  }
+
+  /** Заготовить тяжёлые сетки Лжеца (вход в режим — открыт его шит). */
+  warmLiar(): void {
+    void this.deps?.pool?.warm();
+  }
+
+  /** «Повторить» после сбоя генерации: та же партия, что не построилась (Лжец дня — снова он). */
+  retry(): void {
+    const { daily } = this.snap;
+    if (daily) {
+      this.cancelGeneration();
+      const id = this.requestId;
+      this.resetToLoading({ difficulty: LIAR_DAILY_DIFFICULTY, mode: "liar", daily, hub: false, restoring: false });
+      this.spawn(id, { id, difficulty: LIAR_DAILY_DIFFICULTY, date: daily, liar: true });
+      return;
+    }
+    this.newGame();
   }
 
   /**
@@ -282,7 +437,7 @@ export class PlayStore extends GameStore<PlayScreenSnapshot> {
     const out: Partial<Record<ModeId, SlotSummary>> = {};
     for (const [mode, rec] of this.saved) if (!rec.play.solved) out[mode] = summaryOf(rec);
     const s = this.snap;
-    if (this.hasSlot() && s.play) {
+    if (this.hasSlot() && s.play && !s.daily) {
       out[s.mode] = { difficulty: s.difficulty, left: cellsLeft(s.play), elapsedMs: this.getElapsedMs(), ink: s.play.ink === true };
     }
     return out;
@@ -310,19 +465,22 @@ export class PlayStore extends GameStore<PlayScreenSnapshot> {
     const s = this.snap;
     if (s.hub) return;
     if (s.phase === "playing" && s.play) {
-      this.set({ hub: true, pop: null, wave: null, echo: null, blot: null, hint: null });
+      this.set({ hub: true, pop: null, wave: null, echo: null, blot: null, hint: null, accusation: null });
       this.persist(); // таймер уже накопился (`holdClock`), `getElapsedMs` вернёт итог
       return;
     }
     this.cancelGeneration();
-    this.resetToLoading({ hub: true, restoring: false });
-    this.clearSlot(s.mode);
+    this.resetToLoading({ hub: true, restoring: false, daily: null });
+    // Лжец дня — не слот: решённый остаётся записью дня (Year/снапшот), а слот свободного Лжеца не трогаем.
+    if (!s.daily) this.clearSlot(s.mode);
   }
 
   private cancelGeneration(): void {
     this.requestId++; // ответ уже запущенной генерации устарел
     this.worker?.terminate();
     this.worker = null;
+    if (this.generationTimer !== null) window.clearTimeout(this.generationTimer);
+    this.generationTimer = null;
   }
 
   /** Живая партия — в слот (уже сохранена; дописываем накопленное время). Ничего не выбрасывает. */
@@ -337,7 +495,7 @@ export class PlayStore extends GameStore<PlayScreenSnapshot> {
   open(mode: ModeId): boolean {
     const s = this.snap;
     if (!s.hub) return false;
-    if (s.mode === mode && this.hasSlot()) {
+    if (s.mode === mode && this.hasSlot() && !s.daily) {
       this.set({ hub: false });
       return true;
     }
@@ -348,6 +506,7 @@ export class PlayStore extends GameStore<PlayScreenSnapshot> {
     this.resumeGame(rec.play, rec.elapsedMs, {
       hub: false,
       mode,
+      daily: null,
       restoring: false,
       difficulty: rec.difficulty,
       startedOn: new Date(rec.startedOn),
@@ -378,7 +537,7 @@ export class PlayStore extends GameStore<PlayScreenSnapshot> {
    * заранее); живая партия другого режима паркуется в свой слот. Работает и с хаба, и с доски («⋯ → Новая сетка»).
    */
   startNew(mode: ModeId, difficulty: Difficulty = this.pickFor(mode)): void {
-    if (this.snap.mode !== mode) this.park();
+    if (this.snap.mode !== mode || this.snap.daily) this.park();
     this.newGame(difficulty, mode);
   }
 
@@ -386,14 +545,34 @@ export class PlayStore extends GameStore<PlayScreenSnapshot> {
     this.cancelGeneration();
     const id = this.requestId;
     this.clearSlot(mode); // прежняя игра режима закрыта: до первого хода новой записи нет (перезагрузка — без неё)
-    this.resetToLoading({ difficulty, mode, picks: { ...this.snap.picks, [mode]: difficulty }, hub: false, restoring: false });
+    this.resetToLoading({ difficulty, mode, picks: { ...this.snap.picks, [mode]: difficulty }, hub: false, restoring: false, daily: null });
+    const liar = modeDef(mode).grid === "liar";
+    const req: GenerateRequest = { id, difficulty, seed: randomSeed(), ...(liar ? { liar: true } : {}) };
+    const pool = liar ? this.deps?.pool : null;
+    if (!pool) {
+      this.spawn(id, req);
+      return;
+    }
+    // Тяжёлый класс Лжеца — сначала заготовка (§1.5); нет — строим сейчас, экран показывает «Готовим сетку…».
+    void pool
+      .take(difficulty)
+      .catch(() => null)
+      .then((ready) => {
+        if (id !== this.requestId) return;
+        if (ready) this.onGenerated(id, { id, ok: true, puzzle: ready });
+        else this.spawn(id, req);
+      });
+  }
+
+  /** Запустить генерацию в Worker с потолком ожидания (`GENERATION_TIMEOUT_MS`). */
+  private spawn(id: number, req: GenerateRequest): void {
     try {
       const worker = new Worker(new URL("./generate.worker.ts", import.meta.url), { type: "module" });
       this.worker = worker;
       worker.onmessage = (event: MessageEvent<GenerateResponse>) => this.onGenerated(id, event.data);
       worker.onerror = () => this.onGenerated(id, { id, ok: false, error: "worker error" });
-      const req: GenerateRequest = { id, difficulty, seed: randomSeed() };
       worker.postMessage(req);
+      this.generationTimer = window.setTimeout(() => this.onGenerated(id, { id, ok: false, error: "timeout" }), GENERATION_TIMEOUT_MS[req.difficulty]);
     } catch {
       this.set({ phase: "error" });
     }
@@ -403,6 +582,8 @@ export class PlayStore extends GameStore<PlayScreenSnapshot> {
     if (id !== this.requestId) return; // устаревший ответ (ушли на хаб, начали другую)
     this.worker?.terminate();
     this.worker = null;
+    if (this.generationTimer !== null) window.clearTimeout(this.generationTimer);
+    this.generationTimer = null;
     if (!res.ok) {
       this.set({ phase: "error" });
       return;
@@ -410,8 +591,14 @@ export class PlayStore extends GameStore<PlayScreenSnapshot> {
     this.startPuzzle(res.puzzle);
   }
 
-  /** Сетка готова: партия + настройка под режим (`ModeDef.prepare`, лог ещё пуст). */
-  protected startPuzzle(puzzle: { mission: string; solution: string }): void {
+  /** Сетка готова: партия + настройка под режим (`ModeDef.prepare`, лог ещё пуст). Лжец — партия с секретом. */
+  protected startPuzzle(puzzle: GeneratedPuzzle | { mission: string; solution: string }): void {
+    const liar = "liar" in puzzle ? puzzle.liar : undefined;
+    if (liar) {
+      this.beginGame(puzzle, {}, createLiarPlay({ mission: puzzle.mission, solution: puzzle.solution, ...liar }));
+      this.warmLiar(); // сразу после старта партии — следующая тяжёлая сетка (§1.5)
+      return;
+    }
     const play = this.beginGame(puzzle);
     const prepare = modeDef(this.snap.mode).prepare;
     if (prepare) {
@@ -421,5 +608,16 @@ export class PlayStore extends GameStore<PlayScreenSnapshot> {
   }
 }
 
-export const playStore = new PlayStore({ storage: syncRuntime.repository });
+export const playStore = new PlayStore({
+  storage: syncRuntime.repository,
+  notify: (event) => syncRuntime.hooks.notify(event),
+  pool:
+    typeof Worker === "undefined"
+      ? null
+      : new LiarPool({
+          storage: syncRuntime.repository,
+          spawn: () => new Worker(new URL("./generate.worker.ts", import.meta.url), { type: "module" }),
+          seed: randomSeed,
+        }),
+});
 void playStore.restore();

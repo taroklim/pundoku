@@ -194,7 +194,12 @@
       "filled_other": "Notes filled in {{count}} cells",
       "fillNone": "Nothing to fill in",
       "dead_one": "{{count}} cell has no candidates",
-      "dead_other": "{{count}} cells have no candidates"
+      "dead_other": "{{count}} cells have no candidates",
+      "liarCaught": "Liar caught",
+      "liarHonest_one": "Acquitted · {{count}} wrong",
+      "liarHonest_other": "Acquitted · {{count}} wrong",
+      "liarCaughtShort": "Caught",
+      "liarHonestShort": "Acquitted"
     },
     "cellsLeft_one": "{{count}} cell left",
     "cellsLeft_other": "{{count}} cells left",
@@ -534,6 +539,42 @@
     "ink": {
       "name": "Ink",
       "desc": "Every digit is final: no undo and no eraser for digits. A wrong one leaves a blot."
+    },
+    "liar": {
+      "name": "Liar",
+      "desc": "One of the given digits is a lie. Find it, then press and hold it to accuse."
     }
+  },
+  "liar": {
+    "cellCaught": "Row {{row}}, column {{col}}, clue {{digit}}; the lie {{lie}} is struck out",
+    "cellAcquitted": "Row {{row}}, column {{col}}, clue {{digit}}, acquitted",
+    "cellAccuseHint": "press and hold to accuse",
+    "menuLabel": "Accuse the clue {{digit}}",
+    "menuDesc": "The {{digit}} in row {{row}}, column {{col}}. If it’s honest, it’s acquitted — no penalty.",
+    "accuse": "Accuse",
+    "menuItem": "Accuse this clue…",
+    "whyPick": "Select a given digit first",
+    "whyAccused": "This clue was already accused",
+    "daily": "Liar of the day",
+    "dailyHead": "Today",
+    "dailyNew": "{{difficulty}} · the same for everyone today",
+    "dailyDone": "Caught · {{time}}",
+    "solvedTitle": "Liar caught",
+    "rowMove": "Catch move",
+    "rowAccusations": "Accusations",
+    "firstTry": "first try",
+    "wrong_one": "{{count}} wrong",
+    "wrong_other": "{{count}} wrong",
+    "rowCaughtAt": "Caught at",
+    "compare_one": "Your average catch move: {{avg}} ({{count}} earlier game)",
+    "compare_other": "Your average catch move: {{avg}} ({{count}} earlier games)",
+    "compareFirst": "Your first catch — nothing to compare with yet.",
+    "yearRow": "Liar of the day",
+    "yearCaught": "caught, move {{move}}",
+    "yearNotCaught": "not caught",
+    "yearLegend": "Liar caught",
+    "dayTail": "liar caught",
+    "monthCaught_one": "{{count}} liar caught",
+    "monthCaught_other": "{{count}} liars caught"
   }
 }

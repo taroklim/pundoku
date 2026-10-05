@@ -1,7 +1,8 @@
 /**
  * Меню «⋯» в шапке партии Play (PD-144, вариант C, B-вход Fill). Кнопка с `aria-haspopup="menu"`, всплывающее меню — портал
- * в `<body>` (затемнение закрывает весь экран, включая таб-бар). Ровно два пункта в фиксированном порядке:
- * «Новая сетка» (на хаб, без подтверждения) и «Заполнить кандидатами» (без подтверждения).
+ * в `<body>` (затемнение закрывает весь экран, включая таб-бар). Два пункта в фиксированном порядке:
+ * «Новая сетка» (на хаб, без подтверждения) и «Заполнить кандидатами» (без подтверждения). PD-171: в партии Лжеца до поимки —
+ * третий, «Обвинить подсказку…» (открывает то же меню-подтверждение, что долгое нажатие; путь для VoiceOver и клавиатуры).
  *
  * Недоступный пункт НЕ исчезает: он остаётся на месте с `aria-disabled="true"`, приглушён и объяснён строкой-причиной
  * («Недоступно в чернилах» / «Нечего заполнять»). Тап и Enter по нему ничего не делают; в круге фокуса он остаётся.
@@ -11,22 +12,28 @@ import { useId, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
 import { useModal } from "../shell/useModal";
+import { SealGlyph } from "./AccuseMenu";
 import { GridGlyph, MoreIcon, NewGridGlyph } from "./hubIcons";
 
 /** Что с пунктом «Заполнить кандидатами»: можно / недоступно в Ink / заполнять нечего. */
 export type FillState = "ready" | "ink" | "empty";
 
+/** PD-171: пункт «Обвинить подсказку…» — можно (выбрана необвинённая подсказка) / выберите подсказку / эта уже обвинена. */
+export type AccuseState = "ready" | "pick" | "accused";
+
 export interface MoreMenuProps {
   readonly fill: FillState;
   readonly onNew: () => void;
   readonly onFill: () => void;
+  /** PD-171: партия Лжеца до поимки — пункт «Обвинить подсказку…»; нет — пункта нет. */
+  readonly accuse?: { readonly state: AccuseState; readonly onAccuse: () => void } | null;
 }
 
 interface Anchor {
   readonly top: number;
 }
 
-export function MoreMenu({ fill, onNew, onFill }: MoreMenuProps) {
+export function MoreMenu({ fill, onNew, onFill, accuse = null }: MoreMenuProps) {
   const { t } = useTranslation();
   const [anchor, setAnchor] = useState<Anchor | null>(null);
   const btn = useRef<HTMLButtonElement>(null);
@@ -52,7 +59,7 @@ export function MoreMenu({ fill, onNew, onFill }: MoreMenuProps) {
       >
         <MoreIcon />
       </button>
-      {anchor && createPortal(<Popup id={menuId} top={anchor.top} fill={fill} returnFocus={btn} onClose={close} onNew={onNew} onFill={onFill} />, document.body)}
+      {anchor && createPortal(<Popup id={menuId} top={anchor.top} fill={fill} accuse={accuse} returnFocus={btn} onClose={close} onNew={onNew} onFill={onFill} />, document.body)}
     </>
   );
 }
@@ -61,6 +68,7 @@ function Popup({
   id,
   top,
   fill,
+  accuse,
   returnFocus,
   onClose,
   onNew,
@@ -118,6 +126,29 @@ function Popup({
             )}
           </span>
         </button>
+        {accuse && (
+          <button
+            type="button"
+            role="menuitem"
+            aria-disabled={accuse.state !== "ready"}
+            onClick={() => {
+              if (accuse.state !== "ready") return;
+              onClose();
+              accuse.onAccuse();
+            }}
+            data-testid="menu-accuse"
+          >
+            <SealGlyph />
+            <span className="mi">
+              <span>{t("liar.menuItem")}</span>
+              {accuse.state !== "ready" && (
+                <span className="why" data-testid="menu-accuse-why">
+                  {t(accuse.state === "pick" ? "liar.whyPick" : "liar.whyAccused")}
+                </span>
+              )}
+            </span>
+          </button>
+        )}
       </div>
     </div>
   );

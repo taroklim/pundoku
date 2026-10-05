@@ -1,6 +1,7 @@
 import type { CSSProperties } from "react";
 import type { TimelapseFrame } from "@pundoku/engine";
 import { BOXES, BoxRules } from "./Board";
+import type { LiarTimelapseLayer } from "./liar";
 
 interface ReplayFieldProps {
   frames: readonly TimelapseFrame[];
@@ -12,6 +13,8 @@ interface ReplayFieldProps {
   /** Проявлять изменение (цифра/клякса/кольцо) — `false` при перемотке. */
   animate: boolean;
   label: string;
+  /** PD-171: слой обвинений Лжеца — до поимки в клетке ложная цифра, после — истинная с зачёркнутой ложью; печати оправданных. */
+  liar?: LiarTimelapseLayer | null;
 }
 
 /**
@@ -19,7 +22,7 @@ interface ReplayFieldProps {
  * но без интерактива. Заметки не играются (решение владельца). Последняя поставленная клетка — кольцо выбора (M2).
  * Клякса (ink): пятно + сколотый угол остаются до конца партии; неверная цифра до замены — сургучом.
  */
-export function ReplayField({ frames, idx, mission, blots, animate, label }: ReplayFieldProps) {
+export function ReplayField({ frames, idx, mission, blots, animate, label, liar = null }: ReplayFieldProps) {
   const f = frames[idx]!;
   const wrong = new Set(f.wrong);
   const last = idx > 0 ? f.cell : null;
@@ -39,11 +42,21 @@ export function ReplayField({ frames, idx, mission, blots, animate, label }: Rep
           <div className="box" key={b}>
             {cells.map((i) => {
               const given = mission[i] ?? 0;
-              const v = f.values[i] ?? 0;
               const blotted = (blots.get(i) ?? Infinity) <= idx;
               const fresh = animate && idx > 0 && i === last;
+              // Лжец: клетка лжеца до кадра поимки показывает ложную цифру; после — истинную, ложь зачёркнута в углу.
+              const isLiar = liar !== null && liar.cell === i;
+              const caughtNow = isLiar && liar.catchFrame !== null && liar.catchFrame <= idx;
+              const v = isLiar && !caughtNow ? liar.lie : (f.values[i] ?? 0);
+              const acquitted = liar !== null && (liar.acquitted.get(i) ?? Infinity) <= idx;
               return (
-                <div className={`cell${blotted ? " blot" : ""}`} key={i} data-i={i}>
+                <div className={`cell${blotted ? " blot" : ""}${caughtNow ? " caught" : ""}${acquitted ? " acquitted" : ""}`} key={i} data-i={i}>
+                  {(caughtNow || acquitted) && <i className="seal" aria-hidden="true" />}
+                  {caughtNow && (
+                    <span className="lie" aria-hidden="true">
+                      {liar.lie}
+                    </span>
+                  )}
                   {blotted && <i className={`stain${fresh && idx - (blots.get(i) ?? -Infinity) <= 1 && (blots.get(i) ?? Infinity) <= idx ? " anim" : ""}`} aria-hidden="true" />}
                   {v ? (
                     <span
