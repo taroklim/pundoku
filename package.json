@@ -17,7 +17,8 @@
     "lint": "pnpm -r lint",
     "typecheck": "pnpm -r typecheck",
     "migrate": "pnpm --filter @pundoku/api migrate",
-    "measure:engine": "pnpm --filter @pundoku/api exec tsx ../../packages/engine/scripts/measure-generation.ts"
+    "measure:engine": "pnpm --filter @pundoku/api exec tsx ../../packages/engine/scripts/measure-generation.ts",
+    "measure:liar": "pnpm --filter @pundoku/api exec tsx ../../packages/engine/scripts/measure-liar.ts"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

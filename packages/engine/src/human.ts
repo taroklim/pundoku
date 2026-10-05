@@ -184,31 +184,51 @@ function findHiddenSingle(st: State): Step | null {
  * линии цифру можно вычеркнуть. Claiming: все кандидаты цифры в строке/столбце лежат в
  * одном блоке → в остальных клетках блока цифру можно вычеркнуть.
  */
+/** Рабочий буфер `findLockedCandidates`: позиции цифры d в юните u — маска индексов 0..8 (`u * 10 + d`). */
+const LOCKED_POS = new Uint16Array(27 * 10);
+/** Маски индексов юнита по тройкам 0–2, 3–5, 6–8 (строка блока / блок линии) и по столбцам блока. */
+const TRIPLES = [0b000000111, 0b000111000, 0b111000000] as const;
+const BOX_COLS = [0b001001001, 0b010010010, 0b100100100] as const;
+
+/** Индекс тройки, содержащей все биты `p` (p ≠ 0), иначе -1. */
+function confinedTo(p: number, masks: readonly number[]): number {
+  for (let g = 0; g < 3; g++) if ((p & ~masks[g]!) === 0) return g;
+  return -1;
+}
+
 function findLockedCandidates(st: State): Step | null {
+  // Позиции кандидатов по юнитам — один проход. Порядок поиска и первый найденный шаг — те же, что у прежнего
+  // перебора по клеткам (PD-174: только скорость; логи шагов и сетки генератора побайтно совпадают).
+  const pos = LOCKED_POS;
+  pos.fill(0);
+  for (let u = 0; u < 27; u++) {
+    const unit = UNITS[u]!;
+    for (let i = 0; i < 9; i++) {
+      let m = st.cands[unit[i]!]!;
+      while (m !== 0) {
+        const low = m & -m;
+        const k = u * 10 + (31 - Math.clz32(low));
+        pos[k] = pos[k]! | (1 << i);
+        m ^= low;
+      }
+    }
+  }
   // Pointing: блок → линия.
   for (let b = 0; b < 9; b++) {
     const unit = UNITS[18 + b]!;
     for (let d = 1; d <= 9; d++) {
+      const p = pos[(18 + b) * 10 + d]!;
+      if (p === 0 || (p & (p - 1)) === 0) continue; // меньше двух мест
       const bit = 1 << d;
-      let rows = 0;
-      let cols = 0;
-      let count = 0;
-      for (let i = 0; i < 9; i++) {
-        const c = unit[i]!;
-        if (st.cands[c]! & bit) {
-          count++;
-          rows |= 1 << ROW_OF[c]!;
-          cols |= 1 << COL_OF[c]!;
-        }
-      }
-      if (count < 2) continue;
-      if ((rows & (rows - 1)) === 0) {
-        const r = 31 - Math.clz32(rows);
+      const rg = confinedTo(p, TRIPLES);
+      if (rg >= 0) {
+        const r = Math.floor(b / 3) * 3 + rg;
         const step = lockedEliminate(st, d as Digit, UNITS[r]!, (c) => BOX_OF[c] !== b, unit, bit);
         if (step) return { ...step, explanation: `Pointing: ${d} in box ${b + 1} is confined to row ${r + 1}` };
       }
-      if ((cols & (cols - 1)) === 0) {
-        const col = 31 - Math.clz32(cols);
+      const cg = confinedTo(p, BOX_COLS);
+      if (cg >= 0) {
+        const col = (b % 3) * 3 + cg;
         const step = lockedEliminate(st, d as Digit, UNITS[9 + col]!, (c) => BOX_OF[c] !== b, unit, bit);
         if (step) return { ...step, explanation: `Pointing: ${d} in box ${b + 1} is confined to column ${col + 1}` };
       }
@@ -218,18 +238,12 @@ function findLockedCandidates(st: State): Step | null {
   for (let u = 0; u < 18; u++) {
     const unit = UNITS[u]!;
     for (let d = 1; d <= 9; d++) {
+      const p = pos[u * 10 + d]!;
+      if (p === 0 || (p & (p - 1)) === 0) continue; // меньше двух мест
+      const g = confinedTo(p, TRIPLES);
+      if (g < 0) continue;
       const bit = 1 << d;
-      let boxes = 0;
-      let count = 0;
-      for (let i = 0; i < 9; i++) {
-        const c = unit[i]!;
-        if (st.cands[c]! & bit) {
-          count++;
-          boxes |= 1 << BOX_OF[c]!;
-        }
-      }
-      if (count < 2 || (boxes & (boxes - 1)) !== 0) continue;
-      const b = 31 - Math.clz32(boxes);
+      const b = u < 9 ? Math.floor(u / 3) * 3 + g : g * 3 + Math.floor((u - 9) / 3);
       const inLine = u < 9 ? (c: Cell) => ROW_OF[c] !== u : (c: Cell) => COL_OF[c] !== u - 9;
       const step = lockedEliminate(st, d as Digit, UNITS[18 + b]!, inLine, unit, bit);
       if (step) return { ...step, explanation: `Claiming: ${d} in ${unitName(u)} is confined to box ${b + 1}` };
@@ -246,6 +260,12 @@ function lockedEliminate(
   source: Uint8Array,
   bit: number,
 ): Step | null {
+  let any = false;
+  for (let i = 0; i < 9 && !any; i++) {
+    const c = target[i]!;
+    any = outside(c) && (st.cands[c]! & bit) !== 0;
+  }
+  if (!any) return null;
   const eliminations: Elimination[] = [];
   for (let i = 0; i < 9; i++) {
     const c = target[i]!;
@@ -357,6 +377,25 @@ function run(st: State, maxTier: number): number {
     if (tier > used) used = tier;
   }
   return used;
+}
+
+/**
+ * Внутреннее (Лжец, PD-172): вычёркивания техниками ярусов 2..maxTier (locked candidates, пары) до
+ * фикс-точки — без постановок цифр. Меняет `cands` на месте; `vals` только читается. Останавливается
+ * на первой клетке без кандидатов. Возвращает максимальный ярус, который что-то вычеркнул (-1 — ничего).
+ */
+export function eliminateToFixpoint(vals: Uint8Array, cands: Uint16Array, maxTier: number): number {
+  let empty = 0;
+  for (let c = 0; c < 81; c++) if (vals[c] === 0) empty++;
+  const st: State = { vals, cands, empty, contradiction: false, steps: [] };
+  let used = -1;
+  for (;;) {
+    let tier = 2;
+    for (; tier <= maxTier; tier++) if (FINDERS[tier]!(st)) break;
+    if (tier > maxTier) return used;
+    if (tier > used) used = tier;
+    if (st.contradiction) return used;
+  }
 }
 
 /**

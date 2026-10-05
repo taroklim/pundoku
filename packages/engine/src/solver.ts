@@ -15,6 +15,8 @@ interface SearchState {
   found: number;
   first: Uint8Array | null;
   rng: Rng | null;
+  /** Вызывается на каждое найденное решение (сетка — живой буфер поиска, копировать при сохранении). */
+  onSolution: ((cells: Uint8Array) => void) | null;
 }
 
 /** Инициализирует маски; возвращает false, если в исходных данных есть конфликт. */
@@ -34,7 +36,7 @@ function initState(cells: Uint8Array, limit: number, rng: Rng | null): SearchSta
     cols[col]! |= bit;
     boxes[b]! |= bit;
   }
-  return { cells, rows, cols, boxes, limit, found: 0, first: null, rng };
+  return { cells, rows, cols, boxes, limit, found: 0, first: null, rng, onSolution: null };
 }
 
 function search(st: SearchState): void {
@@ -57,6 +59,7 @@ function search(st: SearchState): void {
   if (best === -1) {
     st.found++;
     if (st.first === null) st.first = Uint8Array.from(cells);
+    if (st.onSolution !== null) st.onSolution(cells);
     return;
   }
   if (bestCount === 0) return;
@@ -101,6 +104,18 @@ function tryDigit(st: SearchState, c: number, d: number, r: number, col: number,
 export function countSolutionsBytes(cells: Uint8Array, limit: number, rng: Rng | null = null): number {
   const st = initState(Uint8Array.from(cells), limit, rng);
   if (st === null) return 0;
+  search(st);
+  return st.found;
+}
+
+/**
+ * Внутреннее: перебор решений (до `limit`), `onSolution` — на каждое (буфер поиска, не сохранять по
+ * ссылке). Возвращает число найденных (≤ limit; == limit — возможно, решений больше).
+ */
+export function forEachSolutionBytes(cells: Uint8Array, limit: number, onSolution: (cells: Uint8Array) => void): number {
+  const st = initState(Uint8Array.from(cells), limit, null);
+  if (st === null) return 0;
+  st.onSolution = onSolution;
   search(st);
   return st.found;
 }

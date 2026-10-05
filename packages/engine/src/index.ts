@@ -15,6 +15,7 @@
  * - Чернильный режим (`ink.ts`): правила `INK_RULES`/`inkAllows`, кляксы лога, проверка лога.
  * - лесенка подсказок (`hint.ts`): `nextHint`.
  * - таймлапс и отпечаток прохождения (`timelapse.ts`): `timelapseFrames`, `timelapseFingerprint`.
+ * - Лжец (`liar.ts`, PD-165): `generateLiar`, `dailyLiarPuzzle`, `validateLiar`, `accuse`, `liarSummary`.
  */
 export type {
   Cell,
@@ -111,3 +112,27 @@ export type {
   TimelapseFrame,
   TimelapseOptions,
 } from "./timelapse.js";
+
+export {
+  LIAR_DEFAULT_MAX_BASES,
+  LIAR_MIN_DEPTH,
+  LIAR_VERSION,
+  LiarGenerationError,
+  accuse,
+  dailyLiarPuzzle,
+  dailyLiarSeed,
+  generateLiar,
+  liarSummary,
+  validateLiar,
+} from "./liar.js";
+export type {
+  Accusation,
+  AccusationVerdict,
+  GenerateLiarOptions,
+  LiarFailure,
+  LiarMeta,
+  LiarPuzzle,
+  LiarSummary,
+  LiarValidation,
+  ValidateLiarOptions,
+} from "./liar.js";
