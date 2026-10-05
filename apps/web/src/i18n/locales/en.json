@@ -114,7 +114,13 @@
       "sheetSkipBack": "Check the key"
     },
     "helpHead": "Help",
-    "helpRow": "How Pundoku works"
+    "helpRow": "How Pundoku works",
+    "extras": {
+      "head": "Extras",
+      "pet": "Blot the pet",
+      "petFoot": "A tiny ink blot on your result card and on a day in Year. It reacts to how the day went and never comes onto the board. Off by default.",
+      "previewLabel": "How the blot looks"
+    }
   },
   "help": {
     "title": "How Pundoku works",
@@ -576,5 +582,25 @@
     "dayTail": "liar caught",
     "monthCaught_one": "{{count}} liar caught",
     "monthCaught_other": "{{count}} liars caught"
+  },
+  "pet": {
+    "label": {
+      "happy": "Blot, pleased",
+      "tired": "Blot, tired",
+      "surprised": "Blot, surprised",
+      "asleep": "Blot, asleep"
+    },
+    "mood": {
+      "happy": "Pleased",
+      "tired": "Tired",
+      "surprised": "Surprised",
+      "asleep": "Asleep"
+    },
+    "when": {
+      "happy": "clean solve",
+      "tired": "fixes, blots or hints",
+      "surprised": "a special day",
+      "asleep": "not played or unfinished"
+    }
   }
 }

@@ -5,6 +5,9 @@ import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
 import { formatClock } from "../play/format";
 import { useSheetSwipe } from "../shell/useSheetSwipe";
+import { PetBlot } from "../pet/PetBlot";
+import { dayPetMood } from "../pet/petDay";
+import { usePetEnabled } from "../settings/prefs";
 import { heatLegend, heatOpacities } from "../play/heat";
 import { hintCellSet, hintCount, HintsRow } from "../play/hintCard";
 import { blotCellSet, HeatCells, InkModeValueRow } from "../play/inkCard";
@@ -133,7 +136,7 @@ export function YearSheet({ year, month, date, closing, ctx, progress, liar = NO
         </header>
         <div className="ysheet-body">
           {mark ? (
-            <DayCard mark={mark} ctx={ctx} progress={progress.get(mark.date)} liar={liar.get(mark.date) ?? null} headRef={headRef} onOpenToday={onOpenToday} onPlayDay={onPlayDay} />
+            <DayCard mark={mark} ctx={ctx} progress={progress.get(mark.date)} all={progress} liar={liar.get(mark.date) ?? null} headRef={headRef} onOpenToday={onOpenToday} onPlayDay={onPlayDay} />
           ) : (
             <MonthPage year={year} month={month} ctx={ctx} liar={liar} onOpenDay={onOpenDay} />
           )}
@@ -192,6 +195,7 @@ function DayCard({
   mark,
   ctx,
   progress,
+  all,
   liar,
   headRef,
   onOpenToday,
@@ -200,6 +204,8 @@ function DayCard({
   mark: DayMark;
   ctx: YearContext;
   progress: DayProgress | undefined;
+  /** Все дни (для «личного рекорда» питомца). */
+  all: ReadonlyMap<string, DayProgress>;
   liar: LiarInfo | null;
   headRef: RefObject<HTMLHeadingElement | null>;
   onOpenToday: () => void;
@@ -230,15 +236,29 @@ function DayCard({
   // Таймлапс (PD-75): строка входа под карточкой решённого дня; шит рисуется порталом поверх шита Year.
   const tl = useTimelapseEntry(solved && progress ? progress.play : null, solved ? mark.date : null, progress?.difficulty ?? null);
 
+  // PD-180: питомец-клякса — только здесь (лист дня), не в клетках полотна. Будущие дни без кляксы: дня ещё не было.
+  const petOn = usePetEnabled();
+  const mood = useMemo(
+    () => (petOn && mark.date <= ctx.today ? dayPetMood(progress, liar, all.values()) : null),
+    [petOn, mark.date, ctx.today, progress, liar, all],
+  );
+
   const sub = showSub
     ? [progress.difficulty ? t(`difficulty.${progress.difficulty}`) : null, t("year.card.dailyPuzzle")].filter(Boolean).join(" · ")
     : null;
 
   return (
     <div className="daycard" data-testid="day-card" data-kind={mark.kind} data-late={mark.late ? "true" : "false"}>
-      <h3 ref={headRef} tabIndex={-1}>
-        {dayLong(mark.date, locale)}
-      </h3>
+      <div className="dc-head">
+        <h3 ref={headRef} tabIndex={-1}>
+          {dayLong(mark.date, locale)}
+        </h3>
+        {mood && (
+          <div className="pet-slot" data-testid="pet-year">
+            <PetBlot mood={mood} size={40} />
+          </div>
+        )}
+      </div>
       {sub && <p className="sub">{sub}</p>}
       {liar && (
         <dl className="rows liar-year">

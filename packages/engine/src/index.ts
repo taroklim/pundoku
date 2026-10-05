@@ -16,6 +16,7 @@
  * - лесенка подсказок (`hint.ts`): `nextHint`.
  * - таймлапс и отпечаток прохождения (`timelapse.ts`): `timelapseFrames`, `timelapseFingerprint`.
  * - Лжец (`liar.ts`, PD-165): `generateLiar`, `dailyLiarPuzzle`, `validateLiar`, `accuse`, `liarSummary`.
+ * - Питомец-клякса (`pet.ts`, PD-180): `petMood`, `isPersonalBest`.
  */
 export type {
   Cell,
@@ -136,3 +137,6 @@ export type {
   LiarValidation,
   ValidateLiarOptions,
 } from "./liar.js";
+
+export { PET_MOODS, PET_TIRED_CORRECTIONS, isPersonalBest, petMood } from "./pet.js";
+export type { PetDay, PetMood } from "./pet.js";

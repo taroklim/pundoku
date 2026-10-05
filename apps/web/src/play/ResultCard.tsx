@@ -1,8 +1,11 @@
-import { heatmap, summary } from "@pundoku/engine";
+import { heatmap, petMood, summary } from "@pundoku/engine";
 import type { ReactNode, RefObject } from "react";
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import type { HelpBlockId } from "../help/blocks";
+import { PetBlot } from "../pet/PetBlot";
+import { petDayOfPlay } from "../pet/petDay";
+import { usePetEnabled } from "../settings/prefs";
 import { formatClock } from "./format";
 import { heatLegend, heatOpacities } from "./heat";
 import { ShareIcon } from "./icons";
@@ -34,6 +37,8 @@ interface ResultCardProps {
   children?: ReactNode;
   /** PD-171: партия Лжеца — метрики поимки и сравнение с собой (средний ход обвинения по другим партиям). */
   liar?: { readonly info: LiarInfo; readonly average: { avg: number; games: number } | null } | null;
+  /** PD-180: время партии — личный рекорд своей сложности (для «удивлён»). Считает экран, у которого есть история (Today). */
+  personalBest?: boolean;
 }
 
 /**
@@ -41,7 +46,7 @@ interface ResultCardProps {
  * заполнения (`heatmap(moveLog)` движка), легенда Early/Late, время, «clean»/правки, достигнутая
  * техника (`summary`), «N % solved today» и Share. Общая для Today и Play.
  */
-export function ResultCard({ play, cardRef, title, winRate, winRateScope = "today", timelapse, hints, onOpenHelp, children, liar = null }: ResultCardProps) {
+export function ResultCard({ play, cardRef, title, winRate, winRateScope = "today", timelapse, hints, onOpenHelp, children, liar = null, personalBest = false }: ResultCardProps) {
   const { t } = useTranslation();
   const tl = useTimelapseEntry(play, timelapse?.date ?? null, timelapse?.difficulty ?? null);
   const sum = useMemo(() => summary(play.log), [play.log]);
@@ -54,8 +59,14 @@ export function ResultCard({ play, cardRef, title, winRate, winRateScope = "toda
   const blots = useMemo(() => blotCellSet(play), [play]);
   const hinted = useMemo(() => hintCellSet(play), [play]);
   const helped = hintCount(play, hints);
+  // PD-180: питомец-клякса (тумблер в Настройках, выкл по умолчанию). Настроение выводится из партии, не хранится.
+  const petOn = usePetEnabled();
+  const mood = useMemo(
+    () => (petOn ? petMood(petDayOfPlay(play, true, { hints, liar: liar?.info ?? null, personalBest })) : null),
+    [petOn, play, hints, liar, personalBest],
+  );
   return (
-    <section className="card" ref={cardRef} tabIndex={-1} aria-labelledby="result-title" data-testid="result-card">
+    <section className={`card${mood ? " has-pet" : ""}`} ref={cardRef} tabIndex={-1} aria-labelledby="result-title" data-testid="result-card">
       <h2 id="result-title" className={ink ? "ink-h2" : undefined}>
         {title}
         {ink && <InkChip />}
@@ -64,6 +75,12 @@ export function ResultCard({ play, cardRef, title, winRate, winRateScope = "toda
         {t("result.pathSub")}
         {ink && ` ${t("ink.cardSub")}`}
       </p>
+      {/* Клякса стоит в правом верхнем углу (absolute), а в DOM — после заголовка: VoiceOver сначала читает «Solved». */}
+      {mood && (
+        <div className="pet-slot" data-testid="pet-card">
+          <PetBlot mood={mood} size={44} />
+        </div>
+      )}
       <div
         className={`heat${tl.available ? " tl-tap" : ""}`}
         role="img"

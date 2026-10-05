@@ -11,7 +11,10 @@ import {
   AUTO_CLEAR_NOTES_KEY,
   HIGHLIGHT_PEERS_KEY,
   HIGHLIGHT_WRONG_KEY,
+  PET_KEY,
   getAutoClearNotes,
+  getPetEnabled,
+  setPetEnabled,
   getHighlightPeers,
   getHighlightWrong,
   setAutoClearNotes,
@@ -99,6 +102,7 @@ beforeEach(async () => {
   await i18n.changeLanguage("en");
   localStorage.clear();
   setHighlightWrong(false);
+  setPetEnabled(false);
   host = document.createElement("div");
   document.body.append(host);
   root = createRoot(host);
@@ -821,5 +825,50 @@ describe("SettingsScreen: автоочистка заметок (PD-119) и за
     await click("lang-ru");
     expect(q<HTMLInputElement>("auto-clear-notes")!.closest("label")!.textContent).toBe("Автоочистка заметок");
     expect(q<HTMLInputElement>("highlight-peers")!.closest("label")!.textContent).toBe("Подсвечивать строку, столбец и блок");
+  });
+});
+
+describe("SettingsScreen: Питомец-клякса (PD-180)", () => {
+  it("раздел «Extras»: нативный switch, ВЫКЛ по умолчанию, футер через aria-describedby; превью 4 настроений приглушено", async () => {
+    await mount();
+    const el = q<HTMLInputElement>("pet-toggle")!;
+    expect(el.type).toBe("checkbox");
+    expect(el.getAttribute("role")).toBe("switch");
+    expect(el.checked).toBe(false);
+    expect(el.closest("label")!.textContent).toBe("Blot the pet");
+    expect(host.querySelector("#settings-h-extras")!.textContent).toBe("Extras");
+    const foot = host.querySelector("#" + el.getAttribute("aria-describedby"))!;
+    expect(foot.textContent).toContain("never comes onto the board");
+    expect(foot.textContent).toContain("Off by default");
+    const moods = q("pet-moods")!;
+    expect(moods.classList.contains("off")).toBe(true);
+    expect([...moods.querySelectorAll("svg.pet-svg")].map((s) => s.getAttribute("data-mood"))).toEqual(["happy", "tired", "surprised", "asleep"]);
+    // В превью картинка — украшение: имя настроения уже в подписи, VoiceOver не читает его дважды.
+    expect([...moods.querySelectorAll("svg.pet-svg")].every((s) => s.getAttribute("aria-hidden") === "true")).toBe(true);
+    expect([...moods.querySelectorAll("figcaption")].map((c) => c.firstChild!.textContent)).toEqual(["Pleased", "Tired", "Surprised", "Asleep"]);
+  });
+
+  it("включение пишет локальную настройку «1», выключение удаляет ключ; превью проявляется", async () => {
+    await mount();
+    await act(async () => q<HTMLInputElement>("pet-toggle")!.closest("label")!.dispatchEvent(new MouseEvent("click", { bubbles: true })));
+    expect(localStorage.getItem(PET_KEY)).toBe("1");
+    expect(getPetEnabled()).toBe(true);
+    expect(q<HTMLInputElement>("pet-toggle")!.checked).toBe(true);
+    expect(q("pet-moods")!.classList.contains("off")).toBe(false);
+    // Другие тумблеры не задеты.
+    expect(q<HTMLInputElement>("highlight-wrong")!.checked).toBe(false);
+    await act(async () => q<HTMLInputElement>("pet-toggle")!.closest("label")!.dispatchEvent(new MouseEvent("click", { bubbles: true })));
+    expect(localStorage.getItem(PET_KEY)).toBeNull();
+  });
+
+  it("подписи на uk и ru", async () => {
+    await mount();
+    await click("lang-uk");
+    expect(q<HTMLInputElement>("pet-toggle")!.closest("label")!.textContent).toBe("Ляпка-улюбленець");
+    expect(host.querySelector("#settings-h-extras")!.textContent).toBe("Додатково");
+    await click("lang-ru");
+    expect(q<HTMLInputElement>("pet-toggle")!.closest("label")!.textContent).toBe("Клякса-питомец");
+    expect(host.querySelector("#settings-h-extras")!.textContent).toBe("Дополнительно");
+    expect([...q("pet-moods")!.querySelectorAll("figcaption")].map((c) => c.firstChild!.textContent)).toEqual(["Довольна", "Устала", "Удивлена", "Спит"]);
   });
 });
