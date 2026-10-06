@@ -96,10 +96,26 @@ describe("свет и тень", () => {
     expect(cell(3).classList.contains("is-lit")).toBe(true);
   });
 
-  it("в тени свои цифры и заметки остаются в DOM (приглушает CSS), подсказки видны; классика — без классов света", () => {
+  it("PD-210: в тени своей цифры и заметок в DOM нет — только пятно тумана без текста; подсказки видны; классика — без классов света", () => {
     render(lanternPlay());
-    expect(cell(40).querySelector(".d.player")!.textContent).toBe("5");
-    expect(cell(78).querySelector(".marks")).not.toBeNull();
+    const fogD = cell(40).querySelector(".d.player.fog")!;
+    expect(fogD).not.toBeNull();
+    expect(fogD.textContent).toBe("");
+    expect(fogD.getAttribute("aria-hidden")).toBe("true");
+    expect(cell(40).textContent).not.toContain("5");
+    const fogM = cell(78).querySelector(".marks.fog")!;
+    expect(fogM).not.toBeNull();
+    expect(fogM.textContent).toBe("");
+    expect(cell(78).querySelectorAll(".marks span")).toHaveLength(0);
+    // Весь текст поля в тени — только подсказки: копирование/печать/выделение не выдают своих цифр.
+    for (const c of host.querySelectorAll(".cell.is-shadow")) {
+      const given = c.querySelector(".d.given")?.textContent ?? "";
+      expect(c.textContent).toBe(given);
+      expect(c.getAttribute("title")).toBeNull();
+    }
+    // В свете — обычные цифры и заметки.
+    expect(cell(3).querySelector(".d.player")!.textContent).toBe("6");
+    expect(cell(5).querySelector(".marks:not(.fog)")!.textContent).toContain("2");
     expect(cell(36).querySelector(".d.given")!.textContent).toBe("4"); // подсказка в тени — как обычно
     render(createPlay({ mission: MISSION, solution: SOLUTION }));
     expect(boardEl().classList.contains("lantern")).toBe(false);
@@ -133,7 +149,8 @@ describe("свет и тень", () => {
     p = enterDigit(p, 5, 9, 700); // r1c6 — неверно (решение 8), в свете
     render(p);
     expect(cell(42).classList.contains("err")).toBe(false);
-    expect(cell(42).querySelector(".d.player")!.textContent).toBe("1");
+    expect(cell(42).querySelector(".d.player.fog")).not.toBeNull(); // ни цифры, ни цвета ошибки — пятно как у любой
+    expect(cell(42).querySelector(".d.err")).toBeNull();
     expect(cell(5).classList.contains("err")).toBe(true);
   });
 });
@@ -155,11 +172,11 @@ describe("подсветка одинаковых цифр — только в �
 });
 
 describe("VoiceOver", () => {
-  it("в тени: «в тени» без цифры/заметок/«пусто»; подсказка и клетки света — обычные подписи", () => {
+  it("в тени: «в тени» / «заметки, в тени» без цифр; пустая — «пусто» (видно и глазами); подсказка и свет — обычные подписи", () => {
     render(lanternPlay());
-    expect(cell(40).getAttribute("aria-label")).toBe("Row 5, column 5, in the dark");
-    expect(cell(78).getAttribute("aria-label")).toBe("Row 9, column 7, in the dark");
-    expect(cell(42).getAttribute("aria-label")).toBe("Row 5, column 7, in the dark"); // пустая в тени — не «пусто»
+    expect(cell(40).getAttribute("aria-label")).toBe("Row 5, column 5, in shadow");
+    expect(cell(78).getAttribute("aria-label")).toBe("Row 9, column 7, notes, in shadow");
+    expect(cell(42).getAttribute("aria-label")).toBe("Row 5, column 7, empty");
     expect(cell(41).getAttribute("aria-label")).toBe("Row 5, column 6, clue 3"); // подсказка в тени
     expect(cell(36).getAttribute("aria-label")).toContain("4"); // подсказка
     expect(cell(3).getAttribute("aria-label")).toBe("Row 1, column 4, your 6");
@@ -170,25 +187,37 @@ describe("VoiceOver", () => {
     await act(() => i18n.changeLanguage("ru"));
     render(lanternPlay());
     expect(cell(40).getAttribute("aria-label")).toBe("Строка 5, столбец 5, в тени");
+    expect(cell(78).getAttribute("aria-label")).toBe("Строка 9, столбец 7, заметки, в тени");
     await act(() => i18n.changeLanguage("uk"));
     render(lanternPlay());
-    expect(cell(40).getAttribute("aria-label")).toBe("Рядок 5, стовпець 5, у темряві");
+    expect(cell(40).getAttribute("aria-label")).toBe("Рядок 5, стовпець 5, у тіні");
+    expect(cell(78).getAttribute("aria-label")).toBe("Рядок 9, стовпець 7, нотатки, у тіні");
   });
 
-  it("при осмотре — обычные подписи, у поля пометка «освещена вся доска»", () => {
+  it("при осмотре (вид b) — обычные подписи и цифры, клетки тени помечены `is-peek` (граница света видна)", () => {
     render(lanternPlay(), {}, true);
     expect(cell(40).getAttribute("aria-label")).toBe("Row 5, column 5, your 5");
-    expect(boardEl().getAttribute("aria-label")).toContain("The whole board is lit");
+    expect(boardEl().getAttribute("aria-label")).toContain("Inspecting the board");
     expect(boardEl().classList.contains("inspecting")).toBe(true);
+    expect(cell(40).classList.contains("is-peek")).toBe(true);
+    expect(cell(40).querySelector(".d.player")!.textContent).toBe("5");
+    expect(cell(78).querySelector(".marks:not(.fog)")).not.toBeNull();
+    expect(cell(3).classList.contains("is-lit")).toBe(true);
+    expect(host.querySelectorAll(".cell.is-peek")).toHaveLength(81 - 21);
+    expect(host.querySelectorAll(".fog")).toHaveLength(0);
   });
 
   it("строки Фонаря есть во всех локалях, плейсхолдеры одинаковы", () => {
     for (const loc of [en, uk, ru] as unknown as { lantern: Record<string, string>; modes: { lantern: { name: string; desc: string } } }[]) {
       expect(loc.modes.lantern.name.length).toBeGreaterThan(2);
       expect(loc.modes.lantern.desc.length).toBeGreaterThan(30);
-      for (const k of ["cellShadow", "inspect", "inspectHint", "inspecting"]) expect(loc.lantern[k], k).toEqual(expect.any(String));
-      expect(loc.lantern["cellShadow"]).toContain("{{row}}");
-      expect(loc.lantern["cellShadow"]).toContain("{{col}}");
+      for (const k of ["cellShadow", "cellShadowNotes", "inspect", "inspectHint", "inspecting", "chipInspect", "done", "rowMode", "yearValue"]) expect(loc.lantern[k], k).toEqual(expect.any(String));
+      for (const k of ["cellShadow", "cellShadowNotes"]) {
+        expect(loc.lantern[k]).toContain("{{row}}");
+        expect(loc.lantern[k]).toContain("{{col}}");
+      }
+      const st = (loc.lantern as unknown as { status: Record<string, string> }).status;
+      for (const k of ["dark", "darkShort", "hold", "holdShort", "menu", "menuShort"]) expect(st[k], k).toEqual(expect.any(String));
     }
   });
 });
@@ -266,8 +295,8 @@ describe("пункт ⋯ «Осмотреть доску»", () => {
     const item = q("menu-inspect")!;
     expect(item.getAttribute("role")).toBe("menuitemcheckbox");
     expect(item.getAttribute("aria-checked")).toBe("false");
-    expect(item.getAttribute("aria-label")).toBe("Look at the whole board");
-    expect(item.textContent).toContain("press and hold");
+    expect(item.getAttribute("aria-label")).toBe("Inspect the board");
+    expect(item.textContent).toContain("touch and hold");
     tap(item);
     expect(onToggle).toHaveBeenCalledTimes(1);
     act(() => root.render(<MoreMenu fill="ready" onNew={() => {}} onFill={() => {}} />));
@@ -299,24 +328,48 @@ describe("хаб и партия (PlayScreen)", () => {
       act(() => root.render(<PlayScreen />));
       const row = q("mode-lantern")!;
       expect(row.textContent).toContain("Lantern");
-      expect(row.textContent).toContain("Only the row, column and box");
+      // PD-210 (макет §6): в строке списка — первое предложение правила, в шите — все три.
+      expect(row.textContent).toContain("Your digits and notes show only in the row, column and box of the selected cell.");
+      expect(row.textContent).not.toContain("Givens stay visible");
       tap(row);
       expect(q("mode-sheet")!.getAttribute("data-mode")).toBe("lantern");
-      expect(q("mode-desc")!.textContent).toMatch(/press and hold the board/i);
+      expect(q("mode-desc")!.textContent).toBe(
+        "Your digits and notes show only in the row, column and box of the selected cell. Givens stay visible. Touch and hold the board to see it all.",
+      );
       tap(q("sheet-start")!);
       act(() => inner.onGenerated(inner.requestId, { id: inner.requestId, ok: true, puzzle: { mission: MISSION, solution: SOLUTION, difficulty: "medium", seed: "t" } }));
       expect(playStore.getSnapshot().play?.lantern).toBe(true);
       expect(playStore.getSnapshot().selected).toBeNull();
       expect(q("mode-chip")!.getAttribute("data-mode")).toBe("lantern");
       expect(boardEl().getAttribute("data-lantern")).toBe("dark");
+      // Нет выбора — строка статуса учит действием (макет §2 п. 5).
+      expect(q("lantern-status")!.getAttribute("data-kind")).toBe("dark");
+      expect(q("lantern-status")!.textContent).toContain("Tap a cell to light its row, column and box.");
       tap(q("more-button")!);
       expect(q("menu-inspect")!.getAttribute("aria-checked")).toBe("false");
       tap(q("menu-inspect")!);
       expect(boardEl().getAttribute("data-lantern")).toBe("inspect");
+      // Осмотр из меню: чип «Inspecting» с глазом, строка «Inspecting the board» + «Done».
+      expect(q("mode-chip")!.getAttribute("data-inspecting")).toBe("true");
+      expect(q("mode-chip")!.textContent).toBe("Inspecting");
+      expect(q("lantern-status")!.getAttribute("data-kind")).toBe("menu");
       tap(q("more-button")!);
       expect(q("menu-inspect")!.getAttribute("aria-checked")).toBe("true");
       tap(q("menu-inspect")!);
       expect(boardEl().getAttribute("data-lantern")).toBe("dark");
+      expect(q("mode-chip")!.getAttribute("data-inspecting")).toBeNull();
+      // «Готово» заканчивает осмотр.
+      tap(q("more-button")!);
+      tap(q("menu-inspect")!);
+      expect(boardEl().getAttribute("data-lantern")).toBe("inspect");
+      tap(q("inspect-done")!);
+      expect(boardEl().getAttribute("data-lantern")).toBe("dark");
+      // Тап по полю тоже заканчивает осмотр из меню — и выбирает клетку (свет загорается).
+      tap(q("more-button")!);
+      tap(q("menu-inspect")!);
+      tap(cell(40));
+      expect(boardEl().getAttribute("data-lantern")).toBe("lit");
+      expect(q("lantern-status")).toBeNull(); // выбор есть — обычное «осталось N»
       act(() => playStore.toHub());
       expect(playStore.slots().lantern).toBeDefined();
       // Классика: пункта нет.
@@ -330,5 +383,5 @@ describe("хаб и партия (PlayScreen)", () => {
       inner.snap = { ...base };
       vi.unstubAllGlobals();
     }
-  });
+  }, 30000);
 });
