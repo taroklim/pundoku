@@ -23,12 +23,12 @@
  */
 .board.lantern {
   /* Пятно своей цифры в тени: размер (em шрифта цифры) и плотность в центре. */
-  --lantern-fog-w: 0.62em;
-  --lantern-fog-h: 0.84em;
-  --lantern-fog-a: 30%;
+  --lantern-fog-w: 0.72em;
+  --lantern-fog-h: 0.98em;
+  --lantern-fog-a: 34%;
   /* Россыпь заметок в тени: радиус точки (em шрифта заметок) и плотность. */
-  --lantern-notes-r: 0.42em;
-  --lantern-notes-a: 26%;
+  --lantern-notes-r: 0.55em;
+  --lantern-notes-a: 20%;
   /* Осмотр (вид b): своя цифра тени — доля чернил (контраст ≥ 4.5:1 в обеих темах) и ореол тумана вокруг. */
   --lantern-peek-ink: 82%;
   --lantern-peek-halo: 0.16em;

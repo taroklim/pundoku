@@ -394,7 +394,7 @@ async function flow(name, type, c) {
     const a = await shadowAudit(page, sol);
     ok(`${tag} утечки: в тени нет текста своих цифр/заметок, нет title, подписи без цифр`, a.bad.length === 0 && a.leaked === 0, a.bad.slice(0, 4).join(" | "));
     ok(`${tag} туман: пятна цифр и заметок есть (градиент), ни одного filter на поле, подсказки в тени не тронуты`, a.fogD > 0 && a.fogM > 0 && a.filters === 0 && a.givenShadow === 0, JSON.stringify({ d: a.fogD, m: a.fogM, f: a.filters, g: a.givenShadow }));
-    ok(`${tag} туман масштабируется от клетки (пятно ≈ 0.38 стороны)`, a.ratio > 0.3 && a.ratio < 0.46, a.ratio.toFixed(3));
+    ok(`${tag} туман масштабируется от клетки (пятно ≈ 0.45 стороны)`, a.ratio > 0.36 && a.ratio < 0.54, a.ratio.toFixed(3));
     ok(`${tag} поле без выделения текста (user-select: none)`, a.userSelect === "none", a.userSelect);
     const shadowMine = mine.find((i) => st.shadow.includes(i));
     const shadowNote = noted.find((i) => st.shadow.includes(i));
