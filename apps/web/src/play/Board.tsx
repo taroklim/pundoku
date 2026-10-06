@@ -84,8 +84,8 @@ interface CellProps {
   rings: readonly RingMark[] | undefined;
   ringId: number;
   /**
-   * PD-208/PD-210 (Фонарь, вариант C «Туман»): `lit` — клетка в свете выбранной (строка/столбец/блок); `shadow` — в тени: вместо
-   * своей цифры/заметок — пятно тумана БЕЗ текста (цифры в DOM нет: ни выделения, ни копирования, ни увеличения, ни печати);
+   * PD-208/PD-210/PD-216 (Фонарь, вариант C «Туман»): `lit` — клетка в свете выбранной (строка/столбец/блок); `shadow` — в тени:
+   * своя цифра/заметки размыты настоящим blur (styles/lantern.css), содержимое aria-hidden, подпись «в тени»;
    * `peek` — та же клетка тени во время осмотра (вид b: цифры видны, туман вокруг них остаётся). Подсказки — всегда как есть.
    * `null` — не Фонарь (или партия не идёт).
    */
@@ -129,8 +129,10 @@ const Cell = memo(function Cell(p: CellProps) {
   if (p.light === "lit") cls.push("is-lit");
   else if (p.light === "shadow") cls.push("is-shadow");
   else if (p.light === "peek") cls.push("is-peek");
-  // PD-210: в тени своя цифра и заметки не рендерятся вовсе — только пятно тумана (styles/lantern.css). Подсказка — как есть.
-  const fog = p.light === "shadow" && !p.given;
+  // PD-216 (решение владельца): в тени своя цифра и заметки — настоящие, но размыты (styles/lantern.css, один filter на элемент);
+  // отдельный ключ — смена света перемонтирует элемент, и переход идёт только по opacity (@starting-style), без анимации blur.
+  // Содержимое aria-hidden, подпись клетки — «в тени» без цифры, поле без выделения текста. Подсказка — как есть.
+  const shade = p.light === "shadow" && !p.given;
   const vars: Record<string, string | number> = {};
   if (p.waveIdx >= 0) vars["--wi"] = p.waveIdx;
   if (p.echoIdx >= 0) {
@@ -208,20 +210,16 @@ const Cell = memo(function Cell(p: CellProps) {
           {p.glyphs ? <Glyph digit={p.wrongDigit} kind="placed" /> : p.wrongDigit}
         </span>
       )}
-      {fog && p.value ? (
-        <span key="fog" className="d player fog" aria-hidden="true" />
-      ) : fog && p.notes ? (
-        <span key="mfog" className="marks fog" aria-hidden="true" />
-      ) : digit ? (
+      {digit ? (
         <span
-          key={p.popId || p.blotId}
+          key={shade ? "sh" : p.popId || p.blotId}
           className={`d ${p.given ? "given" : "player"}${p.glyphs ? " gd" : ""}${p.wrong ? " err" : ""}${p.popId ? " anim-in" : ""}${p.blotId ? " swap-in" : ""}`}
           aria-hidden="true"
         >
           {p.glyphs ? <Glyph digit={digit} kind={p.given ? "given" : "placed"} /> : digit}
         </span>
       ) : p.notes ? (
-        <span key="m" className={p.glyphs ? "marks gl-marks" : "marks"} aria-hidden="true">
+        <span key={shade ? "msh" : "m"} className={p.glyphs ? "marks gl-marks" : "marks"} aria-hidden="true">
           {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((d) => (
             <span key={d} className={p.struck & (1 << d) ? "struck" : undefined}>
               {p.notes & (1 << d) ? (p.glyphs ? <Glyph digit={d} kind="note" /> : d) : ""}

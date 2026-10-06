@@ -96,26 +96,16 @@ describe("свет и тень", () => {
     expect(cell(3).classList.contains("is-lit")).toBe(true);
   });
 
-  it("PD-210: в тени своей цифры и заметок в DOM нет — только пятно тумана без текста; подсказки видны; классика — без классов света", () => {
+  it("PD-216: в тени своя цифра и заметки в DOM, но скрыты от скринридера (aria-hidden) и без title; подсказки видны; классика — без классов света", () => {
     render(lanternPlay());
-    const fogD = cell(40).querySelector(".d.player.fog")!;
-    expect(fogD).not.toBeNull();
-    expect(fogD.textContent).toBe("");
-    expect(fogD.getAttribute("aria-hidden")).toBe("true");
-    expect(cell(40).textContent).not.toContain("5");
-    const fogM = cell(78).querySelector(".marks.fog")!;
-    expect(fogM).not.toBeNull();
-    expect(fogM.textContent).toBe("");
-    expect(cell(78).querySelectorAll(".marks span")).toHaveLength(0);
-    // Весь текст поля в тени — только подсказки: копирование/печать/выделение не выдают своих цифр.
-    for (const c of host.querySelectorAll(".cell.is-shadow")) {
-      const given = c.querySelector(".d.given")?.textContent ?? "";
-      expect(c.textContent).toBe(given);
-      expect(c.getAttribute("title")).toBeNull();
-    }
+    const d = cell(40).querySelector(".d.player")!;
+    expect(d.textContent).toBe("5"); // владелец принял: цифра технически в DOM, размывает CSS
+    expect(d.getAttribute("aria-hidden")).toBe("true");
+    expect(cell(78).querySelector(".marks")!.getAttribute("aria-hidden")).toBe("true");
+    for (const c of host.querySelectorAll(".cell.is-shadow")) expect(c.querySelector("[title]") ?? c.getAttribute("title")).toBeNull();
     // В свете — обычные цифры и заметки.
     expect(cell(3).querySelector(".d.player")!.textContent).toBe("6");
-    expect(cell(5).querySelector(".marks:not(.fog)")!.textContent).toContain("2");
+    expect(cell(5).querySelector(".marks")!.textContent).toContain("2");
     expect(cell(36).querySelector(".d.given")!.textContent).toBe("4"); // подсказка в тени — как обычно
     render(createPlay({ mission: MISSION, solution: SOLUTION }));
     expect(boardEl().classList.contains("lantern")).toBe(false);
@@ -127,6 +117,15 @@ describe("свет и тень", () => {
     expect(boardEl().getAttribute("data-lantern")).toBe("dark");
     expect(shadowCells()).toHaveLength(81);
     expect(litCellsDom()).toHaveLength(0);
+  });
+
+  it("PD-216: смена света перемонтирует свою цифру (переход только opacity через @starting-style, blur не анимируется)", () => {
+    render(lanternPlay());
+    const before = cell(40).querySelector(".d.player");
+    render(lanternPlay(), { selected: 40 });
+    const after = cell(40).querySelector(".d.player");
+    expect(after).not.toBe(before);
+    expect(after!.textContent).toBe("5");
   });
 
   it("свет идёт за выбором", () => {
@@ -149,7 +148,7 @@ describe("свет и тень", () => {
     p = enterDigit(p, 5, 9, 700); // r1c6 — неверно (решение 8), в свете
     render(p);
     expect(cell(42).classList.contains("err")).toBe(false);
-    expect(cell(42).querySelector(".d.player.fog")).not.toBeNull(); // ни цифры, ни цвета ошибки — пятно как у любой
+    expect(cell(42).querySelector(".d.err")).toBeNull(); // цвет ошибки в тени не выдаёт неверную цифру
     expect(cell(42).querySelector(".d.err")).toBeNull();
     expect(cell(5).classList.contains("err")).toBe(true);
   });
@@ -201,10 +200,9 @@ describe("VoiceOver", () => {
     expect(boardEl().classList.contains("inspecting")).toBe(true);
     expect(cell(40).classList.contains("is-peek")).toBe(true);
     expect(cell(40).querySelector(".d.player")!.textContent).toBe("5");
-    expect(cell(78).querySelector(".marks:not(.fog)")).not.toBeNull();
+    expect(cell(78).querySelector(".marks")).not.toBeNull();
     expect(cell(3).classList.contains("is-lit")).toBe(true);
     expect(host.querySelectorAll(".cell.is-peek")).toHaveLength(81 - 21);
-    expect(host.querySelectorAll(".fog")).toHaveLength(0);
   });
 
   it("строки Фонаря есть во всех локалях, плейсхолдеры одинаковы", () => {

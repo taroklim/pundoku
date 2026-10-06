@@ -4,31 +4,23 @@
  *
  *   .board.lantern            — поле партии Фонаря (идёт игра); .board.lantern.inspecting — осмотр доски (удержание / пункт ⋯).
  *   .cell.is-lit              — клетка в свете выбранной (строка + столбец + блок, `litCells`): всё как в классике.
- *   .cell.is-shadow           — клетка в тени. Своей цифры и заметок в DOM НЕТ (Board.tsx): вместо них пустой `.d.player.fog` /
- *                               `.marks.fog` — пятно тумана. Так размытую цифру нельзя «прочесть» ничем: ни выделением/копированием
- *                               текста, ни увеличением, ни печатью, ни скринридером, ни отключением CSS. Подсказки (`.d.given`)
- *                               не трогаются никогда. Фон клетки как в классике (C «Туман»: тени фона нет, макет §3).
+ *   .cell.is-shadow           — клетка в тени: своя цифра (`.d.player`) и заметки (`.marks`) размыты НАСТОЯЩИМ blur (PD-216, решение
+ *                               владельца вместо пятна PD-210) — глубина 2 макета PD-209 C: радиус 11 % стороны клетки (--s), значит
+ *                               масштабируется с полем (320/390, обычный шрифт и AX3), плюс прозрачность 32 %. Цифру не прочесть, но
+ *                               видно, что клетка занята. Один `filter` на элемент (blur + opacity в одном), без will-change, сам blur
+ *                               не анимируется. Содержимое aria-hidden, подпись клетки «в тени» (Board.tsx), выделения нет,
+ *                               на печати — скрыто. Подсказки (`.d.given`) не трогаются никогда. Фон клетки как в классике.
  *   .cell.is-peek             — клетка тени во время осмотра (вид b): цифры и заметки читаются, но своя цифра остаётся в лёгкой
  *                               дымке (чуть светлее + ореол тумана), поэтому граница света видна и при осмотре.
  *
- * Почему пятно, а не `filter: blur()` на настоящей цифре: (1) утечки — размытая цифра остаётся текстом в DOM (копирование,
- * выделение, увеличение, печать, «снять стили»), а силуэт размытого глифа угадывается (макет §3, «Слабое»); (2) WebKit на iOS —
- * `filter` на десятках элементов даёт отдельные слои/проходы фильтра, мерцание при перерисовке и обрезку размытия по краю
- * клетки. Пятно — градиент фона: ни фильтра, ни слоя, ни текста; размер — в em шрифта цифры, а он от стороны клетки (--s),
- * значит туман масштабируется вместе с полем (320/390, обычный шрифт и AX3). Вид — как у размытой цифры глубины 2 в макете
- * (blur 11 % стороны клетки, туман 32 %): видно, что клетка занята (цифра — пятно в центре, заметки — россыпь мелких точек), но
- * какая цифра — нет. Пятно одинаково для любой цифры и любого набора заметок.
+ * Фолбэк, если на iPhone blur даст артефакты: пятно без текста PD-210 (коммит 7f00edd, `.d.fog`/`.marks.fog`).
  *
  * Reduce Motion: переход света (появление цифры/пятна) умножен на --mo (tokens.css) — при «Уменьшении движения» мгновенно.
  */
 .board.lantern {
-  /* Пятно своей цифры в тени: размер (em шрифта цифры) и плотность в центре. */
-  --lantern-fog-w: 0.72em;
-  --lantern-fog-h: 0.98em;
-  --lantern-fog-a: 34%;
-  /* Россыпь заметок в тени: радиус точки (em шрифта заметок) и плотность. */
-  --lantern-notes-r: 0.55em;
-  --lantern-notes-a: 20%;
+  /* Глубина 2 (макет PD-209 C): радиус размытия — доля стороны клетки, прозрачность размытого. */
+  --lantern-blur: 0.11;
+  --lantern-shade-a: 0.32;
   /* Осмотр (вид b): своя цифра тени — доля чернил (контраст ≥ 4.5:1 в обеих темах) и ореол тумана вокруг. */
   --lantern-peek-ink: 82%;
   --lantern-peek-halo: 0.16em;
@@ -44,20 +36,17 @@
   user-select: none;
 }
 
-/* Пятно цифры: пустой элемент, градиент от чернил к прозрачному. */
-.board.lantern .cell .d.fog {
-  display: block;
-  width: var(--lantern-fog-w);
-  height: var(--lantern-fog-h);
-  border-radius: 50%;
-  background: radial-gradient(closest-side, color-mix(in srgb, var(--ink) var(--lantern-fog-a), transparent) 0%, color-mix(in srgb, var(--ink) calc(var(--lantern-fog-a) * 0.55), transparent) 45%, transparent 100%);
+/* Тень: один filter на элемент — blur от стороны клетки + прозрачность. Через filter, а не opacity: анимация постановки M1
+   (`inkSet`, fill both) держит opacity и перебила бы тень. */
+.board.lantern .cell.is-shadow .d.player,
+.board.lantern .cell.is-shadow .marks {
+  filter: blur(calc(var(--s) * var(--lantern-blur))) opacity(var(--lantern-shade-a));
 }
-/* Россыпь заметок: 3×3 мягкие точки цвета заметок на месте сетки заметок — одинаково для любого набора. */
-.board.lantern .cell .marks.fog {
-  font-size: max(7px, calc(var(--s) * 0.3));
-  background: radial-gradient(circle at center, color-mix(in srgb, var(--notes) var(--lantern-notes-a), transparent) 0, transparent var(--lantern-notes-r)) 0 0 / calc(100% / 3) calc(100% / 3);
-  background-origin: content-box;
-  background-clip: content-box;
+@media print {
+  .board.lantern .cell.is-shadow .d.player,
+  .board.lantern .cell.is-shadow .marks {
+    visibility: hidden;
+  }
 }
 
 /* Осмотр b: своя цифра тени читается (контраст ≥ 4.5:1), но остаётся в дымке. Ошибка (если включена) — своим цветом. */
@@ -66,8 +55,8 @@
   text-shadow: 0 0 var(--lantern-peek-halo) color-mix(in srgb, var(--ink) var(--lantern-peek-halo-a), transparent);
 }
 
-/* Переход света: цифра/заметки/пятно проявляются при появлении (свет пришёл/ушёл — элемент сменился). Только opacity, без
-   blur и без will-change; анимации постановки/волны (animation) перекрывают переход, Reduce Motion — 0 мс. */
+/* Переход света: цифра/заметки/пятно проявляются при появлении (свет пришёл/ушёл — элемент сменился). Только opacity (элемент
+   перемонтируется при смене света), blur не анимируется, без will-change; анимации постановки/волны (animation) перекрывают переход, Reduce Motion — 0 мс. */
 .board.lantern .cell .d.player,
 .board.lantern .cell .marks {
   transition: opacity calc(var(--lantern-ms) * var(--mo)) linear;
@@ -76,15 +65,6 @@
   .board.lantern .cell .d.player,
   .board.lantern .cell .marks {
     opacity: 0;
-  }
-}
-
-/* Высокий контраст Windows/forced-colors: градиенты фона система снимает — пятно держим своим цветом, иначе занятая клетка
-   выглядела бы пустой. */
-@media (forced-colors: active) {
-  .board.lantern .cell .d.fog,
-  .board.lantern .cell .marks.fog {
-    forced-color-adjust: none;
   }
 }
 
