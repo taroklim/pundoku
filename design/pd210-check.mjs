@@ -42,7 +42,7 @@ const PERF = process.env.PERF !== "0";
 const OUT = join(HERE, "pd210-shots");
 mkdirSync(OUT, { recursive: true });
 const ONLY = process.env.WK_ONLY ? "wk" : process.env.CR_ONLY ? "cr" : null;
-for (const f of readdirSync(OUT)) if (/^(cr|wk)-.*\.png$/.test(f) && (!ONLY || f.startsWith(ONLY + "-"))) rmSync(join(OUT, f), { force: true });
+if (!process.env.SEL_ONLY) for (const f of readdirSync(OUT)) if (/^(cr|wk)-.*\.png$/.test(f) && (!ONLY || f.startsWith(ONLY + "-"))) rmSync(join(OUT, f), { force: true });
 
 const localDate = (d = new Date()) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 const TODAY = localDate();
@@ -612,8 +612,8 @@ try {
     if (!process.env.CFG || process.env.SEL) await noSelectFlow("cr", chromium, CONFIGS[0]);
   }
   if (ONLY !== "cr") {
-    for (const c of WK) await flow("wk", webkit, c);
-    await yearFlow("wk", webkit, YEAR[0]);
+    if (!process.env.SEL_ONLY) for (const c of WK) await flow("wk", webkit, c);
+    if (!process.env.SEL_ONLY) await yearFlow("wk", webkit, YEAR[0]);
     await noSelectFlow("wk", webkit, CONFIGS[1]);
   }
 } finally {
