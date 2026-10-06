@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import { Fragment } from "react";
 import { useTranslation } from "react-i18next";
 import { MelodyOffIcon } from "../melody/icons";
+import { InspectIcon } from "./modeIcons";
 import type { ModeDef } from "./modes";
 
 interface SublineProps {
@@ -22,6 +23,8 @@ interface SublineProps {
   chip?: ModeDef | null;
   /** PD-203: партия Мелодии с выключенным звуком — чип «♪̸ Мелодия · без звука» (серый), состояние видно без меню. */
   muted?: boolean;
+  /** PD-210: Фонарь, идёт осмотр доски — чип «Фонарь» сменяется на «Осмотр» со значком глаза (макет PD-209 §5). */
+  inspecting?: boolean;
 }
 
 /**
@@ -33,7 +36,7 @@ interface SublineProps {
  * время и метки не переносятся, а когда текст не помещается (крупный Dynamic Type, узкий экран) слова «с подсказкой»/чип режима схлопываются
  * в значки (`.hm-ic`/`.chip-ic`; слово остаётся именем для скринридера и в `title`). Правила — play.css, контейнер-запрос.
  */
-export function Subline({ day, difficulty, ink = false, help = false, clock = null, chip = null, muted = false }: SublineProps) {
+export function Subline({ day, difficulty, ink = false, help = false, clock = null, chip = null, muted = false, inspecting = false }: SublineProps) {
   const { t } = useTranslation();
   const parts: ReactNode[] = [];
   if (day) parts.push(<span key="day" className="sub-day">{day}</span>);
@@ -68,7 +71,12 @@ export function Subline({ day, difficulty, ink = false, help = false, clock = nu
           {part}
         </Fragment>
       ))}
-      {chip && chip.chip && (muted ? (
+      {chip && chip.chip && (inspecting ? (
+        <span className="mode-chip" data-testid="mode-chip" data-mode={chip.id} data-inspecting="true" title={t("lantern.chipInspect")}>
+          <InspectIcon className="chip-ic" />
+          <span className="chip-t">{t("lantern.chipInspect")}</span>
+        </span>
+      ) : muted ? (
         <span className="mode-chip off" data-testid="mode-chip" data-mode={chip.id} data-muted="true" title={t("melody.chipMuted")}>
           <MelodyOffIcon className="chip-ic" />
           <span className="chip-t">{t("melody.chipMuted")}</span>

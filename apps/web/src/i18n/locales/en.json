@@ -554,7 +554,8 @@
     },
     "lantern": {
       "name": "Lantern",
-      "desc": "Only the row, column and box of the selected cell are lit — your digits and notes elsewhere stay in the dark. Press and hold the board to look at all of it."
+      "desc": "Your digits and notes show only in the row, column and box of the selected cell. Givens stay visible. Touch and hold the board to see it all.",
+      "list": "Your digits and notes show only in the row, column and box of the selected cell."
     },
     "glyphs": {
       "name": "Glyphs",
@@ -648,9 +649,22 @@
     "tlNote": "Real rhythm, long pauses shortened. The tune follows the replay."
   },
   "lantern": {
-    "cellShadow": "Row {{row}}, column {{col}}, in the dark",
-    "inspect": "Look at the whole board",
-    "inspectHint": "Or press and hold the board",
-    "inspecting": "The whole board is lit"
+    "cellShadow": "Row {{row}}, column {{col}}, in shadow",
+    "cellShadowNotes": "Row {{row}}, column {{col}}, notes, in shadow",
+    "inspect": "Inspect the board",
+    "inspectHint": "Or touch and hold the board",
+    "inspecting": "Inspecting the board",
+    "chipInspect": "Inspecting",
+    "done": "Done",
+    "status": {
+      "dark": "Tap a cell to light its row, column and box.",
+      "darkShort": "Tap a cell",
+      "hold": "Inspecting the board — lift your finger to return",
+      "holdShort": "Inspecting",
+      "menu": "Inspecting the board",
+      "menuShort": "Inspecting"
+    },
+    "rowMode": "Mode",
+    "yearValue": "Lantern"
   }
 }

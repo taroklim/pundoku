@@ -84,10 +84,12 @@ interface CellProps {
   rings: readonly RingMark[] | undefined;
   ringId: number;
   /**
-   * PD-208 (Фонарь): `lit` — клетка в свете выбранной (строка/столбец/блок), `shadow` — в тени: свои цифры и заметки
-   * приглушены (`styles/lantern.css`, токены `--lantern-*`), подсказки видны. `null` — не Фонарь или осмотр доски.
+   * PD-208/PD-210 (Фонарь, вариант C «Туман»): `lit` — клетка в свете выбранной (строка/столбец/блок); `shadow` — в тени: вместо
+   * своей цифры/заметок — пятно тумана БЕЗ текста (цифры в DOM нет: ни выделения, ни копирования, ни увеличения, ни печати);
+   * `peek` — та же клетка тени во время осмотра (вид b: цифры видны, туман вокруг них остаётся). Подсказки — всегда как есть.
+   * `null` — не Фонарь (или партия не идёт).
    */
-  light: "lit" | "shadow" | null;
+  light: "lit" | "shadow" | "peek" | null;
   onAccuse?: (cell: number, el: HTMLElement) => void;
   onPick: (cell: number) => void;
   /** Нажатие на клетку: запоминаем точку касания для M7. */
@@ -126,6 +128,9 @@ const Cell = memo(function Cell(p: CellProps) {
   if (p.sealId !== 0) cls.push("sealing");
   if (p.light === "lit") cls.push("is-lit");
   else if (p.light === "shadow") cls.push("is-shadow");
+  else if (p.light === "peek") cls.push("is-peek");
+  // PD-210: в тени своя цифра и заметки не рендерятся вовсе — только пятно тумана (styles/lantern.css). Подсказка — как есть.
+  const fog = p.light === "shadow" && !p.given;
   const vars: Record<string, string | number> = {};
   if (p.waveIdx >= 0) vars["--wi"] = p.waveIdx;
   if (p.echoIdx >= 0) {
@@ -203,7 +208,11 @@ const Cell = memo(function Cell(p: CellProps) {
           {p.glyphs ? <Glyph digit={p.wrongDigit} kind="placed" /> : p.wrongDigit}
         </span>
       )}
-      {digit ? (
+      {fog && p.value ? (
+        <span key="fog" className="d player fog" aria-hidden="true" />
+      ) : fog && p.notes ? (
+        <span key="mfog" className="marks fog" aria-hidden="true" />
+      ) : digit ? (
         <span
           key={p.popId || p.blotId}
           className={`d ${p.given ? "given" : "player"}${p.glyphs ? " gd" : ""}${p.wrong ? " err" : ""}${p.popId ? " anim-in" : ""}${p.blotId ? " swap-in" : ""}`}
@@ -212,7 +221,7 @@ const Cell = memo(function Cell(p: CellProps) {
           {p.glyphs ? <Glyph digit={digit} kind={p.given ? "given" : "placed"} /> : digit}
         </span>
       ) : p.notes ? (
-        <span className={p.glyphs ? "marks gl-marks" : "marks"} aria-hidden="true">
+        <span key="m" className={p.glyphs ? "marks gl-marks" : "marks"} aria-hidden="true">
           {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((d) => (
             <span key={d} className={p.struck & (1 << d) ? "struck" : undefined}>
               {p.notes & (1 << d) ? (p.glyphs ? <Glyph digit={d} kind="note" /> : d) : ""}
@@ -292,10 +301,15 @@ interface BoardProps {
   overlay?: ReactNode;
   /** PD-208 (Фонарь): «Осмотреть доску» включено из меню ⋯ — свет на всём поле, пока не выключат. */
   inspect?: boolean;
+  /** PD-210: тап по полю во время осмотра из меню — осмотр заканчивается (макет PD-209 §5); тап при этом выбирает клетку. */
+  onInspectEnd?: () => void;
+  /** PD-210: удержание началось/закончилось — экран меняет чип и строку статуса. */
+  onHoldChange?: (held: boolean) => void;
 }
 
-/** PD-208: удержание на поле дольше этого (мс) — «осмотр доски» (короче долгого нажатия Лжеца, обычный тап — заметно короче). */
-export const INSPECT_HOLD_MS = 350;
+/** PD-208/PD-210: удержание на поле дольше этого (мс) — «осмотр доски»; 0,45 с — макет PD-209 §5 (решение PM): короче системного
+ *  long press, обычный тап заметно короче. */
+export const INSPECT_HOLD_MS = 450;
 
 /**
  * PD-208: «осмотр доски» удержанием. Палец/мышь на поле дольше `INSPECT_HOLD_MS` — свет на всём поле, пока держишь; отпустил —
@@ -374,7 +388,7 @@ function useInspectHold(enabled: boolean, onHold: () => void) {
  * заливаются» — решение владельца 6.4 это пересмотрело); «та же цифра» — чернила 10 %, выбор — 16 % + кольцо (M2 — кольцо едет).
  * Доступность: одна точка табуляции (roving tabindex), стрелки двигают выбор и фокус.
  */
-export function Board({ snap, store, dim, hintMarks = null, onAccuse, canAccuse, overlay, inspect = false }: BoardProps) {
+export function Board({ snap, store, dim, hintMarks = null, onAccuse, canAccuse, overlay, inspect = false, onInspectEnd, onHoldChange }: BoardProps) {
   const { t } = useTranslation();
   const ref = useRef<HTMLDivElement>(null);
   const { play, selected, pop } = snap;
@@ -421,6 +435,13 @@ export function Board({ snap, store, dim, hintMarks = null, onAccuse, canAccuse,
   const showAll = !lantern || inspect || hold.held;
   const lit = useMemo(() => new Set<number>(selected !== null ? litCells(selected) : []), [selected]);
   const inShadow = (i: number): boolean => !showAll && !lit.has(i);
+  // PD-210 (осмотр b): во время осмотра граница света видна — клетки тени помечены `peek` (цифры читаются, туман вокруг них).
+  const lightOf = (i: number): CellProps["light"] => (!lantern ? null : lit.has(i) ? "lit" : showAll ? "peek" : "shadow");
+  const holdChange = useRef(onHoldChange);
+  holdChange.current = onHoldChange;
+  useEffect(() => {
+    holdChange.current?.(hold.held);
+  }, [hold.held]);
 
   // Фокус следует за выбором: undo (Ctrl+Z) и другие программные сдвиги выбора переводят
   // DOM-фокус на выбранную клетку — но только если фокус уже внутри поля (кнопки панели
@@ -449,8 +470,12 @@ export function Board({ snap, store, dim, hintMarks = null, onAccuse, canAccuse,
   const baseLabel = (i: number): string => {
     const where = { row: Math.floor(i / 9) + 1, col: (i % 9) + 1 };
     if (!play) return t("board.cellEmpty", where);
-    // PD-208: в тени — ни цифры, ни заметок, ни «пусто» (иначе подпись выдала бы то, что спрятано); подсказка — как обычно.
-    if (inShadow(i) && !isGiven(play, i)) return t("lantern.cellShadow", where);
+    // PD-208/PD-210: в тени подпись не называет ни цифру, ни заметки — только что клетка занята (это видно и глазами: пятно
+    // тумана цифры / заметок). Пустая клетка в тени — «пусто», как на экране (макет PD-209 §2 п. 9). Подсказка — как обычно.
+    if (inShadow(i) && !isGiven(play, i)) {
+      if (play.values[i]) return t("lantern.cellShadow", where);
+      if (play.notes[i]) return t("lantern.cellShadowNotes", where);
+    }
     if (caught && caught.cell === i) return t("liar.cellCaught", { ...where, digit: play.mission[i], lie: caught.lie });
     if (acquitted.has(i)) return t("liar.cellAcquitted", { ...where, digit: play.mission[i] });
     if (glyphs) {
@@ -513,7 +538,15 @@ export function Board({ snap, store, dim, hintMarks = null, onAccuse, canAccuse,
               }
             : undefined
         }
-        onClickCapture={lantern ? hold.onClickCapture : undefined}
+        onClickCapture={
+          lantern
+            ? (e) => {
+                hold.onClickCapture(e);
+                // Отпускание удержания (клик проглочен) осмотр из меню не заканчивает; обычный тап — заканчивает.
+                if (inspect && !e.isPropagationStopped()) onInspectEnd?.();
+              }
+            : undefined
+        }
         onContextMenu={lantern ? hold.onContextMenu : undefined}
       >
         {BOXES.map((cells, b) => (
@@ -555,7 +588,7 @@ export function Board({ snap, store, dim, hintMarks = null, onAccuse, canAccuse,
                   glyphs={glyphs}
                   rings={rings?.get(i)}
                   ringId={ringNow?.id ?? 0}
-                  light={lantern && !showAll ? (shadow ? "shadow" : "lit") : null}
+                  light={lightOf(i)}
                   onAccuse={onAccuse}
                   onPick={pick}
                   onTouch={onTouch}
