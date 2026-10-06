@@ -26,7 +26,11 @@
 .board.lantern .cell {
   transition: background-color calc(var(--lantern-ms) * var(--mo)) linear;
 }
-.board.lantern .cell .d.player,
+/* Своя цифра гаснет через `filter: opacity()`, а не `opacity`: у только что поставленной цифры анимация M1 (`inkSet`, fill both)
+   держит `opacity: 1` и перебила бы приглушение, когда фонарь уходит с клетки. Фильтр с анимацией складывается. */
+.board.lantern .cell .d.player {
+  transition: filter calc(var(--lantern-ms) * var(--mo)) linear;
+}
 .board.lantern .cell .marks {
   transition: opacity calc(var(--lantern-ms) * var(--mo)) linear;
 }
@@ -38,7 +42,7 @@
   background: var(--lantern-shadow-bg);
 }
 .board.lantern .cell.is-shadow .d.player {
-  opacity: var(--lantern-shadow-opacity);
+  filter: opacity(var(--lantern-shadow-opacity));
 }
 .board.lantern .cell.is-shadow .marks {
   opacity: var(--lantern-shadow-notes-opacity);

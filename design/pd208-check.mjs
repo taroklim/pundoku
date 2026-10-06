@@ -7,8 +7,8 @@
  * Сценарий: хаб (порядок строк, Фонарь между Мелодией и Глифами) → шит (правило) → партия в темноте (выбора нет, все свои
  * клетки в тени) → свои цифры и заметки → тап по клетке: свет = строка/столбец/блок (21 клетка), своя цифра вне света
  * приглушена (opacity токена), подсказка вне света — нет; подпись VoiceOver «в тени» → короткий тап не осматривает →
- * удержание ≥350 мс: свет везде, отпустил — обратно, фонарь не прыгнул на клетку под пальцем (webkit; в chromium мышь
- * фокусирует кнопку на нажатии — это выбор по фокусу, как в классике) → ⋯ «Осмотреть доску» вкл/выкл → Reduce Motion:
+ * удержание ≥350 мс: свет везде, отпустил — обратно, фонарь не прыгнул на клетку под пальцем → ⋯ «Осмотреть доску»
+ * вкл/выкл → Reduce Motion:
  * переход света 0 с. Консоль чистая. Кадры (основа без финального визуала): design/pd208-shots/. Браузеры — в finally.
  */
 import { createRequire } from "node:module";
@@ -113,6 +113,13 @@ const state = (page) =>
     return { lantern: b.getAttribute("data-lantern"), lit: cls("is-lit"), shadow: cls("is-shadow"), sel: Number(b.querySelector('.cell[aria-current="true"]')?.getAttribute("data-i") ?? -1) };
   }, BOARD);
 const opacityOf = (page, i, part) => page.evaluate(([s, p]) => Number(getComputedStyle(document.querySelector(s).querySelector(p)).opacity), [cellSel(i), part]);
+/** Своя цифра гаснет фильтром (`filter: opacity()`, lantern.css) — итоговая видимость = opacity × фильтр. */
+const filterOpacityOf = (page, i) =>
+  page.evaluate((s) => {
+    const cs = getComputedStyle(document.querySelector(s).querySelector(".d.player"));
+    const m = /opacity\(([\d.]+)\)/.exec(cs.filter);
+    return Number(cs.opacity) * (m ? Number(m[1]) : 1);
+  }, cellSel(i));
 const tapCell = (page, i) => page.locator(cellSel(i)).click();
 async function place(page, i, d) {
   await tapCell(page, i);
@@ -167,8 +174,8 @@ async function flow(name, type, c) {
     st = await state(page);
     const expectLit = [...litCells(A)];
     ok(`${tag} свет = строка/столбец/блок выбранной (21 клетка), остальные 60 в тени`, st.lantern === "lit" && JSON.stringify([...st.lit].sort((a, b) => a - b)) === JSON.stringify(expectLit) && st.shadow.length === 60);
-    const oB = await opacityOf(page, B, ".d.player");
-    const oA = await opacityOf(page, A, ".d.player");
+    const oB = await filterOpacityOf(page, B);
+    const oA = await filterOpacityOf(page, A);
     const notesC = await page.locator(`${cellSel(C)} .marks`).count();
     const oC = notesC ? await opacityOf(page, C, ".marks") : -1;
     ok(`${tag} своя цифра в тени приглушена (токен ≈0.1), в свете — 1`, oB > 0 && oB < 0.2 && oA === 1, `B=${oB} A=${oA}`);
@@ -180,7 +187,8 @@ async function flow(name, type, c) {
     ok(`${tag} подсказка в тени видна (opacity 1)`, givenShadow === 1, String(givenShadow));
     const lblB = await page.locator(cellSel(B)).getAttribute("aria-label");
     const lblA = await page.locator(cellSel(A)).getAttribute("aria-label");
-    ok(`${tag} VoiceOver: в тени «${SHADOW_LABEL[c.lang]}» без цифры, в свете — цифра`, lblB.includes(SHADOW_LABEL[c.lang]) && !lblB.includes(sol[B]) && lblA.includes(sol[A]), `${lblB} | ${lblA}`);
+    // Подпись тени — ровно «строка, столбец, в тени» (три части): ни цифры, ни «ваша». Координаты сами цифры — сравниваем форму.
+    ok(`${tag} VoiceOver: в тени «${SHADOW_LABEL[c.lang]}» без цифры, в свете — цифра`, lblB.endsWith(`, ${SHADOW_LABEL[c.lang]}`) && lblB.split(", ").length === 3 && lblA.endsWith(sol[A]), `${lblB} | ${lblA}`);
     ok(`${tag} одинаковые цифры вне света не подсвечены`, (await page.locator(`${BOARD} .cell.same.is-shadow`).count()) === 0);
     const trans = await page.evaluate((s) => getComputedStyle(document.querySelector(s).querySelector(".d.player")).transitionDuration, cellSel(B));
     if (c.rm) ok(`${tag} Reduce Motion: переход света без анимации (0 с)`, /^0s$/.test(trans), trans);
@@ -205,14 +213,14 @@ async function flow(name, type, c) {
     await page.mouse.down();
     await page.waitForTimeout(550);
     const held = await state(page);
-    const oBheld = await opacityOf(page, B, ".d.player");
+    const oBheld = await filterOpacityOf(page, B);
     ok(`${tag} удержание ≥350 мс: осмотр — теней нет, своя цифра видна`, held.lantern === "inspect" && held.shadow.length === 0 && oBheld > 0.9, `${held.lantern} sh=${held.shadow.length} B=${oBheld}`);
     if (c.shots) await page.screenshot({ path: shot("3-inspect-hold") });
     await page.mouse.up();
     await page.waitForTimeout(350);
     const after = await state(page);
     ok(`${tag} отпустил — тень вернулась`, after.lantern === "lit" && after.shadow.length === 60, after.lantern);
-    if (name === "wk") ok(`${tag} отпускание после осмотра не переносит фонарь (webkit: выбор по клику)`, after.sel === A, `sel=${after.sel}`);
+    ok(`${tag} осмотр не переносит фонарь на клетку под пальцем`, after.sel === A, `sel=${after.sel}`);
 
     // Меню ⋯ «Осмотреть доску».
     await page.locator('[data-testid="more-button"]').click();

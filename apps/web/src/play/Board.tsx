@@ -299,10 +299,11 @@ export const INSPECT_HOLD_MS = 350;
 
 /**
  * PD-208: «осмотр доски» удержанием. Палец/мышь на поле дольше `INSPECT_HOLD_MS` — свет на всём поле, пока держишь; отпустил —
- * обратно. Сдвиг до срабатывания больше `MOVE_SLOP_PX` — это не удержание. После осмотра клик отпускания глотается: осмотр не
- * переносит фонарь на клетку под пальцем (обычный тап до порога — как всегда, выбирает клетку).
+ * обратно. Сдвиг до срабатывания больше `MOVE_SLOP_PX` — это не удержание. Осмотр не переносит фонарь на клетку под пальцем:
+ * клик отпускания глотается, а выбор, который браузер успел сдвинуть фокусом на нажатии (chromium/desktop webkit), `onHold`
+ * возвращает на клетку до нажатия. Обычный тап до порога — как всегда, выбирает клетку.
  */
-function useInspectHold(enabled: boolean) {
+function useInspectHold(enabled: boolean, onHold: () => void) {
   const [held, setHeld] = useState(false);
   const press = useRef<{ timer: number; x: number; y: number; id: number } | null>(null);
   const swallow = useRef(false);
@@ -329,6 +330,7 @@ function useInspectHold(enabled: boolean) {
         window.clearTimeout(press.current.timer);
         swallow.current = true;
         setHeld(true);
+        onHold();
       }, INSPECT_HOLD_MS),
       x: e.clientX,
       y: e.clientY,
@@ -409,7 +411,13 @@ export function Board({ snap, store, dim, hintMarks = null, onAccuse, canAccuse,
   // PD-208 (Фонарь): свет — строка/столбец/блок выбранной клетки (`litCells`); нет выбора — свет пуст. Только пока партия идёт:
   // загрузка, прелюдия «решено» и карточка показывают всё. Осмотр (удержание или пункт ⋯) — свет на всём поле.
   const lantern = ready && play.lantern === true;
-  const hold = useInspectHold(lantern);
+  // Выбор до нажатия (обработчик поля идёт до фокуса кнопки) и текущий — чтобы удержание вернуло фонарь на место.
+  const selRef = useRef(selected);
+  selRef.current = selected;
+  const beforePress = useRef<number | null>(null);
+  const hold = useInspectHold(lantern, () => {
+    if (selRef.current !== beforePress.current) store.select(beforePress.current);
+  });
   const showAll = !lantern || inspect || hold.held;
   const lit = useMemo(() => new Set<number>(selected !== null ? litCells(selected) : []), [selected]);
   const inShadow = (i: number): boolean => !showAll && !lit.has(i);
@@ -497,7 +505,14 @@ export function Board({ snap, store, dim, hintMarks = null, onAccuse, canAccuse,
         aria-busy={snap.phase === "loading"}
         inert={!ready}
         onKeyDown={onKeyDown}
-        onPointerDown={lantern ? hold.onPointerDown : undefined}
+        onPointerDown={
+          lantern
+            ? (e) => {
+                beforePress.current = selected;
+                hold.onPointerDown(e);
+              }
+            : undefined
+        }
         onClickCapture={lantern ? hold.onClickCapture : undefined}
         onContextMenu={lantern ? hold.onContextMenu : undefined}
       >

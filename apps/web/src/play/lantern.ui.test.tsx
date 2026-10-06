@@ -223,6 +223,15 @@ describe("осмотр доски удержанием", () => {
     expect(shadowCells()).toHaveLength(81 - 21);
   });
 
+  it("если браузер сдвинул выбор фокусом на нажатии, удержание возвращает фонарь на клетку до нажатия", () => {
+    render(lanternPlay());
+    pointer(cell(40), "pointerdown");
+    render(lanternPlay(), { selected: 40 }); // фокус кнопки → выбор (chromium/desktop webkit)
+    act(() => void vi.advanceTimersByTime(INSPECT_HOLD_MS + 10));
+    expect(select).toHaveBeenCalledWith(3);
+    pointer(window, "pointerup");
+  });
+
   it("сдвиг пальца до порога — не удержание", () => {
     render(lanternPlay());
     pointer(cell(40), "pointerdown", 10, 10);

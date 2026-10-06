@@ -22,7 +22,8 @@ describe("lantern.css", () => {
   });
 
   it("в тени приглушаются только свои цифры и заметки — через токены; подсказки (.d.given) не трогаются", () => {
-    expect(css).toMatch(/\.cell\.is-shadow \.d\.player \{\s*opacity: var\(--lantern-shadow-opacity\);/);
+    // Фильтр, а не opacity: анимация постановки (fill both) держит opacity: 1 и перебила бы тень.
+    expect(css).toMatch(/\.cell\.is-shadow \.d\.player \{\s*filter: opacity\(var\(--lantern-shadow-opacity\)\);/);
     expect(css).toMatch(/\.cell\.is-shadow \.marks \{\s*opacity: var\(--lantern-shadow-notes-opacity\);/);
     expect(css).not.toMatch(/\.d\.given/);
   });
