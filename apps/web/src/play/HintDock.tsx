@@ -14,6 +14,8 @@ interface HintDockProps {
   play?: boolean;
   /** Док на нескроллящемся экране партии (Play, Today, архив): страницу не двигаем. По умолчанию — как `play`. */
   fit?: boolean;
+  /** PD-199: партия в Глифах — ступени говорят «знак», а не «цифра». */
+  glyphs?: boolean;
 }
 
 /**
@@ -26,7 +28,7 @@ interface HintDockProps {
  * фокуса: озвучивается «Шаг 3 из 4. …». Видимый счётчик — `aria-hidden`: его дубль уже в live-регионе. `→` / `Enter` на
  * самом доке — следующая ступень; `Esc` и `H` обрабатывает `handleGameKey` (controls.tsx).
  */
-export function HintDock({ ladder, state, play = false, fit = play }: HintDockProps) {
+export function HintDock({ ladder, state, play = false, fit = play, glyphs = false }: HintDockProps) {
   const { t } = useTranslation();
   const heading = useRef<HTMLHeadingElement>(null);
   const dock = useRef<HTMLElement>(null);
@@ -63,7 +65,7 @@ export function HintDock({ ladder, state, play = false, fit = play }: HintDockPr
     return () => ro.disconnect();
   }, [measureMore, state.open]);
 
-  const copy = useMemo(() => (hint ? hintStepCopy(t, hint, step, play) : null), [t, hint, step, play]);
+  const copy = useMemo(() => (hint ? hintStepCopy(t, hint, step, play, glyphs) : null), [t, hint, step, play, glyphs]);
   if (!state.open || !hint || !copy) return null;
 
   const branch = hint.kind !== "step";

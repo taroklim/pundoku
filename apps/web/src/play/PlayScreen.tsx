@@ -339,7 +339,7 @@ export function PlayScreen({ onOpenSettings, onOpenHelp, onOpenToday }: { onOpen
                 ))}
               </div>
 
-              {hint.open ? <HintDock ladder={ladder} state={hint} play /> : <GamePad snap={snap} store={playStore} />}
+              {hint.open ? <HintDock ladder={ladder} state={hint} play glyphs={play?.glyphs === true} /> : <GamePad snap={snap} store={playStore} />}
             </>
           )}
         </>
