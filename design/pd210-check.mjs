@@ -366,6 +366,7 @@ async function flow(name, type, c) {
     ok(`${tag} старт: темно, строка «нет выбора», чип «${L.chip}»`, st.lantern === "dark" && st.shadow.length === 81 && st.status === "dark" && st.chip === "lantern", JSON.stringify({ l: st.lantern, sh: st.shadow.length, s: st.status }));
     let f = await fit(page);
     ok(`${tag} нет выбора: строка без переполнения, подпись в одну строку, поле ≥ 150`, !f.over && !f.subOver && f.field >= 150, JSON.stringify(f));
+    if (c.shots) await page.screenshot({ path: shot("none-start") });
 
     const g = await givens(page);
     const sol = solve(g).join("");
