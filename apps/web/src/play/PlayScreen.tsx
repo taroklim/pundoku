@@ -199,6 +199,11 @@ export function PlayScreen({ onOpenSettings, onOpenHelp, onOpenToday }: { onOpen
   const soundOn = useMelodySound();
   useMelodyGame(playStore, active && melody && !restoring && phase === "playing", !soundOn);
   const melodyHint = melody && phase === "playing" && play !== null && play.log.length === 0 && !waiting;
+  // PD-208: Фонарь. «Осмотреть доску» из ⋯ — на эту партию (ключ — момент открытия партии): новая партия/возврат начинают в темноте.
+  const lantern = !hub && play?.lantern === true;
+  const gameKey = snap.startedOn.getTime();
+  const [inspectKey, setInspectKey] = useState<number | null>(null);
+  const inspectOn = lantern && inspectKey === gameKey;
   const showLamp = !hub && !restoring && !waiting && playStore.hintAllowed();
   const showMore = !hub && !restoring && phase !== "solved";
 
@@ -245,6 +250,7 @@ export function PlayScreen({ onOpenSettings, onOpenHelp, onOpenToday }: { onOpen
               onFill={() => playStore.fillCandidates()}
               accuse={accuseState && !waiting ? { state: accuseState, onAccuse: () => sel !== null && openAccuse(sel, null) } : null}
               sound={melody ? { on: soundOn, onToggle: () => setMelodySound(!soundOn) } : null}
+              inspect={lantern && phase === "playing" && !waiting ? { on: inspectOn, onToggle: () => setInspectKey(inspectOn ? null : gameKey) } : null}
             />
           )
         }
@@ -296,6 +302,7 @@ export function PlayScreen({ onOpenSettings, onOpenHelp, onOpenToday }: { onOpen
                 store={playStore}
                 dim={phase === "solved"}
                 hintMarks={hint.marks}
+                inspect={inspectOn}
                 onAccuse={liarOpen ? openAccuse : undefined}
                 canAccuse={liarOpen ? (cell) => playStore.canAccuse(cell) : undefined}
                 overlay={

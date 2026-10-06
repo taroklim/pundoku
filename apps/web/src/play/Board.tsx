@@ -1,4 +1,5 @@
-import type { CSSProperties, KeyboardEvent, ReactNode } from "react";
+import { litCells } from "@pundoku/engine";
+import type { CSSProperties, KeyboardEvent, PointerEvent as ReactPointerEvent, ReactNode } from "react";
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { RingMark } from "../melody/game";
@@ -82,6 +83,11 @@ interface CellProps {
    */
   rings: readonly RingMark[] | undefined;
   ringId: number;
+  /**
+   * PD-208 (Фонарь): `lit` — клетка в свете выбранной (строка/столбец/блок), `shadow` — в тени: свои цифры и заметки
+   * приглушены (`styles/lantern.css`, токены `--lantern-*`), подсказки видны. `null` — не Фонарь или осмотр доски.
+   */
+  light: "lit" | "shadow" | null;
   onAccuse?: (cell: number, el: HTMLElement) => void;
   onPick: (cell: number) => void;
   /** Нажатие на клетку: запоминаем точку касания для M7. */
@@ -118,6 +124,8 @@ const Cell = memo(function Cell(p: CellProps) {
   if (p.acquitted) cls.push("acquitted");
   if (p.lie) cls.push("caught");
   if (p.sealId !== 0) cls.push("sealing");
+  if (p.light === "lit") cls.push("is-lit");
+  else if (p.light === "shadow") cls.push("is-shadow");
   const vars: Record<string, string | number> = {};
   if (p.waveIdx >= 0) vars["--wi"] = p.waveIdx;
   if (p.echoIdx >= 0) {
@@ -282,6 +290,80 @@ interface BoardProps {
   canAccuse?: (cell: number) => boolean;
   /** PD-189: слой поверх поля (панель ожидания генерации Play) — в `.board-wrap`, центр по квадрату поля. */
   overlay?: ReactNode;
+  /** PD-208 (Фонарь): «Осмотреть доску» включено из меню ⋯ — свет на всём поле, пока не выключат. */
+  inspect?: boolean;
+}
+
+/** PD-208: удержание на поле дольше этого (мс) — «осмотр доски» (короче долгого нажатия Лжеца, обычный тап — заметно короче). */
+export const INSPECT_HOLD_MS = 350;
+
+/**
+ * PD-208: «осмотр доски» удержанием. Палец/мышь на поле дольше `INSPECT_HOLD_MS` — свет на всём поле, пока держишь; отпустил —
+ * обратно. Сдвиг до срабатывания больше `MOVE_SLOP_PX` — это не удержание. После осмотра клик отпускания глотается: осмотр не
+ * переносит фонарь на клетку под пальцем (обычный тап до порога — как всегда, выбирает клетку).
+ */
+function useInspectHold(enabled: boolean) {
+  const [held, setHeld] = useState(false);
+  const press = useRef<{ timer: number; x: number; y: number; id: number } | null>(null);
+  const swallow = useRef(false);
+  const cleanup = useRef<(() => void) | null>(null);
+  const end = useCallback(() => {
+    if (press.current) window.clearTimeout(press.current.timer);
+    press.current = null;
+    cleanup.current?.();
+    cleanup.current = null;
+    setHeld(false);
+  }, []);
+  useEffect(() => end, [end]);
+  useEffect(() => {
+    if (!enabled) end();
+  }, [enabled, end]);
+  const onPointerDown = (e: ReactPointerEvent<HTMLElement>) => {
+    swallow.current = false;
+    if (!enabled || e.button !== 0 || !e.isPrimary) return;
+    end();
+    const id = e.pointerId;
+    press.current = {
+      timer: window.setTimeout(() => {
+        if (!press.current) return;
+        window.clearTimeout(press.current.timer);
+        swallow.current = true;
+        setHeld(true);
+      }, INSPECT_HOLD_MS),
+      x: e.clientX,
+      y: e.clientY,
+      id,
+    };
+    // Отпускание ловим на window: палец может уйти с поля, а тач неявно захвачен клеткой.
+    const up = (ev: PointerEvent) => {
+      if (ev.pointerId === id) end();
+    };
+    const move = (ev: PointerEvent) => {
+      const pr = press.current;
+      if (pr && ev.pointerId === id && !swallow.current && Math.hypot(ev.clientX - pr.x, ev.clientY - pr.y) > MOVE_SLOP_PX) end();
+    };
+    window.addEventListener("pointerup", up, true);
+    window.addEventListener("pointercancel", up, true);
+    window.addEventListener("pointermove", move, true);
+    window.addEventListener("blur", end);
+    cleanup.current = () => {
+      window.removeEventListener("pointerup", up, true);
+      window.removeEventListener("pointercancel", up, true);
+      window.removeEventListener("pointermove", move, true);
+      window.removeEventListener("blur", end);
+    };
+  };
+  const onClickCapture = (e: { stopPropagation: () => void; preventDefault: () => void }) => {
+    if (!swallow.current) return;
+    swallow.current = false;
+    e.stopPropagation();
+    e.preventDefault();
+  };
+  const onContextMenu = (e: { preventDefault: () => void }) => {
+    // Долгий тап Android/правая кнопка мыши — не системное меню поверх осмотра.
+    if (enabled) e.preventDefault();
+  };
+  return { held: enabled && held, onPointerDown, onClickCapture, onContextMenu };
 }
 
 /**
@@ -290,7 +372,7 @@ interface BoardProps {
  * заливаются» — решение владельца 6.4 это пересмотрело); «та же цифра» — чернила 10 %, выбор — 16 % + кольцо (M2 — кольцо едет).
  * Доступность: одна точка табуляции (roving tabindex), стрелки двигают выбор и фокус.
  */
-export function Board({ snap, store, dim, hintMarks = null, onAccuse, canAccuse, overlay }: BoardProps) {
+export function Board({ snap, store, dim, hintMarks = null, onAccuse, canAccuse, overlay, inspect = false }: BoardProps) {
   const { t } = useTranslation();
   const ref = useRef<HTMLDivElement>(null);
   const { play, selected, pop } = snap;
@@ -324,6 +406,13 @@ export function Board({ snap, store, dim, hintMarks = null, onAccuse, canAccuse,
   const rings = useMemo(() => (ringNow ? ringSchedule(ringNow.units) : null), [ringNow]);
   // Roving: клетка-«единственная остановка» — выбранная (или первая, пока ничего не выбрано).
   const stop = selected ?? 0;
+  // PD-208 (Фонарь): свет — строка/столбец/блок выбранной клетки (`litCells`); нет выбора — свет пуст. Только пока партия идёт:
+  // загрузка, прелюдия «решено» и карточка показывают всё. Осмотр (удержание или пункт ⋯) — свет на всём поле.
+  const lantern = ready && play.lantern === true;
+  const hold = useInspectHold(lantern);
+  const showAll = !lantern || inspect || hold.held;
+  const lit = useMemo(() => new Set<number>(selected !== null ? litCells(selected) : []), [selected]);
+  const inShadow = (i: number): boolean => !showAll && !lit.has(i);
 
   // Фокус следует за выбором: undo (Ctrl+Z) и другие программные сдвиги выбора переводят
   // DOM-фокус на выбранную клетку — но только если фокус уже внутри поля (кнопки панели
@@ -352,6 +441,8 @@ export function Board({ snap, store, dim, hintMarks = null, onAccuse, canAccuse,
   const baseLabel = (i: number): string => {
     const where = { row: Math.floor(i / 9) + 1, col: (i % 9) + 1 };
     if (!play) return t("board.cellEmpty", where);
+    // PD-208: в тени — ни цифры, ни заметок, ни «пусто» (иначе подпись выдала бы то, что спрятано); подсказка — как обычно.
+    if (inShadow(i) && !isGiven(play, i)) return t("lantern.cellShadow", where);
     if (caught && caught.cell === i) return t("liar.cellCaught", { ...where, digit: play.mission[i], lie: caught.lie });
     if (acquitted.has(i)) return t("liar.cellAcquitted", { ...where, digit: play.mission[i] });
     if (glyphs) {
@@ -398,19 +489,24 @@ export function Board({ snap, store, dim, hintMarks = null, onAccuse, canAccuse,
     <div className="board-wrap">
       <div
         ref={ref}
-        className={`board${dim ? " dim" : ""}${ready ? "" : " idle"}`}
+        className={`board${dim ? " dim" : ""}${ready ? "" : " idle"}${lantern ? " lantern" : ""}${lantern && showAll ? " inspecting" : ""}`}
         data-phase={snap.phase}
+        data-lantern={lantern ? (showAll ? "inspect" : selected === null ? "dark" : "lit") : undefined}
         role="group"
-        aria-label={t("board.label")}
+        aria-label={lantern && showAll ? `${t("board.label")}, ${t("lantern.inspecting")}` : t("board.label")}
         aria-busy={snap.phase === "loading"}
         inert={!ready}
         onKeyDown={onKeyDown}
+        onPointerDown={lantern ? hold.onPointerDown : undefined}
+        onClickCapture={lantern ? hold.onClickCapture : undefined}
+        onContextMenu={lantern ? hold.onContextMenu : undefined}
       >
         {BOXES.map((cells, b) => (
           <div className="box" key={b}>
             {cells.map((i) => {
               const v = play?.values[i] ?? 0;
               const digit = play ? digitAt(play, i) : 0;
+              const shadow = inShadow(i);
               return (
                 <Cell
                   key={i}
@@ -419,18 +515,18 @@ export function Board({ snap, store, dim, hintMarks = null, onAccuse, canAccuse,
                   value={v}
                   notes={play?.notes[i] ?? 0}
                   selected={ready && selected === i}
-                  same={ready && selDigit !== 0 && selected !== i && digit === selDigit && !blotCells.has(i)}
+                  same={ready && selDigit !== 0 && selected !== i && digit === selDigit && !blotCells.has(i) && !shadow}
                   peer={ready && peers !== null && peers.has(i)}
-                  wrong={play ? wrongAt(play, i) : false}
+                  wrong={play && !shadow ? wrongAt(play, i) : false}
                   blot={blotCells.has(i)}
                   blotId={blotNow && blotNow.cell === i ? blotNow.id : 0}
                   wrongDigit={blotNow && blotNow.cell === i ? blotNow.digit : 0}
                   popId={pop && pop.cell === i ? pop.id : 0}
                   waveIdx={wave ? (waveIndex.get(i) ?? -1) : -1}
                   waveId={wave && waveIndex.has(i) ? wave.id : 0}
-                  echoIdx={echo ? (echoIndex.get(i) ?? -1) : -1}
+                  echoIdx={echo && !shadow ? (echoIndex.get(i) ?? -1) : -1}
                   echoDelay={echo?.delay ?? 0}
-                  echoId={echo && echoIndex.has(i) ? echo.id : 0}
+                  echoId={echo && !shadow && echoIndex.has(i) ? echo.id : 0}
                   blotOrigin={blotNow && blotNow.cell === i && touch && touch.cell === i ? touch : null}
                   hintStrip={hintMarks?.strip.has(i) ?? false}
                   hintRing={hintMarks?.ring.has(i) ?? false}
@@ -444,6 +540,7 @@ export function Board({ snap, store, dim, hintMarks = null, onAccuse, canAccuse,
                   glyphs={glyphs}
                   rings={rings?.get(i)}
                   ringId={ringNow?.id ?? 0}
+                  light={lantern && !showAll ? (shadow ? "shadow" : "lit") : null}
                   onAccuse={onAccuse}
                   onPick={pick}
                   onTouch={onTouch}

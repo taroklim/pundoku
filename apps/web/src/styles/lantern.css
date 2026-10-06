@@ -1,0 +1,52 @@
+/*
+ * Фонарь (PD-208) — ОСНОВА без финального визуала: финал придёт в PD-210 по выбору владельца из макета PD-209. Поэтому всё
+ * оформление света/тени — только через токены `--lantern-*` ниже и классы клетки `.is-lit` / `.is-shadow` (их ставит `Board.tsx`
+ * только в идущей партии Фонаря и не во время осмотра доски). Перекрасить = поменять токены, разметку не трогать.
+ *
+ *   .board.lantern            — поле партии Фонаря (идёт игра); .board.lantern.inspecting — осмотр доски (свет везде).
+ *   .cell.is-lit              — клетка в свете выбранной (строка + столбец + блок, `litCells`).
+ *   .cell.is-shadow           — клетка в тени: свои цифры (`.d.player`) и заметки (`.marks`) приглушены, подсказки (`.d.given`)
+ *                               видны всегда.
+ *
+ * Глубина приглушения намеренно ниже 4.5:1 (план режимов §5) — для этого есть осмотр доски (удержание / пункт ⋯).
+ * Reduce Motion: длительность перехода умножена на --mo (tokens.css) — при «Уменьшении движения» свет переключается мгновенно.
+ */
+.board.lantern {
+  /* Прозрачность своей цифры в тени. */
+  --lantern-shadow-opacity: 0.1;
+  /* Прозрачность заметок в тени (отдельно: приглушённая цифра не должна путаться с заметкой). */
+  --lantern-shadow-notes-opacity: 0.1;
+  /* Фон клетки в тени / в свете. Тень чуть темнее поверхности в обеих темах — очертание света видно и без заливки соседей. */
+  --lantern-shadow-bg: color-mix(in srgb, var(--surface) 93%, #000);
+  --lantern-lit-bg: var(--surface);
+  /* Переход света (мс до умножения на --mo). */
+  --lantern-ms: 180ms;
+}
+
+.board.lantern .cell {
+  transition: background-color calc(var(--lantern-ms) * var(--mo)) linear;
+}
+.board.lantern .cell .d.player,
+.board.lantern .cell .marks {
+  transition: opacity calc(var(--lantern-ms) * var(--mo)) linear;
+}
+
+.board.lantern .cell.is-lit {
+  background: var(--lantern-lit-bg);
+}
+.board.lantern .cell.is-shadow {
+  background: var(--lantern-shadow-bg);
+}
+.board.lantern .cell.is-shadow .d.player {
+  opacity: var(--lantern-shadow-opacity);
+}
+.board.lantern .cell.is-shadow .marks {
+  opacity: var(--lantern-shadow-notes-opacity);
+}
+
+/* Удержание на поле — осмотр, а не системная выноска/лупа/выделение текста iOS. */
+.board.lantern {
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+}

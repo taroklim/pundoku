@@ -552,6 +552,10 @@
       "name": "Liar",
       "desc": "One of the given digits is a lie. Find it, then press and hold it to accuse."
     },
+    "lantern": {
+      "name": "Lantern",
+      "desc": "Only the row, column and box of the selected cell are lit — your digits and notes elsewhere stay in the dark. Press and hold the board to look at all of it."
+    },
     "glyphs": {
       "name": "Glyphs",
       "desc": "Nine shapes instead of digits. The same logic, without a single number."
@@ -642,5 +646,11 @@
     "livePlaying": "Playing the tune",
     "liveStopped": "Stopped",
     "tlNote": "Real rhythm, long pauses shortened. The tune follows the replay."
+  },
+  "lantern": {
+    "cellShadow": "Row {{row}}, column {{col}}, in the dark",
+    "inspect": "Look at the whole board",
+    "inspectHint": "Or press and hold the board",
+    "inspecting": "The whole board is lit"
   }
 }
