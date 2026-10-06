@@ -1,0 +1,103 @@
+PASS  cr-glyphs-320 правый угол (клетка 74, nth 9) с заметками и полосой подготовлен  
+PASS  cr-glyphs-320 полоса на угловой клетке 75 (nth 7) и на 74 (nth 9)  30,39,74,75
+PASS  cr-glyphs-320 правил PD-215 снято 2  n=2
+PASS  cr-glyphs-320 правила возвращены  
+PASS  cr-glyphs-320 cell30(nth1): не угловая/без заметок — геометрия полосы не изменилась  x0=4.14 x1=4.14
+PASS  cr-glyphs-320 cell39(nth4): не угловая/без заметок — геометрия полосы не изменилась  x0=4.14 x1=4.14
+PASS  cr-glyphs-320 cell74(nth9,marks): полоса в пределах скругления  overhang=0px (было 0.7) x=6 (было 4.14) cell=25.95
+PASS  cr-glyphs-320 cell74: дальняя сторона, низ и высота полосы не изменились  x0=4.14 bottom=0.5 h=2.5
+PASS  cr-glyphs-320 cell75(nth7,marks): полоса в пределах скругления  overhang=0px (было 0.7) x=6 (было 4.14) cell=25.95
+PASS  cr-glyphs-320 cell75: дальняя сторона, низ и высота полосы не изменились  x1=4.14 bottom=0.5 h=2.5
+PASS  cr-glyphs-320 cell75 выбрана: полоса в пределах скругления  overhang=0px sel=true
+PASS  cr-glyphs-320 консоль без ошибок  
+PASS  cr-glyphs-320-ax3 правый угол (клетка 74, nth 9) с заметками и полосой подготовлен  
+PASS  cr-glyphs-320-ax3 полоса на угловой клетке 75 (nth 7) и на 74 (nth 9)  30,39,74,75
+PASS  cr-glyphs-320-ax3 правил PD-215 снято 2  n=2
+PASS  cr-glyphs-320-ax3 правила возвращены  
+PASS  cr-glyphs-320-ax3 cell30(nth1): не угловая/без заметок — геометрия полосы не изменилась  x0=2.86 x1=2.86
+PASS  cr-glyphs-320-ax3 cell39(nth4): не угловая/без заметок — геометрия полосы не изменилась  x0=2.86 x1=2.86
+PASS  cr-glyphs-320-ax3 cell74(nth9,marks): полоса в пределах скругления  overhang=0px (было 1.387) x=6 (было 2.86) cell=17.88
+PASS  cr-glyphs-320-ax3 cell74: дальняя сторона, низ и высота полосы не изменились  x0=2.86 bottom=0.5 h=2.5
+PASS  cr-glyphs-320-ax3 cell75(nth7,marks): полоса в пределах скругления  overhang=0px (было 1.387) x=6 (было 2.86) cell=17.89
+PASS  cr-glyphs-320-ax3 cell75: дальняя сторона, низ и высота полосы не изменились  x1=2.86 bottom=0.5 h=2.5
+PASS  cr-glyphs-320-ax3 cell75 выбрана: полоса в пределах скругления  overhang=0px sel=true
+PASS  cr-glyphs-320-ax3 консоль без ошибок  
+PASS  cr-glyphs-390 правый угол (клетка 74, nth 9) с заметками и полосой подготовлен  
+PASS  cr-glyphs-390 полоса на угловой клетке 75 (nth 7) и на 74 (nth 9)  30,39,74,75
+PASS  cr-glyphs-390 правил PD-215 снято 2  n=2
+PASS  cr-glyphs-390 правила возвращены  
+PASS  cr-glyphs-390 cell30(nth1): не угловая/без заметок — геометрия полосы не изменилась  x0=6.22 x1=6.22
+PASS  cr-glyphs-390 cell39(nth4): не угловая/без заметок — геометрия полосы не изменилась  x0=6.22 x1=6.22
+PASS  cr-glyphs-390 cell74(nth9,marks): полоса в пределах скругления  overhang=0px (было 0) x=6.22 (было 6.22) cell=38.89
+PASS  cr-glyphs-390 cell74: дальняя сторона, низ и высота полосы не изменились  x0=6.22 bottom=0.5 h=2.5
+PASS  cr-glyphs-390 cell75(nth7,marks): полоса в пределах скругления  overhang=0px (было 0) x=6.22 (было 6.22) cell=38.89
+PASS  cr-glyphs-390 cell75: дальняя сторона, низ и высота полосы не изменились  x1=6.22 bottom=0.5 h=2.5
+PASS  cr-glyphs-390 cell75 выбрана: полоса в пределах скругления  overhang=0px sel=true
+PASS  cr-glyphs-390 консоль без ошибок  
+PASS  cr-glyphs-390-ax3 правый угол (клетка 74, nth 9) с заметками и полосой подготовлен  
+PASS  cr-glyphs-390-ax3 полоса на угловой клетке 75 (nth 7) и на 74 (nth 9)  30,39,74,75
+PASS  cr-glyphs-390-ax3 правил PD-215 снято 2  n=2
+PASS  cr-glyphs-390-ax3 правила возвращены  
+PASS  cr-glyphs-390-ax3 cell30(nth1): не угловая/без заметок — геометрия полосы не изменилась  x0=6.22 x1=6.22
+PASS  cr-glyphs-390-ax3 cell39(nth4): не угловая/без заметок — геометрия полосы не изменилась  x0=6.22 x1=6.22
+PASS  cr-glyphs-390-ax3 cell74(nth9,marks): полоса в пределах скругления  overhang=0px (было 0) x=6.22 (было 6.22) cell=38.89
+PASS  cr-glyphs-390-ax3 cell74: дальняя сторона, низ и высота полосы не изменились  x0=6.22 bottom=0.5 h=2.5
+PASS  cr-glyphs-390-ax3 cell75(nth7,marks): полоса в пределах скругления  overhang=0px (было 0) x=6.22 (было 6.22) cell=38.89
+PASS  cr-glyphs-390-ax3 cell75: дальняя сторона, низ и высота полосы не изменились  x1=6.22 bottom=0.5 h=2.5
+PASS  cr-glyphs-390-ax3 cell75 выбрана: полоса в пределах скругления  overhang=0px sel=true
+PASS  cr-glyphs-390-ax3 консоль без ошибок  
+PASS  cr-classic-320 правый угол (клетка 74, nth 9) с заметками и полосой подготовлен  
+PASS  cr-classic-320 полоса на угловой клетке 75 (nth 7) и на 74 (nth 9)  30,39,74,75
+PASS  cr-classic-320 правил PD-215 снято 2  n=2
+PASS  cr-classic-320 правила возвращены  
+PASS  cr-classic-320 cell30(nth1): не угловая/без заметок — геометрия полосы не изменилась  x0=4.14 x1=4.14
+PASS  cr-classic-320 cell39(nth4): не угловая/без заметок — геометрия полосы не изменилась  x0=4.14 x1=4.14
+PASS  cr-classic-320 cell74(nth9,marks): полоса в пределах скругления  overhang=0px (было 0.7) x=6 (было 4.14) cell=25.95
+PASS  cr-classic-320 cell74: дальняя сторона, низ и высота полосы не изменились  x0=4.14 bottom=0.5 h=2.5
+PASS  cr-classic-320 cell75(nth7,marks): полоса в пределах скругления  overhang=0px (было 0.7) x=6 (было 4.14) cell=25.95
+PASS  cr-classic-320 cell75: дальняя сторона, низ и высота полосы не изменились  x1=4.14 bottom=0.5 h=2.5
+PASS  cr-classic-320 cell75 выбрана: полоса в пределах скругления  overhang=0px sel=true
+PASS  cr-classic-320 консоль без ошибок  
+PASS  cr-classic-320-ax3 правый угол (клетка 74, nth 9) с заметками и полосой подготовлен  
+PASS  cr-classic-320-ax3 полоса на угловой клетке 75 (nth 7) и на 74 (nth 9)  30,39,74,75
+PASS  cr-classic-320-ax3 правил PD-215 снято 2  n=2
+PASS  cr-classic-320-ax3 правила возвращены  
+PASS  cr-classic-320-ax3 cell30(nth1): не угловая/без заметок — геометрия полосы не изменилась  x0=2.86 x1=2.86
+PASS  cr-classic-320-ax3 cell39(nth4): не угловая/без заметок — геометрия полосы не изменилась  x0=2.86 x1=2.86
+PASS  cr-classic-320-ax3 cell74(nth9,marks): полоса в пределах скругления  overhang=0px (было 1.387) x=6 (было 2.86) cell=17.88
+PASS  cr-classic-320-ax3 cell74: дальняя сторона, низ и высота полосы не изменились  x0=2.86 bottom=0.5 h=2.5
+PASS  cr-classic-320-ax3 cell75(nth7,marks): полоса в пределах скругления  overhang=0px (было 1.387) x=6 (было 2.86) cell=17.89
+PASS  cr-classic-320-ax3 cell75: дальняя сторона, низ и высота полосы не изменились  x1=2.86 bottom=0.5 h=2.5
+PASS  cr-classic-320-ax3 cell75 выбрана: полоса в пределах скругления  overhang=0px sel=true
+PASS  cr-classic-320-ax3 консоль без ошибок  
+PASS  cr-classic-390 правый угол (клетка 74, nth 9) с заметками и полосой подготовлен  
+PASS  cr-classic-390 полоса на угловой клетке 75 (nth 7) и на 74 (nth 9)  30,39,74,75
+PASS  cr-classic-390 правил PD-215 снято 2  n=2
+PASS  cr-classic-390 правила возвращены  
+PASS  cr-classic-390 cell30(nth1): не угловая/без заметок — геометрия полосы не изменилась  x0=6.22 x1=6.22
+PASS  cr-classic-390 cell39(nth4): не угловая/без заметок — геометрия полосы не изменилась  x0=6.22 x1=6.22
+PASS  cr-classic-390 cell74(nth9,marks): полоса в пределах скругления  overhang=0px (было 0) x=6.22 (было 6.22) cell=38.89
+PASS  cr-classic-390 cell74: дальняя сторона, низ и высота полосы не изменились  x0=6.22 bottom=0.5 h=2.5
+PASS  cr-classic-390 cell75(nth7,marks): полоса в пределах скругления  overhang=0px (было 0) x=6.22 (было 6.22) cell=38.89
+PASS  cr-classic-390 cell75: дальняя сторона, низ и высота полосы не изменились  x1=6.22 bottom=0.5 h=2.5
+PASS  cr-classic-390 cell75 выбрана: полоса в пределах скругления  overhang=0px sel=true
+PASS  cr-classic-390 консоль без ошибок  
+PASS  cr-classic-390-ax3 правый угол (клетка 74, nth 9) с заметками и полосой подготовлен  
+PASS  cr-classic-390-ax3 полоса на угловой клетке 75 (nth 7) и на 74 (nth 9)  30,39,74,75
+PASS  cr-classic-390-ax3 правил PD-215 снято 2  n=2
+PASS  cr-classic-390-ax3 правила возвращены  
+PASS  cr-classic-390-ax3 cell30(nth1): не угловая/без заметок — геометрия полосы не изменилась  x0=6.22 x1=6.22
+PASS  cr-classic-390-ax3 cell39(nth4): не угловая/без заметок — геометрия полосы не изменилась  x0=6.22 x1=6.22
+PASS  cr-classic-390-ax3 cell74(nth9,marks): полоса в пределах скругления  overhang=0px (было 0) x=6.22 (было 6.22) cell=38.89
+PASS  cr-classic-390-ax3 cell74: дальняя сторона, низ и высота полосы не изменились  x0=6.22 bottom=0.5 h=2.5
+PASS  cr-classic-390-ax3 cell75(nth7,marks): полоса в пределах скругления  overhang=0px (было 0) x=6.22 (было 6.22) cell=38.89
+PASS  cr-classic-390-ax3 cell75: дальняя сторона, низ и высота полосы не изменились  x1=6.22 bottom=0.5 h=2.5
+PASS  cr-classic-390-ax3 cell75 выбрана: полоса в пределах скругления  overhang=0px sel=true
+PASS  cr-classic-390-ax3 консоль без ошибок  
+PASS  cr-sheet-ru-glyphs: шит без «цифры», знак назван  Pundoku никогда не вписывает знак за вас. Подсказка доводит до следующего хода за четыре шага: где искать, какая техника, какие клетки и почему.
+PASS  cr-sheet-ru-classic: Классика — шит прежний (без «знака»)  
+PASS  cr-sheet-uk-glyphs: шит без «цифры», знак назван  Pundoku ніколи не вписує знак за вас. Підказка проводить до наступного ходу в чотири кроки: де шукати, яка техніка, які клітинки і чому.
+PASS  cr-sheet-uk-classic: Классика — шит прежний (без «знака»)  
+PASS  cr-sheet-en-glyphs: шит без «цифры», знак назван  Pundoku never places a shape for you. A hint walks you to the next move in four steps: where to look, which technique, which cells, and why.
+PASS  cr-sheet-en-classic: Классика — шит прежний (без «знака»)  
+102/102 PASS
