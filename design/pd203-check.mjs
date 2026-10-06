@@ -193,7 +193,8 @@ async function flow(name, type, c) {
     const { page, errs } = await open(browser, c);
     await toHub(page);
     const rows = await page.locator(".hub-row.mode").evaluateAll((els) => els.map((e) => e.getAttribute("data-testid")));
-    ok(`${tag} хаб: порядок Классика, Чернила, Лжец, Мелодия, Глифы`, JSON.stringify(rows) === JSON.stringify(["mode-classic", "mode-ink", "mode-liar", "mode-melody", "mode-glyphs"]), rows.join(","));
+    // PD-210: с PD-208 между Мелодией и Глифами — Фонарь.
+    ok(`${tag} хаб: порядок Классика, Чернила, Лжец, Мелодия, Фонарь, Глифы`, JSON.stringify(rows) === JSON.stringify(["mode-classic", "mode-ink", "mode-liar", "mode-melody", "mode-lantern", "mode-glyphs"]), rows.join(","));
     if (c.full) await page.screenshot({ path: shot("0-hub") });
 
     if (c.classic) {
