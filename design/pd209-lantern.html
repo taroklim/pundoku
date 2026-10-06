@@ -1,0 +1,662 @@
+<!DOCTYPE html>
+<html lang="en" class="force-light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<title>Pundoku — Lantern mode (PD-209)</title>
+<!--
+  PD-209 — Lantern mode visuals, variants for the owner. DESIGN ONLY, no product code.
+  Notes, contrast numbers, recommendation, questions: design/pd209-lantern.md.
+  Shots + self-check: design/pd209-shots.mjs  (window.PD209 = { reset, apply, check, state }).
+
+  Mechanic (decided by the team, STATUS.md «Решения команды по Фонарю», NOT changed here):
+  light = row + column + box of the selected cell; outside the light the player's digits AND notes are in shadow,
+  givens are always visible; no selection -> everything of the player's is in shadow; touch-and-hold = inspect the
+  whole board (+ menu item / VoiceOver action); no timer; same-digit highlight only inside the light.
+
+  1. Light / shadow look:  A «Quiet» (digits fade, background as Classic) · B «Beam» (shadow dims the cell surface,
+     recommended) · C «Fog» (shadowed digits fade + blur)
+  2. Depth:  faint «едва различимо» (~1.6:1) · ghost «почти невидимо» (~1.2:1, recommended)
+  3. Inspect:  a «everything as in Classic» · b «digits rise, the shade of the background stays» (recommended; B only)
+     Indicator in both: the mode chip turns into «Inspecting», the status line says so; menu ⋯ → «Inspect the board».
+  4. Year: A «like Ink» — no mark on the canvas, «Mode · Lantern» row in the day sheet (recommended) · B hollow ring
+     in the free top-left corner of the day mark. Entry: the mode sheet (PD-163) with a corrected rule line.
+
+  Tokens: verbatim from apps/web/src/styles/tokens.css + play.css (board B «Boxes»). New values, all derived:
+  --shade-bg (B only), --given-sh (B only, keeps givens >= 17:1), --shade-a / --fog-* (depth). No new hue, no new font.
+-->
+<style>
+[hidden]{ display:none !important; }
+:root{
+  --font-sans: system-ui, -apple-system, "SF Pro Text", "Helvetica Neue", Arial, sans-serif;
+  --font-serif: ui-serif, "New York", Charter, Georgia, serif;
+  --sa-top: 59px; --sa-bot: 34px;
+  --bg:#F2F2F7; --elev:#FFFFFF; --chip-bg:#F2F2F7;
+  --label:#1C1C1E; --label-2:#6E6E73; --label-2-grouped:#6A6A6E; --notes:#6E6E73; --notes-fill:#5A5A5F;
+  --ink:#3B48B0; --on-ink:#FFFFFF; --wax:#B3261E;
+  --hairline:rgba(60,60,67,.29); --rule-half:rgba(60,60,67,.145);
+  --ink-tint:rgba(59,72,176,.12);
+  --fill-peer:.03; --fill-same:.10; --fill-sel:.16;
+  --box-shadow:0 1px 2px rgba(0,0,0,.04);
+  --glass-fill:rgba(255,255,255,.72); --glass-solid:#F6F6F9;
+  --scrim:rgba(0,0,0,.28); --page-bg:#8A8A8E;
+  --mark-ink:#3B48B0; --mark-ink-soft:#8589CE; --mark-wax:#B3261E;
+  /* PD-209, Lantern B «Beam»: the shadowed cell surface = --label 9 % over --elev (#E9E9EC).
+     A given on it in --label would drop 17.0 -> 14.0:1, so in the shadow a given is drawn in #000: 17.3:1 (not lowered). */
+  --shade-bg:#E9E9EC; --given-sh:#000000;
+}
+:root.force-dark{
+  --bg:#000000; --elev:#1C1C1E; --chip-bg:#2C2C2E;
+  --label:#FFFFFF; --label-2:#98989D; --label-2-grouped:#98989D; --notes:#98989D; --notes-fill:#AEAEB2;
+  --ink:#8C96FF; --on-ink:#000000; --wax:#FF6B5E;
+  --hairline:rgba(235,235,245,.22); --rule-half:rgba(235,235,245,.11);
+  --ink-tint:rgba(140,150,255,.18);
+  --fill-peer:.06; --fill-same:.12; --fill-sel:.16;
+  --box-shadow:none;
+  --glass-fill:rgba(28,28,30,.72); --glass-solid:#141416;
+  --scrim:rgba(0,0,0,.5); --page-bg:#2C2C2E;
+  --mark-ink:#8C96FF; --mark-ink-soft:#6168AA; --mark-wax:#FF6B5E;
+  /* dark: the shadow goes darker (#121214), so a white given RISES 17.0 -> 18.7:1; still distinct from the #000 page. */
+  --shade-bg:#121214; --given-sh:#FFFFFF;
+}
+@media (prefers-contrast: more){ :root{ --label-2:#3C3C43; --label-2-grouped:#3C3C43; --notes:#3C3C43; --notes-fill:#3C3C43; --hairline:rgba(60,60,67,.6); --fill-same:.14; --fill-sel:.22; } }
+
+*{ box-sizing:border-box; }
+html{ font-size:17px; font-family:var(--font-sans); line-height:1.3; -webkit-text-size-adjust:100%; }
+:root.ax3{ font-size:40px; }
+body{ margin:0; background:var(--page-bg); color:var(--label); touch-action:manipulation; -webkit-tap-highlight-color:transparent; }
+button{ font:inherit; color:inherit; background:none; border:0; padding:0; cursor:pointer; -webkit-appearance:none; appearance:none; text-align:left; touch-action:manipulation; }
+:focus-visible{ outline:2px solid var(--ink); outline-offset:2px; border-radius:6px; }
+.sr, :root.ax3 .st-long, :root.ax3 .mode-chip .ct, :root.ax3 .acts .al{ position:absolute; width:1px; height:1px; overflow:hidden; clip-path:inset(50%); white-space:nowrap; }
+.st-short{ display:none; }
+:root.ax3 .st-short{ display:inline; }
+
+/* ---------- page: panel + phone frame (pd202) ---------- */
+.page{ display:flex; gap:28px; align-items:flex-start; justify-content:center; padding:24px 16px 80px; }
+.frame{ position:relative; flex:none; width:var(--fw,390px); height:var(--fh,844px); display:flex; flex-direction:column;
+  background:var(--bg); overflow:hidden; border-radius:46px; box-shadow:0 20px 60px rgba(0,0,0,.35); }
+:root.shot body{ background:var(--bg); }
+:root.shot .page{ display:block; padding:0; }
+:root.shot .frame{ width:100vw; height:100vh; border-radius:0; box-shadow:none; }
+:root.shot .panel{ display:none; }
+:root.shot *, :root.shot *::after, :root.shot *::before{ animation:none !important; transition:none !important; }
+.panel{ width:340px; flex:none; position:sticky; top:16px; max-height:calc(100vh - 32px); overflow:auto; background:#fff; color:#1C1C1E;
+  border-radius:14px; padding:14px 14px 18px; font-size:13px; line-height:1.3; box-shadow:0 8px 30px rgba(0,0,0,.25); }
+.panel h3{ margin:0 0 2px; font-size:15px; }
+.panel .hint{ margin:6px 0 0; color:#6E6E73; font-size:12px; line-height:1.35; }
+.panel .grp{ margin-top:10px; }
+.panel .grp > span{ display:block; font-weight:600; margin-bottom:4px; }
+.panel .seg{ display:flex; flex-wrap:wrap; gap:4px; }
+.panel .seg button{ padding:5px 8px; border-radius:7px; background:#F2F2F7; font-size:12px; }
+.panel .seg button[aria-pressed="true"]{ background:#3B48B0; color:#fff; }
+.panel .seg button[aria-disabled="true"]{ opacity:.4; }
+
+/* ---------- screen shell (pd163 / pd202) ---------- */
+.screen{ flex:1; min-height:0; display:flex; flex-direction:column; position:relative; }
+.toolbar{ flex:none; display:flex; align-items:flex-end; justify-content:space-between; gap:12px; padding:calc(var(--sa-top) + 8px) 16px 0; }
+.title{ font-size:1.62rem; font-weight:700; letter-spacing:-.02em; line-height:1.2; margin:0; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.toolbar-end{ display:flex; align-items:flex-end; gap:2px; margin-right:-10px; flex:none; }
+.icon-btn{ width:44px; height:44px; flex:none; margin-bottom:-6px; display:grid; place-items:center; color:var(--label-2-grouped); border-radius:22px; }
+.icon-btn svg{ width:23px; height:23px; }
+.icon-btn[aria-expanded="true"]{ color:var(--ink); background:var(--ink-tint); }
+.subline{ flex:none; margin:2px 0 0; padding:0 16px; color:var(--label-2); font-size:.88rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.mode-chip{ display:inline-flex; align-items:center; gap:4px; margin-left:8px; vertical-align:baseline; padding:1px 8px 1px 6px; border-radius:999px;
+  background:var(--ink-tint); color:var(--ink); font-size:.76rem; font-weight:600; }
+.mode-chip svg{ width:1.05em; height:1.05em; flex:none; }
+:root.ax3 .mode-chip{ padding:2px 6px; }
+
+/* ---------- game ---------- */
+.game{ flex:1; min-height:0; display:flex; flex-direction:column; overflow:hidden; }
+.board-wrap{ flex:1 1 auto; min-height:0; container-type:size; display:grid; place-items:center; padding:10px 16px 0; }
+
+/* ---------- the board: variant B «Boxes» of apps/web (play.css), rebuilt 1:1 in what matters here ---------- */
+.board{ --s:calc((min(100cqw,100cqh) - 8px) / 9); width:min(100cqw,100cqh); height:min(100cqw,100cqh);
+  display:grid; grid-template-columns:repeat(3,1fr); gap:4px; }
+.box{ display:grid; grid-template-columns:repeat(3,1fr); gap:1px; background:var(--rule-half); border-radius:10px; overflow:hidden; box-shadow:var(--box-shadow); }
+.cell{ position:relative; background:var(--elev); display:grid; place-items:center; min-width:0; min-height:0; }
+.fl{ position:absolute; inset:0; background:var(--ink); opacity:0; pointer-events:none; }
+.cell.peer > .fl{ opacity:var(--fill-peer); }
+.cell.same > .fl{ opacity:var(--fill-same); }
+.cell.sel > .fl{ opacity:var(--fill-sel); }
+.d{ position:relative; z-index:2; line-height:1; font-size:calc(var(--s) * .62); }
+.d.given{ font-family:var(--font-serif); font-weight:600; color:var(--label); }
+.d.player{ font-family:var(--font-sans); font-weight:500; color:var(--ink); }
+.marks{ position:absolute; inset:0; z-index:2; padding:4%; display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); grid-template-rows:repeat(3,minmax(0,1fr)); }
+.marks span{ min-height:0; font-size:max(7px, calc(var(--s) * .3)); line-height:1; letter-spacing:-.02em; color:var(--notes); display:grid; place-items:center; }
+.cell.sel .marks span, .cell.same .marks span{ color:var(--notes-fill); }
+.cell.sel::after{ content:""; position:absolute; inset:0; z-index:4; border:2px solid var(--ink); border-radius:4px; pointer-events:none; }
+@media (prefers-contrast: more){ .cell.sel::after{ border-width:3px; } }
+/* mock-only: the finger in the «hold» still */
+.finger{ position:absolute; z-index:5; left:50%; top:50%; width:calc(var(--s) * 1.5); height:calc(var(--s) * 1.5); margin:calc(var(--s) * -.75) 0 0 calc(var(--s) * -.75);
+  border-radius:50%; background:rgba(120,120,128,.30); box-shadow:0 0 0 1px rgba(120,120,128,.55); pointer-events:none; }
+
+/* ---------- LANTERN: depth (shared) ---------- */
+.board[data-depth="faint"]{ --shade-a:.30; --fog-a:.55; --fog-b:.045; }
+.board[data-depth="ghost"]{ --shade-a:.10; --fog-a:.32; --fog-b:.11; }
+/* the light moves: 160 ms opacity/colour only (no travel). Reduce Motion: NO transition at all (team decision PD-208). */
+.board .cell{ transition:background-color .16s linear; }
+.board .d, .board .marks{ transition:opacity .16s linear, filter .16s linear; }
+:root.rm .board .cell, :root.rm .board .d, :root.rm .board .marks{ transition:none; }
+@media (prefers-reduced-motion: reduce){ .board .cell, .board .d, .board .marks{ transition:none; } }
+
+/* A «Quiet»: only the player's digits and notes fade; the surface is Classic (peer tint = the existing setting). */
+.lan-A .cell.sh:not(.peek) .d.player, .lan-A .cell.sh:not(.peek) .marks{ opacity:var(--shade-a); }
+/* B «Beam»: the shadow is ALSO the surface — out-of-light cells sink (--shade-bg); givens stay at full contrast. */
+.lan-B .cell.sh{ background:var(--shade-bg); }
+.lan-B .cell.sh .d.given{ color:var(--given-sh); }
+/* notes on the shaded surface take --notes-fill (as on any filled cell): --notes would be 4.2:1 on #E9E9EC in the inspect, --notes-fill 5.7:1 */
+.lan-B .cell.sh .marks span{ color:var(--notes-fill); }
+.lan-B .cell.sh:not(.peek) .d.player, .lan-B .cell.sh:not(.peek) .marks{ opacity:var(--shade-a); }
+/* C «Fog»: fade + blur proportional to the cell. */
+.lan-C .cell.sh:not(.peek) .d.player, .lan-C .cell.sh:not(.peek) .marks{ opacity:var(--fog-a); filter:blur(calc(var(--s) * var(--fog-b))); }
+
+@media (forced-colors: active){
+  .cell.sel::after{ border-color:Highlight; }
+  .lan-B .cell.sh{ background:Canvas; }
+  .mode-chip, .done-btn{ border:1px solid CanvasText; }
+}
+
+.status{ flex:none; min-height:calc(1.15rem + 16px); padding:8px 16px; margin:0; display:flex; align-items:center; justify-content:center; gap:6px;
+  text-align:center; color:var(--label-2); font-size:.88rem; line-height:1.25; }
+.status > svg{ width:1.05em; height:1.05em; flex:none; color:var(--ink); }
+.done-btn{ flex:none; min-height:44px; padding:0 16px; margin-left:4px; border-radius:22px; background:var(--ink-tint); color:var(--ink); font-weight:600; font-size:.95rem; text-align:center; }
+.pad{ flex:none; display:grid; grid-template-columns:repeat(9,1fr); gap:4px; padding:0 12px; container-type:inline-size; }
+.pad button{ height:48px; border-radius:10px; background:var(--elev); text-align:center; color:var(--ink); font-size:min(1.24rem, 7.5cqi); box-shadow:var(--box-shadow); }
+.pad button:active{ background:var(--ink-tint); }
+.acts{ flex:none; display:flex; justify-content:space-around; padding:8px 12px 10px; }
+.acts button{ min-width:46px; min-height:46px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px; color:var(--label-2); font-size:.72rem; text-align:center; }
+.acts svg{ width:22px; height:22px; }
+
+/* ---------- menu (pd163) ---------- */
+.scrim{ position:absolute; inset:0; background:var(--scrim); z-index:30; }
+.scrim.clear{ background:transparent; }
+.menu{ position:absolute; z-index:31; min-width:236px; max-width:calc(100% - 20px); background:var(--elev); border-radius:13px; box-shadow:0 10px 34px rgba(0,0,0,.22); overflow:hidden; }
+.menu button{ display:flex; align-items:center; gap:10px; width:100%; min-height:44px; padding:10px 14px; font-size:.95rem; overflow-wrap:break-word; }
+.menu button + button{ border-top:1px solid var(--hairline); }
+.menu .sep{ height:8px; background:var(--chip-bg); }
+.menu svg{ width:18px; height:18px; flex:none; color:var(--label-2); }
+.menu .mi{ flex:1; min-width:0; }
+
+/* ---------- mode sheet (PD-163: description + difficulty + Start) ---------- */
+.msheet{ position:absolute; left:0; right:0; bottom:0; z-index:31; background:var(--bg); border-radius:16px 16px 0 0;
+  max-height:calc(100% - var(--sa-top) - 10px); display:flex; flex-direction:column; padding-bottom:calc(10px + var(--sa-bot)); }
+.grab{ flex:none; width:36px; height:5px; border-radius:3px; background:var(--hairline); margin:6px auto 0; }
+.msheet-body{ flex:1; min-height:0; overflow-y:auto; overflow-x:hidden; padding:0 16px 4px; }
+.msheet h2{ display:flex; align-items:center; gap:8px; margin:10px 0 0; font-size:1.18rem; font-weight:700; letter-spacing:-.01em; overflow-wrap:anywhere; }
+.msheet h2 svg{ width:1.2em; height:1.2em; flex:none; color:var(--ink); }
+.msheet .desc{ margin:6px 0 0; font-size:.92rem; color:var(--label); overflow-wrap:break-word; }
+.group-t{ margin:16px 4px 6px; font-size:.78rem; color:var(--label-2-grouped); text-transform:uppercase; letter-spacing:.02em; }
+.list{ background:var(--elev); border-radius:12px; overflow:hidden; }
+.list button{ display:flex; align-items:center; gap:10px; width:100%; min-height:44px; padding:10px 14px; font-size:1rem; overflow-wrap:break-word; }
+.list button + button{ border-top:1px solid var(--hairline); }
+.list .mi{ flex:1; min-width:0; }
+.list .ck{ width:18px; height:18px; color:var(--ink); flex:none; }
+.msheet-foot{ flex:none; display:flex; gap:10px; padding:12px 16px 0; }
+.msheet-foot button{ flex:1; min-height:50px; border-radius:13px; text-align:center; font-weight:600; font-size:1rem; padding:8px 12px; overflow-wrap:break-word; }
+:root.ax3 .msheet-foot{ flex-direction:column; }
+.btn-cancel{ background:var(--chip-bg); color:var(--ink); }
+.btn-start{ background:var(--ink); color:var(--on-ink); }
+
+/* ---------- Year (PD-25 marks, liar.css corner convention) ---------- */
+.yscroll{ flex:1; min-height:0; overflow-y:auto; overflow-x:hidden; }
+.ycard{ margin:12px 16px 0; background:var(--elev); border-radius:14px; padding:14px; box-shadow:var(--box-shadow); }
+.ycard h2{ font-size:1rem; margin:0 0 10px; font-weight:700; }
+.ygrid{ display:grid; grid-template-columns:repeat(7, 1fr); gap:8px 6px; }
+.ywd{ font-size:.7rem; color:var(--label-2); text-align:center; }
+.yslot{ display:grid; place-items:center; min-height:22px; }
+.ymark{ position:relative; display:block; width:18px; height:18px; border-radius:2px; --m:var(--mark-ink); }
+.ymark.has-corr{ --m:var(--mark-wax); }
+.ymark.has-help{ --m:var(--mark-ink-soft); }
+.ymark::before{ content:""; position:absolute; inset:0; border-radius:inherit; }
+.ymark.is-solved::before{ background:var(--m); }
+.ymark.is-missed::before{ box-shadow:inset 0 0 0 1px var(--hairline); }
+.ymark.is-solved.has-corr::before{ clip-path:polygon(0 0, 62% 0, 100% 38%, 100% 100%, 0 100%); }
+.ymark.is-solved.has-help::before{ clip-path:polygon(0 0, 100% 0, 100% 100%, 38% 100%, 0 62%); }
+.ymark.is-today::after{ content:""; position:absolute; inset:-3px; border-radius:5px; box-shadow:0 0 0 1.5px var(--ink); }
+/* Y-B: Lantern day = hollow ring in the FREE top-left corner (TR = fixes notch, BL = help cut, BR = liar dot, centre = late core).
+   Hollow vs the liar's filled dot -> different by shape, not colour. */
+.ymark > .ylan{ position:absolute; z-index:1; left:-2px; top:-2px; width:46%; height:46%; border-radius:50%;
+  background:var(--elev); box-shadow:inset 0 0 0 1.5px var(--label), 0 0 0 1px var(--elev); }
+@media (forced-colors: active){ .ymark > .ylan{ box-shadow:inset 0 0 0 1.5px CanvasText; background:Canvas; } }
+.ylegend{ display:flex; align-items:center; gap:8px; margin:12px 0 0; font-size:.78rem; color:var(--label-2); }
+.ylegend .ymark{ flex:none; }
+.dsheet{ position:absolute; left:0; right:0; bottom:0; z-index:31; background:var(--bg); border-radius:16px 16px 0 0; padding:0 16px calc(14px + var(--sa-bot)); }
+.dsheet h2{ margin:10px 0 0; font-size:1.18rem; font-weight:700; }
+.dsheet .sub{ margin:2px 0 8px; color:var(--label-2-grouped); font-size:.84rem; }
+.rows{ background:var(--elev); border-radius:12px; padding:0 14px; }
+.r{ display:flex; justify-content:space-between; gap:12px; align-items:baseline; flex-wrap:wrap; padding:11px 0; font-size:.92rem; }
+.r + .r{ border-top:1px solid var(--hairline); }
+.r .k{ color:var(--label-2); } .r .v{ font-weight:600; font-variant-numeric:tabular-nums; }
+
+/* ---------- tab bar (the only glass) ---------- */
+.tabbar{ flex:none; display:grid; grid-template-columns:repeat(3,1fr); background:var(--glass-solid); border-top:.5px solid var(--hairline); padding:7px 0 calc(2px + var(--sa-bot)); }
+@supports (backdrop-filter: blur(20px)) or (-webkit-backdrop-filter: blur(20px)){
+  .tabbar{ background:var(--glass-fill); -webkit-backdrop-filter:saturate(180%) blur(20px); backdrop-filter:saturate(180%) blur(20px); }
+}
+@media (prefers-reduced-transparency: reduce){ .tabbar{ background:var(--glass-solid) !important; -webkit-backdrop-filter:none !important; backdrop-filter:none !important; } }
+.tab{ display:flex; flex-direction:column; align-items:center; gap:2px; color:var(--label-2-grouped); font-size:10px; min-height:44px; text-align:center; }
+.tab.sel{ color:var(--ink); font-weight:600; }
+.tab svg{ width:25px; height:25px; }
+#pd209-err{ position:fixed; left:0; right:0; top:0; z-index:200; background:#B3261E; color:#fff; font:12px/1.3 ui-monospace,monospace; padding:6px 10px; white-space:pre-wrap; }
+</style>
+</head>
+<body>
+<div class="page">
+  <aside class="panel" aria-label="Mockup controls">
+    <h3>PD-209 · Фонарь</h3>
+    <p class="hint">Макет для выбора, не код. Рамка 390×844 (iPhone 16) / 320×568. Варианты, контрасты, рекомендация и вопросы — pd209-lantern.md. <b>Живое:</b> тап по клетке переносит свет; удержание пальца на поле (~0,45 с) — осмотр, пока держите; ⋯ → «Осмотреть доску»; цифры на паде ставятся в выбранную пустую клетку.</p>
+    <div id="controls"></div>
+  </aside>
+  <div class="frame" id="frame"></div>
+</div>
+<p class="sr" role="status" aria-live="polite" id="live"></p>
+<script>
+"use strict";
+(function(){
+/* ============================================================ errors → banner */
+function banner(msg){
+  let b = document.getElementById("pd209-err");
+  if (!b){ b = document.createElement("div"); b.id = "pd209-err"; document.body.appendChild(b); }
+  b.textContent += (b.textContent ? "\n" : "") + msg;
+}
+window.addEventListener("error", (e) => banner("JS: " + (e.message || e)));
+const SHOT = new URLSearchParams(location.search).get("shot") === "1";
+if (SHOT) document.documentElement.classList.add("shot");
+
+/* ============================================================ icons (stroke 1.7, pd163) */
+const I = {
+  lantern:'<path d="M10 3h4M12 3v2.2"/><path d="M9.5 5.2h5a2.5 2.5 0 0 1 2.5 2.5v8.1a2.5 2.5 0 0 1-2.5 2.5h-5A2.5 2.5 0 0 1 7 15.8V7.7a2.5 2.5 0 0 1 2.5-2.5z"/><path d="M12 9.2c1.4 1.4 1.4 3.2 0 4.6-1.4-1.4-1.4-3.2 0-4.6z"/><path d="M9 21h6"/>',
+  eye:'<path d="M2.5 12s3.4-6.3 9.5-6.3S21.5 12 21.5 12s-3.4 6.3-9.5 6.3S2.5 12 2.5 12z"/><circle cx="12" cy="12" r="2.9"/>',
+  bulb:'<path d="M9 18h6M10 21h4"/><path d="M12 3a6 6 0 0 0-3.6 10.8c.6.5 1 1.2 1 2V16h5.2v-.2c0-.8.4-1.5 1-2A6 6 0 0 0 12 3z"/>',
+  gear:'<path d="M10.38 4.98 L10.6 2.6 L13.4 2.6 L13.62 4.98 A7.2 7.2 0 0 1 15.82 5.89 L17.65 4.36 L19.64 6.35 L18.11 8.18 A7.2 7.2 0 0 1 19.02 10.38 L21.4 10.6 L21.4 13.4 L19.02 13.62 A7.2 7.2 0 0 1 18.11 15.82 L19.64 17.65 L17.65 19.64 L15.82 18.11 A7.2 7.2 0 0 1 13.62 19.02 L13.4 21.4 L10.6 21.4 L10.38 19.02 A7.2 7.2 0 0 1 8.18 18.11 L6.35 19.64 L4.36 17.65 L5.89 15.82 A7.2 7.2 0 0 1 4.98 13.62 L2.6 13.4 L2.6 10.6 L4.98 10.38 A7.2 7.2 0 0 1 5.89 8.18 L4.36 6.35 L6.35 4.36 L8.18 5.89 A7.2 7.2 0 0 1 10.38 4.98 Z"/><circle cx="12" cy="12" r="2.9"/>',
+  more:'<circle cx="5.5" cy="12" r="1.6" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.6" fill="currentColor" stroke="none"/><circle cx="18.5" cy="12" r="1.6" fill="currentColor" stroke="none"/>',
+  gridplus:'<rect x="3.5" y="3.5" width="12" height="12" rx="2"/><path d="M7.5 3.5v12M11.5 3.5v12M3.5 7.5h12M3.5 11.5h12"/><path d="M18.5 14.5v6M15.5 17.5h6"/>',
+  griddots:'<rect x="3.5" y="3.5" width="17" height="17" rx="3"/><circle cx="8" cy="8" r="1" fill="currentColor"/><circle cx="12" cy="8" r="1" fill="currentColor"/><circle cx="16" cy="8" r="1" fill="currentColor"/><circle cx="8" cy="12" r="1" fill="currentColor"/><circle cx="16" cy="16" r="1" fill="currentColor"/>',
+  check:'<path d="M4.5 12.5l4.6 4.6L19.5 6.8"/>',
+  pencil:'<path d="M4 20l1-4L16 5l3 3L8 19z"/><path d="M14 7l3 3"/>',
+  undo:'<path d="M9 6L4 11l5 5"/><path d="M4 11h10a5 5 0 0 1 0 10h-3"/>',
+  eraser:'<path d="M8 20h12"/><path d="M4.5 15.5l9-9 5 5-7 7H8z"/>',
+  tToday:'<rect x="3.5" y="4.5" width="17" height="16" rx="3"/><path d="M3.5 9.5h17"/><path d="M8 14h3v3H8z"/>',
+  tPlay:'<rect x="3.5" y="3.5" width="17" height="17" rx="3"/><path d="M9.2 3.5v17M14.8 3.5v17M3.5 9.2h17M3.5 14.8h17"/>',
+  tYear:'<path d="M4 4h4v4H4zM10 4h4v4h-4zM16 4h4v4h-4zM4 10h4v4H4zM10 10h4v4h-4zM16 10h4v4h-4zM4 16h4v4H4zM10 16h4v4h-4z"/>'
+};
+const svg = (k, extra = "") => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" ${extra}>${I[k]}</svg>`;
+const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;" }[c]));
+
+/* ============================================================ strings */
+const T = {
+  en: {
+    play:"Play", today:"Today", year:"Year", medium:"Medium", lantern:"Lantern", inspecting:"Inspecting",
+    left:(n) => `${n} cells left`, leftS:(n) => `${n} left`, notes:"Notes", undo:"Undo", erase:"Erase", hint:"Hint", gear:"Settings", more:"More",
+    hintL:"Tap a cell to light its row, column and box.", hintS:"Tap a cell",
+    holdL:"Inspecting the board — lift your finger to return", holdS:"Inspecting",
+    doneL:"Inspecting the board", done:"Done",
+    menuNew:"New puzzle…", menuFill:"Fill candidates", menuInspect:"Inspect the board",
+    inShadow:"in shadow", given:"given", empty:"empty", notesW:"notes",
+    desc:"Your digits and notes show only in the row, column and box of the selected cell. Givens stay visible. Touch and hold the board to see it all.",
+    difficulty:"Difficulty", diffs:["Easy","Medium","Hard","Expert"], cancel:"Cancel", start:"Start",
+    yearT:"2026", month:"October", wd:["M","T","W","T","F","S","S"], dayT:"October 6", daySub:"Solved · Medium",
+    time:"Time", mode:"Mode", tech:"Technique reached", techV:"Locked candidates", legend:"Played in Lantern"
+  },
+  uk: {
+    play:"Гра", today:"Сьогодні", year:"Рік", medium:"Середньо", lantern:"Ліхтар", inspecting:"Огляд",
+    left:(n) => `залишилось ${n}`, leftS:(n) => `${n}`, notes:"Нотатки", undo:"Скасувати", erase:"Стерти", hint:"Підказка", gear:"Налаштування", more:"Ще",
+    hintL:"Торкніться клітинки — засвітяться її рядок, стовпець і блок.", hintS:"Торкніться клітинки",
+    holdL:"Огляд дошки — відпустіть палець, щоб повернутися", holdS:"Огляд",
+    doneL:"Огляд дошки", done:"Готово",
+    menuNew:"Нова сітка…", menuFill:"Заповнити кандидатами", menuInspect:"Оглянути дошку",
+    inShadow:"у тіні", given:"дано", empty:"порожньо", notesW:"нотатки",
+    desc:"Ваші цифри й нотатки видно лише в рядку, стовпці та блоці вибраної клітинки. Дані цифри видно завжди. Утримуйте палець на полі, щоб побачити все.",
+    difficulty:"Складність", diffs:["Легко","Середньо","Складно","Експерт"], cancel:"Скасувати", start:"Почати",
+    yearT:"2026", month:"Жовтень", wd:["П","В","С","Ч","П","С","Н"], dayT:"6 жовтня", daySub:"Розв’язано · Середньо",
+    time:"Час", mode:"Режим", tech:"Найскладніша техніка", techV:"Замкнені кандидати", legend:"Зіграно в Ліхтарі"
+  },
+  ru: {
+    play:"Игра", today:"Сегодня", year:"Год", medium:"Средне", lantern:"Фонарь", inspecting:"Осмотр",
+    left:(n) => `осталось ${n}`, leftS:(n) => `${n}`, notes:"Заметки", undo:"Отменить", erase:"Стереть", hint:"Подсказка", gear:"Настройки", more:"Ещё",
+    hintL:"Коснитесь клетки — загорятся её строка, столбец и блок.", hintS:"Коснитесь клетки",
+    holdL:"Осмотр доски — отпустите палец, чтобы вернуться", holdS:"Осмотр",
+    doneL:"Осмотр доски", done:"Готово",
+    menuNew:"Новая сетка…", menuFill:"Заполнить кандидатами", menuInspect:"Осмотреть доску",
+    inShadow:"в тени", given:"дано", empty:"пусто", notesW:"заметки",
+    desc:"Ваши цифры и заметки видны только в строке, столбце и блоке выбранной клетки. Данные цифры видны всегда. Удерживайте палец на поле, чтобы увидеть всё.",
+    difficulty:"Сложность", diffs:["Легко","Средне","Сложно","Эксперт"], cancel:"Отмена", start:"Начать",
+    yearT:"2026", month:"Октябрь", wd:["П","В","С","Ч","П","С","В"], dayT:"6 октября", daySub:"Решено · Средне",
+    time:"Время", mode:"Режим", tech:"Сложнейшая техника", techV:"Запертые кандидаты", legend:"Сыграно в Фонаре"
+  }
+};
+const tx = () => T[S.lang];
+
+/* ============================================================ puzzle data (same grid as pd163/pd170/pd202) */
+const PUZ = "530070000600195000098000060800060003400803001700020006060000280000419005000080079";
+const SOL = "534678912672195348198342567859761423426853791713924856961537284287419635345286179";
+const EMPTY = [...Array(81).keys()].filter((i) => PUZ[i] === "0");          // 51 cells
+const SEL_CENTER = 40, SEL_CORNER = 72, FINGER = 67;                        // r5c5 (player 5) · r9c1 (empty, notes) · r8c5
+/* mid-game: ~30 of 51 cells filled by the player (always the centre, never the corner) */
+const FILLED = new Set(EMPTY.filter((i, k) => ((k * 37) % 51) < 30 || i === SEL_CENTER).filter((i) => i !== SEL_CORNER));
+const rowCells = (n) => [0,1,2,3,4,5,6,7,8].map((c) => n * 9 + c);
+const colCells = (n) => [0,1,2,3,4,5,6,7,8].map((r) => r * 9 + n);
+const boxCells = (n) => { const br = Math.floor(n / 3) * 3, bc = (n % 3) * 3, o = []; for (let r = 0; r < 3; r++) for (let c = 0; c < 3; c++) o.push((br + r) * 9 + bc + c); return o; };
+function unitsOf(i){ const r = Math.floor(i / 9), c = i % 9; return [rowCells(r), colCells(c), boxCells(Math.floor(r / 3) * 3 + Math.floor(c / 3))]; }
+function litSet(sel){ if (sel == null) return new Set(); const [a, b, c] = unitsOf(sel); return new Set([...a, ...b, ...c]); }
+
+/* ============================================================ state */
+const DEF = { screen:"game", v:"B", depth:"ghost", gstate:"center", iv:"b", y:"A",
+  theme:"light", lang:"en", w:"390", rm:false, ax3:false };
+let S = Object.assign({}, DEF);
+let extra = {}, uSel, liveHold = false, justHeld = false, holdTimer = null;
+
+function valueAt(i){
+  if (PUZ[i] !== "0") return +PUZ[i];
+  if (extra[i]) return extra[i];
+  return FILLED.has(i) ? +SOL[i] : 0;
+}
+/* notes: the real candidates of the current board, on most of the still-empty cells */
+function notesAt(i){
+  if (PUZ[i] !== "0" || valueAt(i)) return null;
+  const k = EMPTY.indexOf(i);
+  if (i !== SEL_CORNER && k % 3 === 2) return null;
+  const used = new Set(); unitsOf(i).forEach((u) => u.forEach((c) => { const v = valueAt(c); if (v) used.add(v); }));
+  const out = []; for (let d = 1; d <= 9; d++) if (!used.has(d)) out.push(d);
+  return out;
+}
+function selOf(){
+  if (uSel !== undefined) return uSel;
+  if (S.gstate === "corner") return SEL_CORNER;
+  if (S.gstate === "none") return null;
+  return SEL_CENTER;
+}
+const inspecting = () => liveHold || S.gstate === "hold" || S.gstate === "done";
+
+/* ============================================================ pieces */
+function tabbar(cur){
+  const t = tx(), tab = (k, ic) => `<button type="button" class="tab${cur === k ? " sel" : ""}"${cur === k ? ' aria-current="page"' : ""}>${svg(ic)}<span>${esc(t[k])}</span></button>`;
+  return `<nav class="tabbar" aria-label="Tabs">${tab("today", "tToday")}${tab("play", "tPlay")}${tab("year", "tYear")}</nav>`;
+}
+function iconBtn(ic, label, act, extraAttr = ""){
+  return `<button type="button" class="icon-btn" aria-label="${esc(label)}" data-act="${act}" ${extraAttr}>${svg(ic)}</button>`;
+}
+function chip(){
+  const t = tx(), on = inspecting();
+  return `<span class="mode-chip" data-testid="mode-chip" title="${esc(on ? t.inspecting : t.lantern)}">${svg(on ? "eye" : "lantern")}<span class="ct">${esc(on ? t.inspecting : t.lantern)}</span></span>`;
+}
+function boardHTML(){
+  const t = tx(), sel = selOf(), lit = litSet(sel), insp = inspecting();
+  const selV = sel != null ? valueAt(sel) : 0;
+  let out = "";
+  for (let b = 0; b < 9; b++){
+    out += `<div class="box">`;
+    for (let c = 0; c < 9; c++){
+      const r = Math.floor(b / 3) * 3 + Math.floor(c / 3), col = (b % 3) * 3 + (c % 3), i = r * 9 + col;
+      const g = PUZ[i] !== "0", v = valueAt(i), nt = notesAt(i), isLit = lit.has(i);
+      // outside the light: shadow. Inspect «a» = the shadow is gone; inspect «b» = surface keeps the shade, digits rise (peek).
+      const shaded = !isLit && !(insp && S.iv === "a");
+      const peek = shaded && insp;
+      const cls = ["cell", shaded ? "sh" : "lit", peek ? "peek" : "", g ? "g" : v ? "p" : nt ? "n" : "e",
+        isLit && i !== sel ? "peer" : "", isLit && selV && v === selV && i !== sel ? "same" : "", i === sel ? "sel" : ""].filter(Boolean).join(" ");
+      const dark = shaded && !peek;
+      let inner = `<span class="fl"></span>`, label;
+      if (g){ inner += `<span class="d given">${v}</span>`; label = `${v}, ${t.given}`; }
+      else if (v){ inner += `<span class="d player">${v}</span>`; label = dark ? t.inShadow : String(v); }
+      else if (nt){ inner += `<span class="marks">${[1,2,3,4,5,6,7,8,9].map((d) => `<span>${nt.includes(d) ? d : ""}</span>`).join("")}</span>`; label = dark ? `${t.notesW}, ${t.inShadow}` : `${t.notesW} ${nt.join(" ")}`; }
+      else label = t.empty;
+      if (S.gstate === "hold" && i === FINGER) inner += `<span class="finger" aria-hidden="true"></span>`;
+      out += `<div class="${cls}" data-i="${i}" role="gridcell" aria-label="${esc(label)}">${inner}</div>`;
+    }
+    out += `</div>`;
+  }
+  return `<div class="board lan-${S.v}" data-depth="${S.depth}" role="grid" aria-label="Board" data-testid="board">${out}</div>`;
+}
+
+/* ---------- 1. the game ---------- */
+function game(){
+  const t = tx(), sel = selOf(), insp = inspecting();
+  const placed = EMPTY.filter((i) => valueAt(i)).length;
+  const icons = iconBtn("bulb", t.hint, "noop") + iconBtn("gear", t.gear, "noop") +
+    iconBtn("more", t.more, "menu", `aria-haspopup="menu" aria-expanded="${S.gstate === "menu"}"`);
+  let status;
+  if (insp && S.gstate === "done" && !liveHold)
+    status = `<div class="status" data-testid="insp-status">${svg("eye")}<span class="st-long">${esc(t.doneL)}</span><button type="button" class="done-btn" data-act="endinsp" data-testid="insp-done">${esc(t.done)}</button></div>`;
+  else if (insp)
+    status = `<p class="status" data-testid="insp-status">${svg("eye")}<span class="st-long">${esc(t.holdL)}</span><span class="st-short">${esc(t.holdS)}</span></p>`;
+  else if (sel == null)
+    status = `<p class="status" data-testid="hint">${svg("lantern")}<span class="st-long">${esc(t.hintL)}</span><span class="st-short">${esc(t.hintS)}</span></p>`;
+  else
+    status = `<p class="status" data-testid="left"><span class="st-long">${esc(t.left(51 - placed))}</span><span class="st-short">${esc(t.leftS(51 - placed))}</span></p>`;
+  const menu = S.gstate === "menu" ? gameMenu() : "";
+  return `<div class="screen" data-testid="game">
+    <header class="toolbar"><h1 class="title clip">${esc(t.play)}</h1><div class="toolbar-end">${icons}</div></header>
+    <p class="subline clip" data-testid="subline">${esc(t.medium)} · 14:06${chip()}</p>
+    <div class="game">
+      <div class="board-wrap" data-testid="board-wrap">${boardHTML()}</div>
+      ${status}
+      <div class="pad" data-testid="pad">${[1,2,3,4,5,6,7,8,9].map((n) => `<button type="button" data-d="${n}" aria-label="${n}">${n}</button>`).join("")}</div>
+      <div class="acts">${[["pencil", t.notes], ["undo", t.undo], ["eraser", t.erase]].map(([ic, l]) => `<button type="button" data-act="noop" aria-label="${esc(l)}">${svg(ic)}<span class="al">${esc(l)}</span></button>`).join("")}</div>
+    </div>
+    ${tabbar("play")}${menu}
+  </div>`;
+}
+function gameMenu(){
+  const t = tx();
+  return `<div class="scrim clear" data-act="close"></div>
+  <div class="menu" role="menu" style="top:calc(var(--sa-top) + 54px); right:10px" data-testid="game-menu">
+    <button type="button" role="menuitem" data-act="close">${svg("gridplus")}<span class="mi">${esc(t.menuNew)}</span></button>
+    <button type="button" role="menuitem" data-act="close">${svg("griddots")}<span class="mi">${esc(t.menuFill)}</span></button>
+    <div class="sep" role="separator"></div>
+    <button type="button" role="menuitem" data-act="inspect" data-testid="menu-inspect">${svg("eye")}<span class="mi">${esc(t.menuInspect)}</span></button>
+  </div>`;
+}
+
+/* ---------- 2. the mode sheet on entry (PD-163 shape, only the text is new) ---------- */
+function sheet(){
+  const t = tx();
+  return `<div class="screen" data-testid="sheet-screen">
+    <header class="toolbar"><h1 class="title clip">${esc(t.play)}</h1><div class="toolbar-end">${iconBtn("gear", t.gear, "noop")}</div></header>
+    <div style="flex:1"></div>
+    ${tabbar("play")}
+    <div class="scrim"></div>
+    <section class="msheet" role="dialog" aria-modal="true" aria-labelledby="msh" data-testid="mode-sheet">
+      <div class="grab" aria-hidden="true"></div>
+      <div class="msheet-body">
+        <h2 id="msh">${svg("lantern")}<span>${esc(t.lantern)}</span></h2>
+        <p class="desc" data-testid="mode-desc">${esc(t.desc)}</p>
+        <p class="group-t">${esc(t.difficulty)}</p>
+        <div class="list" role="radiogroup">${t.diffs.map((d, k) => `<button type="button" role="radio" aria-checked="${k === 1}"><span class="mi">${esc(d)}</span>${k === 1 ? svg("check", 'class="ck"') : ""}</button>`).join("")}</div>
+      </div>
+      <div class="msheet-foot"><button type="button" class="btn-cancel">${esc(t.cancel)}</button><button type="button" class="btn-start" data-testid="start">${esc(t.start)}</button></div>
+    </section>
+  </div>`;
+}
+
+/* ---------- 3. Year: October with three Lantern days + the day sheet of a Lantern day ---------- */
+const DAYS = { 1:["is-solved"], 2:["is-solved","has-corr"], 3:["is-solved"], 4:["is-missed"], 5:["is-solved","has-help"], 6:["is-solved","is-today"] };
+const LANTERN_DAYS = new Set([3, 5, 6]);
+function year(){
+  const t = tx(), offset = 3;   // 2026-10-01 is a Thursday; weeks start on Monday
+  let cells = t.wd.map((w) => `<span class="ywd" aria-hidden="true">${esc(w)}</span>`).join("");
+  for (let k = 0; k < offset; k++) cells += `<span class="yslot"></span>`;
+  for (let d = 1; d <= 31; d++){
+    const st = DAYS[d];
+    const lan = st && S.y === "B" && LANTERN_DAYS.has(d) && st[0] === "is-solved" ? `<i class="ylan" data-testid="ylan"></i>` : "";
+    cells += `<span class="yslot">${st ? `<span class="ymark ${st.join(" ")}" aria-hidden="true">${lan}</span>` : ""}</span>`;
+  }
+  const legend = S.y === "B" ? `<p class="ylegend" data-testid="ylegend"><span class="ymark is-solved"><i class="ylan"></i></span><span>${esc(t.legend)}</span></p>` : "";
+  return `<div class="screen" data-testid="year">
+    <header class="toolbar"><h1 class="title clip">${esc(t.yearT)}</h1><div class="toolbar-end">${iconBtn("gear", t.gear, "noop")}</div></header>
+    <div class="yscroll">
+      <section class="ycard"><h2>${esc(t.month)}</h2><div class="ygrid">${cells}</div>${legend}</section>
+    </div>
+    ${tabbar("year")}
+    <div class="scrim"></div>
+    <section class="dsheet" role="dialog" aria-modal="true" aria-labelledby="dsh" data-testid="day-sheet">
+      <div class="grab" aria-hidden="true"></div>
+      <h2 id="dsh">${esc(t.dayT)}</h2>
+      <p class="sub">${esc(t.daySub)}</p>
+      <div class="rows">
+        <div class="r"><span class="k">${esc(t.time)}</span><span class="v">14:06</span></div>
+        <div class="r" data-testid="mode-row"><span class="k">${esc(t.mode)}</span><span class="v">${esc(t.lantern)}</span></div>
+        <div class="r"><span class="k">${esc(t.tech)}</span><span class="v">${esc(t.techV)}</span></div>
+      </div>
+    </section>
+  </div>`;
+}
+
+/* ============================================================ panel */
+const CTRL = [
+  ["screen", "Экран", [["game", "Партия"], ["sheet", "Шит режима (вход)"], ["year", "Year + шит дня"]]],
+  ["v", "1 · Свет и тень", [["A", "A · тихий"], ["B", "B · луч ★"], ["C", "C · туман"]]],
+  ["depth", "2 · Глубина тени", [["faint", "1 · едва различимо"], ["ghost", "2 · почти невидимо ★"]]],
+  ["gstate", "Партия: состояние", [["center", "клетка в центре"], ["corner", "клетка в углу"], ["none", "нет выбора"], ["hold", "осмотр: держу палец"], ["done", "осмотр из меню ⋯"], ["menu", "меню ⋯ открыто"]]],
+  ["iv", "3 · Осмотр: вид доски", [["a", "a · как в классике"], ["b", "b · цифры поверх тени ★"]]],
+  ["y", "4 · Year", [["A", "A · как Чернила ★"], ["B", "B · кольцо в углу"]]],
+  ["theme", "Тема", [["light", "светлая"], ["dark", "тёмная"]]],
+  ["lang", "Язык", [["en", "en"], ["uk", "uk"], ["ru", "ru"]]],
+  ["w", "Ширина", [["390", "390"], ["320", "320"]]],
+  ["ax3", "Размер текста", [[false, "17 px"], [true, "AX3 (40 px)"]]],
+  ["rm", "Reduce Motion (макет)", [[false, "выкл"], [true, "вкл"]]]
+];
+function disabled(k){
+  if (k === "iv" && S.v !== "B") return "В A и C у фона нет тени — оба вида осмотра выглядят одинаково";
+  if ((k === "v" || k === "depth" || k === "gstate" || k === "iv") && S.screen !== "game") return "Только для экрана партии";
+  if (k === "y" && S.screen !== "year") return "Только для Year";
+  return "";
+}
+function panel(){
+  document.getElementById("controls").innerHTML = CTRL.map(([k, l, opts]) => {
+    const why = disabled(k);
+    return `<div class="grp"><span>${l}</span><div class="seg">${opts.map(([v, txt]) =>
+      `<button type="button" data-k="${k}" data-v="${v}" aria-pressed="${String(S[k] === v)}"${why ? ` aria-disabled="true" title="${esc(why)}"` : ""}>${txt}</button>`).join("")}</div></div>`;
+  }).join("");
+}
+
+/* ============================================================ render */
+function render(){
+  const root = document.documentElement;
+  root.lang = S.lang;
+  root.classList.toggle("force-dark", S.theme === "dark");
+  root.classList.toggle("force-light", S.theme !== "dark");
+  root.classList.toggle("ax3", !!S.ax3);
+  root.classList.toggle("rm", !!S.rm);
+  const frame = document.getElementById("frame");
+  const short = S.w === "320";
+  frame.style.setProperty("--fw", S.w + "px");
+  frame.style.setProperty("--fh", short ? "568px" : "844px");
+  frame.style.setProperty("--sa-top", short ? "20px" : "59px");
+  frame.style.setProperty("--sa-bot", short ? "0px" : "34px");
+  frame.innerHTML = { game, sheet, year }[S.screen]();
+  panel();
+}
+const live = (m) => { const l = document.getElementById("live"); if (l) l.textContent = m; };
+
+/* ============================================================ live behaviour */
+document.addEventListener("pointerdown", (e) => {
+  if (!e.target.closest("[data-testid=board]")) return;
+  clearTimeout(holdTimer);
+  holdTimer = setTimeout(() => { liveHold = true; justHeld = true; live(tx().holdL); render(); }, 450);
+});
+const endHold = () => { clearTimeout(holdTimer); if (liveHold){ liveHold = false; render(); } };
+document.addEventListener("pointerup", endHold);
+document.addEventListener("pointercancel", endHold);
+document.addEventListener("click", (e) => {
+  const b = e.target.closest("button, .cell, [data-act]"); if (!b) return;
+  if (b.dataset.k){
+    if (b.getAttribute("aria-disabled") === "true") return;
+    const k = b.dataset.k; let v = b.dataset.v;
+    if (k === "rm" || k === "ax3") v = v === "true";
+    if (k === "gstate" || k === "screen"){ uSel = undefined; extra = {}; }
+    S[k] = v; render(); return;
+  }
+  if (b.classList.contains("cell") && b.closest("[data-testid=game]")){
+    if (justHeld){ justHeld = false; return; }
+    uSel = +b.dataset.i; if (S.gstate === "hold" || S.gstate === "done" || S.gstate === "menu") S.gstate = "center";
+    render(); return;
+  }
+  if (b.dataset.d && b.closest("[data-testid=pad]")){
+    const at = selOf(); if (at == null || PUZ[at] !== "0" || valueAt(at)) return;
+    extra[at] = +b.dataset.d; render(); return;
+  }
+  const act = b.dataset.act;
+  if (act === "menu"){ S.gstate = S.gstate === "menu" ? "center" : "menu"; render(); return; }
+  if (act === "close"){ if (S.gstate === "menu") S.gstate = "center"; render(); return; }
+  if (act === "inspect"){ S.gstate = "done"; live(tx().doneL); render(); return; }
+  if (act === "endinsp"){ S.gstate = "center"; render(); return; }
+});
+
+/* ============================================================ self-check (for the shots script) */
+function lum(rgb){ const f = (c) => { c /= 255; return c <= .04045 ? c / 12.92 : Math.pow((c + .055) / 1.055, 2.4); }; return .2126 * f(rgb[0]) + .7152 * f(rgb[1]) + .0722 * f(rgb[2]); }
+function rgbOf(s){ const m = String(s).match(/[\d.]+/g); return m ? m.slice(0, 3).map(Number) : null; }
+function contrast(a, b){ const la = lum(a), lb = lum(b); return (Math.max(la, lb) + .05) / (Math.min(la, lb) + .05); }
+function check(){
+  const out = [], frame = document.getElementById("frame"), fr = frame.getBoundingClientRect();
+  frame.querySelectorAll("*").forEach((el) => {
+    const r = el.getBoundingClientRect();
+    if (r.width === 0 || r.height === 0 || el.closest(".finger")) return;
+    if (r.right > fr.right + .5 || r.left < fr.left - .5){
+      const cn = el.className && el.className.baseVal !== undefined ? el.className.baseVal : el.className;
+      out.push("overflow: " + el.tagName.toLowerCase() + "." + String(cn).split(" ")[0] + " " + Math.round(r.left) + "…" + Math.round(r.right));
+    }
+  });
+  frame.querySelectorAll(".msheet-body, .yscroll").forEach((s) => { if (s.scrollWidth > s.clientWidth + 1) out.push("h-scroll in " + s.className); });
+  frame.querySelectorAll(".clip").forEach((el) => { if (el.scrollWidth > el.clientWidth + 1) out.push("clipped text: " + el.textContent.trim().slice(0, 40)); });
+  frame.querySelectorAll(".icon-btn, .pad button, .menu button, .done-btn, .list button, .msheet-foot button, .acts button").forEach((b) => {
+    const r = b.getBoundingClientRect(); if (r.height && r.height < 43.5) out.push("target < 44: " + (b.getAttribute("aria-label") || b.textContent.trim()).slice(0, 24) + " " + Math.round(r.height));
+  });
+  const tb = frame.querySelector(".tabbar");
+  if (S.screen === "game"){
+    const bd = frame.querySelector("[data-testid=board]"), insp = inspecting(), sel = selOf();
+    if (!bd || bd.querySelectorAll(".cell").length !== 81) out.push("board cells != 81");
+    if (bd && bd.getBoundingClientRect().width < 150) out.push("board < 150 px: " + Math.round(bd.getBoundingClientRect().width));
+    if (bd && tb && bd.getBoundingClientRect().bottom > tb.getBoundingClientRect().top + .5) out.push("board under the tab bar");
+    const pad = frame.querySelector("[data-testid=pad]");
+    if (pad && tb && pad.getBoundingClientRect().bottom > tb.getBoundingClientRect().top + .5) out.push("pad under the tab bar");
+    const st = frame.querySelector(".status"); if (st && st.scrollHeight > st.clientHeight + 1) out.push("status text clipped");
+    // the mechanic, as drawn
+    const op = (el) => parseFloat(getComputedStyle(el).opacity);
+    const fl = (el) => getComputedStyle(el).filter;
+    if (!insp){
+      bd.querySelectorAll(".cell.sh .d.player, .cell.sh .marks").forEach((el) => { if (op(el) >= .6) out.push("LEAK: player digit/note in shadow at opacity " + op(el)); });
+      if (sel == null && bd.querySelector(".cell.lit")) out.push("no selection but some cells are lit");
+      if (sel == null && !frame.querySelector("[data-testid=hint]")) out.push("no selection without the hint line");
+    } else {
+      bd.querySelectorAll(".d.player, .marks").forEach((el) => { if (op(el) < .99 || (fl(el) !== "none" && fl(el) !== "")) { out.push("inspect: something still in shadow"); } });
+      if (!frame.querySelector("[data-testid=insp-status]")) out.push("inspect without status line");
+      if (S.gstate === "done" && !frame.querySelector("[data-testid=insp-done]")) out.push("menu inspect without Done");
+    }
+    bd.querySelectorAll(".cell.lit .d.player").forEach((el) => { if (op(el) < .99) out.push("player digit in the light is dimmed"); });
+    bd.querySelectorAll(".cell.same").forEach((c) => { if (!c.classList.contains("lit")) out.push("same-digit highlight outside the light"); });
+    // givens: never dimmed, never blurred; contrast on their own (unfilled) cell >= the token's 17.0:1
+    bd.querySelectorAll(".d.given").forEach((el) => {
+      if (op(el) < .99 || (fl(el) !== "none" && fl(el) !== "")) out.push("given dimmed/blurred");
+      const cell = el.parentElement;
+      if (cell.matches(".peer, .same, .sel")) return;
+      const fg = rgbOf(getComputedStyle(el).color), bg = rgbOf(getComputedStyle(cell).backgroundColor);
+      if (fg && bg){ const c = contrast(fg, bg); if (c < 16.9) out.push("given contrast " + c.toFixed(2) + " < 17"); }
+    });
+    if (S.rm){ const d = bd.querySelector(".d"); if (d && parseFloat(getComputedStyle(d).transitionDuration) > 0) out.push("Reduce Motion: light still transitions"); }
+    if (S.gstate === "menu" && !frame.querySelector("[data-testid=menu-inspect]")) out.push("menu without «Inspect the board»");
+  }
+  if (S.screen === "sheet"){
+    if (!frame.querySelector("[data-testid=mode-desc]")) out.push("sheet without the rule line");
+    const ft = frame.querySelector(".msheet-foot");
+    if (ft && ft.getBoundingClientRect().bottom > fr.bottom + .5) out.push("sheet buttons off screen");
+  }
+  if (S.screen === "year"){
+    const n = frame.querySelectorAll(".ycard [data-testid=ylan]").length;
+    if (S.y === "A" && n) out.push("Y-A must have no Lantern mark on the canvas");
+    if (S.y === "B" && n !== LANTERN_DAYS.size) out.push("Y-B: lantern marks " + n + " != " + LANTERN_DAYS.size);
+    if (!frame.querySelector("[data-testid=mode-row]")) out.push("day sheet without the Mode row");
+  }
+  return [...new Set(out)].slice(0, 12);
+}
+
+window.PD209 = {
+  reset(){ extra = {}; uSel = undefined; liveHold = false; justHeld = false; S = Object.assign({}, DEF); render(); },
+  apply(o){ Object.assign(S, o); render(); },
+  check, state: () => Object.assign({}, S)
+};
+render();
+})();
+</script>
+</body>
+</html>
