@@ -7,7 +7,7 @@ import { describe, expect, it } from "vitest";
 
 // vitest отдаёт пустую строку для `.css?raw`, а @types/node в этом пакете нет — читаем файл через динамический node:fs.
 const fs = (await import(/* @vite-ignore */ ["node", "fs"].join(":"))) as { readFileSync(u: URL, enc: "utf8"): string };
-const css = fs.readFileSync(new URL("../styles/lantern.css", import.meta.url), "utf8");
+const css = fs.readFileSync(new URL("../styles/lantern.css", import.meta.url), "utf8").replace(/\/\*[\s\S]*?\*\//g, "");
 const main = fs.readFileSync(new URL("../main.tsx", import.meta.url), "utf8");
 
 describe("lantern.css", () => {
