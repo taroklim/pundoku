@@ -65,6 +65,37 @@ button {
   appearance: none;
 }
 
+/* PD-210 (решение владельца): удержание клетки или кнопки — не выделение текста и не лупа/выноска iOS, во всём приложении.
+   Только управляющие элементы и поле с падом: обычный текст (справка, код восстановления — у него свой user-select: all)
+   выделяется как прежде; настоящие поля ввода ниже возвращают выделение явно. */
+button,
+a[href],
+label,
+summary,
+[role="button"],
+[role="tab"],
+[role="menuitem"],
+[role="menuitemcheckbox"],
+[role="menuitemradio"],
+[role="switch"],
+.board,
+.pad-wrap,
+.actions,
+.tabbar,
+.toolbar {
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+  -webkit-tap-highlight-color: transparent;
+}
+input,
+textarea,
+[contenteditable="true"] {
+  -webkit-user-select: text;
+  user-select: text;
+  -webkit-touch-callout: default;
+}
+
 :focus-visible {
   outline: 2px solid var(--ink);
   outline-offset: 2px;

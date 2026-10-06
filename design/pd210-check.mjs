@@ -550,14 +550,71 @@ async function yearFlow(name, type, c) {
   }
 }
 
+/** Решение владельца (PD-210): удержание клетки/кнопки нигде не выделяет текст; поля ввода — выделяют. */
+async function noSelectFlow(name, type, c) {
+  const browser = await type.launch();
+  const tag = `${name}-${c.w}-${c.scheme}-${c.lang}`;
+  try {
+    const { page, errs } = await open(browser, c);
+    await toHub(page);
+    const us = (sel) =>
+      page.evaluate((sel) => {
+        const els = [...document.querySelectorAll(sel)];
+        const bad = els.filter((e) => {
+          const cs = getComputedStyle(e);
+          return (cs.webkitUserSelect || cs.userSelect) !== "none" || (cs.webkitTouchCallout !== undefined && cs.webkitTouchCallout !== "none");
+        });
+        return { n: els.length, bad: bad.length };
+      }, sel);
+    const hub = await us(".hub-row.mode, .tabbar [role=tab], .toolbar button");
+    ok(`${tag} без выделения: строки режимов, таб-бар, кнопки шапки`, hub.n > 8 && hub.bad === 0, JSON.stringify(hub));
+    await startMode(page, "classic");
+    const game = await us(`${BOARD}, ${BOARD} .cell, .play:not(.today) .pad .key, .play:not(.today) .actions .act, .tabbar [role=tab], .toolbar button`);
+    ok(`${tag} без выделения: поле, клетки, пад, Notes/Undo/Erase, таб-бар, шапка`, game.n >= 100 && game.bad === 0, JSON.stringify(game));
+    // Долгое нажатие на клетку и на клавишу пада — выделения в документе нет.
+    for (const sel of [cellSel(40), ".play:not(.today) .pad .key >> nth=4"]) {
+      const b = await page.locator(sel).boundingBox();
+      await page.mouse.move(b.x + b.width / 2, b.y + b.height / 2);
+      await page.mouse.down();
+      await page.waitForTimeout(900);
+      await page.mouse.up();
+      const selText = await page.evaluate(() => String(window.getSelection() ?? ""));
+      ok(`${tag} удержание ${sel.includes("key") ? "клавиши пада" : "клетки"}: выделения нет`, selText === "", JSON.stringify(selText));
+    }
+    // dblclick по клавише (в десктоп-браузере выделяет слово) — тоже ничего.
+    await page.locator(".play:not(.today) .pad .key").nth(2).dblclick();
+    ok(`${tag} двойной клик по клавише: выделения нет`, (await page.evaluate(() => String(window.getSelection() ?? ""))) === "");
+    await page.goto(`${BASE}/#/settings`);
+    await page.waitForTimeout(900);
+    const inp = await page.evaluate(() => {
+      let els = [...document.querySelectorAll("input[type=text], input[type=email], input[type=password], textarea")];
+      let injected = false;
+      if (!els.length) {
+        const i = document.createElement("input");
+        i.type = "email";
+        document.querySelector(".scroll, main, body").appendChild(i);
+        els = [i];
+        injected = true;
+      }
+      return { injected, ok: els.every((e) => (getComputedStyle(e).webkitUserSelect || getComputedStyle(e).userSelect) !== "none") };
+    });
+    ok(`${tag} поля ввода выделение сохраняют${inp.injected ? " (проверочное поле)" : ""}`, inp.ok, JSON.stringify(inp));
+    ok(`${tag} без выделения: консоль чистая`, errs.length === 0, errs.join(" | "));
+  } finally {
+    await browser.close();
+  }
+}
+
 try {
   if (ONLY !== "wk") {
     for (const [k, c] of CONFIGS.entries()) if (!process.env.CFG || process.env.CFG.split(",").includes(String(k))) await flow("cr", chromium, c);
     if (!process.env.CFG) for (const c of YEAR) await yearFlow("cr", chromium, c);
+    if (!process.env.CFG || process.env.SEL) await noSelectFlow("cr", chromium, CONFIGS[0]);
   }
   if (ONLY !== "cr") {
     for (const c of WK) await flow("wk", webkit, c);
     await yearFlow("wk", webkit, YEAR[0]);
+    await noSelectFlow("wk", webkit, CONFIGS[1]);
   }
 } finally {
   if (perf.length) writeFileSync(join(OUT, `pd210-perf${ONLY ? "-" + ONLY : ""}.json`), JSON.stringify(perf, null, 2));
