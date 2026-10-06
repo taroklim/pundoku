@@ -377,7 +377,7 @@ export function PlayScreen({ onOpenSettings, onOpenHelp, onOpenToday }: { onOpen
         />
       )}
       {rule && <RuleSheet rule={rule} onDone={() => setRule(null)} />}
-      {hint.rule && <HintRuleSheet play onGo={() => ladder.confirmRule()} onCancel={() => ladder.dismissRule()} />}
+      {hint.rule && <HintRuleSheet play glyphs={play?.glyphs === true} onGo={() => ladder.confirmRule()} onCancel={() => ladder.dismissRule()} />}
     </div>
   );
 }

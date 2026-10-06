@@ -19,8 +19,11 @@ export function boldParts(text: string): ReactNode[] {
   return text.split("**").map((part, i) => (i % 2 === 1 ? <strong key={i}>{part}</strong> : part));
 }
 
-/** `play`: свободная партия Play — в Year она не попадает, метка только на карточке результата (решение владельца PD-139). */
-export function HintRuleSheet({ onGo, onCancel, play = false }: { onGo: () => void; onCancel: () => void; play?: boolean }) {
+/**
+ * `play`: свободная партия Play — в Year она не попадает, метка только на карточке результата (решение владельца PD-139).
+ * `glyphs`: партия в Глифах (PD-215, как лесенка PD-199) — вступление говорит «знак» / «shape», а не «цифра» (контекст i18next).
+ */
+export function HintRuleSheet({ onGo, onCancel, play = false, glyphs = false }: { onGo: () => void; onCancel: () => void; play?: boolean; glyphs?: boolean }) {
   const { t } = useTranslation();
   const scrim = useRef<HTMLDivElement>(null);
   const root = useRef<HTMLElement>(null);
@@ -83,7 +86,7 @@ export function HintRuleSheet({ onGo, onCancel, play = false }: { onGo: () => vo
           {t(play ? "hint.rule.titlePlay" : "hint.rule.title")}
         </h2>
         <p id={leadId} className="ink-sheet-lead">
-          {t("hint.rule.lead")}
+          {t("hint.rule.lead", glyphs ? { context: "glyphs" } : undefined)}
         </p>
         <ul className="ink-rules">
           <li>

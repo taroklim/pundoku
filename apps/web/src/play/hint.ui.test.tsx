@@ -221,6 +221,15 @@ describe("HintRuleSheet", () => {
     expect(text).not.toContain(i18n.t("hint.rule.title"));
     expect(text).not.toMatch(/\byear\b/i);
   });
+
+  it("PD-215: в Глифах вступление шита — «shape»; без флага — прежняя строка", () => {
+    act(() => root.render(<HintRuleSheet play glyphs onGo={() => {}} onCancel={() => {}} />));
+    const lead = () => q("hint-rule-sheet")!.querySelector(".ink-sheet-lead")!.textContent ?? "";
+    expect(lead()).toBe(i18n.t("hint.rule.lead_glyphs"));
+    expect(lead()).toMatch(/\bshape\b/);
+    act(() => root.render(<HintRuleSheet play onGo={() => {}} onCancel={() => {}} />));
+    expect(lead()).toBe(i18n.t("hint.rule.lead"));
+  });
 });
 
 describe("Board: метки подсказки", () => {

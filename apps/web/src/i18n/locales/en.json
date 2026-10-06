@@ -257,6 +257,7 @@
       "title": "A hint marks the day",
       "titlePlay": "A hint marks the game",
       "lead": "Pundoku never fills a cell for you. A hint walks you to the next move in four steps: where to look, which technique, which cells, and why.",
+      "lead_glyphs": "Pundoku never places a shape for you. A hint walks you to the next move in four steps: where to look, which technique, which cells, and why.",
       "r1": "The day is recorded as **solved with help** — in the year and on the card.",
       "r2": "Further hints today don’t change the mark.",
       "r1Play": "The game is marked **with help** on its result card.",

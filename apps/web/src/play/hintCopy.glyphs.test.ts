@@ -94,3 +94,17 @@ describe("PD-199: лесенка подсказок в Глифах", () => {
     expect(sets[2]).toEqual(sets[0]);
   });
 });
+
+describe("PD-215: шит правила подсказки в Глифах", () => {
+  for (const lng of Object.keys(LOCALES) as Lang[]) {
+    it(`${lng}: вступление шита в Глифах говорит «знак»/«shape», в Классике — прежняя строка`, async () => {
+      const t = await tOf(lng);
+      const g = t("hint.rule.lead", { context: "glyphs" });
+      expect(g).not.toBe(t("hint.rule.lead"));
+      expect(g).not.toMatch(DIGIT[lng]);
+      expect(g).toMatch(GLYPH[lng]);
+      expect(t("hint.rule.lead")).not.toMatch(GLYPH[lng]);
+      if (lng !== "en") expect(t("hint.rule.lead")).toMatch(DIGIT[lng]);
+    });
+  }
+});
