@@ -1,0 +1,385 @@
+PASS  cr-glyphs-320-light cell30: нижний ряд заметок и зачёркивание выше полосы (зазор ≥ 1 px)  gap=2.38 cell=26.0 notes=7,8,9s
+PASS  cr-glyphs-320-light cell30: верхний ряд в клетке  top-gap=14.95
+PASS  cr-glyphs-320-light cell39: нижний ряд заметок и зачёркивание выше полосы (зазор ≥ 1 px)  gap=2.72 cell=26.0 notes=7,9s
+PASS  cr-glyphs-320-light cell39: верхний ряд в клетке  top-gap=1.53
+PASS  cr-glyphs-320-light cell75: нижний ряд заметок и зачёркивание выше полосы (зазор ≥ 1 px)  gap=2.88 cell=26.0 notes=7,9s
+PASS  cr-glyphs-320-light cell75: верхний ряд в клетке  top-gap=1.53
+PASS  cr-glyphs-320-light клетка без полосы: отступ заметок как в базе  4.03125px 1.03125px 1.03125px 4.03125px
+PASS  cr-glyphs-320-light консоль без ошибок  
+PASS  cr-glyphs-320-dark cell30: нижний ряд заметок и зачёркивание выше полосы (зазор ≥ 1 px)  gap=2.38 cell=26.0 notes=7,8,9s
+PASS  cr-glyphs-320-dark cell30: верхний ряд в клетке  top-gap=14.95
+PASS  cr-glyphs-320-dark cell39: нижний ряд заметок и зачёркивание выше полосы (зазор ≥ 1 px)  gap=2.72 cell=26.0 notes=7,9s
+PASS  cr-glyphs-320-dark cell39: верхний ряд в клетке  top-gap=1.53
+PASS  cr-glyphs-320-dark cell75: нижний ряд заметок и зачёркивание выше полосы (зазор ≥ 1 px)  gap=2.88 cell=26.0 notes=7,9s
+PASS  cr-glyphs-320-dark cell75: верхний ряд в клетке  top-gap=1.53
+PASS  cr-glyphs-320-dark клетка без полосы: отступ заметок как в базе  4.03125px 1.03125px 1.03125px 4.03125px
+PASS  cr-glyphs-320-dark консоль без ошибок  
+PASS  cr-glyphs-375-light cell30: нижний ряд заметок и зачёркивание выше полосы (зазор ≥ 1 px)  gap=2.98 cell=37.0 notes=7,8,9s
+PASS  cr-glyphs-375-light cell30: верхний ряд в клетке  top-gap=22.14
+PASS  cr-glyphs-375-light cell39: нижний ряд заметок и зачёркивание выше полосы (зазор ≥ 1 px)  gap=3.48 cell=37.0 notes=7,9s
+PASS  cr-glyphs-375-light cell39: верхний ряд в клетке  top-gap=1.97
+PASS  cr-glyphs-375-light cell75: нижний ряд заметок и зачёркивание выше полосы (зазор ≥ 1 px)  gap=3.48 cell=37.0 notes=7,9s
+PASS  cr-glyphs-375-light cell75: верхний ряд в клетке  top-gap=1.97
+PASS  cr-glyphs-375-light клетка без полосы: отступ заметок как в базе  4.46875px 1.46875px 1.46875px 4.46875px
+PASS  cr-glyphs-375-light консоль без ошибок  
+PASS  cr-glyphs-375-dark cell30: нижний ряд заметок и зачёркивание выше полосы (зазор ≥ 1 px)  gap=2.98 cell=37.0 notes=7,8,9s
+PASS  cr-glyphs-375-dark cell30: верхний ряд в клетке  top-gap=22.14
+PASS  cr-glyphs-375-dark cell39: нижний ряд заметок и зачёркивание выше полосы (зазор ≥ 1 px)  gap=3.48 cell=37.0 notes=7,9s
+PASS  cr-glyphs-375-dark cell39: верхний ряд в клетке  top-gap=1.97
+PASS  cr-glyphs-375-dark cell75: нижний ряд заметок и зачёркивание выше полосы (зазор ≥ 1 px)  gap=3.48 cell=37.0 notes=7,9s
+PASS  cr-glyphs-375-dark cell75: верхний ряд в клетке  top-gap=1.97
+PASS  cr-glyphs-375-dark клетка без полосы: отступ заметок как в базе  4.46875px 1.46875px 1.46875px 4.46875px
+PASS  cr-glyphs-375-dark консоль без ошибок  
+PASS  cr-glyphs-390-light cell30: нижний ряд заметок и зачёркивание выше полосы (зазор ≥ 1 px)  gap=3.06 cell=38.9 notes=7,8,9s
+PASS  cr-glyphs-390-light cell30: верхний ряд в клетке  top-gap=23.41
+PASS  cr-glyphs-390-light cell39: нижний ряд заметок и зачёркивание выше полосы (зазор ≥ 1 px)  gap=3.56 cell=38.9 notes=7,9s
+PASS  cr-glyphs-390-light cell39: верхний ряд в клетке  top-gap=2.05
+PASS  cr-glyphs-390-light cell75: нижний ряд заметок и зачёркивание выше полосы (зазор ≥ 1 px)  gap=3.56 cell=38.9 notes=7,9s
+PASS  cr-glyphs-390-light cell75: верхний ряд в клетке  top-gap=2.05
+PASS  cr-glyphs-390-light клетка без полосы: отступ заметок как в базе  4.54688px 1.54688px 1.54688px 4.54688px
+PASS  cr-glyphs-390-light консоль без ошибок  
+PASS  cr-glyphs-390-dark cell30: нижний ряд заметок и зачёркивание выше полосы (зазор ≥ 1 px)  gap=3.06 cell=38.9 notes=7,8,9s
+PASS  cr-glyphs-390-dark cell30: верхний ряд в клетке  top-gap=23.41
+PASS  cr-glyphs-390-dark cell39: нижний ряд заметок и зачёркивание выше полосы (зазор ≥ 1 px)  gap=3.56 cell=38.9 notes=7,9s
+PASS  cr-glyphs-390-dark cell39: верхний ряд в клетке  top-gap=2.05
+PASS  cr-glyphs-390-dark cell75: нижний ряд заметок и зачёркивание выше полосы (зазор ≥ 1 px)  gap=3.56 cell=38.9 notes=7,9s
+PASS  cr-glyphs-390-dark cell75: верхний ряд в клетке  top-gap=2.05
+PASS  cr-glyphs-390-dark клетка без полосы: отступ заметок как в базе  4.54688px 1.54688px 1.54688px 4.54688px
+PASS  cr-glyphs-390-dark консоль без ошибок  
+PASS  cr-glyphs-430-light cell30: нижний ряд заметок и зачёркивание выше полосы (зазор ≥ 1 px)  gap=3.30 cell=43.3 notes=7,8,9s
+PASS  cr-glyphs-430-light cell30: верхний ряд в клетке  top-gap=26.38
+PASS  cr-glyphs-430-light cell39: нижний ряд заметок и зачёркивание выше полосы (зазор ≥ 1 px)  gap=3.80 cell=43.3 notes=7,9s
+PASS  cr-glyphs-430-light cell39: верхний ряд в клетке  top-gap=2.28
+PASS  cr-glyphs-430-light cell75: нижний ряд заметок и зачёркивание выше полосы (зазор ≥ 1 px)  gap=3.80 cell=43.3 notes=7,9s
+PASS  cr-glyphs-430-light cell75: верхний ряд в клетке  top-gap=2.28
+PASS  cr-glyphs-430-light клетка без полосы: отступ заметок как в базе  4.71875px 1.71875px 1.71875px 4.71875px
+PASS  cr-glyphs-430-light консоль без ошибок  
+PASS  cr-glyphs-430-dark cell30: нижний ряд заметок и зачёркивание выше полосы (зазор ≥ 1 px)  gap=3.30 cell=43.3 notes=7,8,9s
+PASS  cr-glyphs-430-dark cell30: верхний ряд в клетке  top-gap=26.38
+PASS  cr-glyphs-430-dark cell39: нижний ряд заметок и зачёркивание выше полосы (зазор ≥ 1 px)  gap=3.80 cell=43.3 notes=7,9s
+PASS  cr-glyphs-430-dark cell39: верхний ряд в клетке  top-gap=2.28
+PASS  cr-glyphs-430-dark cell75: нижний ряд заметок и зачёркивание выше полосы (зазор ≥ 1 px)  gap=3.80 cell=43.3 notes=7,9s
+PASS  cr-glyphs-430-dark cell75: верхний ряд в клетке  top-gap=2.28
+PASS  cr-glyphs-430-dark клетка без полосы: отступ заметок как в базе  4.71875px 1.71875px 1.71875px 4.71875px
+PASS  cr-glyphs-430-dark консоль без ошибок  
+PASS  cr-glyphs-320-light-ax3 cell30: нижний ряд заметок и зачёркивание выше полосы (зазор ≥ 1 px)  gap=1.22 cell=17.9 notes=7,8,9s
+PASS  cr-glyphs-320-light-ax3 cell30: верхний ряд в клетке  top-gap=9.69
+PASS  cr-glyphs-320-light-ax3 cell39: нижний ряд заметок и зачёркивание выше полосы (зазор ≥ 1 px)  gap=1.55 cell=17.9 notes=7,9s
+PASS  cr-glyphs-320-light-ax3 cell39: верхний ряд в клетке  top-gap=1.06
+PASS  cr-glyphs-320-light-ax3 cell75: нижний ряд заметок и зачёркивание выше полосы (зазор ≥ 1 px)  gap=1.72 cell=17.9 notes=7,9s
+PASS  cr-glyphs-320-light-ax3 cell75: верхний ряд в клетке  top-gap=1.06
+PASS  cr-glyphs-320-light-ax3 клетка без полосы: отступ заметок как в базе  3.70312px 0.703125px 0.703125px 3.70312px
+PASS  cr-glyphs-320-light-ax3 консоль без ошибок  
+PASS  cr-glyphs-320-dark-ax3 cell30: нижний ряд заметок и зачёркивание выше полосы (зазор ≥ 1 px)  gap=1.22 cell=17.9 notes=7,8,9s
+PASS  cr-glyphs-320-dark-ax3 cell30: верхний ряд в клетке  top-gap=9.69
+PASS  cr-glyphs-320-dark-ax3 cell39: нижний ряд заметок и зачёркивание выше полосы (зазор ≥ 1 px)  gap=1.55 cell=17.9 notes=7,9s
+PASS  cr-glyphs-320-dark-ax3 cell39: верхний ряд в клетке  top-gap=1.06
+PASS  cr-glyphs-320-dark-ax3 cell75: нижний ряд заметок и зачёркивание выше полосы (зазор ≥ 1 px)  gap=1.72 cell=17.9 notes=7,9s
+PASS  cr-glyphs-320-dark-ax3 cell75: верхний ряд в клетке  top-gap=1.06
+PASS  cr-glyphs-320-dark-ax3 клетка без полосы: отступ заметок как в базе  3.70312px 0.703125px 0.703125px 3.70312px
+PASS  cr-glyphs-320-dark-ax3 консоль без ошибок  
+PASS  cr-glyphs-430-light-ax3 cell30: нижний ряд заметок и зачёркивание выше полосы (зазор ≥ 1 px)  gap=3.30 cell=43.3 notes=7,8,9s
+PASS  cr-glyphs-430-light-ax3 cell30: верхний ряд в клетке  top-gap=26.38
+PASS  cr-glyphs-430-light-ax3 cell39: нижний ряд заметок и зачёркивание выше полосы (зазор ≥ 1 px)  gap=3.80 cell=43.3 notes=7,9s
+PASS  cr-glyphs-430-light-ax3 cell39: верхний ряд в клетке  top-gap=2.28
+PASS  cr-glyphs-430-light-ax3 cell75: нижний ряд заметок и зачёркивание выше полосы (зазор ≥ 1 px)  gap=3.80 cell=43.3 notes=7,9s
+PASS  cr-glyphs-430-light-ax3 cell75: верхний ряд в клетке  top-gap=2.28
+PASS  cr-glyphs-430-light-ax3 клетка без полосы: отступ заметок как в базе  4.71875px 1.71875px 1.71875px 4.71875px
+PASS  cr-glyphs-430-light-ax3 консоль без ошибок  
+PASS  cr-glyphs-430-dark-ax3 cell30: нижний ряд заметок и зачёркивание выше полосы (зазор ≥ 1 px)  gap=3.30 cell=43.3 notes=7,8,9s
+PASS  cr-glyphs-430-dark-ax3 cell30: верхний ряд в клетке  top-gap=26.38
+PASS  cr-glyphs-430-dark-ax3 cell39: нижний ряд заметок и зачёркивание выше полосы (зазор ≥ 1 px)  gap=3.80 cell=43.3 notes=7,9s
+PASS  cr-glyphs-430-dark-ax3 cell39: верхний ряд в клетке  top-gap=2.28
+PASS  cr-glyphs-430-dark-ax3 cell75: нижний ряд заметок и зачёркивание выше полосы (зазор ≥ 1 px)  gap=3.80 cell=43.3 notes=7,9s
+PASS  cr-glyphs-430-dark-ax3 cell75: верхний ряд в клетке  top-gap=2.28
+PASS  cr-glyphs-430-dark-ax3 клетка без полосы: отступ заметок как в базе  4.71875px 1.71875px 1.71875px 4.71875px
+PASS  cr-glyphs-430-dark-ax3 консоль без ошибок  
+PASS  cr-classic-320-light cell30: нижний ряд заметок и зачёркивание выше полосы (зазор ≥ 1 px)  gap=1.88 cell=26.0 notes=7,8,9s
+PASS  cr-classic-320-light cell30: верхний ряд в клетке  top-gap=15.64
+PASS  cr-classic-320-light cell39: нижний ряд заметок и зачёркивание выше полосы (зазор ≥ 1 px)  gap=2.88 cell=26.0 notes=7,9s
+PASS  cr-classic-320-light cell39: верхний ряд в клетке  top-gap=1.84
+PASS  cr-classic-320-light cell75: нижний ряд заметок и зачёркивание выше полосы (зазор ≥ 1 px)  gap=2.88 cell=26.0 notes=7,9s
+PASS  cr-classic-320-light cell75: верхний ряд в клетке  top-gap=1.72
+PASS  cr-classic-320-light клетка без полосы: отступ заметок как в базе  4.03125px 1.03125px 1.03125px 4.03125px
+PASS  cr-classic-320-light консоль без ошибок  
+PASS  cr-classic-320-dark cell30: нижний ряд заметок и зачёркивание выше полосы (зазор ≥ 1 px)  gap=1.88 cell=26.0 notes=7,8,9s
+PASS  cr-classic-320-dark cell30: верхний ряд в клетке  top-gap=15.64
+PASS  cr-classic-320-dark cell39: нижний ряд заметок и зачёркивание выше полосы (зазор ≥ 1 px)  gap=2.88 cell=26.0 notes=7,9s
+PASS  cr-classic-320-dark cell39: верхний ряд в клетке  top-gap=1.84
+PASS  cr-classic-320-dark cell75: нижний ряд заметок и зачёркивание выше полосы (зазор ≥ 1 px)  gap=2.88 cell=26.0 notes=7,9s
+PASS  cr-classic-320-dark cell75: верхний ряд в клетке  top-gap=1.72
+PASS  cr-classic-320-dark клетка без полосы: отступ заметок как в базе  4.03125px 1.03125px 1.03125px 4.03125px
+PASS  cr-classic-320-dark консоль без ошибок  
+PASS  cr-classic-375-light cell30: нижний ряд заметок и зачёркивание выше полосы (зазор ≥ 1 px)  gap=1.63 cell=37.0 notes=7,8,9s
+PASS  cr-classic-375-light cell30: верхний ряд в клетке  top-gap=24.15
+PASS  cr-classic-375-light cell39: нижний ряд заметок и зачёркивание выше полосы (зазор ≥ 1 px)  gap=2.63 cell=37.0 notes=7,9s
+PASS  cr-classic-375-light cell39: верхний ряд в клетке  top-gap=3.66
+PASS  cr-classic-375-light cell75: нижний ряд заметок и зачёркивание выше полосы (зазор ≥ 1 px)  gap=2.63 cell=37.0 notes=7,9s
+PASS  cr-classic-375-light cell75: верхний ряд в клетке  top-gap=3.48
+PASS  cr-classic-375-light клетка без полосы: отступ заметок как в базе  4.46875px 1.46875px 1.46875px 4.46875px
+PASS  cr-classic-375-light консоль без ошибок  
+PASS  cr-classic-375-dark cell30: нижний ряд заметок и зачёркивание выше полосы (зазор ≥ 1 px)  gap=1.63 cell=37.0 notes=7,8,9s
+PASS  cr-classic-375-dark cell30: верхний ряд в клетке  top-gap=24.15
+PASS  cr-classic-375-dark cell39: нижний ряд заметок и зачёркивание выше полосы (зазор ≥ 1 px)  gap=2.63 cell=37.0 notes=7,9s
+PASS  cr-classic-375-dark cell39: верхний ряд в клетке  top-gap=3.66
+PASS  cr-classic-375-dark cell75: нижний ряд заметок и зачёркивание выше полосы (зазор ≥ 1 px)  gap=2.63 cell=37.0 notes=7,9s
+PASS  cr-classic-375-dark cell75: верхний ряд в клетке  top-gap=3.48
+PASS  cr-classic-375-dark клетка без полосы: отступ заметок как в базе  4.46875px 1.46875px 1.46875px 4.46875px
+PASS  cr-classic-375-dark консоль без ошибок  
+PASS  cr-classic-390-light cell30: нижний ряд заметок и зачёркивание выше полосы (зазор ≥ 1 px)  gap=2.29 cell=38.9 notes=7,8,9s
+PASS  cr-classic-390-light cell30: верхний ряд в клетке  top-gap=25.00
+PASS  cr-classic-390-light cell39: нижний ряд заметок и зачёркивание выше полосы (зазор ≥ 1 px)  gap=3.29 cell=38.9 notes=7,9s
+PASS  cr-classic-390-light cell39: верхний ряд в клетке  top-gap=3.33
+PASS  cr-classic-390-light cell75: нижний ряд заметок и зачёркивание выше полосы (зазор ≥ 1 px)  gap=3.29 cell=38.9 notes=7,9s
+PASS  cr-classic-390-light cell75: верхний ряд в клетке  top-gap=3.14
+PASS  cr-classic-390-light клетка без полосы: отступ заметок как в базе  4.54688px 1.54688px 1.54688px 4.54688px
+PASS  cr-classic-390-light консоль без ошибок  
+PASS  cr-classic-390-dark cell30: нижний ряд заметок и зачёркивание выше полосы (зазор ≥ 1 px)  gap=2.29 cell=38.9 notes=7,8,9s
+PASS  cr-classic-390-dark cell30: верхний ряд в клетке  top-gap=25.00
+PASS  cr-classic-390-dark cell39: нижний ряд заметок и зачёркивание выше полосы (зазор ≥ 1 px)  gap=3.29 cell=38.9 notes=7,9s
+PASS  cr-classic-390-dark cell39: верхний ряд в клетке  top-gap=3.33
+PASS  cr-classic-390-dark cell75: нижний ряд заметок и зачёркивание выше полосы (зазор ≥ 1 px)  gap=3.29 cell=38.9 notes=7,9s
+PASS  cr-classic-390-dark cell75: верхний ряд в клетке  top-gap=3.14
+PASS  cr-classic-390-dark клетка без полосы: отступ заметок как в базе  4.54688px 1.54688px 1.54688px 4.54688px
+PASS  cr-classic-390-dark консоль без ошибок  
+PASS  cr-classic-430-light cell30: нижний ряд заметок и зачёркивание выше полосы (зазор ≥ 1 px)  gap=2.80 cell=43.3 notes=7,8,9s
+PASS  cr-classic-430-light cell30: верхний ряд в клетке  top-gap=27.94
+PASS  cr-classic-430-light cell39: нижний ряд заметок и зачёркивание выше полосы (зазор ≥ 1 px)  gap=3.80 cell=43.3 notes=7,9s
+PASS  cr-classic-430-light cell39: верхний ряд в клетке  top-gap=3.56
+PASS  cr-classic-430-light cell75: нижний ряд заметок и зачёркивание выше полосы (зазор ≥ 1 px)  gap=3.80 cell=43.3 notes=7,9s
+PASS  cr-classic-430-light cell75: верхний ряд в клетке  top-gap=3.34
+PASS  cr-classic-430-light клетка без полосы: отступ заметок как в базе  4.71875px 1.71875px 1.71875px 4.71875px
+PASS  cr-classic-430-light консоль без ошибок  
+PASS  cr-classic-430-dark cell30: нижний ряд заметок и зачёркивание выше полосы (зазор ≥ 1 px)  gap=2.80 cell=43.3 notes=7,8,9s
+PASS  cr-classic-430-dark cell30: верхний ряд в клетке  top-gap=27.94
+PASS  cr-classic-430-dark cell39: нижний ряд заметок и зачёркивание выше полосы (зазор ≥ 1 px)  gap=3.80 cell=43.3 notes=7,9s
+PASS  cr-classic-430-dark cell39: верхний ряд в клетке  top-gap=3.56
+PASS  cr-classic-430-dark cell75: нижний ряд заметок и зачёркивание выше полосы (зазор ≥ 1 px)  gap=3.80 cell=43.3 notes=7,9s
+PASS  cr-classic-430-dark cell75: верхний ряд в клетке  top-gap=3.34
+PASS  cr-classic-430-dark клетка без полосы: отступ заметок как в базе  4.71875px 1.71875px 1.71875px 4.71875px
+PASS  cr-classic-430-dark консоль без ошибок  
+PASS  cr-classic-320-light-ax3 cell30: нижний ряд заметок и зачёркивание выше полосы (зазор ≥ 1 px)  gap=2.14 cell=17.9 notes=7,8,9s
+PASS  cr-classic-320-light-ax3 cell30: верхний ряд в клетке  top-gap=9.78
+PASS  cr-classic-320-light-ax3 cell39: нижний ряд заметок и зачёркивание выше полосы (зазор ≥ 1 px)  gap=3.14 cell=17.9 notes=7,9s
+PASS  cr-classic-320-light-ax3 cell39: верхний ряд в клетке  top-gap=0.86
+PASS  cr-classic-320-light-ax3 cell75: нижний ряд заметок и зачёркивание выше полосы (зазор ≥ 1 px)  gap=3.14 cell=17.9 notes=7,9s
+PASS  cr-classic-320-light-ax3 cell75: верхний ряд в клетке  top-gap=0.80
+PASS  cr-classic-320-light-ax3 клетка без полосы: отступ заметок как в базе  3.70312px 0.703125px 0.703125px 3.70312px
+PASS  cr-classic-320-light-ax3 консоль без ошибок  
+PASS  cr-classic-320-dark-ax3 cell30: нижний ряд заметок и зачёркивание выше полосы (зазор ≥ 1 px)  gap=2.14 cell=17.9 notes=7,8,9s
+PASS  cr-classic-320-dark-ax3 cell30: верхний ряд в клетке  top-gap=9.78
+PASS  cr-classic-320-dark-ax3 cell39: нижний ряд заметок и зачёркивание выше полосы (зазор ≥ 1 px)  gap=3.14 cell=17.9 notes=7,9s
+PASS  cr-classic-320-dark-ax3 cell39: верхний ряд в клетке  top-gap=0.86
+PASS  cr-classic-320-dark-ax3 cell75: нижний ряд заметок и зачёркивание выше полосы (зазор ≥ 1 px)  gap=3.14 cell=17.9 notes=7,9s
+PASS  cr-classic-320-dark-ax3 cell75: верхний ряд в клетке  top-gap=0.80
+PASS  cr-classic-320-dark-ax3 клетка без полосы: отступ заметок как в базе  3.70312px 0.703125px 0.703125px 3.70312px
+PASS  cr-classic-320-dark-ax3 консоль без ошибок  
+PASS  cr-classic-430-light-ax3 cell30: нижний ряд заметок и зачёркивание выше полосы (зазор ≥ 1 px)  gap=2.80 cell=43.3 notes=7,8,9s
+PASS  cr-classic-430-light-ax3 cell30: верхний ряд в клетке  top-gap=27.94
+PASS  cr-classic-430-light-ax3 cell39: нижний ряд заметок и зачёркивание выше полосы (зазор ≥ 1 px)  gap=3.80 cell=43.3 notes=7,9s
+PASS  cr-classic-430-light-ax3 cell39: верхний ряд в клетке  top-gap=3.56
+PASS  cr-classic-430-light-ax3 cell75: нижний ряд заметок и зачёркивание выше полосы (зазор ≥ 1 px)  gap=3.80 cell=43.3 notes=7,9s
+PASS  cr-classic-430-light-ax3 cell75: верхний ряд в клетке  top-gap=3.34
+PASS  cr-classic-430-light-ax3 клетка без полосы: отступ заметок как в базе  4.71875px 1.71875px 1.71875px 4.71875px
+PASS  cr-classic-430-light-ax3 консоль без ошибок  
+PASS  cr-classic-430-dark-ax3 cell30: нижний ряд заметок и зачёркивание выше полосы (зазор ≥ 1 px)  gap=2.80 cell=43.3 notes=7,8,9s
+PASS  cr-classic-430-dark-ax3 cell30: верхний ряд в клетке  top-gap=27.94
+PASS  cr-classic-430-dark-ax3 cell39: нижний ряд заметок и зачёркивание выше полосы (зазор ≥ 1 px)  gap=3.80 cell=43.3 notes=7,9s
+PASS  cr-classic-430-dark-ax3 cell39: верхний ряд в клетке  top-gap=3.56
+PASS  cr-classic-430-dark-ax3 cell75: нижний ряд заметок и зачёркивание выше полосы (зазор ≥ 1 px)  gap=3.80 cell=43.3 notes=7,9s
+PASS  cr-classic-430-dark-ax3 cell75: верхний ряд в клетке  top-gap=3.34
+PASS  cr-classic-430-dark-ax3 клетка без полосы: отступ заметок как в базе  4.71875px 1.71875px 1.71875px 4.71875px
+PASS  cr-classic-430-dark-ax3 консоль без ошибок  
+PASS  wk-glyphs-320-light cell30: нижний ряд заметок и зачёркивание выше полосы (зазор ≥ 1 px)  gap=2.52 cell=27.0 notes=7,8,9s
+PASS  wk-glyphs-320-light cell30: верхний ряд в клетке  top-gap=15.64
+PASS  wk-glyphs-320-light cell39: нижний ряд заметок и зачёркивание выше полосы (зазор ≥ 1 px)  gap=2.86 cell=27.0 notes=7,9s
+PASS  wk-glyphs-320-light cell39: верхний ряд в клетке  top-gap=1.58
+PASS  wk-glyphs-320-light cell75: нижний ряд заметок и зачёркивание выше полосы (зазор ≥ 1 px)  gap=3.02 cell=27.0 notes=7,9s
+PASS  wk-glyphs-320-light cell75: верхний ряд в клетке  top-gap=1.58
+PASS  wk-glyphs-320-light клетка без полосы: отступ заметок как в базе  4.078125px 1.078125px 1.078125px 4.078125px
+PASS  wk-glyphs-320-light консоль без ошибок  
+PASS  wk-glyphs-320-dark cell30: нижний ряд заметок и зачёркивание выше полосы (зазор ≥ 1 px)  gap=2.52 cell=27.0 notes=7,8,9s
+PASS  wk-glyphs-320-dark cell30: верхний ряд в клетке  top-gap=15.64
+PASS  wk-glyphs-320-dark cell39: нижний ряд заметок и зачёркивание выше полосы (зазор ≥ 1 px)  gap=2.86 cell=27.0 notes=7,9s
+PASS  wk-glyphs-320-dark cell39: верхний ряд в клетке  top-gap=1.58
+PASS  wk-glyphs-320-dark cell75: нижний ряд заметок и зачёркивание выше полосы (зазор ≥ 1 px)  gap=3.02 cell=27.0 notes=7,9s
+PASS  wk-glyphs-320-dark cell75: верхний ряд в клетке  top-gap=1.58
+PASS  wk-glyphs-320-dark клетка без полосы: отступ заметок как в базе  4.078125px 1.078125px 1.078125px 4.078125px
+PASS  wk-glyphs-320-dark консоль без ошибок  
+PASS  wk-glyphs-375-light cell30: нижний ряд заметок и зачёркивание выше полосы (зазор ≥ 1 px)  gap=3.00 cell=37.2 notes=7,8,9s
+PASS  wk-glyphs-375-light cell30: верхний ряд в клетке  top-gap=22.31
+PASS  wk-glyphs-375-light cell39: нижний ряд заметок и зачёркивание выше полосы (зазор ≥ 1 px)  gap=3.50 cell=37.2 notes=7,9s
+PASS  wk-glyphs-375-light cell39: верхний ряд в клетке  top-gap=1.98
+PASS  wk-glyphs-375-light cell75: нижний ряд заметок и зачёркивание выше полосы (зазор ≥ 1 px)  gap=3.50 cell=37.2 notes=7,9s
+PASS  wk-glyphs-375-light cell75: верхний ряд в клетке  top-gap=1.98
+PASS  wk-glyphs-375-light клетка без полосы: отступ заметок как в базе  4.484375px 1.484375px 1.484375px 4.484375px
+PASS  wk-glyphs-375-light консоль без ошибок  
+PASS  wk-glyphs-375-dark cell30: нижний ряд заметок и зачёркивание выше полосы (зазор ≥ 1 px)  gap=3.00 cell=37.2 notes=7,8,9s
+PASS  wk-glyphs-375-dark cell30: верхний ряд в клетке  top-gap=22.31
+PASS  wk-glyphs-375-dark cell39: нижний ряд заметок и зачёркивание выше полосы (зазор ≥ 1 px)  gap=3.50 cell=37.2 notes=7,9s
+PASS  wk-glyphs-375-dark cell39: верхний ряд в клетке  top-gap=1.98
+PASS  wk-glyphs-375-dark cell75: нижний ряд заметок и зачёркивание выше полосы (зазор ≥ 1 px)  gap=3.50 cell=37.2 notes=7,9s
+PASS  wk-glyphs-375-dark cell75: верхний ряд в клетке  top-gap=1.98
+PASS  wk-glyphs-375-dark клетка без полосы: отступ заметок как в базе  4.484375px 1.484375px 1.484375px 4.484375px
+PASS  wk-glyphs-375-dark консоль без ошибок  
+PASS  wk-glyphs-390-light cell30: нижний ряд заметок и зачёркивание выше полосы (зазор ≥ 1 px)  gap=3.06 cell=38.9 notes=7,8,9s
+PASS  wk-glyphs-390-light cell30: верхний ряд в клетке  top-gap=23.41
+PASS  wk-glyphs-390-light cell39: нижний ряд заметок и зачёркивание выше полосы (зазор ≥ 1 px)  gap=3.56 cell=38.9 notes=7,9s
+PASS  wk-glyphs-390-light cell39: верхний ряд в клетке  top-gap=2.05
+PASS  wk-glyphs-390-light cell75: нижний ряд заметок и зачёркивание выше полосы (зазор ≥ 1 px)  gap=3.56 cell=38.9 notes=7,9s
+PASS  wk-glyphs-390-light cell75: верхний ряд в клетке  top-gap=2.05
+PASS  wk-glyphs-390-light клетка без полосы: отступ заметок как в базе  4.546875px 1.546875px 1.546875px 4.546875px
+PASS  wk-glyphs-390-light консоль без ошибок  
+PASS  wk-glyphs-390-dark cell30: нижний ряд заметок и зачёркивание выше полосы (зазор ≥ 1 px)  gap=3.06 cell=38.9 notes=7,8,9s
+PASS  wk-glyphs-390-dark cell30: верхний ряд в клетке  top-gap=23.41
+PASS  wk-glyphs-390-dark cell39: нижний ряд заметок и зачёркивание выше полосы (зазор ≥ 1 px)  gap=3.56 cell=38.9 notes=7,9s
+PASS  wk-glyphs-390-dark cell39: верхний ряд в клетке  top-gap=2.05
+PASS  wk-glyphs-390-dark cell75: нижний ряд заметок и зачёркивание выше полосы (зазор ≥ 1 px)  gap=3.56 cell=38.9 notes=7,9s
+PASS  wk-glyphs-390-dark cell75: верхний ряд в клетке  top-gap=2.05
+PASS  wk-glyphs-390-dark клетка без полосы: отступ заметок как в базе  4.546875px 1.546875px 1.546875px 4.546875px
+PASS  wk-glyphs-390-dark консоль без ошибок  
+PASS  wk-glyphs-430-light cell30: нижний ряд заметок и зачёркивание выше полосы (зазор ≥ 1 px)  gap=3.30 cell=43.3 notes=7,8,9s
+PASS  wk-glyphs-430-light cell30: верхний ряд в клетке  top-gap=26.38
+PASS  wk-glyphs-430-light cell39: нижний ряд заметок и зачёркивание выше полосы (зазор ≥ 1 px)  gap=3.80 cell=43.3 notes=7,9s
+PASS  wk-glyphs-430-light cell39: верхний ряд в клетке  top-gap=2.28
+PASS  wk-glyphs-430-light cell75: нижний ряд заметок и зачёркивание выше полосы (зазор ≥ 1 px)  gap=3.80 cell=43.3 notes=7,9s
+PASS  wk-glyphs-430-light cell75: верхний ряд в клетке  top-gap=2.28
+PASS  wk-glyphs-430-light клетка без полосы: отступ заметок как в базе  4.71875px 1.71875px 1.71875px 4.71875px
+PASS  wk-glyphs-430-light консоль без ошибок  
+PASS  wk-glyphs-430-dark cell30: нижний ряд заметок и зачёркивание выше полосы (зазор ≥ 1 px)  gap=3.30 cell=43.3 notes=7,8,9s
+PASS  wk-glyphs-430-dark cell30: верхний ряд в клетке  top-gap=26.38
+PASS  wk-glyphs-430-dark cell39: нижний ряд заметок и зачёркивание выше полосы (зазор ≥ 1 px)  gap=3.80 cell=43.3 notes=7,9s
+PASS  wk-glyphs-430-dark cell39: верхний ряд в клетке  top-gap=2.28
+PASS  wk-glyphs-430-dark cell75: нижний ряд заметок и зачёркивание выше полосы (зазор ≥ 1 px)  gap=3.80 cell=43.3 notes=7,9s
+PASS  wk-glyphs-430-dark cell75: верхний ряд в клетке  top-gap=2.28
+PASS  wk-glyphs-430-dark клетка без полосы: отступ заметок как в базе  4.71875px 1.71875px 1.71875px 4.71875px
+PASS  wk-glyphs-430-dark консоль без ошибок  
+PASS  wk-glyphs-320-light-ax3 cell30: нижний ряд заметок и зачёркивание выше полосы (зазор ≥ 1 px)  gap=1.22 cell=17.9 notes=7,8,9s
+PASS  wk-glyphs-320-light-ax3 cell30: верхний ряд в клетке  top-gap=9.67
+PASS  wk-glyphs-320-light-ax3 cell39: нижний ряд заметок и зачёркивание выше полосы (зазор ≥ 1 px)  gap=1.55 cell=17.9 notes=7,9s
+PASS  wk-glyphs-320-light-ax3 cell39: верхний ряд в клетке  top-gap=1.06
+PASS  wk-glyphs-320-light-ax3 cell75: нижний ряд заметок и зачёркивание выше полосы (зазор ≥ 1 px)  gap=1.72 cell=17.9 notes=7,9s
+PASS  wk-glyphs-320-light-ax3 cell75: верхний ряд в клетке  top-gap=1.06
+PASS  wk-glyphs-320-light-ax3 клетка без полосы: отступ заметок как в базе  3.703125px 0.703125px 0.703125px 3.703125px
+PASS  wk-glyphs-320-light-ax3 консоль без ошибок  
+PASS  wk-glyphs-320-dark-ax3 cell30: нижний ряд заметок и зачёркивание выше полосы (зазор ≥ 1 px)  gap=1.22 cell=17.9 notes=7,8,9s
+PASS  wk-glyphs-320-dark-ax3 cell30: верхний ряд в клетке  top-gap=9.67
+PASS  wk-glyphs-320-dark-ax3 cell39: нижний ряд заметок и зачёркивание выше полосы (зазор ≥ 1 px)  gap=1.55 cell=17.9 notes=7,9s
+PASS  wk-glyphs-320-dark-ax3 cell39: верхний ряд в клетке  top-gap=1.06
+PASS  wk-glyphs-320-dark-ax3 cell75: нижний ряд заметок и зачёркивание выше полосы (зазор ≥ 1 px)  gap=1.72 cell=17.9 notes=7,9s
+PASS  wk-glyphs-320-dark-ax3 cell75: верхний ряд в клетке  top-gap=1.06
+PASS  wk-glyphs-320-dark-ax3 клетка без полосы: отступ заметок как в базе  3.703125px 0.703125px 0.703125px 3.703125px
+PASS  wk-glyphs-320-dark-ax3 консоль без ошибок  
+PASS  wk-glyphs-430-light-ax3 cell30: нижний ряд заметок и зачёркивание выше полосы (зазор ≥ 1 px)  gap=3.30 cell=43.3 notes=7,8,9s
+PASS  wk-glyphs-430-light-ax3 cell30: верхний ряд в клетке  top-gap=26.38
+PASS  wk-glyphs-430-light-ax3 cell39: нижний ряд заметок и зачёркивание выше полосы (зазор ≥ 1 px)  gap=3.80 cell=43.3 notes=7,9s
+PASS  wk-glyphs-430-light-ax3 cell39: верхний ряд в клетке  top-gap=2.28
+PASS  wk-glyphs-430-light-ax3 cell75: нижний ряд заметок и зачёркивание выше полосы (зазор ≥ 1 px)  gap=3.80 cell=43.3 notes=7,9s
+PASS  wk-glyphs-430-light-ax3 cell75: верхний ряд в клетке  top-gap=2.28
+PASS  wk-glyphs-430-light-ax3 клетка без полосы: отступ заметок как в базе  4.71875px 1.71875px 1.71875px 4.71875px
+PASS  wk-glyphs-430-light-ax3 консоль без ошибок  
+PASS  wk-glyphs-430-dark-ax3 cell30: нижний ряд заметок и зачёркивание выше полосы (зазор ≥ 1 px)  gap=3.30 cell=43.3 notes=7,8,9s
+PASS  wk-glyphs-430-dark-ax3 cell30: верхний ряд в клетке  top-gap=26.38
+PASS  wk-glyphs-430-dark-ax3 cell39: нижний ряд заметок и зачёркивание выше полосы (зазор ≥ 1 px)  gap=3.80 cell=43.3 notes=7,9s
+PASS  wk-glyphs-430-dark-ax3 cell39: верхний ряд в клетке  top-gap=2.28
+PASS  wk-glyphs-430-dark-ax3 cell75: нижний ряд заметок и зачёркивание выше полосы (зазор ≥ 1 px)  gap=3.80 cell=43.3 notes=7,9s
+PASS  wk-glyphs-430-dark-ax3 cell75: верхний ряд в клетке  top-gap=2.28
+PASS  wk-glyphs-430-dark-ax3 клетка без полосы: отступ заметок как в базе  4.71875px 1.71875px 1.71875px 4.71875px
+PASS  wk-glyphs-430-dark-ax3 консоль без ошибок  
+PASS  wk-classic-320-light cell30: нижний ряд заметок и зачёркивание выше полосы (зазор ≥ 1 px)  gap=2.23 cell=27.0 notes=7,8,9s
+PASS  wk-classic-320-light cell30: верхний ряд в клетке  top-gap=16.02
+PASS  wk-classic-320-light cell39: нижний ряд заметок и зачёркивание выше полосы (зазор ≥ 1 px)  gap=3.23 cell=27.0 notes=7,9s
+PASS  wk-classic-320-light cell39: верхний ряд в клетке  top-gap=1.58
+PASS  wk-classic-320-light cell75: нижний ряд заметок и зачёркивание выше полосы (зазор ≥ 1 px)  gap=3.23 cell=27.0 notes=7,9s
+PASS  wk-classic-320-light cell75: верхний ряд в клетке  top-gap=1.45
+PASS  wk-classic-320-light клетка без полосы: отступ заметок как в базе  4.078125px 1.078125px 1.078125px 4.078125px
+PASS  wk-classic-320-light консоль без ошибок  
+PASS  wk-classic-320-dark cell30: нижний ряд заметок и зачёркивание выше полосы (зазор ≥ 1 px)  gap=2.23 cell=27.0 notes=7,8,9s
+PASS  wk-classic-320-dark cell30: верхний ряд в клетке  top-gap=16.02
+PASS  wk-classic-320-dark cell39: нижний ряд заметок и зачёркивание выше полосы (зазор ≥ 1 px)  gap=3.23 cell=27.0 notes=7,9s
+PASS  wk-classic-320-dark cell39: верхний ряд в клетке  top-gap=1.58
+PASS  wk-classic-320-dark cell75: нижний ряд заметок и зачёркивание выше полосы (зазор ≥ 1 px)  gap=3.23 cell=27.0 notes=7,9s
+PASS  wk-classic-320-dark cell75: верхний ряд в клетке  top-gap=1.45
+PASS  wk-classic-320-dark клетка без полосы: отступ заметок как в базе  4.078125px 1.078125px 1.078125px 4.078125px
+PASS  wk-classic-320-dark консоль без ошибок  
+PASS  wk-classic-375-light cell30: нижний ряд заметок и зачёркивание выше полосы (зазор ≥ 1 px)  gap=1.73 cell=37.2 notes=7,8,9s
+PASS  wk-classic-375-light cell30: верхний ряд в клетке  top-gap=24.27
+PASS  wk-classic-375-light cell39: нижний ряд заметок и зачёркивание выше полосы (зазор ≥ 1 px)  gap=2.73 cell=37.2 notes=7,9s
+PASS  wk-classic-375-light cell39: верхний ряд в клетке  top-gap=3.63
+PASS  wk-classic-375-light cell75: нижний ряд заметок и зачёркивание выше полосы (зазор ≥ 1 px)  gap=2.73 cell=37.2 notes=7,9s
+PASS  wk-classic-375-light cell75: верхний ряд в клетке  top-gap=3.44
+PASS  wk-classic-375-light клетка без полосы: отступ заметок как в базе  4.484375px 1.484375px 1.484375px 4.484375px
+PASS  wk-classic-375-light консоль без ошибок  
+PASS  wk-classic-375-dark cell30: нижний ряд заметок и зачёркивание выше полосы (зазор ≥ 1 px)  gap=1.73 cell=37.2 notes=7,8,9s
+PASS  wk-classic-375-dark cell30: верхний ряд в клетке  top-gap=24.27
+PASS  wk-classic-375-dark cell39: нижний ряд заметок и зачёркивание выше полосы (зазор ≥ 1 px)  gap=2.73 cell=37.2 notes=7,9s
+PASS  wk-classic-375-dark cell39: верхний ряд в клетке  top-gap=3.63
+PASS  wk-classic-375-dark cell75: нижний ряд заметок и зачёркивание выше полосы (зазор ≥ 1 px)  gap=2.73 cell=37.2 notes=7,9s
+PASS  wk-classic-375-dark cell75: верхний ряд в клетке  top-gap=3.44
+PASS  wk-classic-375-dark клетка без полосы: отступ заметок как в базе  4.484375px 1.484375px 1.484375px 4.484375px
+PASS  wk-classic-375-dark консоль без ошибок  
+PASS  wk-classic-390-light cell30: нижний ряд заметок и зачёркивание выше полосы (зазор ≥ 1 px)  gap=2.30 cell=38.9 notes=7,8,9s
+PASS  wk-classic-390-light cell30: верхний ряд в клетке  top-gap=25.00
+PASS  wk-classic-390-light cell39: нижний ряд заметок и зачёркивание выше полосы (зазор ≥ 1 px)  gap=3.30 cell=38.9 notes=7,9s
+PASS  wk-classic-390-light cell39: верхний ряд в клетке  top-gap=3.33
+PASS  wk-classic-390-light cell75: нижний ряд заметок и зачёркивание выше полосы (зазор ≥ 1 px)  gap=3.30 cell=38.9 notes=7,9s
+PASS  wk-classic-390-light cell75: верхний ряд в клетке  top-gap=3.14
+PASS  wk-classic-390-light клетка без полосы: отступ заметок как в базе  4.546875px 1.546875px 1.546875px 4.546875px
+PASS  wk-classic-390-light консоль без ошибок  
+PASS  wk-classic-390-dark cell30: нижний ряд заметок и зачёркивание выше полосы (зазор ≥ 1 px)  gap=2.30 cell=38.9 notes=7,8,9s
+PASS  wk-classic-390-dark cell30: верхний ряд в клетке  top-gap=25.00
+PASS  wk-classic-390-dark cell39: нижний ряд заметок и зачёркивание выше полосы (зазор ≥ 1 px)  gap=3.30 cell=38.9 notes=7,9s
+PASS  wk-classic-390-dark cell39: верхний ряд в клетке  top-gap=3.33
+PASS  wk-classic-390-dark cell75: нижний ряд заметок и зачёркивание выше полосы (зазор ≥ 1 px)  gap=3.30 cell=38.9 notes=7,9s
+PASS  wk-classic-390-dark cell75: верхний ряд в клетке  top-gap=3.14
+PASS  wk-classic-390-dark клетка без полосы: отступ заметок как в базе  4.546875px 1.546875px 1.546875px 4.546875px
+PASS  wk-classic-390-dark консоль без ошибок  
+PASS  wk-classic-430-light cell30: нижний ряд заметок и зачёркивание выше полосы (зазор ≥ 1 px)  gap=2.81 cell=43.3 notes=7,8,9s
+PASS  wk-classic-430-light cell30: верхний ряд в клетке  top-gap=27.94
+PASS  wk-classic-430-light cell39: нижний ряд заметок и зачёркивание выше полосы (зазор ≥ 1 px)  gap=3.81 cell=43.3 notes=7,9s
+PASS  wk-classic-430-light cell39: верхний ряд в клетке  top-gap=3.56
+PASS  wk-classic-430-light cell75: нижний ряд заметок и зачёркивание выше полосы (зазор ≥ 1 px)  gap=3.81 cell=43.3 notes=7,9s
+PASS  wk-classic-430-light cell75: верхний ряд в клетке  top-gap=3.34
+PASS  wk-classic-430-light клетка без полосы: отступ заметок как в базе  4.71875px 1.71875px 1.71875px 4.71875px
+PASS  wk-classic-430-light консоль без ошибок  
+PASS  wk-classic-430-dark cell30: нижний ряд заметок и зачёркивание выше полосы (зазор ≥ 1 px)  gap=2.81 cell=43.3 notes=7,8,9s
+PASS  wk-classic-430-dark cell30: верхний ряд в клетке  top-gap=27.94
+PASS  wk-classic-430-dark cell39: нижний ряд заметок и зачёркивание выше полосы (зазор ≥ 1 px)  gap=3.81 cell=43.3 notes=7,9s
+PASS  wk-classic-430-dark cell39: верхний ряд в клетке  top-gap=3.56
+PASS  wk-classic-430-dark cell75: нижний ряд заметок и зачёркивание выше полосы (зазор ≥ 1 px)  gap=3.81 cell=43.3 notes=7,9s
+PASS  wk-classic-430-dark cell75: верхний ряд в клетке  top-gap=3.34
+PASS  wk-classic-430-dark клетка без полосы: отступ заметок как в базе  4.71875px 1.71875px 1.71875px 4.71875px
+PASS  wk-classic-430-dark консоль без ошибок  
+PASS  wk-classic-320-light-ax3 cell30: нижний ряд заметок и зачёркивание выше полосы (зазор ≥ 1 px)  gap=2.14 cell=17.9 notes=7,8,9s
+PASS  wk-classic-320-light-ax3 cell30: верхний ряд в клетке  top-gap=9.77
+PASS  wk-classic-320-light-ax3 cell39: нижний ряд заметок и зачёркивание выше полосы (зазор ≥ 1 px)  gap=3.14 cell=17.9 notes=7,9s
+PASS  wk-classic-320-light-ax3 cell39: верхний ряд в клетке  top-gap=0.88
+PASS  wk-classic-320-light-ax3 cell75: нижний ряд заметок и зачёркивание выше полосы (зазор ≥ 1 px)  gap=3.14 cell=17.9 notes=7,9s
+PASS  wk-classic-320-light-ax3 cell75: верхний ряд в клетке  top-gap=0.80
+PASS  wk-classic-320-light-ax3 клетка без полосы: отступ заметок как в базе  3.703125px 0.703125px 0.703125px 3.703125px
+PASS  wk-classic-320-light-ax3 консоль без ошибок  
+PASS  wk-classic-320-dark-ax3 cell30: нижний ряд заметок и зачёркивание выше полосы (зазор ≥ 1 px)  gap=2.14 cell=17.9 notes=7,8,9s
+PASS  wk-classic-320-dark-ax3 cell30: верхний ряд в клетке  top-gap=9.77
+PASS  wk-classic-320-dark-ax3 cell39: нижний ряд заметок и зачёркивание выше полосы (зазор ≥ 1 px)  gap=3.14 cell=17.9 notes=7,9s
+PASS  wk-classic-320-dark-ax3 cell39: верхний ряд в клетке  top-gap=0.88
+PASS  wk-classic-320-dark-ax3 cell75: нижний ряд заметок и зачёркивание выше полосы (зазор ≥ 1 px)  gap=3.14 cell=17.9 notes=7,9s
+PASS  wk-classic-320-dark-ax3 cell75: верхний ряд в клетке  top-gap=0.80
+PASS  wk-classic-320-dark-ax3 клетка без полосы: отступ заметок как в базе  3.703125px 0.703125px 0.703125px 3.703125px
+PASS  wk-classic-320-dark-ax3 консоль без ошибок  
+PASS  wk-classic-430-light-ax3 cell30: нижний ряд заметок и зачёркивание выше полосы (зазор ≥ 1 px)  gap=2.81 cell=43.3 notes=7,8,9s
+PASS  wk-classic-430-light-ax3 cell30: верхний ряд в клетке  top-gap=27.94
+PASS  wk-classic-430-light-ax3 cell39: нижний ряд заметок и зачёркивание выше полосы (зазор ≥ 1 px)  gap=3.81 cell=43.3 notes=7,9s
+PASS  wk-classic-430-light-ax3 cell39: верхний ряд в клетке  top-gap=3.56
+PASS  wk-classic-430-light-ax3 cell75: нижний ряд заметок и зачёркивание выше полосы (зазор ≥ 1 px)  gap=3.81 cell=43.3 notes=7,9s
+PASS  wk-classic-430-light-ax3 cell75: верхний ряд в клетке  top-gap=3.34
+PASS  wk-classic-430-light-ax3 клетка без полосы: отступ заметок как в базе  4.71875px 1.71875px 1.71875px 4.71875px
+PASS  wk-classic-430-light-ax3 консоль без ошибок  
+PASS  wk-classic-430-dark-ax3 cell30: нижний ряд заметок и зачёркивание выше полосы (зазор ≥ 1 px)  gap=2.81 cell=43.3 notes=7,8,9s
+PASS  wk-classic-430-dark-ax3 cell30: верхний ряд в клетке  top-gap=27.94
+PASS  wk-classic-430-dark-ax3 cell39: нижний ряд заметок и зачёркивание выше полосы (зазор ≥ 1 px)  gap=3.81 cell=43.3 notes=7,9s
+PASS  wk-classic-430-dark-ax3 cell39: верхний ряд в клетке  top-gap=3.56
+PASS  wk-classic-430-dark-ax3 cell75: нижний ряд заметок и зачёркивание выше полосы (зазор ≥ 1 px)  gap=3.81 cell=43.3 notes=7,9s
+PASS  wk-classic-430-dark-ax3 cell75: верхний ряд в клетке  top-gap=3.34
+PASS  wk-classic-430-dark-ax3 клетка без полосы: отступ заметок как в базе  4.71875px 1.71875px 1.71875px 4.71875px
+PASS  wk-classic-430-dark-ax3 консоль без ошибок  
+384/384 PASS

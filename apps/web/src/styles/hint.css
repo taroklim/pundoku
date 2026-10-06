@@ -106,6 +106,26 @@
   border-radius: var(--r-tl) var(--r-tr) var(--r-br) var(--r-bl);
   pointer-events: none;
 }
+/* PD-200: полоса на клетке с заметками. Заметки 3×3 занимают клетку целиком, и нижний ряд (вычеркнутый кандидат вместе
+   с ним) ложился ровно на полосу. Здесь полоса прижата к кромке (низ 0,5 px, высота 2,5 px — верх на 3 px), а сетка
+   заметок поднята над ней: снизу 4 % + 4,5 px, ряды сжимаются. Шрифт заметок ограничен шагом ряда (шаг − 1 px на чернила:
+   цифра ≈ 0,74 em, знак 0,82 em), чтобы соседние ряды не наезжали друг на друга; от 375 pt это ограничение не срабатывает,
+   на 320 pt — доли пикселя у знаков, сильнее — только на крошечной клетке AX3 при открытом доке (≈ 18 px). Клетки без
+   полосы и полоса на клетке с цифрой не меняются. */
+.board .box > .cell:has(> .marks) > .hint-strip {
+  bottom: 0.5px;
+  height: 2.5px;
+  border-radius: 1.25px;
+}
+.board .box > .cell:has(> .hint-strip) > .marks {
+  padding-bottom: calc(4% + 4.5px);
+}
+.board .box > .cell:has(> .hint-strip) > .marks > span {
+  font-size: min(max(7px, calc(var(--s) * 0.3)), max(4px, calc((var(--s) * 0.3067 - 2.5px) / 0.74)));
+}
+.board .box > .cell:has(> .hint-strip) > .gl-marks > span {
+  font-size: min(max(7px, calc(var(--s) * 0.3)), max(4px, calc((var(--s) * 0.3067 - 2.5px) / 0.82)));
+}
 /* 4. Вычеркнутый кандидат — только там, где заметка есть: глиф цветом чернил + линия по нему. */
 .cell .marks span.struck,
 .cell.same .marks span.struck,
