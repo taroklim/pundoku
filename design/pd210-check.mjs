@@ -11,8 +11,9 @@
  * удержание: < 0,45 с — нет, > 0,45 с — осмотр b (цифры читаются, контраст ≥ 4.5:1, граница света видна: is-peek), чип «Осмотр»,
  * строка удержания; отпустил — фонарь на месте → ⋯ «Осмотреть доску» → строка + «Готово» (44 pt, не налезает на поле/пад) →
  * «Готово» → Reduce Motion: переход 0 с. Год: строка «Режим · Фонарь», знака на полотне нет. Переполнения подписи/строки нет,
- * поле ≥ 150 px. Замер кадров смены выбора: классика / Фонарь (туман) / осмотр / осмотр + настоящий filter: blur (для сравнения).
- * Кадры: design/pd210-shots/. Браузеры — в finally.
+ * поле ≥ 150 px. Замер кадров смены выбора: классика / Фонарь с blur / тот же Фонарь без blur (только opacity) / осмотр.
+ * PD-216: туман — настоящий blur своих цифр/заметок (проверка «глиф размыт и нечитаем»: радиус ≥ 0.17 кегля, ≤ 32 %, aria-hidden).
+ * Кадры: design/pd216-shots/ (OUT_DIR — другая папка). Браузеры — в finally.
  */
 import { createRequire } from "node:module";
 import { spawnSync } from "node:child_process";
@@ -39,7 +40,7 @@ const { solve, litCells } = await import(pathToFileURL(join(HERE, "../packages/e
 
 const BASE = process.env.BASE ?? "http://localhost:5210";
 const PERF = process.env.PERF !== "0";
-const OUT = join(HERE, "pd210-shots");
+const OUT = join(HERE, process.env.OUT_DIR ?? "pd216-shots");
 mkdirSync(OUT, { recursive: true });
 const ONLY = process.env.WK_ONLY ? "wk" : process.env.CR_ONLY ? "cr" : null;
 if (!process.env.SEL_ONLY) for (const f of readdirSync(OUT)) if (/^(cr|wk)-.*\.png$/.test(f) && (!ONLY || f.startsWith(ONLY + "-"))) rmSync(join(OUT, f), { force: true });
@@ -207,38 +208,41 @@ const shadowAudit = (page, sol) =>
     ({ sel, sol }) => {
       const b = document.querySelector(sel);
       const bad = [];
-      let fogD = 0;
-      let fogM = 0;
-      const ratios = [];
+      let shD = 0;
+      let shM = 0;
+      const blurs = [];
       for (const c of b.querySelectorAll(".cell.is-shadow")) {
         const i = Number(c.getAttribute("data-i"));
-        const given = c.querySelector(".d.given")?.textContent ?? "";
-        if (c.textContent !== given) bad.push(`text r${i}:${c.textContent}`);
         if (c.hasAttribute("title") || c.querySelector("[title]")) bad.push(`title r${i}`);
         const lab = c.getAttribute("aria-label") ?? "";
-        const tail = lab.split(", ").slice(2).join(", ");
-        if (!given && /\d/.test(tail)) bad.push(`label r${i}:${lab}`);
-        const f = c.querySelector(".d.fog");
-        if (f) {
-          fogD++;
-          if (!getComputedStyle(f).backgroundImage.includes("radial-gradient")) bad.push(`fog bg r${i}`);
-          ratios.push(f.getBoundingClientRect().width / c.getBoundingClientRect().width);
+        const given = c.querySelector(".d.given");
+        if (!given && /\d/.test(lab.split(", ").slice(2).join(", "))) bad.push(`label r${i}:${lab}`);
+        for (const el of c.querySelectorAll(".d.player, .marks")) {
+          if (el.getAttribute("aria-hidden") !== "true") bad.push(`aria r${i}`);
+          const f = getComputedStyle(el).filter;
+          const m = /blur\(([\d.]+)px\)/.exec(f);
+          const o = /opacity\(([\d.]+)\)/.exec(f);
+          if (!m || !o || Number(o[1]) > 0.33) {
+            bad.push(`filter r${i}:${f}`);
+            continue;
+          }
+          if (el.classList.contains("marks")) shM++;
+          else {
+            shD++;
+            // Нечитаемость: радиус размытия к кеглю цифры (макет C глубина 2: 0.11·s / 0.62·s ≈ 0.18) и к стороне клетки.
+            blurs.push({ font: Number(m[1]) / parseFloat(getComputedStyle(el).fontSize), cell: Number(m[1]) / c.getBoundingClientRect().width });
+          }
         }
-        if (c.querySelector(".marks.fog")) fogM++;
       }
-      const filters = [...b.querySelectorAll(".d, .marks")].filter((e) => getComputedStyle(e).filter !== "none").length;
+      const filters = [...b.querySelectorAll(".cell:not(.is-shadow) .d, .cell:not(.is-shadow) .marks, .d.given")].filter((e) => getComputedStyle(e).filter !== "none").length;
       const givenShadow = [...b.querySelectorAll(".cell.is-shadow .d.given")].map((e) => getComputedStyle(e)).filter((cs) => cs.opacity !== "1" || cs.filter !== "none").length;
-      // Весь текст поля (как при копировании/печати): свои цифры — только в свете.
-      const lit = new Set([...b.querySelectorAll(".cell.is-lit")].map((c) => Number(c.getAttribute("data-i"))));
-      let leaked = 0;
-      for (const c of b.querySelectorAll(".cell")) {
-        const i = Number(c.getAttribute("data-i"));
-        if (lit.has(i)) continue;
-        const p = c.querySelector(".d.player:not(.fog)");
-        if (p && p.textContent === sol[i]) leaked++;
-      }
-      const sorted = ratios.sort((a, b) => a - b);
-      return { bad, fogD, fogM, filters, givenShadow, leaked, ratio: sorted.length ? sorted[sorted.length >> 1] : 0, userSelect: getComputedStyle(b).webkitUserSelect || getComputedStyle(b).userSelect };
+      const leaked = 0;
+      const med = (k) => {
+        const v = blurs.map((x) => x[k]).sort((x, y) => x - y);
+        return v.length ? v[v.length >> 1] : 0;
+      };
+      const minFont = blurs.length ? Math.min(...blurs.map((x) => x.font)) : 0;
+      return { bad, shD, shM, filters, givenShadow, leaked, blurCell: med("cell"), blurFont: minFont, userSelect: getComputedStyle(b).webkitUserSelect || getComputedStyle(b).userSelect };
     },
     { sel: BOARD, sol },
   );
@@ -393,16 +397,16 @@ async function flow(name, type, c) {
     st = await state(page);
     ok(`${tag} свет = строка/столбец/блок центра (21), остальное в тени (60)`, st.lantern === "lit" && JSON.stringify([...st.lit].sort((a, b) => a - b)) === JSON.stringify([...litCells(40)]) && st.shadow.length === 60);
     const a = await shadowAudit(page, sol);
-    ok(`${tag} утечки: в тени нет текста своих цифр/заметок, нет title, подписи без цифр`, a.bad.length === 0 && a.leaked === 0, a.bad.slice(0, 4).join(" | "));
-    ok(`${tag} туман: пятна цифр и заметок есть (градиент), ни одного filter на поле, подсказки в тени не тронуты`, a.fogD > 0 && a.fogM > 0 && a.filters === 0 && a.givenShadow === 0, JSON.stringify({ d: a.fogD, m: a.fogM, f: a.filters, g: a.givenShadow }));
-    ok(`${tag} туман масштабируется от клетки (пятно ≈ 0.45 стороны)`, a.ratio > 0.36 && a.ratio < 0.54, a.ratio.toFixed(3));
+    ok(`${tag} утечки: размытое содержимое aria-hidden, нет title, подписи без цифр, один filter blur+opacity ≤ 0.32`, a.bad.length === 0, a.bad.slice(0, 4).join(" | "));
+    ok(`${tag} туман: размыты свои цифры и заметки; вне тени и у подсказок filter нет`, a.shD > 0 && a.shM > 0 && a.filters === 0 && a.givenShadow === 0, JSON.stringify({ d: a.shD, m: a.shM, f: a.filters, g: a.givenShadow }));
+    ok(`${tag} глиф нечитаем: blur ≥ 0.17 кегля цифры, ≈ 0.11 стороны клетки (масштаб с полем)`, a.blurFont >= 0.17 && a.blurCell > 0.1 && a.blurCell < 0.12, JSON.stringify({ font: +a.blurFont.toFixed(3), cell: +a.blurCell.toFixed(3) }));
     ok(`${tag} поле без выделения текста (user-select: none)`, a.userSelect === "none", a.userSelect);
     const shadowMine = mine.find((i) => st.shadow.includes(i));
     const shadowNote = noted.find((i) => st.shadow.includes(i));
     const lbl = await page.locator(cellSel(shadowMine)).getAttribute("aria-label");
     const lblN = shadowNote !== undefined ? await page.locator(cellSel(shadowNote)).getAttribute("aria-label") : `x, x, ${L.notes}`;
     ok(`${tag} VoiceOver: «${L.shadow}» / «${L.notes}»`, lbl.endsWith(`, ${L.shadow}`) && lbl.split(", ").length === 3 && lblN.endsWith(`, ${L.notes}`), `${lbl} | ${lblN}`);
-    const trans = await page.evaluate((s) => getComputedStyle(document.querySelector(s)).transitionDuration, `${BOARD} .cell.is-lit .d.player, ${BOARD} .cell .d.fog`);
+    const trans = await page.evaluate((s) => getComputedStyle(document.querySelector(s)).transitionDuration, `${BOARD} .cell.is-shadow .d.player`);
     if (c.rm) ok(`${tag} Reduce Motion: переход света 0 с`, /^0s$/.test(trans), trans);
     else ok(`${tag} переход света 160 мс (только opacity)`, /0\.16s|160ms/.test(trans), trans);
     f = await fit(page);
@@ -431,7 +435,7 @@ async function flow(name, type, c) {
     const peekCell = mine.find((i) => held.peek.includes(i));
     const pc = await peekContrast(page, peekCell);
     ok(`${tag} удержание: 0,3 с — ещё нет, 0,7 с — осмотр`, early !== "inspect" && held.lantern === "inspect", `${early} → ${held.lantern}`);
-    ok(`${tag} осмотр b: тень помечена is-peek (60), свет как был (21), тумана нет`, held.peek.length === 60 && held.lit.length === 21 && held.shadow.length === 0 && (await page.locator(`${BOARD} .fog`).count()) === 0);
+    ok(`${tag} осмотр b: тень помечена is-peek (60), свет как был (21), тумана нет`, held.peek.length === 60 && held.lit.length === 21 && held.shadow.length === 0 );
     ok(`${tag} осмотр b: своя цифра тени читается (${sol[peekCell]}), контраст ≥ 4.5:1, ореол тумана`, pc.text === sol[peekCell] && pc.ratio >= 4.5 && pc.halo, JSON.stringify(pc));
     ok(`${tag} удержание: чип «${L.insp}», строка удержания`, held.chip === "insp" && held.status === "hold");
     f = await fit(page);
@@ -458,10 +462,15 @@ async function flow(name, type, c) {
     await page.waitForTimeout(400);
     ok(`${tag} «Готово» — туман вернулся`, (await state(page)).lantern === "lit");
 
-    // Замер кадров (только конфиг perf): Фонарь — туман; осмотр — is-peek; осмотр + настоящий filter: blur (как альтернатива).
+    // Замер кадров (только конфиг perf): Фонарь с blur; тот же Фонарь без blur (только opacity — цена размытия); осмотр.
     if (c.perf && PERF) {
       const seq = [40, 0, 80, 8, 72, 30, 50, 12, 68, 4, 44, 76, 36, 20, 60, 2, 78, 41, 39, 13, 67, 31, 49, 22];
       const fog = await frames(page, seq);
+      const noBlurTag = await page.addStyleTag({ content: `${BOARD} .cell.is-shadow .d.player, ${BOARD} .cell.is-shadow .marks{filter:opacity(0.32) !important}` });
+      await page.waitForTimeout(300);
+      const noBlur = await frames(page, seq);
+      await noBlurTag.evaluate((e) => e.remove());
+      await page.waitForTimeout(300);
       await page.locator('[data-testid="more-button"]').click();
       await page.locator('[data-testid="menu-inspect"]').click();
       await page.waitForTimeout(400);
@@ -485,10 +494,6 @@ async function flow(name, type, c) {
         }, BOARD);
       await page.locator(cellSel(40)).focus().catch(() => {});
       const peek = await arrows();
-      await page.addStyleTag({ content: `${BOARD} .cell.is-peek .d.player{filter:blur(calc(var(--s) * 0.11)) opacity(0.32) !important;text-shadow:none !important}` });
-      await page.waitForTimeout(300);
-      const blur = await arrows();
-      if (c.shots) await page.screenshot({ path: shot("perf-filter-blur-compare") });
       // Вкл/выкл осмотра (весь туман ↔ цифры): «Готово» → кадр.
       const toggle = await page.evaluate(async () => {
         const raf = () => new Promise((r) => requestAnimationFrame(() => r()));
@@ -508,8 +513,8 @@ async function flow(name, type, c) {
       const empty2 = [...g2].flatMap((ch, i) => (ch === "0" ? [i] : []));
       for (const i of empty2.filter((_, k) => k % 3 === 0).slice(0, mine.length)) await place(page, i, Number(sol2[i]));
       const classic = await frames(page, seq);
-      perf.push({ engine: name, tag, classic, fog, peekArrows: peek, peekFilterBlurArrows: blur, inspectOffMs: toggle });
-      ok(`${tag} замер кадров (см. pd210-perf.json)`, true, JSON.stringify({ classic: classic.frame, fog: fog.frame, peek, blur, toggle }));
+      perf.push({ engine: name, tag, classic, lanternBlur: fog, lanternNoBlur: noBlur, peekArrows: peek, inspectOffMs: toggle });
+      ok(`${tag} замер кадров (см. pd216-perf.json)`, true, JSON.stringify({ classic: classic.frame, blur: fog.frame, noBlur: noBlur.frame, peek, toggle }));
     }
     ok(`${tag} консоль чистая`, errs.length === 0, errs.join(" | "));
   } finally {
@@ -617,7 +622,7 @@ try {
     await noSelectFlow("wk", webkit, CONFIGS[1]);
   }
 } finally {
-  if (perf.length) writeFileSync(join(OUT, `pd210-perf${ONLY ? "-" + ONLY : ""}.json`), JSON.stringify(perf, null, 2));
+  if (perf.length) writeFileSync(join(OUT, `pd216-perf${ONLY ? "-" + ONLY : ""}.json`), JSON.stringify(perf, null, 2));
   const failed = results.filter((r) => !r.cond);
   console.log(`\n${results.length - failed.length}/${results.length} PASS`);
   if (failed.length) {
