@@ -132,10 +132,10 @@ describe("партия на экране", () => {
       playStore.input(digit);
     });
 
-  it("строка «Мелодия» на хабе — между Лжецом и Глифами, со значком и описанием PD-163", () => {
+  it("строка «Мелодия» на хабе — между Лжецом и Фонарём, со значком и описанием PD-163", () => {
     act(() => root.render(<PlayScreen />));
     const rows = [...host.querySelectorAll(".hub-row.mode")].map((r) => r.getAttribute("data-testid"));
-    expect(rows).toEqual(["mode-classic", "mode-ink", "mode-liar", "mode-melody", "mode-glyphs"]);
+    expect(rows).toEqual(["mode-classic", "mode-ink", "mode-liar", "mode-melody", "mode-lantern", "mode-glyphs"]);
     expect(q("mode-melody")!.textContent).toContain("Each digit you place sounds a note.");
     expect(q("mode-melody")!.querySelector("svg")).not.toBeNull();
   });

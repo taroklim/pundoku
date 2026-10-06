@@ -320,7 +320,7 @@ function useInspectHold(enabled: boolean) {
   }, [enabled, end]);
   const onPointerDown = (e: ReactPointerEvent<HTMLElement>) => {
     swallow.current = false;
-    if (!enabled || e.button !== 0 || !e.isPrimary) return;
+    if (!enabled || e.button !== 0 || e.isPrimary === false) return;
     end();
     const id = e.pointerId;
     press.current = {
