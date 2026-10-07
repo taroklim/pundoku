@@ -536,7 +536,7 @@ Gates: build → typecheck, lint, тесты web/engine/api (api с TEST_DATABAS
 | PD-212 | Мерж Фонаря в локальный main + gates на слитом (push — Coordinator после владельца) | product-manager | P1 | pending | PD-211 |
 | PD-213 | QA PD-199/PD-200 (Low-пакет, ветка `pd-199`) | qa-tester | P3 | completed (PASS с Low: gates web 1509, engine 378; PD-199 48/48, PD-200 без наложений во всей матрице; Low (1) полоса за скруглением угловых клеток 320 ~0,7 px/AX3 ~1,4 → PD-215, (2) AX3 320 с доком заметки в клетке с полосой до ~4 px → бэклог, (3) hint.rule.lead ru/uk «цифру» в Глифах → PD-215; /tmp/pundoku-qa/qa-213-out/) | PD-199, PD-200 |
 | PD-214 | Во всём приложении удержание клетки/кнопки не выделяет текст (просьба владельца 2026-10-06): user-select:none + -webkit-touch-callout:none на поле/паде/кнопках/таб-баре/строках режимов, поля ввода не трогать; тест + пункт iPhone-чек-листа; отдельный коммит в pd-208 (передано developer PD-210 Coordinator'ом) | developer | P1 | completed (e380ef5 в pd-208: styles/shell.css + noSelect.css.test.ts; iPhone п. 87) | — |
-| PD-215 | Доводка по QA PD-213 в pd-199: (1) полоса подсказки не выходит за скругление угловых клеток блока на 320/AX3, (3) hint.rule.lead ru/uk/en в Глифах — «знак»/«shape» (_glyphs); ре-тест входит в QA PD-211 (на слиянии pd-208+pd-199) | developer | P3 | in_progress | PD-213 |
+| PD-215 | Доводка по QA PD-213 в pd-199: (1) полоса подсказки не выходит за скругление угловых клеток блока на 320/AX3, (3) hint.rule.lead ru/uk/en в Глифах — «знак»/«shape» (_glyphs); ре-тест входит в QA PD-211 (на слиянии pd-208+pd-199) | developer | P3 | completed (pd-199 @ 7603561: полоса в угловых клетках ≥0,6 R от угла, hint.rule.lead_glyphs ru/uk/en, стенд design/pd215-shots.mjs; ре-тест — в PD-211) | PD-213 |
 | PD-216 | Фонарь: настоящее размытие в тумане вместо пятна (решение владельца 2026-10-06) — blur глубины 2 нечитаемый, aria-hidden + VO без цифры, user-select:none, без анимации blur, замер webkit; фолбэк — пятно PD-210 при артефактах; отдельный коммит в pd-208 поверх 7f00edd | developer | P1 | in_progress | PD-210 |
 
 ### Бриф PD-8 (developer, P1 — пункт (a) блокирует UI-тикеты поля/Today)
@@ -626,9 +626,8 @@ Gates: build → typecheck, lint, тесты web/engine/api (api с `TEST_DATABA
 ## Агенты (текущий статус)
 | Имя | Роль | Статус | Тикет | Обновлено |
 |-----|------|--------|-------|-----------|
-| PM-Pundoku-16 | product-manager | waiting | PD-208 | 2026-10-06 |
-| Dev-Pundoku-215 | developer | working | PD-215 | 2026-10-06 |
-| Dev-Pundoku-216 | developer | working | PD-216 | 2026-10-06 |
+| PM-Pundoku-17 | product-manager | working | PD-216 | 2026-10-08 |
+| Dev-Pundoku-216b | developer | working | PD-216 | 2026-10-08 |
 
 ## Чек-пойнт 2026-10-01 (конец сессии PM-Pundoku-7)
 - **Сделано:** решения владельца по релизу 1.1 зафиксированы; PD-74 (UI ink, pd-74 @ 73444b2), PD-75 (UI таймлапса/PNG Rhythm, pd-75 @ bfeedbf), PD-80 (счёт ходов в ink, pd-80 @ de5a52d) смержены в локальный main; gates на слитом: build/typecheck/lint, web 624, engine 178 (api не затронут, 174+3). PD-78 сделан в PD-74. PD-79 закрыт: не дефект.
