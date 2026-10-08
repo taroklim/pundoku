@@ -138,3 +138,14 @@ describe("головоломка дня Today в «Продолжить»", () =
     expect(title("continue-day")).toBe("Головоломка дня · 7 окт.");
   });
 });
+
+describe("PD-275: вчерашний день Today после перезапуска", () => {
+  it("строка «Daily puzzle · 7 Oct»; тап отдаёт дату дня головоломки (экран откроет именно его)", () => {
+    daySlot = slot(YESTERDAY);
+    const onOpenToday = vi.fn();
+    render({ onOpenToday });
+    expect(title("continue-day")).toBe("Daily puzzle · 7 Oct");
+    act(() => q("continue-day")!.click());
+    expect(onOpenToday).toHaveBeenCalledWith(YESTERDAY);
+  });
+});

@@ -58,7 +58,7 @@ import { useWaitView } from "./waitView";
  * с одной кнопкой «Новая сетка». PD-116: партия переживает перезагрузку (`store.ts`); после неё всегда хаб, а идущая
  * своя сетка — слот «Продолжить». Возврат на хаб подтверждения не требует: партия не выбрасывается, а встаёт на паузу.
  */
-export function PlayScreen({ onOpenSettings, onOpenHelp, onOpenToday }: { onOpenSettings?: () => void; onOpenHelp?: (block: HelpBlockId) => void; onOpenToday?: () => void } = {}) {
+export function PlayScreen({ onOpenSettings, onOpenHelp, onOpenToday }: { onOpenSettings?: () => void; onOpenHelp?: (block: HelpBlockId) => void; onOpenToday?: (date?: string) => void } = {}) {
   const { t } = useTranslation();
   const snap = useSyncExternalStore(playStore.subscribe, playStore.getSnapshot);
   // PD-161: панель Play смонтирована постоянно; «вкладка на экране» — сигнал из стопки вкладок (таймер, подсказки, эффекты).
@@ -325,7 +325,7 @@ export function PlayScreen({ onOpenSettings, onOpenHelp, onOpenToday }: { onOpen
             if (!playStore.open(mode)) openSheet(mode, row);
           }}
           onNewInMode={(mode, row) => openSheet(mode, row)}
-          onOpenToday={() => onOpenToday?.()}
+          onOpenToday={(date) => onOpenToday?.(date)}
           onDeleteMode={deleteMode}
           onMenuOpen={() => setUndo(null)}
         />

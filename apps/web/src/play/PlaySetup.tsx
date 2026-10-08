@@ -13,12 +13,14 @@
  *   Строки «Продолжить» (игры дня) не свайпаются.
  * - PD-262: игра дня в «Продолжить» не за сегодня (вчерашний Лжец дня, день Today после полуночи) — в заголовке строки дата
  *   дня головоломки: «Liar of the day · 7 Oct», «Daily puzzle · 7 Oct». Сегодняшняя — без даты.
+ * - PD-275: вчерашний незаконченный день Today остаётся в «Продолжить» и после перезапуска (`useDaySlot` ищет его в хранилище),
+ *   тап отдаёт его дату (`onOpenToday(date)`).
  * - Под списком — сноска «Свои игры не попадают в ваш год».
  */
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { SlotSummary } from "./daySlot";
-import { useDaySlot } from "./daySlot";
+import { DEFAULT_DAY_SLOT_SOURCE, useDaySlot } from "./daySlot";
 import { CalendarGlyph } from "./hubIcons";
 import { formatShortDay } from "./format";
 import { ChevronIcon } from "./inkIcons";
@@ -27,6 +29,7 @@ import type { ModeDef, ModeId } from "./modes";
 import { ModeMenu } from "./ModeMenu";
 import { slotMeta } from "./slotMeta";
 import { ModeRowBody, SwipeRow, useSwipeHub } from "./SwipeRow";
+import { useTabActive } from "../shell/tabSlide";
 import { useLocalDate } from "./useLocalDate";
 
 export interface PlaySetupProps {
@@ -40,7 +43,11 @@ export interface PlaySetupProps {
   readonly onOpenMode: (mode: ModeId, opener: HTMLElement) => void;
   /** «Новая сетка…» из контекстного меню: шит режима (при незавершённой игре — с предупреждением). */
   readonly onNewInMode: (mode: ModeId, opener: HTMLElement) => void;
-  readonly onOpenToday: () => void;
+  /**
+   * Строка дня в «Продолжить»: `date` — день головоломки из сводки (PD-275: может быть прошлым — вчерашний, найденный в хранилище
+   * после перезапуска; экран откроет его там, где его можно доиграть). Нет даты — старые данные, сегодняшний.
+   */
+  readonly onOpenToday: (date?: string) => void;
   /** PD-171: незаконченный Лжец дня (тоже «игра дня») — вторая строка «Продолжить»; `null` — нет. */
   readonly liarDay?: SlotSummary | null;
   readonly onOpenLiarDay?: () => void;
@@ -69,8 +76,10 @@ interface MenuState {
 
 export function PlaySetup({ modes, slots, reselect, onOpenMode, onNewInMode, onOpenToday, liarDay = null, onOpenLiarDay, onDeleteMode, onMenuOpen }: PlaySetupProps) {
   const { t, i18n } = useTranslation();
-  const day = useDaySlot();
   const today = useLocalDate();
+  // PD-275: слот дня перечитывается при смене суток и при возврате на вкладку (день могли доиграть в архиве).
+  const active = useTabActive();
+  const day = useDaySlot(DEFAULT_DAY_SLOT_SOURCE, `${today}|${active ? 1 : 0}`);
   const locale = i18n.resolvedLanguage ?? "en";
   // Intl — не на каждый рендер (PD-95): только когда меняются дата игры, «сегодня» или язык.
   const dayWhen = useMemo(() => pastDaySuffix(day?.date, today, locale), [day?.date, today, locale]);
@@ -108,7 +117,7 @@ export function PlaySetup({ modes, slots, reselect, onOpenMode, onNewInMode, onO
             </p>
             <div className="hub-card">
               {day && (
-                <button type="button" className="hub-row two" onClick={onOpenToday} data-testid="continue-day">
+                <button type="button" className="hub-row two" onClick={() => onOpenToday(day.date)} data-testid="continue-day">
                   <span className="l1">
                     <CalendarGlyph className="glyph" />
                     {/* «Today’s puzzle» для вчерашнего дня врёт — тогда «Daily puzzle · 7 Oct». */}
