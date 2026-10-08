@@ -53,6 +53,16 @@ const ok = (name, cond, extra = "") => {
 };
 const note = (s) => console.log("NOTE  " + s);
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+/** Ждать условия до `ms` (машина под нагрузкой: IDB-запись и кадр могут прийти позже фиксированной паузы). */
+async function until(fn, ms = 4000) {
+  const t0 = Date.now();
+  let v = await fn();
+  while (!v && Date.now() - t0 < ms) {
+    await sleep(100);
+    v = await fn();
+  }
+  return v;
+}
 
 async function open(browser, c) {
   const ctx = await browser.newContext({
@@ -426,16 +436,18 @@ async function mainFlow(type, bn) {
     ok(`${bn} §7: Esc — закрыта, фокус на строке`, st.active === "mode-classic" && st.x === 0);
     await page.keyboard.press("Backspace");
     await page.waitForTimeout(300);
-    await page.keyboard.press("Enter");
-    await page.waitForTimeout(500);
     st = await rowState(page, "classic");
-    ok(`${bn} §7: Enter — удалено, фокус на «Отменить»`, (await idb(page, slotKey("classic"))) === null && st.active === "undo-toast-action");
+    ok(`${bn} §7: Backspace — то же`, st.active === "del-classic" && st.x === -st.aw, `${st.active} x=${st.x}`);
+    await page.keyboard.press("Enter");
+    const kbdOk = await until(async () => (await idb(page, slotKey("classic"))) === null && (await rowState(page, "classic")).active === "undo-toast-action");
+    st = await rowState(page, "classic");
+    ok(`${bn} §7: Enter — удалено, фокус на «Отменить»`, kbdOk, `active=${st.active} toast=${st.toast}`);
     await page.waitForTimeout(7000);
     ok(`${bn} §7: пока фокус в тосте — не гаснет (7 с)`, (await rowState(page, "classic")).toast);
     await page.keyboard.press("Enter");
-    await page.waitForTimeout(500);
+    const undoOk = await until(async () => (await idb(page, slotKey("classic"))) === before && (await rowState(page, "classic")).active === "mode-classic");
     st = await rowState(page, "classic");
-    ok(`${bn} §7: «Отменить» с клавиатуры — восстановлена, фокус на строке`, (await idb(page, slotKey("classic"))) === before && st.active === "mode-classic");
+    ok(`${bn} §7: «Отменить» с клавиатуры — восстановлена, фокус на строке`, undoOk, `active=${st.active}`);
 
     // 8. Меню долгого нажатия: «Удалить сетку» последним, красным → удаление + тост.
     const rb = await page.locator('[data-testid="mode-classic"]').boundingBox();
