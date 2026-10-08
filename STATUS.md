@@ -608,7 +608,7 @@ Gates: build → typecheck, lint, тесты web/engine/api (api с TEST_DATABAS
 | PD-262 | Лжец дня со вчера: в подписи строки «Продолжить» дата («Лжец дня · 7 окт», en/uk/ru, локальный формат); тест; ветка от main после выката пакетов | developer | P2 | in_progress (Dev-Pundoku-262, ветка pd-262 от pd-pack2-base 9a6ccb0; мерж в main — после выката обоих пакетов) | — |
 | PD-263 | QA PD-262 (вместе с PD-261 при возможности) | qa-tester | P2 | pending | PD-262 |
 | PD-264 | QA PD-253: жест «назад» от края в Settings/справке, только standalone, не конфликтует со свайпом строк/слайдом вкладок, cr+wk touch, gates | qa-tester | P3 | completed (PASS с замечаниями, qa-264 @ ca17277: gates c063ada web 1740/1740, api 151+49 skip, engine 385/385; qa264-check cr-393 39/39 (CDP-касания, мультитач, щипок), wk-393 35/35, 320/430 9/9; pan-y pinch-zoom принят cr+wk; P3 → PD-272, PD-273; iPhone п. 109) | PD-253 |
-| PD-265 | Второй пакет: мерж pd-landscape (42af8f5) + pd-fog-fade (b6f3968) [+ pd-253 при PASS] поверх main с пакетом; короткий общий QA на слиянии + gates; hash Coordinator'у | product-manager | P1 | pending (ждёт PD-248; ландшафт/туман/жест QA PASS — pd-landscape 42af8f5 + pd-fog-fade b6f3968 + pd-253 c063ada; пробное merge-tree попарно — текстовых конфликтов нет) | PD-248, PD-250, PD-258, PD-252 |
+| PD-265 | Второй пакет: мерж pd-landscape (42af8f5) + pd-fog-fade (b6f3968) [+ pd-253 при PASS] поверх main с пакетом; короткий общий QA на слиянии + gates; hash Coordinator'у | product-manager | P1 | in_progress (QA-Pundoku-265 — общий QA стыков на pd-pack2-base 9a6ccb0 = pd-pack-v2 + pd-landscape + pd-fog-fade + pd-253; мерж в main после PASS и после push первого пакета) | PD-248, PD-250, PD-258, PD-252 |
 | PD-266 | Десктоп C «Сайдбар» — НЕ НАЧИНАТЬ до уточнения владельцем компьютера/браузера/масштаба: оболочка ≥1100×680 — стеклянный сайдбар (Today/Play+режимы вторым уровнем/Year), скрытие/показ с запоминанием, таб-бар скрыт; маршрутизация режимов из сайдбара (хаб Play → страница режима) | developer | P2 | pending (ждёт владельца) | — |
 | PD-267 | Десктоп C: партия — тулбар над полем + инспектор справа (время/осталось/цифры/заметки/клавиатура), шиты в контексте окна | developer | P2 | pending (ждёт владельца) | PD-266 |
 | PD-268 | Десктоп C: после решения карточка + Grid ∞ в инспекторе компактно (1280×800 без прокрутки); компакт <1100×680 и 125/150 % — без сайдбара, компактный инспектор (2×2), решить прокрутку инспектора после решения | developer | P2 | pending (ждёт владельца) | PD-267 |
@@ -734,6 +734,7 @@ Gates: build → typecheck, lint, тесты web/engine/api (api с `TEST_DATABA
 | PM-Pundoku-20 | product-manager | working (PD-248) | PD-247 → PD-248, PD-265 | 2026-10-08 21:35 |
 | Dev-Pundoku-260 | developer | working | PD-260 | 2026-10-09 00:00 |
 | Dev-Pundoku-262 | developer | working | PD-262 | 2026-10-09 00:00 |
+| QA-Pundoku-265 | qa-tester | waiting (slot-1, gates PM) | PD-265 | 2026-10-09 00:05 |
 
 ## Чек-пойнт 2026-10-01 (конец сессии PM-Pundoku-7)
 - **Сделано:** решения владельца по релизу 1.1 зафиксированы; PD-74 (UI ink, pd-74 @ 73444b2), PD-75 (UI таймлапса/PNG Rhythm, pd-75 @ bfeedbf), PD-80 (счёт ходов в ink, pd-80 @ de5a52d) смержены в локальный main; gates на слитом: build/typecheck/lint, web 624, engine 178 (api не затронут, 174+3). PD-78 сделан в PD-74. PD-79 закрыт: не дефект.
