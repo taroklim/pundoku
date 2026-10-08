@@ -172,7 +172,8 @@ function ModeRowBody({ mode, slot }: { mode: ModeDef; slot: SlotSummary | null }
           </span>
         ) : (
           <span className="sub" data-testid={`mode-desc-${mode.id}`}>
-            {t(`modes.${mode.textKey}.desc`)}
+            {/* PD-210: у режима с длинным правилом в строке списка — первое предложение (`list`), целиком — в шите. */}
+            {t([`modes.${mode.textKey}.list`, `modes.${mode.textKey}.desc`])}
           </span>
         )}
       </span>

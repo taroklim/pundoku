@@ -603,7 +603,9 @@ export class PlayStore extends GameStore<PlayScreenSnapshot> {
     const prepare = modeDef(this.snap.mode).prepare;
     if (prepare) {
       const next = prepare(play);
-      if (next !== play) this.set({ play: next });
+      // PD-208: свежая партия Фонаря начинается в темноте — без выбранной клетки (свет пуст до первого тапа). Возврат в
+      // начатую партию (`open`) выбор восстанавливает как обычно: фонарь там, где его оставили.
+      if (next !== play) this.set(next.lantern === true ? { play: next, selected: null } : { play: next });
     }
   }
 }

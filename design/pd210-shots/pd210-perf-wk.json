@@ -1,0 +1,41 @@
+[
+  {
+    "engine": "wk",
+    "tag": "wk-390-light-en",
+    "classic": {
+      "frame": {
+        "med": 158,
+        "p90": 261,
+        "max": 387
+      },
+      "sync": {
+        "med": 4,
+        "p90": 32,
+        "max": 40
+      }
+    },
+    "fog": {
+      "frame": {
+        "med": 142,
+        "p90": 179,
+        "max": 267
+      },
+      "sync": {
+        "med": 4,
+        "p90": 15,
+        "max": 16
+      }
+    },
+    "peekArrows": {
+      "med": 119,
+      "p90": 188,
+      "max": 235
+    },
+    "peekFilterBlurArrows": {
+      "med": 58,
+      "p90": 114,
+      "max": 138
+    },
+    "inspectOffMs": 136
+  }
+]

@@ -1,0 +1,210 @@
+/*
+ * Фонарь — финальный визуал PD-210 поверх основы PD-208. Выбор владельца (макет PD-209): свет/тень C «Туман», глубина 2
+ * «почти невидимо», осмотр b, Year A.
+ *
+ *   .board.lantern            — поле партии Фонаря (идёт игра); .board.lantern.inspecting — осмотр доски (удержание / пункт ⋯).
+ *   .cell.is-lit              — клетка в свете выбранной (строка + столбец + блок, `litCells`): всё как в классике.
+ *   .cell.is-shadow           — клетка в тени: своя цифра (`.d.player`) и заметки (`.marks`) размыты НАСТОЯЩИМ blur (PD-216, решение
+ *                               владельца вместо пятна PD-210) — глубина 2 макета PD-209 C: радиус 11 % стороны клетки (--s), значит
+ *                               масштабируется с полем (320/390, обычный шрифт и AX3), плюс прозрачность 32 %. Цифру не прочесть, но
+ *                               видно, что клетка занята. Один `filter` на элемент (blur + opacity в одном), без will-change, сам blur
+ *                               не анимируется. Содержимое aria-hidden, подпись клетки «в тени» (Board.tsx), выделения нет,
+ *                               на печати — скрыто. Подсказки (`.d.given`) не трогаются никогда. Фон клетки как в классике.
+ *                               PD-230 (QA PD-211): заметки в тени — не размытая сетка 3×3 (blur 0,11 клетки меньше шага ⅓, одиночная
+ *                               заметка читалась по месту пятна), а `.marks.spot` — пустой элемент, одно пятно цвета заметок по
+ *                               центру клетки, тем же filter. Одинаково при любом наборе и числе заметок (и после Fill candidates):
+ *                               видно «клетка с заметками», но не какие. В DOM ни цифр, ни их позиций.
+ *   .cell.is-peek             — клетка тени во время осмотра (вид b): цифры и заметки читаются, но своя цифра остаётся в лёгкой
+ *                               дымке (чуть светлее + ореол тумана), поэтому граница света видна и при осмотре.
+ *
+ * Фолбэк, если на iPhone blur даст артефакты: пятно без текста PD-210 (коммит 7f00edd, `.d.fog`/`.marks.fog`).
+ *
+ * Reduce Motion: переход света (появление цифры/пятна) умножен на --mo (tokens.css) — при «Уменьшении движения» мгновенно.
+ */
+.board.lantern {
+  /* Глубина 2 (макет PD-209 C): радиус размытия — доля стороны клетки, прозрачность размытого. */
+  --lantern-blur: 0.11;
+  --lantern-shade-a: 0.32;
+  /* PD-230: пятно заметок в тени — диаметр (доля стороны клетки, до размытия) и плотность цвета заметок. Слабее размытой своей
+     цифры (замер pd230-check: ΔL пятна ≈ 0,6–0,8 от цифры) — «клетка с заметками», а не «клетка с цифрой». */
+  --lantern-spot: 0.3;
+  --lantern-spot-a: 35%;
+  /* Осмотр (вид b): своя цифра тени — доля чернил (контраст ≥ 4.5:1 в обеих темах) и ореол тумана вокруг. */
+  --lantern-peek-ink: 82%;
+  --lantern-peek-halo: 0.16em;
+  --lantern-peek-halo-a: 42%;
+  /* Переход света (мс до умножения на --mo). */
+  --lantern-ms: 160ms;
+}
+
+/* Удержание на поле — осмотр, а не системная выноска/лупа/выделение текста iOS. */
+.board.lantern {
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/* Тень: один filter на элемент — blur от стороны клетки + прозрачность. Через filter, а не opacity: анимация постановки M1
+   (`inkSet`, fill both) держит opacity и перебила бы тень. */
+.board.lantern .cell.is-shadow .d.player,
+.board.lantern .cell.is-shadow .marks {
+  filter: blur(calc(var(--s) * var(--lantern-blur))) opacity(var(--lantern-shade-a));
+}
+/* PD-230: заметки в тени — одно пятно по центру клетки (без сетки 3×3 и угловых отступов `.marks`); размывается filter выше. */
+.board.lantern .cell .marks.spot {
+  display: grid;
+  grid-template: 1fr / 1fr;
+  place-items: center;
+  padding: 0;
+}
+.board.lantern .cell .marks.spot::before {
+  content: "";
+  width: calc(var(--s) * var(--lantern-spot));
+  height: calc(var(--s) * var(--lantern-spot));
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--notes) var(--lantern-spot-a), transparent);
+}
+/* Высокий контраст: фон пятна иначе заменился бы фоном окна — клетка с заметками выглядела бы пустой. */
+@media (forced-colors: active) {
+  .board.lantern .cell .marks.spot::before {
+    forced-color-adjust: none;
+  }
+}
+@media print {
+  .board.lantern .cell.is-shadow .d.player,
+  .board.lantern .cell.is-shadow .marks {
+    visibility: hidden;
+  }
+}
+
+/* Осмотр b: своя цифра тени читается (контраст ≥ 4.5:1), но остаётся в дымке. Ошибка (если включена) — своим цветом. */
+.board.lantern .cell.is-peek .d.player:not(.err) {
+  color: color-mix(in srgb, var(--ink) var(--lantern-peek-ink), var(--surface));
+  text-shadow: 0 0 var(--lantern-peek-halo) color-mix(in srgb, var(--ink) var(--lantern-peek-halo-a), transparent);
+}
+
+/* Переход света: цифра/заметки/пятно проявляются при появлении (свет пришёл/ушёл — элемент сменился). Только opacity (элемент
+   перемонтируется при смене света), blur не анимируется, без will-change; анимации постановки/волны (animation) перекрывают переход, Reduce Motion — 0 мс. */
+.board.lantern .cell .d.player,
+.board.lantern .cell .marks {
+  transition: opacity calc(var(--lantern-ms) * var(--mo)) linear;
+}
+@starting-style {
+  .board.lantern .cell .d.player,
+  .board.lantern .cell .marks {
+    opacity: 0;
+  }
+}
+
+/* ---------- Строка статуса Фонаря (LanternStatus.tsx) ----------
+   Зазор — size-контейнер (как у строки Мелодии, PD-206): форма выбирается по месту, поле от строки не зависит.
+   По умолчанию — короткая форма в одну строку; полная — когда ширина гарантирует 1 строку (или 2, и высота их держит).
+   Пороги в em зазора (= rem) — по самой длинной строке из en/uk/ru (замер pd210-check). */
+.play-fit > .gap:has(> .lantern-status) {
+  container-type: size;
+}
+.status.lantern-status {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  max-width: 100%;
+  min-width: 0;
+  line-height: 1.3;
+}
+.status.lantern-status > .ls-ic {
+  width: 1.05em;
+  height: 1.05em;
+  flex: none;
+  color: var(--ink);
+}
+.status.lantern-status > .ls-long {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+.status.lantern-status > .ls-short {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+/* «Готово» — 44 pt по высоте, но строку не раздвигает: выступает в отступы зазора (8 px сверху/снизу). */
+.status.lantern-status > .ls-done {
+  flex: none;
+  min-height: 44px;
+  margin: -14px 0 -14px 4px;
+  padding: 0 16px;
+  border: 0;
+  border-radius: 22px;
+  background: var(--ink-tint);
+  color: var(--ink);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+@media (forced-colors: active) {
+  .status.lantern-status > .ls-done {
+    border: 1px solid ButtonText;
+  }
+}
+/* Полная форма. «Нет выбора» и «удержание» — длинные: одна строка (dark ≈ 22.6 em, hold ≈ 21.2 em ru/uk) или две при
+   высоте; «осмотр из меню» — короткая фраза + кнопка (≈ 14 em). */
+@container (min-width: 23em) {
+  .status.lantern-status:is(.ls-dark, .ls-hold) > .ls-long {
+    position: static;
+    width: auto;
+    height: auto;
+    overflow: visible;
+    clip-path: none;
+    white-space: nowrap;
+  }
+  .status.lantern-status:is(.ls-dark, .ls-hold) > .ls-short {
+    display: none;
+  }
+}
+@container (min-width: 13.5em) and (min-height: 2.5em) {
+  .status.lantern-status:is(.ls-dark, .ls-hold) > .ls-long {
+    position: static;
+    width: auto;
+    height: auto;
+    overflow: visible;
+    clip-path: none;
+    white-space: normal;
+    text-align: center;
+  }
+  .status.lantern-status:is(.ls-dark, .ls-hold) > .ls-short {
+    display: none;
+  }
+}
+@container (min-width: 15em) {
+  .status.lantern-status.ls-menu > .ls-long {
+    position: static;
+    width: auto;
+    height: auto;
+    overflow: visible;
+    clip-path: none;
+    white-space: nowrap;
+  }
+  .status.lantern-status.ls-menu > .ls-short {
+    display: none;
+  }
+}
+/* AX3 — короткая форма всегда (макет §7); у осмотра из меню при AX3 — только значок и «Готово». */
+:root[data-type="ax3"] .status.lantern-status > .ls-long {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+:root[data-type="ax3"] .status.lantern-status > .ls-short {
+  display: block;
+}
+:root[data-type="ax3"] .status.lantern-status.ls-menu > .ls-short {
+  display: none;
+}

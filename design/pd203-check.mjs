@@ -193,7 +193,8 @@ async function flow(name, type, c) {
     const { page, errs } = await open(browser, c);
     await toHub(page);
     const rows = await page.locator(".hub-row.mode").evaluateAll((els) => els.map((e) => e.getAttribute("data-testid")));
-    ok(`${tag} хаб: порядок Классика, Чернила, Лжец, Мелодия, Глифы`, JSON.stringify(rows) === JSON.stringify(["mode-classic", "mode-ink", "mode-liar", "mode-melody", "mode-glyphs"]), rows.join(","));
+    // PD-210: с PD-208 между Мелодией и Глифами — Фонарь.
+    ok(`${tag} хаб: порядок Классика, Чернила, Лжец, Мелодия, Фонарь, Глифы`, JSON.stringify(rows) === JSON.stringify(["mode-classic", "mode-ink", "mode-liar", "mode-melody", "mode-lantern", "mode-glyphs"]), rows.join(","));
     if (c.full) await page.screenshot({ path: shot("0-hub") });
 
     if (c.classic) {
@@ -391,9 +392,13 @@ async function flow(name, type, c) {
       ok(`${tag} таймлапс: кнопка звука в шапке, включена`, snd.p === "true" && !!snd.l, JSON.stringify(snd));
       n0 = (await S(page)).n;
       await page.locator('[data-testid="tl-play"]').click();
-      await page.waitForTimeout(5000);
-      notes = await notesSince(page, n0);
-      ok(`${tag} таймлапс ▶: мелодия идёт за кадрами`, notes.length >= 2, `${notes.length} нот`);
+      // Окно 12 с (было 5 с; QA PD-211, Low): под нагрузкой первые ноты таймлапса приходят позже. Ждём ≥ 2 нот, не дольше 12 с.
+      const tlT0 = Date.now();
+      do {
+        await page.waitForTimeout(500);
+        notes = await notesSince(page, n0);
+      } while (notes.length < 2 && Date.now() - tlT0 < 12000);
+      ok(`${tag} таймлапс ▶: мелодия идёт за кадрами`, notes.length >= 2, `${notes.length} нот за ${((Date.now() - tlT0) / 1000).toFixed(1)} с (окно 12 с)`);
       await page.screenshot({ path: shot("7-timelapse") });
       await page.locator('[data-testid="tl-play"]').click();
       await page.keyboard.press("Escape");

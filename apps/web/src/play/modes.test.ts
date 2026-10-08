@@ -21,8 +21,8 @@ type Tree = { [k: string]: string | Tree };
 const get = (t: Tree, path: string): unknown => path.split(".").reduce<unknown>((n, k) => (n as Tree | undefined)?.[k], t);
 
 describe("реестр режимов", () => {
-  it("сейчас готовы Классика, Чернила, Лжец (PD-171), Мелодия (PD-203) и Глифы (PD-194) — в порядке PD-163; Классика — по умолчанию", () => {
-    expect(availableModes().map((m) => m.id)).toEqual(["classic", "ink", "liar", "melody", "glyphs"]);
+  it("сейчас готовы Классика, Чернила, Лжец (PD-171), Мелодия (PD-203), Фонарь (PD-208) и Глифы (PD-194) — в порядке PD-163; Классика — по умолчанию", () => {
+    expect(availableModes().map((m) => m.id)).toEqual(["classic", "ink", "liar", "melody", "lantern", "glyphs"]);
     expect(DEFAULT_MODE).toBe("classic");
     expect(MODES[0]!.id).toBe(DEFAULT_MODE);
   });
@@ -43,7 +43,9 @@ describe("реестр режимов", () => {
     expect(slotKey("glyphs")).toBe("playGame:glyphs");
     expect(isModeId("melody")).toBe(true);
     expect(slotKey("melody")).toBe("playGame:melody");
-    expect(isModeId("lantern")).toBe(false);
+    expect(isModeId("lantern")).toBe(true);
+    expect(slotKey("lantern")).toBe("playGame:lantern");
+    expect(isModeId("perception")).toBe(false);
     expect(isModeId(undefined)).toBe(false);
     expect(modeDef("nope" as never).id).toBe("classic");
   });
@@ -117,6 +119,26 @@ describe("реестр режимов", () => {
     expect(prepared.log).toEqual(fresh.log);
     // Классика флага не получает.
     expect(createPlay({ mission: MISSION, solution: SOLUTION }).glyphs).toBeUndefined();
+  });
+
+  it("Фонарь (PD-208): готов, на хабе между Мелодией и Глифами; чип, подсказки, все сложности, без правила; подготовка ставит `lantern`", () => {
+    const l = modeDef("lantern");
+    expect(l.ready).toBe(true);
+    expect(l.chip).toBe(true);
+    expect(l.hints).toBe(true);
+    expect(l.Rule).toBeUndefined();
+    expect(l.allowInArchive).toBe(false);
+    expect(l.grid ?? "classic").toBe("classic");
+    expect(l.difficulties).toEqual(DIFFICULTIES);
+    expect(availableModes().map((x) => x.id).indexOf("lantern")).toBe(4);
+    const fresh = createPlay({ mission: MISSION, solution: SOLUTION });
+    const prepared = l.prepare!(fresh);
+    expect(prepared.lantern).toBe(true);
+    expect(prepared.ink).toBeUndefined();
+    expect(prepared.mission).toEqual(fresh.mission);
+    expect(prepared.log).toEqual(fresh.log);
+    expect(fresh.lantern).toBeUndefined();
+    expect(legacyModeOf({ lantern: true })).toBe("lantern");
   });
 
   it("режим записи до PD-167 выводится из самой партии", () => {

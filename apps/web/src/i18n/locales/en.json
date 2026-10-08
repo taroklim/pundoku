@@ -257,6 +257,7 @@
       "title": "A hint marks the day",
       "titlePlay": "A hint marks the game",
       "lead": "Pundoku never fills a cell for you. A hint walks you to the next move in four steps: where to look, which technique, which cells, and why.",
+      "lead_glyphs": "Pundoku never places a shape for you. A hint walks you to the next move in four steps: where to look, which technique, which cells, and why.",
       "r1": "The day is recorded as **solved with help** — in the year and on the card.",
       "r2": "Further hints today don’t change the mark.",
       "r1Play": "The game is marked **with help** on its result card.",
@@ -301,35 +302,50 @@
     "s2": {
       "naked_single": "One cell in there has a single candidate left.",
       "hidden_single": "In this region one digit has only one place left to go.",
+      "hidden_single_glyphs": "In this region one shape has only one place left to go.",
       "locked_pointing": "In this box one digit is confined to a single line — so it can leave that line everywhere else.",
+      "locked_pointing_glyphs": "In this box one shape is confined to a single line — so it can leave that line everywhere else.",
       "locked_claiming": "In this line one digit only fits inside a single box — so it can leave the rest of that box.",
+      "locked_claiming_glyphs": "In this line one shape only fits inside a single box — so it can leave the rest of that box.",
       "naked_pair": "Two cells here hold the same two candidates and nothing else — those digits belong to them.",
-      "hidden_pair": "Two digits here fit in only two cells — those cells can drop everything else."
+      "naked_pair_glyphs": "Two cells here hold the same two candidates and nothing else — those shapes belong to them.",
+      "hidden_pair": "Two digits here fit in only two cells — those cells can drop everything else.",
+      "hidden_pair_glyphs": "Two shapes here fit in only two cells — those cells can drop everything else."
     },
     "s3": {
       "cell": "Row {{r}}, column {{c}}.",
       "cellBody": "That one cell is where the move happens. The digit is still yours to find.",
+      "cellBody_glyphs": "That one cell is where the move happens. The shape is still yours to find.",
       "pair": "Two cells: row {{r1}} column {{c1}}, row {{r2}} column {{c2}}.",
       "pairBody": "The pair lives here. Everything it frees is one step further.",
       "locked": "{{Source}}, the digit can only be {{target}}.",
+      "locked_glyphs": "{{Source}}, the shape can only be {{target}}.",
       "lockedBody": "Which cells that frees is one step further."
     },
     "s4": {
       "titleOne": "Why that cell",
       "titleMany": "Why those cells",
       "naked_single": "Look at the row, column and box of the underlined cell. The circled cells already use eight of the nine digits — the ninth has nowhere else to go.",
+      "naked_single_glyphs": "Look at the row, column and box of the underlined cell. The circled cells already use eight of the nine shapes — the ninth has nowhere else to go.",
       "naked_single_assumed": "Look at the row, column and box of the underlined cell. The circled cells already use up some of the digits, and the candidates you struck in your notes rule out the rest — the one left has nowhere else to go.",
+      "naked_single_assumed_glyphs": "Look at the row, column and box of the underlined cell. The circled cells already use up some of the shapes, and the candidates you struck in your notes rule out the rest — the one left has nowhere else to go.",
       "hidden_single_one": "{{Region}}, one digit is still missing. The circled cell already holds it and rules out every other free square there. Only the underlined cell is left.",
+      "hidden_single_glyphs_one": "{{Region}}, one shape is still missing. The circled cell already holds it and rules out every other free square there. Only the underlined cell is left.",
       "hidden_single_other": "{{Region}}, one digit is still missing. The circled cells already hold it and between them rule out every other free square there. Only the underlined cell is left.",
+      "hidden_single_glyphs_other": "{{Region}}, one shape is still missing. The circled cells already hold it and between them rule out every other free square there. Only the underlined cell is left.",
       "locked": "{{Source}}, one digit only fits in the circled cells, all of them {{target}}. Wherever it lands there, it can’t also sit elsewhere {{target}} — strike it from the underlined cells.",
+      "locked_glyphs": "{{Source}}, one shape only fits in the circled cells, all of them {{target}}. Wherever it lands there, it can’t also sit elsewhere {{target}} — strike it from the underlined cells.",
       "naked_pair": "The two circled cells share the same pair of candidates and nothing else. Between them they will use both digits, so no other cell {{region}} can — strike them from the underlined cells.",
+      "naked_pair_glyphs": "The two circled cells share the same pair of candidates and nothing else. Between them they will use both shapes, so no other cell {{region}} can — strike them from the underlined cells.",
       "hidden_pair": "{{Region}}, two digits fit only in the two circled cells. So those two cells can hold nothing else — strike every other candidate there.",
+      "hidden_pair_glyphs": "{{Region}}, two shapes fit only in the two circled cells. So those two cells can hold nothing else — strike every other candidate there.",
       "assumes": "Part of this relies on candidates you already struck in your notes."
     },
     "bad": {
       "step": "Before the next step",
       "title": "Something here doesn’t add up",
       "dup": "Two of your digits {{region}} are the same, so the grid can’t be finished as it stands. Pundoku won’t point at the cell — hints come back once it works again.",
+      "dup_glyphs": "Two of your shapes {{region}} are the same, so the grid can’t be finished as it stands. Pundoku won’t point at the cell — hints come back once it works again.",
       "generic": "The grid can’t be finished with what’s {{region}}. Pundoku won’t point at the cell — hints come back once it works again.",
       "key": "the region of the disagreement"
     },
@@ -552,6 +568,11 @@
       "name": "Liar",
       "desc": "One of the given digits is a lie. Find it, then press and hold it to accuse."
     },
+    "lantern": {
+      "name": "Lantern",
+      "desc": "Your digits and notes show only in the row, column and box of the selected cell. Givens stay visible. Touch and hold the board to see it all.",
+      "list": "Your digits and notes show only in the row, column and box of the selected cell."
+    },
     "glyphs": {
       "name": "Glyphs",
       "desc": "Nine shapes instead of digits. The same logic, without a single number."
@@ -642,5 +663,24 @@
     "livePlaying": "Playing the tune",
     "liveStopped": "Stopped",
     "tlNote": "Real rhythm, long pauses shortened. The tune follows the replay."
+  },
+  "lantern": {
+    "cellShadow": "Row {{row}}, column {{col}}, in shadow",
+    "cellShadowNotes": "Row {{row}}, column {{col}}, notes, in shadow",
+    "inspect": "Inspect the board",
+    "inspectHint": "Or touch and hold the board",
+    "inspecting": "Inspecting the board",
+    "chipInspect": "Inspecting",
+    "done": "Done",
+    "status": {
+      "dark": "Tap a cell to light its row, column and box.",
+      "darkShort": "Tap a cell",
+      "hold": "Inspecting the board — lift your finger to return",
+      "holdShort": "Inspecting",
+      "menu": "Inspecting the board",
+      "menuShort": "Inspecting"
+    },
+    "rowMode": "Mode",
+    "yearValue": "Lantern"
   }
 }

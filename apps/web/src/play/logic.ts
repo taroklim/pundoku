@@ -63,6 +63,12 @@ export interface PlayState {
    */
   readonly melody?: true;
   /**
+   * Фонарь (PD-208, план режимов §5): свои цифры и заметки видны только в свете выбранной клетки (строка + столбец + блок,
+   * `litCells` движка), остальное в тени. Только рендер — правила, лог, подсказки и решение те же, что у Классики. Ставится на
+   * старте партии режима `lantern` и не меняется. Только `true`, по прецеденту `glyphs`/`melody`.
+   */
+  readonly lantern?: true;
+  /**
    * Лог восстановлен из `heat` записи снапшота (`sync/schema.ts › logFromHeat`), а не сыгран: нужен
    * карточке дня, но не настоящий ход партии — не уходит в `moveLog` снапшота и не годится для Таймлапса
    * (PD-70). Отсутствует у настоящих партий.
@@ -161,6 +167,15 @@ export const isMelody = (s: Pick<PlayState, "melody">): boolean => s.melody === 
 export function setMelodyMode(s: PlayState): PlayState {
   if (s.melody === true || s.solved || s.liar !== undefined || s.glyphs === true || s.log.length > 0) return s;
   return { ...s, melody: true };
+}
+
+/** PD-208: партия режима Фонарь. */
+export const isLantern = (s: Pick<PlayState, "lantern">): boolean => s.lantern === true;
+
+/** PD-208: пометить свежую партию режимом Фонарь (до первого хода; решённую и другие режимы не трогаем — режимы не комбинируются). */
+export function setLanternMode(s: PlayState): PlayState {
+  if (s.lantern === true || s.solved || s.liar !== undefined || s.ink === true || s.glyphs === true || s.melody === true || s.log.length > 0) return s;
+  return { ...s, lantern: true };
 }
 
 /** Кляксы партии (пусто у обычной партии) — из лога, единственного источника. */

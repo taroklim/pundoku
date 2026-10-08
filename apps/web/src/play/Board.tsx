@@ -1,4 +1,5 @@
-import type { CSSProperties, KeyboardEvent, ReactNode } from "react";
+import { litCells } from "@pundoku/engine";
+import type { CSSProperties, KeyboardEvent, PointerEvent as ReactPointerEvent, ReactNode } from "react";
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { RingMark } from "../melody/game";
@@ -82,6 +83,14 @@ interface CellProps {
    */
   rings: readonly RingMark[] | undefined;
   ringId: number;
+  /**
+   * PD-208/PD-210/PD-216 (Фонарь, вариант C «Туман»): `lit` — клетка в свете выбранной (строка/столбец/блок); `shadow` — в тени:
+   * своя цифра размыта настоящим blur (styles/lantern.css), заметки — одно размытое пятно без цифр и позиций (PD-230),
+   * содержимое aria-hidden, подпись «в тени»;
+   * `peek` — та же клетка тени во время осмотра (вид b: цифры видны, туман вокруг них остаётся). Подсказки — всегда как есть.
+   * `null` — не Фонарь (или партия не идёт).
+   */
+  light: "lit" | "shadow" | "peek" | null;
   onAccuse?: (cell: number, el: HTMLElement) => void;
   onPick: (cell: number) => void;
   /** Нажатие на клетку: запоминаем точку касания для M7. */
@@ -118,6 +127,14 @@ const Cell = memo(function Cell(p: CellProps) {
   if (p.acquitted) cls.push("acquitted");
   if (p.lie) cls.push("caught");
   if (p.sealId !== 0) cls.push("sealing");
+  if (p.light === "lit") cls.push("is-lit");
+  else if (p.light === "shadow") cls.push("is-shadow");
+  else if (p.light === "peek") cls.push("is-peek");
+  // PD-216 (решение владельца): в тени своя цифра — настоящая, но размыта (styles/lantern.css, один filter на элемент); заметки —
+  // одно пятно без цифр (PD-230);
+  // отдельный ключ — смена света перемонтирует элемент, и переход идёт только по opacity (@starting-style), без анимации blur.
+  // Содержимое aria-hidden, подпись клетки — «в тени» без цифры, поле без выделения текста. Подсказка — как есть.
+  const shade = p.light === "shadow" && !p.given;
   const vars: Record<string, string | number> = {};
   if (p.waveIdx >= 0) vars["--wi"] = p.waveIdx;
   if (p.echoIdx >= 0) {
@@ -197,14 +214,19 @@ const Cell = memo(function Cell(p: CellProps) {
       )}
       {digit ? (
         <span
-          key={p.popId || p.blotId}
+          key={shade ? "sh" : p.popId || p.blotId}
           className={`d ${p.given ? "given" : "player"}${p.glyphs ? " gd" : ""}${p.wrong ? " err" : ""}${p.popId ? " anim-in" : ""}${p.blotId ? " swap-in" : ""}`}
           aria-hidden="true"
         >
           {p.glyphs ? <Glyph digit={digit} kind={p.given ? "given" : "placed"} /> : digit}
         </span>
+      ) : p.notes && shade ? (
+        // PD-230 (QA PD-211): заметки в тени — одно пятно «клетка с заметками» по центру, без элемента на цифру. Размытая сетка
+        // 3×3 выдавала одиночную заметку по месту пятна (blur 0,11 клетки < шага ⅓); пятно одинаково при любом наборе и числе
+        // заметок (и после Fill candidates), а в DOM нет ни цифр, ни их позиций/классов.
+        <span key="msh" className="marks spot" aria-hidden="true" />
       ) : p.notes ? (
-        <span className={p.glyphs ? "marks gl-marks" : "marks"} aria-hidden="true">
+        <span key="m" className={p.glyphs ? "marks gl-marks" : "marks"} aria-hidden="true">
           {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((d) => (
             <span key={d} className={p.struck & (1 << d) ? "struck" : undefined}>
               {p.notes & (1 << d) ? (p.glyphs ? <Glyph digit={d} kind="note" /> : d) : ""}
@@ -275,6 +297,87 @@ interface BoardProps {
   canAccuse?: (cell: number) => boolean;
   /** PD-189: слой поверх поля (панель ожидания генерации Play) — в `.board-wrap`, центр по квадрату поля. */
   overlay?: ReactNode;
+  /** PD-208 (Фонарь): «Осмотреть доску» включено из меню ⋯ — свет на всём поле, пока не выключат. */
+  inspect?: boolean;
+  /** PD-210: тап по полю во время осмотра из меню — осмотр заканчивается (макет PD-209 §5); тап при этом выбирает клетку. */
+  onInspectEnd?: () => void;
+  /** PD-210: удержание началось/закончилось — экран меняет чип и строку статуса. */
+  onHoldChange?: (held: boolean) => void;
+}
+
+/** PD-208/PD-210: удержание на поле дольше этого (мс) — «осмотр доски»; 0,45 с — макет PD-209 §5 (решение PM): короче системного
+ *  long press, обычный тап заметно короче. */
+export const INSPECT_HOLD_MS = 450;
+
+/**
+ * PD-208: «осмотр доски» удержанием. Палец/мышь на поле дольше `INSPECT_HOLD_MS` — свет на всём поле, пока держишь; отпустил —
+ * обратно. Сдвиг до срабатывания больше `MOVE_SLOP_PX` — это не удержание. Осмотр не переносит фонарь на клетку под пальцем:
+ * клик отпускания глотается, а выбор, который браузер успел сдвинуть фокусом на нажатии (chromium/desktop webkit), `onHold`
+ * возвращает на клетку до нажатия. Обычный тап до порога — как всегда, выбирает клетку.
+ */
+function useInspectHold(enabled: boolean, onHold: () => void) {
+  const [held, setHeld] = useState(false);
+  const press = useRef<{ timer: number; x: number; y: number; id: number } | null>(null);
+  const swallow = useRef(false);
+  const cleanup = useRef<(() => void) | null>(null);
+  const end = useCallback(() => {
+    if (press.current) window.clearTimeout(press.current.timer);
+    press.current = null;
+    cleanup.current?.();
+    cleanup.current = null;
+    setHeld(false);
+  }, []);
+  useEffect(() => end, [end]);
+  useEffect(() => {
+    if (!enabled) end();
+  }, [enabled, end]);
+  const onPointerDown = (e: ReactPointerEvent<HTMLElement>) => {
+    swallow.current = false;
+    if (!enabled || e.button !== 0 || e.isPrimary === false) return;
+    end();
+    const id = e.pointerId;
+    press.current = {
+      timer: window.setTimeout(() => {
+        if (!press.current) return;
+        window.clearTimeout(press.current.timer);
+        swallow.current = true;
+        setHeld(true);
+        onHold();
+      }, INSPECT_HOLD_MS),
+      x: e.clientX,
+      y: e.clientY,
+      id,
+    };
+    // Отпускание ловим на window: палец может уйти с поля, а тач неявно захвачен клеткой.
+    const up = (ev: PointerEvent) => {
+      if (ev.pointerId === id) end();
+    };
+    const move = (ev: PointerEvent) => {
+      const pr = press.current;
+      if (pr && ev.pointerId === id && !swallow.current && Math.hypot(ev.clientX - pr.x, ev.clientY - pr.y) > MOVE_SLOP_PX) end();
+    };
+    window.addEventListener("pointerup", up, true);
+    window.addEventListener("pointercancel", up, true);
+    window.addEventListener("pointermove", move, true);
+    window.addEventListener("blur", end);
+    cleanup.current = () => {
+      window.removeEventListener("pointerup", up, true);
+      window.removeEventListener("pointercancel", up, true);
+      window.removeEventListener("pointermove", move, true);
+      window.removeEventListener("blur", end);
+    };
+  };
+  const onClickCapture = (e: { stopPropagation: () => void; preventDefault: () => void }) => {
+    if (!swallow.current) return;
+    swallow.current = false;
+    e.stopPropagation();
+    e.preventDefault();
+  };
+  const onContextMenu = (e: { preventDefault: () => void }) => {
+    // Долгий тап Android/правая кнопка мыши — не системное меню поверх осмотра.
+    if (enabled) e.preventDefault();
+  };
+  return { held: enabled && held, onPointerDown, onClickCapture, onContextMenu };
 }
 
 /**
@@ -283,7 +386,7 @@ interface BoardProps {
  * заливаются» — решение владельца 6.4 это пересмотрело); «та же цифра» — чернила 10 %, выбор — 16 % + кольцо (M2 — кольцо едет).
  * Доступность: одна точка табуляции (roving tabindex), стрелки двигают выбор и фокус.
  */
-export function Board({ snap, store, dim, hintMarks = null, onAccuse, canAccuse, overlay }: BoardProps) {
+export function Board({ snap, store, dim, hintMarks = null, onAccuse, canAccuse, overlay, inspect = false, onInspectEnd, onHoldChange }: BoardProps) {
   const { t } = useTranslation();
   const ref = useRef<HTMLDivElement>(null);
   const { play, selected, pop } = snap;
@@ -317,6 +420,26 @@ export function Board({ snap, store, dim, hintMarks = null, onAccuse, canAccuse,
   const rings = useMemo(() => (ringNow ? ringSchedule(ringNow.units) : null), [ringNow]);
   // Roving: клетка-«единственная остановка» — выбранная (или первая, пока ничего не выбрано).
   const stop = selected ?? 0;
+  // PD-208 (Фонарь): свет — строка/столбец/блок выбранной клетки (`litCells`); нет выбора — свет пуст. Только пока партия идёт:
+  // загрузка, прелюдия «решено» и карточка показывают всё. Осмотр (удержание или пункт ⋯) — свет на всём поле.
+  const lantern = ready && play.lantern === true;
+  // Выбор до нажатия (обработчик поля идёт до фокуса кнопки) и текущий — чтобы удержание вернуло фонарь на место.
+  const selRef = useRef(selected);
+  selRef.current = selected;
+  const beforePress = useRef<number | null>(null);
+  const hold = useInspectHold(lantern, () => {
+    if (selRef.current !== beforePress.current) store.select(beforePress.current);
+  });
+  const showAll = !lantern || inspect || hold.held;
+  const lit = useMemo(() => new Set<number>(selected !== null ? litCells(selected) : []), [selected]);
+  const inShadow = (i: number): boolean => !showAll && !lit.has(i);
+  // PD-210 (осмотр b): во время осмотра граница света видна — клетки тени помечены `peek` (цифры читаются, туман вокруг них).
+  const lightOf = (i: number): CellProps["light"] => (!lantern ? null : lit.has(i) ? "lit" : showAll ? "peek" : "shadow");
+  const holdChange = useRef(onHoldChange);
+  holdChange.current = onHoldChange;
+  useEffect(() => {
+    holdChange.current?.(hold.held);
+  }, [hold.held]);
 
   // Фокус следует за выбором: undo (Ctrl+Z) и другие программные сдвиги выбора переводят
   // DOM-фокус на выбранную клетку — но только если фокус уже внутри поля (кнопки панели
@@ -351,6 +474,12 @@ export function Board({ snap, store, dim, hintMarks = null, onAccuse, canAccuse,
   const baseLabel = (i: number): string => {
     const where = { row: Math.floor(i / 9) + 1, col: (i % 9) + 1 };
     if (!play) return t("board.cellEmpty", where);
+    // PD-208/PD-210: в тени подпись не называет ни цифру, ни заметки — только что клетка занята (это видно и глазами: пятно
+    // тумана цифры / заметок). Пустая клетка в тени — «пусто», как на экране (макет PD-209 §2 п. 9). Подсказка — как обычно.
+    if (inShadow(i) && !isGiven(play, i)) {
+      if (play.values[i]) return t("lantern.cellShadow", where);
+      if (play.notes[i]) return t("lantern.cellShadowNotes", where);
+    }
     if (caught && caught.cell === i) return t("liar.cellCaught", { ...where, digit: play.mission[i], lie: caught.lie });
     if (acquitted.has(i)) return t("liar.cellAcquitted", { ...where, digit: play.mission[i] });
     if (glyphs) {
@@ -397,19 +526,39 @@ export function Board({ snap, store, dim, hintMarks = null, onAccuse, canAccuse,
     <div className="board-wrap">
       <div
         ref={ref}
-        className={`board${dim ? " dim" : ""}${ready ? "" : " idle"}`}
+        className={`board${dim ? " dim" : ""}${ready ? "" : " idle"}${lantern ? " lantern" : ""}${lantern && showAll ? " inspecting" : ""}`}
         data-phase={snap.phase}
+        data-lantern={lantern ? (showAll ? "inspect" : selected === null ? "dark" : "lit") : undefined}
         role="group"
-        aria-label={t("board.label")}
+        aria-label={lantern && showAll ? `${t("board.label")}, ${t("lantern.inspecting")}` : t("board.label")}
         aria-busy={snap.phase === "loading"}
         inert={!ready}
         onKeyDown={onKeyDown}
+        onPointerDown={
+          lantern
+            ? (e) => {
+                beforePress.current = selected;
+                hold.onPointerDown(e);
+              }
+            : undefined
+        }
+        onClickCapture={
+          lantern
+            ? (e) => {
+                hold.onClickCapture(e);
+                // Отпускание удержания (клик проглочен) осмотр из меню не заканчивает; обычный тап — заканчивает.
+                if (inspect && !e.isPropagationStopped()) onInspectEnd?.();
+              }
+            : undefined
+        }
+        onContextMenu={lantern ? hold.onContextMenu : undefined}
       >
         {BOXES.map((cells, b) => (
           <div className="box" key={b}>
             {cells.map((i) => {
               const v = play?.values[i] ?? 0;
               const digit = play ? digitAt(play, i) : 0;
+              const shadow = inShadow(i);
               return (
                 <Cell
                   key={i}
@@ -418,18 +567,18 @@ export function Board({ snap, store, dim, hintMarks = null, onAccuse, canAccuse,
                   value={v}
                   notes={play?.notes[i] ?? 0}
                   selected={ready && selected === i}
-                  same={ready && selDigit !== 0 && selected !== i && digit === selDigit && !blotCells.has(i)}
+                  same={ready && selDigit !== 0 && selected !== i && digit === selDigit && !blotCells.has(i) && !shadow}
                   peer={ready && peers !== null && peers.has(i)}
-                  wrong={play ? wrongAt(play, i) : false}
+                  wrong={play && !shadow ? wrongAt(play, i) : false}
                   blot={blotCells.has(i)}
                   blotId={blotNow && blotNow.cell === i ? blotNow.id : 0}
                   wrongDigit={blotNow && blotNow.cell === i ? blotNow.digit : 0}
                   popId={pop && pop.cell === i ? pop.id : 0}
                   waveIdx={wave ? (waveIndex.get(i) ?? -1) : -1}
                   waveId={wave && waveIndex.has(i) ? wave.id : 0}
-                  echoIdx={echo ? (echoIndex.get(i) ?? -1) : -1}
+                  echoIdx={echo && !shadow ? (echoIndex.get(i) ?? -1) : -1}
                   echoDelay={echo?.delay ?? 0}
-                  echoId={echo && echoIndex.has(i) ? echo.id : 0}
+                  echoId={echo && !shadow && echoIndex.has(i) ? echo.id : 0}
                   blotOrigin={blotNow && blotNow.cell === i && touch && touch.cell === i ? touch : null}
                   hintStrip={hintMarks?.strip.has(i) ?? false}
                   hintRing={hintMarks?.ring.has(i) ?? false}
@@ -443,6 +592,7 @@ export function Board({ snap, store, dim, hintMarks = null, onAccuse, canAccuse,
                   glyphs={glyphs}
                   rings={rings?.get(i)}
                   ringId={ringNow?.id ?? 0}
+                  light={lightOf(i)}
                   onAccuse={onAccuse}
                   onPick={pick}
                   onTouch={onTouch}
