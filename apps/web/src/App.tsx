@@ -64,6 +64,21 @@ export function App() {
   // показывает два экрана сразу, а состояние экрана (прокрутка, выбор клетки, раскрытые блоки) больше не теряется.
   const [visited, setVisited] = useState<ReadonlySet<TabId>>(() => new Set([tab]));
   if (!visited.has(tab)) setVisited(new Set([...visited, tab]));
+  // PD-232 (б), аудит PD-228 п. 10: Settings, справка и архив делят один прокручиваемый слой `.push-layer`, и scrollTop
+  // переезжал с экрана на экран — справка, открытая из низа Settings, оказывалась прокручена в самый низ. Позиция каждого экрана
+  // слоя — своя: справка всегда с начала (ссылка на блок докручивает сама, HelpScreen), возврат на экран слоя — к его прежней
+  // позиции, пока слой открыт; закрыли слой — забыли (новый заход в Settings — снова сверху, как было).
+  const pushRef = useRef<HTMLDivElement>(null);
+  const pushTops = useRef(new Map<string, number>());
+  useLayoutEffect(() => {
+    const el = pushRef.current;
+    if (!el) {
+      pushTops.current.clear();
+      return;
+    }
+    const top = panelKey === "help" ? 0 : (pushTops.current.get(panelKey) ?? 0);
+    if (el.scrollTop !== top) el.scrollTop = top;
+  }, [panelKey, overlay]);
   const stackRef = useRef<HTMLElement>(null);
   const pillRef = useRef<HTMLSpanElement>(null);
   const prewarm = useTabSlide(stackRef, pillRef, tab, overlay);
@@ -123,7 +138,9 @@ export function App() {
       </main>
       {overlay && (
         <div
+          ref={pushRef}
           className="scroll push-layer"
+          onScroll={(e) => pushTops.current.set(panelKey, e.currentTarget.scrollTop)}
           // Settings и справка — экраны поверх вкладки, а не её содержимое: роль панели только у архива (он живёт на Year).
           role={archiveDate !== null && !pushed ? "tabpanel" : undefined}
           id={archiveDate !== null && !pushed ? panelDomId("year") : undefined}
