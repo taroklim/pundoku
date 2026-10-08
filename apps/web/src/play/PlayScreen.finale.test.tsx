@@ -193,9 +193,38 @@ describe("финал Play: dim-фаза и тап-прерывание (PD-89)",
     startAlmostSolved();
     act(() => void vi.advanceTimersByTime(50));
     act(() => void tabBtn.dispatchEvent(new Event("pointerdown", { bubbles: true })));
-    expect(card()).not.toBeNull(); // финал прерван
+    // PD-276: до click касания вкладки карточка не появляется (иначе iOS не шлёт click — вкладка со второго тапа)
+    act(() => void vi.advanceTimersByTime(500));
+    expect(card()).toBeNull();
     act(() => tap(tabBtn));
     expect(selected).toBe(1);
+    act(() => void vi.advanceTimersByTime(0));
+    expect(card()).not.toBeNull(); // финал завершён сразу после выбора вкладки
+    remove();
+  });
+
+  it("PD-276: касание ДРУГОЙ вкладки без click (палец увели) — карточка по pointercancel / через окно после pointerup", () => {
+    const { tabBtn, remove } = tabBar(false, () => undefined);
+    startAlmostSolved();
+    act(() => void vi.advanceTimersByTime(50));
+    act(() => void tabBtn.dispatchEvent(new Event("pointerdown", { bubbles: true })));
+    act(() => void tabBtn.dispatchEvent(new Event("pointercancel", { bubbles: true })));
+    expect(card()).not.toBeNull();
+    remove();
+  });
+
+  it("PD-276: касание ДРУГОЙ вкладки, затем тап по полю — обычное прерывание: карточка сразу, хвост над «New game» гасится", () => {
+    const { tabBtn, remove } = tabBar(false, () => undefined);
+    startAlmostSolved();
+    act(() => void vi.advanceTimersByTime(50));
+    act(() => void tabBtn.dispatchEvent(new Event("pointerdown", { bubbles: true })));
+    expect(card()).toBeNull();
+    act(() => void document.body.dispatchEvent(new Event("pointerdown", { bubbles: true })));
+    expect(card()).not.toBeNull();
+    act(() => tap(newGame()));
+    expect(sheetOpen()).toBe(false);
+    act(() => void vi.advanceTimersByTime(1000));
+    expect(card()).not.toBeNull();
     remove();
   });
 

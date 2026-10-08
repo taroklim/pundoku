@@ -11,11 +11,24 @@ export const panelDomId = (tab: TabId) => `panel-${tab}`;
 interface TabBarProps {
   active: TabId;
   onSelect: (tab: TabId) => void;
-  /** PD-175: касание вкладки (pointerdown, до тапа) — движок слайда заранее рисует экран-цель за краем. */
+  /**
+   * PD-175: нажатие вкладки (pointerdown, до click) — движок слайда заранее рисует экран-цель за краем. Только мышь/трекпад
+   * (`prewarmsOn`), не касание — PD-276.
+   */
   onPrewarm?: (tab: TabId) => void;
   /** PD-161: пилюля выбранной вкладки — отдельный слой, её двигает движок перехода (`tabSlide.ts`). */
   pillRef?: Ref<HTMLSpanElement>;
 }
+
+/**
+ * PD-276: прогрев по нажатию — только для мыши/трекпада. На iPhone (касание, а также Apple Pencil — `pen`) он съедал первый
+ * тап: WebKit iOS между touchstart и синтетическим click следит за страницей (ContentChangeObserver) и, если за это время
+ * что-то кликабельное стало из скрытого видимым, считает тап «наведением» (показ меню по hover) и click не шлёт вовсе.
+ * Прогрев как раз снимает `visibility: hidden` с панели-цели (в ней кнопки), пусть и за краем экрана — кадрирование по
+ * вьюпорту появилось только в WebKit trunk 2026-09-30 (bug 325690), в iOS его нет. Второй тап проходил, потому что панель
+ * уже прогрета (до WARM_MS) и ничего не меняется. Исправление — не прогревать на касании вообще; у мыши этой эвристики нет.
+ */
+export const prewarmsOn = (pointerType: string): boolean => pointerType === "mouse";
 
 /** Таб-бар: role=tablist, roving tabindex, стрелки влево/вправо (+ Home/End), автоактивация. */
 export function TabBar({ active, onSelect, onPrewarm, pillRef }: TabBarProps) {
@@ -64,7 +77,13 @@ export function TabBar({ active, onSelect, onPrewarm, pillRef }: TabBarProps) {
           aria-selected={id === active}
           aria-controls={panelDomId(id)}
           tabIndex={id === active ? 0 : -1}
-          onPointerDown={onPrewarm && id !== active ? () => onPrewarm(id) : undefined}
+          onPointerDown={
+            onPrewarm && id !== active
+              ? (e) => {
+                  if (prewarmsOn(e.pointerType)) onPrewarm(id);
+                }
+              : undefined
+          }
           onClick={() => onSelect(id)}
         >
           <TabIcon tab={id} />
