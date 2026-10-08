@@ -88,7 +88,8 @@ export function InkRuleSheet({ onStart, onCancel }: { onStart: () => void; onCan
         }
       }
     }
-    root.current?.focus({ preventScroll: true });
+    // PD-232 (в): начальный фокус — «Играть чернилами» (Enter): до первого хода режим снимается обратно, ничего не теряется.
+    (root.current?.querySelector<HTMLElement>('[data-testid="ink-rule-start"]') ?? root.current)?.focus({ preventScroll: true });
     const onKey = (event: globalThis.KeyboardEvent) => {
       if (event.key === "Escape") {
         event.stopPropagation();

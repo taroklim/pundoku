@@ -139,3 +139,105 @@ describe("справка (PD-120)", () => {
     expect(selectedTab()).toContain("Play");
   });
 });
+
+describe("PD-232 (б): прокрутка общего слоя Settings/справки", () => {
+  // jsdom не хранит scrollTop — держим его сами, по элементу.
+  const tops = new WeakMap<Element, number>();
+  let restore: () => void = () => undefined;
+  beforeEach(() => {
+    const desc = Object.getOwnPropertyDescriptor(Element.prototype, "scrollTop")!;
+    Object.defineProperty(Element.prototype, "scrollTop", {
+      configurable: true,
+      get(this: Element) {
+        return tops.get(this) ?? 0;
+      },
+      set(this: Element, v: number) {
+        tops.set(this, v);
+      },
+    });
+    restore = () => Object.defineProperty(Element.prototype, "scrollTop", desc);
+  });
+  afterEach(() => restore());
+  const layer = () => host.querySelector<HTMLElement>(".push-layer")!;
+  const scrollLayer = (top: number) =>
+    act(() => {
+      layer().scrollTop = top;
+      layer().dispatchEvent(new Event("scroll"));
+    });
+
+  it("справка из низа Settings открывается с начала; «‹ Settings» возвращает прежнюю позицию Settings", async () => {
+    await press("today-gear");
+    scrollLayer(640);
+    await press("open-help");
+    expect(q("help-screen")).not.toBeNull();
+    expect(layer().scrollTop).toBe(0);
+    scrollLayer(120);
+    await press("help-back");
+    expect(q("settings-screen")).not.toBeNull();
+    expect(layer().scrollTop).toBe(640);
+  });
+
+  it("новый заход в Settings (после ухода на вкладку) — снова с начала", async () => {
+    await press("today-gear");
+    scrollLayer(640);
+    await press("settings-back");
+    expect(q("settings-screen")).toBeNull();
+    await press("today-gear");
+    expect(layer().scrollTop).toBe(0);
+  });
+});
+
+describe("PD-232 (г): Esc = назад на экранах поверх вкладки", () => {
+  const esc = (target: EventTarget = document.body) =>
+    act(async () => void target.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", code: "Escape", bubbles: true, cancelable: true })));
+
+  it("Settings: Esc — как «‹»: назад на вкладку-источник, через requestLeave", async () => {
+    await act(async () => void (window.location.hash = "#/play"));
+    await settle();
+    await press("play-gear");
+    store.requestLeave.mockClear();
+    await esc();
+    await settle();
+    expect(store.requestLeave).toHaveBeenCalledTimes(1);
+    expect(q("settings-screen")).toBeNull();
+    expect(window.location.hash).toBe("#/play");
+  });
+
+  it("справка из Settings: Esc — в Settings; ещё Esc — на вкладку", async () => {
+    await press("today-gear");
+    await press("open-help");
+    await esc();
+    await settle();
+    expect(q("help-screen")).toBeNull();
+    expect(q("settings-screen")).not.toBeNull();
+    await esc();
+    await settle();
+    expect(q("settings-screen")).toBeNull();
+    expect(q("today-gear")).not.toBeNull();
+  });
+
+  it("открыт шит (диалог) или фокус в поле ввода — Esc не уводит с экрана", async () => {
+    await press("today-gear");
+    const dlg = document.createElement("div");
+    dlg.setAttribute("role", "dialog");
+    dlg.setAttribute("aria-modal", "true");
+    document.body.append(dlg);
+    await esc();
+    await settle();
+    expect(q("settings-screen")).not.toBeNull();
+    dlg.remove();
+    const input = document.createElement("input");
+    document.body.append(input);
+    await esc(input);
+    await settle();
+    expect(q("settings-screen")).not.toBeNull();
+    input.remove();
+  });
+
+  it("на вкладке (ничего поверх) Esc ничего не делает", async () => {
+    await esc();
+    await settle();
+    expect(window.location.hash).toBe("#/today");
+    expect(q("today-gear")).not.toBeNull();
+  });
+});

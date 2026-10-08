@@ -9,6 +9,11 @@ interface ActionSheetProps {
   actionLabel: string;
   /** Сургучный цвет — только там, где действие необратимо (перевыпуск, удаление, уход без ключа). */
   destructive?: boolean;
+  /**
+   * PD-232 (в): начальный фокус — на главном действии (Enter/пробел его выполняют). Только для безопасных, откатываемых действий
+   * («Fill candidates» снимается одним Undo); с `destructive` игнорируется — там фокус всегда на «Отмене».
+   */
+  primary?: boolean;
   cancelLabel: string;
   onAction: () => void;
   onCancel: () => void;
@@ -30,14 +35,16 @@ const FOCUSABLE = "button:not([disabled])";
  * PD-144: колонка до безопасной высоты экрана; прокручивается ТОЛЬКО текст (`.st-ahead`), кнопки `flex:none` — никогда не
  * уезжают за край (320×568, AX3, uk/ru), а прокрутка не бывает на кнопке (action-sheets.md).
  */
-export function ActionSheet({ title, message, actionLabel, destructive = false, cancelLabel, onAction, onCancel, guardTail = false }: ActionSheetProps) {
+export function ActionSheet({ title, message, actionLabel, destructive = false, primary = false, cancelLabel, onAction, onCancel, guardTail = false }: ActionSheetProps) {
   const tail = useRef(guardTail);
   const scrim = useRef<HTMLDivElement>(null);
   const root = useRef<HTMLDivElement>(null);
   const cancelBtn = useRef<HTMLButtonElement>(null);
   const cancelRef = useRef(onCancel);
   cancelRef.current = onCancel;
+  const actionBtn = useRef<HTMLButtonElement>(null);
   const destructiveRef = useRef(destructive);
+  const primaryRef = useRef(primary);
   const titleId = useId();
   const msgId = useId();
 
@@ -57,7 +64,8 @@ export function ActionSheet({ title, message, actionLabel, destructive = false, 
     // Tab от неё НЕ защищает: «Отмена» — последний табстоп, и следующий Tab по кругу ведёт на разрушающее действие (а Shift+Tab —
     // на него же, ведь их всего два); защита — только в том, что действие требует осознанного Enter/пробела на нём. В обычном
     // шите начальный фокус — на самом шите (первый Tab → действие, как раньше).
-    (destructiveRef.current ? cancelBtn.current : root.current)?.focus({ preventScroll: true });
+    // PD-232 (в): `primary` (безопасное действие) — сразу на действии, Enter его выполняет.
+    (destructiveRef.current ? cancelBtn.current : primaryRef.current ? actionBtn.current : root.current)?.focus({ preventScroll: true });
 
     // Клавиатура — на document, а не на шите: если фокус всё же оказался вне его (тап по фону, `body`), Esc и Tab работают.
     const onKey = (event: globalThis.KeyboardEvent) => {
@@ -123,7 +131,7 @@ export function ActionSheet({ title, message, actionLabel, destructive = false, 
             {/* PD-144: липкая растушёвка — последний ребёнок прокручиваемого текста (подсказка «ниже есть ещё»). */}
             <div className="scroll-fade" aria-hidden="true" />
           </div>
-          <button type="button" className={destructive ? "destructive" : undefined} onClick={onAction} data-testid="action-sheet-go">
+          <button ref={actionBtn} type="button" className={destructive ? "destructive" : undefined} onClick={onAction} data-testid="action-sheet-go">
             {actionLabel}
           </button>
         </div>
