@@ -115,11 +115,12 @@ describe("swallowGhostClick", () => {
 
   // PD-221: финал прерывается ЛЮБЫМ касанием, в том числе по таб-бару. Таб-бар под пальцем не перерисовывается, его click —
   // не призрак: раньше тап по вкладке в dim-фазе финала Play / во время полёта Today только прерывал финал, вкладка не менялась.
-  it("касание таб-бара: click по вкладке проходит (прерывание финала по-прежнему срабатывает у вызывающего)", () => {
+  it("касание ДРУГОЙ вкладки таб-бара: click по ней проходит (прерывание финала по-прежнему срабатывает у вызывающего)", () => {
     const bar = document.createElement("div");
     bar.setAttribute("role", "tablist");
     const tabBtn = document.createElement("button");
     tabBtn.setAttribute("role", "tab");
+    tabBtn.setAttribute("aria-selected", "false");
     const label = document.createElement("span");
     tabBtn.append(label);
     bar.append(tabBtn);
@@ -135,6 +136,38 @@ describe("swallowGhostClick", () => {
     // и перехват не «висит» до следующего касания вне таб-бара
     click(1);
     expect(clicks).toBe(1);
+    bar.remove();
+  });
+
+  // PD-239 (QA PD-222): касание УЖЕ ВЫБРАННОЙ вкладки, прервавшее финал, — не повторный тап («Play → хаб», PD-144), а только
+  // прерывание: его click гасится, как любой хвост (PD-94). Переключение на другую вкладку (PD-221) не затронуто.
+  it("касание АКТИВНОЙ вкладки таб-бара: click гасится (только прерывание), клавиатура/AT — нет", () => {
+    const bar = document.createElement("div");
+    bar.setAttribute("role", "tablist");
+    const tabBtn = document.createElement("button");
+    tabBtn.setAttribute("role", "tab");
+    tabBtn.setAttribute("aria-selected", "true");
+    const label = document.createElement("span");
+    tabBtn.append(label);
+    bar.append(tabBtn);
+    document.body.append(bar);
+    let tabClicks = 0;
+    tabBtn.addEventListener("click", () => tabClicks++);
+    const down = ev("pointerdown");
+    document.addEventListener("pointerdown", () => swallowGhostClick(down), { once: true, capture: true });
+    label.dispatchEvent(down); // палец на подписи выбранной вкладки
+    tabBtn.dispatchEvent(new MouseEvent("click", { bubbles: true, cancelable: true, detail: 0 }));
+    expect(tabClicks).toBe(1); // клавиатура/VoiceOver не блокируются
+    tabBtn.dispatchEvent(ev("pointerup"));
+    const tail = new MouseEvent("click", { bubbles: true, cancelable: true, detail: 1 });
+    tabBtn.dispatchEvent(tail);
+    expect(tabClicks).toBe(1);
+    expect(tail.defaultPrevented).toBe(true);
+    // следующее касание той же вкладки — осознанный повторный тап, проходит
+    tabBtn.dispatchEvent(ev("pointerdown"));
+    tabBtn.dispatchEvent(ev("pointerup"));
+    tabBtn.dispatchEvent(new MouseEvent("click", { bubbles: true, cancelable: true, detail: 1 }));
+    expect(tabClicks).toBe(2);
     bar.remove();
   });
 });

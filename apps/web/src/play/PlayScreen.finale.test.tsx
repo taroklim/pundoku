@@ -174,22 +174,63 @@ describe("финал Play: dim-фаза и тап-прерывание (PD-89)",
     expect(card()).not.toBeNull();
   });
 
-  it("PD-221: тап по вкладке таб-бара в dim-фазе прерывает финал И доходит до вкладки (не гасится как призрак)", () => {
+  /** Таб-бар как в App: вкладка `selected` — выбранная (aria-selected), click по ней = то, что делает `App.setTab`. */
+  const tabBar = (selected: boolean, onClick: () => void) => {
     const bar = document.createElement("div");
     bar.setAttribute("role", "tablist");
     const tabBtn = document.createElement("button");
     tabBtn.setAttribute("role", "tab");
+    tabBtn.setAttribute("aria-selected", String(selected));
     bar.append(tabBtn);
     document.body.append(bar);
+    tabBtn.addEventListener("click", onClick);
+    return { tabBtn, remove: () => bar.remove() };
+  };
+
+  it("PD-221: тап по ДРУГОЙ вкладке таб-бара в dim-фазе прерывает финал И доходит до вкладки (не гасится как призрак)", () => {
     let selected = 0;
-    tabBtn.addEventListener("click", () => selected++);
+    const { tabBtn, remove } = tabBar(false, () => selected++);
     startAlmostSolved();
     act(() => void vi.advanceTimersByTime(50));
     act(() => void tabBtn.dispatchEvent(new Event("pointerdown", { bubbles: true })));
     expect(card()).not.toBeNull(); // финал прерван
     act(() => tap(tabBtn));
     expect(selected).toBe(1);
-    bar.remove();
+    remove();
+  });
+
+  // PD-239 (QA PD-222, Low): повторный тап по выбранной Play = «на хаб» (PD-144). Касание, прервавшее финал, — не повторный
+  // тап: оно только досрочно завершает финал, карточка результата показывается, как при обычном завершении.
+  it("PD-239: тап по АКТИВНОЙ вкладке Play в dim-фазе только прерывает финал — карточка, без ухода на хаб", () => {
+    const { tabBtn, remove } = tabBar(true, () => playStore.reselect());
+    startAlmostSolved();
+    const before = playStore.getSnapshot().reselect;
+    act(() => void vi.advanceTimersByTime(50));
+    act(() => void tabBtn.dispatchEvent(new Event("pointerdown", { bubbles: true })));
+    act(() => tap(tabBtn));
+    expect(playStore.getSnapshot().reselect).toBe(before);
+    expect(playStore.getSnapshot().hub).toBe(false);
+    expect(playStore.getSnapshot().phase).toBe("solved");
+    expect(card()).not.toBeNull();
+    // следующий, осознанный тап по ней же (финал уже кончился) — обычный повторный тап: на хаб
+    act(() => void tabBtn.dispatchEvent(new Event("pointerdown", { bubbles: true })));
+    act(() => tap(tabBtn));
+    expect(playStore.getSnapshot().reselect).toBe(before + 1);
+    expect(playStore.getSnapshot().hub).toBe(true);
+    remove();
+  });
+
+  it("PD-239: вне финала (карточка показана по таймеру) повторный тап по активной Play — на хаб, как раньше", () => {
+    const { tabBtn, remove } = tabBar(true, () => playStore.reselect());
+    startAlmostSolved();
+    act(() => void vi.advanceTimersByTime(300));
+    expect(card()).not.toBeNull();
+    const before = playStore.getSnapshot().reselect;
+    act(() => void tabBtn.dispatchEvent(new Event("pointerdown", { bubbles: true })));
+    act(() => tap(tabBtn));
+    expect(playStore.getSnapshot().reselect).toBe(before + 1);
+    expect(playStore.getSnapshot().hub).toBe(true);
+    remove();
   });
 
   it("после прерывающего тапа следующий осознанный тап по «New game» работает", () => {
