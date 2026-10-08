@@ -270,11 +270,14 @@ export function useDocumentGameKeys(
  * Клавиатурный ввод игрового экрана (цифры, Backspace, Ctrl+Z, N). PD-139: третий аргумент — лесенка подсказок:
  * `H` (без модификаторов) открывает/закрывает док, `Esc` закрывает открытый док. Нет лесенки (Ink, Grid ∞) — клавиш нет.
  * PD-232 (г): `Esc` без открытого дока снимает выбор клетки; из партии Esc не выводит никогда.
+ * PD-244 (QA PD-233): четвёртый аргумент — «закончить осмотр доски» (Фонарь, пункт ⋯), передаётся, пока осмотр включён.
+ * Порядок `Esc` в партии: открытый шит/меню (закрывается своим обработчиком, сюда не доходит) → осмотр → док → выбор.
  */
 export function handleGameKey(
   e: GameKeyEvent,
   store: Pick<GameStore, "undo" | "erase" | "input" | "toggleNotesMode" | "fillCandidates" | "select" | "getSnapshot">,
   hint?: Pick<HintLadder, "toggle" | "close" | "getState"> | null,
+  endInspect?: (() => void) | null,
 ): void {
   const target = e.target instanceof Element ? e.target : null;
   // Шит поверх экрана (PD-116: «Discard current puzzle?») и меню «⋯» (PD-144) — их клавиши не ввод в клетку
@@ -304,7 +307,10 @@ export function handleGameKey(
     e.preventDefault();
     hint.toggle();
   } else if (e.key === "Escape" && !e.altKey && !e.shiftKey) {
-    if (hint && hint.getState().open) {
+    if (endInspect) {
+      e.preventDefault();
+      endInspect();
+    } else if (hint && hint.getState().open) {
       e.preventDefault();
       hint.close();
     } else if (store.getSnapshot().selected !== null) {

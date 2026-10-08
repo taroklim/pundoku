@@ -232,7 +232,8 @@ export function PlayScreen({ onOpenSettings, onOpenHelp, onOpenToday }: { onOpen
       if (sel !== null) openAccuse(sel, null);
       return;
     }
-    handleGameKey(e, playStore, ladder);
+    // PD-244: Esc сначала заканчивает осмотр доски из ⋯ (как «Готово»), следующий — док/выбор.
+    handleGameKey(e, playStore, ladder, inspectOn && phase === "playing" ? () => setInspectKey(null) : null);
   };
   // PD-232 (а): те же клавиши, когда фокус вне экрана (<body> после загрузки, вкладка таб-бара) — пока партия на экране.
   useDocumentGameKeys(screenRef, active && !hub && !waiting && !restoring && phase === "playing", onGameKey, playStore);

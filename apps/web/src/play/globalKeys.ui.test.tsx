@@ -21,7 +21,7 @@ import { InMemoryProgressRepository } from "../today/repository";
 import { DayView } from "../today/TodayScreen";
 import { createLiarPlay } from "./liar";
 import type { PlayState } from "./logic";
-import { createPlay, setGlyphMode, setInkMode, setMelodyMode } from "./logic";
+import { createPlay, setGlyphMode, setInkMode, setLanternMode, setMelodyMode } from "./logic";
 import { PlayScreen } from "./PlayScreen";
 import { playStore } from "./store";
 
@@ -389,6 +389,119 @@ describe("PD-232 (г): Esc в партии снимает выбор, из па�
     document.body.append(el);
     esc();
     expect(snap().selected).toBe(CELL);
+  });
+});
+
+describe("PD-244 (QA PD-233): Esc в осмотре доски Фонаря — сначала заканчивает осмотр, потом док, потом выбор", () => {
+  const esc = (target: EventTarget = document.body) => key(target, { key: "Escape", code: "Escape" });
+  const tap = (el: Element) => act(() => void el.dispatchEvent(new MouseEvent("click", { bubbles: true, cancelable: true, detail: 1 })));
+  const tid = (id: string) => q(`[data-testid="${id}"]`);
+  const light = () => host.querySelector(".board")!.getAttribute("data-lantern");
+  const inspectFromMenu = () => {
+    tap(tid("more-button")!);
+    tap(tid("menu-inspect")!);
+    expect(light()).toBe("inspect");
+  };
+  const lantern = () => {
+    playing(setLanternMode(classic()), "lantern");
+    render();
+    expect(light()).toBe("lit");
+  };
+
+  it("Esc с кнопки ⋯ (фокус после меню), с <body> и с клетки: первый — конец осмотра (выбор цел), второй — снимает выбор; партия на месте", () => {
+    lantern();
+    inspectFromMenu();
+    // Фокус вернулся на «⋯» — Esc оттуда (сценарий QA).
+    const e = esc(document.activeElement ?? document.body);
+    expect(e.defaultPrevented).toBe(true);
+    expect(light()).toBe("lit");
+    expect(snap().selected).toBe(CELL);
+    expect(tid("mode-chip")!.getAttribute("data-inspecting")).toBeNull();
+    esc();
+    expect(snap().selected).toBeNull();
+    expect(light()).toBe("dark");
+    esc();
+    expect(snap().hub).toBe(false);
+    expect(host.querySelector(".board")).not.toBeNull();
+    // С <body> и с клетки — так же.
+    act(() => playStore.select(CELL));
+    inspectFromMenu();
+    (document.activeElement as HTMLElement | null)?.blur();
+    esc();
+    expect(light()).toBe("lit");
+    inspectFromMenu();
+    cell(CELL).focus();
+    esc(cell(CELL));
+    expect(light()).toBe("lit");
+    expect(snap().selected).toBe(CELL);
+    esc(cell(CELL));
+    expect(snap().selected).toBeNull();
+  });
+
+  it("осмотр и док вместе: Esc — осмотр, Esc — док, Esc — выбор", () => {
+    lantern();
+    inspectFromMenu();
+    (document.activeElement as HTMLElement | null)?.blur();
+    key(document.body, { key: "h", code: "KeyH" });
+    // Первый раз — шит правила подсказок (это слой: пока открыт, Esc его, осмотр не трогается).
+    const go = tid("hint-rule-go");
+    if (go) {
+      esc(go);
+      expect(light()).toBe("inspect");
+      key(document.body, { key: "h", code: "KeyH" });
+      tap(tid("hint-rule-go")!);
+    }
+    expect(tid("hint-dock")).not.toBeNull();
+    (document.activeElement as HTMLElement | null)?.blur();
+    esc();
+    expect(light()).not.toBe("inspect");
+    expect(tid("hint-dock")).not.toBeNull();
+    expect(snap().selected).toBe(CELL);
+    esc();
+    expect(tid("hint-dock")).toBeNull();
+    expect(snap().selected).toBe(CELL);
+    esc();
+    expect(snap().selected).toBeNull();
+  });
+
+  it("открытое меню ⋯ поверх осмотра: Esc закрывает меню, осмотр остаётся; следующий Esc — конец осмотра", () => {
+    lantern();
+    inspectFromMenu();
+    tap(tid("more-button")!);
+    expect(tid("more-menu")).not.toBeNull();
+    esc(document.activeElement ?? document.body);
+    expect(tid("more-menu")).toBeNull();
+    expect(light()).toBe("inspect");
+    expect(snap().selected).toBe(CELL);
+    esc(document.activeElement ?? document.body);
+    expect(light()).toBe("lit");
+  });
+
+  it("выход из осмотра как раньше: пункт ⋯, «Готово», тап по полю; после Esc пункт снова включает осмотр", () => {
+    lantern();
+    inspectFromMenu();
+    esc();
+    tap(tid("more-button")!);
+    expect(tid("menu-inspect")!.getAttribute("aria-checked")).toBe("false");
+    tap(tid("menu-inspect")!);
+    expect(light()).toBe("inspect");
+    tap(tid("more-button")!);
+    tap(tid("menu-inspect")!);
+    expect(light()).toBe("lit");
+    inspectFromMenu();
+    act(() => playStore.select(null));
+    tap(tid("inspect-done")!);
+    expect(light()).toBe("dark");
+    inspectFromMenu();
+    tap(cell(CELL));
+    expect(light()).toBe("lit");
+  });
+
+  it("классика: Esc по-прежнему снимает выбор с первого нажатия", () => {
+    playing(classic());
+    render();
+    esc();
+    expect(snap().selected).toBeNull();
   });
 });
 
