@@ -14,7 +14,7 @@ import { setPetEnabled } from "../settings/prefs";
 import { progressOf } from "../sync/fixtures";
 import type { DayProgress } from "../today/repository";
 import { YearScreen } from "../year/YearScreen";
-import { usePersonalBest } from "./usePersonalBest";
+import { usePersonalBest, usePersonalBestState } from "./usePersonalBest";
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
@@ -170,6 +170,39 @@ describe("игровое поле — никогда", () => {
   it.each(["../play/Board.tsx", "../play/controls.tsx", "../today/MiniBoard.tsx", "../play/ReplayField.tsx"])("%s не импортирует питомца", async (file) => {
     const src = await fs.read(file);
     expect(src).not.toMatch(/PetBlot|from "\.\.\/pet\//);
+  });
+});
+
+describe("usePersonalBestState (PD-260)", () => {
+  function Probe({ list, day }: { list: () => Promise<DayProgress[]>; day: DayProgress }) {
+    const s = usePersonalBestState(true, list, { date: day.date, difficulty: day.difficulty, play: day.play, assisted: day.assisted });
+    return <span data-testid="st">{`${s.best}/${s.ready}`}</span>;
+  }
+  const flush = () => act(async () => void (await new Promise((r) => setTimeout(r, 0))));
+  it("ready — когда рекорд для даты посчитан; новая партия той же даты не сбрасывает; сбой чтения — готово без рекорда", async () => {
+    const a = progressOf("2026-09-10");
+    const b = { ...progressOf("2026-09-11"), play: { ...progressOf("2026-09-11").play, log: progressOf("2026-09-11").play.log.map((m) => ({ ...m, t: Math.round(m.t / 2) })) } };
+    let release: (v: DayProgress[]) => void = () => undefined;
+    const slow = () => new Promise<DayProgress[]>((r) => (release = r));
+    act(() => root.render(<Probe list={slow} day={b} />));
+    expect(host.textContent).toBe("false/false");
+    await act(async () => release([a, b]));
+    await flush();
+    expect(host.textContent).toBe("true/true");
+    act(() => root.render(<Probe list={slow} day={{ ...b, play: { ...b.play } }} />));
+    expect(host.textContent).toBe("true/true");
+    act(() => root.render(<Probe list={() => Promise.reject(new Error("idb"))} day={a} />));
+    await flush();
+    expect(host.textContent).toBe("false/true");
+  });
+  it("ResultCard: пока настроение уточняется — место под кляксу есть, кляксы нет", () => {
+    setPetEnabled(true);
+    act(() => root.render(<ResultCard play={progressOf("2026-09-10").play} cardRef={{ current: null }} title="Solved" solvedNow petPending />));
+    expect(host.querySelector('[data-testid="result-card"]')!.classList.contains("has-pet")).toBe(true);
+    expect(pet("pet-card")).toBeNull();
+    act(() => root.render(<ResultCard play={progressOf("2026-09-10").play} cardRef={{ current: null }} title="Solved" solvedNow personalBest />));
+    expect(pet("pet-card")!.getAttribute("data-mood")).toBe("surprised");
+    expect(pet("pet-card")!.getAttribute("data-act")).toBe("arrive");
   });
 });
 
