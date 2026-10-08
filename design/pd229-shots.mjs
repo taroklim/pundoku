@@ -11,10 +11,13 @@
  * Порт не занимается. Браузеры закрываются в finally; никаких pkill.
  *
  * Что пишет в design/pd229-shots/  (cr-* chromium, wk-* webkit; @1x, если не указано -2x):
- *   <br>-<C>-<screen>-<theme>-<w>[-hover|-focus][-solid][-2x].png
- *     C      = A Колонка · B Стол · C Сайдбар
+ *   <br>-<C>-<screen>-<theme>-<w>[-z125|-z150][-hover|-focus][-solid][-2x].png
+ *     C      = A Пара · B Стол · C Сайдбар   (PD-234: A «Колонка» заменена на «Пару», см. pd229-desktop.md §8)
  *     screen = game (Today, партия идёт) · solved (Today, решено: карточка + Grid ∞) · hub (Play, режимы) · year · keys (список клавиш «?»)
- *     theme  = light · dark;   w = 1280 (×800) · 1440 (×900) · 1920 (×1080)
+ *              · settings (Settings + текст Help, колонка 640) · sheet (модальный шит 560, фокус на основной кнопке)
+ *     theme  = light · dark;   w = 1280 (×800) · 1440 (×900) · 1920 (×1080) — физическое окно
+ *     -z125 / -z150 — масштаб браузера: CSS-вьюпорт = окно / масштаб, DPR = масштаб (как в аудите PD-228); ниже 1100×680 CSS px
+ *                     включается компактная раскладка
  *     -hover / -focus — показаны состояния наведения / фокуса с клавиатуры;  -solid — навигация без стекла (фолбэк)
  *   overview-<theme>.png — страница макета с панелью переключателей (1600×1000, только chromium)
  *
@@ -24,6 +27,9 @@
  * контраст КАЖДОГО видимого текста по computed-цветам ≥ 4.5:1 (≥ 3:1 для крупного) — с учётом стекла (полупрозрачные слои
  * смешиваются с фоном), кроме намеренно приглушённых закрытых цифр (opacity .4, как в приложении) и текста под затемнением диалога;
  * в состояниях hover/focus — демонстрация действительно есть.
+ * PD-234 добавил: порог поля 420 (полные раскладки) / 360 (компакт) / 240 (решённое поле в A); колонка инструментов A и инспектор C
+ * не прокручиваются во время партии; после решения карточка и Grid ∞ целиком в окне (кроме C при 125/150 % — задокументировано);
+ * шкала ширин: поповер ≤ 320, шит = 560 (или окно − 64), диалог ≤ 640, колонки списков ≤ 640, год ≤ 780.
  */
 import { createRequire } from "node:module";
 import { mkdirSync } from "node:fs";
@@ -47,14 +53,20 @@ const OUT = join(DIR, "pd229-shots");
 const PAGE = pathToFileURL(join(DIR, "pd229-desktop.html")).href;
 mkdirSync(OUT, { recursive: true });
 
-const VIEW = { 1280: { width: 1280, height: 800 }, 1440: { width: 1440, height: 900 }, 1920: { width: 1920, height: 1080 } };
+const BASE = { 1280: [1280, 800], 1440: [1440, 900], 1920: [1920, 1080] };
+// Масштаб браузера эмулируется как в PD-228: CSS-вьюпорт = окно / масштаб, DPR = масштаб (кадр — физический размер окна).
+const viewOf = (a) => { const [W, H] = BASE[a.w], z = Number(a.z) / 100; return { width: Math.round(W / z), height: Math.round(H / z) }; };
+const dsfOf = (a) => (a.dsf === 2 ? 2 : Number(a.z) / 100);
 
 /* ------------------------------------------------------------------ план кадров */
 const SHOTS = [];
-const name = (o) => `${o.c}-${o.screen}-${o.theme}-${o.w}${o.st && o.st !== "none" ? "-" + o.st : ""}${o.glass === "off" ? "-solid" : ""}${o.dsf === 2 ? "-2x" : ""}`;
+const name = (o) => `${o.c}-${o.screen}-${o.theme}-${o.w}${o.z !== "100" ? "-z" + o.z : ""}${o.st && o.st !== "none" ? "-" + o.st : ""}${o.glass === "off" ? "-solid" : ""}${o.dsf === 2 ? "-2x" : ""}`;
 const add = (o, browsers = ["cr"]) => {
-  const a = Object.assign({ screen: "game", theme: "light", w: "1440", st: "none", glass: "on", dsf: 1 }, o);
-  SHOTS.push({ name: name(a), browsers, a });
+  const a = Object.assign({ screen: "game", theme: "light", w: "1440", z: "100", st: "none", glass: "on", dsf: 1 }, o);
+  a.z = String(a.z);
+  const n = name(a);
+  if (SHOTS.some((s) => s.name === n)) return; // без дублей
+  SHOTS.push({ name: n, browsers, a });
 };
 
 // 1. Главная матрица: концепция × ширина × тема, экран партии — в обоих движках (Safari на Mac — вероятный браузер владельца).
@@ -86,6 +98,27 @@ for (const theme of ["light", "dark"]) { add({ c: "B", glass: "off", theme }); a
 // 5. Чёткие кадры рекомендованной B для просмотра на ретине.
 for (const theme of ["light", "dark"]) add({ c: "B", theme, dsf: 2 }, ["cr", "wk"]);
 
+// 6. PD-234 — сверка с аудитом PD-228.
+// 6a. Масштаб браузера (аудит #11). 1280×800 @125 → 1024×640 и @150 → 853×533 CSS px: компакт у всех концепций.
+for (const c of ["A", "B", "C"]) for (const z of ["125", "150"]) add({ c, w: "1280", z }, c === "B" ? ["cr", "wk"] : ["cr"]);
+for (const c of ["A", "B", "C"]) add({ c, w: "1280", z: "150", screen: "solved" });
+for (const screen of ["hub", "year", "keys", "sheet", "settings"]) add({ c: "B", w: "1280", z: "150", screen });
+add({ c: "B", w: "1280", z: "150", theme: "dark" });
+add({ c: "B", w: "1280", z: "125", screen: "solved" });
+// 1440×900 @150 → 960×600 (компакт), @125 → 1152×720 (уже полная раскладка); 1920×1080 @125 → 1536×864.
+for (const c of ["A", "B", "C"]) add({ c, w: "1440", z: "150" });
+for (const c of ["A", "B", "C"]) for (const screen of ["game", "solved"]) add({ c, w: "1440", z: "125", screen });
+for (const screen of ["game", "solved", "year"]) add({ c: "B", w: "1920", z: "125", screen });
+// 6b. Today после решения и Year на 1920 (аудит #2, #3) — все концепции, обе темы для B.
+for (const c of ["A", "B", "C"]) for (const screen of ["solved", "year"]) add({ c, screen, w: "1920" });
+for (const screen of ["solved", "year"]) add({ c: "B", screen, w: "1920", theme: "dark" });
+// 6c. Единая шкала ширин (аудит #5, #6): Settings + текст Help (640) и шит (560) — каждая концепция.
+for (const c of ["A", "B", "C"]) for (const screen of ["settings", "sheet"]) add({ c, screen });
+for (const screen of ["settings", "sheet"]) { add({ c: "B", screen, w: "1920" }); add({ c: "B", screen, w: "1280" }); add({ c: "B", screen, theme: "dark" }); }
+// 6d. Наведение и фокус на строках списков (аудит #7).
+for (const st of ["hover", "focus"]) add({ c: "B", screen: "settings", st });
+add({ c: "A", st: "hover", w: "1280", z: "150" });
+
 /* ------------------------------------------------------------------ съёмка */
 const problems = [];
 
@@ -94,7 +127,7 @@ async function shoot(browserType, prefix) {
   try {
     for (const s of SHOTS.filter((x) => x.browsers.includes(prefix))) {
       const ctx = await browser.newContext({
-        viewport: VIEW[s.a.w], deviceScaleFactor: s.a.dsf,
+        viewport: viewOf(s.a), deviceScaleFactor: dsfOf(s.a),
         colorScheme: s.a.theme === "dark" ? "dark" : "light", reducedMotion: "reduce"
       });
       try {
@@ -104,7 +137,7 @@ async function shoot(browserType, prefix) {
         page.on("console", (m) => { if (m.type() === "error") errors.push(m.text()); });
         await page.goto(PAGE + "?shot=1", { waitUntil: "load" });
         await page.waitForFunction(() => !!window.PD229);
-        const o = { c: s.a.c, w: s.a.w, theme: s.a.theme, screen: s.a.screen, st: s.a.st, glass: s.a.glass };
+        const o = { c: s.a.c, w: s.a.w, z: s.a.z, theme: s.a.theme, screen: s.a.screen, st: s.a.st, glass: s.a.glass };
         await page.evaluate((x) => { PD229.reset(); PD229.apply(x); }, o);
         await page.evaluate(() => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r))));
         await page.screenshot({ path: join(OUT, `${prefix}-${s.name}.png`) });
