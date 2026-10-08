@@ -408,7 +408,7 @@ async function flow(name, type, c) {
     ok(`${tag} VoiceOver: «${L.shadow}» / «${L.notes}»`, lbl.endsWith(`, ${L.shadow}`) && lbl.split(", ").length === 3 && lblN.endsWith(`, ${L.notes}`), `${lbl} | ${lblN}`);
     const trans = await page.evaluate((s) => getComputedStyle(document.querySelector(s)).transitionDuration, `${BOARD} .cell.is-shadow .d.player`);
     if (c.rm) ok(`${tag} Reduce Motion: переход света 0 с`, /^0s$/.test(trans), trans);
-    else ok(`${tag} переход света 160 мс (только opacity)`, /0\.16s|160ms/.test(trans), trans);
+    else ok(`${tag} переход света 200 мс (только opacity; PD-251 — кроссфейд чёткий ↔ туман)`, /^0\.2s$|^200ms$/.test(trans), trans);
     f = await fit(page);
     ok(`${tag} свет: строка «осталось N», подпись без переполнения`, !f.subOver && (await state(page)).status === "left", f.text);
     if (c.shots) await page.screenshot({ path: shot("center") });

@@ -1,0 +1,131 @@
+{
+ "engine": "webkit headless (mac13), viewport 390×844 @2x",
+ "rounds": 6,
+ "load": "263.44 279.64 280.21",
+ "note": "мс; click — клик → 2 rAF; clickWork/arrowWork — главный поток: событие → рендер React (микрозадача) → стиль+раскладка (аналог длинной задачи: в WebKit нет Long Tasks API); jumpFrames/arrowFrames — интервалы rAF во время переходов; over34/over50 — число интервалов/задач длиннее 34/50 мс",
+ "before": {
+  "click": {
+   "n": 72,
+   "med": 305,
+   "p90": 536,
+   "max": 828,
+   "over34": 71,
+   "over50": 71
+  },
+  "clickWork": {
+   "n": 72,
+   "med": 34,
+   "p90": 170,
+   "max": 284,
+   "over34": 34,
+   "over50": 31
+  },
+  "jumpFrames": {
+   "n": 260,
+   "med": 17,
+   "p90": 47,
+   "max": 251,
+   "over34": 38,
+   "over50": 23
+  },
+  "arrowWork": {
+   "n": 144,
+   "med": 17,
+   "p90": 78,
+   "max": 165,
+   "over34": 37,
+   "over50": 30
+  },
+  "arrowFrames": {
+   "n": 480,
+   "med": 63,
+   "p90": 189,
+   "max": 415,
+   "over34": 306,
+   "over50": 264
+  }
+ },
+ "after": {
+  "click": {
+   "n": 72,
+   "med": 268,
+   "p90": 497,
+   "max": 812,
+   "over34": 71,
+   "over50": 71
+  },
+  "clickWork": {
+   "n": 72,
+   "med": 29,
+   "p90": 142,
+   "max": 221,
+   "over34": 34,
+   "over50": 27
+  },
+  "jumpFrames": {
+   "n": 200,
+   "med": 18,
+   "p90": 94,
+   "max": 273,
+   "over34": 59,
+   "over50": 37
+  },
+  "arrowWork": {
+   "n": 144,
+   "med": 19,
+   "p90": 121,
+   "max": 201,
+   "over34": 46,
+   "over50": 42
+  },
+  "arrowFrames": {
+   "n": 517,
+   "med": 86,
+   "p90": 254,
+   "max": 658,
+   "over34": 378,
+   "over50": 339
+  }
+ },
+ "afterFadingAtRestAfterRounds": 0,
+ "frames": [
+  {
+   "scheme": "light",
+   "fading": 17,
+   "entering": 17,
+   "transitions": {
+    "fading": 17,
+    "entering": 17,
+    "other": 0
+   },
+   "fadingAfter": 0,
+   "files": [
+    "wk-390-light-r5c5-to-r1c1-t000.png",
+    "wk-390-light-r5c5-to-r1c1-t040.png",
+    "wk-390-light-r5c5-to-r1c1-t080.png",
+    "wk-390-light-r5c5-to-r1c1-t120.png",
+    "wk-390-light-r5c5-to-r1c1-t160.png",
+    "wk-390-light-r5c5-to-r1c1-t200.png"
+   ]
+  },
+  {
+   "scheme": "dark",
+   "fading": 16,
+   "entering": 16,
+   "transitions": {
+    "fading": 16,
+    "entering": 16,
+    "other": 0
+   },
+   "fadingAfter": 0,
+   "files": [
+    "wk-390-dark-r5c5-to-r1c1-t000.png",
+    "wk-390-dark-r5c5-to-r1c1-t040.png",
+    "wk-390-dark-r5c5-to-r1c1-t080.png",
+    "wk-390-dark-r5c5-to-r1c1-t120.png",
+    "wk-390-dark-r5c5-to-r1c1-t160.png",
+    "wk-390-dark-r5c5-to-r1c1-t200.png"
+   ]
+  }
+ ]
+}
