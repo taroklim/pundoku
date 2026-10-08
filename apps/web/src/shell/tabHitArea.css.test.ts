@@ -9,12 +9,18 @@ import { describe, expect, it } from "vitest";
 const fs = (await import(/* @vite-ignore */ ["node", "fs"].join(":"))) as { readFileSync(u: URL, enc: "utf8"): string };
 const css = fs.readFileSync(new URL("../styles/shell.css", import.meta.url), "utf8").replace(/\/\*[\s\S]*?\*\//g, "");
 
-/** Тело правила с ровно таким селектором. */
+/**
+ * Склеенные тела ВСЕХ правил верхнего уровня, в списке селекторов которых есть ровно `sel` (элемент списка целиком, не
+ * подстрока: `.tabbar` не совпадает с `.tabbar-x` или `.tabbar .tab`). QA PD-222: раньше бралось первое правило, а после
+ * PD-214 первым с `.tabbar` стало групповое правило user-select — свойства бара «пропадали». Блоки @media/@supports сюда
+ * не попадают (регулярка поглощает их целиком как одно «правило» с селектором-at-rule).
+ */
 function rule(sel: string): string {
+  const bodies: string[] = [];
   for (const m of css.matchAll(/([^{}]+)\{([^}]*)\}/g)) {
-    if (m[1]!.split(",").map((s) => s.trim()).includes(sel)) return m[2]!;
+    if (m[1]!.split(",").map((s) => s.trim()).includes(sel)) bodies.push(m[2]!);
   }
-  return "";
+  return bodies.join("\n");
 }
 
 describe("зона касания вкладки (shell.css)", () => {
