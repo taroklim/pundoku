@@ -1,0 +1,46 @@
+[
+  {
+    "browser": "chromium",
+    "scheme": "light",
+    "reduced": false,
+    "rest": {
+      "tab-today": "1",
+      "tab-play": "1",
+      "tab-year": "1"
+    },
+    "tabTransition": "color 0.12s linear"
+  },
+  {
+    "browser": "chromium",
+    "scheme": "dark",
+    "reduced": false,
+    "rest": {
+      "tab-today": "1",
+      "tab-play": "1",
+      "tab-year": "1"
+    },
+    "tabTransition": "color 0.12s linear"
+  },
+  {
+    "browser": "webkit",
+    "scheme": "light",
+    "reduced": false,
+    "rest": {
+      "tab-today": "1",
+      "tab-play": "1",
+      "tab-year": "1"
+    },
+    "tabTransition": "color 0.12s linear"
+  },
+  {
+    "browser": "webkit",
+    "scheme": "dark",
+    "reduced": false,
+    "rest": {
+      "tab-today": "1",
+      "tab-play": "1",
+      "tab-year": "1"
+    },
+    "tabTransition": "color 0.12s linear"
+  }
+]

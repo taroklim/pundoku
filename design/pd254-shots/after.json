@@ -1,0 +1,239 @@
+[
+  {
+    "browser": "chromium",
+    "scheme": "light",
+    "reduced": false,
+    "rest": {
+      "tab-today": "1",
+      "tab-play": "1",
+      "tab-year": "1"
+    },
+    "tabTransition": "color 0.12s linear, opacity 0.2s linear",
+    "holdSelectedToday": {
+      "tab-today": "0.5",
+      "tab-play": "1",
+      "tab-year": "1"
+    },
+    "holdPlay": {
+      "tab-today": "1",
+      "tab-play": "0.5",
+      "tab-year": "1"
+    },
+    "afterRelease16ms": "0.833435",
+    "afterRelease500ms": {
+      "tab-today": "1",
+      "tab-play": "1",
+      "tab-year": "1"
+    },
+    "selectedAfterClick": "tab-play",
+    "holdHomeIndicatorUnderYear": {
+      "tab-today": "1",
+      "tab-play": "1",
+      "tab-year": "0.5"
+    },
+    "selectedAfterHomeZone": "tab-year",
+    "touchHoldTodaySamples": [
+      "false/1",
+      "true/0.5",
+      "true/0.5",
+      "false/0.5",
+      "false/1",
+      "false/1",
+      "false/1",
+      "false/1"
+    ],
+    "selectedAfterTouch": "tab-today"
+  },
+  {
+    "browser": "chromium",
+    "scheme": "dark",
+    "reduced": false,
+    "rest": {
+      "tab-today": "1",
+      "tab-play": "1",
+      "tab-year": "1"
+    },
+    "tabTransition": "color 0.12s linear, opacity 0.2s linear",
+    "holdSelectedToday": {
+      "tab-today": "0.5",
+      "tab-play": "1",
+      "tab-year": "1"
+    },
+    "holdPlay": {
+      "tab-today": "1",
+      "tab-play": "0.5",
+      "tab-year": "1"
+    },
+    "afterRelease16ms": "0.54185",
+    "afterRelease500ms": {
+      "tab-today": "1",
+      "tab-play": "1",
+      "tab-year": "1"
+    },
+    "selectedAfterClick": "tab-play",
+    "holdHomeIndicatorUnderYear": {
+      "tab-today": "1",
+      "tab-play": "1",
+      "tab-year": "0.5"
+    },
+    "selectedAfterHomeZone": "tab-year",
+    "touchHoldTodaySamples": [
+      "false/1",
+      "true/0.5",
+      "true/0.5",
+      "true/0.5",
+      "false/0.5",
+      "false/0.750105",
+      "false/0.958355",
+      "false/1"
+    ],
+    "selectedAfterTouch": "tab-today"
+  },
+  {
+    "browser": "chromium",
+    "scheme": "light",
+    "reduced": true,
+    "rest": {
+      "tab-today": "1",
+      "tab-play": "1",
+      "tab-year": "1"
+    },
+    "tabTransition": "color 0.12s linear, opacity linear",
+    "holdSelectedToday": {
+      "tab-today": "0.5",
+      "tab-play": "1",
+      "tab-year": "1"
+    },
+    "holdPlay": {
+      "tab-today": "1",
+      "tab-play": "0.5",
+      "tab-year": "1"
+    },
+    "afterRelease16ms": "1",
+    "afterRelease500ms": {
+      "tab-today": "1",
+      "tab-play": "1",
+      "tab-year": "1"
+    },
+    "selectedAfterClick": "tab-play",
+    "holdHomeIndicatorUnderYear": {
+      "tab-today": "1",
+      "tab-play": "1",
+      "tab-year": "0.5"
+    },
+    "selectedAfterHomeZone": "tab-year",
+    "touchHoldTodaySamples": [
+      "false/1",
+      "true/0.5",
+      "true/0.5",
+      "false/1",
+      "false/1",
+      "false/1",
+      "false/1",
+      "false/1"
+    ],
+    "selectedAfterTouch": "tab-today"
+  },
+  {
+    "browser": "webkit",
+    "scheme": "light",
+    "reduced": false,
+    "rest": {
+      "tab-today": "1",
+      "tab-play": "1",
+      "tab-year": "1"
+    },
+    "tabTransition": "color 0.12s linear, opacity 0.2s linear",
+    "holdSelectedToday": {
+      "tab-today": "0.5",
+      "tab-play": "1",
+      "tab-year": "1"
+    },
+    "holdPlay": {
+      "tab-today": "1",
+      "tab-play": "0.5",
+      "tab-year": "1"
+    },
+    "afterRelease16ms": "0.9125",
+    "afterRelease500ms": {
+      "tab-today": "1",
+      "tab-play": "1",
+      "tab-year": "1"
+    },
+    "selectedAfterClick": "tab-play",
+    "holdHomeIndicatorUnderYear": {
+      "tab-today": "1",
+      "tab-play": "1",
+      "tab-year": "0.5"
+    },
+    "selectedAfterHomeZone": "tab-year"
+  },
+  {
+    "browser": "webkit",
+    "scheme": "dark",
+    "reduced": false,
+    "rest": {
+      "tab-today": "1",
+      "tab-play": "1",
+      "tab-year": "1"
+    },
+    "tabTransition": "color 0.12s linear, opacity 0.2s linear",
+    "holdSelectedToday": {
+      "tab-today": "0.5",
+      "tab-play": "1",
+      "tab-year": "1"
+    },
+    "holdPlay": {
+      "tab-today": "1",
+      "tab-play": "0.5",
+      "tab-year": "1"
+    },
+    "afterRelease16ms": "0.64",
+    "afterRelease500ms": {
+      "tab-today": "1",
+      "tab-play": "1",
+      "tab-year": "1"
+    },
+    "selectedAfterClick": "tab-play",
+    "holdHomeIndicatorUnderYear": {
+      "tab-today": "1",
+      "tab-play": "1",
+      "tab-year": "0.5"
+    },
+    "selectedAfterHomeZone": "tab-year"
+  },
+  {
+    "browser": "webkit",
+    "scheme": "light",
+    "reduced": true,
+    "rest": {
+      "tab-today": "1",
+      "tab-play": "1",
+      "tab-year": "1"
+    },
+    "tabTransition": "color 0.12s linear, opacity 0s linear",
+    "holdSelectedToday": {
+      "tab-today": "0.5",
+      "tab-play": "1",
+      "tab-year": "1"
+    },
+    "holdPlay": {
+      "tab-today": "1",
+      "tab-play": "0.5",
+      "tab-year": "1"
+    },
+    "afterRelease16ms": "1",
+    "afterRelease500ms": {
+      "tab-today": "1",
+      "tab-play": "1",
+      "tab-year": "1"
+    },
+    "selectedAfterClick": "tab-play",
+    "holdHomeIndicatorUnderYear": {
+      "tab-today": "1",
+      "tab-play": "1",
+      "tab-year": "0.5"
+    },
+    "selectedAfterHomeZone": "tab-year"
+  }
+]
