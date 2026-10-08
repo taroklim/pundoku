@@ -215,6 +215,7 @@
     "hub": {
       "contHead": "Continue",
       "contDay": "Today’s puzzle",
+      "contDayPast": "Daily puzzle",
       "clues_one": "{{count}} clue",
       "clues_other": "{{count}} clues",
       "tech": {

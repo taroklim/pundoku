@@ -98,7 +98,8 @@ describe("PD-217: Лжец дня после полуночи", () => {
     at(D2);
     const s = new PlayStore({ storage: repo });
     await s.restore();
-    expect(s.liarDayContinue()).toMatchObject({ date: D1, summary: { difficulty: "medium" } });
+    // PD-262: сводка несёт день головоломки — строка «Продолжить» подписывает им вчерашнего Лжеца.
+    expect(s.liarDayContinue()).toMatchObject({ date: D1, summary: { difficulty: "medium", date: D1 } });
     s.startDaily(s.liarDayContinue()!.date);
     expect(s.getSnapshot()).toMatchObject({ daily: D1, phase: "playing", hub: false });
     finish(s, P1.liarCell);
@@ -116,7 +117,7 @@ describe("PD-217: Лжец дня после полуночи", () => {
   it("полночь посреди сессии: живой незаконченный Лжец дня остаётся в «Продолжить» и решается на свою дату", async () => {
     const { s, repo } = await startedYesterday();
     at(D2);
-    expect(s.liarDayContinue()).toMatchObject({ date: D1 });
+    expect(s.liarDayContinue()).toMatchObject({ date: D1, summary: { date: D1 } });
     s.startDaily(s.liarDayContinue()!.date);
     expect(s.getSnapshot()).toMatchObject({ daily: D1, hub: false });
     finish(s, P1.liarCell);

@@ -25,13 +25,18 @@ export interface SlotSummary {
   readonly left: number;
   readonly elapsedMs: number;
   readonly ink: boolean;
+  /**
+   * PD-262: день головоломки (`YYYY-MM-DD`) — только у игр дня (день Today, Лжец дня). Не сегодняшний — строка «Продолжить»
+   * подписывает его датой. Нет — подпись без даты (слоты режимов, старые данные).
+   */
+  readonly date?: string;
 }
 
 /** Что нужно хабу от Today: живое состояние стора (если он уже загружен) и запись из хранилища. */
 export interface DaySlotSource {
   readonly store: {
     readonly subscribe: (fn: () => void) => () => void;
-    readonly getSnapshot: () => { readonly phase: string; readonly play: PlayState | null; readonly difficulty: Difficulty; readonly difficultyKnown: boolean; readonly hints?: number };
+    readonly getSnapshot: () => { readonly phase: string; readonly date?: string; readonly play: PlayState | null; readonly difficulty: Difficulty; readonly difficultyKnown: boolean; readonly hints?: number };
     readonly getElapsedMs: () => number;
   };
   readonly repo: Pick<ProgressRepository, "getDay">;
@@ -53,14 +58,16 @@ export function summaryFromRecord(record: DayProgress | null): SlotSummary | nul
   if (!record) return null;
   const [ok] = sanitizeDays([record], "daySlot");
   if (!ok || ok.solved || ok.play.solved || !hasProgress(ok.play, ok.hints)) return null;
-  return { difficulty: ok.difficulty, left: cellsLeft(ok.play), elapsedMs: ok.elapsedMs, ink: ok.play.ink === true };
+  return { difficulty: ok.difficulty, left: cellsLeft(ok.play), elapsedMs: ok.elapsedMs, ink: ok.play.ink === true, date: ok.date };
 }
 
 /** Сводка из живого состояния стора Today (`null` — день не идёт, решён, нетронут или ещё грузится). */
 export function summaryFromStore(source: DaySlotSource): SlotSummary | null {
   const s = source.store.getSnapshot();
   if (s.phase !== "playing" || !s.play || !hasProgress(s.play, s.hints)) return null;
-  return { difficulty: s.difficultyKnown ? s.difficulty : null, left: cellsLeft(s.play), elapsedMs: source.store.getElapsedMs(), ink: s.play.ink === true };
+  // PD-262: после полуночи стор держит вчерашнюю начатую партию (`refresh` не меняет день с ходами) — её дата идёт в подпись.
+  const summary: SlotSummary = { difficulty: s.difficultyKnown ? s.difficulty : null, left: cellsLeft(s.play), elapsedMs: source.store.getElapsedMs(), ink: s.play.ink === true };
+  return s.date ? { ...summary, date: s.date } : summary;
 }
 
 /** Живая сводка слота дня: перечитывается при монтировании хаба и при каждом изменении стора Today. */

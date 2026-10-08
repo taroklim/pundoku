@@ -494,7 +494,7 @@ export class PlayStore extends GameStore<PlayScreenSnapshot> {
   liarDayContinue(today: string = localDate()): { date: string; summary: SlotSummary } | null {
     const s = this.snap;
     if (s.daily && s.play && s.phase === "playing" && !s.play.solved && hasProgress(s.play)) {
-      return { date: s.daily, summary: { difficulty: s.difficulty, left: cellsLeft(s.play), elapsedMs: this.getElapsedMs(), ink: false } };
+      return { date: s.daily, summary: { difficulty: s.difficulty, left: cellsLeft(s.play), elapsedMs: this.getElapsedMs(), ink: false, date: s.daily } };
     }
     let best: string | null = null;
     for (const [date, rec] of this.dailies) {
@@ -502,7 +502,8 @@ export class PlayStore extends GameStore<PlayScreenSnapshot> {
       if (best === null || date === today || (best !== today && date > best)) best = date;
     }
     if (best === null) return null;
-    return { date: best, summary: summaryOf(this.dailies.get(best)!) };
+    // PD-262: дата дня головоломки в сводке — строка «Продолжить» подписывает ею не сегодняшнего Лжеца.
+    return { date: best, summary: { ...summaryOf(this.dailies.get(best)!), date: best } };
   }
 
   /**

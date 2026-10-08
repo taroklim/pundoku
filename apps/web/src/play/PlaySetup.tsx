@@ -11,19 +11,23 @@
  *   «Новая сетка…» (шит с предупреждением), PD-225 — «Удалить сетку».
  * - PD-225: строка с незавершённой игрой свайпается справа налево — «Удалить» (`SwipeRow`, design/pd224-swipe-gestures.md).
  *   Строки «Продолжить» (игры дня) не свайпаются.
+ * - PD-262: игра дня в «Продолжить» не за сегодня (вчерашний Лжец дня, день Today после полуночи) — в заголовке строки дата
+ *   дня головоломки: «Liar of the day · 7 Oct», «Daily puzzle · 7 Oct». Сегодняшняя — без даты.
  * - Под списком — сноска «Свои игры не попадают в ваш год».
  */
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { SlotSummary } from "./daySlot";
 import { useDaySlot } from "./daySlot";
 import { CalendarGlyph } from "./hubIcons";
+import { formatShortDay } from "./format";
 import { ChevronIcon } from "./inkIcons";
 import { LiarModeIcon } from "./modeIcons";
 import type { ModeDef, ModeId } from "./modes";
 import { ModeMenu } from "./ModeMenu";
 import { slotMeta } from "./slotMeta";
 import { ModeRowBody, SwipeRow, useSwipeHub } from "./SwipeRow";
+import { useLocalDate } from "./useLocalDate";
 
 export interface PlaySetupProps {
   /** Строки списка — готовые режимы реестра (`availableModes()`), в их порядке. */
@@ -46,6 +50,17 @@ export interface PlaySetupProps {
   readonly onMenuOpen?: () => void;
 }
 
+const YMD = /^\d{4}-\d{2}-\d{2}$/;
+
+/**
+ * PD-262: « · 7 Oct» к заголовку строки игры дня, если её день — не сегодня; иначе пусто. Неразрывные пробелы внутри даты и
+ * перед «·»: при крупном тексте на 320 pt строка переносится после «·», дата целиком уходит на следующую строку.
+ */
+function pastDaySuffix(date: string | undefined, today: string, locale: string): string {
+  if (!date || date === today || !YMD.test(date)) return "";
+  return `\u00a0· ${formatShortDay(date, locale, today).replace(/ /g, "\u00a0")}`;
+}
+
 interface MenuState {
   readonly mode: ModeDef;
   readonly row: HTMLButtonElement;
@@ -53,8 +68,13 @@ interface MenuState {
 }
 
 export function PlaySetup({ modes, slots, reselect, onOpenMode, onNewInMode, onOpenToday, liarDay = null, onOpenLiarDay, onDeleteMode, onMenuOpen }: PlaySetupProps) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const day = useDaySlot();
+  const today = useLocalDate();
+  const locale = i18n.resolvedLanguage ?? "en";
+  // Intl — не на каждый рендер (PD-95): только когда меняются дата игры, «сегодня» или язык.
+  const dayWhen = useMemo(() => pastDaySuffix(day?.date, today, locale), [day?.date, today, locale]);
+  const liarWhen = useMemo(() => pastDaySuffix(liarDay?.date, today, locale), [liarDay?.date, today, locale]);
   const scroll = useRef<HTMLDivElement>(null);
   const [menu, setMenu] = useState<MenuState | null>(null);
   const menuRow = useRef<HTMLElement | null>(null);
@@ -91,7 +111,8 @@ export function PlaySetup({ modes, slots, reselect, onOpenMode, onNewInMode, onO
                 <button type="button" className="hub-row two" onClick={onOpenToday} data-testid="continue-day">
                   <span className="l1">
                     <CalendarGlyph className="glyph" />
-                    <b>{t("play.hub.contDay")}</b>
+                    {/* «Today’s puzzle» для вчерашнего дня врёт — тогда «Daily puzzle · 7 Oct». */}
+                    <b>{dayWhen ? `${t("play.hub.contDayPast")}${dayWhen}` : t("play.hub.contDay")}</b>
                     {day.ink && (
                       <span className="mode-chip" data-testid="continue-ink-chip">
                         {t("ink.chip")}
@@ -106,7 +127,10 @@ export function PlaySetup({ modes, slots, reselect, onOpenMode, onNewInMode, onO
                 <button type="button" className="hub-row two" onClick={() => onOpenLiarDay?.()} data-testid="continue-liar-day">
                   <span className="l1">
                     <LiarModeIcon className="glyph" />
-                    <b>{t("liar.daily")}</b>
+                    <b>
+                      {t("liar.daily")}
+                      {liarWhen}
+                    </b>
                   </span>
                   <span className="l2">{slotMeta(t, liarDay)}</span>
                   <ChevronIcon className="chev" />
