@@ -101,7 +101,7 @@ async function measure(browser, theme) {
         },
       };
       for (const n of ["--ink", "--wax", "--surface", "--bg", "--label", "--label-2", "--label-2-grouped", "--notes", "--notes-fill",
-        "--hairline", "--mark-ink-soft", "--mark-wax-soft", "--mark-ink", "--mark-wax", "--dis-label", "--dis-fill"]) out.tok[n] = tok(n);
+        "--hairline", "--mark-ink-soft", "--mark-wax-soft", "--mark-ink", "--mark-wax", "--dis-label", "--dis-fill", "--on-wax"]) out.tok[n] = tok(n);
       const sel = document.querySelector(".board .cell.sel");
       const d = sel?.querySelector(".d");
       out.selDigit = d ? cs(d, "color") : null;
@@ -178,6 +178,8 @@ for (const theme of THEMES) {
   add("label-2 / bg", tk["--label-2"], bg, 4.5);
   add("label-2-grouped / bg", tk["--label-2-grouped"], bg, 4.5);
   add("dis-label / dis-fill", tk["--dis-label"], tk["--dis-fill"].slice(0, 3), 4.5);
+  // PD-225: подпись кнопки «Удалить» (свайп строки хаба) на сургуче.
+  add("on-wax / wax (Delete button)", tk["--on-wax"], tk["--wax"].slice(0, 3), 4.5);
   // §2.3, графика (3:1).
   add("ring ink / sel fill", tk["--ink"], selFill, 3);
   add("ring ink / peer fill", tk["--ink"], peerFill, 3);

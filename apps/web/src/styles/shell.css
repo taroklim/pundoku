@@ -489,6 +489,9 @@ button {
   flex-wrap: wrap;
   padding: 8px 6px 6px 16px;
 }
+:root[data-type="ax3"] .undo-toast .tt {
+  flex-basis: 100%; /* иначе flex:1 с min-width:0 сжимает текст до столбика букв рядом с кнопкой */
+}
 :root[data-type="ax3"] .undo-toast .tu {
   margin-left: auto;
 }
