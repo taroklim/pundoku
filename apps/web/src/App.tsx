@@ -1,4 +1,4 @@
-import { useLayoutEffect, useRef, useState } from "react";
+import { memo, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { HelpScreen } from "./help/HelpScreen";
 import { PlayScreen } from "./play/PlayScreen";
@@ -75,21 +75,21 @@ export function App() {
     document.documentElement.lang = i18n.resolvedLanguage ?? "en";
   }, [i18n.resolvedLanguage]);
 
-  const screenOf = (id: TabId) =>
-    id === "play" ? (
-      <PlayScreen onOpenSettings={() => go({ settings: true })} onOpenHelp={openHelp} onOpenToday={() => setTab("today")} />
-    ) : id === "today" ? (
-      <TodayScreen onOpenSettings={() => go({ settings: true })} onOpenHelp={openHelp} />
-    ) : (
-      <YearTab
-        onOpenSettings={() => go({ settings: true })}
-        onOpenToday={() => setTab("today")}
-        onPlayDay={playDay}
-        // Year не потребляет `initialDate`, пока скрыт (md §6.1.4).
-        initialDate={tab === "year" && !overlay ? route.yearDate : null}
-        onInitialDateConsumed={() => go({ tab: "year" })}
-      />
-    );
+  // PD-221: колбэки экранов вкладок — стабильные (одни и те же функции весь срок жизни App), но всегда зовут актуальные
+  // `go`/`setTab`/`playDay`: иначе каждая смена вкладки давала экранам новые пропсы и React перерисовывал все три экрана
+  // до подсветки вкладки и старта слайда.
+  const latest = useRef({ go, setTab, playDay, openHelp });
+  latest.current = { go, setTab, playDay, openHelp };
+  const actions = useMemo<TabActions>(
+    () => ({
+      openSettings: () => latest.current.go({ settings: true }),
+      openHelp: (block) => latest.current.openHelp(block),
+      openToday: () => latest.current.setTab("today"),
+      playDay: (date) => latest.current.playDay(date),
+      yearConsumed: () => latest.current.go({ tab: "year" }),
+    }),
+    [],
+  );
 
   return (
     <div className="shell">
@@ -114,7 +114,10 @@ export function App() {
               <div className="panel">
                 {/* PD-146: сбой вкладки не роняет приложение; экран сбоя сбрасывается, когда с вкладки уходят (PD-161). */}
                 <ErrorBoundary scope="tab" active={active}>
-                  <TabActiveContext.Provider value={active}>{screenOf(id)}</TabActiveContext.Provider>
+                  <TabActiveContext.Provider value={active}>
+                    {/* Year не потребляет `initialDate`, пока скрыт (md §6.1.4). */}
+                    <TabScreen id={id} actions={actions} yearDate={id === "year" && tab === "year" && !overlay ? route.yearDate : null} />
+                  </TabActiveContext.Provider>
                 </ErrorBoundary>
               </div>
             </div>
@@ -156,3 +159,30 @@ export function App() {
     </div>
   );
 }
+
+interface TabActions {
+  openSettings: () => void;
+  openHelp: (block: HelpBlockId | null) => void;
+  openToday: () => void;
+  playDay: (date: string) => void;
+  yearConsumed: () => void;
+}
+
+/**
+ * Экран вкладки в стопке (PD-221). memo: при смене вкладки его пропсы не меняются (колбэки стабильны, `yearDate` есть только
+ * у Year на его адресе), поэтому React его не перерисовывает — активность экран получает из TabActiveContext, перерисовываются
+ * только её потребители. Свои сторы экраны читают подпиской, от перерисовки родителя они не зависят.
+ */
+const TabScreen = memo(function TabScreen({ id, actions, yearDate }: { id: TabId; actions: TabActions; yearDate: string | null }) {
+  if (id === "play") return <PlayScreen onOpenSettings={actions.openSettings} onOpenHelp={actions.openHelp} onOpenToday={actions.openToday} />;
+  if (id === "today") return <TodayScreen onOpenSettings={actions.openSettings} onOpenHelp={actions.openHelp} />;
+  return (
+    <YearTab
+      onOpenSettings={actions.openSettings}
+      onOpenToday={actions.openToday}
+      onPlayDay={actions.playDay}
+      initialDate={yearDate}
+      onInitialDateConsumed={actions.yearConsumed}
+    />
+  );
+});
