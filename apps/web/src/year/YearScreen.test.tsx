@@ -138,6 +138,19 @@ describe("пустой год", () => {
     expect(openToday).toHaveBeenCalledTimes(1);
   });
 
+  // PD-277: под полотном кнопка на iPhone (1rem = 17 px) лежала под стеклом таб-бара уже на 393×852 (живой замер
+  // design/pd277-shots.mjs). Строка и кнопка — над полотном, сразу под шапкой: видны без прокрутки при любом экране/тексте.
+  it("PD-277: приглашение и кнопка — ДО полотна (в порядке документа), полотно следом; в непустом году легенда — после полотна", () => {
+    render([], TODAY, TODAY);
+    const empty = host.querySelector('[data-testid="year-empty"]')!;
+    const canvas = host.querySelector('[data-testid="year-canvas"]')!;
+    expect(empty.compareDocumentPosition(canvas) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(empty.nextElementSibling).toBe(canvas);
+    render();
+    const legend = host.querySelector(".year-legend")!;
+    expect(host.querySelector('[data-testid="year-canvas"]')!.nextElementSibling).toBe(legend);
+  });
+
   it("знак P4 над строкой (PD-102, PD-155): 56 px, клеточная оптика (9 клеток), декоративный, перед текстом; в непустом году знака нет", () => {
     render([], TODAY, TODAY);
     const empty = host.querySelector('[data-testid="year-empty"]')!;
