@@ -2,6 +2,8 @@
  * Контекстное меню строки режима (PD-167, решение 7 макета PD-163, кадры wk-C-ctx-*): долгое нажатие / правая кнопка /
  * клавиша контекстного меню на строке хаба. Заголовок меню — описание режима (слот заголовка системного контекстного меню),
  * пункты: «Продолжить» (если есть незавершённая игра) и «Новая сетка…» (шит режима; при незавершённой — с предупреждением).
+ * PD-225: при незавершённой игре последним пунктом — «Удалить сетку» красным, отделённый толстым разделителем (HIG
+ * `context-menus.md`: деструктивное — в конце и красным); это путь удаления без жеста (§A8 design/pd224-swipe-gestures.md).
  * Нажатая строка «поднимается» над размытием (копия без действий, как превью iOS). Ускоритель, а не единственный путь:
  * новую сетку при незавершённой можно начать и из партии («⋯ → Новая сетка»).
  *
@@ -13,7 +15,7 @@ import { useLayoutEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
 import { useModal } from "../shell/useModal";
-import { NewGridGlyph } from "./hubIcons";
+import { NewGridGlyph, TrashGlyph } from "./hubIcons";
 import { ChevronIcon } from "./inkIcons";
 import type { ModeDef } from "./modes";
 
@@ -26,13 +28,15 @@ export interface ModeMenuProps {
   readonly canContinue: boolean;
   readonly onContinue: () => void;
   readonly onNew: () => void;
+  /** PD-225: «Удалить сетку» (только при незавершённой игре; `kbd` — выбран с клавиатуры/AT, фокус уйдёт на «Отменить»). */
+  readonly onDelete?: (kbd: boolean) => void;
   readonly onClose: () => void;
   readonly returnFocus: RefObject<HTMLElement | null>;
 }
 
 const GAP = 8;
 
-export function ModeMenu({ mode, anchor, preview, canContinue, onContinue, onNew, onClose, returnFocus }: ModeMenuProps) {
+export function ModeMenu({ mode, anchor, preview, canContinue, onContinue, onNew, onDelete, onClose, returnFocus }: ModeMenuProps) {
   const { t } = useTranslation();
   const scrim = useRef<HTMLDivElement>(null);
   const root = useRef<HTMLDivElement>(null);
@@ -110,6 +114,22 @@ export function ModeMenu({ mode, anchor, preview, canContinue, onContinue, onNew
           <NewGridGlyph />
           <span className="mi">{t("modes.newPuzzle")}</span>
         </button>
+        {canContinue && onDelete && (
+          <button
+            type="button"
+            role="menuitem"
+            className="danger"
+            onClick={(e) => {
+              if (e.detail !== 0 && !armed.current) return; // хвост долгого нажатия
+              onClose();
+              onDelete(e.detail === 0);
+            }}
+            data-testid="ctx-delete"
+          >
+            <TrashGlyph />
+            <span className="mi">{t("modes.deleteItem")}</span>
+          </button>
+        )}
       </div>
     </div>,
     document.body,
