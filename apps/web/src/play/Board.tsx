@@ -1,6 +1,6 @@
 import { litCells } from "@pundoku/engine";
 import type { CSSProperties, KeyboardEvent, PointerEvent as ReactPointerEvent, ReactNode } from "react";
-import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { memo, useCallback, useEffect, useMemo, useReducer, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { RingMark } from "../melody/game";
 import { ringLifetimeMs, ringSchedule } from "../melody/game";
@@ -13,6 +13,8 @@ import type { GameStore, PlaySnapshot } from "./gameStore";
 import { MOTION_MS } from "./motion";
 import type { HintMarks } from "./hintModel";
 import { hintRoleOf, regionCells, regionRect } from "./hintModel";
+import type { FadeTrack, FogGhost, Light } from "./lanternFade";
+import { fogMotion, nextExpiry, stepFade, veilOf as veilOfLight } from "./lanternFade";
 
 /** Индекс клетки по номеру блока и позиции в блоке (DOM идёт блок за блоком, как в макете). */
 const idxOf = (b: number, k: number): number =>
@@ -90,7 +92,14 @@ interface CellProps {
    * `peek` — та же клетка тени во время осмотра (вид b: цифры видны, туман вокруг них остаётся). Подсказки — всегда как есть.
    * `null` — не Фонарь (или партия не идёт).
    */
-  light: "lit" | "shadow" | "peek" | null;
+  light: Light;
+  /**
+   * PD-251: слой прежнего вида клетки, ещё гаснущий после смены света (кроссфейд чёткий ↔ туман, lanternFade.ts); null — нет.
+   * Чёткий призрак бывает только у клетки, которая была в свете меньше FOG_FADE_MS назад.
+   */
+  ghost: FogGhost | null;
+  /** PD-251: свет клетки менялся после её постановки — M1 (`anim-in`) не повторять: перезапуск анимации мигнул бы. */
+  popSpent: boolean;
   onAccuse?: (cell: number, el: HTMLElement) => void;
   onPick: (cell: number) => void;
   /** Нажатие на клетку: запоминаем точку касания для M7. */
@@ -131,10 +140,17 @@ const Cell = memo(function Cell(p: CellProps) {
   else if (p.light === "shadow") cls.push("is-shadow");
   else if (p.light === "peek") cls.push("is-peek");
   // PD-216 (решение владельца): в тени своя цифра — настоящая, но размыта (styles/lantern.css, один filter на элемент); заметки —
-  // одно пятно без цифр (PD-230);
-  // отдельный ключ — смена света перемонтирует элемент, и переход идёт только по opacity (@starting-style), без анимации blur.
-  // Содержимое aria-hidden, подпись клетки — «в тени» без цифры, поле без выделения текста. Подсказка — как есть.
-  const shade = p.light === "shadow" && !p.given;
+  // одно пятно без цифр (PD-230). Содержимое aria-hidden, подпись клетки — «в тени» без цифры, поле без выделения текста.
+  // PD-251: два слоя в постоянном порядке — чёткий (своя цифра / сетка заметок), затем туман (`.fog` / `.marks.spot`). Смена света
+  // монтирует слой нового вида (проявляется по opacity через @starting-style), а слой прежнего вида — призрак `ghost` — гаснет
+  // классом `fading` и через FOG_FADE_MS убирается. Быстрая смена туда-обратно возвращает тот же элемент (переход разворачивается
+  // с текущей прозрачности, без мигания). Анимируется только opacity, blur — никогда. Подсказка — как есть.
+  const fog = p.light === "shadow" && !p.given;
+  const g = p.given ? null : p.ghost;
+  const showClear = !fog || g?.veil === "clear";
+  const showFog = fog || g?.veil === "fog";
+  const clearOut = fog; // чёткий слой в клетке тени — только гаснущий призрак
+  const fogOut = !fog;
   const vars: Record<string, string | number> = {};
   if (p.waveIdx >= 0) vars["--wi"] = p.waveIdx;
   if (p.echoIdx >= 0) {
@@ -212,28 +228,39 @@ const Cell = memo(function Cell(p: CellProps) {
           {p.glyphs ? <Glyph digit={p.wrongDigit} kind="placed" /> : p.wrongDigit}
         </span>
       )}
-      {digit ? (
-        <span
-          key={shade ? "sh" : p.popId || p.blotId}
-          className={`d ${p.given ? "given" : "player"}${p.glyphs ? " gd" : ""}${p.wrong ? " err" : ""}${p.popId ? " anim-in" : ""}${p.blotId ? " swap-in" : ""}`}
-          aria-hidden="true"
-        >
-          {p.glyphs ? <Glyph digit={digit} kind={p.given ? "given" : "placed"} /> : digit}
-        </span>
-      ) : p.notes && shade ? (
-        // PD-230 (QA PD-211): заметки в тени — одно пятно «клетка с заметками» по центру, без элемента на цифру. Размытая сетка
-        // 3×3 выдавала одиночную заметку по месту пятна (blur 0,11 клетки < шага ⅓); пятно одинаково при любом наборе и числе
-        // заметок (и после Fill candidates), а в DOM нет ни цифр, ни их позиций/классов.
-        <span key="msh" className="marks spot" aria-hidden="true" />
-      ) : p.notes ? (
-        <span key="m" className={p.glyphs ? "marks gl-marks" : "marks"} aria-hidden="true">
-          {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((d) => (
-            <span key={d} className={p.struck & (1 << d) ? "struck" : undefined}>
-              {p.notes & (1 << d) ? (p.glyphs ? <Glyph digit={d} kind="note" /> : d) : ""}
+      {digit
+        ? showClear && (
+            <span
+              key={p.popId || p.blotId}
+              className={`d ${p.given ? "given" : "player"}${p.glyphs ? " gd" : ""}${(clearOut ? g?.err : p.wrong) ? " err" : ""}${(clearOut ? g?.peek : p.light === "peek") ? " pk" : ""}${p.popId && !clearOut && !p.popSpent ? " anim-in" : ""}${p.blotId && !clearOut ? " swap-in" : ""}${clearOut ? " fading" : ""}`}
+              aria-hidden="true"
+            >
+              {p.glyphs ? <Glyph digit={digit} kind={p.given ? "given" : "placed"} /> : digit}
             </span>
-          ))}
-        </span>
-      ) : null}
+          )
+        : p.notes
+          ? showClear && (
+              <span key="m" className={`marks${p.glyphs ? " gl-marks" : ""}${clearOut ? " fading" : ""}`} aria-hidden="true">
+                {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((d) => (
+                  <span key={d} className={p.struck & (1 << d) ? "struck" : undefined}>
+                    {p.notes & (1 << d) ? (p.glyphs ? <Glyph digit={d} kind="note" /> : d) : ""}
+                  </span>
+                ))}
+              </span>
+            )
+          : null}
+      {digit && !p.given
+        ? showFog && (
+            <span key="sh" className={`d player${p.glyphs ? " gd" : ""} fog${fogOut ? " fading" : ""}`} aria-hidden="true">
+              {p.glyphs ? <Glyph digit={digit} kind="placed" /> : digit}
+            </span>
+          )
+        : !digit && p.notes
+          ? // PD-230 (QA PD-211): заметки в тени — одно пятно «клетка с заметками» по центру, без элемента на цифру. Размытая сетка
+            // 3×3 выдавала одиночную заметку по месту пятна (blur 0,11 клетки < шага ⅓); пятно одинаково при любом наборе и числе
+            // заметок (и после Fill candidates), а в DOM нет ни цифр, ни их позиций/классов.
+            showFog && <span key="msh" className={`marks spot${fogOut ? " fading" : ""}`} aria-hidden="true" />
+          : null}
     </button>
   );
 });
@@ -442,6 +469,34 @@ export function Board({ snap, store, dim, hintMarks = null, onAccuse, canAccuse,
   const inShadow = (i: number): boolean => !showAll && !lit.has(i);
   // PD-210 (осмотр b): во время осмотра граница света видна — клетки тени помечены `peek` (цифры читаются, туман вокруг них).
   const lightOf = (i: number): CellProps["light"] => (!lantern ? null : lit.has(i) ? "lit" : showAll ? "peek" : "shadow");
+  // PD-251: туман появляется и уходит постепенно — у клетки, сменившей свет, слой прежнего вида гаснет (призрак, lanternFade.ts).
+  // Учёт — в ref (идемпотентен при повторном рендере), один таймер на всё поле снимает истёкшие призраки.
+  const lights: Light[] = [];
+  const sigs: number[] = [];
+  const wrongs: boolean[] = [];
+  for (let i = 0; i < 81; i++) {
+    lights.push(lightOf(i));
+    sigs.push(play && !isGiven(play, i) ? (play.values[i] ?? 0) * 1024 + (play.notes[i] ?? 0) : 0);
+    wrongs.push(play && !inShadow(i) ? wrongAt(play, i) : false);
+  }
+  const fadeRef = useRef<FadeTrack | null>(null);
+  const fade = stepFade(fadeRef.current, lights, sigs, wrongs, Date.now(), fogMotion);
+  fadeRef.current = fade;
+  const fadeUntil = nextExpiry(fade);
+  const [, fadeTick] = useReducer((n: number) => n + 1, 0);
+  useEffect(() => {
+    if (fadeUntil === null) return;
+    const timer = window.setTimeout(fadeTick, Math.max(0, fadeUntil - Date.now()) + 1);
+    return () => window.clearTimeout(timer);
+  }, [fadeUntil]);
+  // PD-251: M1 только что поставленной цифры — пока свет её клетки не менялся; вернувшись на свет, цифра проявляется кроссфейдом.
+  const popSeen = useRef<{ id: number; veil: string | null; spent: boolean }>({ id: 0, veil: null, spent: false });
+  if (pop) {
+    const v = veilOfLight(lights[pop.cell] ?? null);
+    if (popSeen.current.id !== pop.id) popSeen.current = { id: pop.id, veil: v, spent: false };
+    else if (!popSeen.current.spent && v !== popSeen.current.veil) popSeen.current = { ...popSeen.current, spent: true };
+  }
+  const popSpent = pop !== null && popSeen.current.id === pop.id && popSeen.current.spent;
   const holdChange = useRef(onHoldChange);
   holdChange.current = onHoldChange;
   useEffect(() => {
@@ -570,7 +625,7 @@ export function Board({ snap, store, dim, hintMarks = null, onAccuse, canAccuse,
                   selected={ready && selected === i}
                   same={ready && selDigit !== 0 && selected !== i && digit === selDigit && !blotCells.has(i) && !shadow}
                   peer={ready && peers !== null && peers.has(i)}
-                  wrong={play && !shadow ? wrongAt(play, i) : false}
+                  wrong={wrongs[i] ?? false}
                   blot={blotCells.has(i)}
                   blotId={blotNow && blotNow.cell === i ? blotNow.id : 0}
                   wrongDigit={blotNow && blotNow.cell === i ? blotNow.digit : 0}
@@ -593,7 +648,9 @@ export function Board({ snap, store, dim, hintMarks = null, onAccuse, canAccuse,
                   glyphs={glyphs}
                   rings={rings?.get(i)}
                   ringId={ringNow?.id ?? 0}
-                  light={lightOf(i)}
+                  light={lights[i] ?? null}
+                  ghost={fade.ghost[i] ?? null}
+                  popSpent={popSpent && pop?.cell === i}
                   onAccuse={onAccuse}
                   onPick={pick}
                   onTouch={onTouch}

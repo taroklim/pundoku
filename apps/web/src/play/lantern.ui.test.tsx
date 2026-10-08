@@ -16,6 +16,7 @@ import ru from "../i18n/locales/ru.json";
 import uk from "../i18n/locales/uk.json";
 import { setHighlightPeers, setHighlightWrong } from "../settings/prefs";
 import { Board, INSPECT_HOLD_MS } from "./Board";
+import { FOG_FADE_MS, FOG_GHOST_SLACK_MS } from "./lanternFade";
 import type { PlaySnapshot } from "./gameStore";
 import type { PlayState } from "./logic";
 import { createPlay, enterDigit, fillCandidates, setLanternMode, toggleNote } from "./logic";
@@ -440,4 +441,160 @@ describe("хаб и партия (PlayScreen)", () => {
       vi.unstubAllGlobals();
     }
   }, 30000);
+});
+
+describe("PD-251: туман появляется и уходит постепенно — кроссфейд слоёв, гаснущий слой убирается из DOM", () => {
+  beforeEach(() => void vi.useFakeTimers());
+  const settle = () => act(() => void vi.advanceTimersByTime(FOG_FADE_MS + FOG_GHOST_SLACK_MS + 5));
+  /** Слои содержимого клетки: своя цифра (чёткая / туман) и заметки (сетка / пятно). Без селекторов — jsdom под нагрузкой медленный. */
+  const isFog = (e: Element) => e.classList.contains("fog") || e.classList.contains("spot");
+  const layers = (i: number) =>
+    [...cell(i).children].filter((e) => (e.classList.contains("d") && e.classList.contains("player")) || e.classList.contains("marks")) as HTMLElement[];
+  const clearLayers = (i: number) => layers(i).filter((e) => !isFog(e));
+  const fogLayers = (i: number) => layers(i).filter(isFog);
+  const allCells = () => Array.from({ length: 81 }, (_, i) => i);
+
+  it("уход в тень: чёткая цифра гаснет (`fading`) под проявляющимся туманом; выход на свет — наоборот; через FOG_FADE_MS — один слой", () => {
+    render(lanternPlay()); // свет r1c4 (3): своя 6 в 3 и заметки в 5 — на свету, своя 5 в 40 — в тени
+    expect(layers(3)).toHaveLength(1);
+    render(lanternPlay(), { selected: 40 });
+    // 3 ушла в тень: подпись — сразу «в тени», чёткая 6 — только гаснущий слой, туман — новый слой.
+    expect(cell(3).classList.contains("is-shadow")).toBe(true);
+    expect(cell(3).getAttribute("aria-label")).toBe("Row 1, column 4, in shadow");
+    expect(clearLayers(3).map((e) => [e.textContent, e.classList.contains("fading")])).toEqual([["6", true]]);
+    expect(fogLayers(3).map((e) => e.classList.contains("fading"))).toEqual([false]);
+    // Заметки 5: сетка гаснет, пятно проявляется.
+    expect(clearLayers(5).map((e) => e.classList.contains("fading"))).toEqual([true]);
+    expect(fogLayers(5).map((e) => e.className)).toEqual(["marks spot"]);
+    // 40 вышла на свет: чёткая 5 — новый слой, туман гаснет; цифра клетки на свету читается сразу.
+    expect(clearLayers(40).map((e) => [e.textContent, e.classList.contains("fading")])).toEqual([["5", false]]);
+    expect(fogLayers(40).map((e) => e.classList.contains("fading"))).toEqual([true]);
+    for (const e of [...layers(3), ...layers(5), ...layers(40)]) expect(e.getAttribute("aria-hidden")).toBe("true");
+    // Переход ещё идёт — слои на месте.
+    act(() => void vi.advanceTimersByTime(FOG_FADE_MS - 20));
+    expect(layers(3)).toHaveLength(2);
+    settle();
+    expect(layers(3).map((e) => e.className)).toEqual(["d player fog"]);
+    expect(layers(5).map((e) => e.className)).toEqual(["marks spot"]);
+    expect(cell(5).textContent).toBe("");
+    expect(layers(40).map((e) => e.className)).toEqual(["d player"]);
+    expect(host.querySelectorAll(".fading")).toHaveLength(0);
+  });
+
+  it("правило утечек: чёткий слой в клетке тени — только гаснущий и только тот, что был виден до смены; после перехода — ни одного (все 81 клетки, серия выборов)", () => {
+    const p = fillCandidates(lanternPlay(), 600); // плотно: заметки во всех пустых клетках
+    render(p, { selected: 3 });
+    settle();
+    for (const sel of [40, 80, 0, null, 30]) {
+      const visibleBefore = new Set(allCells().flatMap((i) => (cell(i).classList.contains("is-shadow") ? [] : clearLayers(i))));
+      render(p, { selected: sel });
+      for (const i of allCells()) {
+        if (!cell(i).classList.contains("is-shadow")) continue;
+        for (const e of clearLayers(i)) {
+          expect(e.classList.contains("fading"), `клетка ${i}, выбор ${sel}`).toBe(true);
+          expect(visibleBefore.has(e), `клетка ${i}: чёткий слой в тени должен быть тем, что был на свету`).toBe(true);
+        }
+      }
+      settle();
+      for (const i of allCells()) {
+        if (!cell(i).classList.contains("is-shadow")) continue;
+        expect(clearLayers(i), `клетка ${i}, выбор ${sel}`).toHaveLength(0);
+        if (p.notes[i] && !p.values[i]) expect(cell(i).textContent).toBe("");
+        if (p.values[i] && !p.mission[i]) expect(layers(i).map((e) => e.className)).toEqual(["d player fog"]);
+      }
+      expect(host.querySelectorAll(".fading")).toHaveLength(0);
+    }
+  }, 60000);
+
+  it("быстрая смена туда-обратно: те же элементы (переход разворачивается, без перемонтирования и мигания), не больше 2 слоёв", () => {
+    render(lanternPlay()); // 40 в тени
+    const fog40 = fogLayers(40)[0]!;
+    const clear3 = clearLayers(3)[0]!;
+    render(lanternPlay(), { selected: 40 });
+    act(() => void vi.advanceTimersByTime(60));
+    const clear40 = clearLayers(40)[0]!;
+    const fog3 = fogLayers(3)[0]!;
+    render(lanternPlay(), { selected: 3 }); // обратно, пока переход не кончился
+    expect(fogLayers(40)).toEqual([fog40]); // тот же узел тумана — снова текущий
+    expect(fog40.classList.contains("fading")).toBe(false);
+    expect(clearLayers(40)).toEqual([clear40]); // чёткий — гаснет тем же узлом
+    expect(clear40.classList.contains("fading")).toBe(true);
+    expect(clearLayers(3)).toEqual([clear3]);
+    expect(clear3.classList.contains("fading")).toBe(false);
+    expect(fogLayers(3)).toEqual([fog3]);
+    expect(fog3.classList.contains("fading")).toBe(true);
+    settle();
+    expect(layers(40)).toEqual([fog40]);
+    expect(layers(3)).toEqual([clear3]);
+  });
+
+  it("серия «стрелок» каждые 30 мс: у клетки не больше 2 слоёв, ни одного накопления; по окончании — ровно один слой", () => {
+    const p = fillCandidates(lanternPlay(), 600);
+    render(p, { selected: 40 });
+    settle();
+    const path = [41, 42, 43, 44, 35, 26, 25, 24, 33, 42, 51, 60];
+    for (const sel of path) {
+      render(p, { selected: sel });
+      for (const i of allCells()) expect(layers(i).length, `клетка ${i}, выбор ${sel}`).toBeLessThanOrEqual(2);
+      act(() => void vi.advanceTimersByTime(30));
+    }
+    settle();
+    for (const i of allCells()) if (!p.mission[i] && (p.values[i] || p.notes[i])) expect(layers(i), `клетка ${i}`).toHaveLength(1);
+    expect(host.querySelectorAll(".fading")).toHaveLength(0);
+   }, 60000);
+
+  it("Reduce Motion: смена мгновенная — гаснущих слоёв нет вовсе", () => {
+    const mm = window.matchMedia;
+    window.matchMedia = ((query: string) => ({ matches: query.includes("reduce"), media: query, addEventListener() {}, removeEventListener() {} })) as never;
+    try {
+      render(lanternPlay());
+      render(lanternPlay(), { selected: 40 });
+      expect(host.querySelectorAll(".fading")).toHaveLength(0);
+      expect(layers(3).map((e) => e.className)).toEqual(["d player fog"]);
+      expect(layers(5).map((e) => e.className)).toEqual(["marks spot"]);
+      expect(layers(40).map((e) => e.className)).toEqual(["d player"]);
+      render(lanternPlay(), { selected: 40 }, true);
+      expect(host.querySelectorAll(".fading")).toHaveLength(0);
+    } finally {
+      window.matchMedia = mm;
+    }
+  });
+
+  it("содержимое клетки сменилось во время перехода (заметки) — гаснущий слой снят сразу, новое содержимое в тени не мелькает", () => {
+    render(lanternPlay());
+    render(lanternPlay(), { selected: 40 });
+    expect(clearLayers(5)).toHaveLength(1); // сетка заметок 5 гаснет
+    render(toggleNote(lanternPlay(), 5, 7, 900), { selected: 40 });
+    expect(clearLayers(5)).toHaveLength(0);
+    expect(cell(5).textContent).toBe("");
+    expect(layers(5).map((e) => e.className)).toEqual(["marks spot"]);
+  });
+
+  it("M1 не повторяется: цифра, ушедшая в тень и вернувшаяся, проявляется кроссфейдом без `anim-in`", () => {
+    const pop = { cell: 3, id: 7 };
+    render(lanternPlay(), { pop });
+    expect(clearLayers(3)[0]!.classList.contains("anim-in")).toBe(true);
+    render(lanternPlay(), { pop, selected: 40 });
+    expect(clearLayers(3)[0]!.className).toBe("d player fading"); // гаснущий слой — без анимации постановки
+    render(lanternPlay(), { pop, selected: 3 });
+    expect(clearLayers(3)[0]!.className).toBe("d player");
+    settle();
+    expect(clearLayers(3)[0]!.className).toBe("d player");
+  });
+
+  it("осмотр: туман уходит/возвращается тем же кроссфейдом; гаснущая чёткая цифра сохраняет вид осмотра (`pk`) и ошибки (`err`)", () => {
+    setHighlightWrong(true);
+    const p = enterDigit(lanternPlay(), 42, 1, 600); // r5c7 — неверно, в тени
+    render(p);
+    render(p, {}, true);
+    expect(clearLayers(42).map((e) => e.className)).toEqual(["d player err pk"]);
+    expect(fogLayers(42).map((e) => e.classList.contains("fading"))).toEqual([true]);
+    settle();
+    render(p);
+    expect(cell(42).classList.contains("err")).toBe(false); // клетка тени ошибку не показывает
+    expect(clearLayers(42).map((e) => e.className)).toEqual(["d player err pk fading"]); // гаснет тем же видом, не перекрашиваясь
+    settle();
+    expect(layers(42).map((e) => e.className)).toEqual(["d player fog"]);
+    expect(cell(42).querySelector(".err")).toBeNull();
+  });
 });

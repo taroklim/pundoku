@@ -17,6 +17,13 @@
  *   .cell.is-peek             — клетка тени во время осмотра (вид b): цифры и заметки читаются, но своя цифра остаётся в лёгкой
  *                               дымке (чуть светлее + ореол тумана), поэтому граница света видна и при осмотре.
  *
+ * PD-251 (решение владельца): туман появляется и уходит постепенно — кроссфейд двух слоёв клетки за --lantern-ms (200 мс):
+ *   чёткий слой (своя цифра / сетка заметок) и слой тумана (`.d.player.fog` / `.marks.spot`). Новый слой проявляется по opacity
+ *   (@starting-style), слой прежнего вида — `.fading` — гаснет (ease-out: чёткая цифра уходит быстрее, чем густеет туман) и
+ *   через переход убирается из DOM (Board.tsx, lanternFade.ts). Blur на слое тумана постоянный — анимируется только opacity
+ *   слоя (compositor). Вид слоя не зависит от класса клетки (`.fog`, `.pk`, `.err` — на самом слое), поэтому гаснущий слой
+ *   не меняет вид, когда клетка уже сменила свет. Слои стоят в одной ячейке сетки клетки (grid-area 1 / 1).
+ *
  * Фолбэк, если на iPhone blur даст артефакты: пятно без текста PD-210 (коммит 7f00edd, `.d.fog`/`.marks.fog`).
  *
  * Reduce Motion: переход света (появление цифры/пятна) умножен на --mo (tokens.css) — при «Уменьшении движения» мгновенно.
@@ -33,8 +40,8 @@
   --lantern-peek-ink: 82%;
   --lantern-peek-halo: 0.16em;
   --lantern-peek-halo-a: 42%;
-  /* Переход света (мс до умножения на --mo). */
-  --lantern-ms: 160ms;
+  /* Переход света — кроссфейд чёткий ↔ туман (мс до умножения на --mo); = FOG_FADE_MS в play/lanternFade.ts. */
+  --lantern-ms: 200ms;
 }
 
 /* Удержание на поле — осмотр, а не системная выноска/лупа/выделение текста iOS. */
@@ -44,10 +51,11 @@
   user-select: none;
 }
 
-/* Тень: один filter на элемент — blur от стороны клетки + прозрачность. Через filter, а не opacity: анимация постановки M1
-   (`inkSet`, fill both) держит opacity и перебила бы тень. */
-.board.lantern .cell.is-shadow .d.player,
-.board.lantern .cell.is-shadow .marks {
+/* Тень: один filter на элемент — blur от стороны клетки + прозрачность. Через filter, а не opacity: opacity слоя занята
+   кроссфейдом PD-251 (и анимацией постановки M1 `inkSet`, fill both). Класс — на слое тумана, не на клетке: гаснущий туман в
+   клетке, уже вышедшей на свет, остаётся размытым до конца. */
+.board.lantern .cell .d.player.fog,
+.board.lantern .cell .marks.spot {
   filter: blur(calc(var(--s) * var(--lantern-blur))) opacity(var(--lantern-shade-a));
 }
 /* PD-230: заметки в тени — одно пятно по центру клетки (без сетки 3×3 и угловых отступов `.marks`); размывается filter выше. */
@@ -71,20 +79,26 @@
   }
 }
 @media print {
-  .board.lantern .cell.is-shadow .d.player,
-  .board.lantern .cell.is-shadow .marks {
+  .board.lantern .cell .d.player.fog,
+  .board.lantern .cell .marks.spot,
+  .board.lantern .cell .fading {
     visibility: hidden;
   }
 }
 
 /* Осмотр b: своя цифра тени читается (контраст ≥ 4.5:1), но остаётся в дымке. Ошибка (если включена) — своим цветом. */
-.board.lantern .cell.is-peek .d.player:not(.err) {
+.board.lantern .cell .d.player.pk:not(.err) {
   color: color-mix(in srgb, var(--ink) var(--lantern-peek-ink), var(--surface));
   text-shadow: 0 0 var(--lantern-peek-halo) color-mix(in srgb, var(--ink) var(--lantern-peek-halo-a), transparent);
 }
 
-/* Переход света: цифра/заметки/пятно проявляются при появлении (свет пришёл/ушёл — элемент сменился). Только opacity (элемент
-   перемонтируется при смене света), blur не анимируется, без will-change; анимации постановки/волны (animation) перекрывают переход, Reduce Motion — 0 мс. */
+/* Переход света (PD-251): слой нового вида проявляется (@starting-style: от 0), слой прежнего — `.fading` — гаснет и убирается
+   из DOM. Только opacity, blur не анимируется, без will-change. Быстрая смена туда-обратно снимает/ставит `.fading` на том же
+   элементе — переход разворачивается с текущей прозрачности. Анимации постановки (animation) на новом слое перекрывают
+   переход; на гаснущем слое их нет. Reduce Motion — 0 мс (и призраков нет вовсе). */
+.board.lantern .cell > .d {
+  grid-area: 1 / 1;
+}
 .board.lantern .cell .d.player,
 .board.lantern .cell .marks {
   transition: opacity calc(var(--lantern-ms) * var(--mo)) linear;
@@ -94,6 +108,11 @@
   .board.lantern .cell .marks {
     opacity: 0;
   }
+}
+.board.lantern .cell .d.player.fading,
+.board.lantern .cell .marks.fading {
+  opacity: 0;
+  transition-timing-function: var(--e-out);
 }
 
 /* ---------- Строка статуса Фонаря (LanternStatus.tsx) ----------
