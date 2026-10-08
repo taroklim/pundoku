@@ -10,6 +10,7 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { PET_MOODS } from "@pundoku/engine";
 import i18n from "../i18n";
 import { progressOf } from "../sync/fixtures";
+import { dayRecordFromProgress, progressFromRecord } from "../sync/schema";
 import type { DayProgress } from "../today/repository";
 import { PetBlot } from "./PetBlot";
 import { dayPetMood, personalBestOf, petDayOfPlay } from "./petDay";
@@ -180,5 +181,26 @@ describe("petDayOfPlay / dayPetMood / personalBestOf", () => {
     // Пустой solvedAt тот же, что начало даты дня в снапшоте (выгрузка синка) — порядок совпадает на другом устройстве.
     const synced: DayProgress = { ...legacy, solvedAt: "2026-09-10T00:00:00.000Z" };
     expect(personalBestOf(synced, [a, synced, archive])).toBe(true);
+  });
+
+  it("PD-217 (Low-1 QA PD-181, закрыт PD-197): рекорды одинаковы на устройстве с пустым solvedAt и на другом после синка, в любом порядке, и не зависят от «сейчас»", () => {
+    // Устройство A: две старые записи без solvedAt и архивный день, решённый позже, быстрее всех.
+    const legacy1: DayProgress = { ...withTime(day("2026-09-05"), 1), solvedAt: null };
+    const legacy2: DayProgress = { ...withTime(day("2026-09-10"), 0.5), solvedAt: null };
+    const archive = withTime(day("2026-09-01", { solvedAt: "2026-09-20T10:00:00.000Z" }), 0.25);
+    const deviceA = [legacy1, legacy2, archive];
+    // Устройство B получает те же дни через снапшот: выгрузка в разные «сейчас» (циклы синка) даёт одно и то же.
+    const viaSync = (now: string) => deviceA.map((p) => progressFromRecord(p.date, dayRecordFromProgress(p, new Date(now))!)!);
+    const deviceB1 = viaSync("2026-09-21T08:00:00.000Z");
+    const deviceB2 = viaSync("2027-03-01T23:59:00.000Z");
+    expect(deviceB1.map((p) => p.solvedAt)).toEqual(["2026-09-05T00:00:00.000Z", "2026-09-10T00:00:00.000Z", "2026-09-20T10:00:00.000Z"]);
+    expect(deviceB2.map((p) => p.solvedAt)).toEqual(deviceB1.map((p) => p.solvedAt));
+    const perms = <T,>(xs: T[]): T[][] => (xs.length <= 1 ? [xs] : xs.flatMap((x, i) => perms([...xs.slice(0, i), ...xs.slice(i + 1)]).map((r) => [x, ...r])));
+    const bests = (list: DayProgress[]) => perms(list).map((order) => list.map((d) => personalBestOf(d, order)));
+    // Ожидание: 09-05 — первое решение класса (не рекорд); 09-10 быстрее → рекорд и остаётся им; архив решён позже и быстрее → рекорд.
+    const want = [false, true, true];
+    for (const r of bests(deviceA)) expect(r).toEqual(want);
+    for (const r of bests(deviceB1)) expect(r).toEqual(want);
+    for (const r of bests(deviceB2)) expect(r).toEqual(want);
   });
 });
