@@ -85,7 +85,8 @@ interface CellProps {
   ringId: number;
   /**
    * PD-208/PD-210/PD-216 (Фонарь, вариант C «Туман»): `lit` — клетка в свете выбранной (строка/столбец/блок); `shadow` — в тени:
-   * своя цифра/заметки размыты настоящим blur (styles/lantern.css), содержимое aria-hidden, подпись «в тени»;
+   * своя цифра размыта настоящим blur (styles/lantern.css), заметки — одно размытое пятно без цифр и позиций (PD-230),
+   * содержимое aria-hidden, подпись «в тени»;
    * `peek` — та же клетка тени во время осмотра (вид b: цифры видны, туман вокруг них остаётся). Подсказки — всегда как есть.
    * `null` — не Фонарь (или партия не идёт).
    */
@@ -129,7 +130,8 @@ const Cell = memo(function Cell(p: CellProps) {
   if (p.light === "lit") cls.push("is-lit");
   else if (p.light === "shadow") cls.push("is-shadow");
   else if (p.light === "peek") cls.push("is-peek");
-  // PD-216 (решение владельца): в тени своя цифра и заметки — настоящие, но размыты (styles/lantern.css, один filter на элемент);
+  // PD-216 (решение владельца): в тени своя цифра — настоящая, но размыта (styles/lantern.css, один filter на элемент); заметки —
+  // одно пятно без цифр (PD-230);
   // отдельный ключ — смена света перемонтирует элемент, и переход идёт только по opacity (@starting-style), без анимации blur.
   // Содержимое aria-hidden, подпись клетки — «в тени» без цифры, поле без выделения текста. Подсказка — как есть.
   const shade = p.light === "shadow" && !p.given;
@@ -218,8 +220,13 @@ const Cell = memo(function Cell(p: CellProps) {
         >
           {p.glyphs ? <Glyph digit={digit} kind={p.given ? "given" : "placed"} /> : digit}
         </span>
+      ) : p.notes && shade ? (
+        // PD-230 (QA PD-211): заметки в тени — одно пятно «клетка с заметками» по центру, без элемента на цифру. Размытая сетка
+        // 3×3 выдавала одиночную заметку по месту пятна (blur 0,11 клетки < шага ⅓); пятно одинаково при любом наборе и числе
+        // заметок (и после Fill candidates), а в DOM нет ни цифр, ни их позиций/классов.
+        <span key="msh" className="marks spot" aria-hidden="true" />
       ) : p.notes ? (
-        <span key={shade ? "msh" : "m"} className={p.glyphs ? "marks gl-marks" : "marks"} aria-hidden="true">
+        <span key="m" className={p.glyphs ? "marks gl-marks" : "marks"} aria-hidden="true">
           {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((d) => (
             <span key={d} className={p.struck & (1 << d) ? "struck" : undefined}>
               {p.notes & (1 << d) ? (p.glyphs ? <Glyph digit={d} kind="note" /> : d) : ""}

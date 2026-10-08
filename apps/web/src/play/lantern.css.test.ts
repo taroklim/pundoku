@@ -28,6 +28,23 @@ describe("lantern.css", () => {
     expect(css).toMatch(/@media print \{[^@]*is-shadow[^}]*\{\s*visibility: hidden;/);
   });
 
+  it("PD-230: заметки в тени — одно пятно по центру клетки (размер от --s), тем же filter; ни сетки 3×3, ни правил по цифре", () => {
+    const rule = /\.board\.lantern \.cell \.marks\.spot \{([^}]*)\}/.exec(css)?.[1] ?? "";
+    expect(rule).toMatch(/display: grid;/);
+    expect(rule).toMatch(/grid-template: 1fr \/ 1fr;/); // одна ячейка, не 3×3 `.marks`
+    expect(rule).toMatch(/place-items: center;/);
+    expect(rule).toMatch(/padding: 0;/);
+    const dot = /\.board\.lantern \.cell \.marks\.spot::before \{([^}]*)\}/.exec(css)?.[1] ?? "";
+    expect(dot).toMatch(/width: calc\(var\(--s\) \* var\(--lantern-spot\)\);/);
+    expect(dot).toMatch(/height: calc\(var\(--s\) \* var\(--lantern-spot\)\);/);
+    expect(dot).toMatch(/background: color-mix\(in srgb, var\(--notes\) var\(--lantern-spot-a\), transparent\);/);
+    expect(Number(/--lantern-spot: ([\d.]+);/.exec(css)?.[1])).toBeGreaterThan(0.1);
+    // Ничего не зависит от позиции/цифры заметки: ни nth-child, ни struck, ни сеток в тени.
+    expect(css).not.toMatch(/is-shadow[^{]*(nth-child|struck|span)/);
+    expect(css).not.toMatch(/\.spot[^{]*(nth-child|struck|span)/);
+    expect(css).toMatch(/@media \(forced-colors: active\) \{\s*\.board\.lantern \.cell \.marks\.spot::before \{\s*forced-color-adjust: none;/);
+  });
+
   it("осмотр b: своя цифра тени — чернила с долей ≥ 80 % (контраст ≥ 4.5:1) и ореол", () => {
     const m = /--lantern-peek-ink: (\d+)%;/.exec(css);
     expect(Number(m?.[1])).toBeGreaterThanOrEqual(80);

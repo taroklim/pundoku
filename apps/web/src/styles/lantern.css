@@ -10,6 +10,10 @@
  *                               видно, что клетка занята. Один `filter` на элемент (blur + opacity в одном), без will-change, сам blur
  *                               не анимируется. Содержимое aria-hidden, подпись клетки «в тени» (Board.tsx), выделения нет,
  *                               на печати — скрыто. Подсказки (`.d.given`) не трогаются никогда. Фон клетки как в классике.
+ *                               PD-230 (QA PD-211): заметки в тени — не размытая сетка 3×3 (blur 0,11 клетки меньше шага ⅓, одиночная
+ *                               заметка читалась по месту пятна), а `.marks.spot` — пустой элемент, одно пятно цвета заметок по
+ *                               центру клетки, тем же filter. Одинаково при любом наборе и числе заметок (и после Fill candidates):
+ *                               видно «клетка с заметками», но не какие. В DOM ни цифр, ни их позиций.
  *   .cell.is-peek             — клетка тени во время осмотра (вид b): цифры и заметки читаются, но своя цифра остаётся в лёгкой
  *                               дымке (чуть светлее + ореол тумана), поэтому граница света видна и при осмотре.
  *
@@ -21,6 +25,10 @@
   /* Глубина 2 (макет PD-209 C): радиус размытия — доля стороны клетки, прозрачность размытого. */
   --lantern-blur: 0.11;
   --lantern-shade-a: 0.32;
+  /* PD-230: пятно заметок в тени — диаметр (доля стороны клетки, до размытия) и плотность цвета заметок. Слабее размытой своей
+     цифры (замер pd230-check: ΔL пятна ≈ 0,6–0,8 от цифры) — «клетка с заметками», а не «клетка с цифрой». */
+  --lantern-spot: 0.3;
+  --lantern-spot-a: 35%;
   /* Осмотр (вид b): своя цифра тени — доля чернил (контраст ≥ 4.5:1 в обеих темах) и ореол тумана вокруг. */
   --lantern-peek-ink: 82%;
   --lantern-peek-halo: 0.16em;
@@ -41,6 +49,26 @@
 .board.lantern .cell.is-shadow .d.player,
 .board.lantern .cell.is-shadow .marks {
   filter: blur(calc(var(--s) * var(--lantern-blur))) opacity(var(--lantern-shade-a));
+}
+/* PD-230: заметки в тени — одно пятно по центру клетки (без сетки 3×3 и угловых отступов `.marks`); размывается filter выше. */
+.board.lantern .cell .marks.spot {
+  display: grid;
+  grid-template: 1fr / 1fr;
+  place-items: center;
+  padding: 0;
+}
+.board.lantern .cell .marks.spot::before {
+  content: "";
+  width: calc(var(--s) * var(--lantern-spot));
+  height: calc(var(--s) * var(--lantern-spot));
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--notes) var(--lantern-spot-a), transparent);
+}
+/* Высокий контраст: фон пятна иначе заменился бы фоном окна — клетка с заметками выглядела бы пустой. */
+@media (forced-colors: active) {
+  .board.lantern .cell .marks.spot::before {
+    forced-color-adjust: none;
+  }
 }
 @media print {
   .board.lantern .cell.is-shadow .d.player,

@@ -18,7 +18,7 @@ import { setHighlightPeers, setHighlightWrong } from "../settings/prefs";
 import { Board, INSPECT_HOLD_MS } from "./Board";
 import type { PlaySnapshot } from "./gameStore";
 import type { PlayState } from "./logic";
-import { createPlay, enterDigit, setLanternMode, toggleNote } from "./logic";
+import { createPlay, enterDigit, fillCandidates, setLanternMode, toggleNote } from "./logic";
 import { MoreMenu } from "./MoreMenu";
 import { PlayScreen } from "./PlayScreen";
 import { playStore } from "./store";
@@ -151,6 +151,64 @@ describe("свет и тень", () => {
     expect(cell(42).querySelector(".d.err")).toBeNull(); // цвет ошибки в тени не выдаёт неверную цифру
     expect(cell(42).querySelector(".d.err")).toBeNull();
     expect(cell(5).classList.contains("err")).toBe(true);
+  });
+});
+
+describe("PD-230: заметки в тени — одно пятно без позиций (QA PD-211: одиночная заметка читалась по месту пятна 3×3)", () => {
+  /** Чистая партия Фонаря, в r9c7 (78, в тени при выборе r1c4) — заметки `ds`. */
+  const withNotes = (ds: number[]) => {
+    let p = setLanternMode(createPlay({ mission: MISSION, solution: SOLUTION }));
+    ds.forEach((d, k) => (p = toggleNote(p, 78, d, 100 + k)));
+    return p;
+  };
+  const SETS = [[1], [2], [3], [4], [5], [6], [7], [8], [9], [1, 9], [2, 4, 6], [1, 2, 3, 4, 5, 6, 7, 8, 9]];
+
+  it("отрисовка клетки тени не зависит от того, какие цифры в заметках: одна 1 / одна 9 / набор — одинаковый DOM", () => {
+    const html = SETS.map((ds) => {
+      render(withNotes(ds));
+      expect(cell(78).classList.contains("is-shadow")).toBe(true);
+      return cell(78).outerHTML;
+    });
+    for (const [k, h] of html.entries()) expect(h, `заметки ${SETS[k]!.join("")}`).toBe(html[0]);
+  });
+
+  it("в тени: одно пятно `.marks.spot` — без цифр, без элемента на цифру, без классов/стилей по цифре; aria-hidden", () => {
+    render(withNotes([7]));
+    const m = cell(78).querySelector(".marks")!;
+    expect(m.classList.contains("spot")).toBe(true);
+    expect(m.getAttribute("aria-hidden")).toBe("true");
+    expect(m.textContent).toBe("");
+    expect(m.children).toHaveLength(0);
+    expect(m.hasAttribute("style")).toBe(false);
+    expect(cell(78).querySelectorAll(".struck, [data-d], [style]")).toHaveLength(0);
+    expect(cell(78).textContent).toBe("");
+  });
+
+  it("в свете и при осмотре — обычная сетка заметок 3×3 с цифрами (не тронуто)", () => {
+    render(withNotes([7]), { selected: 80 }); // 78 в свете
+    const lit = cell(78).querySelector(".marks")!;
+    expect(lit.classList.contains("spot")).toBe(false);
+    expect(lit.children).toHaveLength(9);
+    expect(lit.children[6]!.textContent).toBe("7");
+    render(withNotes([7]), {}, true); // осмотр
+    const peek = cell(78).querySelector(".marks")!;
+    expect(cell(78).classList.contains("is-peek")).toBe(true);
+    expect(peek.classList.contains("spot")).toBe(false);
+    expect(peek.textContent).toBe("7");
+  });
+
+  it("Fill candidates: все клетки тени с заметками — одно и то же пятно, независимо от числа и набора кандидатов; в свете — цифры", () => {
+    const p = fillCandidates(setLanternMode(createPlay({ mission: MISSION, solution: SOLUTION })), 100);
+    render(p, { selected: 40 });
+    const noted = [...host.querySelectorAll<HTMLElement>(".cell.is-shadow")].filter((c) => c.querySelector(".marks"));
+    expect(noted.length).toBeGreaterThan(20);
+    // Наборы кандидатов в этих клетках разные (иначе проверка ничего не доказывает).
+    expect(new Set(noted.map((c) => p.notes[Number(c.getAttribute("data-i"))])).size).toBeGreaterThan(5);
+    const inner = new Set(noted.map((c) => c.innerHTML));
+    expect([...inner]).toEqual(['<i class="fl" aria-hidden="true"></i><span class="marks spot" aria-hidden="true"></span>']);
+    for (const c of noted) expect(c.textContent).toBe("");
+    const litNoted = [...host.querySelectorAll<HTMLElement>(".cell.is-lit")].find((c) => c.querySelector(".marks"))!;
+    expect(litNoted.querySelector(".marks")!.textContent).toMatch(/^\d+$/);
   });
 });
 

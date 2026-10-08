@@ -1,0 +1,936 @@
+{
+ "wk-390-light-en": {
+  "X": 1,
+  "Y": 3,
+  "single": {
+   "1": {
+    "maxDL": 9.9,
+    "cx": 0.5,
+    "cy": 0.496,
+    "mass": 0.875,
+    "box": [
+     0.292,
+     0.282,
+     0.717,
+     0.718
+    ],
+    "sub": 5,
+    "dom": {
+     "cls": "cell is-shadow",
+     "html": "<i class=\"fl\" aria-hidden=\"true\"></i><span class=\"marks spot\" aria-hidden=\"true\"></span>",
+     "label": "Row 1, column 2, notes, in shadow",
+     "text": ""
+    }
+   },
+   "2": {
+    "maxDL": 9.9,
+    "cx": 0.5,
+    "cy": 0.496,
+    "mass": 0.875,
+    "box": [
+     0.292,
+     0.282,
+     0.717,
+     0.718
+    ],
+    "sub": 5,
+    "dom": {
+     "cls": "cell is-shadow",
+     "html": "<i class=\"fl\" aria-hidden=\"true\"></i><span class=\"marks spot\" aria-hidden=\"true\"></span>",
+     "label": "Row 1, column 2, notes, in shadow",
+     "text": ""
+    }
+   },
+   "3": {
+    "maxDL": 9.9,
+    "cx": 0.5,
+    "cy": 0.496,
+    "mass": 0.875,
+    "box": [
+     0.292,
+     0.282,
+     0.717,
+     0.718
+    ],
+    "sub": 5,
+    "dom": {
+     "cls": "cell is-shadow",
+     "html": "<i class=\"fl\" aria-hidden=\"true\"></i><span class=\"marks spot\" aria-hidden=\"true\"></span>",
+     "label": "Row 1, column 2, notes, in shadow",
+     "text": ""
+    }
+   },
+   "4": {
+    "maxDL": 9.9,
+    "cx": 0.5,
+    "cy": 0.496,
+    "mass": 0.875,
+    "box": [
+     0.292,
+     0.282,
+     0.717,
+     0.718
+    ],
+    "sub": 5,
+    "dom": {
+     "cls": "cell is-shadow",
+     "html": "<i class=\"fl\" aria-hidden=\"true\"></i><span class=\"marks spot\" aria-hidden=\"true\"></span>",
+     "label": "Row 1, column 2, notes, in shadow",
+     "text": ""
+    }
+   },
+   "5": {
+    "maxDL": 9.9,
+    "cx": 0.5,
+    "cy": 0.496,
+    "mass": 0.875,
+    "box": [
+     0.292,
+     0.282,
+     0.717,
+     0.718
+    ],
+    "sub": 5,
+    "dom": {
+     "cls": "cell is-shadow",
+     "html": "<i class=\"fl\" aria-hidden=\"true\"></i><span class=\"marks spot\" aria-hidden=\"true\"></span>",
+     "label": "Row 1, column 2, notes, in shadow",
+     "text": ""
+    }
+   },
+   "6": {
+    "maxDL": 9.9,
+    "cx": 0.5,
+    "cy": 0.496,
+    "mass": 0.875,
+    "box": [
+     0.292,
+     0.282,
+     0.717,
+     0.718
+    ],
+    "sub": 5,
+    "dom": {
+     "cls": "cell is-shadow",
+     "html": "<i class=\"fl\" aria-hidden=\"true\"></i><span class=\"marks spot\" aria-hidden=\"true\"></span>",
+     "label": "Row 1, column 2, notes, in shadow",
+     "text": ""
+    }
+   },
+   "7": {
+    "maxDL": 9.9,
+    "cx": 0.5,
+    "cy": 0.496,
+    "mass": 0.875,
+    "box": [
+     0.292,
+     0.282,
+     0.717,
+     0.718
+    ],
+    "sub": 5,
+    "dom": {
+     "cls": "cell is-shadow",
+     "html": "<i class=\"fl\" aria-hidden=\"true\"></i><span class=\"marks spot\" aria-hidden=\"true\"></span>",
+     "label": "Row 1, column 2, notes, in shadow",
+     "text": ""
+    }
+   },
+   "8": {
+    "maxDL": 9.9,
+    "cx": 0.5,
+    "cy": 0.496,
+    "mass": 0.875,
+    "box": [
+     0.292,
+     0.282,
+     0.717,
+     0.718
+    ],
+    "sub": 5,
+    "dom": {
+     "cls": "cell is-shadow",
+     "html": "<i class=\"fl\" aria-hidden=\"true\"></i><span class=\"marks spot\" aria-hidden=\"true\"></span>",
+     "label": "Row 1, column 2, notes, in shadow",
+     "text": ""
+    }
+   },
+   "9": {
+    "maxDL": 9.9,
+    "cx": 0.5,
+    "cy": 0.496,
+    "mass": 0.875,
+    "box": [
+     0.292,
+     0.282,
+     0.717,
+     0.718
+    ],
+    "sub": 5,
+    "dom": {
+     "cls": "cell is-shadow",
+     "html": "<i class=\"fl\" aria-hidden=\"true\"></i><span class=\"marks spot\" aria-hidden=\"true\"></span>",
+     "label": "Row 1, column 2, notes, in shadow",
+     "text": ""
+    }
+   }
+  },
+  "singleY": {
+   "1": {
+    "maxDL": 9.9,
+    "cx": 0.5,
+    "cy": 0.496,
+    "mass": 0.875,
+    "box": [
+     0.292,
+     0.282,
+     0.717,
+     0.718
+    ],
+    "sub": 5,
+    "dom": {
+     "cls": "cell is-shadow",
+     "html": "<i class=\"fl\" aria-hidden=\"true\"></i><span class=\"marks spot\" aria-hidden=\"true\"></span>",
+     "label": "Row 1, column 4, notes, in shadow",
+     "text": ""
+    }
+   },
+   "3": {
+    "maxDL": 9.9,
+    "cx": 0.5,
+    "cy": 0.496,
+    "mass": 0.875,
+    "box": [
+     0.292,
+     0.282,
+     0.717,
+     0.718
+    ],
+    "sub": 5,
+    "dom": {
+     "cls": "cell is-shadow",
+     "html": "<i class=\"fl\" aria-hidden=\"true\"></i><span class=\"marks spot\" aria-hidden=\"true\"></span>",
+     "label": "Row 1, column 4, notes, in shadow",
+     "text": ""
+    }
+   },
+   "7": {
+    "maxDL": 9.9,
+    "cx": 0.5,
+    "cy": 0.496,
+    "mass": 0.875,
+    "box": [
+     0.292,
+     0.282,
+     0.717,
+     0.718
+    ],
+    "sub": 5,
+    "dom": {
+     "cls": "cell is-shadow",
+     "html": "<i class=\"fl\" aria-hidden=\"true\"></i><span class=\"marks spot\" aria-hidden=\"true\"></span>",
+     "label": "Row 1, column 4, notes, in shadow",
+     "text": ""
+    }
+   },
+   "9": {
+    "maxDL": 9.9,
+    "cx": 0.5,
+    "cy": 0.496,
+    "mass": 0.875,
+    "box": [
+     0.292,
+     0.282,
+     0.717,
+     0.718
+    ],
+    "sub": 5,
+    "dom": {
+     "cls": "cell is-shadow",
+     "html": "<i class=\"fl\" aria-hidden=\"true\"></i><span class=\"marks spot\" aria-hidden=\"true\"></span>",
+     "label": "Row 1, column 4, notes, in shadow",
+     "text": ""
+    }
+   }
+  },
+  "sets": {
+   "19": {
+    "maxDL": 9.9,
+    "cx": 0.5,
+    "cy": 0.496,
+    "mass": 0.875,
+    "box": [
+     0.292,
+     0.282,
+     0.717,
+     0.718
+    ],
+    "dom": {
+     "cls": "cell is-shadow",
+     "html": "<i class=\"fl\" aria-hidden=\"true\"></i><span class=\"marks spot\" aria-hidden=\"true\"></span>",
+     "label": "Row 1, column 2, notes, in shadow",
+     "text": ""
+    }
+   },
+   "246": {
+    "maxDL": 9.9,
+    "cx": 0.5,
+    "cy": 0.496,
+    "mass": 0.875,
+    "box": [
+     0.292,
+     0.282,
+     0.717,
+     0.718
+    ],
+    "dom": {
+     "cls": "cell is-shadow",
+     "html": "<i class=\"fl\" aria-hidden=\"true\"></i><span class=\"marks spot\" aria-hidden=\"true\"></span>",
+     "label": "Row 1, column 2, notes, in shadow",
+     "text": ""
+    }
+   },
+   "123456789": {
+    "maxDL": 9.9,
+    "cx": 0.5,
+    "cy": 0.496,
+    "mass": 0.875,
+    "box": [
+     0.292,
+     0.282,
+     0.717,
+     0.718
+    ],
+    "dom": {
+     "cls": "cell is-shadow",
+     "html": "<i class=\"fl\" aria-hidden=\"true\"></i><span class=\"marks spot\" aria-hidden=\"true\"></span>",
+     "label": "Row 1, column 2, notes, in shadow",
+     "text": ""
+    }
+   }
+  },
+  "lit": {
+   "1": 1,
+   "9": 9
+  },
+  "fill": {
+   "dom": {
+    "n": 34,
+    "kinds": 1,
+    "bad": [],
+    "filter": "blur(4.277778px) opacity(0.32)"
+   },
+   "cells": [
+    {
+     "i": 6,
+     "maxDL": 9.9,
+     "cx": 0.492,
+     "cy": 0.496,
+     "mass": 0.875,
+     "box": [
+      0.283,
+      0.282,
+      0.708,
+      0.718
+     ]
+    },
+    {
+     "i": 7,
+     "maxDL": 9.9,
+     "cx": 0.483,
+     "cy": 0.496,
+     "mass": 0.875,
+     "box": [
+      0.275,
+      0.282,
+      0.7,
+      0.718
+     ]
+    },
+    {
+     "i": 8,
+     "maxDL": 9.9,
+     "cx": 0.496,
+     "cy": 0.496,
+     "mass": 0.897,
+     "box": [
+      0.282,
+      0.282,
+      0.718,
+      0.718
+     ]
+    },
+    {
+     "i": 9,
+     "maxDL": 9,
+     "cx": 0.496,
+     "cy": 0.504,
+     "mass": 0.847,
+     "box": [
+      0.282,
+      0.3,
+      0.718,
+      0.717
+     ]
+    },
+    {
+     "i": 10,
+     "maxDL": 9,
+     "cx": 0.5,
+     "cy": 0.504,
+     "mass": 0.826,
+     "box": [
+      0.292,
+      0.3,
+      0.717,
+      0.717
+     ]
+    },
+    {
+     "i": 11,
+     "maxDL": 9,
+     "cx": 0.5,
+     "cy": 0.504,
+     "mass": 0.826,
+     "box": [
+      0.292,
+      0.3,
+      0.717,
+      0.717
+     ]
+    },
+    {
+     "i": 12,
+     "maxDL": 9,
+     "cx": 0.5,
+     "cy": 0.504,
+     "mass": 0.826,
+     "box": [
+      0.292,
+      0.3,
+      0.717,
+      0.717
+     ]
+    },
+    {
+     "i": 15,
+     "maxDL": 9,
+     "cx": 0.492,
+     "cy": 0.504,
+     "mass": 0.826,
+     "box": [
+      0.283,
+      0.3,
+      0.708,
+      0.717
+     ]
+    },
+    {
+     "i": 20,
+     "maxDL": 9.9,
+     "cx": 0.5,
+     "cy": 0.5,
+     "mass": 0.853,
+     "box": [
+      0.292,
+      0.292,
+      0.717,
+      0.717
+     ]
+    },
+    {
+     "i": 24,
+     "maxDL": 9.9,
+     "cx": 0.492,
+     "cy": 0.5,
+     "mass": 0.853,
+     "box": [
+      0.283,
+      0.292,
+      0.708,
+      0.717
+     ]
+    }
+   ]
+  },
+  "own": {
+   "maxDL": 15.6,
+   "cx": 0.502,
+   "cy": 0.445,
+   "mass": 2.05,
+   "box": [
+    0.283,
+    0.154,
+    0.75,
+    0.803
+   ]
+  }
+ },
+ "wk-320-dark-uk-ax3": {
+  "X": 1,
+  "Y": 0,
+  "single": {
+   "1": {
+    "maxDL": 8.1,
+    "cx": 0.482,
+    "cy": 0.491,
+    "mass": 0.737,
+    "box": [
+     0.298,
+     0.296,
+     0.684,
+     0.704
+    ],
+    "sub": 5,
+    "dom": {
+     "cls": "cell is-shadow",
+     "html": "<i class=\"fl\" aria-hidden=\"true\"></i><span class=\"marks spot\" aria-hidden=\"true\"></span>",
+     "label": "Рядок 1, стовпець 2, нотатки, у тіні",
+     "text": ""
+    }
+   },
+   "2": {
+    "maxDL": 8.1,
+    "cx": 0.482,
+    "cy": 0.491,
+    "mass": 0.737,
+    "box": [
+     0.298,
+     0.296,
+     0.684,
+     0.704
+    ],
+    "sub": 5,
+    "dom": {
+     "cls": "cell is-shadow",
+     "html": "<i class=\"fl\" aria-hidden=\"true\"></i><span class=\"marks spot\" aria-hidden=\"true\"></span>",
+     "label": "Рядок 1, стовпець 2, нотатки, у тіні",
+     "text": ""
+    }
+   },
+   "3": {
+    "maxDL": 8.1,
+    "cx": 0.482,
+    "cy": 0.491,
+    "mass": 0.737,
+    "box": [
+     0.298,
+     0.296,
+     0.684,
+     0.704
+    ],
+    "sub": 5,
+    "dom": {
+     "cls": "cell is-shadow",
+     "html": "<i class=\"fl\" aria-hidden=\"true\"></i><span class=\"marks spot\" aria-hidden=\"true\"></span>",
+     "label": "Рядок 1, стовпець 2, нотатки, у тіні",
+     "text": ""
+    }
+   },
+   "4": {
+    "maxDL": 8.1,
+    "cx": 0.482,
+    "cy": 0.491,
+    "mass": 0.737,
+    "box": [
+     0.298,
+     0.296,
+     0.684,
+     0.704
+    ],
+    "sub": 5,
+    "dom": {
+     "cls": "cell is-shadow",
+     "html": "<i class=\"fl\" aria-hidden=\"true\"></i><span class=\"marks spot\" aria-hidden=\"true\"></span>",
+     "label": "Рядок 1, стовпець 2, нотатки, у тіні",
+     "text": ""
+    }
+   },
+   "5": {
+    "maxDL": 8.1,
+    "cx": 0.482,
+    "cy": 0.491,
+    "mass": 0.737,
+    "box": [
+     0.298,
+     0.296,
+     0.684,
+     0.704
+    ],
+    "sub": 5,
+    "dom": {
+     "cls": "cell is-shadow",
+     "html": "<i class=\"fl\" aria-hidden=\"true\"></i><span class=\"marks spot\" aria-hidden=\"true\"></span>",
+     "label": "Рядок 1, стовпець 2, нотатки, у тіні",
+     "text": ""
+    }
+   },
+   "6": {
+    "maxDL": 8.1,
+    "cx": 0.482,
+    "cy": 0.491,
+    "mass": 0.737,
+    "box": [
+     0.298,
+     0.296,
+     0.684,
+     0.704
+    ],
+    "sub": 5,
+    "dom": {
+     "cls": "cell is-shadow",
+     "html": "<i class=\"fl\" aria-hidden=\"true\"></i><span class=\"marks spot\" aria-hidden=\"true\"></span>",
+     "label": "Рядок 1, стовпець 2, нотатки, у тіні",
+     "text": ""
+    }
+   },
+   "7": {
+    "maxDL": 8.1,
+    "cx": 0.482,
+    "cy": 0.491,
+    "mass": 0.737,
+    "box": [
+     0.298,
+     0.296,
+     0.684,
+     0.704
+    ],
+    "sub": 5,
+    "dom": {
+     "cls": "cell is-shadow",
+     "html": "<i class=\"fl\" aria-hidden=\"true\"></i><span class=\"marks spot\" aria-hidden=\"true\"></span>",
+     "label": "Рядок 1, стовпець 2, нотатки, у тіні",
+     "text": ""
+    }
+   },
+   "8": {
+    "maxDL": 8.1,
+    "cx": 0.482,
+    "cy": 0.491,
+    "mass": 0.737,
+    "box": [
+     0.298,
+     0.296,
+     0.684,
+     0.704
+    ],
+    "sub": 5,
+    "dom": {
+     "cls": "cell is-shadow",
+     "html": "<i class=\"fl\" aria-hidden=\"true\"></i><span class=\"marks spot\" aria-hidden=\"true\"></span>",
+     "label": "Рядок 1, стовпець 2, нотатки, у тіні",
+     "text": ""
+    }
+   },
+   "9": {
+    "maxDL": 8.1,
+    "cx": 0.482,
+    "cy": 0.491,
+    "mass": 0.737,
+    "box": [
+     0.298,
+     0.296,
+     0.684,
+     0.704
+    ],
+    "sub": 5,
+    "dom": {
+     "cls": "cell is-shadow",
+     "html": "<i class=\"fl\" aria-hidden=\"true\"></i><span class=\"marks spot\" aria-hidden=\"true\"></span>",
+     "label": "Рядок 1, стовпець 2, нотатки, у тіні",
+     "text": ""
+    }
+   }
+  },
+  "singleY": {
+   "1": {
+    "maxDL": 8.1,
+    "cx": 0.482,
+    "cy": 0.491,
+    "mass": 0.737,
+    "box": [
+     0.298,
+     0.296,
+     0.684,
+     0.704
+    ],
+    "sub": 5,
+    "dom": {
+     "cls": "cell is-shadow",
+     "html": "<i class=\"fl\" aria-hidden=\"true\"></i><span class=\"marks spot\" aria-hidden=\"true\"></span>",
+     "label": "Рядок 1, стовпець 1, нотатки, у тіні",
+     "text": ""
+    }
+   },
+   "3": {
+    "maxDL": 8.1,
+    "cx": 0.482,
+    "cy": 0.491,
+    "mass": 0.737,
+    "box": [
+     0.298,
+     0.296,
+     0.684,
+     0.704
+    ],
+    "sub": 5,
+    "dom": {
+     "cls": "cell is-shadow",
+     "html": "<i class=\"fl\" aria-hidden=\"true\"></i><span class=\"marks spot\" aria-hidden=\"true\"></span>",
+     "label": "Рядок 1, стовпець 1, нотатки, у тіні",
+     "text": ""
+    }
+   },
+   "7": {
+    "maxDL": 8.1,
+    "cx": 0.482,
+    "cy": 0.491,
+    "mass": 0.737,
+    "box": [
+     0.298,
+     0.296,
+     0.684,
+     0.704
+    ],
+    "sub": 5,
+    "dom": {
+     "cls": "cell is-shadow",
+     "html": "<i class=\"fl\" aria-hidden=\"true\"></i><span class=\"marks spot\" aria-hidden=\"true\"></span>",
+     "label": "Рядок 1, стовпець 1, нотатки, у тіні",
+     "text": ""
+    }
+   },
+   "9": {
+    "maxDL": 8.1,
+    "cx": 0.482,
+    "cy": 0.491,
+    "mass": 0.737,
+    "box": [
+     0.298,
+     0.296,
+     0.684,
+     0.704
+    ],
+    "sub": 5,
+    "dom": {
+     "cls": "cell is-shadow",
+     "html": "<i class=\"fl\" aria-hidden=\"true\"></i><span class=\"marks spot\" aria-hidden=\"true\"></span>",
+     "label": "Рядок 1, стовпець 1, нотатки, у тіні",
+     "text": ""
+    }
+   }
+  },
+  "sets": {
+   "19": {
+    "maxDL": 8.1,
+    "cx": 0.482,
+    "cy": 0.491,
+    "mass": 0.737,
+    "box": [
+     0.298,
+     0.296,
+     0.684,
+     0.704
+    ],
+    "dom": {
+     "cls": "cell is-shadow",
+     "html": "<i class=\"fl\" aria-hidden=\"true\"></i><span class=\"marks spot\" aria-hidden=\"true\"></span>",
+     "label": "Рядок 1, стовпець 2, нотатки, у тіні",
+     "text": ""
+    }
+   },
+   "246": {
+    "maxDL": 8.1,
+    "cx": 0.482,
+    "cy": 0.491,
+    "mass": 0.737,
+    "box": [
+     0.298,
+     0.296,
+     0.684,
+     0.704
+    ],
+    "dom": {
+     "cls": "cell is-shadow",
+     "html": "<i class=\"fl\" aria-hidden=\"true\"></i><span class=\"marks spot\" aria-hidden=\"true\"></span>",
+     "label": "Рядок 1, стовпець 2, нотатки, у тіні",
+     "text": ""
+    }
+   },
+   "123456789": {
+    "maxDL": 8.1,
+    "cx": 0.482,
+    "cy": 0.491,
+    "mass": 0.737,
+    "box": [
+     0.298,
+     0.296,
+     0.684,
+     0.704
+    ],
+    "dom": {
+     "cls": "cell is-shadow",
+     "html": "<i class=\"fl\" aria-hidden=\"true\"></i><span class=\"marks spot\" aria-hidden=\"true\"></span>",
+     "label": "Рядок 1, стовпець 2, нотатки, у тіні",
+     "text": ""
+    }
+   }
+  },
+  "lit": {
+   "1": 1,
+   "9": 9
+  },
+  "fill": {
+   "dom": {
+    "n": 33,
+    "kinds": 1,
+    "bad": [],
+    "filter": "blur(1.967778px) opacity(0.32)"
+   },
+   "cells": [
+    {
+     "i": 3,
+     "maxDL": 8.1,
+     "cx": 0.465,
+     "cy": 0.491,
+     "mass": 0.737,
+     "box": [
+      0.281,
+      0.296,
+      0.667,
+      0.704
+     ]
+    },
+    {
+     "i": 7,
+     "maxDL": 8.1,
+     "cx": 0.5,
+     "cy": 0.491,
+     "mass": 0.737,
+     "box": [
+      0.316,
+      0.296,
+      0.702,
+      0.704
+     ]
+    },
+    {
+     "i": 8,
+     "maxDL": 8.1,
+     "cx": 0.5,
+     "cy": 0.491,
+     "mass": 0.737,
+     "box": [
+      0.316,
+      0.296,
+      0.702,
+      0.704
+     ]
+    },
+    {
+     "i": 9,
+     "maxDL": 9,
+     "cx": 0.482,
+     "cy": 0.509,
+     "mass": 0.749,
+     "box": [
+      0.298,
+      0.298,
+      0.684,
+      0.737
+     ]
+    },
+    {
+     "i": 11,
+     "maxDL": 9,
+     "cx": 0.482,
+     "cy": 0.509,
+     "mass": 0.749,
+     "box": [
+      0.298,
+      0.298,
+      0.684,
+      0.737
+     ]
+    },
+    {
+     "i": 14,
+     "maxDL": 9,
+     "cx": 0.518,
+     "cy": 0.509,
+     "mass": 0.749,
+     "box": [
+      0.333,
+      0.298,
+      0.719,
+      0.737
+     ]
+    },
+    {
+     "i": 15,
+     "maxDL": 9,
+     "cx": 0.5,
+     "cy": 0.509,
+     "mass": 0.749,
+     "box": [
+      0.316,
+      0.298,
+      0.702,
+      0.737
+     ]
+    },
+    {
+     "i": 16,
+     "maxDL": 9,
+     "cx": 0.5,
+     "cy": 0.509,
+     "mass": 0.749,
+     "box": [
+      0.316,
+      0.298,
+      0.702,
+      0.737
+     ]
+    },
+    {
+     "i": 23,
+     "maxDL": 8.1,
+     "cx": 0.518,
+     "cy": 0.5,
+     "mass": 0.698,
+     "box": [
+      0.333,
+      0.316,
+      0.719,
+      0.702
+     ]
+    },
+    {
+     "i": 24,
+     "maxDL": 8.1,
+     "cx": 0.5,
+     "cy": 0.5,
+     "mass": 0.698,
+     "box": [
+      0.316,
+      0.316,
+      0.702,
+      0.702
+     ]
+    }
+   ]
+  },
+  "own": {
+   "maxDL": 15.8,
+   "cx": 0.464,
+   "cy": 0.519,
+   "mass": 2.563,
+   "box": [
+    0.211,
+    0.204,
+    0.737,
+    0.852
+   ]
+  }
+ }
+}
