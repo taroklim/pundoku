@@ -5,6 +5,10 @@
  * одной ступени. Шаблоны получают только области, номера строк/столбцов и число свидетелей; тест
  * (`hintCopy.test.ts`) подменяет все цифры шага и требует неизменных строк. Названия областей — предложная форма с
  * предлогом внутри («in row 6», «у рядку 6»): предлог зависит от языка и падежа, поэтому он в строке, а не в коде.
+ *
+ * PD-199: в Глифах на поле нет цифр — строки, где сказано «цифра», имеют вариант с контекстом i18next `glyphs`
+ * (`hint.s2.hidden_single_glyphs`, `hint.s4.hidden_single_glyphs_one` …) со словом «знак» / «shape». Остальные ключи
+ * без варианта — i18next сам откатывается к базовой строке, так что Классика и прочие режимы не меняются.
  */
 import type { TFunction } from "i18next";
 import type { Hint, HintRegion, MistakeHint, StepHint } from "@pundoku/engine";
@@ -31,6 +35,11 @@ export const capFirst = (s: string): string => (s ? s[0]!.toUpperCase() + s.slic
 export function regionIn(t: TFunction, r: HintRegion): string {
   const n = r.index + 1;
   return r.kind === "box" ? t(`hint.regionIn.box.${n}`) : t(`hint.regionIn.${r.kind}`, { n });
+}
+
+/** `t` с контекстом `glyphs`: ключ `x_glyphs`, если он есть, иначе `x` (откат i18next по контексту). */
+function glyphsT(t: TFunction): TFunction {
+  return ((key: string, opts?: Record<string, unknown>) => t(key, { ...opts, context: "glyphs" })) as unknown as TFunction;
 }
 
 const rowOf = (cell: number): number => Math.floor(cell / 9) + 1;
@@ -114,9 +123,10 @@ function mistakeCopy(t: TFunction, hint: MistakeHint): HintStepCopy {
 
 /**
  * Текст ступени `step` для подсказки; ветка ошибки и «ничего не нашёл» от ступени не зависят. `play` — Play (партия, не день):
- * подвал ветки «ничего не нашёл» говорит «игра», а не «день».
+ * подвал ветки «ничего не нашёл» говорит «игра», а не «день». `glyphs` — партия в Глифах (PD-199): «знак» вместо «цифра».
  */
-export function hintStepCopy(t: TFunction, hint: Hint, step: HintStep, play = false): HintStepCopy {
+export function hintStepCopy(t: TFunction, hint: Hint, step: HintStep, play = false, glyphs = false): HintStepCopy {
+  if (glyphs) t = glyphsT(t);
   if (hint.kind === "mistake") return mistakeCopy(t, hint);
   if (hint.kind === "none") return { title: t("hint.none.title"), body: t("hint.none.body"), key: [], foot: t(play ? "hint.none.footPlay" : "hint.none.foot") };
   return stepCopy(t, hint, step);

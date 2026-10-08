@@ -53,6 +53,23 @@ function ladderFor(name: FixtureName): { ladder: HintLadder; store: PlayStore } 
 const dock = (ladder: HintLadder, play = false) => act(() => root.render(<HintDock ladder={ladder} state={ladder.getState()} play={play} />));
 
 describe("HintDock", () => {
+  it("PD-199: с glyphs ступени говорят «shape», без — «digit» (Классика)", () => {
+    const { ladder } = ladderFor("hiddenSingle");
+    act(() => ladder.openLadder());
+    const live = (glyphs: boolean) => {
+      act(() => root.render(<HintDock ladder={ladder} state={ladder.getState()} play glyphs={glyphs} />));
+      return q("hint-live")!.textContent ?? "";
+    };
+    act(() => ladder.next()); // ступень 2: «one digit has only one place left»
+    expect(live(false)).toMatch(/\bdigit\b/);
+    expect(live(true)).toMatch(/\bshape\b/);
+    expect(live(true)).not.toMatch(/digit/i);
+    act(() => ladder.next());
+    act(() => ladder.next()); // ступень 4
+    expect(live(true)).toMatch(/one shape is still missing/);
+    expect(live(true)).not.toMatch(/digit/i);
+  });
+
   it("закрыт — ничего не рисует; открыт — счётчик «Step 1 of 4», «More» и подвал с правилом", () => {
     const { ladder } = ladderFor("hiddenSingle");
     dock(ladder);
@@ -203,6 +220,15 @@ describe("HintRuleSheet", () => {
     expect(text).toContain(i18n.t("hint.rule.titlePlay"));
     expect(text).not.toContain(i18n.t("hint.rule.title"));
     expect(text).not.toMatch(/\byear\b/i);
+  });
+
+  it("PD-215: в Глифах вступление шита — «shape»; без флага — прежняя строка", () => {
+    act(() => root.render(<HintRuleSheet play glyphs onGo={() => {}} onCancel={() => {}} />));
+    const lead = () => q("hint-rule-sheet")!.querySelector(".ink-sheet-lead")!.textContent ?? "";
+    expect(lead()).toBe(i18n.t("hint.rule.lead_glyphs"));
+    expect(lead()).toMatch(/\bshape\b/);
+    act(() => root.render(<HintRuleSheet play onGo={() => {}} onCancel={() => {}} />));
+    expect(lead()).toBe(i18n.t("hint.rule.lead"));
   });
 });
 
