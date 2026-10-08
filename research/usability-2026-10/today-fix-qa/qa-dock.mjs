@@ -8,7 +8,7 @@ const { webkit, chromium } = createRequire('/tmp/pundoku-ios/pw/')('playwright')
 const BASE = process.env.BASE ?? 'http://127.0.0.1:3992';
 const ROUTE = process.env.ROUTE ?? 'today';
 const PROFILE = process.env.PROFILE ? JSON.parse(readFileSync(process.env.PROFILE, 'utf8')) : null;
-const RESTORE = PROFILE ? (await import(pathToFileURL(new URL('./lib-qa.mjs', import.meta.url).pathname).href)).RESTORE : null;
+const seedIdb = PROFILE ? (await import(pathToFileURL(new URL('./lib-qa.mjs', import.meta.url).pathname).href)).seedIdb : async () => {};
 const args = process.argv.slice(2);
 const filter = args.find((a) => !a.startsWith('--')) ?? '';
 const soft = args.includes('--soft');
@@ -46,7 +46,7 @@ async function run(browser, c) {
   const newPage = async (hard) => {
     const ctx = await browser.newContext({ viewport: { width: c.w, height: c.h }, deviceScaleFactor: 2, isMobile: c.engine === 'webkit', hasTouch: true, locale: LOCALE[c.lang], colorScheme: c.scheme, timezoneId: 'UTC', ...(PROFILE ? { storageState: PROFILE.ls } : {}) });
     ctxs.push(ctx);
-    if (PROFILE?.idb && Object.keys(PROFILE.idb).length) { const p0 = await ctx.newPage(); await p0.goto(BASE + '/health'); await p0.evaluate(RESTORE, PROFILE.idb); await p0.close(); }
+    await seedIdb(ctx, PROFILE?.idb, BASE); // PD-217: посев на странице без приложения (не /health)
     await ctx.addInitScript((px) => { const add = () => { const s = document.createElement('style'); s.textContent = `html{font-size:${px}px !important}`; document.documentElement.appendChild(s); }; if (document.documentElement) add(); else document.addEventListener('DOMContentLoaded', add); }, c.ax3 ? 40 : 17);
     const page = await ctx.newPage();
     page.on('pageerror', (e) => errs.push(e.message));

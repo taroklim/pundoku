@@ -5,7 +5,7 @@ import { createRequire } from 'node:module';
 import { pathToFileURL } from 'node:url';
 import { readFileSync } from 'node:fs';
 const PROFILE = JSON.parse(readFileSync(process.env.PROFILE ?? '/tmp/qa-todayfix/state-vet.json', 'utf8'));
-const { RESTORE } = await import(pathToFileURL(new URL('./lib-qa.mjs', import.meta.url).pathname).href);
+const { seedIdb } = await import(pathToFileURL(new URL('./lib-qa.mjs', import.meta.url).pathname).href);
 const { webkit, chromium } = createRequire('/tmp/pundoku-ios/pw/')('playwright');
 const BASE = process.env.BASE ?? 'http://127.0.0.1:3992';
 const WT = process.env.WT ?? '/Users/taroklim/Documents/KlymWork/DevTeam_v1/products/pundoku-worktrees/pd-today-fix-qa';
@@ -20,7 +20,7 @@ const key = (page, d) => page.locator('.pad .key').nth(d - 1);
 async function withCtx(eng, fn, opts = {}) {
   const browser = await (eng === 'webkit' ? webkit : chromium).launch();
   const ctx = await browser.newContext({ viewport: { width: 393, height: 852 }, deviceScaleFactor: 2, isMobile: eng === 'webkit', hasTouch: true, locale: 'en-US', timezoneId: 'UTC', ...(opts.vet ? { storageState: PROFILE.ls } : {}) });
-  if (opts.vet) { const p0 = await ctx.newPage(); await p0.goto(BASE + '/health'); await p0.evaluate(RESTORE, PROFILE.idb); await p0.close(); }
+  if (opts.vet) await seedIdb(ctx, PROFILE.idb, BASE); // PD-217: посев на странице без приложения (не /health)
   await ctx.route('**/api/devices', (r) => r.fulfill({ status: 503, body: '{}' })); // без регистрации устройства — sync не при чём
   const page = await ctx.newPage(); const errs = []; page.on('pageerror', (e) => errs.push(e.message));
   try { await fn(page, errs); } finally { await browser.close(); }

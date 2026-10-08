@@ -39,7 +39,41 @@ export const launch = (engine) => pw[engine].launch();
 export const newCtx = (browser, engine, profile) =>
   browser.newContext({ ...IPHONE16, ...(engine === "webkit" ? { userAgent: WEBKIT_UA } : {}), ...(profile ? { storageState: profile.ls } : {}) });
 
-/** Дамп всех баз IndexedDB origin'а (страница BASE/health — тот же origin, приложение не грузится). Читает всё в одной readonly-транзакции и ждёт tx.oncomplete. */
+/**
+ * PD-217: страница посева/дампа IndexedDB — тот же origin, но приложение на ней НЕ запускается. Раньше это был `/health`: за nginx
+ * он проксируется в api, а на стенде vite (dev/preview: прокси только у `/api`) отдаётся index.html (SPA-fallback) — приложение
+ * грузилось прямо на странице посева, открывало ту же базу и писало своё (день реальной даты, мета) параллельно с RESTORE.
+ * Итог зависел от того, кто успел первым: «seed verify failed» через раз, а когда проверка проходила — профиль мог быть уже
+ * испорчен записями приложения. Теперь страница — пустой HTML, который отдаёт `ctx.route` (сервер не участвует); путь под
+ * `/api/`, чтобы и при зарегистрированном service worker навигация не ушла в его navigateFallback (index.html): `/api/` он не
+ * обслуживает. Контроль: если на странице всё же оказался скрипт — ошибка сразу, а не флейк потом.
+ */
+export const FIXTURE_PATH = "/api/__pundoku-idb-fixture";
+const FIXTURE_HTML = "<!doctype html><meta charset=utf-8><title>idb fixture</title>";
+export async function fixturePage(ctx, base = BASE) {
+  const url = base + FIXTURE_PATH;
+  const handler = (route) => route.fulfill({ status: 200, contentType: "text/html", body: FIXTURE_HTML });
+  await ctx.route(url, handler);
+  const page = await ctx.newPage();
+  try {
+    await page.goto(url);
+    // Не перехвачен (редкость: навигацию забрал service worker) — придёт ответ api/прокси без скриптов, это тоже годится.
+    if (await page.evaluate(() => document.scripts.length > 0)) throw new Error(`fixture page runs a script: ${url}`);
+  } catch (e) {
+    await page.close();
+    await ctx.unroute(url, handler);
+    throw e;
+  }
+  return {
+    page,
+    close: async () => {
+      await page.close();
+      await ctx.unroute(url, handler);
+    },
+  };
+}
+
+/** Дамп всех баз IndexedDB origin'а (страница `fixturePage` — приложение не грузится). Читает всё в одной readonly-транзакции и ждёт tx.oncomplete. */
 const DUMP = async () => {
   const out = {};
   const dbs = (await indexedDB.databases?.()) ?? [];
@@ -73,7 +107,10 @@ const DUMP = async () => {
   }
   return out;
 };
-/** Запись дампа: структура воссоздаётся в onupgradeneeded (та же версия, что у приложения -> upgrade у него не сработает), put всех записей, ждём tx.oncomplete. */
+/**
+ * Запись дампа: структура воссоздаётся в onupgradeneeded (та же версия, что у приложения -> upgrade у него не сработает); если
+ * база уже есть (контекст не чистый), хранилища сначала очищаются — в базе ровно дамп. put всех записей, ждём tx.oncomplete.
+ */
 export const RESTORE = async (dump) => {
   for (const [name, d] of Object.entries(dump)) {
     await new Promise((resolve, reject) => {
@@ -97,6 +134,7 @@ export const RESTORE = async (dump) => {
         for (const n of names) {
           const st = d.stores[n];
           const os = tx.objectStore(n);
+          os.clear();
           st.values.forEach((v, i) => (st.keyPath ? os.put(v) : os.put(v, st.keys[i])));
         }
         tx.oncomplete = () => {
@@ -117,33 +155,47 @@ export const RESTORE = async (dump) => {
         const names = Object.keys(d.stores);
         if (!names.length) return resolve(db.close());
         const tx = db.transaction(names, "readonly");
-        for (const n of names) tx.objectStore(n).getAll().onsuccess = (e) => {
-          if (e.target.result.length !== d.stores[n].values.length || e.target.result.some((v) => v === undefined)) reject(new Error(`seed verify failed: ${name}/${n}`));
-        };
+        for (const n of names) {
+          const os = tx.objectStore(n);
+          os.getAll().onsuccess = (e) => {
+            if (e.target.result.length !== d.stores[n].values.length || e.target.result.some((v) => v === undefined)) reject(new Error(`seed verify failed: ${name}/${n} (${e.target.result.length} != ${d.stores[n].values.length})`));
+          };
+          os.getAllKeys().onsuccess = (e) => {
+            if (JSON.stringify(e.target.result) !== JSON.stringify(d.stores[n].keys)) reject(new Error(`seed verify failed: ${name}/${n} keys`));
+          };
+        }
         tx.oncomplete = () => {
           db.close();
           resolve();
         };
+        tx.onerror = tx.onabort = () => reject(tx.error);
       };
     });
   }
 };
-export async function snapshotProfile(ctx) {
-  const p = await ctx.newPage();
-  await p.goto(BASE + "/health");
-  const idb = await p.evaluate(DUMP);
-  await p.close();
-  return { ls: await ctx.storageState({ indexedDB: false }), idb };
+export async function snapshotProfile(ctx, base = BASE) {
+  const f = await fixturePage(ctx, base);
+  try {
+    const idb = await f.page.evaluate(DUMP);
+    return { ls: await ctx.storageState({ indexedDB: false }), idb };
+  } finally {
+    await f.close();
+  }
+}
+/** Посеять дамп IndexedDB в контекст (страница без приложения, см. `fixturePage`). Вызывать до первой страницы приложения. */
+export async function seedIdb(ctx, idb, base = BASE) {
+  if (!idb || !Object.keys(idb).length) return;
+  const f = await fixturePage(ctx, base);
+  try {
+    await f.page.evaluate(RESTORE, idb);
+  } finally {
+    await f.close();
+  }
 }
 /** Новый контекст с профилем: localStorage — через storageState, IndexedDB — ручной посев с ожиданием tx.oncomplete. */
 export async function newProfileCtx(browser, engine, profile, base = BASE) {
   const ctx = await newCtx(browser, engine, profile);
-  if (profile?.idb && Object.keys(profile.idb).length) {
-    const p = await ctx.newPage();
-    await p.goto(base + "/health");
-    await p.evaluate(RESTORE, profile.idb);
-    await p.close();
-  }
+  await seedIdb(ctx, profile?.idb, base);
   return ctx;
 }
 
@@ -322,6 +374,7 @@ export async function seedVeteran(engine, file) {
   }
   const { writeFileSync } = await import("node:fs");
   await page.waitForTimeout(800);
+  await page.close(); // PD-217: дамп — когда приложение уже ничего не пишет
   writeFileSync(file, JSON.stringify(await snapshotProfile(ctx)));
   await b.close();
 }
