@@ -232,7 +232,7 @@ const Cell = memo(function Cell(p: CellProps) {
         ? showClear && (
             <span
               key={p.popId || p.blotId}
-              className={`d ${p.given ? "given" : "player"}${p.glyphs ? " gd" : ""}${(clearOut ? g?.err : p.wrong) ? " err" : ""}${(clearOut ? g?.peek : p.light === "peek") ? " pk" : ""}${p.popId && !clearOut && !p.popSpent ? " anim-in" : ""}${p.blotId && !clearOut ? " swap-in" : ""}${clearOut ? " fading" : ""}`}
+              className={`d ${p.given ? "given" : "player"}${p.glyphs ? " gd" : ""}${(clearOut ? g?.err : p.wrong) ? " err" : ""}${!p.given && (clearOut ? g?.peek : p.light === "peek") ? " pk" : ""}${p.popId && !clearOut && !p.popSpent ? " anim-in" : ""}${p.blotId && !clearOut ? " swap-in" : ""}${clearOut ? " fading" : ""}`}
               aria-hidden="true"
             >
               {p.glyphs ? <Glyph digit={digit} kind={p.given ? "given" : "placed"} /> : digit}
