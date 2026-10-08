@@ -20,8 +20,10 @@ import {
   useCellsLeftAnnouncement,
   useClearEffectsOnUnmount,
   useClock,
+  useDocumentGameKeys,
   useHintAnnouncement,
 } from "./controls";
+import type { GameKeyEvent } from "./controls";
 import { fitClassName } from "./fitModel";
 import { HintButton } from "./HintButton";
 import { HintDock, HINT_DOCK_ID } from "./HintDock";
@@ -165,6 +167,7 @@ export function PlayScreen({ onOpenSettings, onOpenHelp, onOpenToday }: { onOpen
   // старым экраном — фокус на заголовок вкладки, а не на <body> (VoiceOver/клавиатура не теряют место). Если фокус уже
   // на живом элементе (повторный тап по вкладке), не трогаем.
   const titleRef = useRef<HTMLHeadingElement>(null);
+  const screenRef = useRef<HTMLDivElement>(null);
   const wasHub = useRef(snap.hub);
   useEffect(() => {
     if (wasHub.current !== snap.hub && (!document.activeElement || document.activeElement === document.body)) titleRef.current?.focus({ preventScroll: true });
@@ -208,23 +211,21 @@ export function PlayScreen({ onOpenSettings, onOpenHelp, onOpenToday }: { onOpen
   const fitClass = hub ? " play-hub" : fitClassName({ fit: !cardView, hintable, docked: hint.open });
   const waitClass = hub || restoring ? "" : waiting ? " play-waiting" : wait.entered ? " play-in" : "";
 
+  const onGameKey = (e: GameKeyEvent) => {
+    // PD-171: A — обвинить выбранную подсказку (то же меню-подтверждение, что долгое нажатие).
+    const target = e.target instanceof Element ? e.target : null;
+    if (liarOpen && e.code === "KeyA" && !e.ctrlKey && !e.metaKey && !e.altKey && !target?.closest('[role="dialog"], [role="menu"]')) {
+      e.preventDefault();
+      if (sel !== null) openAccuse(sel, null);
+      return;
+    }
+    handleGameKey(e, playStore, ladder);
+  };
+  // PD-232 (а): те же клавиши, когда фокус вне экрана (<body> после загрузки, вкладка таб-бара) — пока партия на экране.
+  useDocumentGameKeys(screenRef, active && !hub && !waiting && !restoring && phase === "playing", onGameKey, playStore);
+
   return (
-    <div
-      className={`play${fitClass}${waitClass}`}
-      onKeyDown={
-        hub || waiting
-          ? undefined
-          : (e) => {
-              // PD-171: A — обвинить выбранную подсказку (то же меню-подтверждение, что долгое нажатие).
-              if (liarOpen && e.code === "KeyA" && !e.ctrlKey && !e.metaKey && !e.altKey && !(e.target as HTMLElement).closest('[role="dialog"], [role="menu"]')) {
-                e.preventDefault();
-                if (sel !== null) openAccuse(sel, null);
-                return;
-              }
-              handleGameKey(e, playStore, ladder);
-            }
-      }
-    >
+    <div ref={screenRef} className={`play${fitClass}${waitClass}`} onKeyDown={hub || waiting ? undefined : onGameKey}>
       {/* Live-регион для скринридера: «N cells left» только на порогах (см. хук выше). */}
       <p className="sr-only" role="status" aria-live="polite" aria-atomic="true">
         {announcement}

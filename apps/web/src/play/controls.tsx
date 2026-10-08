@@ -3,7 +3,7 @@
  * «N cells left», панель 1–9 с остатками + Notes/Undo/Erase, клавиатурный ввод, сброс анимаций.
  * Экраны отличаются шапкой и тем, откуда берётся сетка; всё остальное — одно и то же.
  */
-import type { CSSProperties, KeyboardEvent } from "react";
+import type { CSSProperties, RefObject } from "react";
 import { memo, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { TFunction } from "i18next";
@@ -200,19 +200,81 @@ export function useClearEffectsOnUnmount(store: Pick<GameStore, "clearEffects">,
   }, [store, active]);
 }
 
+/** Клавиша игрового экрана: и React-событие корня `.play`, и нативное с document (PD-232) — нужны только эти поля. */
+export type GameKeyEvent = Pick<globalThis.KeyboardEvent, "code" | "key" | "ctrlKey" | "metaKey" | "altKey" | "shiftKey" | "target" | "preventDefault">;
+
+/** Стрелки → шаг выбора по полю (ряд, столбец). */
+export const ARROWS: Readonly<Record<string, readonly [number, number]>> = {
+  ArrowUp: [-1, 0],
+  ArrowDown: [1, 0],
+  ArrowLeft: [0, -1],
+  ArrowRight: [0, 1],
+};
+
+/** Поля ввода: их клавиши — текст, а не ход. */
+const EDITABLE = 'select, input, textarea, [contenteditable]:not([contenteditable="false"])';
+/** Слои поверх экрана: шиты/диалоги/меню (порталом в body). Пока любой открыт, ввода в клетку нет. */
+const OVERLAY = '[role="dialog"], [role="alertdialog"], [role="menu"], [aria-modal="true"]';
+
+/**
+ * PD-232 (а), аудит PD-228 п. 1: ввод партии без клика по клетке. Клавиши экрана висят на `onKeyDown` корня `.play` — пока
+ * фокус вне него (после загрузки фокус на <body>, клик по вкладке таб-бара или мимо поля), 1–9, стрелки, Backspace/Delete и
+ * заметки молчали. Этот слушатель на document подхватывает клавиши, чей источник ВНЕ корня экрана (внутри — по-прежнему
+ * `onKeyDown` корня и поля, без дублей), и только пока `enabled` (вкладка активна, партия идёт):
+ * - не срабатывает, если открыт шит/меню/диалог (где угодно в документе) или фокус в поле ввода;
+ * - стрелки — только когда фокуса нет вовсе (<body>): у вкладок таб-бара и прочих виджетов стрелки свои; выбор сдвигается, и
+ *   фокус переходит на клетку — дальше навигация поля как обычно;
+ * - всё остальное — `onKey` (тот же обработчик, что у корня экрана: Cmd/Ctrl только для уже принятого ⌘Z/Ctrl+Z).
+ */
+export function useDocumentGameKeys(
+  root: RefObject<HTMLElement | null>,
+  enabled: boolean,
+  onKey: (e: GameKeyEvent) => void,
+  store: Pick<GameStore, "moveSelection">,
+): void {
+  const latest = useRef({ onKey, store });
+  latest.current = { onKey, store };
+  useEffect(() => {
+    if (!enabled) return;
+    const onDocKey = (e: globalThis.KeyboardEvent) => {
+      if (e.defaultPrevented || e.isComposing) return;
+      const screen = root.current;
+      if (!screen) return;
+      const target = e.target instanceof Element ? e.target : null;
+      if (target && screen.contains(target)) return;
+      if (target?.closest(EDITABLE)) return;
+      if (document.querySelector(OVERLAY)) return;
+      const dir = ARROWS[e.key];
+      if (dir) {
+        if (e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) return;
+        if (target && target !== document.body && target !== document.documentElement) return;
+        e.preventDefault();
+        const next = latest.current.store.moveSelection(dir[0], dir[1]);
+        const board = screen.querySelector<HTMLElement>(".board");
+        const stop = next !== null ? board?.querySelector<HTMLElement>(`[data-i="${next}"]`) : board?.querySelector<HTMLElement>('[tabindex="0"]');
+        stop?.focus();
+        return;
+      }
+      latest.current.onKey(e);
+    };
+    document.addEventListener("keydown", onDocKey);
+    return () => document.removeEventListener("keydown", onDocKey);
+  }, [root, enabled]);
+}
+
 /**
  * Клавиатурный ввод игрового экрана (цифры, Backspace, Ctrl+Z, N). PD-139: третий аргумент — лесенка подсказок:
  * `H` (без модификаторов) открывает/закрывает док, `Esc` закрывает открытый док. Нет лесенки (Ink, Grid ∞) — клавиш нет.
  */
 export function handleGameKey(
-  e: KeyboardEvent<HTMLElement>,
+  e: GameKeyEvent,
   store: Pick<GameStore, "undo" | "erase" | "input" | "toggleNotesMode" | "fillCandidates">,
   hint?: Pick<HintLadder, "toggle" | "close" | "getState"> | null,
 ): void {
-  const target = e.target as HTMLElement;
+  const target = e.target instanceof Element ? e.target : null;
   // Шит поверх экрана (PD-116: «Discard current puzzle?») и меню «⋯» (PD-144) — их клавиши не ввод в клетку
   // (события порталов всплывают по дереву React до экрана).
-  if (target.closest('select, input, textarea, [role="dialog"], [role="menu"]')) return;
+  if (target?.closest(`${EDITABLE}, ${OVERLAY}`)) return;
   if ((e.ctrlKey || e.metaKey) && e.code === "KeyZ") {
     e.preventDefault();
     store.undo();

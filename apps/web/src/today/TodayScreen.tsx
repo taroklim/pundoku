@@ -9,6 +9,7 @@ import {
   useCellsLeftAnnouncement,
   useClearEffectsOnUnmount,
   useClock,
+  useDocumentGameKeys,
   useHintAnnouncement,
 } from "../play/controls";
 import { fitClassName } from "../play/fitModel";
@@ -158,6 +159,9 @@ export function DayView({ store, archive, onOpenSettings, onOpenHelp }: { store:
     listDays,
     phase === "solved" && play ? { date: snap.date, difficulty: snap.difficultyKnown ? difficulty : null, play, assisted: snap.assisted === true, hints: snap.hints } : null,
   );
+
+  // PD-232 (а): клавиши партии и при фокусе вне экрана (<body> после загрузки, вкладка таб-бара) — пока поле в игре.
+  useDocumentGameKeys(root, active && interactive && !stale, (e) => handleGameKey(e, store, ladder), store);
 
   return (
     <div ref={root} className={`play today${archive ? " archive" : ""}${fitClass}`} onKeyDown={(e) => handleGameKey(e, store, ladder)} data-testid={archive ? "archive-screen" : undefined} data-date={archive ? archive.date : undefined}>
