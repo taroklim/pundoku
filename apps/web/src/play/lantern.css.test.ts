@@ -22,7 +22,9 @@ describe("lantern.css", () => {
 
   it("тень: один filter (blur от --s + opacity) на цифре и заметках; глубина 2 (≥ 11 % клетки, ≤ 32 %); без will-change; подсказки не трогаются", () => {
     // PD-251: класс — на слое тумана (`.d.player.fog` / `.marks.spot`), не на клетке: гаснущий туман в клетке на свету остаётся размытым.
+    // PD-251: класс — на слое тумана (`.d.player.fog` / `.marks.spot`), не на клетке: гаснущий туман в клетке на свету остаётся размытым.
     expect(css).toMatch(/\.board\.lantern \.cell \.d\.player\.fog,\s*\.board\.lantern \.cell \.marks\.spot \{\s*filter: blur\(calc\(var\(--s\) \* var\(--lantern-blur\)\)\) opacity\(var\(--lantern-shade-a\)\);/);
+    expect(css).not.toMatch(/\.fading[^{]*\{[^}]*filter/);
     expect(Number(/--lantern-blur: ([\d.]+);/.exec(css)?.[1])).toBeGreaterThanOrEqual(0.11);
     expect(Number(/--lantern-shade-a: ([\d.]+);/.exec(css)?.[1])).toBeLessThanOrEqual(0.32);
     expect(css).not.toMatch(/will-change/);
@@ -36,7 +38,7 @@ describe("lantern.css", () => {
     expect(rule).toMatch(/grid-template: 1fr \/ 1fr;/); // одна ячейка, не 3×3 `.marks`
     expect(rule).toMatch(/place-items: center;/);
     expect(rule).toMatch(/padding: 0;/);
-    const dot = /\.board\.lantern \.cell \.marks\.spot::before \{([^}]*)\}/.exec(css)?.[1] ?? "";
+    const dot = /(?<!,\s*)\.board\.lantern \.cell \.marks\.spot::before \{([^}]*)\}/.exec(css)?.[1] ?? "";
     expect(dot).toMatch(/width: calc\(var\(--s\) \* var\(--lantern-spot\)\);/);
     expect(dot).toMatch(/height: calc\(var\(--s\) \* var\(--lantern-spot\)\);/);
     expect(dot).toMatch(/background: color-mix\(in srgb, var\(--notes\) var\(--lantern-spot-a\), transparent\);/);
