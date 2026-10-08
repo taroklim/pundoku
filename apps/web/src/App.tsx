@@ -10,6 +10,7 @@ import { dayStore } from "./today/dayStore";
 import { TodayScreen } from "./today/TodayScreen";
 import { useDynamicTypeFlag } from "./shell/dynamicType";
 import { ErrorBoundary } from "./shell/ErrorBoundary";
+import { useEscapeBack } from "./shell/escapeBack";
 import { panelDomId, tabDomId, TabBar } from "./shell/TabBar";
 import { TabActiveContext, useTabSlide } from "./shell/tabSlide";
 import type { HelpBlockId } from "./help/blocks";
@@ -40,6 +41,8 @@ export function App() {
     recoveryStore.requestLeave(() => (next === tab ? leaveSettings(go) : go({ tab: next })));
   };
   const openHelp = (block: HelpBlockId | null) => go({ help: block });
+  // PD-232 (г): Esc на Settings/справке — то же, что «‹» (архив решает сам: в партии Esc снимает выбор, а не уводит).
+  useEscapeBack(pushed, () => (help !== null ? leaveHelp(go) : recoveryStore.requestLeave(() => leaveSettings(go))));
 
   // «Play this day's puzzle» / «Finish this puzzle» из карточки дня Year. Вчерашний день, начатый на Today и не
   // доигранный к полуночи, остаётся в сторе Today (у него ходы): открывать его ещё и в архиве значило бы вести одну

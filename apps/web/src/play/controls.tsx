@@ -8,6 +8,7 @@ import { memo, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { TFunction } from "i18next";
 import { ActionSheet } from "../recovery/ActionSheet";
+import { EDITABLE, OVERLAY, overlayOpen } from "../shell/escapeBack";
 import { formatClock } from "./format";
 import type { GameStore, PlaySnapshot } from "./gameStore";
 import type { HintLadder } from "./hintStore";
@@ -211,10 +212,6 @@ export const ARROWS: Readonly<Record<string, readonly [number, number]>> = {
   ArrowRight: [0, 1],
 };
 
-/** Поля ввода: их клавиши — текст, а не ход. */
-const EDITABLE = 'select, input, textarea, [contenteditable]:not([contenteditable="false"])';
-/** Слои поверх экрана: шиты/диалоги/меню (порталом в body). Пока любой открыт, ввода в клетку нет. */
-const OVERLAY = '[role="dialog"], [role="alertdialog"], [role="menu"], [aria-modal="true"]';
 
 /**
  * PD-232 (а), аудит PD-228 п. 1: ввод партии без клика по клетке. Клавиши экрана висят на `onKeyDown` корня `.play` — пока
@@ -230,7 +227,7 @@ export function useDocumentGameKeys(
   root: RefObject<HTMLElement | null>,
   enabled: boolean,
   onKey: (e: GameKeyEvent) => void,
-  store: Pick<GameStore, "moveSelection">,
+  store: Pick<GameStore, "moveSelection" | "select">,
 ): void {
   const latest = useRef({ onKey, store });
   latest.current = { onKey, store };
@@ -243,16 +240,23 @@ export function useDocumentGameKeys(
       const target = e.target instanceof Element ? e.target : null;
       if (target && screen.contains(target)) return;
       if (target?.closest(EDITABLE)) return;
-      if (document.querySelector(OVERLAY)) return;
+      if (overlayOpen()) return;
       const dir = ARROWS[e.key];
       if (dir) {
         if (e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) return;
         if (target && target !== document.body && target !== document.documentElement) return;
         e.preventDefault();
-        const next = latest.current.store.moveSelection(dir[0], dir[1]);
-        const board = screen.querySelector<HTMLElement>(".board");
-        const stop = next !== null ? board?.querySelector<HTMLElement>(`[data-i="${next}"]`) : board?.querySelector<HTMLElement>('[tabindex="0"]');
-        stop?.focus();
+        const { store: s } = latest.current;
+        let next = s.moveSelection(dir[0], dir[1]);
+        if (next === null) {
+          // Ничего не выбрано (Esc снял выбор): стрелка выбирает остановку поля, а не «сдвиг от ничего».
+          const at = screen.querySelector<HTMLElement>('.board [tabindex="0"]')?.dataset["i"];
+          if (at !== undefined) {
+            s.select(Number(at));
+            next = Number(at);
+          }
+        }
+        if (next !== null) screen.querySelector<HTMLElement>(`.board [data-i="${next}"]`)?.focus();
         return;
       }
       latest.current.onKey(e);
@@ -265,10 +269,11 @@ export function useDocumentGameKeys(
 /**
  * Клавиатурный ввод игрового экрана (цифры, Backspace, Ctrl+Z, N). PD-139: третий аргумент — лесенка подсказок:
  * `H` (без модификаторов) открывает/закрывает док, `Esc` закрывает открытый док. Нет лесенки (Ink, Grid ∞) — клавиш нет.
+ * PD-232 (г): `Esc` без открытого дока снимает выбор клетки; из партии Esc не выводит никогда.
  */
 export function handleGameKey(
   e: GameKeyEvent,
-  store: Pick<GameStore, "undo" | "erase" | "input" | "toggleNotesMode" | "fillCandidates">,
+  store: Pick<GameStore, "undo" | "erase" | "input" | "toggleNotesMode" | "fillCandidates" | "select" | "getSnapshot">,
   hint?: Pick<HintLadder, "toggle" | "close" | "getState"> | null,
 ): void {
   const target = e.target instanceof Element ? e.target : null;
@@ -298,9 +303,14 @@ export function handleGameKey(
   } else if (hint && e.code === "KeyH" && !e.altKey && !e.shiftKey) {
     e.preventDefault();
     hint.toggle();
-  } else if (hint && e.key === "Escape" && hint.getState().open) {
-    e.preventDefault();
-    hint.close();
+  } else if (e.key === "Escape" && !e.altKey && !e.shiftKey) {
+    if (hint && hint.getState().open) {
+      e.preventDefault();
+      hint.close();
+    } else if (store.getSnapshot().selected !== null) {
+      e.preventDefault();
+      store.select(null);
+    }
   }
 }
 

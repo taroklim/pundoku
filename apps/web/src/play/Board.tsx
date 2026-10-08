@@ -335,6 +335,12 @@ export function Board({ snap, store, dim, hintMarks = null, onAccuse, canAccuse,
     const dir = ARROWS[e.key];
     if (!dir || e.altKey || e.ctrlKey || e.metaKey) return;
     e.preventDefault();
+    // PD-232 (г): Esc снял выбор — стрелка выбирает клетку под фокусом, а не «сдвиг от ничего» (moveSelection молчал бы).
+    if (selected === null) {
+      const at = (e.target as HTMLElement).closest<HTMLElement>("[data-i]")?.dataset["i"];
+      store.select(at !== undefined ? Number(at) : stop);
+      return;
+    }
     const next = store.moveSelection(dir[0], dir[1]);
     if (next !== null) ref.current?.querySelector<HTMLElement>(`[data-i="${next}"]`)?.focus();
   };

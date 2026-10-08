@@ -347,3 +347,90 @@ describe("Today: ввод без фокуса в партии", () => {
     expect(s.getSnapshot().play!.notes[empty]).toBe(0);
   });
 });
+
+describe("PD-232 (г): Esc в партии снимает выбор, из партии не выводит", () => {
+  const esc = (target: EventTarget = document.body, extra: KeyboardEventInit = {}) => key(target, { key: "Escape", code: "Escape", ...extra });
+
+  it("Play: Esc с <body> и с клетки снимает выбор; партия на месте; стрелка на клетке выбирает её снова", () => {
+    playing(classic());
+    render();
+    const e = esc();
+    expect(snap().selected).toBeNull();
+    expect(e.defaultPrevented).toBe(true);
+    expect(snap().hub).toBe(false);
+    expect(host.querySelector(".board")).not.toBeNull();
+    act(() => playStore.select(CELL));
+    cell(CELL).focus();
+    esc(cell(CELL));
+    expect(snap().selected).toBeNull();
+    key(cell(CELL), { key: "ArrowRight", code: "ArrowRight" });
+    expect(snap().selected).toBe(CELL); // выбор вернулся туда, где фокус, а не сдвинулся с «ничего»
+    // Ничего не выбрано: Esc с <body>, затем стрелка — выбор с остановки поля (клетка 0).
+    esc(cell(CELL));
+    (document.activeElement as HTMLElement).blur();
+    key(document.body, { key: "ArrowDown", code: "ArrowDown" });
+    expect(snap().selected).toBe(0);
+    expect(document.activeElement).toBe(cell(0));
+  });
+
+  it("Esc с модификатором — не наш", () => {
+    playing(classic());
+    render();
+    for (const mod of [{ metaKey: true }, { ctrlKey: true }, { altKey: true }]) esc(document.body, mod);
+    expect(snap().selected).toBe(CELL);
+  });
+
+  it("Esc при открытом шите/меню — их (выбор не снимается)", () => {
+    playing(classic());
+    render();
+    const el = document.createElement("div");
+    el.setAttribute("data-test-overlay", "");
+    el.setAttribute("role", "menu");
+    document.body.append(el);
+    esc();
+    expect(snap().selected).toBe(CELL);
+  });
+});
+
+describe("PD-232 (г): Esc в архиве", () => {
+  const NOW = new Date(2026, 8, 29, 12, 0);
+  const DATE = "2026-09-20";
+  const archiveStore = (pending: boolean) =>
+    new DayStore(
+      {
+        repo: new InMemoryProgressRepository(),
+        fetchDay: vi.fn(async (d: string) =>
+          pending
+            ? new Promise<never>(() => undefined)
+            : { ok: true as const, puzzle: { date: d, mission: dailyPuzzle(d, "easy").mission, difficulty: "easy" as const, source: "sudoku.com" as const, winRate: 58.2 } },
+        ),
+        verify: vi.fn(async () => true),
+        generateFallback: vi.fn(async (d, diff) => (pending ? new Promise<never>(() => undefined) : dailyPuzzle(d, diff))),
+        now: () => NOW,
+        isOnline: () => true,
+        slowFetchMs: 60_000,
+      },
+      { archive: true },
+    );
+
+  it("идёт партия: Esc снимает выбор, «назад в Year» не зовётся", async () => {
+    const s = archiveStore(false);
+    const onBack = vi.fn();
+    await act(async () => root.render(<DayView store={s} archive={{ date: DATE, onBack }} />));
+    await act(async () => vi.waitFor(() => expect(s.getSnapshot().phase).toBe("playing"), { timeout: 20000, interval: 25 }));
+    const empty = Array.from(s.getSnapshot().play!.mission).findIndex((g) => Number(g) === 0);
+    act(() => s.select(empty));
+    key(document.body, { key: "Escape", code: "Escape" });
+    expect(s.getSnapshot().selected).toBeNull();
+    key(document.body, { key: "Escape", code: "Escape" });
+    expect(onBack).not.toHaveBeenCalled();
+  });
+
+  it("партии нет (загрузка/недоступно/карточка): Esc = «‹ Year»", async () => {
+    const s = archiveStore(true);
+    const onBack = vi.fn();
+    await act(async () => root.render(<DayView store={s} archive={{ date: DATE, onBack }} />));
+    key(document.body, { key: "Escape", code: "Escape" });
+    expect(onBack).toHaveBeenCalledTimes(1);
+  });
+});
