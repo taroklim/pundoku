@@ -122,6 +122,24 @@ describe("клавиатура (§A8 п. 3, §A11 п. 7)", () => {
     expect(fns.onDeleteMode).not.toHaveBeenCalled();
   });
 
+  it("PD-242 (QA PD-226 Low): Shift+Tab с «Удалить» на свою строку — строка закрылась; дальше назад — закрыта", () => {
+    render({ slots: { classic: CLASSIC } });
+    fg("classic").focus();
+    key(fg("classic"), "Delete");
+    expect(shift("classic")).toBe("translateX(-80px)");
+    act(() => fg("classic").focus()); // Shift+Tab: фокус с «Удалить» назад на строку
+    expect(document.activeElement).toBe(fg("classic"));
+    expect(shift("classic")).toBe("");
+    act(() => fg("ink").focus());
+    expect(shift("classic")).toBe("");
+    act(() => fg("classic").focus()); // Tab вперёд на «Удалить» снова открывает
+    act(() => q("del-classic")!.focus());
+    expect(shift("classic")).toBe("translateX(-80px)");
+    act(() => (document.activeElement as HTMLElement).blur()); // фокус ушёл в никуда (WebKit: body)
+    expect(shift("classic")).toBe("");
+    expect(fns.onDeleteMode).not.toHaveBeenCalled();
+  });
+
   it("Delete на строке без игры — ничего", () => {
     render({ slots: { classic: CLASSIC } });
     fg("ink").focus();

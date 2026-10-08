@@ -427,6 +427,11 @@ export function SwipeRow({ mode, slot, hub, onPress, onLongPress, onDelete }: Sw
           if (isOpen.current) closeRow(false);
           fireLongPress();
         }}
+        onBlur={(e) => {
+          // Открыта с клавиатуры, а фокус уходит со строки мимо её «Удалить» — закрыть (пара .fg/.del покинута).
+          if (!kb.current || e.relatedTarget === del.current) return;
+          closeRow(true);
+        }}
         onKeyDown={(e) => {
           if ((e.key === "Delete" || e.key === "Backspace") && hasRef.current && !e.metaKey && !e.ctrlKey && !e.altKey) {
             e.preventDefault();
@@ -463,10 +468,9 @@ export function SwipeRow({ mode, slot, hub, onPress, onLongPress, onDelete }: Sw
           openRow();
           kb.current = true;
         }}
-        onBlur={(e) => {
-          if (!kb.current) return;
-          if (e.relatedTarget instanceof Node && wrap.current?.contains(e.relatedTarget)) return;
-          closeRow(true);
+        onBlur={() => {
+          // PD-242: строка открыта, пока фокус на «Удалить»; ушёл куда угодно — в т. ч. Shift+Tab на свою строку — закрылась.
+          if (kb.current) closeRow(true);
         }}
         onKeyDown={(e) => {
           if (e.key !== "Escape") return;
