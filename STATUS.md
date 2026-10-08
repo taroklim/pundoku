@@ -733,7 +733,7 @@ Gates: build → typecheck, lint, тесты web/engine/api (api с `TEST_DATABA
 ## Агенты (текущий статус)
 | Имя | Роль | Статус | Тикет | Обновлено |
 |-----|------|--------|-------|-----------|
-| PM-Pundoku-20 | product-manager | waiting (QA-265/263, Dev-260) | PD-247 → PD-248, PD-265 | 2026-10-08 21:35 |
+| PM-Pundoku-20 | product-manager | waiting (graceful stop 85%, до 01:50) | PD-247 → PD-248, PD-265 | 2026-10-08 21:35 |
 | Dev-Pundoku-260 | developer | working | PD-260 | 2026-10-09 00:00 |
 | QA-Pundoku-263 | qa-tester | working | PD-263 | 2026-10-09 00:25 |
 | QA-Pundoku-265 | qa-tester | waiting (slot-1, gates PM) | PD-265 | 2026-10-09 00:05 |
@@ -856,3 +856,9 @@ Gates: build → typecheck, lint, тесты web/engine/api (api с `TEST_DATABA
 - Первый пакет (pd-swipe + pd-tab-press + pd-desk-fix + pd-low-3) на проде: origin/main d6bfb68 (merge 6f7369a). Push теперь делает владелец сам (у Coordinator'а push блокирует классификатор) — для следующих пакетов hash → Coordinator → владелец.
 - PD-262: формат даты «7 Oct» / «7 окт.» (с точкой от Intl) — оставить; en «Daily puzzle · 7 Oct» для вчерашней сетки дня — да.
 - PD-275: да — вчерашний день Today в «Продолжить» как у Лжеца, отдельный маленький тикет от ветки pd-262.
+
+## Чек-пойнт graceful stop 85% (2026-10-09 ~00:35, PM-Pundoku-20; возобновление после 01:50)
+- Сделано: первый пакет на проде d6bfb68 (PD-247/248 закрыты); PD-250/252/258/253/264 PASS; PD-262 готов (pd-262 6ec92cf).
+- В работе (агенты попрошены сохраниться): QA-265 (стыки второго пакета на pd-pack2-base 9a6ccb0, slot-1), QA-263 (PD-262, slot-2), Dev-260 (Питомец «Капля», ветка pd-260).
+- Осталось: PASS PD-265 → мерж pd-landscape + pd-fog-fade + pd-253 в main + gates → hash Coordinator'у (push — владелец); PD-261 QA Питомца после Dev-260; PD-275 (developer, от pd-262) — не запускать до сигнала; затем мерж pd-260/pd-262(/pd-275) третьим пакетом. Десктоп C PD-266–270 ждут ответа владельца.
+- При возобновлении: проверить висячие слоты .heavy/slot-1|2 (владельцы — в owner).
