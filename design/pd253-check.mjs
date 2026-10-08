@@ -69,59 +69,66 @@ const STATE = () => {
   };
 };
 
-/** Жест пальцем: точки [x, y], шаг `stepMs`; `holdMs` — пауза перед отпусканием (без броска); `release: false` — не отпускать. */
+/**
+ * Палец. Время событий задаём сами (`dt` мс между событиями): под нагрузкой машины CDP/evaluate дают 40–150 мс на событие, и
+ * скорость броска зависела бы от загрузки, а не от жеста. Chromium — `timestamp` у CDP (браузер берёт его в `timeStamp`),
+ * WebKit — `timeStamp` синтетического события. Паузы (`holdMs`) входят в это же время.
+ */
 function makeFinger(page, real) {
+  let ts = 0; // мс, виртуальные часы жеста
   if (real) {
     let cdp = null;
-    const send = async (type, x, y) => {
+    const send = async (type, x, y, dt) => {
       cdp ??= await page.context().newCDPSession(page);
-      await cdp.send("Input.dispatchTouchEvent", { type, touchPoints: type === "touchEnd" || type === "touchCancel" ? [] : [{ x, y, id: 1 }] });
+      ts = type === "touchStart" ? Math.max(Date.now(), ts + 16) : ts + dt;
+      await cdp.send("Input.dispatchTouchEvent", {
+        type,
+        timestamp: ts / 1000,
+        touchPoints: type === "touchEnd" || type === "touchCancel" ? [] : [{ x, y, id: 1 }],
+      });
     };
     return {
-      async down(x, y) {
-        await send("touchStart", x, y);
-      },
-      async move(x, y) {
-        await send("touchMove", x, y);
-      },
-      async up() {
-        await send("touchEnd");
-      },
+      down: (x, y) => send("touchStart", x, y, 0),
+      move: (x, y, dt = 16) => send("touchMove", x, y, dt),
+      up: (dt = 16) => send("touchEnd", 0, 0, dt),
     };
   }
   let last = [0, 0];
-  const fire = (type, x, y) =>
-    page.evaluate(
-      ([type, x, y]) => {
+  const fire = (type, x, y, dt) => {
+    ts = type === "pointerdown" ? 0 : ts + dt;
+    return page.evaluate(
+      ([type, x, y, t]) => {
+        if (type === "pointerdown") window.__pdBase = performance.now();
         const init = { bubbles: true, cancelable: true, pointerId: 7, pointerType: "touch", isPrimary: true, clientX: x, clientY: y, button: 0 };
         const target = type === "pointerdown" ? document.elementFromPoint(x, y) : document;
-        target.dispatchEvent(new PointerEvent(type, init));
+        const ev = new PointerEvent(type, init);
+        Object.defineProperty(ev, "timeStamp", { value: window.__pdBase + t });
+        target.dispatchEvent(ev);
       },
-      [type, x, y],
+      [type, x, y, ts],
     );
+  };
   return {
     async down(x, y) {
       last = [x, y];
-      await fire("pointerdown", x, y);
+      await fire("pointerdown", x, y, 0);
     },
-    async move(x, y) {
+    async move(x, y, dt = 16) {
       last = [x, y];
-      await fire("pointermove", x, y);
+      await fire("pointermove", x, y, dt);
     },
-    async up() {
-      await fire("pointerup", ...last);
-    },
+    up: (dt = 16) => fire("pointerup", ...last, dt),
   };
 }
 async function stroke(page, finger, from, to, { steps = 12, stepMs = 16, holdMs = 250, release = true } = {}) {
   await finger.down(...from);
   for (let i = 1; i <= steps; i++) {
-    await finger.move(from[0] + ((to[0] - from[0]) * i) / steps, from[1] + ((to[1] - from[1]) * i) / steps);
+    await finger.move(from[0] + ((to[0] - from[0]) * i) / steps, from[1] + ((to[1] - from[1]) * i) / steps, stepMs);
     if (stepMs > 0) await page.waitForTimeout(stepMs);
   }
   if (!release) return;
   if (holdMs > 0) await page.waitForTimeout(holdMs);
-  await finger.up();
+  await finger.up(holdMs + 16);
 }
 const gear = (page) => page.locator('.tab-pane:not(.off) [data-testid="open-settings"]');
 
@@ -159,7 +166,7 @@ async function runSet(name) {
       k("ведение: экран едет за пальцем, Play видна под ним", /translate3d\((1[6-9]\d|20\d)(\.\d+)?px/.test(s.transform) && s.peek && s.playVisible === "visible" && s.topRight === "layer", s);
       await shot(page, "02-drag-mid");
       await page.waitForTimeout(250);
-      await f.up();
+      await f.up(250);
       await page.waitForTimeout(700);
       s = await st();
       k("отпустил за 35 % → Play, слой закрыт", s.hash === "#/play" && !s.layer && !s.peek, s);
@@ -202,14 +209,14 @@ async function runSet(name) {
       k("ведение на справке из Settings: экран едет, под ним пусто (без вкладки)", /translate3d/.test(s.transform) && !s.peek, s);
       await shot(page, "04-help-drag");
       await page.waitForTimeout(250);
-      await f.up();
+      await f.up(250);
       await page.waitForTimeout(800);
       s = await st();
       k("справка → Settings, позиция Settings восстановлена", s.settings && !s.help && Math.abs(s.scrollTop - before) <= 2 && s.transform === "", { ...s, before });
       await shot(page, "05-back-on-settings");
 
-      // 6. Бросок вправо с малой дистанции (120 px < 35 % от 390): шаги без пауз (CDP под нагрузкой и так ~40–50 мс на событие).
-      await stroke(page, f, [4, 420], [124, 420], { steps: 5, stepMs: 0, holdMs: 0 });
+      // 6. Бросок вправо с малой дистанции (120 px < 35 % от 390): 5 шагов по 16 мс, отпускание сразу.
+      await stroke(page, f, [4, 420], [124, 420], { steps: 5, stepMs: 16, holdMs: 0 });
       await page.waitForTimeout(800);
       s = await st();
       k("бросок вправо (120 px < 35 %) → назад на вкладку", s.hash === "#/play" && !s.layer, s);
@@ -244,7 +251,7 @@ async function runSet(name) {
       let s = await page.evaluate(STATE);
       k("Reduce Motion: экран за пальцем не едет", s.transform === "" && !s.peek && s.settings, s);
       await page.waitForTimeout(250);
-      await f.up();
+      await f.up(250);
       await page.waitForTimeout(400);
       s = await page.evaluate(STATE);
       k("Reduce Motion: по отпусканию — сразу назад", s.hash === "#/play" && !s.layer, s);

@@ -1,0 +1,278 @@
+{
+  "set": "chromium-390",
+  "checks": [
+    {
+      "label": "standalone: слой Settings помечен, touch-action pan-y",
+      "ok": true,
+      "detail": {
+        "hash": "#/settings",
+        "layer": true,
+        "edgeAttr": true,
+        "touchAction": "pan-y pinch-zoom",
+        "transform": "",
+        "scrollTop": 0,
+        "peek": false,
+        "playVisible": "hidden",
+        "settings": true,
+        "help": false,
+        "topRight": "layer"
+      }
+    },
+    {
+      "label": "ведение: экран едет за пальцем, Play видна под ним",
+      "ok": true,
+      "detail": {
+        "hash": "#/settings",
+        "layer": true,
+        "edgeAttr": true,
+        "touchAction": "pan-y pinch-zoom",
+        "transform": "translate3d(180px, 0px, 0px)",
+        "scrollTop": 0,
+        "peek": true,
+        "playVisible": "visible",
+        "settings": true,
+        "help": false,
+        "topRight": "layer"
+      }
+    },
+    {
+      "label": "отпустил за 35 % → Play, слой закрыт",
+      "ok": true,
+      "detail": {
+        "hash": "#/play",
+        "layer": false,
+        "edgeAttr": null,
+        "touchAction": null,
+        "transform": null,
+        "scrollTop": null,
+        "peek": false,
+        "playVisible": "visible",
+        "settings": false,
+        "help": false,
+        "topRight": "other"
+      }
+    },
+    {
+      "label": "недотянул (< 35 %) → Settings на месте, слой в покое",
+      "ok": true,
+      "detail": {
+        "hash": "#/settings",
+        "layer": true,
+        "edgeAttr": true,
+        "touchAction": "pan-y pinch-zoom",
+        "transform": "",
+        "scrollTop": 0,
+        "peek": false,
+        "playVisible": "hidden",
+        "settings": true,
+        "help": false,
+        "topRight": "layer"
+      }
+    },
+    {
+      "label": "старт в 40 px от края → не жест",
+      "ok": true,
+      "detail": {
+        "hash": "#/settings",
+        "layer": true,
+        "edgeAttr": true,
+        "touchAction": "pan-y pinch-zoom",
+        "transform": "",
+        "scrollTop": 0,
+        "peek": false,
+        "playVisible": "hidden",
+        "settings": true,
+        "help": false,
+        "topRight": "layer"
+      }
+    },
+    {
+      "label": "вертикаль от края → прокрутка, экран не едет",
+      "ok": true,
+      "detail": {
+        "hash": "#/settings",
+        "layer": true,
+        "edgeAttr": true,
+        "touchAction": "pan-y pinch-zoom",
+        "transform": "",
+        "scrollTop": 635,
+        "peek": false,
+        "playVisible": "hidden",
+        "settings": true,
+        "help": false,
+        "topRight": "layer"
+      }
+    },
+    {
+      "label": "справка открыта из Settings, с начала",
+      "ok": true,
+      "detail": {
+        "hash": "#/help",
+        "layer": true,
+        "edgeAttr": true,
+        "touchAction": "pan-y pinch-zoom",
+        "transform": "",
+        "scrollTop": 0,
+        "peek": false,
+        "playVisible": "hidden",
+        "settings": false,
+        "help": true,
+        "topRight": "layer"
+      }
+    },
+    {
+      "label": "ведение на справке из Settings: экран едет, под ним пусто (без вкладки)",
+      "ok": true,
+      "detail": {
+        "hash": "#/help",
+        "layer": true,
+        "edgeAttr": true,
+        "touchAction": "pan-y pinch-zoom",
+        "transform": "translate3d(176px, 0px, 0px)",
+        "scrollTop": 0,
+        "peek": false,
+        "playVisible": "hidden",
+        "settings": false,
+        "help": true,
+        "topRight": "layer"
+      }
+    },
+    {
+      "label": "справка → Settings, позиция Settings восстановлена",
+      "ok": true,
+      "detail": {
+        "hash": "#/settings",
+        "layer": true,
+        "edgeAttr": true,
+        "touchAction": "pan-y pinch-zoom",
+        "transform": "",
+        "scrollTop": 757,
+        "peek": false,
+        "playVisible": "hidden",
+        "settings": true,
+        "help": false,
+        "topRight": "layer",
+        "before": 757
+      }
+    },
+    {
+      "label": "бросок вправо (120 px < 35 %) → назад на вкладку",
+      "ok": true,
+      "detail": {
+        "hash": "#/play",
+        "layer": false,
+        "edgeAttr": null,
+        "touchAction": null,
+        "transform": null,
+        "scrollTop": null,
+        "peek": false,
+        "playVisible": "visible",
+        "settings": false,
+        "help": false,
+        "topRight": "other"
+      }
+    },
+    {
+      "label": "на вкладке Play свайп от края ничего не делает",
+      "ok": true,
+      "detail": {
+        "hash": "#/play",
+        "layer": false,
+        "edgeAttr": null,
+        "touchAction": null,
+        "transform": null,
+        "scrollTop": null,
+        "peek": false,
+        "playVisible": "visible",
+        "settings": false,
+        "help": false,
+        "topRight": "other"
+      }
+    },
+    {
+      "label": "кнопка «‹» — назад как раньше",
+      "ok": true,
+      "detail": {
+        "hash": "#/play",
+        "layer": false,
+        "edgeAttr": null,
+        "touchAction": null,
+        "transform": null,
+        "scrollTop": null,
+        "peek": false,
+        "playVisible": "visible",
+        "settings": false,
+        "help": false,
+        "topRight": "other"
+      }
+    },
+    {
+      "label": "Reduce Motion: экран за пальцем не едет",
+      "ok": true,
+      "detail": {
+        "hash": "#/settings",
+        "layer": true,
+        "edgeAttr": true,
+        "touchAction": "pan-y pinch-zoom",
+        "transform": "",
+        "scrollTop": 0,
+        "peek": false,
+        "playVisible": "hidden",
+        "settings": true,
+        "help": false,
+        "topRight": "layer"
+      }
+    },
+    {
+      "label": "Reduce Motion: по отпусканию — сразу назад",
+      "ok": true,
+      "detail": {
+        "hash": "#/play",
+        "layer": false,
+        "edgeAttr": null,
+        "touchAction": null,
+        "transform": null,
+        "scrollTop": null,
+        "peek": false,
+        "playVisible": "visible",
+        "settings": false,
+        "help": false,
+        "topRight": "other"
+      }
+    },
+    {
+      "label": "браузер: слой без data-edge-back, touch-action не pan-y",
+      "ok": true,
+      "detail": {
+        "hash": "#/settings",
+        "layer": true,
+        "edgeAttr": false,
+        "touchAction": "auto",
+        "transform": "",
+        "scrollTop": 0,
+        "peek": false,
+        "playVisible": "hidden",
+        "settings": true,
+        "help": false,
+        "topRight": "layer"
+      }
+    },
+    {
+      "label": "браузер: свайп от края — жест не активен",
+      "ok": true,
+      "detail": {
+        "hash": "#/settings",
+        "layer": true,
+        "edgeAttr": false,
+        "touchAction": "auto",
+        "transform": "",
+        "scrollTop": 0,
+        "peek": false,
+        "playVisible": "hidden",
+        "settings": true,
+        "help": false,
+        "topRight": "layer"
+      }
+    }
+  ]
+}
