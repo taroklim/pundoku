@@ -170,7 +170,7 @@ export function SwipeRow({ mode, slot, hub, onPress, onLongPress, onDelete }: Sw
   /** Когда долгое нажатие открыло меню: хвост этого жеста (click, contextmenu) — не новый тап. */
   const firedAt = useRef<number | null>(null);
   const drag = useRef<Drag | null>(null);
-  /** Этот click — хвост жеста (свайп, касание открытой строки, сдвиг > slop): не тап. */
+  /** Этот click — хвост жеста (свайп, сдвиг > slop): не тап. Хвост касания открытой строки гасит `swallowGhostClick`. */
   const suppress = useRef(false);
   const moved = useRef<{ x: number; y: number; far: boolean } | null>(null);
   const geom = useRef<SwipeGeometry | null>(null);
@@ -303,11 +303,8 @@ export function SwipeRow({ mode, slot, hub, onPress, onLongPress, onDelete }: Sw
     drag.current = null;
     if (!d || d.id !== e.pointerId) return;
     if (!d.claimed) {
-      if (d.wasOpen && !cancelled) {
-        closeRow(true); // тап по открытой строке закрывает её и партию не открывает
-        suppress.current = true;
-        window.setTimeout(() => (suppress.current = false), 0);
-      }
+      // Тап по открытой строке закрывает её и партию не открывает: его click гасит `swallowGhostClick` с pointerdown.
+      if (d.wasOpen && !cancelled) closeRow(true);
       return;
     }
     suppress.current = true; // свайп никогда не становится тапом
@@ -351,7 +348,12 @@ export function SwipeRow({ mode, slot, hub, onPress, onLongPress, onDelete }: Sw
             edge: e.clientX <= SWIPE.EDGE || vw - e.clientX <= SWIPE.EDGE,
             samples: [{ t: e.timeStamp, x: e.clientX }],
           };
-          if (wasOpen) return; // у открытой строки долгое нажатие не запускается
+          if (wasOpen) {
+            // PD-242: касание открытой строки только закрывает её. click тача приходит через 2–6 мс после pointerup —
+            // флаг `suppress` с setTimeout(0) его не ловил; перехватчик живёт до следующего касания / 350 мс после отпускания.
+            swallowGhostClick(e.nativeEvent);
+            return; // у открытой строки долгое нажатие не запускается
+          }
           press.current = {
             timer: window.setTimeout(() => {
               press.current = null;

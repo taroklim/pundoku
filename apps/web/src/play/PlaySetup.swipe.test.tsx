@@ -61,6 +61,7 @@ beforeEach(async () => {
   root = createRoot(host);
 });
 afterEach(() => {
+  window.dispatchEvent(new Event("pointerdown")); // снять одноразовый перехватчик призрачного клика, если остался от теста
   act(() => root.unmount());
   host.remove();
   vi.useRealTimers();
@@ -199,6 +200,49 @@ describe("свайп строки (§A3–A5, §A11 пп. 1–6)", () => {
     click(fg("classic"));
     expect(shift("classic")).toBe("");
     expect(fns.onOpenMode).not.toHaveBeenCalled();
+  });
+
+  it("PD-242 (QA PD-226 Major): click тача через 2–10 мс после pointerup по открытой строке партию не открывает", () => {
+    render({ slots: { classic: CLASSIC } });
+    for (const lag of [0, 2, 6, 10, 40]) {
+      swipe("classic", 300, 240);
+      expect(shift("classic")).toBe("translateX(-80px)");
+      pointer(fg("classic"), "pointerdown", 100);
+      pointer(fg("classic"), "pointerup", 100);
+      act(() => void vi.advanceTimersByTime(lag)); // тач шлёт click не сразу: в cr-touch через 2–6 мс
+      click(fg("classic"));
+      expect(shift("classic")).toBe("");
+      expect(fns.onOpenMode).not.toHaveBeenCalled();
+    }
+  });
+
+  it("PD-242: после тапа, закрывшего строку, следующий тап по закрытой строке открывает партию (как раньше)", () => {
+    render({ slots: { classic: CLASSIC } });
+    swipe("classic", 300, 240);
+    pointer(fg("classic"), "pointerdown", 100);
+    pointer(fg("classic"), "pointerup", 100);
+    act(() => void vi.advanceTimersByTime(4));
+    click(fg("classic"));
+    expect(fns.onOpenMode).not.toHaveBeenCalled();
+    act(() => void vi.advanceTimersByTime(120));
+    pointer(fg("classic"), "pointerdown", 100);
+    pointer(fg("classic"), "pointerup", 100);
+    act(() => void vi.advanceTimersByTime(4));
+    click(fg("classic"));
+    expect(fns.onOpenMode).toHaveBeenCalledTimes(1);
+  });
+
+  it("PD-242: закрытая строка с партией — тап (click через 6 мс) открывает партию; клавиатура/VO (detail 0) по открытой — только закрывает", () => {
+    render({ slots: { classic: CLASSIC } });
+    pointer(fg("classic"), "pointerdown", 100);
+    pointer(fg("classic"), "pointerup", 100);
+    act(() => void vi.advanceTimersByTime(6));
+    click(fg("classic"));
+    expect(fns.onOpenMode).toHaveBeenCalledTimes(1);
+    swipe("classic", 300, 240);
+    click(fg("classic"), 0);
+    expect(shift("classic")).toBe("");
+    expect(fns.onOpenMode).toHaveBeenCalledTimes(1);
   });
 
   it("открытая строка: тап по «Удалить» — удаление касанием", () => {
