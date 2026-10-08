@@ -149,7 +149,7 @@ try {
   // Портрет: карточка (сразу после решения) и её конец — попиксельно как сборка main (где на этих размерах дефекта не было).
   if (args.includes("portrait")) {
     if (!baseServer) throw new Error("portrait: нужен BASE_DIST (сборка main)");
-    for (const br of ["chromium", "webkit"]) {
+    for (const br of (process.env.PORTRAIT_BR ?? "chromium,webkit").split(",")) {
       const browser = await pw[br].launch();
       try {
         const cmp = await browser.newPage();
@@ -168,7 +168,10 @@ try {
           for (const [k, port] of [["base", PORT + 1], ["new", PORT]]) {
             const { ctx, p } = await solveToCard(browser, { W, H, rm, port, scheme });
             try {
-              const take = async (screen) => { const buf = await p.screenshot(); (pics[screen] ??= {})[k] = buf; fs.writeFileSync(path.join(OUT, `portrait-${br === "webkit" ? "wk" : "cr"}-${W}x${H}-${scheme}-${screen}-${k}.png`), buf); };
+              // Недетерминированное содержимое закрыто маской: время/техники и тепловая карта (тайминги тапов), мини-поле Grid ∞
+              // (скрытое решение случайно на каждый запуск — другая цифра подсказки). Раскладка вокруг сравнивается попиксельно.
+              const mask = [p.locator('[data-testid="result-card"] .heat'), p.locator('[data-testid="result-card"] .rows'), p.locator('[data-testid="grid-inf-section"] .board-wrap')];
+              const take = async (screen) => { const buf = await p.screenshot({ mask, maskColor: "#f0f" }); (pics[screen] ??= {})[k] = buf; fs.writeFileSync(path.join(OUT, `portrait-${br === "webkit" ? "wk" : "cr"}-${W}x${H}-${scheme}-${screen}-${k}.png`), buf); };
               await take("card");
               await p.evaluate(async () => { document.querySelector(".scroll.tab-pane:not(.off)").scrollTop = 1e6; await new Promise((ok) => setTimeout(ok, 300)); });
               await take("card-end");
