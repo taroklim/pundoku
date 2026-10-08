@@ -199,13 +199,21 @@ export function SwipeRow({ mode, slot, hub, onPress, onLongPress, onDelete }: Sw
     press.current = null;
   };
   const commitTimer = useRef(0);
+  const closeTimer = useRef(0);
   useEffect(
     () => () => {
       stopPress();
       window.clearTimeout(commitTimer.current);
+      window.clearTimeout(closeTimer.current);
     },
     [],
   );
+
+  /**
+   * PD-242 (QA PD-226 Low): красная подложка `.del` закрашена только пока её видно — `.dragging`, `.open`, `.closing` (строка
+   * едет на место), `.committing`; в покое прозрачна, иначе её край просвечивает розовой каймой в скруглённых углах карточки.
+   */
+  const paint = (cls: "open" | "closing" | "committing", on: boolean) => wrap.current?.classList.toggle(cls, on);
 
   const measure = (): SwipeGeometry => {
     const w = wrap.current;
@@ -260,6 +268,9 @@ export function SwipeRow({ mode, slot, hub, onPress, onLongPress, onDelete }: Sw
   );
   function openRow() {
     if (hub.open && hub.open !== handle) hub.closeOpen(true);
+    window.clearTimeout(closeTimer.current);
+    paint("closing", false);
+    paint("open", true);
     const g = measure();
     setArmed(false);
     setX(-g.A, SWIPE.SETTLE_MS);
@@ -269,8 +280,14 @@ export function SwipeRow({ mode, slot, hub, onPress, onLongPress, onDelete }: Sw
     hub.openScroll = sc ? sc.scrollTop : 0;
   }
   function closeRow(animate: boolean) {
+    const shifted = x.current !== 0; // подложку видно — пока строка едет на место, она остаётся красной
     setArmed(false);
     setX(0, animate ? SWIPE.SETTLE_MS : 0);
+    window.clearTimeout(closeTimer.current);
+    const settle = animate && shifted && !prefersReducedMotion();
+    paint("open", false);
+    paint("closing", settle);
+    if (settle) closeTimer.current = window.setTimeout(() => paint("closing", false), SWIPE.SETTLE_MS);
     isOpen.current = false;
     kb.current = false;
     if (hub.open === handle) hub.open = null;
@@ -285,9 +302,16 @@ export function SwipeRow({ mode, slot, hub, onPress, onLongPress, onDelete }: Sw
     setX(0, SWIPE.COMMIT_MS);
     const ms = prefersReducedMotion() ? 0 : SWIPE.COMMIT_MS;
     window.clearTimeout(commitTimer.current);
+    window.clearTimeout(closeTimer.current);
+    paint("open", false);
+    paint("closing", false);
     if (ms > 0) {
       setCommitting(true);
-      commitTimer.current = window.setTimeout(() => setCommitting(false), ms);
+      paint("committing", true);
+      commitTimer.current = window.setTimeout(() => {
+        paint("committing", false);
+        setCommitting(false);
+      }, ms);
     }
     onDelete(kbd);
   };

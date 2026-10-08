@@ -294,7 +294,7 @@ button.hub-row:active {
   display: flex;
   justify-content: flex-end;
   align-items: stretch;
-  background: var(--wax);
+  background: transparent;
   color: var(--on-wax);
   font-size: 1rem;
   font-weight: 600;
@@ -303,6 +303,11 @@ button.hub-row:active {
 }
 .srow > .del[hidden] {
   display: none;
+}
+/* PD-242 (QA PD-226 Low): красная только пока её видно — ведение пальцем, открыта, едет на место, удаление. В покое прозрачна:
+   иначе её край просвечивает розовой каймой сквозь сглаживание скруглённого угла карточки (.hub-card overflow: hidden). */
+.srow:is(.dragging, .open, .closing, .committing) > .del {
+  background: var(--wax);
 }
 .srow .dlw {
   flex: none;
@@ -674,7 +679,7 @@ button.hub-row:active {
   .mode-chip {
     border: 1px solid CanvasText;
   }
-  .srow > .del {
+  .srow:is(.dragging, .open, .closing, .committing) > .del {
     border: 1px solid ButtonText;
   }
   .hub-primary {

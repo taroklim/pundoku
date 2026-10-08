@@ -293,6 +293,37 @@ describe("свайп строки (§A3–A5, §A11 пп. 1–6)", () => {
     expect(shift("classic")).toBe("translateX(-80px)");
   });
 
+  it("PD-242 (QA PD-226 Low): подложка красится только в состояниях dragging/open/closing/committing, в покое — ни одного", () => {
+    render({ slots: { classic: CLASSIC } });
+    const w = q("srow-classic")!;
+    const lit = () => ["dragging", "open", "closing", "committing"].filter((c) => w.classList.contains(c));
+    expect(lit()).toEqual([]);
+    swipe("classic", 300, 240, { release: false });
+    expect(lit()).toEqual(["dragging"]);
+    pointer(fg("classic"), "pointerup", 240);
+    expect(lit()).toEqual(["open"]);
+    pointer(fg("classic"), "pointerdown", 100);
+    pointer(fg("classic"), "pointerup", 100);
+    expect(lit()).toEqual(["closing"]); // строка едет на место — подложку ещё видно
+    act(() => void vi.advanceTimersByTime(220));
+    expect(lit()).toEqual([]);
+    swipe("classic", 300, 280); // короткий свайп — доводка на место из ведения
+    expect(lit()).toEqual(["closing"]);
+    act(() => void vi.advanceTimersByTime(220));
+    expect(lit()).toEqual([]);
+    swipe("classic", 330, 100); // полный свайп — удаление
+    expect(lit()).toEqual(["committing"]);
+    act(() => void vi.advanceTimersByTime(260));
+    expect(lit()).toEqual([]);
+    window.dispatchEvent(new Event("pointerdown"));
+    render({ slots: { classic: CLASSIC } });
+    act(() => fg("classic").focus());
+    key(fg("classic"), "Delete"); // путь клавиатуры: открыта — красная
+    expect(lit()).toEqual(["open"]);
+    key(q("del-classic")!, "Escape");
+    expect(lit()).toEqual(["closing"]);
+  });
+
   it("pointercancel посреди «armed» не удаляет", () => {
     render({ slots: { classic: CLASSIC } });
     swipe("classic", 330, 100, { release: false });
