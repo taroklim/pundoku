@@ -9,6 +9,7 @@ import { ArchiveScreen } from "./today/ArchiveScreen";
 import { dayStore } from "./today/dayStore";
 import { TodayScreen } from "./today/TodayScreen";
 import { useDynamicTypeFlag } from "./shell/dynamicType";
+import { isStandalone, useEdgeBack } from "./shell/edgeBack";
 import { ErrorBoundary } from "./shell/ErrorBoundary";
 import { useEscapeBack } from "./shell/escapeBack";
 import { panelDomId, tabDomId, TabBar } from "./shell/TabBar";
@@ -86,6 +87,19 @@ export function App() {
   const pillRef = useRef<HTMLSpanElement>(null);
   const prewarm = useTabSlide(stackRef, pillRef, tab, overlay);
 
+  // PD-253: «назад» от левого края на Settings/справке — только в установленном приложении (в Safari-вкладке у системы свой).
+  // Ведёт ровно туда же, куда «‹»/Esc; Settings — через guard PD-57 (несохранённый ключ → шит, экран остаётся). После
+  // useTabSlide: тот должен увидеть «вкладка уже видна под экраном», до того как жест снимет свои атрибуты.
+  const [standalone] = useState(isStandalone);
+  const edgeBack = pushed && standalone;
+  useEdgeBack(pushRef, stackRef, {
+    enabled: edgeBack,
+    screen: panelKey,
+    peek: settings || help?.via === "tab",
+    intercept: () => help === null && recoveryStore.guardLeave(() => leaveSettings(go)),
+    onBack: () => (help !== null ? leaveHelp(go) : leaveSettings(go)),
+  });
+
   // Layout-эффект, не обычный: `lang` задаёт переносы (`hyphens: auto`) и поэтому раскладку текста. Обычный эффект родителя идёт
   // ПОСЛЕ эффектов детей — справка успевала прокрутиться к блоку по раскладке с lang="en", а потом текст перекладывался (WebKit),
   // и заголовок блока уезжал вверх на 2–20 px.
@@ -146,6 +160,7 @@ export function App() {
         <div
           ref={pushRef}
           className="scroll push-layer"
+          data-edge-back={edgeBack ? "" : undefined}
           onScroll={(e) => pushTops.current.set(panelKey, e.currentTarget.scrollTop)}
           // Settings и справка — экраны поверх вкладки, а не её содержимое: роль панели только у архива (он живёт на Year).
           role={archiveDate !== null && !pushed ? "tabpanel" : undefined}
