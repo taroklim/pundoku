@@ -69,9 +69,9 @@ describe("PD-185: начальный фокус слоя под StrictMode", () 
     expect(document.activeElement).toBe(btn);
   });
 
-  it("ModeSheet (обычный потребитель, initialFocus): фокус на «Отмена», при закрытии — на открывший элемент", () => {
+  it("ModeSheet (обычный потребитель, initialFocus): фокус на «Начать» (PD-232: отбрасывать нечего), при закрытии — на открывший элемент", () => {
     strict(<ModeSheet mode={MODES[0]!} pick={MODES[0]!.difficulties[0]!} discard={null} onPick={vi.fn()} onStart={vi.fn()} onClose={vi.fn()} returnFocus={returnFocus} />);
-    expect(document.activeElement).toBe(document.querySelector('[data-testid="sheet-cancel"]'));
+    expect(document.activeElement).toBe(document.querySelector('[data-testid="sheet-start"]'));
     act(() => root.render(<StrictMode />));
     expect(document.activeElement).toBe(opener);
   });

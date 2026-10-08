@@ -41,7 +41,9 @@ export function HintRuleSheet({ onGo, onCancel, play = false }: { onGo: () => vo
         }
       }
     }
-    root.current?.focus({ preventScroll: true });
+    // PD-232 (в): начальный фокус — «Показать подсказку» (Enter её показывает): человек сам попросил подсказку, шит лишь
+    // предупреждает о метке дня; ничего не удаляет и не сбрасывает. «Не сейчас»/Esc — рядом.
+    (root.current?.querySelector<HTMLElement>('[data-testid="hint-rule-go"]') ?? root.current)?.focus({ preventScroll: true });
     const onKey = (event: globalThis.KeyboardEvent) => {
       if (event.key === "Escape") {
         event.stopPropagation();

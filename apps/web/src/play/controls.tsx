@@ -435,6 +435,7 @@ export function GamePad({ snap, store }: { snap: PlaySnapshot; store: GameStore 
       </div>
       {filling && (
         <ActionSheet
+          primary
           title={t("play.fillTitle")}
           message={t("play.fillMessage")}
           actionLabel={t("play.fillAction")}

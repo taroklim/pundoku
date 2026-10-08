@@ -51,7 +51,9 @@ export function ModeSheet({ mode, pick, discard, onPick, onStart, onClose, retur
   const warnId = useId();
   const diffId = useId();
   const swipe = useSheetSwipe(root, onClose);
-  useModal(scrim, root, { kind: "dialog", onClose, returnFocus, initialFocus: '[data-testid="sheet-cancel"]' });
+  // PD-232 (в): Enter = основное действие, только если оно ничего не отбрасывает. «Начать» с чистого листа — фокус на нём;
+  // «Начать новую» отбросит незаконченную партию (выход из партии) — фокус остаётся на безопасной «Отмене».
+  useModal(scrim, root, { kind: "dialog", onClose, returnFocus, initialFocus: discard ? '[data-testid="sheet-cancel"]' : '[data-testid="sheet-start"]' });
   const { Icon } = mode;
   const name = t(`modes.${mode.textKey}.name`);
 
