@@ -1,0 +1,120 @@
+/*
+ * PD-249: ландшафт телефона — две колонки (вариант (в) исследования PD-227, эскиз design/pd227-shots/c-twocol-sketch-*).
+ * Решение владельца: поворот в iOS-PWA не запретить, поэтому ландшафт делаем удобным, «без фанатизма». Заменяет PD-159
+ * (там экран партии в ландшафте был колонкой с прокруткой и полем 160–150 pt).
+ *
+ * Экран партии (Today, Play во всех режимах, архивный день — всё, что `.play-fit`): поле слева на всю высоту между верхним
+ * краем и таб-баром, справа — шапка, подпись, зазор со статусом и панель 1–9 с рядом действий (или док подсказки на её месте).
+ * Таб-бар остаётся внизу (shell.css) — поле и панель целиком над ним. Safe-area: слева/справа вырез (Dynamic Island) — поле
+ * отступает от левого, правая колонка от правого края; снизу — индикатор Home (уже в отступе `.scroll`).
+ *
+ * Остальные экраны (хаб Play, карточка «решено», Year, Settings, Help) в ландшафте живут по своим правилам: они прокручиваются,
+ * здесь их не трогаем, кроме ширины карточки (ниже).
+ *
+ * ВЕСЬ файл — один @media: портрет, планшет и десктоп (высота окна > 500) правила отсюда не видят. Условие то же, что у PD-159.
+ * Подключается последним (main.tsx) — перекрывает отступы колонок из shell/play/hint.css без повышения специфичности.
+ */
+@media (orientation: landscape) and (max-height: 500px) {
+  /* Не влезло (AX3, низкий 320-класс, длинный док) — страница партии докручивается, ничего не режется и не наезжает. */
+  .scroll:has(.play-fit) {
+    overflow-y: auto;
+  }
+  .scroll:has(.play-fit) > .panel,
+  .scroll:has(.play-fit) .play {
+    min-height: auto;
+  }
+
+  /* Сторона поля: высота окна минус таб-бар, safe-area и по 12 px сверху и снизу; не шире, чем оставляет правой колонке
+     280 px (панель 1–9: клавиша ≥ 28 pt) — защита от почти квадратного окна; пол 160 pt, как в PD-159. */
+  .play-fit {
+    --side: max(
+      160px,
+      min(
+        100dvh - var(--sa-top) - var(--sa-bot) - var(--tabbar-h) - 24px,
+        100vw - max(16px, var(--sa-l)) - max(16px, var(--sa-r)) - 24px - 280px
+      )
+    );
+    display: grid;
+    grid-template-columns: calc(max(16px, var(--sa-l)) + var(--side)) minmax(0, 1fr);
+    grid-template-rows: auto auto minmax(0, 1fr) auto;
+    column-gap: 24px;
+  }
+  .play-fit > .board-wrap {
+    grid-column: 1;
+    grid-row: 1 / -1;
+    align-self: start;
+    padding: calc(var(--sa-top) + 12px) 0 12px max(16px, var(--sa-l));
+  }
+  .play-fit > :not(.board-wrap) {
+    grid-column: 2;
+    min-width: 0;
+  }
+  .play-fit > .toolbar {
+    grid-row: 1;
+  }
+  .play-fit > .subline {
+    grid-row: 2;
+  }
+  .play-fit > .gap {
+    grid-row: 3;
+  }
+  .play-fit > .pad-wrap,
+  .play-fit > .hint-dock {
+    grid-row: 4;
+  }
+  /* Правая колонка: левый отступ — зазор между колонками (column-gap), правый — safe-area. */
+  .play-fit > .toolbar,
+  .play-fit > .subline,
+  .play-fit > .pad-wrap {
+    padding-left: 0;
+  }
+  .play-fit > .hint-dock {
+    margin-left: 0;
+  }
+  /* Ряд действий снизу — на линии нижнего края поля (у поля 12 px до таб-бара, у ряда — свои 10 px). */
+  .play-fit > .pad-wrap .actions {
+    padding-bottom: 12px;
+  }
+
+  .play-fit .board {
+    width: var(--side);
+    margin: 0;
+    --s: calc((var(--side) - 2 * var(--box-gap)) / 9);
+  }
+  /* Ряды бокса — явно по размеру клетки (поворот меняет поле без перезагрузки; WebKit не пересчитывает ряды сетки с
+     aspect-ratio-клетками, см. today.css, AX3). */
+  .play-fit .box {
+    grid-auto-rows: var(--s);
+  }
+  /* PD-189: панель ожидания генерации — квадрат на месте поля. */
+  .play-fit .board-wrap > .wait {
+    top: calc(var(--sa-top) + 12px);
+    left: max(16px, var(--sa-l));
+    right: auto;
+    width: var(--side);
+    height: var(--side);
+  }
+
+  /* Карточка «решено» и секция Grid ∞ (страница прокручивается): не растягиваются на всю ширину ландшафта — колонка по центру
+     шириной с портрет Pro Max (поля по бокам шире выреза). Тепловая карта и мини-поле Grid ∞ — не выше видимой области, чтобы
+     каждое было видно целиком (по образцу PD-87 для низкого экрана); тап по карте — как раньше. */
+  .play:not(.play-fit):not(.play-hub) > .card {
+    width: auto;
+    max-width: 480px;
+    margin-inline: auto;
+  }
+  .play:not(.play-fit):not(.play-hub) > section:not(.card) {
+    width: 100%;
+    max-width: 512px;
+    margin-inline: auto;
+  }
+  .play:not(.play-fit):not(.play-hub) > .card .heat {
+    max-width: min(100%, 100dvh - var(--sa-top) - var(--sa-bot) - var(--tabbar-h) - 96px);
+    margin-inline: auto;
+  }
+  .play:not(.play-fit):not(.play-hub) > section .board-wrap {
+    max-width: min(100%, 100dvh - var(--sa-top) - var(--sa-bot) - var(--tabbar-h) - 32px);
+    margin-inline: auto;
+    padding-inline: 16px;
+  }
+}
