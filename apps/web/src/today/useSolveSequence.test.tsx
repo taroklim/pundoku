@@ -274,6 +274,62 @@ describe("финал V2 (PD-89)", () => {
     expect(onWatch).toHaveBeenCalledTimes(1);
   });
 
+  // PD-221 / PD-239: таб-бар во время полёта Today. Касание ДРУГОЙ вкладки прерывает финал и переключает её; касание ВЫБРАННОЙ
+  // вкладки (Today) — только прерывает: финал досрочно завершён, карточка показана, повторного «выбора» вкладки нет.
+  const todayTabBar = (selected: boolean) => {
+    const bar = document.createElement("div");
+    bar.setAttribute("role", "tablist");
+    const tabBtn = document.createElement("button");
+    tabBtn.setAttribute("role", "tab");
+    tabBtn.setAttribute("aria-selected", String(selected));
+    bar.append(tabBtn);
+    document.body.append(bar);
+    const onTab = vi.fn();
+    tabBtn.addEventListener("click", onTab);
+    const touch = () =>
+      act(() => {
+        tabBtn.dispatchEvent(new Event("pointerdown", { bubbles: true }));
+        tabBtn.dispatchEvent(new Event("pointerup", { bubbles: true }));
+        tabBtn.dispatchEvent(new MouseEvent("click", { bubbles: true, cancelable: true, detail: 1 }));
+      });
+    return { onTab, touch, remove: () => bar.remove() };
+  };
+
+  it("PD-239: тап по АКТИВНОЙ вкладке Today в полёте — только досрочное завершение финала (click гасится)", () => {
+    const { onTab, touch, remove } = todayTabBar(true);
+    solve();
+    wait(FINALE_DIM_MS + FINALE_FLIGHT_DELAY_MS + 100);
+    expect(animate).toHaveBeenCalled(); // идёт полёт
+    touch();
+    expect(onTab).not.toHaveBeenCalled();
+    expect(anim.cancel).toHaveBeenCalled();
+    expect(latest.cardShown).toBe(true);
+    expect(latest.finaleDone).toBe(true);
+    touch(); // финал кончился: следующий тап — обычный
+    expect(onTab).toHaveBeenCalledTimes(1);
+    remove();
+  });
+
+  it("PD-239: тап по АКТИВНОЙ вкладке Today в dim-фазе — карточка сразу, click гасится", () => {
+    const { onTab, touch, remove } = todayTabBar(true);
+    solve();
+    wait(100);
+    touch();
+    expect(onTab).not.toHaveBeenCalled();
+    expect(latest.cardShown).toBe(true);
+    remove();
+  });
+
+  it("PD-221: тап по ДРУГОЙ вкладке в полёте — финал прерван И вкладка переключается", () => {
+    const { onTab, touch, remove } = todayTabBar(false);
+    solve();
+    wait(FINALE_DIM_MS + FINALE_FLIGHT_DELAY_MS + 100);
+    touch();
+    expect(onTab).toHaveBeenCalledTimes(1);
+    expect(latest.cardShown).toBe(true);
+    remove();
+  });
+
   it("клавиатурная активация сразу после прерывания проходит (detail 0)", () => {
     solve();
     wait(100);
