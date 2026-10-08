@@ -179,6 +179,8 @@ export function PlayScreen({ onOpenSettings, onOpenHelp, onOpenToday }: { onOpen
 
   const hub = snap.hub;
   const restoring = snap.restoring === true;
+  // PD-217: «Продолжить» Лжеца дня — любой незаконченной даты (после полуночи вчерашний не пропадает), открывается его дата.
+  const liarCont = hub ? playStore.liarDayContinue() : null;
   // PD-189: ожидание генерации — панель на месте поля (порог 600 мс, минимум 700 мс, «долго» с 4 с). Пока она (или пустота
   // первых 600 мс) на экране, поле и панель цифр скрыты, но место за ними держится; ввод не проходит сквозь.
   const wait = useWaitView(phase, !hub && !restoring);
@@ -253,8 +255,8 @@ export function PlayScreen({ onOpenSettings, onOpenHelp, onOpenToday }: { onOpen
         <PlaySetup
           modes={availableModes()}
           slots={playStore.slots()}
-          liarDay={playStore.liarDaySlot()}
-          onOpenLiarDay={() => playStore.startDaily()}
+          liarDay={liarCont?.summary ?? null}
+          onOpenLiarDay={() => liarCont && playStore.startDaily(liarCont.date)}
           reselect={snap.reselect}
           onOpenMode={(mode, row) => {
             if (!playStore.open(mode)) openSheet(mode, row);

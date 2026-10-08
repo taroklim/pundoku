@@ -11,6 +11,8 @@
  * PD-171 (Лжец): режим `liar` строит сетку `generateLiar` (тот же Worker), тяжёлые классы берутся из заготовок (`liarPool.ts`).
  * Лжец дня (medium, `dailyLiarPuzzle`) — отдельная партия вне слотов: запись `meta:liar:YYYY-MM-DD` переживает решение (Year,
  * снапшот синхронизации `liar`), незаконченный Лжец дня — строка «Продолжить» хаба. Свободная партия Лжеца — слот `liar`.
+ * PD-217: незаконченный Лжец дня прошлой даты (полночь посреди партии, перезапуск на следующий день) остаётся в «Продолжить»,
+ * пока не решён, и решается в запись СВОЕЙ даты (Year — на исходный день), а не текущей.
  *
  * Общая механика (ввод, undo, таймер, анимации) — `GameStore`; здесь — источник сетки (генерация в Web Worker) и слоты.
  */
@@ -30,7 +32,7 @@ import { cellsLeft, resumeSelection } from "./logic";
 import type { ModeId } from "./modes";
 import { DEFAULT_MODE, MODES, legacyModeOf, modeDef, slotKey } from "./modes";
 import type { SavedPlay } from "./savedPlay";
-import { liarDayKey, parseSavedLiarDay, parseSavedPlay, summaryOf } from "./savedPlay";
+import { LIAR_DAY_PREFIX, liarDayKey, parseSavedLiarDay, parseSavedPlay, summaryOf } from "./savedPlay";
 
 export type { Phase, PlaySnapshot } from "./gameStore";
 export type { ModeId } from "./modes";
@@ -61,6 +63,9 @@ export type LiarDayState =
   | { readonly kind: "none" }
   | { readonly kind: "playing"; readonly summary: SlotSummary }
   | { readonly kind: "solved"; readonly timeMs: number };
+
+/** У партии есть прогресс (ход или обвинение): только такая — строка «Продолжить» и запись снапшота. */
+const hasProgress = (play: PlayState): boolean => play.log.length > 0 || (play.accusations?.length ?? 0) > 0;
 
 function randomSeed(): string {
   const a = new Uint32Array(2);
@@ -97,7 +102,8 @@ export const PLAY_META_KEY = "playGame";
 export { slotKey };
 
 export interface PlayDeps {
-  storage: Pick<SyncStorage, "getMeta" | "setMeta">;
+  /** `listMeta` (необязателен) — найти незаконченных Лжецов дня прошлых дат при старте (PD-217); нет — только сегодняшний. */
+  storage: Pick<SyncStorage, "getMeta" | "setMeta" | "listMeta">;
   /** PD-171: Лжец дня входит в снапшот синхронизации — сообщить о прогрессе/решении. Нет — без синхронизации (тесты). */
   notify?: (event: SyncEvent) => void;
   /** PD-171: заготовки тяжёлых классов Лжеца. Нет — генерация всегда в момент старта. */
@@ -295,6 +301,7 @@ export class PlayStore extends GameStore<PlayScreenSnapshot> {
     for (const mode of stale) this.write(() => deps.storage.setMeta(slotKey(mode), null));
     // PD-171: Лжец дня сегодня (строка «Продолжить» хаба) и история поимок (сравнение с собой на карточке).
     await this.loadDaily(localDate(), read);
+    await this.loadUnfinishedDailies();
     const hist = await read(LIAR_HISTORY_KEY);
     if (Array.isArray(hist)) {
       const ok = hist.filter(
@@ -350,6 +357,30 @@ export class PlayStore extends GameStore<PlayScreenSnapshot> {
     this.set({ dailyRev: (this.snap.dailyRev ?? 0) + 1 });
   }
 
+  /**
+   * PD-217: незаконченные Лжецы дня прошлых дат (с прогрессом) — кандидаты в «Продолжить» после полуночи. Решённые прошлые
+   * не держим в памяти (их читает Year). Хранилище без `listMeta` — только сегодняшний, как до PD-217.
+   */
+  private async loadUnfinishedDailies(): Promise<void> {
+    const list = this.deps?.storage.listMeta;
+    if (!list) return;
+    let entries: [string, unknown][];
+    try {
+      entries = await list.call(this.deps!.storage, LIAR_DAY_PREFIX);
+    } catch {
+      return;
+    }
+    let changed = false;
+    for (const [key, raw] of entries) {
+      const date = key.slice(LIAR_DAY_PREFIX.length);
+      const rec = parseSavedLiarDay(raw, date);
+      if (!rec || rec.play.solved || !hasProgress(rec.play) || this.dailies.has(date) || this.snap.daily === date) continue;
+      this.dailies.set(date, rec);
+      changed = true;
+    }
+    if (changed) this.set({ dailyRev: (this.snap.dailyRev ?? 0) + 1 });
+  }
+
   /** Перечитать Лжеца дня (открыт шит Лжеца, вернулись на хаб): запись могла прийти из синхронизации. */
   refreshDaily(date: string = localDate()): void {
     void this.loadDaily(date);
@@ -374,8 +405,27 @@ export class PlayStore extends GameStore<PlayScreenSnapshot> {
     if (st.kind !== "playing") return null;
     const s = this.snap;
     const play = s.daily === date && s.play ? s.play : this.dailies.get(date)?.play;
-    if (!play || (play.log.length === 0 && (play.accusations?.length ?? 0) === 0)) return null;
+    if (!play || !hasProgress(play)) return null;
     return st.summary;
+  }
+
+  /**
+   * PD-217: строка «Продолжить» хаба — незаконченный Лжец дня с прогрессом, любой даты (полночь посреди партии не прячет
+   * его). Живая партия Лжеца дня главнее; затем сегодняшний; затем самый поздний из прошлых. Строка одна: остальные
+   * незаконченные ждут, пока решат показанный. Открывать — `startDaily(date)` с датой отсюда.
+   */
+  liarDayContinue(today: string = localDate()): { date: string; summary: SlotSummary } | null {
+    const s = this.snap;
+    if (s.daily && s.play && s.phase === "playing" && !s.play.solved && hasProgress(s.play)) {
+      return { date: s.daily, summary: { difficulty: s.difficulty, left: cellsLeft(s.play), elapsedMs: this.getElapsedMs(), ink: false } };
+    }
+    let best: string | null = null;
+    for (const [date, rec] of this.dailies) {
+      if (date === s.daily || rec.play.solved || !hasProgress(rec.play)) continue;
+      if (best === null || date === today || (best !== today && date > best)) best = date;
+    }
+    if (best === null) return null;
+    return { date: best, summary: summaryOf(this.dailies.get(best)!) };
   }
 
   /**
