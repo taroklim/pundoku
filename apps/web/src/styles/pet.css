@@ -1,31 +1,286 @@
-/* ---------- Питомец-клякса (PD-180, макет PD-170 вариант A «Капля») ----------
-   Только карточка результата и лист дня Year; на поле — никогда. Цвет — чернила (`--ink`), новых цветов нет.
-   «Дыхание» 4,2 с (сон — 6,5 с), масштаб ≤ 3,5 %; амплитуда через --mo (tokens.css): при Reduce Motion --mo = 0 и клякса
-   стоит — отдельного @media не нужно (конвенция PD-89). */
-.pet-svg {
+/* ---------- Питомец-клякса (PD-180: рисунок — макет PD-170 вариант A «Капля»; PD-260: движение — макет PD-223 вариант B «Капля») ----------
+   Только карточка результата, лист дня Year и превью в Настройках; на поле — никогда. Цвет — чернила (`--ink`), новых цветов нет.
+   Слои (PetBlot.tsx): .pet › .breath › .pose.from/.to (статичный SVG) + .drops.from/.to › .drop (HTML-кружки вне .breath).
+   Анимируются ТОЛЬКО transform/opacity HTML-обёрток (WebKit: композитные слои; SVG с маской растрируется один раз).
+   Нет filter/blur, clip-path, морфинга path и JS-циклов. Keyframes и тайминги — дословно макет design/pd223-pet-motion.html
+   (вариант B; имена с префиксом pet). Амплитуды × --mo (конвенция PD-89): при Reduce Motion каждый кадр — тождественный
+   transform, остаётся короткое растворение; длительность при RM — отдельным коротким значением (--d-rm, макет md §3). */
+.pet {
+  position: relative;
   display: block;
-  overflow: visible;
   flex: none;
+  color: var(--ink);
   forced-color-adjust: none;
+  pointer-events: none;
+}
+.pet .breath,
+.pet .pose,
+.pet .drops {
+  position: absolute;
+  inset: 0;
+  display: block;
+}
+.pet svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  display: block;
 }
 .pet-ink {
   fill: currentColor;
 }
-.pet-breathe {
-  transform-box: view-box;
-  transform-origin: 24px 39px;
-  animation: petBreathe 4.2s ease-in-out infinite;
+.pet .drop {
+  position: absolute;
+  display: block;
+  border-radius: 50%;
+  background: currentColor;
 }
-.pet-breathe.asleep {
+/* «Земля» y = 39 из 48: вдох и посадка — от неё. */
+.pet .breath,
+.pet .pose {
+  transform-origin: 50% 81.25%;
+}
+
+/* Длительность действия: полная или короткое растворение при Reduce Motion (--mo = 0). */
+.pet[data-act] {
+  --D: calc(var(--d-rm) + var(--mo) * (var(--d-full) - var(--d-rm)));
+}
+
+/* Покой: 3 вдоха после действия (или сразу), потом клякса стоит — не бесконечное дыхание (макет md §1). data-idle ставит
+   PetBlot, только когда клякса видна и движение не уменьшено. */
+.pet[data-idle] .breath {
+  animation-name: petBreathB;
+  animation-duration: 4.2s;
+  animation-timing-function: var(--e-io);
+  animation-delay: calc(var(--act-delay, 0ms) + var(--D, 0ms));
+  animation-iteration-count: 3;
+  animation-fill-mode: none;
+}
+.pet[data-idle][data-mood="asleep"] .breath {
+  animation-name: petBreathS;
   animation-duration: 6.5s;
 }
-@keyframes petBreathe {
+
+/* Действия: один раз. */
+.pet[data-act] .pose,
+.pet[data-act] .drop {
+  animation-duration: var(--D);
+  animation-delay: var(--act-delay, 0ms);
+  animation-fill-mode: both;
+  animation-timing-function: var(--e-io);
+  animation-iteration-count: 1;
+}
+/* «Решил день» (карточка результата): капля падает, сплющивается, собирается; посадка = настроение. */
+.pet[data-act="arrive"] .pose.to {
+  animation-name: petArriveB;
+}
+.pet[data-act="arrive"][data-mood="tired"] .pose.to {
+  animation-name: petArriveBTired;
+}
+.pet[data-act="arrive"][data-mood="surprised"] .pose.to {
+  animation-name: petArriveBSurp;
+}
+.pet[data-act="arrive"] .drops.to .drop {
+  animation-name: petSplashIn;
+  animation-timing-function: var(--e-out);
+}
+/* «Проснуться» (лист дня Year): лужица собирается в каплю с лёгким перехлёстом, брызги разлетаются. */
+.pet[data-act="wake"] .pose.from {
+  animation-name: petGatherOut;
+}
+.pet[data-act="wake"] .pose.to {
+  animation-name: petGatherIn;
+}
+.pet[data-act="wake"] .drops.from .drop {
+  animation-name: petAbsorbOut;
+}
+.pet[data-act="wake"] .drops.to .drop {
+  animation-name: petSplashLate;
+  animation-timing-function: var(--e-out);
+}
+/* Не видна (вкладка скрыта, приложение в фоне): ни одной анимации; вернулась — PetBlot перезапускает покой ремаунтом. */
+.pet[data-still] * {
+  animation: none !important;
+}
+
+/* keyframes — только transform / opacity */
+@keyframes petBreathS {
   0%,
   100% {
     transform: scale(1, 1);
   }
   50% {
-    transform: scale(calc(1 - 0.01 * var(--mo)), calc(1 + 0.035 * var(--mo)));
+    transform: scale(calc(1 + 0.008 * var(--mo)), calc(1 + 0.022 * var(--mo)));
+  }
+}
+@keyframes petBreathB {
+  0%,
+  100% {
+    transform: skewX(0deg) scale(1, 1);
+  }
+  25% {
+    transform: skewX(calc(1.2deg * var(--mo))) scale(calc(1 - 0.006 * var(--mo)), calc(1 + 0.016 * var(--mo)));
+  }
+  50% {
+    transform: skewX(0deg) scale(calc(1 - 0.016 * var(--mo)), calc(1 + 0.032 * var(--mo)));
+  }
+  75% {
+    transform: skewX(calc(-1.2deg * var(--mo))) scale(calc(1 - 0.006 * var(--mo)), calc(1 + 0.016 * var(--mo)));
+  }
+}
+@keyframes petArriveB {
+  0% {
+    opacity: 0;
+    transform: translateY(calc(-9 * var(--u) * var(--mo))) scale(calc(1 - 0.22 * var(--mo)), calc(1 + 0.2 * var(--mo)));
+    animation-timing-function: cubic-bezier(0.5, 0, 1, 1);
+  }
+  26% {
+    opacity: 1;
+    transform: translateY(calc(-1.5 * var(--u) * var(--mo))) scale(calc(1 - 0.12 * var(--mo)), calc(1 + 0.14 * var(--mo)));
+    animation-timing-function: cubic-bezier(0, 0, 0.4, 1);
+  }
+  44% {
+    transform: translateY(0px) scale(calc(1 + 0.14 * var(--mo)), calc(1 - 0.16 * var(--mo)));
+    animation-timing-function: cubic-bezier(0.45, 0, 0.55, 1);
+  }
+  68% {
+    transform: translateY(0px) scale(calc(1 - 0.03 * var(--mo)), calc(1 + 0.04 * var(--mo)));
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0px) scale(1, 1);
+  }
+}
+@keyframes petArriveBTired {
+  0% {
+    opacity: 0;
+    transform: translateY(calc(-9 * var(--u) * var(--mo))) scale(calc(1 - 0.22 * var(--mo)), calc(1 + 0.2 * var(--mo)));
+    animation-timing-function: cubic-bezier(0.5, 0, 1, 1);
+  }
+  26% {
+    opacity: 1;
+    transform: translateY(calc(-1.5 * var(--u) * var(--mo))) scale(calc(1 - 0.12 * var(--mo)), calc(1 + 0.14 * var(--mo)));
+    animation-timing-function: cubic-bezier(0, 0, 0.4, 1);
+  }
+  46% {
+    transform: translateY(0px) scale(calc(1 + 0.2 * var(--mo)), calc(1 - 0.24 * var(--mo)));
+    animation-timing-function: cubic-bezier(0.3, 0, 0.3, 1);
+  }
+  76% {
+    transform: translateY(0px) scale(calc(1 + 0.03 * var(--mo)), calc(1 - 0.03 * var(--mo)));
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0px) scale(1, 1);
+  }
+}
+@keyframes petArriveBSurp {
+  0% {
+    opacity: 0;
+    transform: translateY(calc(-9 * var(--u) * var(--mo))) scale(calc(1 - 0.22 * var(--mo)), calc(1 + 0.2 * var(--mo)));
+    animation-timing-function: cubic-bezier(0.5, 0, 1, 1);
+  }
+  26% {
+    opacity: 1;
+    transform: translateY(calc(-1.5 * var(--u) * var(--mo))) scale(calc(1 - 0.12 * var(--mo)), calc(1 + 0.14 * var(--mo)));
+    animation-timing-function: cubic-bezier(0, 0, 0.4, 1);
+  }
+  42% {
+    transform: translateY(0px) scale(calc(1 + 0.1 * var(--mo)), calc(1 - 0.13 * var(--mo)));
+    animation-timing-function: cubic-bezier(0.2, 0.7, 0.3, 1);
+  }
+  62% {
+    transform: translateY(calc(-3 * var(--u) * var(--mo))) scale(calc(1 - 0.05 * var(--mo)), calc(1 + 0.07 * var(--mo)));
+    animation-timing-function: cubic-bezier(0.5, 0, 0.8, 0.5);
+  }
+  80% {
+    transform: translateY(0px) scale(calc(1 + 0.04 * var(--mo)), calc(1 - 0.05 * var(--mo)));
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0px) scale(1, 1);
+  }
+}
+@keyframes petSplashIn {
+  0%,
+  42% {
+    opacity: 0;
+    transform: translate(calc(var(--dx) * var(--mo)), calc(var(--dy) * var(--mo))) scale(calc(1 - 0.6 * var(--mo)));
+  }
+  47% {
+    opacity: 1;
+  }
+  70% {
+    transform: translate(0px, 0px) scale(calc(1 + 0.15 * var(--mo)));
+  }
+  100% {
+    opacity: 1;
+    transform: translate(0px, 0px) scale(1);
+  }
+}
+@keyframes petGatherOut {
+  0% {
+    opacity: 1;
+    transform: scale(1, 1);
+  }
+  35% {
+    opacity: 1;
+  }
+  58% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 0;
+    transform: scale(calc(1 + (var(--sx) - 1) * var(--mo)), calc(1 + (var(--sy) - 1) * var(--mo)));
+  }
+}
+@keyframes petGatherIn {
+  0% {
+    opacity: 0;
+    transform: scale(calc(1 + (var(--isx) - 1) * var(--mo)), calc(1 + (var(--isy) - 1) * var(--mo)));
+  }
+  32% {
+    opacity: 1;
+  }
+  66% {
+    transform: scale(calc(1 - 0.04 * var(--mo)), calc(1 + 0.07 * var(--mo)));
+  }
+  84% {
+    transform: scale(calc(1 + 0.015 * var(--mo)), calc(1 - 0.015 * var(--mo)));
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1, 1);
+  }
+}
+@keyframes petAbsorbOut {
+  0% {
+    opacity: 1;
+    transform: translate(0px, 0px) scale(1);
+  }
+  35%,
+  100% {
+    opacity: 0;
+    transform: translate(calc(var(--dx) * var(--mo)), calc(var(--dy) * var(--mo))) scale(calc(1 - 0.6 * var(--mo)));
+  }
+}
+@keyframes petSplashLate {
+  0%,
+  56% {
+    opacity: 0;
+    transform: translate(calc(var(--dx) * var(--mo)), calc(var(--dy) * var(--mo))) scale(calc(1 - 0.6 * var(--mo)));
+  }
+  61% {
+    opacity: 1;
+  }
+  80% {
+    transform: translate(0px, 0px) scale(calc(1 + 0.12 * var(--mo)));
+  }
+  100% {
+    opacity: 1;
+    transform: translate(0px, 0px) scale(1);
   }
 }
 
@@ -59,6 +314,14 @@
 }
 .daycard .dc-head h3 {
   min-width: 0;
+  /* PD-260: слово длиннее колонки (AX4+, узкий экран) переносится внутри строки, а не уезжает под кляксу. */
+  overflow-wrap: anywhere;
+}
+/* PD-260 (кадры PD-223: 320 pt + AX3 — дата наезжала на спящую кляксу): на AX3 зазор до кляксы 8 вместо 12 — самое длинное
+   слово даты (uk «листопада», en «September», ≈ 235 pt) помещается в колонку целиком; видимый зазор до чернил ≥ 13 pt
+   (слот 44 вокруг кляксы 40 + поля рисунка). */
+:root[data-type="ax3"] .daycard .dc-head {
+  gap: 8px;
 }
 .daycard .pet-slot {
   flex: none;
@@ -101,7 +364,7 @@
   font-size: 0.7rem;
   line-height: 1.25;
 }
-.pet-moods.off figure > svg {
+.pet-moods.off figure > .pet {
   opacity: 0.35;
 }
 /* AX3 и крупнее (data-type="ax3", shell/dynamicType.ts): четыре колонки по ~80 pt не держат подписи — список строк. */
@@ -118,7 +381,7 @@
 }
 
 @media (forced-colors: active) {
-  .pet-svg,
+  .pet,
   .pet-slot,
   .pet-moods figure {
     color: CanvasText !important;

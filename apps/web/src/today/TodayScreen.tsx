@@ -22,6 +22,7 @@ import { InkEntry } from "../play/InkEntry";
 import type { HelpBlockId } from "../help/blocks";
 import { cellsLeft, isGridFull } from "../play/logic";
 import { ResultCard } from "../play/ResultCard";
+import { useSolvedNow } from "../pet/useSolvedNow";
 import { Subline } from "../play/Subline";
 import { useDeferredFocus } from "../shell/afterPaint";
 import { useEscapeBack } from "../shell/escapeBack";
@@ -100,6 +101,8 @@ export function DayView({ store, archive, onOpenSettings, onOpenHelp }: { store:
   useClearEffectsOnUnmount(store, active);
 
   const { cardShown, gridShown, finaleDone, flown } = useSolveSequence(phase, store, root, active);
+  // PD-260: посадка кляксы на карточке — только если день решили здесь и сейчас (как финал: не загрузка, не скрытая вкладка).
+  const solvedNow = useSolvedNow(phase, active);
 
   // Фокус на карточку (a11y) — после конца финала и после кадра, не посреди анимации и не в задаче монтажа (PD-95).
   const cardRef = useRef<HTMLElement>(null);
@@ -192,7 +195,7 @@ export function DayView({ store, archive, onOpenSettings, onOpenHelp }: { store:
       {phase === "solved" && cardShown ? (
         <>
           {play && (
-            <ResultCard play={play} cardRef={cardRef} title={t("today.cardTitle")} winRate={winRate} winRateScope={archive || snap.late ? "day" : "today"} hints={snap.hints} timelapse={isRealDate(snap.date) ? { date: snap.date, difficulty: snap.difficultyKnown ? difficulty : null } : undefined} onOpenHelp={onOpenHelp} personalBest={personalBest}>
+            <ResultCard play={play} cardRef={cardRef} title={t("today.cardTitle")} winRate={winRate} winRateScope={archive || snap.late ? "day" : "today"} hints={snap.hints} timelapse={isRealDate(snap.date) ? { date: snap.date, difficulty: snap.difficultyKnown ? difficulty : null } : undefined} onOpenHelp={onOpenHelp} personalBest={personalBest} solvedNow={solvedNow}>
               {sourceLabel && <p className="source">{sourceLabel}</p>}
               {snap.late && (
                 <p className="source late-line" data-testid="late-note">

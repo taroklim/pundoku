@@ -36,7 +36,7 @@ afterEach(() => {
   setPetEnabled(false);
 });
 
-const pet = (id: string) => document.querySelector(`[data-testid="${id}"] svg.pet-svg`);
+const pet = (id: string) => document.querySelector<HTMLElement>(`[data-testid="${id}"] .pet`);
 const moodOf = (id: string) => pet(id)?.getAttribute("data-mood") ?? null;
 const LIAR_FIRST: LiarInfo = { caught: true, firstTry: true, wrongAccusations: 0, catchT: 4000, catchPlacement: 12 };
 
@@ -72,6 +72,19 @@ describe("карточка результата", () => {
     expect(moodOf("pet-card")).toBe("surprised");
   });
 
+  it("PD-260: решили только что — клякса один раз «приземляется» после входа карточки; повторное открытие — только покой", () => {
+    setPetEnabled(true);
+    card(progressOf("2026-09-10", { withFix: true }).play, { solvedNow: true });
+    expect(pet("pet-card")!.getAttribute("data-act")).toBe("arrive");
+    expect(pet("pet-card")!.getAttribute("data-mood")).toBe("tired");
+    expect(pet("pet-card")!.style.getPropertyValue("--act-delay")).toBe("300ms");
+    act(() => root.unmount());
+    root = createRoot(host);
+    card(progressOf("2026-09-10", { withFix: true }).play);
+    expect(pet("pet-card")!.hasAttribute("data-act")).toBe(false);
+    expect(pet("pet-card")!.hasAttribute("data-idle")).toBe(true);
+  });
+
   it("тумблер действует на открытой карточке сразу (подписка на настройку)", () => {
     card(progressOf("2026-09-10").play);
     expect(pet("pet-card")).toBeNull();
@@ -92,14 +105,14 @@ describe("Year: только лист дня", () => {
   it("полотно и страница месяца — без клякс; лист дня — клякса рядом с датой (40 pt)", () => {
     setPetEnabled(true);
     render([progressOf("2026-09-10"), progressOf("2026-09-11", { withFix: true })]);
-    expect(document.querySelector("svg.pet-svg")).toBeNull();
+    expect(document.querySelector(".pet")).toBeNull();
     openMonth();
     expect(document.querySelector('[data-testid="month-page"]')).not.toBeNull();
-    expect(document.querySelector("svg.pet-svg")).toBeNull();
+    expect(document.querySelector(".pet")).toBeNull();
     openDay("2026-09-11");
     expect(moodOf("pet-year")).toBe("tired");
-    expect(pet("pet-year")!.getAttribute("width")).toBe("40");
-    expect(document.querySelectorAll("svg.pet-svg")).toHaveLength(1);
+    expect(pet("pet-year")!.style.width).toBe("40px");
+    expect(document.querySelectorAll(".pet")).toHaveLength(1);
     expect(document.querySelector(".dc-head h3")).not.toBeNull();
   });
 
@@ -115,6 +128,30 @@ describe("Year: только лист дня", () => {
     click(document.querySelector(".ysheet .back"));
     openDay("2026-09-30");
     expect(pet("pet-year")).toBeNull();
+  });
+
+  it("PD-260: день показывался «спит», потом закончен → при следующем показе «проснуться» один раз; дальше только покой", () => {
+    setPetEnabled(true);
+    render([progressOf("2026-09-12", { solved: false, moves: 4 })]);
+    openMonth();
+    openDay("2026-09-12");
+    expect(moodOf("pet-year")).toBe("asleep");
+    expect(pet("pet-year")!.hasAttribute("data-act")).toBe(false);
+    click(document.querySelector(".ysheet .back"));
+    // День закончили (архив) — Year получает решённую запись.
+    render([progressOf("2026-09-12")]);
+    openDay("2026-09-12");
+    expect(moodOf("pet-year")).toBe("happy");
+    expect(pet("pet-year")!.getAttribute("data-act")).toBe("wake");
+    expect(pet("pet-year")!.querySelector(".pose.from")!.getAttribute("data-mood")).toBe("asleep");
+    click(document.querySelector(".ysheet .back"));
+    openDay("2026-09-12");
+    expect(pet("pet-year")!.hasAttribute("data-act")).toBe(false);
+    // Решённый день, который «спящим» не показывался, — без перехода.
+    click(document.querySelector(".ysheet .back"));
+    render([progressOf("2026-09-12"), progressOf("2026-09-10")]);
+    openDay("2026-09-10");
+    expect(pet("pet-year")!.hasAttribute("data-act")).toBe(false);
   });
 
   it("Лжец даты с первого обвинения → удивлён; выключенный тумблер — кляксы нет", () => {

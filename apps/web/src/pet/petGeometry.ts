@@ -51,7 +51,7 @@ function smoothClosed(pts: readonly (readonly [number, number])[]): string {
   return d + "z";
 }
 
-function bodyPath(m: MoodShape): { d: string; cx: number; cy: number } {
+function bodyPath(m: MoodShape): { d: string; cx: number; cy: number; w: number; h: number } {
   const cx = 24;
   const cy = GROUND - 0.82 * m.ry - m.lift;
   const pts: [number, number][] = [];
@@ -63,7 +63,10 @@ function bodyPath(m: MoodShape): { d: string; cx: number; cy: number } {
     for (const [k, a, ph] of HARM) r += a * Math.cos(k * t + ph);
     pts.push([cx + m.rx * c * r * (1 + m.widen * Math.max(0, s)), cy + m.ry * s * r * (s > 0 ? 0.82 : 1)]);
   }
-  return { d: smoothClosed(pts), cx, cy };
+  const xs = pts.map((p) => p[0]);
+  const ys = pts.map((p) => p[1]);
+  // Габариты тела по 40 точкам контура (как `bodyOf` макета PD-223) — для «подогнанного растворения» поз.
+  return { d: smoothClosed(pts), cx, cy, w: Math.max(...xs) - Math.min(...xs), h: Math.max(...ys) - Math.min(...ys) };
 }
 
 /** Глаза-прорези (рисуются чёрным в маске → сквозь них видна подложка). */
@@ -113,6 +116,12 @@ function drops(mood: PetMood, m: MoodShape, cx: number, cy: number): [number, nu
 
 export interface PetShape {
   readonly body: string;
+  /** Центр тела (поле 48) — к нему «собираются» брызги при посадке (PD-260). */
+  readonly cx: number;
+  readonly cy: number;
+  /** Габариты тела по точкам контура — масштаб перехода между позами (PD-223 `poseEl`). */
+  readonly w: number;
+  readonly h: number;
   readonly eyes: EyeShape;
   readonly drops: readonly (readonly [number, number, number])[];
 }
@@ -125,7 +134,7 @@ export function petShape(mood: PetMood): PetShape {
   if (hit) return hit;
   const m = MOOD_SHAPE[mood];
   const b = bodyPath(m);
-  const shape: PetShape = { body: b.d, eyes: eyes(mood, m, b.cx, b.cy), drops: drops(mood, m, b.cx, b.cy) };
+  const shape: PetShape = { body: b.d, cx: b.cx, cy: b.cy, w: b.w, h: b.h, eyes: eyes(mood, m, b.cx, b.cy), drops: drops(mood, m, b.cx, b.cy) };
   cache.set(mood, shape);
   return shape;
 }

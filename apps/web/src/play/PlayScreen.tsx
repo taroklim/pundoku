@@ -41,6 +41,7 @@ import { MelodyModeIcon } from "./modeIcons";
 import { MoreMenu } from "./MoreMenu";
 import { PlaySetup } from "./PlaySetup";
 import { ResultCard } from "./ResultCard";
+import { useSolvedNow } from "../pet/useSolvedNow";
 import type { SavedPlay } from "./store";
 import { playStore } from "./store";
 import { Subline } from "./Subline";
@@ -145,6 +146,8 @@ export function PlayScreen({ onOpenSettings, onOpenHelp, onOpenToday }: { onOpen
   // PD-255: партию заменил победитель с другого устройства (`remoteSolved`, PD-217) — не «решили сейчас»: карточка сразу,
   // без dim и паузы (как Today, `useSolveSequence`). Прилетел посреди своего финала — финал обрывается, карточка сразу.
   const remoteSolved = phase === "solved" && snap.remoteSolved === true;
+  // PD-260: посадка кляксы — только на партии, решённой здесь и сейчас (не победа с другого устройства, не скрытая вкладка).
+  const solvedNow = useSolvedNow(phase, !remoteSolved && active);
   const [cardShown, setCardShown] = useState(false);
   const cardShownRef = useRef(false);
   useEffect(() => {
@@ -350,6 +353,7 @@ export function PlayScreen({ onOpenSettings, onOpenHelp, onOpenToday }: { onOpen
                 hints={snap.hints}
                 onOpenHelp={onOpenHelp}
                 liar={liarSum ? { info: liarSum, average: playStore.liarAverage() } : null}
+                solvedNow={solvedNow}
               >
                 {/* PD-144: единственная кнопка нового пазла на экране (шапка на решённой партии действий не несёт). PD-167: шит режима партии. */}
                 <button type="button" className="btn-plain newgrid" onClick={(e) => openSheet(snap.mode, e.currentTarget)} data-testid="new-puzzle">

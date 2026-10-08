@@ -49,18 +49,19 @@ describe("геометрия = макет PD-170, вариант A «Капля�
   });
 });
 
-// ---- стили -----------------------------------------------------------------------------------------------------------------------
-describe("pet.css", () => {
-  const css = fs.readFileSync(new URL("../styles/pet.css", import.meta.url), "utf8").replace(/\/\*[\s\S]*?\*\//g, "");
-  it("дыхание: амплитуда через --mo (Reduce Motion → статично), сон медленнее", () => {
-    expect(css).toMatch(/@keyframes petBreathe[\s\S]*scale\(calc\(1 - 0\.01 \* var\(--mo\)\), calc\(1 \+ 0\.035 \* var\(--mo\)\)\)/);
-    expect(css).toMatch(/\.pet-breathe\.asleep\s*\{\s*animation-duration: 6\.5s;/);
+// ---- стили ----------------------------------------------------------------------------------------------------------------------
+// PD-260: движение и стили кляксы (покой «3 вдоха», посадка, Reduce Motion, цвета) — `pet.motion.test.ts`.
+
+describe("габариты и центр тела (PD-260: масштаб перехода и векторы брызг)", () => {
+  it.each(PET_MOODS)("%s: центр и габариты — как bodyPath/bodyOf макетов", (mood) => {
+    const b = mock.bodyPath("A", mock.MOOD[mood]);
+    const s = petShape(mood);
+    expect([s.cx, s.cy]).toEqual([b.cx, b.cy]);
+    expect(s.w).toBeGreaterThan(2 * mock.MOOD[mood].rx * 0.9);
+    expect(s.h).toBeGreaterThan(mock.MOOD[mood].ry * 1.5);
   });
-  it("новых цветов нет: только токены (--ink, --label, --label-2) и системные цвета forced-colors", () => {
-    expect(css).not.toMatch(/#[0-9a-f]{3,8}\b|rgba?\(|hsla?\(/i);
-    expect([...css.matchAll(/var\((--[\w-]+)\)/g)].map((m) => m[1]).filter((v) => v !== "--mo")).toEqual(
-      expect.arrayContaining(["--ink"]),
-    );
-    for (const v of new Set([...css.matchAll(/var\((--[\w-]+)\)/g)].map((m) => m[1]))) expect(["--ink", "--label", "--label-2", "--mo"]).toContain(v);
+  it("«спит» — лужица: шире и ниже «доволен»", () => {
+    expect(petShape("asleep").w).toBeGreaterThan(petShape("happy").w);
+    expect(petShape("asleep").h).toBeLessThan(petShape("happy").h);
   });
 });

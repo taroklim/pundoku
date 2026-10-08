@@ -1,4 +1,5 @@
 import { heatmap, summary } from "@pundoku/engine";
+import type { PetMood } from "@pundoku/engine";
 import type { RefObject } from "react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
@@ -7,6 +8,7 @@ import { formatClock } from "../play/format";
 import { useSheetSwipe } from "../shell/useSheetSwipe";
 import { PetBlot } from "../pet/PetBlot";
 import { dayPetMood } from "../pet/petDay";
+import { useWakeOnce } from "../pet/petSeen";
 import { usePetEnabled } from "../settings/prefs";
 import { heatLegend, heatOpacities } from "../play/heat";
 import { hintCellSet, hintCount, HintsRow } from "../play/hintCard";
@@ -255,11 +257,7 @@ function DayCard({
         <h3 ref={headRef} tabIndex={-1}>
           {dayLong(mark.date, locale)}
         </h3>
-        {mood && (
-          <div className="pet-slot" data-testid="pet-year">
-            <PetBlot mood={mood} size={40} />
-          </div>
-        )}
+        {mood && <YearPet key={mark.date} date={mark.date} mood={mood} />}
       </div>
       {sub && <p className="sub">{sub}</p>}
       {liar && (
@@ -366,6 +364,20 @@ function DayCard({
  * Предупреждение ДО старта (PD-125): что станет с днём, если решить его сейчас, — до кнопки «Play/Finish», а не после победы.
  * Только факт о том, как день отметится в году; ничего не обещает сверх этого и не пугает пропуском.
  */
+/**
+ * Клякса листа дня (PD-180; движение PD-260, макет PD-223 B): день, который прежде показывался «спит», закончили — при первом
+ * показе после этого клякса «просыпается» (один раз; память показанного настроения — `petSeen`). Иначе только покой.
+ * Ключуется датой: решение «проснуться» принимается на показ даты.
+ */
+function YearPet({ date, mood }: { date: string; mood: PetMood }) {
+  const wake = useWakeOnce(date, mood);
+  return (
+    <div className="pet-slot" data-testid="pet-year">
+      <PetBlot mood={mood} size={40} act={wake ? "wake" : undefined} />
+    </div>
+  );
+}
+
 function LateWarning() {
   const { t } = useTranslation();
   return (
