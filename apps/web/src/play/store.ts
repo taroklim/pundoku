@@ -95,6 +95,11 @@ export interface PlayScreenSnapshot extends PlaySnapshot {
   readonly daily?: string | null;
   /** PD-171: растёт, когда изменились записи Лжеца дня (шит/«Продолжить» перечитывают состояние). */
   readonly dailyRev?: number;
+  /**
+   * PD-255: партия на экране решена НЕ здесь — живую партию заменил победитель с другого устройства (`reloadDaily`, PD-217).
+   * Экран показывает карточку сразу, без финала (dim + пауза), как Today. Сбрасывается любой сменой фазы (`set`).
+   */
+  readonly remoteSolved?: boolean;
 }
 
 /** Единственный ключ записи Play до PD-167 (`meta:playGame`): читается только ради переноса в слот режима. */
@@ -224,6 +229,8 @@ export class PlayStore extends GameStore<PlayScreenSnapshot> {
 
   /** Партия меняется (ход/решение/смена фазы) — пишем. Выбор клетки, анимации и отклики — не прогресс, не пишем. */
   protected override set(patch: Partial<PlayScreenSnapshot>): void {
+    // PD-255: пометка «решено с другого устройства» живёт ровно до следующей смены фазы (новая партия, локальное решение).
+    if (patch.phase !== undefined && patch.remoteSolved === undefined && this.snap.remoteSolved === true) patch = { ...patch, remoteSolved: false };
     super.set(patch);
     if (patch.play !== undefined || patch.phase !== undefined || patch.hints !== undefined) this.persist();
   }
@@ -440,6 +447,7 @@ export class PlayStore extends GameStore<PlayScreenSnapshot> {
           notesMode: rec.notesMode,
           hints: rec.hints ?? 0,
           assisted: rec.assisted === true,
+          remoteSolved: true, // PD-255: не «решили сейчас» — экран покажет карточку без финала
         });
       }
     } finally {

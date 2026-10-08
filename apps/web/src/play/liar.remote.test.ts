@@ -129,9 +129,13 @@ describe("PD-217: Лжец дня и onRemoteApplied", () => {
     expect(liarInfoOf(stored)).toMatchObject({ caught: true, catchPlacement: 10, wrongAccusations: 1 });
     // Живая партия этой даты — победитель: решена, «Продолжить» нет, Year видит пойманного.
     expect(s.getSnapshot()).toMatchObject({ daily: DATE, phase: "solved" });
+    // PD-255: экран узнаёт, что партию решили не здесь (карточка без финала); новая партия пометку снимает.
+    expect(s.getSnapshot().remoteSolved).toBe(true);
     expect(s.liarDay(DATE).kind).toBe("solved");
     expect(s.liarDayContinue(DATE)).toBeNull();
     expect(liarInfoMap(await repo.listMeta("liar:")).get(DATE)).toMatchObject({ caught: true, catchPlacement: 10 });
+    s.startNew("classic", "easy");
+    expect(s.getSnapshot().remoteSolved).toBe(false);
   });
 
   it("незаконченный Лжец дня не на доске (строка «Продолжить»): решённый с сервера убирает строку", async () => {

@@ -104,16 +104,28 @@ export function PlayScreen({ onOpenSettings, onOpenHelp, onOpenToday }: { onOpen
   useClearEffectsOnUnmount(playStore, active);
 
   // «Решено»: сначала данные гаснут до 60 % (240 мс), затем карточка (финал V2, PD-89); тап прерывает паузу.
+  // PD-255: партию заменил победитель с другого устройства (`remoteSolved`, PD-217) — не «решили сейчас»: карточка сразу,
+  // без dim и паузы (как Today, `useSolveSequence`). Прилетел посреди своего финала — финал обрывается, карточка сразу.
+  const remoteSolved = phase === "solved" && snap.remoteSolved === true;
   const [cardShown, setCardShown] = useState(false);
+  const cardShownRef = useRef(false);
   useEffect(() => {
     if (phase !== "solved") {
+      cardShownRef.current = false;
       setCardShown(false);
       return;
     }
-    // Карточка уже показана (по таймеру или тапом) — дальше обычные тапы, без перехвата хвоста (PD-94).
+    // Карточка уже показана (по таймеру, тапом или сразу) — дальше обычные тапы, без перехвата хвоста (PD-94) и без
+    // повторного финала (перезапуск эффекта по `remoteSolved`).
+    if (remoteSolved || cardShownRef.current) {
+      cardShownRef.current = true;
+      setCardShown(true);
+      return;
+    }
     let shown = false;
     const show = () => {
       shown = true;
+      cardShownRef.current = true;
       setCardShown(true);
     };
     // Тап-прерывание: хвост этого касания (click над новой карточкой) гасим — иначе тап в позиции «New game» запускал её.
@@ -128,7 +140,7 @@ export function PlayScreen({ onOpenSettings, onOpenHelp, onOpenToday }: { onOpen
       window.clearTimeout(id);
       document.removeEventListener("pointerdown", onTap, true);
     };
-  }, [phase]);
+  }, [phase, remoteSolved]);
 
   // Фокус на карточку (a11y) — после кадра, а не в задаче монтажа: focus() сразу после записи форсирует style+layout (PD-95).
   const cardRef = useRef<HTMLElement>(null);
@@ -194,7 +206,8 @@ export function PlayScreen({ onOpenSettings, onOpenHelp, onOpenToday }: { onOpen
     waitFocus.current = false;
     titleRef.current?.focus({ preventScroll: true });
   }, [wait.view]);
-  const cardView = !hub && phase === "solved" && cardShown;
+  // `remoteSolved` — карточка уже в первом же кадре после замены, а не через эффект: ни одного кадра приглушённого поля.
+  const cardView = !hub && phase === "solved" && (cardShown || remoteSolved);
   const fillState = ink ? "ink" : play && canFill(play) ? "ready" : "empty";
   // PD-203: Мелодия. Звук — только пока партия Мелодии на экране и идёт (иначе ядра нет вовсе); выключатель — пункт «Звук» в ⋯.
   const melody = !hub && play?.melody === true;
