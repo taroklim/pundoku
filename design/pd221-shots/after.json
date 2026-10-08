@@ -1,0 +1,1113 @@
+{
+  "label": "after",
+  "base": "http://127.0.0.1:5522",
+  "at": "2026-10-08T01:14:03.475Z",
+  "engine": "webkit 18.4",
+  "sizes": [
+    {
+      "size": "320",
+      "viewport": [
+        320,
+        568
+      ],
+      "inset": 0,
+      "hit": {
+        "bar": {
+          "top": 504,
+          "bottom": 568,
+          "left": 0,
+          "right": 320,
+          "h": 64
+        },
+        "tabs": [
+          {
+            "id": "tab-today",
+            "left": 10,
+            "right": 109,
+            "top": 511,
+            "bottom": 562,
+            "w": 99,
+            "h": 51
+          },
+          {
+            "id": "tab-play",
+            "left": 111,
+            "right": 209,
+            "top": 511,
+            "bottom": 562,
+            "w": 99,
+            "h": 51
+          },
+          {
+            "id": "tab-year",
+            "left": 211,
+            "right": 310,
+            "top": 511,
+            "bottom": 562,
+            "w": 99,
+            "h": 51
+          }
+        ],
+        "deadPctAll": 0,
+        "deadPctVisible": 0,
+        "homeZoneDeadPct": null,
+        "underLabel": [
+          {
+            "id": "tab-today",
+            "labBottom": 558,
+            "btnBottom": 562,
+            "visBottom": 568,
+            "bandPx": 10,
+            "deadPct": 0
+          },
+          {
+            "id": "tab-play",
+            "labBottom": 558,
+            "btnBottom": 562,
+            "visBottom": 568,
+            "bandPx": 10,
+            "deadPct": 0
+          },
+          {
+            "id": "tab-year",
+            "labBottom": 558,
+            "btnBottom": 562,
+            "visBottom": 568,
+            "bandPx": 10,
+            "deadPct": 0
+          }
+        ]
+      },
+      "latency": {
+        "taps": [
+          {
+            "to": "play",
+            "pointerdown": -1,
+            "pointerup": 7,
+            "click": 15,
+            "clicks": 1,
+            "sel": 61,
+            "firstFrame": 64,
+            "moveStart": 96,
+            "switched": true,
+            "clickTarget": "tab-play"
+          },
+          {
+            "to": "year",
+            "pointerdown": 0,
+            "pointerup": 9,
+            "click": 14,
+            "clicks": 1,
+            "sel": 60,
+            "firstFrame": 65,
+            "moveStart": 88,
+            "switched": true,
+            "clickTarget": "tab-year"
+          },
+          {
+            "to": "today",
+            "pointerdown": -1,
+            "pointerup": 19,
+            "click": 21,
+            "clicks": 1,
+            "sel": 78,
+            "firstFrame": 84,
+            "moveStart": 116,
+            "switched": true,
+            "clickTarget": "tab-today"
+          },
+          {
+            "to": "year",
+            "pointerdown": -1,
+            "pointerup": 8,
+            "click": 16,
+            "clicks": 1,
+            "sel": 91,
+            "firstFrame": 129,
+            "moveStart": 222,
+            "switched": true,
+            "clickTarget": "tab-year"
+          },
+          {
+            "to": "play",
+            "pointerdown": -1,
+            "pointerup": 6,
+            "click": 10,
+            "clicks": 1,
+            "sel": 48,
+            "firstFrame": 54,
+            "moveStart": 84,
+            "switched": true,
+            "clickTarget": "tab-play"
+          },
+          {
+            "to": "today",
+            "pointerdown": -1,
+            "pointerup": 10,
+            "click": 11,
+            "clicks": 1,
+            "sel": 41,
+            "firstFrame": 44,
+            "moveStart": 73,
+            "switched": true,
+            "clickTarget": "tab-today"
+          },
+          {
+            "to": "play",
+            "pointerdown": 0,
+            "pointerup": 2,
+            "click": 4,
+            "clicks": 1,
+            "sel": 46,
+            "firstFrame": 56,
+            "moveStart": 74,
+            "switched": true,
+            "clickTarget": "tab-play"
+          },
+          {
+            "to": "year",
+            "pointerdown": -1,
+            "pointerup": 9,
+            "click": 12,
+            "clicks": 1,
+            "sel": 59,
+            "firstFrame": 68,
+            "moveStart": 86,
+            "switched": true,
+            "clickTarget": "tab-year"
+          },
+          {
+            "to": "today",
+            "pointerdown": 0,
+            "pointerup": 16,
+            "click": 20,
+            "clicks": 1,
+            "sel": 72,
+            "firstFrame": 80,
+            "moveStart": 122,
+            "switched": true,
+            "clickTarget": "tab-today"
+          },
+          {
+            "to": "year",
+            "pointerdown": 0,
+            "pointerup": 9,
+            "click": 13,
+            "clicks": 1,
+            "sel": 78,
+            "firstFrame": 85,
+            "moveStart": 119,
+            "switched": true,
+            "clickTarget": "tab-year"
+          },
+          {
+            "to": "play",
+            "pointerdown": -1,
+            "pointerup": 4,
+            "click": 9,
+            "clicks": 1,
+            "sel": 48,
+            "firstFrame": 54,
+            "moveStart": 75,
+            "switched": true,
+            "clickTarget": "tab-play"
+          },
+          {
+            "to": "today",
+            "pointerdown": 0,
+            "pointerup": 10,
+            "click": 13,
+            "clicks": 1,
+            "sel": 43,
+            "firstFrame": 51,
+            "moveStart": 82,
+            "switched": true,
+            "clickTarget": "tab-today"
+          }
+        ],
+        "switched": "12/12",
+        "doubleClicks": 0,
+        "median": {
+          "pointerdown": -1,
+          "pointerup": 9,
+          "click": 13,
+          "sel": 60,
+          "firstFrame": 65,
+          "moveStart": 88
+        },
+        "p90": {
+          "click": 20,
+          "sel": 78,
+          "firstFrame": 85,
+          "moveStart": 122
+        }
+      },
+      "rapid": [
+        {
+          "gap": 60,
+          "taps": 15,
+          "touches": 15,
+          "clicks": 15,
+          "expectedSwitches": 15,
+          "switches": 15,
+          "final": "today",
+          "last": "today",
+          "residue": []
+        },
+        {
+          "gap": 120,
+          "taps": 15,
+          "touches": 15,
+          "clicks": 15,
+          "expectedSwitches": 15,
+          "switches": 15,
+          "final": "today",
+          "last": "today",
+          "residue": []
+        },
+        {
+          "gap": 200,
+          "taps": 15,
+          "touches": 15,
+          "clicks": 15,
+          "expectedSwitches": 15,
+          "switches": 15,
+          "final": "today",
+          "last": "today",
+          "residue": []
+        }
+      ],
+      "edge": [
+        {
+          "name": "play: 4 px под подписью",
+          "to": "play",
+          "x": 160,
+          "y": 562,
+          "hitTarget": "tab-play",
+          "switched": true
+        },
+        {
+          "name": "play: 2 px ниже кнопки",
+          "to": "play",
+          "x": 160,
+          "y": 564,
+          "hitTarget": "tab-play",
+          "switched": true
+        },
+        {
+          "name": "play: верхний край бара (2 px)",
+          "to": "play",
+          "x": 160,
+          "y": 506,
+          "hitTarget": "tab-play",
+          "switched": true
+        },
+        {
+          "name": "year: 4 px под подписью",
+          "to": "year",
+          "x": 261,
+          "y": 562,
+          "hitTarget": "tab-year",
+          "switched": true
+        },
+        {
+          "name": "year: 2 px ниже кнопки",
+          "to": "year",
+          "x": 261,
+          "y": 564,
+          "hitTarget": "tab-year",
+          "switched": true
+        },
+        {
+          "name": "year: верхний край бара (2 px)",
+          "to": "year",
+          "x": 261,
+          "y": 506,
+          "hitTarget": "tab-year",
+          "switched": true
+        },
+        {
+          "name": "year: 4 px от правого края экрана",
+          "to": "year",
+          "x": 316,
+          "y": 537,
+          "hitTarget": "tab-year",
+          "switched": true
+        },
+        {
+          "name": "play: зазор слева от кнопки",
+          "to": "play",
+          "x": 110,
+          "y": 537,
+          "hitTarget": "tab-play",
+          "switched": true
+        }
+      ],
+      "feedback": {
+        "activeRules": [],
+        "tapHighlight": "rgba(0, 0, 0, 0)",
+        "touchAction": "manipulation",
+        "userSelect": "text",
+        "touchCallout": null
+      }
+    },
+    {
+      "size": "393",
+      "viewport": [
+        393,
+        852
+      ],
+      "inset": 34,
+      "hit": {
+        "bar": {
+          "top": 754,
+          "bottom": 852,
+          "left": 0,
+          "right": 393,
+          "h": 98
+        },
+        "tabs": [
+          {
+            "id": "tab-today",
+            "left": 10,
+            "right": 133,
+            "top": 761,
+            "bottom": 812,
+            "w": 123,
+            "h": 51
+          },
+          {
+            "id": "tab-play",
+            "left": 135,
+            "right": 258,
+            "top": 761,
+            "bottom": 812,
+            "w": 123,
+            "h": 51
+          },
+          {
+            "id": "tab-year",
+            "left": 260,
+            "right": 383,
+            "top": 761,
+            "bottom": 812,
+            "w": 123,
+            "h": 51
+          }
+        ],
+        "deadPctAll": 0,
+        "deadPctVisible": 0,
+        "homeZoneDeadPct": 0,
+        "underLabel": [
+          {
+            "id": "tab-today",
+            "labBottom": 808,
+            "btnBottom": 812,
+            "visBottom": 818,
+            "bandPx": 10,
+            "deadPct": 0
+          },
+          {
+            "id": "tab-play",
+            "labBottom": 808,
+            "btnBottom": 812,
+            "visBottom": 818,
+            "bandPx": 10,
+            "deadPct": 0
+          },
+          {
+            "id": "tab-year",
+            "labBottom": 808,
+            "btnBottom": 812,
+            "visBottom": 818,
+            "bandPx": 10,
+            "deadPct": 0
+          }
+        ]
+      },
+      "latency": {
+        "taps": [
+          {
+            "to": "play",
+            "pointerdown": 0,
+            "pointerup": 3,
+            "click": 7,
+            "clicks": 1,
+            "sel": 72,
+            "firstFrame": 76,
+            "moveStart": 127,
+            "switched": true,
+            "clickTarget": "tab-play"
+          },
+          {
+            "to": "year",
+            "pointerdown": -1,
+            "pointerup": 20,
+            "click": 23,
+            "clicks": 1,
+            "sel": 64,
+            "firstFrame": 73,
+            "moveStart": 108,
+            "switched": true,
+            "clickTarget": "tab-year"
+          },
+          {
+            "to": "today",
+            "pointerdown": -2,
+            "pointerup": 15,
+            "click": 18,
+            "clicks": 1,
+            "sel": 87,
+            "firstFrame": 108,
+            "moveStart": 160,
+            "switched": true,
+            "clickTarget": "tab-today"
+          },
+          {
+            "to": "year",
+            "pointerdown": 0,
+            "pointerup": 9,
+            "click": 17,
+            "clicks": 1,
+            "sel": 107,
+            "firstFrame": 132,
+            "moveStart": 197,
+            "switched": true,
+            "clickTarget": "tab-year"
+          },
+          {
+            "to": "play",
+            "pointerdown": -1,
+            "pointerup": 2,
+            "click": 6,
+            "clicks": 1,
+            "sel": 78,
+            "firstFrame": 95,
+            "moveStart": 125,
+            "switched": true,
+            "clickTarget": "tab-play"
+          },
+          {
+            "to": "today",
+            "pointerdown": -2,
+            "pointerup": 18,
+            "click": 19,
+            "clicks": 1,
+            "sel": 48,
+            "firstFrame": 51,
+            "moveStart": 84,
+            "switched": true,
+            "clickTarget": "tab-today"
+          },
+          {
+            "to": "play",
+            "pointerdown": -1,
+            "pointerup": 2,
+            "click": 5,
+            "clicks": 1,
+            "sel": 63,
+            "firstFrame": 65,
+            "moveStart": 98,
+            "switched": true,
+            "clickTarget": "tab-play"
+          },
+          {
+            "to": "year",
+            "pointerdown": -1,
+            "pointerup": 22,
+            "click": 25,
+            "clicks": 1,
+            "sel": 61,
+            "firstFrame": 65,
+            "moveStart": 96,
+            "switched": true,
+            "clickTarget": "tab-year"
+          },
+          {
+            "to": "today",
+            "pointerdown": -1,
+            "pointerup": 14,
+            "click": 20,
+            "clicks": 1,
+            "sel": 82,
+            "firstFrame": 98,
+            "moveStart": 135,
+            "switched": true,
+            "clickTarget": "tab-today"
+          },
+          {
+            "to": "year",
+            "pointerdown": 0,
+            "pointerup": 22,
+            "click": 26,
+            "clicks": 1,
+            "sel": 94,
+            "firstFrame": 98,
+            "moveStart": 136,
+            "switched": true,
+            "clickTarget": "tab-year"
+          },
+          {
+            "to": "play",
+            "pointerdown": -1,
+            "pointerup": 3,
+            "click": 12,
+            "clicks": 1,
+            "sel": 62,
+            "firstFrame": 67,
+            "moveStart": 99,
+            "switched": true,
+            "clickTarget": "tab-play"
+          },
+          {
+            "to": "today",
+            "pointerdown": -1,
+            "pointerup": 25,
+            "click": 28,
+            "clicks": 1,
+            "sel": 63,
+            "firstFrame": 67,
+            "moveStart": 107,
+            "switched": true,
+            "clickTarget": "tab-today"
+          }
+        ],
+        "switched": "12/12",
+        "doubleClicks": 0,
+        "median": {
+          "pointerdown": -1,
+          "pointerup": 15,
+          "click": 19,
+          "sel": 72,
+          "firstFrame": 76,
+          "moveStart": 125
+        },
+        "p90": {
+          "click": 26,
+          "sel": 94,
+          "firstFrame": 108,
+          "moveStart": 160
+        }
+      },
+      "rapid": [
+        {
+          "gap": 60,
+          "taps": 15,
+          "touches": 15,
+          "clicks": 15,
+          "expectedSwitches": 15,
+          "switches": 15,
+          "final": "today",
+          "last": "today",
+          "residue": []
+        },
+        {
+          "gap": 120,
+          "taps": 15,
+          "touches": 15,
+          "clicks": 15,
+          "expectedSwitches": 15,
+          "switches": 15,
+          "final": "today",
+          "last": "today",
+          "residue": []
+        },
+        {
+          "gap": 200,
+          "taps": 15,
+          "touches": 15,
+          "clicks": 15,
+          "expectedSwitches": 15,
+          "switches": 15,
+          "final": "today",
+          "last": "today",
+          "residue": []
+        }
+      ],
+      "edge": [
+        {
+          "name": "play: 4 px под подписью",
+          "to": "play",
+          "x": 197,
+          "y": 812,
+          "hitTarget": "tab-play",
+          "switched": true
+        },
+        {
+          "name": "play: 2 px ниже кнопки",
+          "to": "play",
+          "x": 197,
+          "y": 814,
+          "hitTarget": "tab-play",
+          "switched": true
+        },
+        {
+          "name": "play: верхний край бара (2 px)",
+          "to": "play",
+          "x": 197,
+          "y": 756,
+          "hitTarget": "tab-play",
+          "switched": true
+        },
+        {
+          "name": "play: зона индикатора Home (+10 px)",
+          "to": "play",
+          "x": 197,
+          "y": 828,
+          "hitTarget": "tab-play",
+          "switched": true
+        },
+        {
+          "name": "play: 3 px над краем видимой части",
+          "to": "play",
+          "x": 197,
+          "y": 815,
+          "hitTarget": "tab-play",
+          "switched": true
+        },
+        {
+          "name": "year: 4 px под подписью",
+          "to": "year",
+          "x": 322,
+          "y": 812,
+          "hitTarget": "tab-year",
+          "switched": true
+        },
+        {
+          "name": "year: 2 px ниже кнопки",
+          "to": "year",
+          "x": 322,
+          "y": 814,
+          "hitTarget": "tab-year",
+          "switched": true
+        },
+        {
+          "name": "year: верхний край бара (2 px)",
+          "to": "year",
+          "x": 322,
+          "y": 756,
+          "hitTarget": "tab-year",
+          "switched": true
+        },
+        {
+          "name": "year: зона индикатора Home (+10 px)",
+          "to": "year",
+          "x": 322,
+          "y": 828,
+          "hitTarget": "tab-year",
+          "switched": true
+        },
+        {
+          "name": "year: 3 px над краем видимой части",
+          "to": "year",
+          "x": 322,
+          "y": 815,
+          "hitTarget": "tab-year",
+          "switched": true
+        },
+        {
+          "name": "year: 4 px от правого края экрана",
+          "to": "year",
+          "x": 389,
+          "y": 787,
+          "hitTarget": "tab-year",
+          "switched": true
+        },
+        {
+          "name": "play: зазор слева от кнопки",
+          "to": "play",
+          "x": 134,
+          "y": 787,
+          "hitTarget": "tab-play",
+          "switched": true
+        }
+      ],
+      "feedback": {
+        "activeRules": [],
+        "tapHighlight": "rgba(0, 0, 0, 0)",
+        "touchAction": "manipulation",
+        "userSelect": "text",
+        "touchCallout": null
+      }
+    },
+    {
+      "size": "430",
+      "viewport": [
+        430,
+        932
+      ],
+      "inset": 34,
+      "hit": {
+        "bar": {
+          "top": 834,
+          "bottom": 932,
+          "left": 0,
+          "right": 430,
+          "h": 98
+        },
+        "tabs": [
+          {
+            "id": "tab-today",
+            "left": 10,
+            "right": 145,
+            "top": 841,
+            "bottom": 892,
+            "w": 135,
+            "h": 51
+          },
+          {
+            "id": "tab-play",
+            "left": 147,
+            "right": 283,
+            "top": 841,
+            "bottom": 892,
+            "w": 135,
+            "h": 51
+          },
+          {
+            "id": "tab-year",
+            "left": 285,
+            "right": 420,
+            "top": 841,
+            "bottom": 892,
+            "w": 135,
+            "h": 51
+          }
+        ],
+        "deadPctAll": 0,
+        "deadPctVisible": 0,
+        "homeZoneDeadPct": 0,
+        "underLabel": [
+          {
+            "id": "tab-today",
+            "labBottom": 888,
+            "btnBottom": 892,
+            "visBottom": 898,
+            "bandPx": 10,
+            "deadPct": 0
+          },
+          {
+            "id": "tab-play",
+            "labBottom": 888,
+            "btnBottom": 892,
+            "visBottom": 898,
+            "bandPx": 10,
+            "deadPct": 0
+          },
+          {
+            "id": "tab-year",
+            "labBottom": 888,
+            "btnBottom": 892,
+            "visBottom": 898,
+            "bandPx": 10,
+            "deadPct": 0
+          }
+        ]
+      },
+      "latency": {
+        "taps": [
+          {
+            "to": "play",
+            "pointerdown": 0,
+            "pointerup": 3,
+            "click": 5,
+            "clicks": 1,
+            "sel": 159,
+            "firstFrame": 163,
+            "moveStart": 203,
+            "switched": true,
+            "clickTarget": "tab-play"
+          },
+          {
+            "to": "year",
+            "pointerdown": -1,
+            "pointerup": 11,
+            "click": 18,
+            "clicks": 1,
+            "sel": 57,
+            "firstFrame": 60,
+            "moveStart": 81,
+            "switched": true,
+            "clickTarget": "tab-year"
+          },
+          {
+            "to": "today",
+            "pointerdown": 0,
+            "pointerup": 17,
+            "click": 21,
+            "clicks": 1,
+            "sel": 70,
+            "firstFrame": 79,
+            "moveStart": 111,
+            "switched": true,
+            "clickTarget": "tab-today"
+          },
+          {
+            "to": "year",
+            "pointerdown": 0,
+            "pointerup": 15,
+            "click": 22,
+            "clicks": 1,
+            "sel": 84,
+            "firstFrame": 93,
+            "moveStart": 131,
+            "switched": true,
+            "clickTarget": "tab-year"
+          },
+          {
+            "to": "play",
+            "pointerdown": 0,
+            "pointerup": 2,
+            "click": 6,
+            "clicks": 1,
+            "sel": 52,
+            "firstFrame": 61,
+            "moveStart": 83,
+            "switched": true,
+            "clickTarget": "tab-play"
+          },
+          {
+            "to": "today",
+            "pointerdown": 0,
+            "pointerup": 17,
+            "click": 20,
+            "clicks": 1,
+            "sel": 41,
+            "firstFrame": 45,
+            "moveStart": 79,
+            "switched": true,
+            "clickTarget": "tab-today"
+          },
+          {
+            "to": "play",
+            "pointerdown": -1,
+            "pointerup": 4,
+            "click": 13,
+            "clicks": 1,
+            "sel": 60,
+            "firstFrame": 63,
+            "moveStart": 92,
+            "switched": true,
+            "clickTarget": "tab-play"
+          },
+          {
+            "to": "year",
+            "pointerdown": 0,
+            "pointerup": 22,
+            "click": 25,
+            "clicks": 1,
+            "sel": 63,
+            "firstFrame": 67,
+            "moveStart": 105,
+            "switched": true,
+            "clickTarget": "tab-year"
+          },
+          {
+            "to": "today",
+            "pointerdown": -1,
+            "pointerup": 11,
+            "click": 18,
+            "clicks": 1,
+            "sel": 73,
+            "firstFrame": 81,
+            "moveStart": 123,
+            "switched": true,
+            "clickTarget": "tab-today"
+          },
+          {
+            "to": "year",
+            "pointerdown": -1,
+            "pointerup": 18,
+            "click": 22,
+            "clicks": 1,
+            "sel": 82,
+            "firstFrame": 89,
+            "moveStart": 118,
+            "switched": true,
+            "clickTarget": "tab-year"
+          },
+          {
+            "to": "play",
+            "pointerdown": -1,
+            "pointerup": 2,
+            "click": 6,
+            "clicks": 1,
+            "sel": 62,
+            "firstFrame": 67,
+            "moveStart": 97,
+            "switched": true,
+            "clickTarget": "tab-play"
+          },
+          {
+            "to": "today",
+            "pointerdown": 0,
+            "pointerup": 21,
+            "click": 25,
+            "clicks": 1,
+            "sel": 56,
+            "firstFrame": 61,
+            "moveStart": 88,
+            "switched": true,
+            "clickTarget": "tab-today"
+          }
+        ],
+        "switched": "12/12",
+        "doubleClicks": 0,
+        "median": {
+          "pointerdown": 0,
+          "pointerup": 15,
+          "click": 20,
+          "sel": 63,
+          "firstFrame": 67,
+          "moveStart": 105
+        },
+        "p90": {
+          "click": 25,
+          "sel": 84,
+          "firstFrame": 93,
+          "moveStart": 131
+        }
+      },
+      "rapid": [
+        {
+          "gap": 60,
+          "taps": 15,
+          "touches": 15,
+          "clicks": 15,
+          "expectedSwitches": 15,
+          "switches": 15,
+          "final": "today",
+          "last": "today",
+          "residue": []
+        },
+        {
+          "gap": 120,
+          "taps": 15,
+          "touches": 15,
+          "clicks": 15,
+          "expectedSwitches": 15,
+          "switches": 15,
+          "final": "today",
+          "last": "today",
+          "residue": []
+        },
+        {
+          "gap": 200,
+          "taps": 15,
+          "touches": 15,
+          "clicks": 15,
+          "expectedSwitches": 15,
+          "switches": 15,
+          "final": "today",
+          "last": "today",
+          "residue": []
+        }
+      ],
+      "edge": [
+        {
+          "name": "play: 4 px под подписью",
+          "to": "play",
+          "x": 215,
+          "y": 892,
+          "hitTarget": "tab-play",
+          "switched": true
+        },
+        {
+          "name": "play: 2 px ниже кнопки",
+          "to": "play",
+          "x": 215,
+          "y": 894,
+          "hitTarget": "tab-play",
+          "switched": true
+        },
+        {
+          "name": "play: верхний край бара (2 px)",
+          "to": "play",
+          "x": 215,
+          "y": 836,
+          "hitTarget": "tab-play",
+          "switched": true
+        },
+        {
+          "name": "play: зона индикатора Home (+10 px)",
+          "to": "play",
+          "x": 215,
+          "y": 908,
+          "hitTarget": "tab-play",
+          "switched": true
+        },
+        {
+          "name": "play: 3 px над краем видимой части",
+          "to": "play",
+          "x": 215,
+          "y": 895,
+          "hitTarget": "tab-play",
+          "switched": true
+        },
+        {
+          "name": "year: 4 px под подписью",
+          "to": "year",
+          "x": 352,
+          "y": 892,
+          "hitTarget": "tab-year",
+          "switched": true
+        },
+        {
+          "name": "year: 2 px ниже кнопки",
+          "to": "year",
+          "x": 352,
+          "y": 894,
+          "hitTarget": "tab-year",
+          "switched": true
+        },
+        {
+          "name": "year: верхний край бара (2 px)",
+          "to": "year",
+          "x": 352,
+          "y": 836,
+          "hitTarget": "tab-year",
+          "switched": true
+        },
+        {
+          "name": "year: зона индикатора Home (+10 px)",
+          "to": "year",
+          "x": 352,
+          "y": 908,
+          "hitTarget": "tab-year",
+          "switched": true
+        },
+        {
+          "name": "year: 3 px над краем видимой части",
+          "to": "year",
+          "x": 352,
+          "y": 895,
+          "hitTarget": "tab-year",
+          "switched": true
+        },
+        {
+          "name": "year: 4 px от правого края экрана",
+          "to": "year",
+          "x": 426,
+          "y": 867,
+          "hitTarget": "tab-year",
+          "switched": true
+        },
+        {
+          "name": "play: зазор слева от кнопки",
+          "to": "play",
+          "x": 146,
+          "y": 867,
+          "hitTarget": "tab-play",
+          "switched": true
+        }
+      ],
+      "feedback": {
+        "activeRules": [],
+        "tapHighlight": "rgba(0, 0, 0, 0)",
+        "touchAction": "manipulation",
+        "userSelect": "text",
+        "touchCallout": null
+      }
+    }
+  ]
+}
