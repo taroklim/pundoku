@@ -43,7 +43,6 @@ export function UndoToast({ toast, announce = null, actionLabel, onAction, onExp
   const [shown, setShown] = useState(toast);
   const shownRef = useRef(shown);
   shownRef.current = shown;
-  const [leaving, setLeaving] = useState(false);
   const [said, setSaid] = useState("");
 
   const timer = useRef(0);
@@ -77,18 +76,13 @@ export function UndoToast({ toast, announce = null, actionLabel, onAction, onExp
     startedAt.current = 0;
     if (!toast) {
       if (!shownRef.current) return; // тоста и не было
-      setLeaving(true);
       const t = window.setTimeout(
-        () => {
-          setShown(null);
-          setLeaving(false);
-        },
+        () => setShown(null),
         reducedMotion() ? LEAVE_REDUCED_MS : LEAVE_MS,
       );
       return () => window.clearTimeout(t);
     }
     setShown(toast);
-    setLeaving(false);
     remaining.current = UNDO_TOAST_MS;
     held.current = false;
     focusInside.current = false;
@@ -116,19 +110,24 @@ export function UndoToast({ toast, announce = null, actionLabel, onAction, onExp
 
   useEffect(() => () => window.clearTimeout(timer.current), []);
 
-  const kbd = shown?.focus === true;
+  // Пришедший тост рисуется в ТОМ ЖЕ коммите, что и проп (не через `shown` из эффекта): иначе фокус «после кадра» мог
+  // прийти раньше перерисовки и не найти кнопку (WebKit под нагрузкой — фокус терялся на <body>). `shown` держит только
+  // уходящий тост на время прозрачности.
+  const view = toast ?? shown;
+  const out = !toast;
+  const kbd = view?.focus === true;
   return createPortal(
     <>
       <p className="sr-only" role="status" aria-live="polite" aria-atomic="true" data-testid="undo-toast-live">
         {said}
       </p>
-      {shown && (
+      {view && (
         <div
-          key={shown.id}
+          key={view.id}
           ref={box}
-          className={leaving ? "undo-toast out" : "undo-toast"}
-          aria-hidden={leaving || undefined}
-          inert={leaving || undefined}
+          className={out ? "undo-toast out" : "undo-toast"}
+          aria-hidden={out || undefined}
+          inert={out || undefined}
           onPointerDown={() => {
             held.current = true;
             pause();
@@ -153,7 +152,7 @@ export function UndoToast({ toast, announce = null, actionLabel, onAction, onExp
           }}
           data-testid="undo-toast"
         >
-          <span className="tt">{shown.text}</span>
+          <span className="tt">{view.text}</span>
           <button
             ref={action}
             type="button"

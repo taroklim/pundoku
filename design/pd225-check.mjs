@@ -356,13 +356,15 @@ async function mainFlow(type, bn) {
 
     // 2. Тап по другой строке при открытой: закрылась, другая НЕ открылась (шита/партии нет).
     await page.locator('[data-testid="mode-melody"]').click();
-    await page.waitForTimeout(400);
+    await until(async () => (await rowState(page, "classic")).x === 0, 3000); // доводка 220 мс; под нагрузкой дольше
+    await page.waitForTimeout(300);
     st = await rowState(page, "classic");
     ok(`${bn} §2: тап по другой строке — открытая закрылась, другая не открылась`, st.x === 0 && !st.sheet && !st.board, JSON.stringify({ x: st.x, sheet: st.sheet }));
     // тап по самой открытой строке — закрывает, партию не открывает
     await mouseDrag(page, "classic", -70);
     await page.locator('[data-testid="mode-classic"]').click({ position: { x: 160, y: 20 } });
-    await page.waitForTimeout(400);
+    await until(async () => (await rowState(page, "classic")).x === 0, 3000);
+    await page.waitForTimeout(300);
     st = await rowState(page, "classic");
     ok(`${bn} §2: тап по открытой строке — закрыта, партия не открыта`, st.x === 0 && !st.board && !st.sheet);
 
