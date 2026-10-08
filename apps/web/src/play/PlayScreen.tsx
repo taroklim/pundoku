@@ -8,6 +8,7 @@ import { useDeferredFocus } from "../shell/afterPaint";
 import { swallowGhostClick } from "../shell/ghostClick";
 import { useTabActive } from "../shell/tabSlide";
 import { TabHeader } from "../shell/TabHeader";
+import { UndoToast } from "../shell/UndoToast";
 import { localDate } from "../today/dayResolver";
 import { AccuseMenu } from "./AccuseMenu";
 import { Board } from "./Board";
@@ -20,8 +21,10 @@ import {
   useCellsLeftAnnouncement,
   useClearEffectsOnUnmount,
   useClock,
+  useDocumentGameKeys,
   useHintAnnouncement,
 } from "./controls";
+import type { GameKeyEvent } from "./controls";
 import { fitClassName } from "./fitModel";
 import { HintButton } from "./HintButton";
 import { HintDock, HINT_DOCK_ID } from "./HintDock";
@@ -38,6 +41,7 @@ import { MelodyModeIcon } from "./modeIcons";
 import { MoreMenu } from "./MoreMenu";
 import { PlaySetup } from "./PlaySetup";
 import { ResultCard } from "./ResultCard";
+import type { SavedPlay } from "./store";
 import { playStore } from "./store";
 import { Subline } from "./Subline";
 import { WaitPanel } from "./WaitPanel";
@@ -81,6 +85,38 @@ export function PlayScreen({ onOpenSettings, onOpenHelp, onOpenToday }: { onOpen
     setRule(null);
     setAccuseAt(null);
   }, [snap.reselect]);
+  // PD-225 (design/pd224-swipe-gestures.md §A7.1): партия режима удалена с хаба — сразу (слот уже `null`), тост «Отменить» 6 с
+  // возвращает её. Тост закрывается (удаление окончательно): по таймеру, новым удалением (прежняя отмена теряется), уходом с хаба
+  // (партия, шит/меню, другая вкладка, Settings) и скрытием страницы. Прокрутка хаба его не закрывает.
+  const [undo, setUndo] = useState<{ id: number; mode: ModeId; rec: SavedPlay; text: string; focus: boolean } | null>(null);
+  const [said, setSaid] = useState<{ id: number; text: string } | null>(null);
+  const undoSeq = useRef(0);
+  const modeName = (mode: ModeId) => t(`modes.${modeDef(mode).textKey}.name`);
+  const deleteMode = (mode: ModeId, kbd: boolean) => {
+    const rec = playStore.discard(mode);
+    if (!rec) return;
+    setSaid(null);
+    setUndo({ id: ++undoSeq.current, mode, rec, text: t("modes.deleted", { mode: modeName(mode) }), focus: kbd });
+  };
+  const undoDelete = (hadFocus: boolean) => {
+    const u = undo;
+    setUndo(null);
+    if (!u || !playStore.restoreSlot(u.rec)) return;
+    setSaid({ id: u.id, text: t("modes.restored", { mode: modeName(u.mode) }) });
+    if (hadFocus) document.querySelector<HTMLElement>(`[data-testid="mode-${u.mode}"]`)?.focus({ preventScroll: true });
+  };
+  const leftHub = !snap.hub || !active || sheet !== null || rule !== null;
+  useEffect(() => {
+    if (leftHub) setUndo(null);
+  }, [leftHub]);
+  useEffect(() => {
+    const onHide = () => {
+      if (document.visibilityState === "hidden") setUndo(null);
+    };
+    document.addEventListener("visibilitychange", onHide);
+    return () => document.removeEventListener("visibilitychange", onHide);
+  }, []);
+
   const openSheet = (mode: ModeId, opener: HTMLElement | null = document.activeElement instanceof HTMLElement ? document.activeElement : null) => {
     if (modeDef(mode).grid === "liar") {
       // Вход в режим Лжеца: заготовить тяжёлые сетки (§1.5) и перечитать Лжеца дня (мог прийти из синхронизации).
@@ -179,6 +215,7 @@ export function PlayScreen({ onOpenSettings, onOpenHelp, onOpenToday }: { onOpen
   // старым экраном — фокус на заголовок вкладки, а не на <body> (VoiceOver/клавиатура не теряют место). Если фокус уже
   // на живом элементе (повторный тап по вкладке), не трогаем.
   const titleRef = useRef<HTMLHeadingElement>(null);
+  const screenRef = useRef<HTMLDivElement>(null);
   const wasHub = useRef(snap.hub);
   useEffect(() => {
     if (wasHub.current !== snap.hub && (!document.activeElement || document.activeElement === document.body)) titleRef.current?.focus({ preventScroll: true });
@@ -236,23 +273,22 @@ export function PlayScreen({ onOpenSettings, onOpenHelp, onOpenToday }: { onOpen
   const fitClass = hub ? " play-hub" : fitClassName({ fit: !cardView, hintable, docked: hint.open });
   const waitClass = hub || restoring ? "" : waiting ? " play-waiting" : wait.entered ? " play-in" : "";
 
+  const onGameKey = (e: GameKeyEvent) => {
+    // PD-171: A — обвинить выбранную подсказку (то же меню-подтверждение, что долгое нажатие).
+    const target = e.target instanceof Element ? e.target : null;
+    if (liarOpen && e.code === "KeyA" && !e.ctrlKey && !e.metaKey && !e.altKey && !target?.closest('[role="dialog"], [role="menu"]')) {
+      e.preventDefault();
+      if (sel !== null) openAccuse(sel, null);
+      return;
+    }
+    // PD-244: Esc сначала заканчивает осмотр доски из ⋯ (как «Готово»), следующий — док/выбор.
+    handleGameKey(e, playStore, ladder, inspectOn && phase === "playing" ? () => setInspectKey(null) : null);
+  };
+  // PD-232 (а): те же клавиши, когда фокус вне экрана (<body> после загрузки, вкладка таб-бара) — пока партия на экране.
+  useDocumentGameKeys(screenRef, active && !hub && !waiting && !restoring && phase === "playing", onGameKey, playStore);
+
   return (
-    <div
-      className={`play${fitClass}${waitClass}`}
-      onKeyDown={
-        hub || waiting
-          ? undefined
-          : (e) => {
-              // PD-171: A — обвинить выбранную подсказку (то же меню-подтверждение, что долгое нажатие).
-              if (liarOpen && e.code === "KeyA" && !e.ctrlKey && !e.metaKey && !e.altKey && !(e.target as HTMLElement).closest('[role="dialog"], [role="menu"]')) {
-                e.preventDefault();
-                if (sel !== null) openAccuse(sel, null);
-                return;
-              }
-              handleGameKey(e, playStore, ladder);
-            }
-      }
-    >
+    <div ref={screenRef} className={`play${fitClass}${waitClass}`} onKeyDown={hub || waiting ? undefined : onGameKey}>
       {/* Live-регион для скринридера: «N cells left» только на порогах (см. хук выше). */}
       <p className="sr-only" role="status" aria-live="polite" aria-atomic="true">
         {announcement}
@@ -290,6 +326,8 @@ export function PlayScreen({ onOpenSettings, onOpenHelp, onOpenToday }: { onOpen
           }}
           onNewInMode={(mode, row) => openSheet(mode, row)}
           onOpenToday={() => onOpenToday?.()}
+          onDeleteMode={deleteMode}
+          onMenuOpen={() => setUndo(null)}
         />
       ) : (
         <>
@@ -411,6 +449,13 @@ export function PlayScreen({ onOpenSettings, onOpenHelp, onOpenToday }: { onOpen
           returnFocus={accuseOpener}
         />
       )}
+      <UndoToast
+        toast={undo && !leftHub ? undo : null}
+        announce={said}
+        actionLabel={t("modes.undo")}
+        onAction={undoDelete}
+        onExpire={() => setUndo(null)}
+      />
       {rule && <RuleSheet rule={rule} onDone={() => setRule(null)} />}
       {hint.rule && <HintRuleSheet play glyphs={play?.glyphs === true} onGo={() => ladder.confirmRule()} onCancel={() => ladder.dismissRule()} />}
     </div>

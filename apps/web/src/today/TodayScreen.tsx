@@ -9,6 +9,7 @@ import {
   useCellsLeftAnnouncement,
   useClearEffectsOnUnmount,
   useClock,
+  useDocumentGameKeys,
   useHintAnnouncement,
 } from "../play/controls";
 import { fitClassName } from "../play/fitModel";
@@ -23,6 +24,7 @@ import { cellsLeft, isGridFull } from "../play/logic";
 import { ResultCard } from "../play/ResultCard";
 import { Subline } from "../play/Subline";
 import { useDeferredFocus } from "../shell/afterPaint";
+import { useEscapeBack } from "../shell/escapeBack";
 import { useTabActive } from "../shell/tabSlide";
 import { TabHeader } from "../shell/TabHeader";
 import type { DayStore } from "./dayStore";
@@ -158,6 +160,12 @@ export function DayView({ store, archive, onOpenSettings, onOpenHelp }: { store:
     listDays,
     phase === "solved" && play ? { date: snap.date, difficulty: snap.difficultyKnown ? difficulty : null, play, assisted: snap.assisted === true, hints: snap.hints } : null,
   );
+
+  // PD-232 (а): клавиши партии и при фокусе вне экрана (<body> после загрузки, вкладка таб-бара) — пока поле в игре.
+  useDocumentGameKeys(root, active && interactive && !stale, (e) => handleGameKey(e, store, ladder), store);
+  // PD-232 (г): архив вне партии (загрузка, «недоступно», карточка решённого дня) — Esc = «‹ Year». В партии Esc снимает выбор
+  // (handleGameKey) и из партии не выводит.
+  useEscapeBack(archive !== undefined && !(interactive && !stale), () => archive?.onBack());
 
   return (
     <div ref={root} className={`play today${archive ? " archive" : ""}${fitClass}`} onKeyDown={(e) => handleGameKey(e, store, ladder)} data-testid={archive ? "archive-screen" : undefined} data-date={archive ? archive.date : undefined}>

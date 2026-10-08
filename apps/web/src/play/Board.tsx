@@ -5,7 +5,7 @@ import { useTranslation } from "react-i18next";
 import type { RingMark } from "../melody/game";
 import { ringLifetimeMs, ringSchedule } from "../melody/game";
 import { useHighlightPeers, useHighlightWrong } from "../settings/prefs";
-import { LONG_PRESS_MS } from "./controls";
+import { ARROWS, LONG_PRESS_MS } from "./controls";
 import { Glyph, glyphName } from "./glyphs";
 import { acquittedCells, caughtLie, liarHidden } from "./liar";
 import { blotsIn, digitAt, isGiven, isWrong, notesOf, peersOf } from "./logic";
@@ -271,13 +271,6 @@ function useMoment<T extends { id: number }>(effect: T | null | undefined, ms: n
   return effect && effect.id !== done ? effect : null;
 }
 
-const ARROWS: Record<string, [number, number]> = {
-  ArrowUp: [-1, 0],
-  ArrowDown: [1, 0],
-  ArrowLeft: [0, -1],
-  ArrowRight: [0, 1],
-};
-
 /** Слой области подсказки: геометрия — через те же переменные, что у кольца выбора (`--s`, `--box-gap`). */
 function HintArea({ region, tone }: { region: NonNullable<HintMarks["region"]>; tone: HintMarks["tone"] }) {
   const g = regionRect(region);
@@ -465,6 +458,12 @@ export function Board({ snap, store, dim, hintMarks = null, onAccuse, canAccuse,
     const dir = ARROWS[e.key];
     if (!dir || e.altKey || e.ctrlKey || e.metaKey) return;
     e.preventDefault();
+    // PD-232 (г): Esc снял выбор — стрелка выбирает клетку под фокусом, а не «сдвиг от ничего» (moveSelection молчал бы).
+    if (selected === null) {
+      const at = (e.target as HTMLElement).closest<HTMLElement>("[data-i]")?.dataset["i"];
+      store.select(at !== undefined ? Number(at) : stop);
+      return;
+    }
     const next = store.moveSelection(dir[0], dir[1]);
     if (next !== null) ref.current?.querySelector<HTMLElement>(`[data-i="${next}"]`)?.focus();
   };

@@ -9,7 +9,12 @@
  * `click` в capture-фазе на `window` и гасим его (`preventDefault` + `stopImmediatePropagation`). Не трогаем:
  * - клики без касания указателем — с клавиатуры (Enter/Space) и от VoiceOver/Switch Control приходят с `detail === 0`;
  * - любое следующее касание: новый `pointerdown` снимает перехватчик (обычные тапы после паузы работают);
- * - всё, что позже окна: перехватчик одноразовый и снимается сам.
+ * - всё, что позже окна: перехватчик одноразовый и снимается сам;
+ * - касание ДРУГОЙ вкладки таб-бара (PD-221): он под пальцем не перерисовывается, его click — не призрак, а выбор вкладки.
+ *   Раньше тап по вкладке во время финала только прерывал финал, а вкладка не менялась («тап потерялся»).
+ *
+ * Касание УЖЕ ВЫБРАННОЙ вкладки (PD-239, QA PD-222) — гасим, как любой хвост: иначе его click — «повторный тап», и на Play
+ * это уход на хаб (PD-144) вместо карточки результата. Прерывающее касание только досрочно завершает финал.
  */
 export const GHOST_CLICK_GRACE_MS = 350;
 /** Страховка: если `pointerup` так и не пришёл (длинное удержание/потеря события) — снимаем перехватчик сами. */
@@ -17,9 +22,16 @@ const MAX_HOLD_MS = 10_000;
 
 let disarmCurrent: (() => void) | null = null;
 
+/** Касание пришлось на таб-бар, но не на выбранную вкладку (её click — выбор другой вкладки, не хвост прерывания). */
+function touchesOtherTab(down: Event): boolean {
+  if (!(down.target instanceof Element) || !down.target.closest('[role="tablist"]')) return false;
+  return down.target.closest('[role="tab"]')?.getAttribute("aria-selected") !== "true";
+}
+
 /** Вызывать из обработчика `pointerdown`, который прервал анимацию и перерисовал экран; `down` — это событие. */
 export function swallowGhostClick(down: Event): void {
   disarmCurrent?.();
+  if (touchesOtherTab(down)) return;
 
   let timer = 0;
   const disarm = () => {

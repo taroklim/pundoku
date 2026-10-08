@@ -3,11 +3,12 @@
  * «N cells left», панель 1–9 с остатками + Notes/Undo/Erase, клавиатурный ввод, сброс анимаций.
  * Экраны отличаются шапкой и тем, откуда берётся сетка; всё остальное — одно и то же.
  */
-import type { CSSProperties, KeyboardEvent } from "react";
+import type { CSSProperties, RefObject } from "react";
 import { memo, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { TFunction } from "i18next";
 import { ActionSheet } from "../recovery/ActionSheet";
+import { EDITABLE, OVERLAY, overlayOpen } from "../shell/escapeBack";
 import { formatClock } from "./format";
 import type { GameStore, PlaySnapshot } from "./gameStore";
 import type { HintLadder } from "./hintStore";
@@ -200,19 +201,88 @@ export function useClearEffectsOnUnmount(store: Pick<GameStore, "clearEffects">,
   }, [store, active]);
 }
 
+/** Клавиша игрового экрана: и React-событие корня `.play`, и нативное с document (PD-232) — нужны только эти поля. */
+export type GameKeyEvent = Pick<globalThis.KeyboardEvent, "code" | "key" | "ctrlKey" | "metaKey" | "altKey" | "shiftKey" | "target" | "preventDefault">;
+
+/** Стрелки → шаг выбора по полю (ряд, столбец). */
+export const ARROWS: Readonly<Record<string, readonly [number, number]>> = {
+  ArrowUp: [-1, 0],
+  ArrowDown: [1, 0],
+  ArrowLeft: [0, -1],
+  ArrowRight: [0, 1],
+};
+
+
+/**
+ * PD-232 (а), аудит PD-228 п. 1: ввод партии без клика по клетке. Клавиши экрана висят на `onKeyDown` корня `.play` — пока
+ * фокус вне него (после загрузки фокус на <body>, клик по вкладке таб-бара или мимо поля), 1–9, стрелки, Backspace/Delete и
+ * заметки молчали. Этот слушатель на document подхватывает клавиши, чей источник ВНЕ корня экрана (внутри — по-прежнему
+ * `onKeyDown` корня и поля, без дублей), и только пока `enabled` (вкладка активна, партия идёт):
+ * - не срабатывает, если открыт шит/меню/диалог (где угодно в документе) или фокус в поле ввода;
+ * - стрелки — только когда фокуса нет вовсе (<body>): у вкладок таб-бара и прочих виджетов стрелки свои; выбор сдвигается, и
+ *   фокус переходит на клетку — дальше навигация поля как обычно;
+ * - всё остальное — `onKey` (тот же обработчик, что у корня экрана: Cmd/Ctrl только для уже принятого ⌘Z/Ctrl+Z).
+ */
+export function useDocumentGameKeys(
+  root: RefObject<HTMLElement | null>,
+  enabled: boolean,
+  onKey: (e: GameKeyEvent) => void,
+  store: Pick<GameStore, "moveSelection" | "select">,
+): void {
+  const latest = useRef({ onKey, store });
+  latest.current = { onKey, store };
+  useEffect(() => {
+    if (!enabled) return;
+    const onDocKey = (e: globalThis.KeyboardEvent) => {
+      if (e.defaultPrevented || e.isComposing) return;
+      const screen = root.current;
+      if (!screen) return;
+      const target = e.target instanceof Element ? e.target : null;
+      if (target && screen.contains(target)) return;
+      if (target?.closest(EDITABLE)) return;
+      if (overlayOpen()) return;
+      const dir = ARROWS[e.key];
+      if (dir) {
+        if (e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) return;
+        if (target && target !== document.body && target !== document.documentElement) return;
+        e.preventDefault();
+        const { store: s } = latest.current;
+        let next = s.moveSelection(dir[0], dir[1]);
+        if (next === null) {
+          // Ничего не выбрано (Esc снял выбор): стрелка выбирает остановку поля, а не «сдвиг от ничего».
+          const at = screen.querySelector<HTMLElement>('.board [tabindex="0"]')?.dataset["i"];
+          if (at !== undefined) {
+            s.select(Number(at));
+            next = Number(at);
+          }
+        }
+        if (next !== null) screen.querySelector<HTMLElement>(`.board [data-i="${next}"]`)?.focus();
+        return;
+      }
+      latest.current.onKey(e);
+    };
+    document.addEventListener("keydown", onDocKey);
+    return () => document.removeEventListener("keydown", onDocKey);
+  }, [root, enabled]);
+}
+
 /**
  * Клавиатурный ввод игрового экрана (цифры, Backspace, Ctrl+Z, N). PD-139: третий аргумент — лесенка подсказок:
  * `H` (без модификаторов) открывает/закрывает док, `Esc` закрывает открытый док. Нет лесенки (Ink, Grid ∞) — клавиш нет.
+ * PD-232 (г): `Esc` без открытого дока снимает выбор клетки; из партии Esc не выводит никогда.
+ * PD-244 (QA PD-233): четвёртый аргумент — «закончить осмотр доски» (Фонарь, пункт ⋯), передаётся, пока осмотр включён.
+ * Порядок `Esc` в партии: открытый шит/меню (закрывается своим обработчиком, сюда не доходит) → осмотр → док → выбор.
  */
 export function handleGameKey(
-  e: KeyboardEvent<HTMLElement>,
-  store: Pick<GameStore, "undo" | "erase" | "input" | "toggleNotesMode" | "fillCandidates">,
+  e: GameKeyEvent,
+  store: Pick<GameStore, "undo" | "erase" | "input" | "toggleNotesMode" | "fillCandidates" | "select" | "getSnapshot">,
   hint?: Pick<HintLadder, "toggle" | "close" | "getState"> | null,
+  endInspect?: (() => void) | null,
 ): void {
-  const target = e.target as HTMLElement;
+  const target = e.target instanceof Element ? e.target : null;
   // Шит поверх экрана (PD-116: «Discard current puzzle?») и меню «⋯» (PD-144) — их клавиши не ввод в клетку
   // (события порталов всплывают по дереву React до экрана).
-  if (target.closest('select, input, textarea, [role="dialog"], [role="menu"]')) return;
+  if (target?.closest(`${EDITABLE}, ${OVERLAY}`)) return;
   if ((e.ctrlKey || e.metaKey) && e.code === "KeyZ") {
     e.preventDefault();
     store.undo();
@@ -236,9 +306,17 @@ export function handleGameKey(
   } else if (hint && e.code === "KeyH" && !e.altKey && !e.shiftKey) {
     e.preventDefault();
     hint.toggle();
-  } else if (hint && e.key === "Escape" && hint.getState().open) {
-    e.preventDefault();
-    hint.close();
+  } else if (e.key === "Escape" && !e.altKey && !e.shiftKey) {
+    if (endInspect) {
+      e.preventDefault();
+      endInspect();
+    } else if (hint && hint.getState().open) {
+      e.preventDefault();
+      hint.close();
+    } else if (store.getSnapshot().selected !== null) {
+      e.preventDefault();
+      store.select(null);
+    }
   }
 }
 
@@ -373,6 +451,7 @@ export function GamePad({ snap, store }: { snap: PlaySnapshot; store: GameStore 
       </div>
       {filling && (
         <ActionSheet
+          primary
           title={t("play.fillTitle")}
           message={t("play.fillMessage")}
           actionLabel={t("play.fillAction")}

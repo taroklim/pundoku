@@ -1,0 +1,36 @@
+[
+  {
+    "scheme": "light",
+    "slots": [
+      "srow-classic",
+      "srow-glyphs"
+    ],
+    "red": {
+      "tr": 0,
+      "br": 0
+    },
+    "open": {
+      "cls": "srow open",
+      "delBg": "rgb(179, 38, 30)",
+      "fgX": -81
+    },
+    "restDelBg": "rgba(0, 0, 0, 0)"
+  },
+  {
+    "scheme": "dark",
+    "slots": [
+      "srow-classic",
+      "srow-glyphs"
+    ],
+    "red": {
+      "tr": 0,
+      "br": 0
+    },
+    "open": {
+      "cls": "srow open",
+      "delBg": "rgb(255, 107, 94)",
+      "fgX": -81
+    },
+    "restDelBg": "rgba(0, 0, 0, 0)"
+  }
+]

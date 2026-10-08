@@ -1,4 +1,4 @@
-import { useLayoutEffect, useRef, useState } from "react";
+import { memo, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { HelpScreen } from "./help/HelpScreen";
 import { PlayScreen } from "./play/PlayScreen";
@@ -10,6 +10,7 @@ import { dayStore } from "./today/dayStore";
 import { TodayScreen } from "./today/TodayScreen";
 import { useDynamicTypeFlag } from "./shell/dynamicType";
 import { ErrorBoundary } from "./shell/ErrorBoundary";
+import { useEscapeBack } from "./shell/escapeBack";
 import { panelDomId, tabDomId, TabBar } from "./shell/TabBar";
 import { TabActiveContext, useTabSlide } from "./shell/tabSlide";
 import type { HelpBlockId } from "./help/blocks";
@@ -40,6 +41,8 @@ export function App() {
     recoveryStore.requestLeave(() => (next === tab ? leaveSettings(go) : go({ tab: next })));
   };
   const openHelp = (block: HelpBlockId | null) => go({ help: block });
+  // PD-232 (г): Esc на Settings/справке — то же, что «‹» (архив решает сам: в партии Esc снимает выбор, а не уводит).
+  useEscapeBack(pushed, () => (help !== null ? leaveHelp(go) : recoveryStore.requestLeave(() => leaveSettings(go))));
 
   // «Play this day's puzzle» / «Finish this puzzle» из карточки дня Year. Вчерашний день, начатый на Today и не
   // доигранный к полуночи, остаётся в сторе Today (у него ходы): открывать его ещё и в архиве значило бы вести одну
@@ -64,6 +67,21 @@ export function App() {
   // показывает два экрана сразу, а состояние экрана (прокрутка, выбор клетки, раскрытые блоки) больше не теряется.
   const [visited, setVisited] = useState<ReadonlySet<TabId>>(() => new Set([tab]));
   if (!visited.has(tab)) setVisited(new Set([...visited, tab]));
+  // PD-232 (б), аудит PD-228 п. 10: Settings, справка и архив делят один прокручиваемый слой `.push-layer`, и scrollTop
+  // переезжал с экрана на экран — справка, открытая из низа Settings, оказывалась прокручена в самый низ. Позиция каждого экрана
+  // слоя — своя: справка всегда с начала (ссылка на блок докручивает сама, HelpScreen), возврат на экран слоя — к его прежней
+  // позиции, пока слой открыт; закрыли слой — забыли (новый заход в Settings — снова сверху, как было).
+  const pushRef = useRef<HTMLDivElement>(null);
+  const pushTops = useRef(new Map<string, number>());
+  useLayoutEffect(() => {
+    const el = pushRef.current;
+    if (!el) {
+      pushTops.current.clear();
+      return;
+    }
+    const top = panelKey === "help" ? 0 : (pushTops.current.get(panelKey) ?? 0);
+    if (el.scrollTop !== top) el.scrollTop = top;
+  }, [panelKey, overlay]);
   const stackRef = useRef<HTMLElement>(null);
   const pillRef = useRef<HTMLSpanElement>(null);
   const prewarm = useTabSlide(stackRef, pillRef, tab, overlay);
@@ -75,21 +93,21 @@ export function App() {
     document.documentElement.lang = i18n.resolvedLanguage ?? "en";
   }, [i18n.resolvedLanguage]);
 
-  const screenOf = (id: TabId) =>
-    id === "play" ? (
-      <PlayScreen onOpenSettings={() => go({ settings: true })} onOpenHelp={openHelp} onOpenToday={() => setTab("today")} />
-    ) : id === "today" ? (
-      <TodayScreen onOpenSettings={() => go({ settings: true })} onOpenHelp={openHelp} />
-    ) : (
-      <YearTab
-        onOpenSettings={() => go({ settings: true })}
-        onOpenToday={() => setTab("today")}
-        onPlayDay={playDay}
-        // Year не потребляет `initialDate`, пока скрыт (md §6.1.4).
-        initialDate={tab === "year" && !overlay ? route.yearDate : null}
-        onInitialDateConsumed={() => go({ tab: "year" })}
-      />
-    );
+  // PD-221: колбэки экранов вкладок — стабильные (одни и те же функции весь срок жизни App), но всегда зовут актуальные
+  // `go`/`setTab`/`playDay`: иначе каждая смена вкладки давала экранам новые пропсы и React перерисовывал все три экрана
+  // до подсветки вкладки и старта слайда.
+  const latest = useRef({ go, setTab, playDay, openHelp });
+  latest.current = { go, setTab, playDay, openHelp };
+  const actions = useMemo<TabActions>(
+    () => ({
+      openSettings: () => latest.current.go({ settings: true }),
+      openHelp: (block) => latest.current.openHelp(block),
+      openToday: () => latest.current.setTab("today"),
+      playDay: (date) => latest.current.playDay(date),
+      yearConsumed: () => latest.current.go({ tab: "year" }),
+    }),
+    [],
+  );
 
   return (
     <div className="shell">
@@ -114,7 +132,10 @@ export function App() {
               <div className="panel">
                 {/* PD-146: сбой вкладки не роняет приложение; экран сбоя сбрасывается, когда с вкладки уходят (PD-161). */}
                 <ErrorBoundary scope="tab" active={active}>
-                  <TabActiveContext.Provider value={active}>{screenOf(id)}</TabActiveContext.Provider>
+                  <TabActiveContext.Provider value={active}>
+                    {/* Year не потребляет `initialDate`, пока скрыт (md §6.1.4). */}
+                    <TabScreen id={id} actions={actions} yearDate={id === "year" && tab === "year" && !overlay ? route.yearDate : null} />
+                  </TabActiveContext.Provider>
                 </ErrorBoundary>
               </div>
             </div>
@@ -123,7 +144,9 @@ export function App() {
       </main>
       {overlay && (
         <div
+          ref={pushRef}
           className="scroll push-layer"
+          onScroll={(e) => pushTops.current.set(panelKey, e.currentTarget.scrollTop)}
           // Settings и справка — экраны поверх вкладки, а не её содержимое: роль панели только у архива (он живёт на Year).
           role={archiveDate !== null && !pushed ? "tabpanel" : undefined}
           id={archiveDate !== null && !pushed ? panelDomId("year") : undefined}
@@ -156,3 +179,30 @@ export function App() {
     </div>
   );
 }
+
+interface TabActions {
+  openSettings: () => void;
+  openHelp: (block: HelpBlockId | null) => void;
+  openToday: () => void;
+  playDay: (date: string) => void;
+  yearConsumed: () => void;
+}
+
+/**
+ * Экран вкладки в стопке (PD-221). memo: при смене вкладки его пропсы не меняются (колбэки стабильны, `yearDate` есть только
+ * у Year на его адресе), поэтому React его не перерисовывает — активность экран получает из TabActiveContext, перерисовываются
+ * только её потребители. Свои сторы экраны читают подпиской, от перерисовки родителя они не зависят.
+ */
+const TabScreen = memo(function TabScreen({ id, actions, yearDate }: { id: TabId; actions: TabActions; yearDate: string | null }) {
+  if (id === "play") return <PlayScreen onOpenSettings={actions.openSettings} onOpenHelp={actions.openHelp} onOpenToday={actions.openToday} />;
+  if (id === "today") return <TodayScreen onOpenSettings={actions.openSettings} onOpenHelp={actions.openHelp} />;
+  return (
+    <YearTab
+      onOpenSettings={actions.openSettings}
+      onOpenToday={actions.openToday}
+      onPlayDay={actions.playDay}
+      initialDate={yearDate}
+      onInitialDateConsumed={actions.yearConsumed}
+    />
+  );
+});

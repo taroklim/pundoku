@@ -292,7 +292,38 @@ textarea,
   /* Над пилюлей. Цвет/жирность подписи меняются мгновенно по тапу — не ждут конца слайда (макет PD-158 §1). */
   position: relative;
   z-index: 1;
-  transition: color 0.12s linear;
+  /* PD-254: возврат после нажатия — короткий фейд; длительность * --mo, при «Уменьшении движения» 0 s (мгновенно). */
+  transition:
+    color 0.12s linear,
+    opacity calc(0.2s * var(--mo)) linear;
+}
+/* PD-254: отклик нажатия в духе iOS — иконка+подпись приглушаются, пока палец на вкладке; без scale/transform, в покое вид
+   прежний. Затемнение мгновенное (на нажатие перехода нет), фейд — только обратно. Цель касания — сама кнопка, поэтому
+   нажатие в зазоре/отступе (прозрачный ::before, PD-221) тоже даёт отклик своей вкладке. На iOS :active срабатывает от
+   касания, потому что на предке висит touchstart (корневой слушатель React). Пилюля — отдельный слой и не тускнеет. */
+.tab:active {
+  opacity: 0.5;
+  transition:
+    color 0.12s linear,
+    opacity 0s;
+}
+/* PD-221: зона касания — вся доля бара, не только кнопка 50 px. Прозрачный слой кнопки (цель касания — сама кнопка) закрывает
+   верхний отступ бара с линией (6 + 1 px), нижний отступ под подписью и полосу индикатора Home до низа экрана, половину
+   зазора 2 px с каждой стороны; крайние вкладки — ещё и боковые поля. Без фона: вид, пилюля (её геометрия — по самой
+   кнопке) и раскладка не меняются. Свайп вверх от индикатора Home остаётся системным. */
+.tab::before {
+  content: "";
+  position: absolute;
+  top: -7px;
+  bottom: calc(-6px - var(--sa-bot));
+  left: -1px;
+  right: -1px;
+}
+.tab:first-of-type::before {
+  left: calc(-1 * max(10px, var(--sa-l)));
+}
+.tab:last-of-type::before {
+  right: calc(-1 * max(10px, var(--sa-r)));
 }
 /* PD-161: фон выбранной вкладки — отдельная пилюля, переезжает transform'ом (геометрию и положение ставит tabSlide.ts). */
 .tab-pill {
@@ -455,5 +486,79 @@ textarea,
   }
   .crash p {
     margin-bottom: 14px;
+  }
+}
+
+/* ---------- PD-225: тост отмены (shell/UndoToast, design/pd224-swipe-gestures.md §A7.1) ----------
+   Над таб-баром (+8 px), поля 16 px; непрозрачная поверхность — Reduce Transparency не нужен. В тёмной границу даёт контур
+   --hairline, не только тень. Появление: сдвиг 16 px × --mo + прозрачность; уход — прозрачность (160 мс × --mk). */
+.undo-toast {
+  position: fixed;
+  z-index: 30;
+  left: max(16px, var(--sa-l));
+  right: max(16px, var(--sa-r));
+  bottom: calc(var(--tabbar-h) + var(--sa-bot) + 8px);
+  display: flex;
+  align-items: center;
+  gap: 6px 10px;
+  min-height: 50px;
+  padding: 3px 4px 3px 16px;
+  background: var(--elev);
+  color: var(--label);
+  border-radius: 14px;
+  box-shadow: var(--toast-shadow), 0 0 0 0.5px var(--hairline);
+  animation: toast-in calc(200ms * var(--mk)) var(--e-out);
+}
+.undo-toast.out {
+  opacity: 0;
+  transition: opacity calc(160ms * var(--mk)) linear;
+  pointer-events: none;
+}
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(calc(16px * var(--mo)));
+  }
+}
+.undo-toast .tt {
+  flex: 1;
+  min-width: 0;
+  padding: 6px 0;
+  font-size: 0.94rem;
+  line-height: 1.3;
+  overflow-wrap: break-word;
+}
+.undo-toast .tu {
+  flex: none;
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0 12px;
+  border-radius: 10px;
+  color: var(--ink);
+  font-size: 1rem;
+  font-weight: 600;
+  text-align: center;
+}
+.undo-toast .tu:active {
+  background: var(--ink-tint);
+}
+.undo-toast .tu:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: -2px;
+}
+/* AX3: текст сверху (переносится), «Отменить» справа под ним. */
+:root[data-type="ax3"] .undo-toast {
+  flex-wrap: wrap;
+  padding: 8px 6px 6px 16px;
+}
+:root[data-type="ax3"] .undo-toast .tt {
+  flex-basis: 100%; /* иначе flex:1 с min-width:0 сжимает текст до столбика букв рядом с кнопкой */
+}
+:root[data-type="ax3"] .undo-toast .tu {
+  margin-left: auto;
+}
+@media (forced-colors: active) {
+  .undo-toast {
+    border: 1px solid CanvasText;
   }
 }
