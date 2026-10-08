@@ -296,10 +296,19 @@ describe("хаб и шит режима", () => {
   it("незаконченный Лжец дня — строка «Продолжить» с подписью слота", () => {
     const play = enterDigit(real(), empties(real())[0]!, 1, 100);
     playing(play, { daily: "2099-01-01", hub: true });
-    vi.spyOn(playStore, "liarDaySlot").mockReturnValue({ difficulty: "medium", left: 40, elapsedMs: 65_000, ink: false });
+    vi.spyOn(playStore, "liarDayContinue").mockReturnValue({ date: "2099-01-01", summary: { difficulty: "medium", left: 40, elapsedMs: 65_000, ink: false } });
     render();
     expect(q("continue-liar-day")!.textContent).toContain("Liar of the day");
     expect(q("continue-liar-day")!.textContent).toContain("Medium · 40 cells left · 1:05");
+  });
+
+  it("PD-217: «Продолжить» открывает Лжеца дня СВОЕЙ даты (вчерашний после полуночи), а не сегодняшний", () => {
+    vi.spyOn(playStore, "liarDayContinue").mockReturnValue({ date: "2026-10-04", summary: { difficulty: "medium", left: 40, elapsedMs: 65_000, ink: false } });
+    const start = vi.spyOn(playStore, "startDaily").mockImplementation(() => undefined);
+    render();
+    tap(q("continue-liar-day")!);
+    expect(start).toHaveBeenCalledWith("2026-10-04");
+    vi.restoreAllMocks();
   });
 });
 

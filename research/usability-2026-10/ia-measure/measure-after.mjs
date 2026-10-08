@@ -5,7 +5,7 @@ import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import os from "node:os";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
-import { BASE, H, STATE_DIR, Run, THUMB_Y, armMark, instrument, launch, newProfileCtx, placeFirstDigit, seedVeteran, selectedCell, snapshotProfile, solveFromDom, waitMark } from "./lib-after.mjs";
+import { BASE, H, STATE_DIR, Run, THUMB_Y, armMark, fixturePage, instrument, launch, newProfileCtx, placeFirstDigit, seedVeteran, selectedCell, snapshotProfile, solveFromDom, waitMark } from "./lib-after.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const ENGINES = (process.env.ENGINES ?? "webkit").split(",");
@@ -587,15 +587,21 @@ async function prime(ctx, { wipe }) {
   const sw = await p.evaluate(() => (navigator.serviceWorker ? Promise.race([navigator.serviceWorker.ready.then(() => "ready"), new Promise((r) => setTimeout(() => r("timeout"), 8000))]) : "unsupported"));
   await p.waitForTimeout(500);
   await p.goto("about:blank");
-  if (wipe) {
-    await p.goto(BASE + "/health");
-    await p.evaluate(async () => {
-      localStorage.clear();
-      const dbs = (await indexedDB.databases?.()) ?? [];
-      await Promise.all(dbs.map((d) => new Promise((r) => { const q = indexedDB.deleteDatabase(d.name); q.onsuccess = q.onerror = q.onblocked = () => r(); })));
-    });
-  }
   await p.close();
+  if (wipe) {
+    // PD-217: стирать на странице без приложения (`fixturePage`): /health на стенде vite (и через navigateFallback service
+    // worker) отдаёт index.html — приложение тут же заново открывало базу, deleteDatabase упирался в blocked.
+    const f = await fixturePage(ctx, BASE);
+    try {
+      await f.page.evaluate(async () => {
+        localStorage.clear();
+        const dbs = (await indexedDB.databases?.()) ?? [];
+        await Promise.all(dbs.map((d) => new Promise((r) => { const q = indexedDB.deleteDatabase(d.name); q.onsuccess = q.onerror = q.onblocked = () => r(); })));
+      });
+    } finally {
+      await f.close();
+    }
+  }
   return sw;
 }
 
