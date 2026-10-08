@@ -725,7 +725,7 @@ Gates: build → typecheck, lint, тесты web/engine/api (api с `TEST_DATABA
 ## Агенты (текущий статус)
 | Имя | Роль | Статус | Тикет | Обновлено |
 |-----|------|--------|-------|-----------|
-| PM-Pundoku-20 | product-manager | working | PD-247 → PD-248, PD-265 | 2026-10-08 21:35 |
+| PM-Pundoku-20 | product-manager | waiting (ждёт QA PD-247) | PD-247 → PD-248, PD-265 | 2026-10-08 21:35 |
 | QA-Pundoku-247b | qa-tester | working | PD-247 | 2026-10-08 21:35 |
 | QA-Pundoku-250b | qa-tester | waiting (слот) | PD-250, PD-258 | 2026-10-08 21:35 |
 | QA-Pundoku-252b | qa-tester | waiting (слот) | PD-252 | 2026-10-08 21:35 |
