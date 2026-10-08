@@ -12,6 +12,7 @@
   flex: 1;
   min-height: 0;
   overflow-y: auto;
+  overflow-x: hidden; /* PD-225: сдвинутая свайпом строка не даёт горизонтальной прокрутки */
   overscroll-behavior: contain;
   -webkit-overflow-scrolling: touch;
   padding-bottom: 12px;
@@ -250,6 +251,101 @@ button.hub-row:active {
   transform: none;
 }
 
+/* ---------- PD-225: свайп-удаление строки режима (design/pd224-swipe-gestures.md §A3, макет pd224-swipe.html) ----------
+   .srow — обёртка (не движется; ей принадлежит разделитель); .fg — строка, единственный движущийся слой (translateX из JS),
+   фон непрозрачный; .del — красная «Удалить» ПОД строкой справа, ширина = max(A, −x) из JS; .dlw — подпись по центру правых
+   A px, в «armed» уезжает к левому краю красного. Разделитель «Продолжить» (.hub-row + .hub-row) не тронут. */
+.srow {
+  position: relative;
+}
+.srow + .srow::before {
+  content: "";
+  position: absolute;
+  z-index: 3;
+  left: max(16px, var(--sa-l));
+  right: 0;
+  top: 0;
+  height: 1px;
+  background: var(--hairline);
+  transform: scaleY(0.5);
+  transform-origin: top;
+  pointer-events: none;
+}
+.srow > .fg {
+  z-index: 2;
+  background-color: var(--card);
+  touch-action: pan-y; /* вертикаль ведёт браузер (и шлёт pointercancel), горизонталь приходит в JS */
+}
+/* Подсветка нажатия — поверх непрозрачного фона: полупрозрачная заливка без него показала бы красный слой под строкой. */
+.srow > .fg:active {
+  background: linear-gradient(var(--ink-tint), var(--ink-tint)) var(--card);
+}
+.srow.dragging > .fg,
+.srow.dragging > .fg:active {
+  background: var(--card);
+}
+.srow > .del {
+  position: absolute;
+  z-index: 1;
+  top: 0;
+  bottom: 0;
+  right: 0;
+  width: var(--aw, 84px);
+  display: flex;
+  justify-content: flex-end;
+  align-items: stretch;
+  background: transparent;
+  color: var(--on-wax);
+  font-size: 1rem;
+  font-weight: 600;
+  text-align: center;
+  overflow: hidden;
+}
+.srow > .del[hidden] {
+  display: none;
+}
+/* PD-242 (QA PD-226 Low): красная только пока её видно — ведение пальцем, открыта, едет на место, удаление. В покое прозрачна:
+   иначе её край просвечивает розовой каймой сквозь сглаживание скруглённого угла карточки (.hub-card overflow: hidden). */
+.srow:is(.dragging, .open, .closing, .committing) > .del {
+  background: var(--wax);
+}
+.srow .dlw {
+  flex: none;
+  width: var(--aw, 84px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 8px;
+}
+.srow .dl {
+  white-space: nowrap;
+}
+.srow .del svg {
+  display: none;
+  width: min(1.3em, 30px);
+  height: min(1.3em, 30px);
+}
+/* AX-размеры: подпись не влезает в 45 % строки — только корзина; подпись остаётся a11y-именем кнопки. */
+.srow.icon-only .del svg {
+  display: block;
+}
+.srow.icon-only .dl {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+}
+.srow > .del:focus-visible {
+  outline: 2px solid var(--on-wax);
+  outline-offset: -5px;
+  border-radius: 0;
+}
+/* Статус ↔ описание после удаления/отмены — кроссфейд (только прозрачность). */
+.hub-row .sub.xf {
+  animation: st-fade calc(160ms * var(--mk)) linear;
+}
+
 /* Основная кнопка шита режима («Начать» / «Начать новую»): внизу, в зоне большого пальца (HIG), закреплённой на хабе больше нет. */
 .hub-primary {
   display: block;
@@ -331,6 +427,14 @@ button.hub-row:active {
 }
 .menu button:active {
   background: var(--ink-tint);
+}
+/* PD-225: деструктивный пункт — последним, красным, отделён толстым разделителем фоном экрана (HIG context-menus.md). */
+.menu button.danger {
+  color: var(--wax);
+  border-top: 6px solid var(--bg);
+}
+.menu button.danger svg {
+  color: var(--wax);
 }
 .menu svg {
   width: 18px;
@@ -574,6 +678,9 @@ button.hub-row:active {
   }
   .mode-chip {
     border: 1px solid CanvasText;
+  }
+  .srow:is(.dragging, .open, .closing, .committing) > .del {
+    border: 1px solid ButtonText;
   }
   .hub-primary {
     border: 1px solid ButtonText;

@@ -60,3 +60,12 @@ export function CheckGlyph({ className }: { className?: string }) {
     </svg>
   );
 }
+
+/** PD-225: корзина — кнопка «Удалить» свайпа строки (режим «значок» при AX-размерах) и пункт «Удалить сетку» меню строки. */
+export function TrashGlyph({ className }: { className?: string }) {
+  return (
+    <svg {...line(1.7)} className={className}>
+      <path d="M4 7h16M9.5 7V4.5h5V7M6.5 7l1 13h9l1-13M10 11v6M14 11v6" />
+    </svg>
+  );
+}

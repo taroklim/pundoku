@@ -556,6 +556,12 @@
     "discard": "Your unfinished puzzle ({{meta}}) will be discarded.",
     "continue": "Continue",
     "newPuzzle": "New puzzle…",
+    "delete": "Delete",
+    "deleteItem": "Delete puzzle",
+    "deleteA11y": "Delete unfinished puzzle: {{mode}}",
+    "deleted": "{{mode}} puzzle deleted",
+    "undo": "Undo",
+    "restored": "{{mode}} puzzle restored",
     "classic": {
       "name": "Classic",
       "desc": "Plain sudoku: notes, undo and hints are all there."

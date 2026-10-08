@@ -8,13 +8,13 @@
  *   строки; есть незавершённая игра режима — вместо описания статус «● Не закончена · Сложно · осталось 47 · 03:18».
  *   Тап: есть игра — она открывается; нет — шит режима (описание + сложность + «Начать»), его открывает экран.
  * - Долгое нажатие / правая кнопка / клавиша меню на строке — контекстное меню режима (`ModeMenu`): описание, «Продолжить»,
- *   «Новая сетка…» (шит с предупреждением).
+ *   «Новая сетка…» (шит с предупреждением), PD-225 — «Удалить сетку».
+ * - PD-225: строка с незавершённой игрой свайпается справа налево — «Удалить» (`SwipeRow`, design/pd224-swipe-gestures.md).
+ *   Строки «Продолжить» (игры дня) не свайпаются.
  * - Под списком — сноска «Свои игры не попадают в ваш год».
  */
-import type { MouseEvent as ReactMouseEvent, PointerEvent as ReactPointerEvent } from "react";
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { LONG_PRESS_MS } from "./controls";
 import type { SlotSummary } from "./daySlot";
 import { useDaySlot } from "./daySlot";
 import { CalendarGlyph } from "./hubIcons";
@@ -23,6 +23,7 @@ import { LiarModeIcon } from "./modeIcons";
 import type { ModeDef, ModeId } from "./modes";
 import { ModeMenu } from "./ModeMenu";
 import { slotMeta } from "./slotMeta";
+import { ModeRowBody, SwipeRow, useSwipeHub } from "./SwipeRow";
 
 export interface PlaySetupProps {
   /** Строки списка — готовые режимы реестра (`availableModes()`), в их порядке. */
@@ -39,10 +40,11 @@ export interface PlaySetupProps {
   /** PD-171: незаконченный Лжец дня (тоже «игра дня») — вторая строка «Продолжить»; `null` — нет. */
   readonly liarDay?: SlotSummary | null;
   readonly onOpenLiarDay?: () => void;
+  /** PD-225: удалить незаконченную игру режима (свайп, «Удалить», пункт меню). `kbd` — путь клавиатуры/AT. */
+  readonly onDeleteMode?: (mode: ModeId, kbd: boolean) => void;
+  /** PD-225: открылось контекстное меню строки (экран убирает тост отмены: меню/шиты выше него). */
+  readonly onMenuOpen?: () => void;
 }
-
-/** Сдвиг пальца, после которого долгое нажатие считается прокруткой, а не нажатием. */
-const MOVE_SLOP_PX = 10;
 
 interface MenuState {
   readonly mode: ModeDef;
@@ -50,13 +52,14 @@ interface MenuState {
   readonly anchor: { top: number; bottom: number; left: number; width: number; height: number };
 }
 
-export function PlaySetup({ modes, slots, reselect, onOpenMode, onNewInMode, onOpenToday, liarDay = null, onOpenLiarDay }: PlaySetupProps) {
+export function PlaySetup({ modes, slots, reselect, onOpenMode, onNewInMode, onOpenToday, liarDay = null, onOpenLiarDay, onDeleteMode, onMenuOpen }: PlaySetupProps) {
   const { t } = useTranslation();
   const day = useDaySlot();
   const scroll = useRef<HTMLDivElement>(null);
   const [menu, setMenu] = useState<MenuState | null>(null);
   const menuRow = useRef<HTMLElement | null>(null);
   menuRow.current = menu?.row ?? null;
+  const swipe = useSwipeHub(scroll);
 
   // Повторный тап по вкладке Play: оверлеи закрываются первыми, на хабе — прокрутка вверх (без подтверждений).
   const seen = useRef(reselect);
@@ -64,10 +67,13 @@ export function PlaySetup({ modes, slots, reselect, onOpenMode, onNewInMode, onO
     if (seen.current === reselect) return;
     seen.current = reselect;
     setMenu(null);
+    swipe.closeOpen(false);
     scroll.current?.scrollTo?.({ top: 0 });
   }, [reselect]);
 
   const openMenu = (mode: ModeDef, row: HTMLButtonElement) => {
+    swipe.closeOpen(false);
+    onMenuOpen?.();
     const r = row.getBoundingClientRect();
     setMenu({ mode, row, anchor: { top: r.top, bottom: r.bottom, left: r.left, width: r.width, height: r.height } });
   };
@@ -116,12 +122,14 @@ export function PlaySetup({ modes, slots, reselect, onOpenMode, onNewInMode, onO
           </p>
           <div className="hub-card">
             {modes.map((m) => (
-              <ModeRow
+              <SwipeRow
                 key={m.id}
                 mode={m}
                 slot={slots[m.id] ?? null}
+                hub={swipe}
                 onPress={(row) => onOpenMode(m.id, row)}
                 onLongPress={(row) => openMenu(m, row)}
+                onDelete={(kbd) => onDeleteMode?.(m.id, kbd)}
               />
             ))}
           </div>
@@ -144,106 +152,11 @@ export function PlaySetup({ modes, slots, reselect, onOpenMode, onNewInMode, onO
           canContinue={slots[menu.mode.id] !== undefined}
           onContinue={() => onOpenMode(menu.mode.id, menu.row)}
           onNew={() => onNewInMode(menu.mode.id, menu.row)}
+          onDelete={onDeleteMode ? (kbd) => onDeleteMode(menu.mode.id, kbd) : undefined}
           onClose={() => setMenu(null)}
           returnFocus={menuRow}
         />
       )}
     </>
-  );
-}
-
-/** Содержимое строки режима: значок · имя · описание или статус незавершённой игры · шеврон. */
-function ModeRowBody({ mode, slot }: { mode: ModeDef; slot: SlotSummary | null }) {
-  const { t } = useTranslation();
-  const { Icon } = mode;
-  return (
-    <>
-      <span className="mg">
-        <Icon />
-      </span>
-      <span className="lab">
-        <span className="l1">
-          <b>{t(`modes.${mode.textKey}.name`)}</b>
-        </span>
-        {slot ? (
-          <span className="sub prog" data-testid={`mode-status-${mode.id}`}>
-            <span className="dot" aria-hidden="true" />
-            {t("modes.status", { meta: slotMeta(t, slot) })}
-          </span>
-        ) : (
-          <span className="sub" data-testid={`mode-desc-${mode.id}`}>
-            {/* PD-210: у режима с длинным правилом в строке списка — первое предложение (`list`), целиком — в шите. */}
-            {t([`modes.${mode.textKey}.list`, `modes.${mode.textKey}.desc`])}
-          </span>
-        )}
-      </span>
-      <ChevronIcon className="chev" />
-    </>
-  );
-}
-
-/**
- * Строка режима. Тап — `onPress`; долгое нажатие (≥ `LONG_PRESS_MS` без сдвига пальца), правая кнопка мыши или клавиша
- * контекстного меню — `onLongPress`; тап, закончивший долгое нажатие, `onPress` не вызывает. Системные выноска и лупа iOS
- * на строке подавлены в CSS (`-webkit-touch-callout`, `user-select`).
- */
-function ModeRow({ mode, slot, onPress, onLongPress }: { mode: ModeDef; slot: SlotSummary | null; onPress: (row: HTMLButtonElement) => void; onLongPress: (row: HTMLButtonElement) => void }) {
-  const ref = useRef<HTMLButtonElement>(null);
-  const press = useRef<{ timer: number; x: number; y: number } | null>(null);
-  /** Когда долгое нажатие открыло меню: хвост этого жеста (click, contextmenu) — не новый тап. */
-  const firedAt = useRef<number | null>(null);
-  const stop = () => {
-    if (press.current) window.clearTimeout(press.current.timer);
-    press.current = null;
-  };
-  useEffect(() => stop, []);
-
-  const open = () => {
-    firedAt.current = Date.now();
-    if (ref.current) onLongPress(ref.current);
-  };
-
-  return (
-    <button
-      ref={ref}
-      type="button"
-      className="hub-row mode"
-      onPointerDown={(e: ReactPointerEvent<HTMLButtonElement>) => {
-        stop();
-        firedAt.current = null;
-        if (e.button !== 0) return;
-        press.current = {
-          timer: window.setTimeout(() => {
-            press.current = null;
-            open();
-          }, LONG_PRESS_MS),
-          x: e.clientX,
-          y: e.clientY,
-        };
-      }}
-      onPointerMove={(e) => {
-        const p = press.current;
-        if (p && Math.hypot(e.clientX - p.x, e.clientY - p.y) > MOVE_SLOP_PX) stop(); // это прокрутка, а не нажатие
-      }}
-      onPointerUp={stop}
-      onPointerLeave={stop}
-      onPointerCancel={stop}
-      onContextMenu={(e: ReactMouseEvent) => {
-        // iOS/Android отдают долгий тап и как contextmenu; мышь — правой кнопкой; клавиатура — клавишей меню/Shift+F10.
-        e.preventDefault();
-        stop();
-        if (firedAt.current !== null && Date.now() - firedAt.current < 1500) return; // меню уже открыто таймером
-        open();
-      }}
-      onClick={(e) => {
-        const tail = firedAt.current !== null && e.detail !== 0;
-        firedAt.current = null;
-        if (tail) return; // тап, закончивший долгое нажатие
-        if (ref.current) onPress(ref.current);
-      }}
-      data-testid={`mode-${mode.id}`}
-    >
-      <ModeRowBody mode={mode} slot={slot} />
-    </button>
   );
 }
