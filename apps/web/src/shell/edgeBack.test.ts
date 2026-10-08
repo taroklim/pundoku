@@ -1,6 +1,6 @@
 // PD-253: решения жеста «назад» от левого края — захват (полоса/угол/slop) и отпускание (35 % ширины или бросок).
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { EDGE_BACK, edgeClaim, isStandalone, shouldGoBack } from "./edgeBack";
+import { EDGE_BACK, edgeClaim, isStandalone, releaseVelocity, shouldGoBack } from "./edgeBack";
 
 describe("edgeClaim: захват при dx ≥ 24 и угле ≤ 30°", () => {
   it.each([
@@ -35,6 +35,26 @@ describe("shouldGoBack: 35 % ширины или бросок вправо", () 
   });
   it("экран на месте — никогда не назад", () => {
     expect(shouldGoBack(0, W, 2)).toBe(false);
+  });
+});
+
+describe("releaseVelocity: по движениям за последние 100 мс до отпускания", () => {
+  const moves = [
+    { t: 0, x: 0 },
+    { t: 40, x: 40 },
+    { t: 80, x: 80 },
+    { t: 120, x: 120 },
+  ];
+  it("отпустил сразу (даже с задержкой события ~50 мс) — скорость последнего отрезка", () => {
+    expect(releaseVelocity(moves, 125)).toBeCloseTo(1);
+    expect(releaseVelocity(moves, 170)).toBeCloseTo(1);
+  });
+  it("постоял дольше окна — 0 (не бросок)", () => {
+    expect(releaseVelocity(moves, 300)).toBe(0);
+    expect(releaseVelocity(moves, 215)).toBe(0); // в окне одна точка
+  });
+  it("влево — отрицательная", () => {
+    expect(releaseVelocity([{ t: 0, x: 300 }, { t: 16, x: 220 }], 20)).toBeCloseTo(-5);
   });
 });
 

@@ -72,6 +72,18 @@ export function shouldGoBack(x: number, width: number, v: number): boolean {
   return x >= EDGE_BACK.COMMIT_FRAC * width;
 }
 
+/**
+ * Скорость на отпускании, px/мс: по движениям пальца за последние `FLICK_WINDOW_MS` до отпускания — от первого до последнего
+ * (само отпускание не в счёт: оно приходит с последней точкой и с задержкой, и разбавляло бы бросок). Палец постоял дольше
+ * окна — в окне меньше двух точек — скорость 0.
+ */
+export function releaseVelocity(samples: readonly { t: number; x: number }[], t: number): number {
+  const recent = samples.filter((s) => t - s.t <= EDGE_BACK.FLICK_WINDOW_MS);
+  const first = recent[0];
+  const last = recent.at(-1);
+  return first && last && last.t > first.t ? (last.x - first.x) / (last.t - first.t) : 0;
+}
+
 export interface EdgeBackOptions {
   /** Жест включён: открыт Settings/справка и приложение установлено. */
   readonly enabled: boolean;
@@ -160,9 +172,8 @@ export function useEdgeBack(layer: RefObject<HTMLElement | null>, under: RefObje
         if (phase.current === "drag") reset();
         return;
       }
-      const recent = cur.samples.find((s) => e.timeStamp - s.t <= EDGE_BACK.FLICK_WINDOW_MS);
       const x = Math.max(0, e.clientX - cur.x0);
-      const v = recent && e.timeStamp > recent.t ? (x - recent.x) / (e.timeStamp - recent.t) : 0;
+      const v = releaseVelocity(cur.samples, e.timeStamp);
       let back = !cancelled && shouldGoBack(x, cur.width, v);
       // Settings с несохранённым ключом: шит guard PD-57 показан — экран остаётся.
       if (back && opts.current.intercept()) back = false;

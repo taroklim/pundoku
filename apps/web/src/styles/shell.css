@@ -186,11 +186,15 @@ textarea,
 .stack.covered[data-peek] > .tab-pane:not(.off) {
   visibility: visible;
 }
+/* Своя стопка наложения на время показа: элементы вкладки с z-index (карточка хаба, тосты — до 60) не всплывают над слоем. */
+.stack[data-peek] {
+  isolation: isolate;
+}
 .stack[data-peek]::after {
   content: "";
   position: absolute;
   inset: 0;
-  z-index: 1;
+  z-index: 100;
   pointer-events: none;
   background: rgba(0, 0, 0, 0.12);
   opacity: calc(1 - var(--edge-p, 0));
