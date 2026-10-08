@@ -1,0 +1,46 @@
+{
+ "engine": "wk",
+ "blurredElements": 25,
+ "selection": {
+  "blur": {
+   "n": 144,
+   "med": 104,
+   "p90": 158,
+   "max": 1194
+  },
+  "noBlur": {
+   "n": 144,
+   "med": 135,
+   "p90": 183,
+   "max": 446
+  }
+ },
+ "inspectOn": {
+  "blur": {
+   "n": 6,
+   "med": 123,
+   "p90": 206,
+   "max": 206
+  },
+  "noBlur": {
+   "n": 6,
+   "med": 189,
+   "p90": 211,
+   "max": 211
+  }
+ },
+ "inspectOff": {
+  "blur": {
+   "n": 6,
+   "med": 89,
+   "p90": 139,
+   "max": 139
+  },
+  "noBlur": {
+   "n": 6,
+   "med": 85,
+   "p90": 135,
+   "max": 135
+  }
+ }
+}

@@ -32,6 +32,8 @@ import { canFill, cellsLeft, isGiven, isGridFull } from "./logic";
 import { ModeSheet } from "./ModeSheet";
 import type { ModeId } from "./modes";
 import { availableModes, modeDef } from "./modes";
+import { LanternStatus } from "./LanternStatus";
+import type { LanternStatusKind } from "./LanternStatus";
 import { MelodyModeIcon } from "./modeIcons";
 import { MoreMenu } from "./MoreMenu";
 import { PlaySetup } from "./PlaySetup";
@@ -199,6 +201,17 @@ export function PlayScreen({ onOpenSettings, onOpenHelp, onOpenToday }: { onOpen
   const soundOn = useMelodySound();
   useMelodyGame(playStore, active && melody && !restoring && phase === "playing", !soundOn);
   const melodyHint = melody && phase === "playing" && play !== null && play.log.length === 0 && !waiting;
+  // PD-208: Фонарь. «Осмотреть доску» из ⋯ — на эту партию (ключ — момент открытия партии): новая партия/возврат начинают в темноте.
+  const lantern = !hub && play?.lantern === true;
+  const gameKey = snap.startedOn.getTime();
+  const [inspectKey, setInspectKey] = useState<number | null>(null);
+  const inspectOn = lantern && inspectKey === gameKey;
+  // PD-210: удержание поля (осмотр, пока палец на стекле) — экран меняет чип «Фонарь» → «Осмотр» и строку статуса.
+  const [held, setHeld] = useState(false);
+  const inspecting = lantern && phase === "playing" && (inspectOn || held);
+  // PD-210 (макет PD-209 §2 п. 5, §5): строка статуса Фонаря — нет выбора / удержание / осмотр из меню с «Готово»; иначе «осталось N».
+  const lanternStatus: LanternStatusKind | null =
+    lantern && phase === "playing" && !waiting && !snap.hint ? (inspectOn ? "menu" : held ? "hold" : sel === null ? "dark" : null) : null;
   const showLamp = !hub && !restoring && !waiting && playStore.hintAllowed();
   const showMore = !hub && !restoring && phase !== "solved";
 
@@ -245,6 +258,7 @@ export function PlayScreen({ onOpenSettings, onOpenHelp, onOpenToday }: { onOpen
               onFill={() => playStore.fillCandidates()}
               accuse={accuseState && !waiting ? { state: accuseState, onAccuse: () => sel !== null && openAccuse(sel, null) } : null}
               sound={melody ? { on: soundOn, onToggle: () => setMelodySound(!soundOn) } : null}
+              inspect={lantern && phase === "playing" && !waiting ? { on: inspectOn, onToggle: () => setInspectKey(inspectOn ? null : gameKey) } : null}
             />
           )
         }
@@ -269,6 +283,7 @@ export function PlayScreen({ onOpenSettings, onOpenHelp, onOpenToday }: { onOpen
             difficulty={diffLabel}
             chip={play ? (ink ? modeDef("ink") : def) : def}
             muted={melody && !soundOn && phase !== "solved"}
+            inspecting={inspecting}
             help={snap.assisted === true}
             clock={showClock ? clock : null}
           />
@@ -296,6 +311,9 @@ export function PlayScreen({ onOpenSettings, onOpenHelp, onOpenToday }: { onOpen
                 store={playStore}
                 dim={phase === "solved"}
                 hintMarks={hint.marks}
+                inspect={inspectOn}
+                onInspectEnd={() => setInspectKey(null)}
+                onHoldChange={setHeld}
                 onAccuse={liarOpen ? openAccuse : undefined}
                 canAccuse={liarOpen ? (cell) => playStore.canAccuse(cell) : undefined}
                 overlay={
@@ -334,6 +352,8 @@ export function PlayScreen({ onOpenSettings, onOpenHelp, onOpenToday }: { onOpen
                       {t("play.cellsLeftShort", { count: left })}
                     </span>
                   </p>
+                ) : lanternStatus ? (
+                  <LanternStatus kind={lanternStatus} onDone={() => setInspectKey(null)} />
                 ) : (
                   <StatusLine left={left} full={full} hint={snap.hint} />
                 ))}

@@ -18,6 +18,7 @@
  * - Лжец (`liar.ts`, PD-165): `generateLiar`, `dailyLiarPuzzle`, `validateLiar`, `accuse`, `liarSummary`.
  * - Питомец-клякса (`pet.ts`, PD-180): `petMood`, `isPersonalBest`.
  * - Мелодия сетки (`melody.ts`, PD-201): `melodyOf`, `unitsCompletedBy`.
+ * - Фонарь (`lantern.ts`, PD-208): `litCells`, `isLit`.
  */
 export type {
   Cell,
@@ -144,3 +145,5 @@ export type { PetDay, PetMood } from "./pet.js";
 
 export { melodyOf, unitsCompletedBy } from "./melody.js";
 export type { CompletedUnit, MelodyEvent, MelodyNote, MelodyOptions, MelodyUnit, MelodyUnitKind } from "./melody.js";
+
+export { LIT_CELLS_COUNT, isLit, litCells } from "./lantern.js";
