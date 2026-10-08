@@ -1,0 +1,1077 @@
+[
+  {
+    "set": "chromium-1280",
+    "checks": [
+      {
+        "label": "(а) Today: цифра сразу после загрузки ставится",
+        "ok": true,
+        "detail": {
+          "before": {
+            "sel": 1,
+            "val": "",
+            "notes": "",
+            "notesMode": "false",
+            "dock": false,
+            "dialog": false,
+            "menu": false,
+            "hash": "#/today",
+            "active": "body",
+            "activeCell": null
+          },
+          "after": {
+            "sel": 1,
+            "val": "7",
+            "notes": "",
+            "notesMode": "false",
+            "dock": false,
+            "dialog": false,
+            "menu": false,
+            "hash": "#/today",
+            "active": "body",
+            "activeCell": null
+          }
+        }
+      },
+      {
+        "label": "(а) Today: Backspace без клика стирает",
+        "ok": true,
+        "detail": {
+          "sel": 1,
+          "val": "",
+          "notes": "",
+          "notesMode": "false",
+          "dock": false,
+          "dialog": false,
+          "menu": false,
+          "hash": "#/today",
+          "active": "body",
+          "activeCell": null
+        }
+      },
+      {
+        "label": "(а) Today: стрелка без клика двигает выбор, фокус уходит на клетку",
+        "ok": true,
+        "detail": {
+          "from": 1,
+          "to": {
+            "sel": 2,
+            "val": "",
+            "notes": "",
+            "notesMode": "false",
+            "dock": false,
+            "dialog": false,
+            "menu": false,
+            "hash": "#/today",
+            "active": "cell sel",
+            "activeCell": 2
+          }
+        }
+      },
+      {
+        "label": "(а) Today: после клика по вкладке Shift+цифра — заметка",
+        "ok": true,
+        "detail": {
+          "before": {
+            "sel": 2,
+            "val": "",
+            "notes": "",
+            "notesMode": "false",
+            "dock": false,
+            "dialog": false,
+            "menu": false,
+            "hash": "#/today",
+            "active": "tab",
+            "activeCell": null
+          },
+          "after": {
+            "sel": 2,
+            "val": "",
+            "notes": "3",
+            "notesMode": "false",
+            "dock": false,
+            "dialog": false,
+            "menu": false,
+            "hash": "#/today",
+            "active": "tab",
+            "activeCell": null
+          }
+        }
+      },
+      {
+        "label": "(а) Today: стрелка на вкладке переключает вкладку (не ход)",
+        "ok": true,
+        "detail": {
+          "sel": null,
+          "val": null,
+          "notes": null,
+          "notesMode": null,
+          "dock": false,
+          "dialog": false,
+          "menu": false,
+          "hash": "#/play",
+          "active": "tab",
+          "activeCell": null
+        }
+      },
+      {
+        "label": "(а) Today: после клика мимо поля N переключает заметки",
+        "ok": true,
+        "detail": {
+          "before": "false",
+          "after": "true",
+          "active": "body"
+        }
+      },
+      {
+        "label": "(а)+(г) Settings: цифра не уходит в партию; Esc возвращает на Today",
+        "ok": true,
+        "detail": {
+          "sel": 2,
+          "val": "",
+          "notes": "3",
+          "notesMode": "false",
+          "dock": false,
+          "dialog": false,
+          "menu": false,
+          "hash": "#/today",
+          "active": "body",
+          "activeCell": null
+        }
+      },
+      {
+        "label": "(г) Today: Esc снимает выбор, остаёмся в партии",
+        "ok": true,
+        "detail": {
+          "sel": null,
+          "val": null,
+          "notes": null,
+          "notesMode": "false",
+          "dock": false,
+          "dialog": false,
+          "menu": false,
+          "hash": "#/today",
+          "active": "body",
+          "activeCell": null
+        }
+      },
+      {
+        "label": "(г) Today: стрелка после Esc снова выбирает клетку",
+        "ok": true,
+        "detail": {
+          "sel": 0,
+          "val": "given",
+          "notes": "",
+          "notesMode": "false",
+          "dock": false,
+          "dialog": false,
+          "menu": false,
+          "hash": "#/today",
+          "active": "cell sel",
+          "activeCell": 0
+        }
+      },
+      {
+        "label": "(в) шит режима (нечего отбрасывать): фокус на Start",
+        "ok": true,
+        "detail": {
+          "sel": null,
+          "val": null,
+          "notes": null,
+          "notesMode": null,
+          "dock": false,
+          "dialog": true,
+          "menu": false,
+          "hash": "#/play",
+          "active": "sheet-start",
+          "activeCell": null
+        }
+      },
+      {
+        "label": "(в) Enter в шите режима запускает партию",
+        "ok": true,
+        "detail": {
+          "sel": 1,
+          "val": "",
+          "notes": "",
+          "notesMode": "false",
+          "dock": false,
+          "dialog": false,
+          "menu": false,
+          "hash": "#/play",
+          "active": "title",
+          "activeCell": null
+        }
+      },
+      {
+        "label": "(а) Play: цифра без фокуса на поле ставится",
+        "ok": true,
+        "detail": {
+          "before": {
+            "sel": 1,
+            "val": "",
+            "notes": "",
+            "notesMode": "false",
+            "dock": false,
+            "dialog": false,
+            "menu": false,
+            "hash": "#/play",
+            "active": "title",
+            "activeCell": null
+          },
+          "after": {
+            "sel": 1,
+            "val": "4",
+            "notes": "",
+            "notesMode": "false",
+            "dock": false,
+            "dialog": false,
+            "menu": false,
+            "hash": "#/play",
+            "active": "title",
+            "activeCell": null
+          }
+        }
+      },
+      {
+        "label": "(а) Play: фокус на вкладке Play — Backspace стирает",
+        "ok": true,
+        "detail": {
+          "sel": 1,
+          "val": "",
+          "notes": "",
+          "notesMode": "false",
+          "dock": false,
+          "dialog": false,
+          "menu": false,
+          "hash": "#/play",
+          "active": "tab",
+          "activeCell": null
+        }
+      },
+      {
+        "label": "(а) Play: ⌘Z с фокусом на вкладке отменяет стирание (4 вернулась)",
+        "ok": true,
+        "detail": {
+          "sel": 1,
+          "val": "4",
+          "notes": "",
+          "notesMode": "false",
+          "dock": false,
+          "dialog": false,
+          "menu": false,
+          "hash": "#/play",
+          "active": "tab",
+          "activeCell": null
+        }
+      },
+      {
+        "label": "(а) меню ⋯ открыто: цифра не ход",
+        "ok": true,
+        "detail": {}
+      },
+      {
+        "label": "(в) шит «Start new» с отбрасыванием: фокус на Cancel",
+        "ok": true,
+        "detail": {
+          "disc": 1,
+          "menuVal": {
+            "sel": 1,
+            "val": "4",
+            "notes": "",
+            "notesMode": "false",
+            "dock": false,
+            "dialog": false,
+            "menu": true,
+            "hash": "#/play",
+            "active": "menu-new",
+            "activeCell": null
+          },
+          "sel": 1,
+          "val": "4",
+          "notes": "",
+          "notesMode": "false",
+          "dock": false,
+          "dialog": true,
+          "menu": false,
+          "hash": "#/play",
+          "active": "sheet-cancel",
+          "activeCell": null
+        }
+      },
+      {
+        "label": "(в) Enter на Cancel: шит закрыт, партия цела (4 на месте, 5/6 не поставились)",
+        "ok": true,
+        "detail": {
+          "sel": 1,
+          "val": "4",
+          "notes": "",
+          "notesMode": "false",
+          "dock": false,
+          "dialog": false,
+          "menu": false,
+          "hash": "#/play",
+          "active": "body",
+          "activeCell": null
+        }
+      },
+      {
+        "label": "(в) шит правила подсказки: фокус на «Show the hint»",
+        "ok": true,
+        "detail": {
+          "rule": 1,
+          "sel": 1,
+          "val": "4",
+          "notes": "",
+          "notesMode": "false",
+          "dock": false,
+          "dialog": true,
+          "menu": false,
+          "hash": "#/play",
+          "active": "hint-rule-go",
+          "activeCell": null
+        }
+      },
+      {
+        "label": "(в) Enter показывает подсказку (док открыт)",
+        "ok": true,
+        "detail": {
+          "sel": 1,
+          "val": "4",
+          "notes": "",
+          "notesMode": null,
+          "dock": true,
+          "dialog": false,
+          "menu": false,
+          "hash": "#/play",
+          "active": "sr-only",
+          "activeCell": null
+        }
+      },
+      {
+        "label": "(г) Esc сначала закрывает док, выбор остаётся",
+        "ok": true,
+        "detail": {
+          "sel": 1,
+          "val": "4",
+          "notes": "",
+          "notesMode": "false",
+          "dock": false,
+          "dialog": false,
+          "menu": false,
+          "hash": "#/play",
+          "active": "hint-button",
+          "activeCell": null
+        }
+      },
+      {
+        "label": "(в) «Fill candidates»: фокус на действии",
+        "ok": true,
+        "detail": {
+          "sel": 1,
+          "val": "4",
+          "notes": "",
+          "notesMode": "false",
+          "dock": false,
+          "dialog": true,
+          "menu": false,
+          "hash": "#/play",
+          "active": "action-sheet-go",
+          "activeCell": null
+        }
+      },
+      {
+        "label": "(г) Esc закрывает action sheet, из партии не выходим",
+        "ok": true,
+        "detail": {
+          "sel": 1,
+          "val": "4",
+          "notes": "",
+          "notesMode": "false",
+          "dock": false,
+          "dialog": false,
+          "menu": false,
+          "hash": "#/play",
+          "active": "act",
+          "activeCell": null
+        }
+      },
+      {
+        "label": "(в) Ink: второй шит правил — фокус на «Play in ink»",
+        "ok": true,
+        "detail": {
+          "sel": null,
+          "val": null,
+          "notes": null,
+          "notesMode": null,
+          "dock": false,
+          "dialog": true,
+          "menu": false,
+          "hash": "#/play",
+          "active": "ink-rule-start",
+          "activeCell": null
+        }
+      },
+      {
+        "label": "(а) ink: Enter в шите стартует (фокус sheet-start), цифра 5 без фокуса ставится",
+        "ok": true,
+        "detail": {
+          "e0": {
+            "sel": 3,
+            "val": "",
+            "notes": "",
+            "notesMode": "false",
+            "dock": false,
+            "dialog": false,
+            "menu": false,
+            "hash": "#/play",
+            "active": "title",
+            "activeCell": null
+          },
+          "e1": {
+            "sel": 3,
+            "val": "5",
+            "notes": "",
+            "notesMode": "false",
+            "dock": false,
+            "dialog": false,
+            "menu": false,
+            "hash": "#/play",
+            "active": "body",
+            "activeCell": null
+          }
+        }
+      },
+      {
+        "label": "(а) glyphs: Enter в шите стартует (фокус sheet-start), цифра 5 без фокуса ставится",
+        "ok": true,
+        "detail": {
+          "e0": {
+            "sel": 1,
+            "val": "",
+            "notes": "",
+            "notesMode": "false",
+            "dock": false,
+            "dialog": false,
+            "menu": false,
+            "hash": "#/play",
+            "active": "title",
+            "activeCell": null
+          },
+          "e1": {
+            "sel": 1,
+            "val": "glyph",
+            "notes": "",
+            "notesMode": "false",
+            "dock": false,
+            "dialog": false,
+            "menu": false,
+            "hash": "#/play",
+            "active": "body",
+            "activeCell": null
+          }
+        }
+      },
+      {
+        "label": "(а) melody: Enter в шите стартует (фокус sheet-start), цифра 5 без фокуса ставится",
+        "ok": true,
+        "detail": {
+          "e0": {
+            "sel": 1,
+            "val": "",
+            "notes": "",
+            "notesMode": "false",
+            "dock": false,
+            "dialog": false,
+            "menu": false,
+            "hash": "#/play",
+            "active": "title",
+            "activeCell": null
+          },
+          "e1": {
+            "sel": 1,
+            "val": "5",
+            "notes": "",
+            "notesMode": "false",
+            "dock": false,
+            "dialog": false,
+            "menu": false,
+            "hash": "#/play",
+            "active": "body",
+            "activeCell": null
+          }
+        }
+      },
+      {
+        "label": "(а) Лжец: A без фокуса в партии — меню «Обвинить»",
+        "ok": true,
+        "detail": {
+          "sheetFocus": "sheet-start"
+        }
+      },
+      {
+        "label": "(г) Лжец: Esc закрывает меню, партия на месте",
+        "ok": true,
+        "detail": {
+          "sel": 0,
+          "val": "given",
+          "notes": "",
+          "notesMode": "false",
+          "dock": false,
+          "dialog": false,
+          "menu": false,
+          "hash": "#/play",
+          "active": "cell sel",
+          "activeCell": 0
+        }
+      },
+      {
+        "label": "(г) архив без партии (стенд без API — день недоступен): Esc = «‹ Year»",
+        "ok": true,
+        "detail": {
+          "sel": null,
+          "val": null,
+          "notes": null,
+          "notesMode": null,
+          "dock": false,
+          "dialog": true,
+          "menu": false,
+          "hash": "#/year",
+          "active": "",
+          "activeCell": null
+        }
+      },
+      {
+        "label": "(б) справка из низа Settings открыта с начала (scrollTop 0, заголовок виден)",
+        "ok": true,
+        "detail": {
+          "settingsTop": 626,
+          "top": 0,
+          "h1": 52
+        }
+      },
+      {
+        "label": "(б) Esc — Settings на прежней позиции",
+        "ok": true,
+        "detail": {
+          "before": 626,
+          "back": 626
+        }
+      },
+      {
+        "label": "(г) Esc из Settings — на вкладку",
+        "ok": true,
+        "detail": {
+          "sel": 1,
+          "val": "",
+          "notes": "",
+          "notesMode": "false",
+          "dock": false,
+          "dialog": false,
+          "menu": false,
+          "hash": "#/today",
+          "active": "body",
+          "activeCell": null
+        }
+      },
+      {
+        "label": "нет JS-ошибок",
+        "ok": true,
+        "detail": []
+      }
+    ],
+    "errs": []
+  },
+  {
+    "set": "webkit-1280",
+    "checks": [
+      {
+        "label": "(а) Today: цифра сразу после загрузки ставится",
+        "ok": true,
+        "detail": {
+          "before": {
+            "sel": 1,
+            "val": "",
+            "notes": "",
+            "notesMode": "false",
+            "dock": false,
+            "dialog": false,
+            "menu": false,
+            "hash": "#/today",
+            "active": "body",
+            "activeCell": null
+          },
+          "after": {
+            "sel": 1,
+            "val": "7",
+            "notes": "",
+            "notesMode": "false",
+            "dock": false,
+            "dialog": false,
+            "menu": false,
+            "hash": "#/today",
+            "active": "body",
+            "activeCell": null
+          }
+        }
+      },
+      {
+        "label": "(а) Today: Backspace без клика стирает",
+        "ok": true,
+        "detail": {
+          "sel": 1,
+          "val": "",
+          "notes": "",
+          "notesMode": "false",
+          "dock": false,
+          "dialog": false,
+          "menu": false,
+          "hash": "#/today",
+          "active": "body",
+          "activeCell": null
+        }
+      },
+      {
+        "label": "(а) Today: стрелка без клика двигает выбор, фокус уходит на клетку",
+        "ok": true,
+        "detail": {
+          "from": 1,
+          "to": {
+            "sel": 2,
+            "val": "",
+            "notes": "",
+            "notesMode": "false",
+            "dock": false,
+            "dialog": false,
+            "menu": false,
+            "hash": "#/today",
+            "active": "cell sel",
+            "activeCell": 2
+          }
+        }
+      },
+      {
+        "label": "(а) Today: после клика по вкладке Shift+цифра — заметка",
+        "ok": true,
+        "detail": {
+          "before": {
+            "sel": 2,
+            "val": "",
+            "notes": "",
+            "notesMode": "false",
+            "dock": false,
+            "dialog": false,
+            "menu": false,
+            "hash": "#/today",
+            "active": "tab",
+            "activeCell": null
+          },
+          "after": {
+            "sel": 2,
+            "val": "",
+            "notes": "3",
+            "notesMode": "false",
+            "dock": false,
+            "dialog": false,
+            "menu": false,
+            "hash": "#/today",
+            "active": "tab",
+            "activeCell": null
+          }
+        }
+      },
+      {
+        "label": "(а) Today: стрелка на вкладке переключает вкладку (не ход)",
+        "ok": true,
+        "detail": {
+          "sel": null,
+          "val": null,
+          "notes": null,
+          "notesMode": null,
+          "dock": false,
+          "dialog": false,
+          "menu": false,
+          "hash": "#/play",
+          "active": "tab",
+          "activeCell": null
+        }
+      },
+      {
+        "label": "(а) Today: после клика мимо поля N переключает заметки",
+        "ok": true,
+        "detail": {
+          "before": "false",
+          "after": "true",
+          "active": "body"
+        }
+      },
+      {
+        "label": "(а)+(г) Settings: цифра не уходит в партию; Esc возвращает на Today",
+        "ok": true,
+        "detail": {
+          "sel": 2,
+          "val": "",
+          "notes": "3",
+          "notesMode": "false",
+          "dock": false,
+          "dialog": false,
+          "menu": false,
+          "hash": "#/today",
+          "active": "body",
+          "activeCell": null
+        }
+      },
+      {
+        "label": "(г) Today: Esc снимает выбор, остаёмся в партии",
+        "ok": true,
+        "detail": {
+          "sel": null,
+          "val": null,
+          "notes": null,
+          "notesMode": "false",
+          "dock": false,
+          "dialog": false,
+          "menu": false,
+          "hash": "#/today",
+          "active": "body",
+          "activeCell": null
+        }
+      },
+      {
+        "label": "(г) Today: стрелка после Esc снова выбирает клетку",
+        "ok": true,
+        "detail": {
+          "sel": 0,
+          "val": "given",
+          "notes": "",
+          "notesMode": "false",
+          "dock": false,
+          "dialog": false,
+          "menu": false,
+          "hash": "#/today",
+          "active": "cell sel",
+          "activeCell": 0
+        }
+      },
+      {
+        "label": "(в) шит режима (нечего отбрасывать): фокус на Start",
+        "ok": true,
+        "detail": {
+          "sel": null,
+          "val": null,
+          "notes": null,
+          "notesMode": null,
+          "dock": false,
+          "dialog": true,
+          "menu": false,
+          "hash": "#/play",
+          "active": "sheet-start",
+          "activeCell": null
+        }
+      },
+      {
+        "label": "(в) Enter в шите режима запускает партию",
+        "ok": true,
+        "detail": {
+          "sel": 1,
+          "val": "",
+          "notes": "",
+          "notesMode": "false",
+          "dock": false,
+          "dialog": false,
+          "menu": false,
+          "hash": "#/play",
+          "active": "title",
+          "activeCell": null
+        }
+      },
+      {
+        "label": "(а) Play: цифра без фокуса на поле ставится",
+        "ok": true,
+        "detail": {
+          "before": {
+            "sel": 1,
+            "val": "",
+            "notes": "",
+            "notesMode": "false",
+            "dock": false,
+            "dialog": false,
+            "menu": false,
+            "hash": "#/play",
+            "active": "title",
+            "activeCell": null
+          },
+          "after": {
+            "sel": 1,
+            "val": "4",
+            "notes": "",
+            "notesMode": "false",
+            "dock": false,
+            "dialog": false,
+            "menu": false,
+            "hash": "#/play",
+            "active": "title",
+            "activeCell": null
+          }
+        }
+      },
+      {
+        "label": "(а) Play: фокус на вкладке Play — Backspace стирает",
+        "ok": true,
+        "detail": {
+          "sel": 1,
+          "val": "",
+          "notes": "",
+          "notesMode": "false",
+          "dock": false,
+          "dialog": false,
+          "menu": false,
+          "hash": "#/play",
+          "active": "tab",
+          "activeCell": null
+        }
+      },
+      {
+        "label": "(а) Play: ⌘Z с фокусом на вкладке отменяет стирание (4 вернулась)",
+        "ok": true,
+        "detail": {
+          "sel": 1,
+          "val": "4",
+          "notes": "",
+          "notesMode": "false",
+          "dock": false,
+          "dialog": false,
+          "menu": false,
+          "hash": "#/play",
+          "active": "tab",
+          "activeCell": null
+        }
+      },
+      {
+        "label": "(а) меню ⋯ открыто: цифра не ход",
+        "ok": true,
+        "detail": {}
+      },
+      {
+        "label": "(в) шит «Start new» с отбрасыванием: фокус на Cancel",
+        "ok": true,
+        "detail": {
+          "disc": 1,
+          "menuVal": {
+            "sel": 1,
+            "val": "4",
+            "notes": "",
+            "notesMode": "false",
+            "dock": false,
+            "dialog": false,
+            "menu": true,
+            "hash": "#/play",
+            "active": "menu-new",
+            "activeCell": null
+          },
+          "sel": 1,
+          "val": "4",
+          "notes": "",
+          "notesMode": "false",
+          "dock": false,
+          "dialog": true,
+          "menu": false,
+          "hash": "#/play",
+          "active": "sheet-cancel",
+          "activeCell": null
+        }
+      },
+      {
+        "label": "(в) Enter на Cancel: шит закрыт, партия цела (4 на месте, 5/6 не поставились)",
+        "ok": true,
+        "detail": {
+          "sel": 1,
+          "val": "4",
+          "notes": "",
+          "notesMode": "false",
+          "dock": false,
+          "dialog": false,
+          "menu": false,
+          "hash": "#/play",
+          "active": "body",
+          "activeCell": null
+        }
+      },
+      {
+        "label": "(в) шит правила подсказки: фокус на «Show the hint»",
+        "ok": true,
+        "detail": {
+          "rule": 1,
+          "sel": 1,
+          "val": "4",
+          "notes": "",
+          "notesMode": "false",
+          "dock": false,
+          "dialog": true,
+          "menu": false,
+          "hash": "#/play",
+          "active": "hint-rule-go",
+          "activeCell": null
+        }
+      },
+      {
+        "label": "(в) Enter показывает подсказку (док открыт)",
+        "ok": true,
+        "detail": {
+          "sel": 1,
+          "val": "4",
+          "notes": "",
+          "notesMode": null,
+          "dock": true,
+          "dialog": false,
+          "menu": false,
+          "hash": "#/play",
+          "active": "sr-only",
+          "activeCell": null
+        }
+      },
+      {
+        "label": "(г) Esc сначала закрывает док, выбор остаётся",
+        "ok": true,
+        "detail": {
+          "sel": 1,
+          "val": "4",
+          "notes": "",
+          "notesMode": "false",
+          "dock": false,
+          "dialog": false,
+          "menu": false,
+          "hash": "#/play",
+          "active": "hint-button",
+          "activeCell": null
+        }
+      },
+      {
+        "label": "(в) «Fill candidates»: фокус на действии",
+        "ok": true,
+        "detail": {
+          "sel": 1,
+          "val": "4",
+          "notes": "",
+          "notesMode": "false",
+          "dock": false,
+          "dialog": true,
+          "menu": false,
+          "hash": "#/play",
+          "active": "action-sheet-go",
+          "activeCell": null
+        }
+      },
+      {
+        "label": "(г) Esc закрывает action sheet, из партии не выходим",
+        "ok": true,
+        "detail": {
+          "sel": 1,
+          "val": "4",
+          "notes": "",
+          "notesMode": "false",
+          "dock": false,
+          "dialog": false,
+          "menu": false,
+          "hash": "#/play",
+          "active": "body",
+          "activeCell": null
+        }
+      },
+      {
+        "label": "(б) справка из низа Settings открыта с начала (scrollTop 0, заголовок виден)",
+        "ok": true,
+        "detail": {
+          "settingsTop": 569,
+          "top": 0,
+          "h1": 52
+        }
+      },
+      {
+        "label": "(б) Esc — Settings на прежней позиции",
+        "ok": true,
+        "detail": {
+          "before": 569,
+          "back": 569
+        }
+      },
+      {
+        "label": "(г) Esc из Settings — на вкладку",
+        "ok": true,
+        "detail": {
+          "sel": 1,
+          "val": "",
+          "notes": "",
+          "notesMode": "false",
+          "dock": false,
+          "dialog": false,
+          "menu": false,
+          "hash": "#/today",
+          "active": "body",
+          "activeCell": null
+        }
+      },
+      {
+        "label": "нет JS-ошибок",
+        "ok": true,
+        "detail": []
+      }
+    ],
+    "errs": []
+  },
+  {
+    "set": "webkit-390",
+    "checks": [
+      {
+        "label": "(б) справка из низа Settings открыта с начала (scrollTop 0, заголовок виден)",
+        "ok": true,
+        "detail": {
+          "settingsTop": 616,
+          "top": 0,
+          "h1": 52
+        }
+      },
+      {
+        "label": "(б) «‹ Settings» — Settings на прежней позиции",
+        "ok": true,
+        "detail": {
+          "before": 616,
+          "back": 616
+        }
+      },
+      {
+        "label": "нет JS-ошибок",
+        "ok": true,
+        "detail": []
+      }
+    ],
+    "errs": []
+  },
+  {
+    "set": "chromium-390",
+    "checks": [
+      {
+        "label": "(б) справка из низа Settings открыта с начала (scrollTop 0, заголовок виден)",
+        "ok": true,
+        "detail": {
+          "settingsTop": 757,
+          "top": 0,
+          "h1": 52
+        }
+      },
+      {
+        "label": "(б) «‹ Settings» — Settings на прежней позиции",
+        "ok": true,
+        "detail": {
+          "before": 757,
+          "back": 757
+        }
+      },
+      {
+        "label": "нет JS-ошибок",
+        "ok": true,
+        "detail": []
+      }
+    ],
+    "errs": []
+  }
+]
