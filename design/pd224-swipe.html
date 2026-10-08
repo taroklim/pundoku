@@ -1,0 +1,860 @@
+<!DOCTYPE html>
+<html lang="en" data-type="17" data-rm="off" data-w="390">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>Pundoku — swipe to delete an unfinished game (PD-224)</title>
+<!--
+  PD-224 (part A) — interactive mockup of swipe-to-delete on a mode row of the Play hub.
+  DESIGN ONLY, nothing here is wired into apps/. The normative spec is design/pd224-swipe-gestures.md;
+  the gesture code below is a reference implementation of that spec (same numbers, see const P).
+
+  Try it: with a mouse or a finger drag the "Liar" or "Ink" row (they have an unfinished game) from right to left.
+    - short drag and release            -> the row stays open, red "Delete" visible
+    - long drag past the threshold      -> the button fills the row ("armed"); release = delete
+    - tap outside / scroll / drag back  -> closes
+    - Undo toast (default) or Confirm action sheet (variant switch in the panel)
+    - long press / right click a row    -> context menu with "Delete puzzle" (non-gesture path)
+    - Tab to a row and press Delete     -> keyboard path (the row opens, focus on its Delete button)
+  Rows WITHOUT an unfinished game (Classic, Melody, Lantern, Glyphs) and the "Continue" row do not swipe.
+
+  window.PD224 = { apply(o), reset(), state(), check(), P } — used by design/pd224-shots.mjs.
+  Tokens are copied from apps/web/src/styles/tokens.css. One NEW ALIAS only: --on-wax (text on the red
+  button: #FFF light 6.5:1, #000 dark 7.5:1 — same rule as --on-ink). No new hex value.
+-->
+<style>
+[hidden]{ display:none !important; }
+/* ================= 1. TOKENS (= tokens.css) ================= */
+:root{
+  --font-sans: system-ui, -apple-system, "SF Pro Text", "Helvetica Neue", Arial, sans-serif;
+  --sa-top: 59px; --sa-bot: 34px;
+  --bg:#F2F2F7; --elev:#FFFFFF;
+  --label:#1C1C1E; --label-2:#6E6E73; --label-2-grouped:#6A6A6E;
+  --ink:#3B48B0; --on-ink:#FFFFFF; --wax:#B3261E; --on-wax:#FFFFFF;
+  --hairline:rgba(60,60,67,.29);
+  --ink-tint:rgba(59,72,176,.12);
+  --box-shadow:0 1px 2px rgba(0,0,0,.04);
+  --glass-fill:rgba(255,255,255,.72); --glass-solid:#F6F6F9;
+  --scrim:rgba(0,0,0,.28);
+  --toast-shadow:0 8px 28px rgba(0,0,0,.16);
+  --page-bg:#8A8A8E;
+  --mo:1; --mk:1;
+  --e-out:cubic-bezier(0.2,0.7,0.3,1); --e-spring:cubic-bezier(0.22,1,0.36,1);
+}
+@media (prefers-color-scheme: dark){
+  :root:not(.force-light){
+    --bg:#000000; --elev:#1C1C1E;
+    --label:#FFFFFF; --label-2:#98989D; --label-2-grouped:#98989D;
+    --ink:#8C96FF; --on-ink:#000000; --wax:#FF6B5E; --on-wax:#000000;
+    --hairline:rgba(235,235,245,.22); --ink-tint:rgba(140,150,255,.18);
+    --box-shadow:none; --glass-fill:rgba(28,28,30,.72); --glass-solid:#141416;
+    --scrim:rgba(0,0,0,.5); --toast-shadow:0 8px 28px rgba(0,0,0,.6); --page-bg:#2C2C2E;
+  }
+}
+:root.force-dark{
+  --bg:#000000; --elev:#1C1C1E;
+  --label:#FFFFFF; --label-2:#98989D; --label-2-grouped:#98989D;
+  --ink:#8C96FF; --on-ink:#000000; --wax:#FF6B5E; --on-wax:#000000;
+  --hairline:rgba(235,235,245,.22); --ink-tint:rgba(140,150,255,.18);
+  --box-shadow:none; --glass-fill:rgba(28,28,30,.72); --glass-solid:#141416;
+  --scrim:rgba(0,0,0,.5); --toast-shadow:0 8px 28px rgba(0,0,0,.6); --page-bg:#2C2C2E;
+}
+@media (prefers-reduced-motion: reduce){ :root{ --mo:0; --mk:.72; } }
+:root[data-rm="on"]{ --mo:0; --mk:.72; }
+
+/* ================= 2. BASE ================= */
+*{ box-sizing:border-box; }
+html{ font-size:17px; font-family:var(--font-sans); line-height:1.3; -webkit-text-size-adjust:100%; }
+:root[data-type="ax3"]{ font-size:40px; } /* review-only Dynamic Type simulation */
+body{ margin:0; background:var(--page-bg); color:var(--label); font-family:var(--font-sans);
+  touch-action:manipulation; -webkit-tap-highlight-color:transparent; }
+button{ font:inherit; color:inherit; background:none; border:0; padding:0; cursor:pointer;
+  touch-action:manipulation; -webkit-appearance:none; appearance:none; text-align:left; }
+:focus-visible{ outline:2px solid var(--ink); outline-offset:2px; border-radius:6px; }
+.sr{ position:absolute; width:1px; height:1px; overflow:hidden; clip-path:inset(50%); white-space:nowrap; }
+
+/* ================= 3. PAGE: phone frame + panel ================= */
+.page{ display:flex; gap:28px; align-items:flex-start; justify-content:center; padding:24px 16px 80px; }
+.frame{ position:relative; flex:none; width:var(--fw,390px); height:var(--fh,844px); display:flex; flex-direction:column;
+  background:var(--bg); overflow:hidden; border-radius:46px; box-shadow:0 20px 60px rgba(0,0,0,.35); }
+:root[data-w="320"]{ --fw:320px; --fh:568px; }
+:root[data-w="390"]{ --fw:390px; --fh:844px; }
+:root[data-w="430"]{ --fw:430px; --fh:932px; }
+:root[data-w="320"] .frame{ border-radius:22px; }
+:root.shot body, :root.device body{ background:var(--bg); }
+:root.shot .page, :root.device .page{ display:block; padding:0; }
+:root.shot .frame, :root.device .frame{ width:100vw; height:100vh; height:100dvh; border-radius:0; box-shadow:none; }
+:root.shot .panel{ display:none; }
+:root.device .panel{ display:none; position:fixed; inset:0; z-index:200; overflow:auto; width:auto; max-height:none; border-radius:0; }
+:root.device.panel-open .panel{ display:block; }
+.device-toggle{ display:none; }
+:root.device .device-toggle{ display:block; position:fixed; z-index:199; left:50%; transform:translateX(-50%);
+  top:calc(env(safe-area-inset-top,0px) + 2px); padding:3px 10px; border-radius:99px; background:rgba(0,0,0,.55); color:#fff; font-size:11px; }
+
+.panel{ width:320px; flex:none; position:sticky; top:16px; max-height:calc(100vh - 32px); overflow:auto;
+  background:#fff; color:#1C1C1E; border-radius:14px; padding:14px 14px 18px; font-size:13px; box-shadow:0 8px 30px rgba(0,0,0,.25); }
+.panel h3{ margin:0 0 4px; font-size:15px; }
+.panel p{ margin:0 0 8px; color:#6E6E73; font-size:12px; line-height:1.4; }
+.panel .grp{ margin-top:10px; }
+.panel .grp > span{ display:block; font-weight:600; margin-bottom:4px; }
+.panel .seg{ display:flex; flex-wrap:wrap; gap:4px; }
+.panel .seg button{ padding:5px 8px; border-radius:7px; background:#F2F2F7; font-size:12px; color:#1C1C1E; }
+.panel .seg button[aria-pressed="true"]{ background:#3B48B0; color:#fff; }
+.panel .close-panel{ display:none; }
+:root.device .panel .close-panel{ display:inline-block; float:right; padding:4px 10px; border-radius:7px; background:#F2F2F7; }
+.readout{ margin-top:10px; padding:8px; border-radius:8px; background:#F2F2F7; font:11px/1.45 ui-monospace, Menlo, monospace; white-space:pre-wrap; color:#1C1C1E; }
+
+/* ================= 4. SCREEN ================= */
+.screen{ flex:1; min-height:0; display:flex; flex-direction:column; }
+.toolbar{ flex:none; display:flex; align-items:flex-end; justify-content:space-between; gap:12px; padding:calc(var(--sa-top) + 8px) 16px 0; }
+.title{ font-size:1.62rem; font-weight:700; letter-spacing:-.02em; line-height:1.2; margin:0; min-width:0;
+  overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.icon-btn{ width:44px; height:44px; flex:none; margin:0 -10px -6px 0; display:grid; place-items:center; color:var(--label-2-grouped); border-radius:22px; }
+.icon-btn svg{ width:23px; height:23px; }
+
+/* Hub: overflow-x hidden — the translated row must never create horizontal scroll (spec §2). */
+.hub-scroll{ flex:1; min-height:0; overflow-y:auto; overflow-x:hidden; overscroll-behavior:contain; padding-bottom:16px; }
+.sec{ margin-top:16px; } .sec:first-child{ margin-top:10px; }
+.sec-head{ margin:0 0 6px; padding:0 16px; font-size:.82rem; color:var(--label-2-grouped); overflow-wrap:break-word; }
+.sec-foot{ margin:7px 0 0; padding:0 16px; font-size:.82rem; line-height:1.35; color:var(--label-2-grouped); overflow-wrap:break-word; }
+.card{ margin:0 16px; background:var(--elev); border-radius:12px; box-shadow:var(--box-shadow); overflow:hidden; }
+
+.row{ position:relative; width:100%; min-height:44px; display:flex; align-items:center; gap:10px 12px;
+  padding:11px 38px 11px 16px; font-size:1rem; color:var(--label); text-align:left; background:var(--elev); }
+button.row:active{ background:var(--ink-tint); }
+.row .chev{ position:absolute; right:16px; top:50%; transform:translateY(-50%); width:13px; height:13px; color:var(--label-2); opacity:.7; }
+.row.two{ flex-direction:column; align-items:stretch; gap:2px; }
+.row.two .l1{ display:flex; align-items:center; gap:6px; }
+.row.two .l1 svg{ width:19px; height:19px; flex:none; color:var(--ink); }
+.row.two .l2{ color:var(--label-2); font-size:.88rem; font-variant-numeric:tabular-nums; overflow-wrap:break-word; }
+.row.mode{ align-items:flex-start; -webkit-touch-callout:none; -webkit-user-select:none; user-select:none; }
+.row.mode .mg{ flex:none; width:26px; height:26px; margin-top:1px; color:var(--ink); }
+.row.mode .mg svg{ width:26px; height:26px; }
+.row.mode .lab{ flex:1 1 auto; min-width:0; overflow-wrap:break-word; }
+.row.mode b{ font-weight:600; }
+.row .sub{ display:block; margin-top:1px; line-height:1.3; color:var(--label-2); font-size:.82rem; overflow-wrap:break-word; }
+.row .sub.prog{ color:var(--ink); font-variant-numeric:tabular-nums; }
+.row .dot{ display:inline-block; width:.45em; height:.45em; margin-right:.35em; border-radius:50%; background:currentColor; vertical-align:.12em; }
+.row .sub.xf{ animation:xf calc(160ms * var(--mk)) linear; }
+@keyframes xf{ from{ opacity:0; } }
+:root[data-type="ax3"] .row.mode{ flex-direction:column; gap:2px; }
+:root[data-type="ax3"] .row .chev{ top:14px; transform:none; }
+
+/* ---------- PD-224: the swipe row ----------
+   .srow   — static wrapper (owns the separator; does NOT move)
+   .fg     — the existing row button, the only layer that moves (translateX); opaque background
+   .del    — red action UNDER .fg, right-aligned, width = max(A, -x); full row height
+   .dlw    — label box A px wide; shifts to the left edge of the red area while "armed" */
+.srow{ position:relative; }
+.srow + .srow::before{ content:""; position:absolute; z-index:3; left:16px; right:0; top:0; height:1px;
+  background:var(--hairline); transform:scaleY(.5); transform-origin:top; pointer-events:none; }
+.srow .fg{ z-index:2; touch-action:pan-y; }
+.srow.dragging .fg, .srow.dragging .fg:active{ background:var(--elev); } /* no press tint while dragging */
+.del{ position:absolute; z-index:1; top:0; bottom:0; right:0; width:var(--aw,84px); display:flex; justify-content:flex-end; align-items:stretch;
+  background:var(--wax); color:var(--on-wax); font-weight:600; text-align:center; overflow:hidden; }
+.srow[data-slot="0"] .del{ visibility:hidden; }
+.dlw{ flex:none; width:var(--aw,84px); display:flex; align-items:center; justify-content:center; padding:0 8px; }
+.dl{ white-space:nowrap; font-size:1rem; }
+.del svg{ display:none; width:min(1.3em, 30px); height:min(1.3em, 30px); }
+.srow.icon-only .del svg{ display:block; }
+.srow.icon-only .dl{ position:absolute; width:1px; height:1px; overflow:hidden; clip-path:inset(50%); }
+.del:focus-visible, .del.kb{ outline:2px solid var(--on-wax); outline-offset:-5px; border-radius:0; }
+.srow .fg:focus-visible{ outline:2px solid transparent; box-shadow:inset 0 0 0 2px var(--ink); border-radius:0; }
+
+/* ---------- Undo toast (default variant) ---------- */
+.toast{ position:absolute; z-index:30; left:16px; right:16px; bottom:calc(49px + var(--sa-bot) + 8px);
+  display:flex; align-items:center; gap:6px 10px; min-height:50px; padding:3px 4px 3px 16px;
+  background:var(--elev); color:var(--label); border-radius:14px; box-shadow:var(--toast-shadow), 0 0 0 .5px var(--hairline);
+  animation:toast-in calc(200ms * var(--mk)) var(--e-out); }
+@keyframes toast-in{ from{ opacity:0; transform:translateY(calc(16px * var(--mo))); } }
+.toast .tt{ flex:1; min-width:0; font-size:.94rem; line-height:1.3; overflow-wrap:break-word; padding:6px 0; }
+.toast .tu{ flex:none; min-width:44px; min-height:44px; padding:0 12px; border-radius:10px; color:var(--ink); font-weight:600; text-align:center; }
+.toast .tu:active{ background:var(--ink-tint); }
+.toast .tu:focus-visible{ outline:2px solid var(--ink); outline-offset:-2px; }
+:root[data-type="ax3"] .toast{ flex-wrap:wrap; padding:8px 6px 6px 16px; }
+:root[data-type="ax3"] .toast .tu{ margin-left:auto; }
+
+/* ---------- Tab bar (context only) ---------- */
+.tabbar{ flex:none; position:relative; z-index:20; display:flex; justify-content:space-around; height:calc(49px + var(--sa-bot)); padding-bottom:var(--sa-bot);
+  background:var(--glass-fill); -webkit-backdrop-filter:saturate(180%) blur(20px); backdrop-filter:saturate(180%) blur(20px); border-top:.5px solid var(--hairline); }
+.tabbar button{ flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px; color:var(--label-2); font-size:10px; font-weight:500; }
+.tabbar button[aria-current="page"]{ color:var(--ink); }
+.tabbar svg{ width:24px; height:24px; }
+
+/* ---------- Context menu (long press) ---------- */
+.scrim{ position:absolute; inset:0; z-index:60; background:var(--scrim); animation:fade calc(160ms * var(--mk)) linear; }
+@keyframes fade{ from{ opacity:0; } }
+.menu{ position:absolute; left:16px; right:16px; max-width:300px; margin-left:auto; overflow:auto; background:var(--elev); border-radius:13px; box-shadow:0 10px 34px rgba(0,0,0,.22); }
+.menu .mt{ margin:0; padding:10px 14px; font-size:.82rem; color:var(--label-2); border-bottom:.5px solid var(--hairline); overflow-wrap:break-word; }
+.menu button{ display:flex; align-items:center; gap:10px; width:100%; min-height:44px; padding:10px 14px; font-size:.95rem; overflow-wrap:break-word; }
+.menu button + button{ border-top:.5px solid var(--hairline); }
+.menu button.danger{ color:var(--wax); border-top:6px solid var(--bg); } /* destructive LAST, set apart (context-menus.md) */
+.menu button svg{ width:18px; height:18px; flex:none; color:var(--label-2); }
+.menu button.danger svg{ color:var(--wax); }
+.menu button:active{ background:var(--ink-tint); }
+.menu button:focus-visible{ outline:2px solid transparent; box-shadow:inset 0 0 0 2px var(--ink); border-radius:0; }
+
+/* ---------- Confirm action sheet (alternative variant) ---------- */
+.asheet{ position:absolute; left:8px; right:8px; bottom:calc(var(--sa-bot) + 8px); display:flex; flex-direction:column; gap:8px;
+  animation:as-in calc(240ms * var(--mk)) var(--e-spring); }
+@keyframes as-in{ from{ opacity:0; transform:translateY(calc(40px * var(--mo))); } }
+.as-grp{ background:var(--elev); border-radius:13px; overflow:hidden; }
+.as-head{ padding:14px 16px 12px; text-align:center; border-bottom:.5px solid var(--hairline); }
+.as-head h2{ margin:0; font-size:.82rem; font-weight:600; color:var(--label-2); overflow-wrap:break-word; }
+.as-head p{ margin:4px 0 0; font-size:.82rem; color:var(--label-2); overflow-wrap:break-word; font-variant-numeric:tabular-nums; }
+.asheet button{ display:block; width:100%; min-height:56px; padding:12px 16px; font-size:1.18rem; text-align:center; overflow-wrap:break-word; }
+.asheet .as-del{ color:var(--wax); }
+.asheet .as-cancel{ background:var(--elev); border-radius:13px; color:var(--ink); font-weight:600; }
+.asheet button:active{ background:var(--ink-tint); }
+.asheet button:focus-visible{ outline:2px solid transparent; box-shadow:inset 0 0 0 2px var(--ink); border-radius:13px; }
+
+.flash{ position:absolute; z-index:40; left:50%; top:calc(var(--sa-top) + 6px); transform:translateX(-50%); padding:4px 10px; border-radius:99px;
+  background:rgba(0,0,0,.7); color:#fff; font-size:11px; white-space:nowrap; animation:fade calc(160ms * var(--mk)) linear; }
+</style>
+</head>
+<body>
+<button type="button" class="device-toggle" id="devToggle">Mockup controls</button>
+<div class="page">
+  <div class="frame" id="frame">
+    <div class="screen">
+      <header class="toolbar">
+        <h1 class="title" id="tTitle">Play</h1>
+        <button type="button" class="icon-btn" aria-label="Settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="12" r="3"/><path d="M12 2.8v2.4M12 18.8v2.4M2.8 12h2.4M18.8 12h2.4M5.5 5.5l1.7 1.7M16.8 16.8l1.7 1.7M5.5 18.5l1.7-1.7M16.8 7.2l1.7-1.7"/></svg></button>
+      </header>
+      <div class="hub-scroll" id="hub">
+        <section class="sec" aria-labelledby="hCont">
+          <p class="sec-head" id="hCont">Continue</p>
+          <div class="card">
+            <button type="button" class="row two" id="dayRow" data-testid="continue-day">
+              <span class="l1"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3.5" y="5" width="17" height="15" rx="3"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg><b id="tDay">Puzzle of the day</b></span>
+              <span class="l2" id="tDayMeta">Medium · 28 left · 12:04</span>
+              <svg class="chev" viewBox="0 0 13 13"><path d="M4.5 2l5 4.5-5 4.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </button>
+          </div>
+        </section>
+        <section class="sec" aria-labelledby="hModes">
+          <p class="sec-head" id="hModes">Modes</p>
+          <div class="card" id="modes"></div>
+          <p class="sec-foot" id="tFoot">Your own games don’t go into your year.</p>
+        </section>
+      </div>
+      <div class="toast" id="toast" hidden><span class="tt" id="toastText"></span><button type="button" class="tu" id="toastUndo">Undo</button></div>
+      <nav class="tabbar" aria-label="Tabs">
+        <button type="button" id="tabToday"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3.5" y="5" width="17" height="15" rx="3"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg><span id="tToday">Today</span></button>
+        <button type="button" aria-current="page"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3.5" y="3.5" width="17" height="17" rx="3"/><path d="M9.2 3.5v17M14.8 3.5v17M3.5 9.2h17M3.5 14.8h17"/></svg><span id="tPlay">Play</span></button>
+        <button type="button"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="6" cy="6" r="1.6"/><circle cx="12" cy="6" r="1.6"/><circle cx="18" cy="6" r="1.6"/><circle cx="6" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="18" cy="12" r="1.6"/><circle cx="6" cy="18" r="1.6"/><circle cx="12" cy="18" r="1.6"/></svg><span id="tYear">Year</span></button>
+      </nav>
+    </div>
+    <div class="scrim" id="ctxScrim" hidden><div class="menu" id="ctxMenu" role="menu" tabindex="-1"></div></div>
+    <div class="scrim" id="asScrim" hidden>
+      <div class="asheet" role="dialog" aria-modal="true" aria-labelledby="asTitle" aria-describedby="asMsg">
+        <div class="as-grp">
+          <div class="as-head"><h2 id="asTitle"></h2><p id="asMsg"></p></div>
+          <button type="button" class="as-del" id="asDel">Delete</button>
+        </div>
+        <button type="button" class="as-cancel" id="asCancel">Cancel</button>
+      </div>
+    </div>
+    <div class="sr" id="live" aria-live="polite"></div>
+  </div>
+
+  <aside class="panel" id="panel" aria-label="Mockup controls">
+    <button type="button" class="close-panel" id="closePanel">Close</button>
+    <h3>PD-224 · swipe to delete</h3>
+    <p>Drag <b>Liar</b> or <b>Ink</b> right → left. Short = open, past the threshold = delete. Long press / right click = menu. Tab + Delete = keyboard path. Spec: <code>pd224-swipe-gestures.md</code>.</p>
+    <div class="grp"><span>After delete</span><div class="seg" data-k="variant"><button data-v="undo">Undo toast (rec.)</button><button data-v="confirm">Confirm sheet</button></div></div>
+    <div class="grp"><span>Theme</span><div class="seg" data-k="theme"><button data-v="system">System</button><button data-v="light">Light</button><button data-v="dark">Dark</button></div></div>
+    <div class="grp"><span>Width</span><div class="seg" data-k="w"><button data-v="320">320</button><button data-v="390">390</button><button data-v="430">430</button></div></div>
+    <div class="grp"><span>Text size</span><div class="seg" data-k="type"><button data-v="17">Default</button><button data-v="ax3">AX3</button></div></div>
+    <div class="grp"><span>Language</span><div class="seg" data-k="lang"><button data-v="en">en</button><button data-v="uk">uk</button><button data-v="ru">ru</button></div></div>
+    <div class="grp"><span>Reduce Motion</span><div class="seg" data-k="rm"><button data-v="off">Off</button><button data-v="on">On</button></div></div>
+    <div class="grp"><span>Jump to state (Liar row)</span><div class="seg" id="states">
+      <button data-s="closed">Reset</button><button data-s="partial">Dragging</button><button data-s="open">Open</button><button data-s="armed">Armed</button>
+      <button data-s="undo">Undo toast</button><button data-s="confirm">Confirm</button><button data-s="menu">Menu</button><button data-s="kbd">Keyboard</button></div></div>
+    <div class="readout" id="readout"></div>
+  </aside>
+</div>
+
+<script>
+(() => {
+"use strict";
+const root = document.documentElement;
+const qs = new URLSearchParams(location.search);
+if (qs.has("shot")) root.classList.add("shot");
+else if (matchMedia("(max-width: 520px)").matches) root.classList.add("device");
+
+/* ---------------- spec numbers (pd224-swipe-gestures.md §3) ---------------- */
+const P = {
+  SLOP: 10,          // px before the gesture is decided (same as MOVE_SLOP_PX of the long press)
+  ANGLE: 1.5,        // |dx| >= 1.5·|dy|  (≤ ~34° from horizontal) to claim the swipe
+  EDGE: 16,          // px from the screen edges where a swipe never starts
+  A_MIN: 80,         // min width of the red button
+  A_PAD: 32,         // label + 2×16 padding
+  A_ICON: 88,        // width in icon-only mode
+  ICON_FRAC: 0.45,   // label+pad > 45 % of row width → icon-only (AX sizes)
+  OPEN_FRAC: 0.5,    // release past A/2 → stays open
+  FLICK: 0.3,        // px/ms over the last 100 ms
+  FLICK_MIN: 16,     // px: a left flick shorter than this does not open
+  ARM_FRAC: 0.55,    // full-swipe threshold T = max(55 % W, A + 72)
+  ARM_EXTRA: 72,
+  HYST: 24,          // px of hysteresis before "armed" switches off again
+  RUBBER: 0.2, RUBBER_MAX: 12, // dragging an OPEN row to the right past 0
+  SETTLE: 220, COMMIT: 260, LABEL: 140, // ms (× 0 under Reduce Motion)
+  TOAST_MS: 6000,    // undo window
+  LONG: 500          // = LONG_PRESS_MS
+};
+
+/* ---------------- texts ---------------- */
+const T = {
+  en: { play:"Play", cont:"Continue", day:"Puzzle of the day", modes:"Modes", foot:"Your own games don’t go into your year.",
+    today:"Today", year:"Year", status:"In progress · ",
+    names:{ classic:"Classic", ink:"Ink", liar:"Liar", melody:"Melody", lantern:"Lantern", glyphs:"Glyphs" },
+    desc:{ classic:"Plain sudoku: notes, undo and hints are all there.", ink:"Every digit is final: no undo and no eraser for digits. A wrong one leaves a blot.",
+      liar:"One of the given digits is a lie. Find it, then press and hold it to accuse.", melody:"Each digit you place sounds a note. A solved grid plays its own tune.",
+      lantern:"The board is dark. Only the row, column and box of the selected cell are lit.", glyphs:"Nine shapes instead of digits. The same logic, without a single number." },
+    diff:{ medium:"Medium", hard:"Hard" }, left:(n) => `${n} left`,
+    del:"Delete", delItem:"Delete puzzle", delA11y:(m) => `Delete unfinished puzzle: ${m}`, deleted:(m) => `${m} puzzle deleted`,
+    undo:"Undo", restored:(m) => `${m} puzzle restored`,
+    cTitle:"Delete the unfinished puzzle?", cMsg:(m, meta) => `${m} · ${meta}. This can’t be undone.`, cancel:"Cancel",
+    cont2:"Continue", newP:"New puzzle…", opens:(m) => `tap → opens the ${m} game` },
+  uk: { play:"Гра", cont:"Продовжити", day:"Головоломка дня", modes:"Режими", foot:"Власні ігри не потрапляють у ваш рік.",
+    today:"Сьогодні", year:"Рік", status:"Незавершена · ",
+    names:{ classic:"Класика", ink:"Чорнило", liar:"Брехун", melody:"Мелодія", lantern:"Ліхтар", glyphs:"Гліфи" },
+    desc:{ classic:"Звичайне судоку: нотатки, скасування й підказки на місці.", ink:"Кожна цифра остаточна: без скасування і без гумки для цифр. Хибна лишає ляпку.",
+      liar:"Одна з даних цифр бреше. Знайдіть її та утримуйте, щоб звинуватити.", melody:"Кожна поставлена цифра звучить нотою. Розв’язана сітка грає власну мелодію.",
+      lantern:"Поле в темряві. Світяться лише рядок, стовпець і блок вибраної клітинки.", glyphs:"Дев’ять фігур замість цифр. Та сама логіка — жодного числа." },
+    diff:{ medium:"Середньо", hard:"Складно" }, left:(n) => `лишилось ${n}`,
+    del:"Видалити", delItem:"Видалити сітку", delA11y:(m) => `Видалити незавершену сітку: ${m}`, deleted:(m) => `Сітку «${m}» видалено`,
+    undo:"Скасувати", restored:(m) => `Сітку «${m}» відновлено`,
+    cTitle:"Видалити незавершену сітку?", cMsg:(m, meta) => `${m} · ${meta}. Це не можна скасувати.`, cancel:"Скасувати",
+    cont2:"Продовжити", newP:"Нова сітка…", opens:(m) => `тап → відкриває гру «${m}»` },
+  ru: { play:"Игра", cont:"Продолжить", day:"Головоломка дня", modes:"Режимы", foot:"Свои игры не попадают в ваш год.",
+    today:"Сегодня", year:"Год", status:"Не закончена · ",
+    names:{ classic:"Классика", ink:"Чернила", liar:"Лжец", melody:"Мелодия", lantern:"Фонарь", glyphs:"Глифы" },
+    desc:{ classic:"Обычное судоку: заметки, отмена и подсказки на месте.", ink:"Каждая цифра окончательна: без отмены и без ластика для цифр. Неверная оставляет кляксу.",
+      liar:"Одна из данных цифр лжёт. Найдите её и удерживайте, чтобы обвинить.", melody:"Каждая поставленная цифра звучит нотой. Решённая сетка играет свою мелодию.",
+      lantern:"Поле в темноте. Светятся только строка, столбец и блок выбранной клетки.", glyphs:"Девять фигур вместо цифр. Та же логика — ни одного числа." },
+    diff:{ medium:"Средне", hard:"Сложно" }, left:(n) => `осталось ${n}`,
+    del:"Удалить", delItem:"Удалить сетку", delA11y:(m) => `Удалить незаконченную сетку: ${m}`, deleted:(m) => `Сетка «${m}» удалена`,
+    undo:"Отменить", restored:(m) => `Сетка «${m}» восстановлена`,
+    cTitle:"Удалить незаконченную сетку?", cMsg:(m, meta) => `${m} · ${meta}. Это нельзя отменить.`, cancel:"Отмена",
+    cont2:"Продолжить", newP:"Новая сетка…", opens:(m) => `тап → открывает игру «${m}»` }
+};
+
+/* ---------------- icons ---------------- */
+const sv = (d, extra = "") => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" ${extra}>${d}</svg>`;
+const ICON = {
+  classic: sv('<rect x="3.5" y="3.5" width="17" height="17" rx="3"/><path d="M9.2 3.5v17M14.8 3.5v17M3.5 9.2h17M3.5 14.8h17"/>'),
+  ink: sv('<path d="M12 3l5 6-5 12-5-12z"/><path d="M12 10.5v4"/><circle cx="12" cy="9" r="1.2"/>'),
+  liar: sv('<path d="M3 8c3-1.5 6-1.5 9 0 3-1.5 6-1.5 9 0 0 6-3 9-6 9-1.6 0-2.3-1.5-3-3-.7 1.5-1.4 3-3 3-3 0-6-3-6-9z"/><path d="M7 11.5h2.5M14.5 11.5H17"/>'),
+  melody: sv('<path d="M9 18V5l10-2v13"/><circle cx="6.5" cy="18" r="2.5"/><circle cx="16.5" cy="16" r="2.5"/>'),
+  lantern: sv('<path d="M9 4h6M10 4v2M14 4v2"/><rect x="7" y="6" width="10" height="13" rx="3"/><path d="M12 10v5M9 21h6"/>'),
+  glyphs: sv('<circle cx="7.5" cy="7.5" r="3"/><rect x="13.5" y="4.5" width="6" height="6" rx="1"/><path d="M7.5 13.5l3.5 6h-7z"/><path d="M14 14l5 5M19 14l-5 5"/>')
+};
+const TRASH = sv('<path d="M4 7h16M9.5 7V4.5h5V7M6.5 7l1 13h9l1-13M10 11v6M14 11v6"/>');
+const CHEV = '<svg class="chev" viewBox="0 0 13 13" aria-hidden="true"><path d="M4.5 2l5 4.5-5 4.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+const NEWG = sv('<rect x="3.5" y="3.5" width="17" height="17" rx="3"/><path d="M12 8v8M8 12h8"/>');
+
+/* ---------------- state ---------------- */
+const MODES = ["classic", "ink", "liar", "melody", "lantern", "glyphs"];
+const SLOTS0 = { ink: { diff: "medium", left: 31, time: "08:40" }, liar: { diff: "hard", left: 47, time: "03:18" } };
+const S = { lang: "en", theme: "system", w: "390", type: "17", rm: "off", variant: "undo" };
+let slots = {};
+let openRow = null, drag = null, swallow = false, longTimer = 0, lastPointer = 0, lastInput = "pointer", openScroll = 0;
+let toast = null, menuRow = null, sheet = null, activated = null;
+
+const $ = (s) => document.querySelector(s);
+const frame = $("#frame"), hub = $("#hub"), modesEl = $("#modes");
+const tr = () => T[S.lang];
+const meta = (sl) => `${tr().diff[sl.diff]} · ${tr().left(sl.left)} · ${sl.time}`;
+const reduced = () => getComputedStyle(root).getPropertyValue("--mo").trim() === "0";
+const rowOf = (m) => modesEl.querySelector(`.srow[data-mode="${m}"]`);
+const parts = (row) => ({ fg: row.querySelector(".fg"), del: row.querySelector(".del"), dlw: row.querySelector(".dlw"), lab: row.querySelector(".lab") });
+
+function labHTML(m) {
+  const t = tr(), sl = slots[m];
+  return `<b>${t.names[m]}</b>` + (sl
+    ? `<span class="sub prog"><span class="dot" aria-hidden="true"></span>${t.status}${meta(sl)}</span>`
+    : `<span class="sub">${t.desc[m]}</span>`);
+}
+function rowHTML(m) {
+  const t = tr(), sl = !!slots[m];
+  return `<div class="srow" data-mode="${m}" data-slot="${sl ? 1 : 0}">
+    <button type="button" class="fg row mode" data-testid="mode-${m}"><span class="mg">${ICON[m]}</span><span class="lab">${labHTML(m)}</span>${CHEV}</button>
+    <button type="button" class="del" data-testid="del-${m}" aria-label="${t.delA11y(t.names[m])}" ${sl ? "" : "hidden"}><span class="dlw">${TRASH}<span class="dl">${t.del}</span></span></button>
+  </div>`;
+}
+function render() {
+  const t = tr();
+  root.lang = S.lang;
+  $("#tTitle").textContent = t.play; $("#hCont").textContent = t.cont; $("#tDay").textContent = t.day;
+  $("#tDayMeta").textContent = `${t.diff.medium} · ${t.left(28)} · 12:04`;
+  $("#hModes").textContent = t.modes; $("#tFoot").textContent = t.foot;
+  $("#tToday").textContent = t.today; $("#tPlay").textContent = t.play; $("#tYear").textContent = t.year;
+  $("#toastUndo").textContent = t.undo; $("#asDel").textContent = t.del; $("#asCancel").textContent = t.cancel;
+  modesEl.innerHTML = MODES.map(rowHTML).join("");
+  openRow = null;
+}
+function updateRow(row, slotDelay = 0) {
+  const m = row.dataset.mode, t = tr(), { lab, del } = parts(row);
+  lab.innerHTML = labHTML(m);
+  lab.querySelector(".sub").classList.add("xf");
+  const has = !!slots[m];
+  const apply = () => { row._slotT = 0; row.dataset.slot = has ? "1" : "0"; del.hidden = !has; del.setAttribute("aria-label", t.delA11y(t.names[m])); };
+  clearTimeout(row._slotT);
+  if (slotDelay && !reduced()) row._slotT = setTimeout(apply, slotDelay); else apply();
+}
+
+/* ---------------- geometry: W, A, T ---------------- */
+function geom(row) {
+  const W = row.clientWidth;
+  row.classList.remove("icon-only");
+  const label = row.querySelector(".dl").scrollWidth;
+  const need = label + P.A_PAD;
+  let A;
+  if (need > P.ICON_FRAC * W) { row.classList.add("icon-only"); A = P.A_ICON; }
+  else A = Math.max(P.A_MIN, Math.ceil(need));
+  row.style.setProperty("--aw", A + "px");
+  const T_ = Math.round(Math.max(P.ARM_FRAC * W, A + P.ARM_EXTRA));
+  row._g = { W, A, T: T_ };
+  return row._g;
+}
+
+/* ---------------- moving the row ---------------- */
+function setX(row, x, ms = 0) {
+  const g = row._g || geom(row), { fg, del, dlw } = parts(row);
+  row._x = x;
+  const d = reduced() ? 0 : ms;
+  const tf = d ? `${d}ms var(--e-spring)` : "none";
+  fg.style.transition = d ? `transform ${tf}` : "none";
+  fg.style.transform = x ? `translateX(${x}px)` : "";
+  const w = Math.max(g.A, -x);
+  del.style.transition = d ? `width ${tf}` : "none";
+  del.style.width = w + "px";
+  const armedAnim = row._armT && Date.now() - row._armT < P.LABEL && !reduced();
+  dlw.style.transition = d ? `transform ${tf}` : armedAnim ? `transform ${P.LABEL}ms var(--e-out)` : "none";
+  dlw.style.transform = row.classList.contains("armed") ? `translateX(${-(w - g.A)}px)` : "";
+  readout();
+}
+function setArmed(row, on) {
+  if (row.classList.contains("armed") === on) return;
+  row.classList.toggle("armed", on);
+  row._armT = Date.now();
+  if (row._x !== undefined) setX(row, row._x);
+}
+function open(row, ms = P.SETTLE) {
+  if (openRow && openRow !== row) close(openRow);
+  geom(row);
+  setArmed(row, false);
+  setX(row, -row._g.A, ms);
+  openRow = row; openScroll = hub.scrollTop;
+}
+function close(row, ms = P.SETTLE) {
+  setArmed(row, false);
+  setX(row, 0, ms);
+  row.kb = false;
+  if (openRow === row) openRow = null;
+  readout();
+}
+
+/* ---------------- delete / undo ---------------- */
+function commit(row, via) {
+  if (S.variant === "confirm") {
+    setArmed(row, false);
+    if (via === "swipe" || via === "tap" || via === "kbd") open(row);
+    showSheet(row, via);
+    return;
+  }
+  doDelete(row, via, true);
+}
+function doDelete(row, via, withToast) {
+  const m = row.dataset.mode, backup = slots[m];
+  if (!backup) return;
+  commitToast();                       // a previous pending undo becomes final
+  delete slots[m];                     // app: PlayStore.discard(mode) → clearSlot(mode) (IndexedDB meta:playGame:<mode> = null)
+  setArmed(row, false);
+  updateRow(row, P.COMMIT);
+  setX(row, 0, P.COMMIT);
+  if (openRow === row) openRow = null;
+  row.kb = false;
+  if (withToast) showToast(m, backup, via === "kbd");
+  else announce(tr().deleted(tr().names[m]));
+}
+function showToast(m, backup, kbd, hold = false) {
+  const el = $("#toast");
+  toast = { m, backup, kbd, hold, remaining: P.TOAST_MS, t0: 0, timer: 0 };
+  $("#toastText").textContent = tr().deleted(tr().names[m]);
+  el.hidden = true; void el.offsetWidth; el.hidden = false; // restart the enter animation
+  announce(tr().deleted(tr().names[m]));
+  if (kbd) $("#toastUndo").focus(); else runTimer();
+}
+function runTimer() {
+  if (!toast || toast.hold) return;
+  clearTimeout(toast.timer);
+  toast.t0 = Date.now();
+  toast.timer = setTimeout(commitToast, toast.remaining);
+}
+function pauseTimer() {
+  if (!toast || !toast.t0) return;
+  clearTimeout(toast.timer);
+  toast.remaining = Math.max(1500, toast.remaining - (Date.now() - toast.t0));
+  toast.t0 = 0;
+}
+function commitToast() {
+  if (!toast) return;
+  clearTimeout(toast.timer);
+  $("#toast").hidden = true;
+  toast = null;
+}
+function undo() {
+  if (!toast) return;
+  const { m, backup } = toast;
+  const hadFocus = $("#toast").contains(document.activeElement);
+  commitToast();
+  slots[m] = backup;                   // app: PlayStore.restore(record) → setMeta(slotKey(mode), record)
+  const row = rowOf(m);
+  updateRow(row);
+  announce(tr().restored(tr().names[m]));
+  if (hadFocus) parts(row).fg.focus();
+}
+function announce(text) { const l = $("#live"); l.textContent = ""; setTimeout(() => { l.textContent = text; }, 60); }
+
+/* ---------------- confirm sheet (variant B) ---------------- */
+function showSheet(row, via) {
+  const m = row.dataset.mode, t = tr();
+  sheet = { row, via };
+  $("#asTitle").textContent = t.cTitle;
+  $("#asMsg").textContent = t.cMsg(t.names[m], meta(slots[m]));
+  $("#asScrim").hidden = false;
+  $("#asCancel").focus({ preventScroll: true }); // safe default: Cancel
+  readout();
+}
+function hideSheet(confirmed) {
+  if (!sheet) return;
+  const { row, via } = sheet;
+  sheet = null;
+  $("#asScrim").hidden = true;
+  if (confirmed) doDelete(row, via, false);
+  else { close(row); if (via === "kbd" || via === "menu-kbd") parts(row).fg.focus(); }
+  readout();
+}
+
+/* ---------------- context menu (long press / right click / ContextMenu key) ---------------- */
+function openMenu(row, kbd) {
+  if (openRow) close(openRow, 0);
+  const m = row.dataset.mode, t = tr(), has = !!slots[m];
+  menuRow = row;
+  const menu = $("#ctxMenu");
+  menu.setAttribute("aria-label", t.names[m]);
+  menu.innerHTML = `<p class="mt">${t.desc[m]}</p>` +
+    (has ? `<button type="button" role="menuitem" data-a="cont">${CHEV.replace('class="chev"', "")}<span>${t.cont2}</span></button>` : "") +
+    `<button type="button" role="menuitem" data-a="new">${NEWG}<span>${t.newP}</span></button>` +
+    (has ? `<button type="button" role="menuitem" class="danger" data-a="del" data-testid="ctx-delete">${TRASH}<span>${t.delItem}</span></button>` : "");
+  $("#ctxScrim").hidden = false;
+  const fr = frame.getBoundingClientRect(), r = row.getBoundingClientRect();
+  const h = menu.offsetHeight, vh = fr.height;
+  const below = r.bottom - fr.top + 8;
+  menu.style.top = (below + h <= vh - 8 ? below : Math.max(8, r.top - fr.top - h - 8)) + "px";
+  menu.style.maxHeight = vh - 16 + "px";
+  menu.dataset.kbd = kbd ? "1" : "";
+  if (kbd) menu.querySelector("button").focus();
+  readout();
+}
+function closeMenu(focusBack) {
+  if (!menuRow) return;
+  const row = menuRow;
+  menuRow = null;
+  $("#ctxScrim").hidden = true;
+  if (focusBack) parts(row).fg.focus();
+  readout();
+}
+$("#ctxScrim").addEventListener("click", (e) => {
+  if (swallow) return;
+  const b = e.target.closest("#ctxMenu button");
+  if (!b) { if (!e.target.closest("#ctxMenu")) closeMenu(true); return; }
+  const row = menuRow, kbd = $("#ctxMenu").dataset.kbd === "1" || e.detail === 0;
+  closeMenu(false);
+  if (b.dataset.a === "del") {
+    if (S.variant === "confirm") showSheet(row, kbd ? "menu-kbd" : "menu");
+    else doDelete(row, kbd ? "kbd" : "menu", true);
+  } else flash(b.dataset.a === "cont" ? tr().opens(tr().names[row.dataset.mode]) : tr().newP);
+});
+
+/* ---------------- pointer arbitration (spec §5) ---------------- */
+const clearLong = () => { if (longTimer) clearTimeout(longTimer); longTimer = 0; };
+function velocity(d, e) {
+  const recent = d.samples.filter((s) => e.timeStamp - s.t <= 100);
+  const f = recent[0];
+  return f && e.timeStamp > f.t ? (e.clientX - f.x) / (e.timeStamp - f.t) : 0;
+}
+let down = null; // where the current pointer went down: any travel > SLOP means "not a tap" (touch never clicks after a pan)
+document.addEventListener("keydown", () => { lastInput = "key"; }, true);
+document.addEventListener("pointerdown", (e) => {
+  lastPointer = Date.now(); lastInput = "pointer";
+  down = { id: e.pointerId, x: e.clientX, y: e.clientY, moved: false };
+  if (menuRow || sheet || drag) return;            // overlays own the screen; second finger ignored
+  if (e.pointerType === "mouse" && e.button !== 0) return;
+  const row = e.target.closest("#modes .srow");
+  const inHub = !!e.target.closest("#hub");
+  if (openRow && row !== openRow) {                  // tap outside an open row: close it, swallow the tap (hub only)
+    close(openRow);
+    if (inHub) swallow = true;
+    return;
+  }
+  if (openRow && e.target.closest(".del")) return;   // tap on the red button → its click deletes
+  if (!row || !e.target.closest(".fg")) return;
+  const fr = frame.getBoundingClientRect();
+  const edge = e.clientX - fr.left <= P.EDGE || fr.right - e.clientX <= P.EDGE;
+  drag = { row, id: e.pointerId, x0: e.clientX, y0: e.clientY, start: row._x || 0, claimed: false, wasOpen: row === openRow, edge,
+    samples: [{ t: e.timeStamp, x: e.clientX }] };
+  if (!drag.wasOpen) longTimer = setTimeout(() => {
+    longTimer = 0;
+    if (drag && !drag.claimed) { const r = drag.row; drag = null; swallow = true; openMenu(r, false); }
+  }, P.LONG);
+}, true);
+
+document.addEventListener("pointermove", (e) => {
+  if (down && down.id === e.pointerId && !down.moved && Math.hypot(e.clientX - down.x, e.clientY - down.y) > P.SLOP) down.moved = true;
+  const d = drag;
+  if (!d || e.pointerId !== d.id) return;
+  const dx = e.clientX - d.x0, dy = e.clientY - d.y0;
+  if (!d.claimed) {
+    const ax = Math.abs(dx), ay = Math.abs(dy);
+    if (Math.hypot(dx, dy) > P.SLOP) clearLong();
+    if (ay >= P.SLOP && ax < P.ANGLE * ay) { drag = null; return; }      // vertical: the scroll view owns it
+    if (ax < P.SLOP || ax < P.ANGLE * ay) return;                          // undecided yet
+    if (d.row.dataset.slot !== "1" || d.edge || (!d.wasOpen && dx > 0)) { drag = null; return; }
+    d.claimed = true; d.x0 = e.clientX;                                    // start from here: no jump by SLOP
+    d.row.classList.add("dragging");
+    geom(d.row);
+    try { parts(d.row).fg.setPointerCapture(e.pointerId); } catch (_) { /* events still reach document */ }
+  }
+  e.preventDefault();
+  const g = d.row._g;
+  let x = d.start + (e.clientX - d.x0);
+  if (x > 0) x = d.wasOpen ? Math.min(P.RUBBER_MAX, x * P.RUBBER) : 0;
+  if (x < -g.W) x = -g.W;
+  const armed = d.row.classList.contains("armed");
+  if (!armed && -x >= g.T) setArmed(d.row, true);
+  else if (armed && -x < g.T - P.HYST) setArmed(d.row, false);
+  setX(d.row, x, 0);
+  d.samples.push({ t: e.timeStamp, x: e.clientX });
+  if (d.samples.length > 12) d.samples.shift();
+}, { passive: false });
+
+document.addEventListener("pointerup", (e) => {
+  clearLong();
+  if (down && down.id === e.pointerId && down.moved && !menuRow && !sheet) swallow = true;
+  down = null;
+  if (swallow) setTimeout(() => { swallow = false; }, 0);
+  const d = drag;
+  if (!d || e.pointerId !== d.id) return;
+  drag = null;
+  if (!d.claimed) {
+    if (d.wasOpen) { close(d.row); swallow = true; setTimeout(() => { swallow = false; }, 0); } // tap on an open row closes it
+    return;
+  }
+  swallow = true; setTimeout(() => { swallow = false; }, 0);              // a drag never becomes a tap
+  d.row.classList.remove("dragging");
+  const v = velocity(d, e), x = d.row._x, g = d.row._g;
+  if (d.row.classList.contains("armed")) { if (v >= P.FLICK) open(d.row); else commit(d.row, "swipe"); return; }
+  if (v >= P.FLICK) { close(d.row); return; }
+  if (v <= -P.FLICK && -x >= P.FLICK_MIN) { open(d.row); return; }
+  if (-x >= g.A * P.OPEN_FRAC) open(d.row); else close(d.row);
+});
+document.addEventListener("pointercancel", (e) => {
+  clearLong();
+  const d = drag;
+  if (!d || e.pointerId !== d.id) return;
+  drag = null;
+  if (!d.claimed) return;
+  d.row.classList.remove("dragging");
+  setArmed(d.row, false);                                                  // a cancelled gesture never deletes
+  if (-d.row._x >= d.row._g.A * P.OPEN_FRAC) open(d.row); else close(d.row);
+});
+document.addEventListener("click", (e) => { if (swallow) { e.preventDefault(); e.stopPropagation(); } }, true);
+
+hub.addEventListener("scroll", () => { if (openRow && Math.abs(hub.scrollTop - openScroll) > 4) close(openRow); }, { passive: true });
+
+/* ---------------- row taps, keyboard, focus ---------------- */
+modesEl.addEventListener("click", (e) => {
+  const row = e.target.closest(".srow");
+  if (!row) return;
+  if (e.target.closest(".del")) { commit(row, e.detail === 0 || row.kb ? "kbd" : "tap"); return; }
+  if (e.target.closest(".fg")) { activated = row.dataset.mode; flash(tr().opens(tr().names[row.dataset.mode])); }
+});
+modesEl.addEventListener("contextmenu", (e) => {
+  const row = e.target.closest(".srow");
+  if (!row) return;
+  e.preventDefault();
+  clearLong(); drag = null;
+  if (!menuRow) openMenu(row, false); // touch long press already opened it by timer → skipped
+});
+modesEl.addEventListener("keydown", (e) => {
+  const row = e.target.closest(".srow");
+  if (!row) return;
+  if (e.target.classList.contains("fg") && (e.key === "Delete" || e.key === "Backspace") && row.dataset.slot === "1") {
+    e.preventDefault(); parts(row).del.focus();
+  } else if (e.target.classList.contains("del") && e.key === "Escape") {
+    e.preventDefault(); close(row); parts(row).fg.focus();
+  } else if (e.key === "ContextMenu" || (e.shiftKey && e.key === "F10")) {
+    e.preventDefault(); openMenu(row, true);
+  }
+});
+modesEl.addEventListener("focusin", (e) => {
+  const del = e.target.closest(".del");
+  if (!del || lastInput !== "key") return;                  // pointer focus is not the keyboard path
+  const row = del.closest(".srow");
+  open(row); row.kb = true; del.classList.add("kb");
+});
+modesEl.addEventListener("focusout", (e) => {
+  const del = e.target.closest(".del");
+  if (!del) return;
+  del.classList.remove("kb");
+  const row = del.closest(".srow");
+  setTimeout(() => {
+    if (row.kb && !row.contains(document.activeElement) && !$("#toast").contains(document.activeElement) && !sheet) close(row);
+  }, 0);
+});
+document.addEventListener("keydown", (e) => {
+  if (e.key !== "Escape") return;
+  if (sheet) { e.preventDefault(); hideSheet(false); }
+  else if (menuRow) { e.preventDefault(); closeMenu(true); }
+});
+
+/* toast: pause while touched / focused; undo */
+const toastEl = $("#toast");
+toastEl.addEventListener("pointerdown", pauseTimer);
+toastEl.addEventListener("pointerup", () => { if (!toastEl.contains(document.activeElement)) runTimer(); });
+toastEl.addEventListener("focusin", pauseTimer);
+toastEl.addEventListener("focusout", () => setTimeout(() => {
+  if (toast && !toastEl.contains(document.activeElement)) { if (toast.kbd) toast.remaining = P.TOAST_MS; runTimer(); }
+}, 0));
+$("#toastUndo").addEventListener("click", undo);
+$("#asCancel").addEventListener("click", () => hideSheet(false));
+$("#asDel").addEventListener("click", () => hideSheet(true));
+$("#asScrim").addEventListener("click", (e) => { if (e.target.id === "asScrim" && !swallow) hideSheet(false); });
+$("#tabToday").addEventListener("click", () => { if (openRow) close(openRow, 0); commitToast(); flash("→ Today (row closes, toast commits)"); });
+document.addEventListener("visibilitychange", () => { if (document.hidden) { if (openRow) close(openRow, 0); commitToast(); } });
+
+function flash(text) {
+  const f = document.createElement("div");
+  f.className = "flash"; f.textContent = text;
+  frame.appendChild(f);
+  setTimeout(() => f.remove(), 1400);
+}
+
+/* ---------------- panel ---------------- */
+function readout() {
+  const el = $("#readout");
+  if (!el) return;
+  const row = openRow || rowOf("liar");
+  const g = row && row._g;
+  el.textContent =
+    `row W ${g ? g.W : "–"} px · button A ${g ? g.A : "–"} px${row && row.classList.contains("icon-only") ? " (icon)" : ""}\n` +
+    `full-swipe T ${g ? g.T : "–"} px (disarm < ${g ? g.T - P.HYST : "–"})\n` +
+    `x ${row && row._x ? Math.round(row._x) : 0} px · ${row && row.classList.contains("armed") ? "ARMED" : openRow ? "open" : "closed"}\n` +
+    `unfinished: ${Object.keys(slots).join(", ") || "none"}\n` +
+    `toast ${toast ? "visible" : "–"} · sheet ${sheet ? "open" : "–"} · menu ${menuRow ? "open" : "–"}`;
+}
+function syncPanel() {
+  document.querySelectorAll(".panel .seg[data-k]").forEach((seg) => {
+    seg.querySelectorAll("button").forEach((b) => b.setAttribute("aria-pressed", String(S[seg.dataset.k] === b.dataset.v)));
+  });
+}
+function applyEnv() {
+  root.classList.toggle("force-light", S.theme === "light");
+  root.classList.toggle("force-dark", S.theme === "dark");
+  root.dataset.w = S.w; root.dataset.type = S.type; root.dataset.rm = S.rm;
+  syncPanel();
+}
+document.querySelectorAll(".panel .seg[data-k]").forEach((seg) => seg.addEventListener("click", (e) => {
+  const b = e.target.closest("button"); if (!b) return;
+  S[seg.dataset.k] = b.dataset.v;
+  reset(false);
+}));
+$("#states").addEventListener("click", (e) => { const b = e.target.closest("button"); if (b) { reset(false); setState(b.dataset.s); } });
+$("#devToggle").addEventListener("click", () => root.classList.add("panel-open"));
+$("#closePanel").addEventListener("click", () => root.classList.remove("panel-open"));
+
+/* ---------------- API for the shots script ---------------- */
+function reset(full = true) {
+  clearLong(); drag = null; swallow = false; activated = null;
+  commitToast(); closeMenu(false);
+  if (sheet) { sheet = null; $("#asScrim").hidden = true; }
+  slots = JSON.parse(JSON.stringify(SLOTS0));
+  if (full) Object.assign(S, { lang: "en", theme: "system", w: "390", type: "17", rm: "off", variant: "undo" });
+  applyEnv(); render();
+  hub.scrollTop = 0;
+  requestAnimationFrame(() => { modesEl.querySelectorAll(".srow").forEach(geom); readout(); });
+}
+function setState(st) {
+  const row = rowOf("liar");
+  const g = geom(row);
+  if (st === "partial") { row.classList.add("dragging"); setX(row, -Math.round(g.A * 0.6)); }
+  else if (st === "open") open(row, 0);
+  else if (st === "armed") { row.classList.add("dragging", "armed"); row._armT = 0; setX(row, -Math.round(Math.min(g.W * 0.92, g.T + 40))); }
+  else if (st === "undo") { S.variant = "undo"; syncPanel(); doDelete(row, "tap", false); showToast("liar", SLOTS0.liar, false, true); }
+  else if (st === "confirm") { S.variant = "confirm"; syncPanel(); open(row, 0); showSheet(row, "swipe"); }
+  else if (st === "menu") openMenu(row, false);
+  else if (st === "kbd") { lastInput = "key"; parts(row).del.focus(); }
+  readout();
+}
+window.PD224 = {
+  P,
+  apply(o) {
+    for (const k of ["lang", "theme", "w", "type", "rm", "variant"]) if (o[k] !== undefined) S[k] = String(o[k]);
+    reset(false);
+    modesEl.querySelectorAll(".srow").forEach(geom);
+    if (o.state) setState(o.state);
+  },
+  reset() { reset(true); },
+  state() {
+    return { open: openRow ? openRow.dataset.mode : null, armed: !!modesEl.querySelector(".srow.armed"), x: openRow ? openRow._x : 0,
+      slots: Object.keys(slots), toast: !!toast, sheet: !!sheet, menu: !!menuRow, activated, geom: rowOf("liar")._g || null };
+  },
+  check() {
+    const p = [];
+    const fr = frame.getBoundingClientRect();
+    if (root.classList.contains("shot") && document.documentElement.scrollWidth > document.documentElement.clientWidth + 1) p.push("horizontal overflow");
+    if (hub.scrollWidth > hub.clientWidth + 1) p.push("hub scrolls horizontally");
+    const tb = document.querySelector(".tabbar").getBoundingClientRect();
+    if (!toastEl.hidden) {
+      const r = toastEl.getBoundingClientRect();
+      if (r.bottom > tb.top + 0.5) p.push("toast overlaps tab bar");
+      if (r.left < fr.left - 0.5 || r.right > fr.right + 0.5 || r.top < fr.top) p.push("toast outside frame");
+      const tt = $("#toastText"); if (tt.scrollWidth > tt.clientWidth + 1) p.push("toast text clipped");
+      const u = $("#toastUndo").getBoundingClientRect(); if (u.width < 44 || u.height < 44) p.push("undo target < 44");
+      if (r.right - u.right < 0) p.push("undo outside toast");
+    }
+    modesEl.querySelectorAll('.srow[data-slot="1"]').forEach((row) => {
+      const g = row._g || geom(row), del = parts(row).del;
+      if (del.getBoundingClientRect().height < 44) p.push(`delete < 44 (${row.dataset.mode})`);
+      if (!row.classList.contains("icon-only") && row.querySelector(".dl").scrollWidth > g.A - 2 * 8) p.push(`delete label wider than A (${row.dataset.mode})`);
+      if (g.T >= g.W) p.push(`full-swipe T ≥ W (${row.dataset.mode})`);
+    });
+    if (!$("#ctxScrim").hidden) {
+      const r = $("#ctxMenu").getBoundingClientRect();
+      if (r.top < fr.top - 0.5 || r.bottom > fr.bottom + 0.5) p.push("menu outside frame");
+    }
+    if (!$("#asScrim").hidden) {
+      for (const id of ["#asDel", "#asCancel"]) { const r = $(id).getBoundingClientRect(); if (r.bottom > fr.bottom + 0.5 || r.top < fr.top) p.push(`${id} off screen`); if (r.height < 44) p.push(`${id} < 44`); }
+      const h = $(".as-head").getBoundingClientRect(); if (h.top < fr.top) p.push("sheet header off screen");
+    }
+    return p;
+  }
+};
+
+window.addEventListener("error", (e) => {
+  const b = document.createElement("div");
+  b.id = "pd224-err"; b.textContent = "ERROR: " + e.message;
+  b.style.cssText = "position:fixed;left:0;right:0;top:0;z-index:999;background:#B3261E;color:#fff;padding:6px;font:12px monospace";
+  document.body.appendChild(b);
+});
+reset(true);
+})();
+</script>
+</body>
+</html>
