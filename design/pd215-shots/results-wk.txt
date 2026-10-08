@@ -1,0 +1,99 @@
+PASS  wk-glyphs-320 правый угол (клетка 74, nth 9) с заметками и полосой подготовлен  
+PASS  wk-glyphs-320 полоса на угловой клетке 75 (nth 7) и на 74 (nth 9)  30,39,74,75
+PASS  wk-glyphs-320 правил PD-215 снято 2  n=2
+PASS  wk-glyphs-320 правила возвращены  
+PASS  wk-glyphs-320 cell30(nth1): не угловая/без заметок — геометрия полосы не изменилась  x0=4.31 x1=4.31
+PASS  wk-glyphs-320 cell39(nth4): не угловая/без заметок — геометрия полосы не изменилась  x0=4.31 x1=4.31
+PASS  wk-glyphs-320 cell74(nth9,marks): полоса в пределах скругления  overhang=0px (было 0.618) x=6 (было 4.31) cell=27
+PASS  wk-glyphs-320 cell74: дальняя сторона, низ и высота полосы не изменились  x0=4.31 bottom=0.5 h=2.5
+PASS  wk-glyphs-320 cell75(nth7,marks): полоса в пределах скругления  overhang=0px (было 0.618) x=6 (было 4.31) cell=27
+PASS  wk-glyphs-320 cell75: дальняя сторона, низ и высота полосы не изменились  x1=4.31 bottom=0.5 h=2.5
+PASS  wk-glyphs-320 cell75 выбрана: полоса в пределах скругления  overhang=0px sel=true
+PASS  wk-glyphs-320 консоль без ошибок  
+PASS  wk-glyphs-320-ax3 правый угол (клетка 74, nth 9) с заметками и полосой подготовлен  
+PASS  wk-glyphs-320-ax3 полоса на угловой клетке 75 (nth 7) и на 74 (nth 9)  30,39,74,75
+PASS  wk-glyphs-320-ax3 правил PD-215 снято 2  n=2
+PASS  wk-glyphs-320-ax3 правила возвращены  
+PASS  wk-glyphs-320-ax3 cell30(nth1): не угловая/без заметок — геометрия полосы не изменилась  x0=2.86 x1=2.86
+PASS  wk-glyphs-320-ax3 cell39(nth4): не угловая/без заметок — геометрия полосы не изменилась  x0=2.86 x1=2.86
+PASS  wk-glyphs-320-ax3 cell74(nth9,marks): полоса в пределах скругления  overhang=0px (было 1.387) x=6 (было 2.86) cell=17.89
+PASS  wk-glyphs-320-ax3 cell74: дальняя сторона, низ и высота полосы не изменились  x0=2.86 bottom=0.5 h=2.5
+PASS  wk-glyphs-320-ax3 cell75(nth7,marks): полоса в пределах скругления  overhang=0px (было 1.387) x=6 (было 2.86) cell=17.88
+PASS  wk-glyphs-320-ax3 cell75: дальняя сторона, низ и высота полосы не изменились  x1=2.86 bottom=0.5 h=2.5
+PASS  wk-glyphs-320-ax3 cell75 выбрана: полоса в пределах скругления  overhang=0px sel=true
+PASS  wk-glyphs-320-ax3 консоль без ошибок  
+PASS  wk-glyphs-390 правый угол (клетка 74, nth 9) с заметками и полосой подготовлен  
+PASS  wk-glyphs-390 полоса на угловой клетке 75 (nth 7) и на 74 (nth 9)  30,39,74,75
+PASS  wk-glyphs-390 правил PD-215 снято 2  n=2
+PASS  wk-glyphs-390 правила возвращены  
+PASS  wk-glyphs-390 cell30(nth1): не угловая/без заметок — геометрия полосы не изменилась  x0=6.22 x1=6.22
+PASS  wk-glyphs-390 cell39(nth4): не угловая/без заметок — геометрия полосы не изменилась  x0=6.22 x1=6.22
+PASS  wk-glyphs-390 cell74(nth9,marks): полоса в пределах скругления  overhang=0px (было 0) x=6.22 (было 6.22) cell=38.88
+PASS  wk-glyphs-390 cell74: дальняя сторона, низ и высота полосы не изменились  x0=6.22 bottom=0.5 h=2.5
+PASS  wk-glyphs-390 cell75(nth7,marks): полоса в пределах скругления  overhang=0px (было 0) x=6.22 (было 6.22) cell=38.89
+PASS  wk-glyphs-390 cell75: дальняя сторона, низ и высота полосы не изменились  x1=6.22 bottom=0.5 h=2.5
+PASS  wk-glyphs-390 cell75 выбрана: полоса в пределах скругления  overhang=0px sel=true
+PASS  wk-glyphs-390 консоль без ошибок  
+PASS  wk-glyphs-390-ax3 правый угол (клетка 74, nth 9) с заметками и полосой подготовлен  
+PASS  wk-glyphs-390-ax3 полоса на угловой клетке 75 (nth 7) и на 74 (nth 9)  30,39,74,75
+PASS  wk-glyphs-390-ax3 правил PD-215 снято 2  n=2
+PASS  wk-glyphs-390-ax3 правила возвращены  
+PASS  wk-glyphs-390-ax3 cell30(nth1): не угловая/без заметок — геометрия полосы не изменилась  x0=6.22 x1=6.22
+PASS  wk-glyphs-390-ax3 cell39(nth4): не угловая/без заметок — геометрия полосы не изменилась  x0=6.22 x1=6.22
+PASS  wk-glyphs-390-ax3 cell74(nth9,marks): полоса в пределах скругления  overhang=0px (было 0) x=6.22 (было 6.22) cell=38.88
+PASS  wk-glyphs-390-ax3 cell74: дальняя сторона, низ и высота полосы не изменились  x0=6.22 bottom=0.5 h=2.5
+PASS  wk-glyphs-390-ax3 cell75(nth7,marks): полоса в пределах скругления  overhang=0px (было 0) x=6.22 (было 6.22) cell=38.89
+PASS  wk-glyphs-390-ax3 cell75: дальняя сторона, низ и высота полосы не изменились  x1=6.22 bottom=0.5 h=2.5
+PASS  wk-glyphs-390-ax3 cell75 выбрана: полоса в пределах скругления  overhang=0px sel=true
+PASS  wk-glyphs-390-ax3 консоль без ошибок  
+PASS  wk-classic-320 правый угол (клетка 74, nth 9) с заметками и полосой подготовлен  
+PASS  wk-classic-320 полоса на угловой клетке 75 (nth 7) и на 74 (nth 9)  30,39,74,75
+PASS  wk-classic-320 правил PD-215 снято 2  n=2
+PASS  wk-classic-320 правила возвращены  
+PASS  wk-classic-320 cell30(nth1): не угловая/без заметок — геометрия полосы не изменилась  x0=4.31 x1=4.31
+PASS  wk-classic-320 cell39(nth4): не угловая/без заметок — геометрия полосы не изменилась  x0=4.31 x1=4.31
+PASS  wk-classic-320 cell74(nth9,marks): полоса в пределах скругления  overhang=0px (было 0.618) x=6 (было 4.31) cell=27
+PASS  wk-classic-320 cell74: дальняя сторона, низ и высота полосы не изменились  x0=4.31 bottom=0.5 h=2.5
+PASS  wk-classic-320 cell75(nth7,marks): полоса в пределах скругления  overhang=0px (было 0.618) x=6 (было 4.31) cell=27
+PASS  wk-classic-320 cell75: дальняя сторона, низ и высота полосы не изменились  x1=4.31 bottom=0.5 h=2.5
+PASS  wk-classic-320 cell75 выбрана: полоса в пределах скругления  overhang=0px sel=true
+PASS  wk-classic-320 консоль без ошибок  
+PASS  wk-classic-320-ax3 правый угол (клетка 74, nth 9) с заметками и полосой подготовлен  
+PASS  wk-classic-320-ax3 полоса на угловой клетке 75 (nth 7) и на 74 (nth 9)  30,39,74,75
+PASS  wk-classic-320-ax3 правил PD-215 снято 2  n=2
+PASS  wk-classic-320-ax3 правила возвращены  
+PASS  wk-classic-320-ax3 cell30(nth1): не угловая/без заметок — геометрия полосы не изменилась  x0=2.86 x1=2.86
+PASS  wk-classic-320-ax3 cell39(nth4): не угловая/без заметок — геометрия полосы не изменилась  x0=2.86 x1=2.86
+PASS  wk-classic-320-ax3 cell74(nth9,marks): полоса в пределах скругления  overhang=0px (было 1.387) x=6 (было 2.86) cell=17.89
+PASS  wk-classic-320-ax3 cell74: дальняя сторона, низ и высота полосы не изменились  x0=2.86 bottom=0.5 h=2.5
+PASS  wk-classic-320-ax3 cell75(nth7,marks): полоса в пределах скругления  overhang=0px (было 1.387) x=6 (было 2.86) cell=17.88
+PASS  wk-classic-320-ax3 cell75: дальняя сторона, низ и высота полосы не изменились  x1=2.86 bottom=0.5 h=2.5
+PASS  wk-classic-320-ax3 cell75 выбрана: полоса в пределах скругления  overhang=0px sel=true
+PASS  wk-classic-320-ax3 консоль без ошибок  
+PASS  wk-classic-390 правый угол (клетка 74, nth 9) с заметками и полосой подготовлен  
+PASS  wk-classic-390 полоса на угловой клетке 75 (nth 7) и на 74 (nth 9)  30,39,74,75
+PASS  wk-classic-390 правил PD-215 снято 2  n=2
+PASS  wk-classic-390 правила возвращены  
+PASS  wk-classic-390 cell30(nth1): не угловая/без заметок — геометрия полосы не изменилась  x0=6.22 x1=6.22
+PASS  wk-classic-390 cell39(nth4): не угловая/без заметок — геометрия полосы не изменилась  x0=6.22 x1=6.22
+PASS  wk-classic-390 cell74(nth9,marks): полоса в пределах скругления  overhang=0px (было 0) x=6.22 (было 6.22) cell=38.88
+PASS  wk-classic-390 cell74: дальняя сторона, низ и высота полосы не изменились  x0=6.22 bottom=0.5 h=2.5
+PASS  wk-classic-390 cell75(nth7,marks): полоса в пределах скругления  overhang=0px (было 0) x=6.22 (было 6.22) cell=38.89
+PASS  wk-classic-390 cell75: дальняя сторона, низ и высота полосы не изменились  x1=6.22 bottom=0.5 h=2.5
+PASS  wk-classic-390 cell75 выбрана: полоса в пределах скругления  overhang=0px sel=true
+PASS  wk-classic-390 консоль без ошибок  
+PASS  wk-classic-390-ax3 правый угол (клетка 74, nth 9) с заметками и полосой подготовлен  
+PASS  wk-classic-390-ax3 полоса на угловой клетке 75 (nth 7) и на 74 (nth 9)  30,39,74,75
+PASS  wk-classic-390-ax3 правил PD-215 снято 2  n=2
+PASS  wk-classic-390-ax3 правила возвращены  
+PASS  wk-classic-390-ax3 cell30(nth1): не угловая/без заметок — геометрия полосы не изменилась  x0=6.22 x1=6.22
+PASS  wk-classic-390-ax3 cell39(nth4): не угловая/без заметок — геометрия полосы не изменилась  x0=6.22 x1=6.22
+PASS  wk-classic-390-ax3 cell74(nth9,marks): полоса в пределах скругления  overhang=0px (было 0) x=6.22 (было 6.22) cell=38.88
+PASS  wk-classic-390-ax3 cell74: дальняя сторона, низ и высота полосы не изменились  x0=6.22 bottom=0.5 h=2.5
+PASS  wk-classic-390-ax3 cell75(nth7,marks): полоса в пределах скругления  overhang=0px (было 0) x=6.22 (было 6.22) cell=38.89
+PASS  wk-classic-390-ax3 cell75: дальняя сторона, низ и высота полосы не изменились  x1=6.22 bottom=0.5 h=2.5
+PASS  wk-classic-390-ax3 cell75 выбрана: полоса в пределах скругления  overhang=0px sel=true
+PASS  wk-classic-390-ax3 консоль без ошибок  
+PASS  wk-sheet-ru-glyphs: шит без «цифры», знак назван  Pundoku никогда не вписывает знак за вас. Подсказка доводит до следующего хода за четыре шага: где искать, какая техника, какие клетки и почему.
+PASS  wk-sheet-ru-classic: Классика — шит прежний (без «знака»)  
+98/98 PASS

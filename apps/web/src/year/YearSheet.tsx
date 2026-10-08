@@ -232,6 +232,8 @@ function DayCard({
   // Ink (PD-74): кляксы дня — из лога; у обычного дня набор пуст.
   const ink = progress?.play.ink === true;
   const blots = useMemo(() => (progress ? blotCellSet(progress.play) : new Set<number>()), [progress]);
+  // PD-210 (макет PD-209 Year A): у дня Фонаря на полотне знака нет — только строка «Режим · Фонарь» в листе дня.
+  const lantern = progress?.play.lantern === true;
 
   // Таймлапс (PD-75): строка входа под карточкой решённого дня; шит рисуется порталом поверх шита Year.
   const tl = useTimelapseEntry(solved && progress ? progress.play : null, solved ? mark.date : null, progress?.difficulty ?? null);
@@ -286,6 +288,7 @@ function DayCard({
               <dt>{t("solved.time")}</dt>
               <dd className="mono">{formatClock(sum.durationMs)}</dd>
             </div>
+            {lantern && <LanternModeRow />}
             {ink ? (
               <InkModeValueRow count={blots.size} />
             ) : (
@@ -317,6 +320,11 @@ function DayCard({
         </>
       ) : progress ? (
         <>
+          {lantern && (
+            <dl className="rows">
+              <LanternModeRow />
+            </dl>
+          )}
           <p className="emptyday" data-testid="unfinished-note">{t("year.card.unfinishedNote", { n: toFill - unsettledCells(progress.play), total: toFill })}</p>
           {mark.today && (
             <button type="button" className="ghost" onClick={onOpenToday}>
@@ -365,5 +373,16 @@ function LateWarning() {
       <LateSign />
       {t("year.card.lateWarning")}
     </p>
+  );
+}
+
+/** PD-210: строка «Режим · Фонарь» в листе дня (как «Режим · Чернила», PD-74). */
+function LanternModeRow() {
+  const { t } = useTranslation();
+  return (
+    <div className="row" data-testid="lantern-mode-row">
+      <dt>{t("lantern.rowMode")}</dt>
+      <dd>{t("lantern.yearValue")}</dd>
+    </div>
   );
 }

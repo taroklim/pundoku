@@ -1,0 +1,984 @@
+<!DOCTYPE html>
+<html lang="en" class="force-light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>Pundoku — desktop layouts (PD-229)</title>
+<!--
+  PD-229 — desktop version, three layout concepts for the owner. DESIGN ONLY, no product code.
+  Notes, pros/cons, cost, recommendation, questions: design/pd229-desktop.md.
+  Shots + self-check: design/pd229-shots.mjs  (window.PD229 = { reset, apply, check, state }).
+
+  A «Pair»     — board + one tools rail (pad 3×3, actions); hub, year, settings as capped columns. Cost S.
+                 PD-234: replaced «Column» — at 150 % on a 1280×800 laptop the column left the board 176 px (audit #11).
+                 A is also the compact layout every concept falls back to below 1100×680 CSS px.
+  B «Desk»     — three columns: info rail · board · tools rail (pad 3×3); top navigation. Recommended.      Cost M.
+  C «Sidebar»  — macOS-style floating sidebar (sections + modes), toolbar, inspector on the right.           Cost L.
+                 Below 1100×680 the sidebar hides itself and the inspector turns compact.
+  Width scale (PD-234, audit #5/#6): menus 320 · sheets 560 · reading/list screens 640 · year 780 · board ≤ 720.
+
+  Shared by all three: hover states, keyboard focus rings, visible shortcut chips on actions, «?» shortcut list,
+  glass ONLY on the navigation layer (top bar / sidebar) with an opaque fallback.
+
+  Tokens: verbatim from apps/web/src/styles/tokens.css. New values, all derived, all desktop-only:
+  --hover (6 % label overlay light / 8 % dark), --key-hover (the same overlay pre-mixed onto --elev, opaque, so
+  the contrast check reads it), --hover-ring (ink @ 50/55 %, decorative, never the only signal). No new hue, no new font.
+  Year data is illustrative (whole year filled to judge the layout), not real records.
+-->
+<style>
+[hidden]{ display:none !important; }
+:root{
+  --font-sans: system-ui, -apple-system, "SF Pro Text", "Helvetica Neue", Arial, sans-serif;
+  --font-serif: ui-serif, "New York", Charter, Georgia, serif;
+  --bg:#F2F2F7; --elev:#FFFFFF; --chip-bg:#F2F2F7; --key-bg:#FFFFFF;
+  --label:#1C1C1E; --label-2:#6E6E73; --label-2-grouped:#6A6A6E; --notes:#6E6E73; --notes-fill:#5A5A5F;
+  --ink:#3B48B0; --on-ink:#FFFFFF; --wax:#B3261E;
+  --hairline:rgba(60,60,67,.29); --rule-half:rgba(60,60,67,.145);
+  --ink-tint:rgba(59,72,176,.12);
+  --fill-peer:.03; --fill-same:.10; --fill-sel:.16;
+  --box-shadow:0 1px 2px rgba(0,0,0,.04);
+  --glass-fill:rgba(255,255,255,.72); --glass-solid:#F6F6F9;
+  --scrim:rgba(0,0,0,.28);
+  --mark-ink:#3B48B0; --mark-ink-soft:#8589CE; --mark-wax:#B3261E; --mark-wax-soft:#D07874;
+  --doku:#43474F;
+  /* PD-229, desktop only */
+  --hover:rgba(60,60,67,.06); --key-hover:#F3F3F4; --hover-ring:rgba(59,72,176,.5);
+  --page-bg:#C9C9CF;
+  /* PD-234: one width scale for everything that is not the board (audit PD-228 #5, #6) */
+  --w-menu:320px;   /* menus and popovers anchored to a control or the cursor */
+  --w-sheet:560px;  /* every modal sheet (the «Fingerprint» sheet is the model) */
+  --w-read:640px;   /* list and reading screens: Settings, Help, archive, hub; the shortcuts dialog */
+  --w-year:780px;   /* the year canvas */
+}
+:root.force-dark{
+  --bg:#000000; --elev:#1C1C1E; --chip-bg:#2C2C2E; --key-bg:#1C1C1E;
+  --label:#FFFFFF; --label-2:#98989D; --label-2-grouped:#98989D; --notes:#98989D; --notes-fill:#AEAEB2;
+  --ink:#8C96FF; --on-ink:#000000; --wax:#FF6B5E;
+  --hairline:rgba(235,235,245,.22); --rule-half:rgba(235,235,245,.11);
+  --ink-tint:rgba(140,150,255,.18);
+  --fill-peer:.06; --fill-same:.12; --fill-sel:.16;
+  --box-shadow:none;
+  --glass-fill:rgba(28,28,30,.72); --glass-solid:#141416;
+  --scrim:rgba(0,0,0,.5);
+  --mark-ink:#8C96FF; --mark-ink-soft:#6168AA; --mark-wax:#FF6B5E; --mark-wax-soft:#B14D46;
+  --doku:#D1D3D9;
+  --hover:rgba(235,235,245,.08); --key-hover:#2D2D2F; --hover-ring:rgba(140,150,255,.55);
+  --page-bg:#3A3A3C;
+}
+@media (prefers-contrast: more){
+  :root{ --label-2:#3C3C43; --label-2-grouped:#3C3C43; --notes:#3C3C43; --hairline:rgba(60,60,67,.6); --fill-same:.14; --fill-sel:.22; }
+  :root.force-dark{ --label-2:#EBEBF5; --label-2-grouped:#EBEBF5; --notes:#EBEBF5; --hairline:rgba(235,235,245,.5); --ink:#9AA3FF; }
+}
+
+*{ box-sizing:border-box; }
+html{ font-size:16px; font-family:var(--font-sans); line-height:1.3; -webkit-text-size-adjust:100%; }
+body{ margin:0; background:var(--page-bg); color:var(--label); -webkit-font-smoothing:antialiased; }
+button{ font:inherit; color:inherit; background:none; border:0; padding:0; cursor:pointer; -webkit-appearance:none; appearance:none; text-align:left; }
+:focus-visible, .is-focus{ outline:2px solid var(--ink); outline-offset:2px; }
+h1,h2,h3,h4,p,dl,dd{ margin:0; }
+svg{ display:block; }
+
+/* ---------- page: control panel + scaled frame ---------- */
+.page{ display:flex; gap:24px; align-items:flex-start; padding:16px; }
+.ctl{ width:300px; flex:none; position:sticky; top:16px; max-height:calc(100vh - 32px); overflow:auto; background:#fff; color:#1C1C1E;
+  border-radius:14px; padding:14px 14px 18px; font-size:13px; line-height:1.35; box-shadow:0 8px 30px rgba(0,0,0,.2); }
+.ctl h3{ margin:0 0 2px; font-size:15px; }
+.ctl .hint{ margin:6px 0 0; color:#55555A; font-size:12px; }
+.ctl .grp{ margin-top:12px; }
+.ctl .grp > span{ display:block; font-weight:600; margin-bottom:4px; }
+.ctl .seg{ display:flex; flex-wrap:wrap; gap:4px; }
+.ctl .seg button{ padding:5px 8px; border-radius:7px; background:#F2F2F7; font-size:12px; color:#1C1C1E; }
+.ctl .seg button[aria-pressed="true"]{ background:#3B48B0; color:#fff; }
+.ctl .about{ margin-top:12px; padding:10px; border-radius:10px; background:#F2F2F7; font-size:12px; }
+.ctl .about b{ display:block; margin-bottom:2px; }
+.scaler{ flex:none; position:relative; overflow:hidden; border-radius:12px; box-shadow:0 20px 60px rgba(0,0,0,.3); }
+:root.shot body{ background:var(--bg); }
+:root.shot .page{ display:block; padding:0; }
+:root.shot .ctl{ display:none; }
+:root.shot .scaler{ border-radius:0; box-shadow:none; }
+:root.shot *, :root.shot *::before, :root.shot *::after{ animation:none !important; transition:none !important; }
+#pd229-err{ position:fixed; left:8px; right:8px; bottom:8px; z-index:99; background:#B3261E; color:#fff; padding:8px 10px; border-radius:8px; font:12px/1.3 ui-monospace,monospace; }
+
+/* ---------- the app frame (container: every size below is relative to it) ---------- */
+.app{ position:relative; overflow:hidden; background:var(--bg); color:var(--label); container-type:size; transform-origin:0 0; font-size:16px; }
+.sr{ position:absolute; width:1px; height:1px; overflow:hidden; clip-path:inset(50%); white-space:nowrap; }
+
+/* ---------- shared: top navigation (A, B) — the only glass ---------- */
+.topnav{ position:absolute; z-index:20; left:0; right:0; top:0; height:52px; display:grid; grid-template-columns:1fr auto 1fr; align-items:center;
+  padding:0 16px 0 20px; background:var(--glass-fill); -webkit-backdrop-filter:blur(24px) saturate(1.4); backdrop-filter:blur(24px) saturate(1.4);
+  border-bottom:1px solid var(--hairline); }
+.brand{ justify-self:start; font-size:19px; font-weight:700; letter-spacing:-.015em; line-height:1; }
+.brand .pun{ color:var(--ink); } .brand .doku{ color:var(--doku); font-weight:500; }
+.tabs{ display:flex; gap:4px; }
+/* label-2-grouped, not label-2: under the hover overlay on glass label-2 drops to 4.42:1, label-2-grouped stays 4.70:1 */
+.tab{ height:36px; display:flex; align-items:center; gap:7px; padding:0 14px 0 11px; border-radius:10px; color:var(--label-2-grouped); font-size:14px; font-weight:500; }
+.tab svg{ width:19px; height:19px; flex:none; }
+.tab[aria-selected="true"]{ background:var(--ink-tint); color:var(--ink); font-weight:600; }
+.navend{ justify-self:end; display:flex; gap:2px; align-items:center; }
+.ibtn{ width:36px; height:36px; flex:none; display:grid; place-items:center; border-radius:10px; color:var(--label-2-grouped); }
+.ibtn svg{ width:20px; height:20px; }
+.no-glass .topnav, .no-glass .sidebar{ background:var(--glass-solid); -webkit-backdrop-filter:none; backdrop-filter:none; }
+@media (prefers-reduced-transparency: reduce), (prefers-contrast: more){
+  .topnav, .sidebar{ background:var(--glass-solid); -webkit-backdrop-filter:none; backdrop-filter:none; }
+}
+
+/* hover — only where a pointer can hover; demo class .is-hover forces it for screenshots */
+@media (hover:hover) and (pointer:fine){
+  .tab:not([aria-selected="true"]):hover, .ibtn:hover, .side-it:not([aria-current]):hover,
+  .hrow:not([aria-current]):hover, .drow:not([aria-checked="true"]):hover, .tlink:hover, .srow:hover, .sheet .sec:hover{ background:var(--hover); }
+  /* actions sit on the grouped background: a darkening overlay there takes label-2-grouped to 4.36:1, so a hovered action
+     rises to the key surface instead (5.3:1 light, 5.9:1 dark) */
+  .act:not([aria-pressed="true"]):not([aria-disabled="true"]):hover{ background:var(--elev); }
+  .key:hover{ background:var(--key-hover); }
+  .cell:not(.sel):hover::before{ content:""; }
+  .cell:not(.sel):hover::before{ position:absolute; inset:0; border:1.5px solid var(--hover-ring); border-radius:4px; z-index:3; pointer-events:none; }
+  .dm:not(.sel):hover{ outline:1.5px solid var(--hover-ring); outline-offset:1px; }
+}
+.tab.is-hover, .ibtn.is-hover, .side-it.is-hover, .hrow.is-hover, .drow.is-hover, .srow.is-hover{ background:var(--hover); }
+.act.is-hover{ background:var(--elev); }
+.key.is-hover{ background:var(--key-hover); }
+.cell.is-hover::before{ content:""; position:absolute; inset:0; border:1.5px solid var(--hover-ring); border-radius:4px; z-index:3; pointer-events:none; }
+.dm.is-hover{ outline:1.5px solid var(--hover-ring); outline-offset:1px; }
+/* focus ring inside clipping containers (cards with overflow:hidden) is drawn inwards */
+.hcard .is-focus, .hcard :focus-visible{ outline-offset:-3px; }
+/* PD-234, cursor (audit #7): the hand only on enabled controls. The board, given digits, year marks without a record and
+   disabled actions keep the arrow — the hover ring on a cell is the feedback, not the cursor. */
+.board, .cell, .dm.pad, .dm.k-x{ cursor:default; }
+.dm{ cursor:pointer; }
+[aria-disabled="true"], :disabled{ cursor:default; }
+.act[aria-disabled="true"]{ opacity:.4; }
+/* programmatic focus on a heading (deeplink, push screen) draws no ring — audit #17 */
+[tabindex="-1"]:focus:not(:focus-visible){ outline:none; }
+
+/* ---------- kbd chips ---------- */
+kbd{ display:inline-flex; align-items:center; justify-content:center; min-width:22px; height:20px; padding:0 5px; border:1px solid var(--hairline);
+  border-radius:5px; font:500 12px/1 var(--font-sans); color:var(--label-2-grouped); white-space:nowrap; }
+.kgrp{ display:inline-flex; gap:3px; }
+
+/* ---------- board: variant B «Boxes» (play.css), rebuilt in what matters ---------- */
+.board{ --s:calc((var(--bd) - 8px) / 9); width:var(--bd); height:var(--bd); display:grid; grid-template-columns:repeat(3,1fr); grid-template-rows:repeat(3,1fr); gap:4px; flex:none; }
+.box{ display:grid; grid-template-columns:repeat(3,1fr); grid-template-rows:repeat(3,1fr); gap:1px; background:var(--rule-half); border-radius:10px; overflow:hidden; box-shadow:var(--box-shadow); }
+.cell{ position:relative; background:var(--elev); display:grid; place-items:center; min-width:0; min-height:0; cursor:default; }
+.fl{ position:absolute; inset:0; background:var(--ink); opacity:0; pointer-events:none; }
+.cell.peer > .fl{ opacity:var(--fill-peer); }
+.cell.same > .fl{ opacity:var(--fill-same); }
+.cell.sel > .fl{ opacity:var(--fill-sel); }
+.cell.sel::after{ content:""; position:absolute; inset:0; border:2px solid var(--ink); border-radius:4px; z-index:4; pointer-events:none; }
+.d{ position:relative; z-index:2; line-height:1; font-size:calc(var(--s) * .62); }
+.d.g{ font-family:var(--font-serif); font-weight:600; color:var(--label); }
+.d.p{ font-family:var(--font-sans); font-weight:500; color:var(--ink); }
+.marks{ position:absolute; inset:0; z-index:2; display:grid; grid-template-columns:repeat(3,1fr); grid-template-rows:repeat(3,1fr); padding:6%; }
+.marks span{ display:grid; place-items:center; font-size:max(11px, calc(var(--s) * .27)); line-height:1; color:var(--notes); }
+
+/* ---------- pad + actions ---------- */
+.key{ min-width:0; border-radius:10px; background:var(--key-bg); color:var(--label); display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px;
+  box-shadow:var(--box-shadow); transition:background-color .12s linear; text-align:center; }
+.key .kd{ font-weight:500; line-height:1.05; }
+.key .kr{ font-size:12px; line-height:1; color:var(--label-2); font-variant-numeric:tabular-nums; }
+.key.done{ opacity:.4; }
+.pad3{ display:grid; grid-template-columns:repeat(3,1fr); gap:8px; }
+.pad3 .key{ height:64px; } .pad3 .kd{ font-size:26px; }
+.acts{ display:grid; gap:6px; }
+.acts.g2{ grid-template-columns:1fr 1fr; }
+.acts.col{ grid-template-columns:1fr; }
+.act{ min-width:0; height:44px; border-radius:11px; display:flex; align-items:center; gap:7px; padding:0 8px 0 10px; color:var(--label-2-grouped); font-size:14px; }
+.act svg{ width:19px; height:19px; flex:none; }
+.act .al{ min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.act kbd{ margin-left:auto; }
+.acts.g2{ gap:4px; }
+.acts.g2 .act{ justify-content:center; gap:5px; padding:0 6px; font-size:13px; }
+.acts.g2 .act kbd{ margin-left:3px; }
+.act[aria-pressed="true"]{ background:var(--ink-tint); color:var(--ink); font-weight:600; }
+.act[aria-pressed="true"] kbd{ color:var(--ink); border-color:currentColor; }
+
+/* ---------- small type blocks ---------- */
+.title{ font-size:28px; font-weight:700; letter-spacing:-.02em; line-height:1.2; }
+.sub{ font-size:15px; color:var(--label-2-grouped); margin-top:2px; }
+.meta{ display:grid; gap:10px; }
+.meta > div{ display:flex; justify-content:space-between; align-items:baseline; gap:12px; padding-bottom:10px; border-bottom:1px solid var(--hairline); }
+.meta dt{ font-size:14px; color:var(--label-2-grouped); }
+.meta dd{ font-size:15px; color:var(--label); font-variant-numeric:tabular-nums; text-align:right; }
+.chip{ display:inline-flex; align-items:center; gap:4px; padding:2px 9px 2px 7px; border-radius:999px; background:var(--ink-tint); color:var(--ink); font-size:13px; font-weight:600; }
+.chip svg{ width:15px; height:15px; }
+.cap{ font-size:13px; color:var(--label-2-grouped); }
+.legend{ display:grid; gap:7px; }
+.legend h3{ font-size:13px; font-weight:600; color:var(--label-2-grouped); margin-bottom:2px; }
+.legend .lr{ display:flex; align-items:center; gap:10px; font-size:13px; color:var(--label-2-grouped); }
+.legend .lr .kk{ min-width:78px; display:flex; gap:3px; }
+.tlink{ align-self:flex-start; display:inline-flex; align-items:center; gap:8px; min-height:32px; padding:0 8px; margin-left:-8px; border-radius:8px; color:var(--ink); font-size:14px; font-weight:600; }
+.tlink svg{ width:18px; height:18px; }
+
+/* ---------- cards ---------- */
+.card{ background:var(--elev); border-radius:18px; padding:16px; box-shadow:var(--box-shadow); }
+.card h3{ font-size:17px; font-weight:600; }
+.card .cs{ font-size:13px; color:var(--label-2); margin-top:2px; }
+.card .meta > div{ padding-bottom:8px; }
+.card .meta dt{ color:var(--label-2); }
+.heat{ display:grid; grid-template-columns:repeat(9,1fr); gap:1px; margin-top:12px; aspect-ratio:1; }
+.heat i{ position:relative; border-radius:2px; background:var(--chip-bg); }
+.heat i.h::before{ content:""; position:absolute; inset:0; border-radius:2px; background:var(--ink); opacity:var(--a); }
+.heat-scale{ display:flex; justify-content:space-between; font-size:12px; color:var(--label-2); margin:6px 0 12px; }
+.mini{ display:grid; grid-template-columns:repeat(3,1fr); gap:3px; margin-top:12px; aspect-ratio:1; }
+.mini .mb{ display:grid; grid-template-columns:repeat(3,1fr); grid-template-rows:repeat(3,1fr); gap:1px; border-radius:5px; overflow:hidden; background:var(--rule-half); }
+.mini .mc{ position:relative; background:var(--chip-bg); display:grid; place-items:center; font-family:var(--font-serif); font-weight:600; font-size:14px; color:var(--label); }
+.mini .mc.new::after{ content:""; position:absolute; inset:0; border:2px solid var(--ink); border-radius:3px; }
+/* PD-234: compact cards — two of them side by side next to the solved board, or stacked in C's inspector, fit 800 px */
+.card.cmp .heat, .card.cmp .mini{ width:min(100%, 150px); margin-inline:auto; }
+.card.cmp .mini .mc{ font-size:12px; }
+.card .meta.g2{ grid-template-columns:1fr 1fr; gap:10px 14px; }
+.card .meta.g2 > div{ display:block; padding:0; border:0; }
+.card .meta.g2 dd{ text-align:left; }
+
+/* ---------- hub ---------- */
+.hsec + .hsec{ margin-top:22px; }
+.hhead{ font-size:13px; color:var(--label-2-grouped); margin:0 0 7px 16px; }
+.hfoot{ font-size:13px; color:var(--label-2-grouped); margin:8px 0 0 16px; }
+.hcard{ background:var(--elev); border-radius:12px; overflow:hidden; box-shadow:var(--box-shadow); }
+.hrow{ position:relative; width:100%; min-height:60px; display:flex; align-items:center; gap:14px; padding:10px 14px 10px 16px; }
+.hrow + .hrow::before{ content:""; position:absolute; left:58px; right:0; top:0; height:1px; background:var(--hairline); transform:scaleY(.5); transform-origin:top; }
+.hrow .mg{ width:28px; height:28px; flex:none; color:var(--ink); }
+.hrow .mg svg{ width:28px; height:28px; }
+.hrow .lb{ flex:1; min-width:0; display:grid; gap:2px; }
+.hrow b{ font-size:16px; font-weight:600; }
+.hrow .ds{ font-size:14px; color:var(--label-2); }
+.hrow .ds.prog{ color:var(--label); }
+.hrow .dot{ display:inline-block; width:7px; height:7px; border-radius:50%; background:var(--ink); margin-right:6px; vertical-align:1px; }
+.hrow .chev{ width:14px; height:14px; color:var(--label-2); flex:none; }
+.hrow[aria-current]{ background:var(--ink-tint); }
+/* label-2 on the ink-tinted row is 4.15:1 — the existing «inside a fill» token keeps it at 5.6:1 */
+.hrow[aria-current] .ds{ color:var(--notes-fill); }
+.detail h2{ font-size:22px; font-weight:700; letter-spacing:-.01em; display:flex; align-items:center; gap:10px; }
+.detail h2 svg{ width:26px; height:26px; color:var(--ink); }
+.detail .dd{ font-size:15px; color:var(--label-2); margin-top:6px; }
+.dlist{ margin-top:14px; background:var(--chip-bg); border-radius:12px; overflow:hidden; }
+.card .dlist{ background:var(--chip-bg); }
+.dhead{ font-size:13px; color:var(--label-2); margin:16px 0 0; }
+.drow{ width:100%; min-height:40px; display:flex; align-items:center; justify-content:space-between; padding:0 12px; font-size:15px; color:var(--label); }
+.drow + .drow{ border-top:1px solid var(--hairline); }
+.drow svg{ width:18px; height:18px; color:var(--ink); }
+.drow[aria-checked="false"] svg{ visibility:hidden; }
+/* C: the mode «sheet» becomes a page on the grouped background — the list gets the elevated surface */
+.detail:not(.card) .dlist{ background:var(--elev); box-shadow:var(--box-shadow); }
+.detail:not(.card) .dd, .detail:not(.card) .dhead{ color:var(--label-2-grouped); }
+.cta{ margin-top:16px; width:100%; min-height:44px; border-radius:12px; background:var(--ink); color:var(--on-ink); font-size:16px; font-weight:600;
+  display:flex; align-items:center; justify-content:center; gap:10px; }
+.cta kbd{ color:var(--on-ink); border-color:currentColor; opacity:1; }
+.hlist{ width:min(var(--w-read), 100%); margin:0 auto; }
+
+/* ---------- settings + help text (PD-234: the reading column, audit #5) ---------- */
+.scol{ width:min(var(--w-read), 100cqw - 80px); margin:0 auto; padding:24px 0 40px; }
+.srow{ position:relative; width:100%; min-height:44px; display:flex; align-items:center; gap:12px; padding:0 14px 0 16px; font-size:16px; color:var(--label); }
+.srow + .srow::before{ content:""; position:absolute; left:16px; right:0; top:0; height:1px; background:var(--hairline); transform:scaleY(.5); transform-origin:top; }
+.srow .sv{ margin-left:auto; font-size:15px; color:var(--label-2); }
+.srow .chev{ width:14px; height:14px; color:var(--label-2); flex:none; }
+.srow .sv + .chev{ margin-left:0; }
+.srow > span:first-child + .chev{ margin-left:auto; }
+.tgl{ margin-left:auto; position:relative; width:51px; height:31px; flex:none; border-radius:16px; background:var(--hairline); }
+.tgl::after{ content:""; position:absolute; top:2px; left:2px; width:27px; height:27px; border-radius:50%; background:#fff; box-shadow:0 2px 4px rgba(0,0,0,.2); }
+.tgl.on{ background:var(--ink); } .tgl.on::after{ left:22px; }
+.prose{ margin-top:30px; }
+.prose h2{ font-size:20px; font-weight:700; margin-bottom:8px; }
+.prose p{ font-size:16px; line-height:1.5; color:var(--label); }
+.prose p + p{ margin-top:10px; }
+
+/* ---------- modal sheet (PD-234: one width, audit #6; default button focused on open, audit #9 / PD-232) ---------- */
+.sheet{ position:absolute; z-index:41; left:50%; top:50%; transform:translate(-50%,-50%); width:min(var(--w-sheet), 100cqw - 64px);
+  background:var(--elev); border-radius:18px; padding:22px 24px 18px; box-shadow:0 24px 80px rgba(0,0,0,.28); }
+.sheet h2{ font-size:20px; font-weight:700; }
+.sheet p{ font-size:15px; line-height:1.4; color:var(--label-2); margin-top:8px; }
+.sheet .cta{ margin-top:20px; }
+.sheet .sec{ margin-top:8px; width:100%; min-height:44px; border-radius:12px; display:flex; align-items:center; justify-content:center; gap:10px;
+  color:var(--ink); font-size:16px; font-weight:600; }
+
+/* ---------- year ---------- */
+.ycard{ background:var(--elev); border-radius:18px; padding:20px; box-shadow:var(--box-shadow); }
+.ycan{ display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:20px 22px; }
+.mon h4{ font-size:13px; font-weight:600; color:var(--label-2); margin-bottom:6px; }
+.mgrid{ display:grid; grid-template-columns:repeat(7,minmax(0,1fr)); gap:3px; }
+.dm{ aspect-ratio:1; border-radius:4px; background:var(--chip-bg); }
+.dm.pad{ background:none; }
+.dm.k-s{ background:var(--mark-ink); }
+.dm.k-f{ background:var(--mark-ink); clip-path:polygon(0 0, 62% 0, 100% 38%, 100% 100%, 0 100%); }
+.dm.k-h{ background:var(--mark-ink-soft); }
+.dm.k-l{ background:none; box-shadow:inset 0 0 0 2px var(--mark-ink); }
+.dm.k-u{ background:none; box-shadow:inset 0 0 0 1.5px var(--mark-ink-soft); }
+.dm.k-x{ background:none; box-shadow:inset 0 0 0 1px var(--hairline); }
+.dm.k-t{ background:none; box-shadow:inset 0 0 0 2px var(--ink); }
+.dm.sel{ outline:2px solid var(--label); outline-offset:2px; }
+.dm.is-focus{ outline:2px solid var(--ink); outline-offset:2px; }
+.ylegend{ display:flex; flex-wrap:wrap; gap:8px 16px; font-size:13px; color:var(--label-2-grouped); }
+.ylegend span{ display:inline-flex; align-items:center; gap:6px; }
+.ylegend .dm{ width:13px; height:13px; display:inline-block; }
+.ylegend.v{ display:grid; gap:8px; }
+.ychooser{ display:inline-flex; align-items:center; gap:4px; min-height:32px; padding:0 8px; margin-left:-8px; border-radius:8px; color:var(--ink); font-size:15px; font-weight:600; }
+.ychooser svg{ width:14px; height:14px; }
+.dayc .dt{ font-size:17px; font-weight:600; }
+.dayc .dk{ display:flex; align-items:center; gap:8px; font-size:14px; color:var(--label-2); margin:4px 0 12px; }
+.dayc .dk .dm{ width:14px; height:14px; }
+
+/* ---------- dialogs ---------- */
+.scrim{ position:absolute; inset:0; z-index:40; background:var(--scrim); }
+.dlg{ position:absolute; z-index:41; left:50%; top:50%; transform:translate(-50%,-50%); width:min(var(--w-read), 100cqw - 64px); background:var(--elev); border-radius:18px;
+  padding:22px 24px 18px; box-shadow:0 24px 80px rgba(0,0,0,.28); }
+.dlg h2{ font-size:20px; font-weight:700; }
+.kcols{ display:grid; grid-template-columns:1fr 1fr; gap:8px 32px; margin-top:16px; }
+.kcols h3{ font-size:13px; font-weight:600; color:var(--label-2); margin-bottom:8px; }
+.kcols .kr2{ display:flex; align-items:center; gap:12px; min-height:30px; font-size:14px; color:var(--label); }
+.kcols .kr2 .kk{ min-width:84px; display:flex; gap:3px; flex:none; }
+.kcols .new{ font-size:11px; font-weight:600; color:var(--ink); background:var(--ink-tint); border-radius:999px; padding:1px 6px; }
+.dlg .foot{ font-size:13px; color:var(--label-2); margin-top:14px; }
+.dlg .done{ display:block; margin:14px 0 0 auto; min-height:36px; padding:0 16px; border-radius:10px; color:var(--ink); font-size:15px; font-weight:600; }
+.pop{ position:absolute; z-index:30; width:var(--w-menu); background:var(--elev); border-radius:14px; padding:16px; box-shadow:0 10px 40px rgba(0,0,0,.2), 0 0 0 1px var(--hairline); }
+
+/* ================= column screens: hub, year, settings (A at every size; B below the desk size; settings in A and B) ===== */
+.cA .scroller{ position:absolute; inset:52px 0 0 0; overflow-y:auto; }
+.cA .col{ margin:0 auto; padding:24px 0 32px; display:flex; flex-direction:column; }
+.cA .col.wide{ width:min(var(--w-read), 100cqw - 80px); }
+.cA .col.year{ width:min(var(--w-year), 100cqw - 80px); }
+.cA .ahead{ display:flex; align-items:flex-end; justify-content:space-between; gap:16px; margin-bottom:14px; }
+
+/* ================= A «Pair» (PD-234): board + one tools rail. Also the compact layout of B (and of A) below 1100×680 ==== */
+.cK{ --krail:clamp(220px, 24cqw, 260px); --kgap:32px;
+  --bd:min(720px, 100cqh - 52px - 56px, 100cqw - var(--krail) - var(--kgap) - 64px); }
+/* solved: the board steps back so the result card and Grid ∞ stand next to it, each in its own rail */
+.cK.ks{ --bd:min(720px, 100cqh - 52px - 48px - 69px, 100cqw - 2 * var(--krail) - 2 * var(--kgap) - 64px); }
+.cK .main{ position:absolute; left:0; right:0; top:52px; bottom:0; display:grid; grid-template-columns:var(--bd) var(--krail);
+  column-gap:var(--kgap); justify-content:center; align-items:start; padding-top:24px; }
+.cK.ks .main{ grid-template-columns:var(--bd) var(--krail) var(--krail); }
+.cK .center{ min-width:0; }
+.cK .khead{ margin-bottom:14px; }
+.krail{ min-width:0; height:var(--bd); margin:-3px; padding:3px; display:flex; flex-direction:column; gap:12px; overflow-y:auto; }
+.cK.ks .krail{ height:calc(100cqh - 52px - 48px); }
+.krail .push{ margin-top:auto; }
+.cK .pad3 .key{ height:clamp(52px, 7cqh, 64px); } .cK .pad3 .kd{ font-size:24px; }
+
+/* ================= B «Desk» ================= */
+.cB{ --rail:clamp(220px, 18cqw, 300px); --gap:clamp(32px, 3cqw, 56px);
+  --bd:min(720px, 100cqh - 52px - 72px, 100cqw - 2 * var(--rail) - 2 * var(--gap) - 64px); }
+.cB .main{ position:absolute; left:0; right:0; top:52px; bottom:0; display:grid; grid-template-columns:var(--rail) var(--bd) var(--rail);
+  column-gap:var(--gap); justify-content:center; align-items:start; padding-top:32px; }
+.cB .rail{ min-width:0; height:var(--bd); display:flex; flex-direction:column; gap:18px; }
+.cB .rail .push{ margin-top:auto; }
+.cB .center{ min-width:0; height:calc(100cqh - 52px - 32px); overflow-y:auto; padding-bottom:32px; }
+.cB .center.fit{ height:auto; overflow:visible; padding:0; }
+
+/* ================= C «Sidebar» ================= */
+.cC{ --side:232px; --insp:clamp(260px, 20cqw, 320px);
+  --bd:min(720px, 100cqh - 52px - 72px, 100cqw - var(--side) - 16px - var(--insp) - 96px); }
+.sidebar{ position:absolute; z-index:20; left:8px; top:8px; bottom:8px; width:var(--side); border-radius:16px; padding:16px 10px;
+  background:var(--glass-fill); -webkit-backdrop-filter:blur(24px) saturate(1.4); backdrop-filter:blur(24px) saturate(1.4);
+  border:1px solid var(--hairline); display:flex; flex-direction:column; gap:2px; }
+.sidebar .brand{ padding:2px 8px 16px; }
+.side-it{ width:100%; min-height:32px; display:flex; align-items:center; gap:9px; padding:0 8px; border-radius:8px; font-size:14px; color:var(--label); }
+.side-it svg{ width:18px; height:18px; flex:none; color:var(--ink); }
+.side-it .sm{ margin-left:auto; font-size:12px; color:var(--label-2-grouped); font-variant-numeric:tabular-nums; }
+.side-it[aria-current] .sm{ color:var(--notes-fill); } /* on the ink tint label-2 would be ~4.1:1; notes-fill 5.5:1 */
+.side-it .disc{ width:12px; height:12px; color:var(--label-2); margin-left:auto; }
+.side-it .disc svg{ width:12px; height:12px; } /* was inheriting .side-it svg 18 px → overflowed its 12 px box */
+.side-it.subi{ padding-left:34px; min-height:30px; font-size:13.5px; }
+.side-it.subi svg{ width:16px; height:16px; }
+.side-it[aria-current]{ background:var(--ink-tint); color:var(--ink); font-weight:600; }
+.side-gap{ height:10px; }
+.cC .content{ position:absolute; left:calc(var(--side) + 16px); top:0; bottom:0; right:var(--insp); }
+.cC.noinsp .content{ right:0; }
+.cC .ctb{ height:52px; display:flex; align-items:center; gap:10px; padding:0 12px 0 4px; }
+.cC .ctb .tt{ min-width:0; }
+.cC .ctb .tt b{ display:block; font-size:16px; font-weight:600; }
+.cC .ctb .tt span{ display:block; font-size:13px; color:var(--label-2-grouped); }
+.cC .ctb .sp{ flex:1; }
+.cC .stage{ position:absolute; top:52px; left:0; right:0; bottom:0; display:flex; justify-content:center; align-items:flex-start; padding-top:20px; overflow-y:auto; }
+.insp{ position:absolute; right:0; top:0; bottom:0; width:var(--insp); background:var(--bg); border-left:1px solid var(--hairline); padding:20px; overflow-y:auto;
+  display:flex; flex-direction:column; gap:18px; }
+.insp h3.ih{ font-size:13px; font-weight:600; color:var(--label-2-grouped); }
+/* PD-234: below 1100×680 (and at 125/150 % on a laptop) the sidebar hides itself, the inspector stays and gets compact */
+.cC.noside{ --side:-16px; }
+.cC.noside .pad3 .key{ height:52px; } .cC.noside .pad3 .kd{ font-size:22px; }
+</style>
+</head>
+<body>
+<div class="page">
+  <aside class="ctl" aria-label="Mockup controls">
+    <h3>PD-229 / PD-234 · десктоп-версия</h3>
+    <p class="hint">Три концепции раскладки, сверены с аудитом PD-228. Кадр — настоящий размер окна, уменьшен под экран. Подробности, сверка, цена — design/pd229-desktop.md.</p>
+    <div class="grp"><span>Концепция</span><div class="seg" data-k="c">
+      <button data-v="A">A Пара</button><button data-v="B">B Стол (рекоменд.)</button><button data-v="C">C Сайдбар</button></div></div>
+    <div class="grp"><span>Окно (физические px)</span><div class="seg" data-k="w">
+      <button data-v="1280">1280×800</button><button data-v="1440">1440×900</button><button data-v="1920">1920×1080</button></div></div>
+    <div class="grp"><span>Масштаб браузера</span><div class="seg" data-k="z">
+      <button data-v="100">100 %</button><button data-v="125">125 %</button><button data-v="150">150 %</button></div>
+      <p class="hint">Окно в CSS px = окно / масштаб. Ниже 1100×680 включается компактная раскладка.</p></div>
+    <div class="grp"><span>Тема</span><div class="seg" data-k="theme">
+      <button data-v="light">светлая</button><button data-v="dark">тёмная</button></div></div>
+    <div class="grp"><span>Экран</span><div class="seg" data-k="screen">
+      <button data-v="game">Today · игра</button><button data-v="solved">Today · решено</button><button data-v="hub">Play · режимы</button>
+      <button data-v="year">Year</button><button data-v="keys">Клавиши (?)</button><button data-v="settings">Settings · Help</button>
+      <button data-v="sheet">Шит</button></div></div>
+    <div class="grp"><span>Состояния (для кадров)</span><div class="seg" data-k="st">
+      <button data-v="none">нет</button><button data-v="hover">наведение</button><button data-v="focus">фокус с клавиатуры</button></div>
+      <p class="hint">Наведение и фокус работают и живьём — мышью и Tab.</p></div>
+    <div class="grp"><span>Навигация</span><div class="seg" data-k="glass">
+      <button data-v="on">стекло</button><button data-v="off">фолбэк (непрозрачно)</button></div></div>
+    <div class="about" id="about"></div>
+  </aside>
+  <div class="scaler" id="scaler"><div class="app" id="app"></div></div>
+</div>
+
+<script>
+(function () {
+  "use strict";
+  const errs = [];
+  function banner(msg) {
+    errs.push(msg);
+    let b = document.getElementById("pd229-err");
+    if (!b) { b = document.createElement("div"); b.id = "pd229-err"; document.body.appendChild(b); }
+    b.textContent = "JS: " + errs.join(" | ");
+  }
+  window.addEventListener("error", (e) => banner(String(e.message)));
+
+  const SHOT = /[?&]shot=1/.test(location.search);
+  if (SHOT) document.documentElement.classList.add("shot");
+
+  const SIZES = { 1280: [1280, 800], 1440: [1440, 900], 1920: [1920, 1080] };
+  const DEF = { c: "B", w: "1440", z: "100", theme: "light", screen: "game", st: "none", glass: "on" };
+  let S = Object.assign({}, DEF);
+  const GAMEISH = ["game", "solved", "keys", "sheet"];
+  // window in CSS px = physical window / browser zoom (how PD-228 emulated 125/150 %)
+  function dims() { const [W, H] = SIZES[S.w], z = Number(S.z) / 100; return [Math.round(W / z), Math.round(H / z)]; }
+  // which layout is on: K = A «Pair» / compact, A = column screens, B = desk, C = sidebar (noside when compact)
+  function layout() {
+    const [w, h] = dims(), cmp = w < 1100 || h < 680;
+    if (S.c === "C") return { lay: "C", cmp, w, h };
+    if (S.screen === "settings") return { lay: "A", cmp, w, h };
+    if (S.c === "A" || cmp) return { lay: GAMEISH.includes(S.screen) ? "K" : "A", cmp, w, h };
+    return { lay: "B", cmp, w, h };
+  }
+  const LAYNAME = { K: "A «Пара»", A: "колонка (Play / Year / Settings)", B: "B «Стол»", C: "C «Сайдбар»" };
+
+  const ABOUT = {
+    A: "<b>A · Пара (цена S)</b>Поле и одна колонка инструментов справа: заголовок, панель 3×3, действия с клавишами. После решения поле отступает, справа встают карточка дня и Grid ∞ — всё на одном экране. Play, Year, Settings — колонки 640 / 780 px. Это же — компактная раскладка любой концепции ниже 1100×680 (125/150 % на ноутбуке).",
+    B: "<b>B · Стол (цена M, рекомендация)</b>Три колонки: слева — что за партия (дата, сложность, время, остаток) и шпаргалка клавиш; в центре — поле; справа — панель 3×3 и действия. После решения панель уступает место Grid ∞, слева — карточка дня. Year: итоги слева, полотно в центре, карточка дня справа вместо шита.",
+    C: "<b>C · Сайдбар (цена L)</b>Как приложение macOS: плавающая стеклянная боковая панель с разделами и режимами (два уровня), тулбар над полем, инспектор справа (панель, действия, карточка, Grid ∞). Режимы — прямо в сайдбаре, хаб Play превращается в страницу режима."
+  };
+
+  /* ------------------------------------------------------------ data */
+  const SOL = "534678912672195348198342567859761423426853791713924856961537284287419635345286179";
+  const GIV = "530070000600195000098000060800060003400803001700020006060000280000419005000080079";
+  const PLAYER = [2, 3, 10, 11, 18, 28, 29, 30, 37, 38, 40, 46, 47, 54, 64, 72, 73];
+  const NOTES = [6, 7, 8, 21, 22, 56, 57, 75, 76];
+  const SEL = 40, HOV = 56;
+  const sol = SOL.split("").map(Number), giv = GIV.split("").map(Number);
+  const cur = giv.slice(); PLAYER.forEach((i) => { cur[i] = sol[i]; });
+  const filled = cur.filter((v) => v > 0).length;
+  const LEFT = 81 - filled;
+  function cands(vals, i) {
+    const r = Math.floor(i / 9), c = i % 9, br = r - (r % 3), bc = c - (c % 3), used = new Set();
+    for (let k = 0; k < 9; k++) { used.add(vals[r * 9 + k]); used.add(vals[k * 9 + c]); }
+    for (let y = br; y < br + 3; y++) for (let x = bc; x < bc + 3; x++) used.add(vals[y * 9 + x]);
+    return [1, 2, 3, 4, 5, 6, 7, 8, 9].filter((d) => !used.has(d));
+  }
+  const hr = (n) => { const x = Math.sin(n * 12.9898 + 4.1) * 43758.5453; return x - Math.floor(x); };
+  const remaining = (d) => 9 - cur.filter((v) => v === d).length;
+
+  /* ------------------------------------------------------------ icons */
+  const sv = (inner, extra) => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"${extra || ""}>${inner}</svg>`;
+  const I = {
+    today: sv('<rect x="3.5" y="4.8" width="17" height="15.4" rx="3.4"/><path d="M3.5 9.2h17M8 3.2v2.8M16 3.2v2.8"/><circle cx="12" cy="14.7" r="1.9" fill="currentColor" stroke="none"/>'),
+    play: sv('<rect x="3.5" y="3.5" width="17" height="17" rx="3.4"/><path d="M9.2 3.5v17M14.8 3.5v17M3.5 9.2h17M3.5 14.8h17"/>'),
+    year: '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">' + [5.2, 10.2, 15.2].map((y) => `<rect x="3.2" y="${y}" width="3.6" height="3.6" rx="1"/><rect x="8.6" y="${y}" width="3.6" height="3.6" rx="1"/><rect x="14" y="${y}" width="3.6" height="3.6" rx="1"/><rect x="19.4" y="${y}" width="1.4" height="3.6" rx=".7"/>`).join("") + "</svg>",
+    gear: sv('<path d="M10.38 4.98 L10.6 2.6 L13.4 2.6 L13.62 4.98 A7.2 7.2 0 0 1 15.82 5.89 L17.65 4.36 L19.64 6.35 L18.11 8.18 A7.2 7.2 0 0 1 19.02 10.38 L21.4 10.6 L21.4 13.4 L19.02 13.62 A7.2 7.2 0 0 1 18.11 15.82 L19.64 17.65 L17.65 19.64 L15.82 18.11 A7.2 7.2 0 0 1 13.62 19.02 L13.4 21.4 L10.6 21.4 L10.38 19.02 A7.2 7.2 0 0 1 8.18 18.11 L6.35 19.64 L4.36 17.65 L5.89 15.82 A7.2 7.2 0 0 1 4.98 13.62 L2.6 13.4 L2.6 10.6 L4.98 10.38 A7.2 7.2 0 0 1 5.89 8.18 L4.36 6.35 L6.35 4.36 L8.18 5.89 A7.2 7.2 0 0 1 10.38 4.98 Z"/><circle cx="12" cy="12" r="2.9"/>'),
+    notes: sv('<path d="M4 20h4L19 9l-4-4L4 16z"/><path d="M13.5 6.5l4 4"/>'),
+    undo: sv('<path d="M9 7 4.5 11.5 9 16"/><path d="M5 11.5h9a5 5 0 0 1 0 10h-3"/>'),
+    erase: sv('<path d="M9 5h10.5A1.5 1.5 0 0 1 21 6.5v11a1.5 1.5 0 0 1-1.5 1.5H9l-6-7z"/><path d="M12 9.5l5 5M17 9.5l-5 5"/>'),
+    hint: sv('<path d="M9.5 18h5M10.5 21h3"/><path d="M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1 2.1h5c0-.9.4-1.6 1-2.1A6 6 0 0 0 12 3z"/>'),
+    keyboard: sv('<rect x="2.5" y="6" width="19" height="12" rx="2.5"/><path d="M6 10h.01M9.5 10h.01M13 10h.01M16.5 10h.01M7.5 14h9"/>'),
+    sidebar: sv('<rect x="3" y="4.5" width="18" height="15" rx="3"/><path d="M9.5 4.5v15"/>'),
+    more: sv('<circle cx="6" cy="12" r="1.2" fill="currentColor"/><circle cx="12" cy="12" r="1.2" fill="currentColor"/><circle cx="18" cy="12" r="1.2" fill="currentColor"/>'),
+    chev: sv('<path d="M9 6l6 6-6 6"/>'),
+    down: sv('<path d="M6 9l6 6 6-6"/>'),
+    check: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>',
+    share: sv('<path d="M12 3v12M8 7l4-4 4 4"/><path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"/>'),
+    timelapse: sv('<circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/>'),
+    m_classic: sv('<rect x="3.5" y="3.5" width="17" height="17" rx="3.4"/><path d="M9.2 3.5v17M14.8 3.5v17M3.5 9.2h17M3.5 14.8h17"/>'),
+    m_ink: sv('<path d="M12 3.5c3 4 5.5 7 5.5 10a5.5 5.5 0 0 1-11 0c0-3 2.5-6 5.5-10z"/>'),
+    m_liar: sv('<rect x="4" y="4" width="16" height="16" rx="3.4"/><path d="M8.5 8.5l7 7"/>'),
+    m_glyphs: sv('<circle cx="7.5" cy="7.5" r="3"/><path d="M16.5 4.5l3 5.5h-6z"/><rect x="4.5" y="14" width="6" height="6" rx="1"/><path d="M14 17h6M17 14v6"/>'),
+    m_melody: sv('<path d="M9 18V6l10-2v12"/><circle cx="6.5" cy="18" r="2.5"/><circle cx="16.5" cy="16" r="2.5"/>'),
+    m_lantern: sv('<path d="M9 3.5h6M10.5 3.5v2.5M13.5 3.5v2.5"/><rect x="7" y="6" width="10" height="13" rx="3"/><path d="M12 10v5M9.5 21h5"/>')
+  };
+  const MODES = [
+    ["classic", "Classic", "Plain sudoku: notes, undo and hints are all there."],
+    ["ink", "Ink", "Every digit is final: no undo and no eraser for digits. A wrong one leaves a blot."],
+    ["liar", "Liar", "One of the given digits is a lie. Find it, then press and hold it to accuse."],
+    ["glyphs", "Glyphs", "Nine shapes instead of digits. The same logic, without a single number."],
+    ["melody", "Melody", "Each digit you place sounds a note. A solved grid plays its own tune."],
+    ["lantern", "Lantern", "Only the row, column and box of the selected cell are lit. Your digits wait in the shade."]
+  ];
+
+  /* demo-state helpers */
+  const hv = (on) => (on && S.st === "hover" ? " is-hover" : "");
+  const fc = (on) => (on && S.st === "focus" ? " is-focus" : "");
+
+  /* ------------------------------------------------------------ pieces */
+  function topNav(active) {
+    const demo = active !== null; // on Settings the hover/focus demo lives in the rows
+    const t = (id, lab) => `<button class="tab${hv(demo && id === "year" && active !== "year")}${fc(demo && id === "play" && active !== "play")}" role="tab" aria-selected="${id === active}">${I[id]}<span>${lab}</span></button>`;
+    return `<header class="topnav"><div class="brand" role="img" aria-label="Pundoku"><span class="pun">Pun</span><span class="doku">doku</span></div>
+      <nav class="tabs" role="tablist" aria-label="Sections">${t("today", "Today")}${t("play", "Play")}${t("year", "Year")}</nav>
+      <div class="navend"><button class="ibtn" aria-label="Keyboard shortcuts" title="Keyboard shortcuts  ?">${I.keyboard}</button><button class="ibtn" aria-label="Settings" title="Settings"${active === null ? ' aria-pressed="true" style="color:var(--ink);background:var(--ink-tint)"' : ""}>${I.gear}</button></div></header>`;
+  }
+
+  function sidebar(active, mode) {
+    const it = (id, lab, meta, extra) => `<button class="side-it${extra || ""}"${active === id && !mode ? ' aria-current="page"' : ""}>${I[id]}<span>${lab}</span>${meta || ""}</button>`;
+    const sub = MODES.map(([id, name], k) => `<button class="side-it subi${hv(k === 1)}${fc(k === 2)}"${mode === id ? ' aria-current="page"' : ""}>${I["m_" + id]}<span>${name}</span>${id === "ink" ? '<span class="sm">in progress</span>' : ""}</button>`).join("");
+    return `<nav class="sidebar" aria-label="Sections"><div class="brand" role="img" aria-label="Pundoku"><span class="pun">Pun</span><span class="doku">doku</span></div>
+      ${it("today", "Today", `<span class="sm">${LEFT} left</span>`)}
+      ${it("play", "Play", `<span class="disc">${I.down}</span>`)}${sub}
+      <div class="side-gap"></div>${it("year", "Year")}</nav>`;
+  }
+
+  function boardHTML(solved) {
+    const vals = solved ? sol : cur;
+    const selV = solved ? 0 : vals[SEL];
+    const sr = Math.floor(SEL / 9), sc = SEL % 9;
+    let h = '<div class="board" data-chk="board" aria-label="Sudoku grid">';
+    for (let b = 0; b < 9; b++) {
+      h += '<div class="box">';
+      const br = Math.floor(b / 3) * 3, bc = (b % 3) * 3;
+      for (let k = 0; k < 9; k++) {
+        const r = br + Math.floor(k / 3), c = bc + (k % 3), i = r * 9 + c, v = vals[i];
+        let cls = "cell";
+        if (!solved) {
+          const peer = r === sr || c === sc || (Math.floor(r / 3) === Math.floor(sr / 3) && Math.floor(c / 3) === Math.floor(sc / 3));
+          if (i === SEL) cls += " sel";
+          else if (v && v === selV) cls += " same";
+          else if (peer) cls += " peer";
+          if (i === HOV) cls += hv(true);
+        }
+        let inner = '<span class="fl"></span>';
+        if (v) inner += `<span class="d ${giv[i] ? "g" : "p"}">${v}</span>`;
+        else if (NOTES.includes(i)) {
+          const cs = cands(cur, i);
+          inner += '<span class="marks">' + [1, 2, 3, 4, 5, 6, 7, 8, 9].map((d) => `<span>${cs.includes(d) ? d : ""}</span>`).join("") + "</span>";
+        }
+        h += `<div class="${cls}">${inner}</div>`;
+      }
+      h += "</div>";
+    }
+    return h + "</div>";
+  }
+
+  function keyHTML(d) {
+    const n = remaining(d);
+    return `<button class="key${n === 0 ? " done" : ""}${hv(d === 3)}" aria-label="${d}, ${n} left"><span class="kd" aria-hidden="true">${d}</span><span class="kr" aria-hidden="true">${n === 0 ? "·" : n}</span></button>`;
+  }
+  const pad3 = () => `<div class="pad3" role="group" aria-label="Digits">${[1, 2, 3, 4, 5, 6, 7, 8, 9].map(keyHTML).join("")}</div>`;
+  function acts(layout) {
+    const a = (icon, lab, keys, extra) => `<button class="act${extra || ""}" title="${lab}  ${keys.replace(/<[^>]+>/g, "")}">${I[icon]}<span class="al">${lab}</span>${keys}</button>`;
+    return `<div class="acts ${layout}">${a("notes", "Notes", "<kbd>N</kbd>", fc(false))}${a("undo", "Undo", "<kbd>⌘Z</kbd>", fc(true))}${a("erase", "Erase", "<kbd>⌫</kbd>", hv(true))}${a("hint", "Hint", "<kbd>H</kbd>")}</div>`;
+  }
+  function legendCard(title) {
+    const r = (keys, txt) => `<div class="lr"><span class="kk">${keys}</span><span>${txt}</span></div>`;
+    return `<div class="legend">${title ? `<h3>${title}</h3>` : ""}
+      ${r("<kbd>←</kbd><kbd>↑</kbd><kbd>→</kbd><kbd>↓</kbd>", "move")}
+      ${r("<kbd>1</kbd><kbd>–</kbd><kbd>9</kbd>", "place a digit")}
+      ${r("<kbd>⇧</kbd><kbd>1–9</kbd>", "note instead")}
+      ${r("<kbd>F</kbd>", "fill notes")}
+      ${r("<kbd>?</kbd>", "all shortcuts")}</div>`;
+  }
+
+  function heatHTML() {
+    let h = '<div class="heat" aria-label="Heat map of the order in which you filled the grid">';
+    for (let i = 0; i < 81; i++) h += giv[i] ? "<i></i>" : `<i class="h" style="--a:${(0.14 + 0.8 * hr(i + 7)).toFixed(2)}"></i>`;
+    return h + "</div>";
+  }
+  // cmp: compact card (heat 150 px, figures 2×2, no subtitle) — for C's inspector and for A/B at 125/150 %
+  function resultCard(cmp) {
+    return `<section class="card${cmp ? " cmp" : ""}"><h3>Your path</h3>${cmp ? "" : '<p class="cs">Every cell shaded by when you filled it.</p>'}${heatHTML()}
+      <div class="heat-scale"><span>Early</span><span>Late</span></div>
+      <dl class="meta${cmp ? " g2" : ""}"><div><dt>Time</dt><dd>12:48</dd></div><div><dt>Fixes</dt><dd>None</dd></div><div><dt>Hardest</dt><dd>Locked Candidates</dd></div><div><dt>Solved today</dt><dd>61 %</dd></div></dl>
+      <button class="tlink" style="margin-top:8px">${I.share}<span>Share</span></button></section>`;
+  }
+  function gridInf(cmp) {
+    const clue = [3, 9, 13, 20, 26, 31, 37, 44, 49, 58, 61, 66, 72, 79];
+    let h = '<div class="mini" aria-hidden="true">';
+    for (let b = 0; b < 9; b++) {
+      h += '<div class="mb">';
+      const br = Math.floor(b / 3) * 3, bc = (b % 3) * 3;
+      for (let k = 0; k < 9; k++) {
+        const i = (br + Math.floor(k / 3)) * 9 + bc + (k % 3);
+        h += `<div class="mc${i === 40 ? " new" : ""}">${clue.includes(i) || i === 40 ? sol[i] : ""}</div>`;
+      }
+      h += "</div>";
+    }
+    h += "</div>";
+    return `<section class="card${cmp ? " cmp" : ""}" aria-label="Your permanent grid: 15 clues so far, needs more clues"><h3>Grid ∞</h3><p class="cs">15 cells · needs more clues</p>${h}
+      <p class="cs" style="margin-top:10px">Today’s last cell lands here.</p></section>`;
+  }
+
+  function hubList(selMode) {
+    const rows = MODES.map(([id, name, desc], k) => {
+      const prog = id === "ink";
+      return `<button class="hrow${hv(k === 3)}${fc(k === 2)}"${selMode === id ? ' aria-current="true"' : ""}><span class="mg">${I["m_" + id]}</span><span class="lb"><b>${name}</b>
+        ${prog ? '<span class="ds prog"><span class="dot"></span>In progress · Hard · 41 left · 07:02</span>' : `<span class="ds">${desc}</span>`}</span><span class="chev">${I.chev}</span></button>`;
+    }).join("");
+    return `<div class="hlist"><section class="hsec"><p class="hhead">Continue</p><div class="hcard"><button class="hrow"><span class="mg">${I.today}</span><span class="lb"><b>Today’s puzzle</b><span class="ds">Medium · ${LEFT} left · 03:18</span></span><span class="chev">${I.chev}</span></button></div></section>
+      <section class="hsec"><p class="hhead">Modes</p><div class="hcard">${rows}</div><p class="hfoot">Free games aren’t recorded in your year.</p></section></div>`;
+  }
+  function modeDetail(asPage) {
+    const d = (lab, on) => `<button class="drow" role="radio" aria-checked="${on}">${lab}${I.check}</button>`;
+    const body = `<h2>${I.m_classic}Classic</h2><p class="dd">${MODES[0][2]}</p>
+      <p class="dhead">Difficulty</p><div class="dlist" role="radiogroup">${d("Easy", false)}${d("Medium", true)}${d("Hard", false)}${d("Expert", false)}</div>
+      <button class="cta">Start<kbd>↩</kbd></button>`;
+    return asPage ? `<div class="detail" style="width:min(480px,100%)">${body}</div>` : `<section class="card detail">${body}</section>`;
+  }
+
+  /* PD-234: Settings + Help text in the 640 reading column (rows are illustrative — the point is the width) */
+  function settingsHTML() {
+    const sw = (lab, on, k) => `<button class="srow${hv(k === 0)}${fc(k === 1)}" role="switch" aria-checked="${on}"><span>${lab}</span><span class="tgl${on ? " on" : ""}" aria-hidden="true"></span></button>`;
+    const go = (lab, val) => `<button class="srow"><span>${lab}</span>${val ? `<span class="sv">${val}</span>` : ""}<span class="chev">${I.chev}</span></button>`;
+    return `<div class="scol"><h1 class="title" style="margin-bottom:14px" tabindex="-1">Settings</h1>
+      <section class="hsec"><p class="hhead">Game</p><div class="hcard">${sw("Show the timer", true, 0)}${sw("Highlight the same digits", true, 1)}${sw("Sounds", false, 2)}</div></section>
+      <section class="hsec"><p class="hhead">Account</p><div class="hcard">${go("Language", "English")}${go("Recovery key")}</div></section>
+      <section class="hsec"><p class="hhead">About</p><div class="hcard">${go("How Pundoku works")}</div></section>
+      <section class="prose"><h2>How Pundoku works</h2>
+        <p>Every day there is one puzzle, the same for everyone. Solve it at your own pace: the clock is there, but nobody is racing you. When the last cell is filled, your card shows the path you took — which cells came early, which came late, and the hardest step you found.</p>
+        <p>The last digit you place also lands in Grid ∞, your own empty grid with a hidden answer. One clue a day; after a month or two it has a single solution and you can solve it too.</p></section></div>`;
+  }
+  /* PD-234: one modal sheet at the shared width; the default button is focused when it opens (Enter does it, PD-232) */
+  const sheetHTML = () => `<div class="scrim"></div><div class="sheet" role="dialog" aria-modal="true" aria-labelledby="sht"><h2 id="sht">A hint marks the day</h2>
+      <p>The hint shows the next logical step and the technique behind it. Today will count as solved with help.</p>
+      <button class="cta is-focus">Show the hint<kbd>↩</kbd></button><button class="sec">Not now<kbd>Esc</kbd></button></div>`;
+  const overlay = (scr) => (scr === "keys" ? keysDialog() : scr === "sheet" ? sheetHTML() : "");
+
+  /* year */
+  const MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+  const TODAY_DOY = 280; // 8 Oct 2026, 0-based day of year
+  const SEL_DOY = 279;   // 7 Oct
+  function kindOf(doy) {
+    if (doy === TODAY_DOY) return "t";
+    if (doy > TODAY_DOY) return "x";
+    if (doy === SEL_DOY) return "s";
+    const h = hr(doy * 3 + 1);
+    return h < 0.12 ? "m" : h < 0.17 ? "u" : h < 0.25 ? "h" : h < 0.38 ? "f" : h < 0.42 ? "l" : "s";
+  }
+  function yearCanvas() {
+    let h = '<div class="ycan" aria-label="Year 2026, by month">', doy = 0;
+    for (let m = 0; m < 12; m++) {
+      const first = new Date(Date.UTC(2026, m, 1)), days = new Date(Date.UTC(2026, m + 1, 0)).getUTCDate();
+      const off = (first.getUTCDay() + 6) % 7;
+      h += `<div class="mon"><h4>${MONTHS[m]}</h4><div class="mgrid">`;
+      for (let p = 0; p < off; p++) h += '<i class="dm pad"></i>';
+      for (let d = 1; d <= days; d++, doy++) {
+        const k = kindOf(doy);
+        let cls = `dm k-${k === "s" ? "s" : k}`;
+        if (doy === SEL_DOY) cls += " sel";
+        if (doy === SEL_DOY - 20) cls += hv(true);
+        if (doy === SEL_DOY - 1) cls += fc(true);
+        h += `<i class="${cls}"${doy === SEL_DOY ? ' id="selday"' : ""}></i>`;
+      }
+      h += "</div></div>";
+    }
+    return h + "</div>";
+  }
+  function yearLegend(vertical) {
+    const l = (k, t) => `<span><i class="dm k-${k}"></i>${t}</span>`;
+    return `<div class="ylegend${vertical ? " v" : ""}" aria-label="What the marks mean">${l("s", "Solved")}${l("h", "With help")}${l("f", "Fixes")}${l("l", "Solved late")}${l("u", "Unfinished")}${l("m", "Missed")}</div>`;
+  }
+  const yearTotals = () => `<dl class="meta"><div><dt>Days</dt><dd>254</dd></div><div><dt>Clean</dt><dd>148</dd></div><div><dt>With fixes</dt><dd>33</dd></div><div><dt>With help</dt><dd>20</dd></div><div><dt>Solved late</dt><dd>10</dd></div></dl>`;
+  function dayCard(bare) {
+    const inner = `<p class="dt">Wednesday, 7 October</p><p class="dk"><i class="dm k-s"></i>Solved, no fixes</p>
+      <dl class="meta"><div><dt>Time</dt><dd>11:42</dd></div><div><dt>Hardest</dt><dd>Hidden Pair</dd></div><div><dt>Solved that day</dt><dd>58 %</dd></div></dl>
+      <button class="tlink" style="margin-top:10px">${I.timelapse}<span>Watch timelapse</span></button>`;
+    return bare ? inner : `<section class="card dayc">${inner}</section>`;
+  }
+
+  function keysDialog() {
+    const r = (keys, txt, isNew) => `<div class="kr2"><span class="kk">${keys}</span><span>${txt}</span>${isNew ? '<span class="new">new</span>' : ""}</div>`;
+    return `<div class="scrim"></div><div class="dlg" role="dialog" aria-modal="true" aria-labelledby="kt"><h2 id="kt">Keyboard shortcuts</h2>
+      <div class="kcols"><section><h3>Grid</h3>
+        ${r("<kbd>←</kbd><kbd>↑</kbd><kbd>→</kbd><kbd>↓</kbd>", "Move the selection")}
+        ${r("<kbd>1</kbd><kbd>–</kbd><kbd>9</kbd>", "Place a digit")}
+        ${r("<kbd>⇧</kbd><kbd>1–9</kbd>", "Note instead of a digit")}
+        ${r("<kbd>N</kbd>", "Notes on or off")}
+        ${r("<kbd>⌫</kbd>", "Erase")}
+        ${r("<kbd>⌘Z</kbd>", "Undo")}
+        ${r("<kbd>F</kbd>", "Fill notes with candidates")}
+        ${r("<kbd>H</kbd>", "Hint")}</section>
+      <section><h3>App</h3>
+        ${r("<kbd>?</kbd>", "Show this list", true)}
+        ${r("<kbd>T</kbd><kbd>P</kbd><kbd>Y</kbd>", "Today, Play, Year", true)}
+        ${r("<kbd>Tab</kbd>", "Next control")}
+        ${r("<kbd>Esc</kbd>", "Close a dialog; on Settings or Help go back", true)}</section></div>
+      <p class="foot">⇧ or ⌥ with a digit writes a note while held. On Windows and Linux use Ctrl instead of ⌘.</p>
+      <button class="done">Done</button></div>`;
+  }
+
+  /* ------------------------------------------------------------ concepts */
+  /* A «Pair» — the game screens (and B's / A's compact layout below 1100×680) */
+  function renderK(scr, st) {
+    const nav = topNav("today");
+    let main;
+    if (scr === "solved") {
+      main = `<div class="center"><div class="khead"><h1 class="title">Today</h1><p class="sub">Thu 8 Oct · Medium · Solved in 12:48</p></div>${boardHTML(true)}</div>
+        <aside class="krail">${resultCard(st.cmp)}</aside><aside class="krail">${gridInf(st.cmp)}</aside>`;
+    } else {
+      const legend = !st.cmp && st.h >= 800 ? `<div class="push">${legendCard("Keyboard")}</div>` : "";
+      main = `<div class="center">${boardHTML(false)}</div>
+        <aside class="krail"><div><h1 class="title">Today</h1><p class="sub">Thu 8 Oct · Medium</p></div>
+          <p class="cap">03:18 · ${LEFT} cells left · Sudoku.com</p>${pad3()}${acts(st.cmp ? "g2" : "col")}${legend}</aside>`;
+    }
+    return nav + `<div class="main">${main}</div>` + overlay(scr);
+  }
+
+  /* column screens: Play hub, Year, Settings */
+  function renderA(scr) {
+    const nav = topNav(scr === "hub" ? "play" : scr === "year" ? "year" : scr === "settings" ? null : "today");
+    let body = "";
+    if (scr === "settings") {
+      body = settingsHTML();
+    } else if (scr === "hub") {
+      body = `<div class="col wide"><h1 class="title" style="margin-bottom:14px">Play</h1>${hubList(null)}</div>`;
+    } else if (scr === "year") {
+      body = `<div class="col year"><div class="ahead"><div><h1 class="title">Year</h1><button class="ychooser">2026 ${I.down}</button></div>
+        <p class="cap">254 days · 148 clean · 33 with fixes · 20 with help · 10 late</p></div>
+        <div class="ycard">${yearCanvas()}</div><div style="margin-top:14px">${yearLegend(false)}</div></div>
+        <div class="pop" id="pop" role="dialog" aria-label="Wednesday, 7 October">${dayCard(true)}</div>`;
+    }
+    return nav + `<div class="scroller" id="scroller">${body}</div>`;
+  }
+
+  function renderB(scr) {
+    const nav = topNav(scr === "hub" ? "play" : scr === "year" ? "year" : "today");
+    let main = "";
+    if (scr === "game" || scr === "keys" || scr === "sheet") {
+      main = `<aside class="rail"><div><h1 class="title">Today</h1><p class="sub">Thursday, 8 October</p></div>
+          <dl class="meta"><div><dt>Difficulty</dt><dd>Medium</dd></div><div><dt>Time</dt><dd>03:18</dd></div><div><dt>Left</dt><dd>${LEFT} cells</dd></div></dl>
+          <p class="cap">Puzzle from Sudoku.com</p>
+          <div class="push">${legendCard("Keyboard")}</div></aside>
+        <div class="center fit">${boardHTML(false)}</div>
+        <aside class="rail">${pad3()}${acts("col")}</aside>`;
+    } else if (scr === "solved") {
+      // below 800 px of height (1440×900 at 125 % = 1152×720) the full card leaves the rail no slack — use the compact one
+      const cmp = layout().h < 800;
+      main = `<aside class="rail"><div><h1 class="title">Today</h1><p class="sub">Thursday, 8 October · Solved</p></div>${resultCard(cmp)}</aside>
+        <div class="center fit">${boardHTML(true)}</div>
+        <aside class="rail">${gridInf(cmp)}</aside>`;
+    } else if (scr === "hub") {
+      main = `<aside class="rail"><div><h1 class="title">Play</h1><p class="sub">Free games, any time.</p></div>
+          <div class="push"><div class="legend"><h3>Keyboard</h3><div class="lr"><span class="kk"><kbd>↑</kbd><kbd>↓</kbd></span><span>choose a mode</span></div>
+          <div class="lr"><span class="kk"><kbd>↩</kbd></span><span>start or continue</span></div><div class="lr"><span class="kk"><kbd>?</kbd></span><span>all shortcuts</span></div></div></div></aside>
+        <div class="center">${hubList("classic")}</div>
+        <aside class="rail">${modeDetail(false)}</aside>`;
+    } else if (scr === "year") {
+      main = `<aside class="rail"><div><h1 class="title">Year</h1><button class="ychooser">2026 ${I.down}</button></div>${yearTotals()}
+          <div class="push">${yearLegend(true)}</div></aside>
+        <div class="center fit"><div class="ycard">${yearCanvas()}</div></div>
+        <aside class="rail">${dayCard(false)}</aside>`;
+    }
+    return nav + `<div class="main">${main}</div>` + overlay(scr);
+  }
+
+  function renderC(scr, st) {
+    const active = scr === "hub" ? "play" : scr === "year" ? "year" : scr === "settings" ? null : "today";
+    const side = st.cmp ? "" : sidebar(active, scr === "hub" ? "classic" : null);
+    const sideLab = st.cmp ? "Show sidebar" : "Hide sidebar";
+    const tb = (title, sub, extra) => `<div class="ctb"><button class="ibtn" aria-label="${sideLab}" title="${sideLab}">${I.sidebar}</button>
+      <div class="tt"><b>${title}</b><span>${sub}</span></div><div class="sp"></div>${extra || ""}
+      <button class="ibtn" aria-label="Keyboard shortcuts" title="Keyboard shortcuts  ?">${I.keyboard}</button><button class="ibtn" aria-label="Settings"${active === null ? ' aria-pressed="true" style="color:var(--ink);background:var(--ink-tint)"' : ""}>${I.gear}</button></div>`;
+    let out = side;
+    if (scr === "game" || scr === "keys" || scr === "sheet") {
+      out += `<div class="content">${tb("Today", "Thursday, 8 October · Medium", `<button class="ibtn" aria-label="More">${I.more}</button>`)}<div class="stage">${boardHTML(false)}</div></div>
+        <aside class="insp"><dl class="meta"><div><dt>Time</dt><dd>03:18</dd></div><div><dt>Left</dt><dd>${LEFT} cells</dd></div></dl>${pad3()}${acts(st.cmp ? "g2" : "col")}
+        ${st.cmp || st.h < 800 ? "" : `<div style="margin-top:auto">${legendCard("Keyboard")}</div>`}</aside>`;
+    } else if (scr === "solved") {
+      // compact cards: both fit the inspector at 1280×800; at 125/150 % the inspector scrolls (Grid ∞ under the card)
+      out += `<div class="content">${tb("Today", "Thursday, 8 October · Solved in 12:48")}<div class="stage">${boardHTML(true)}</div></div>
+        <aside class="insp">${resultCard(true)}${gridInf(true)}</aside>`;
+    } else if (scr === "settings") {
+      out += `<div class="content">${tb("Settings", "Pundoku")}<div class="stage">${settingsHTML()}</div></div>`;
+    } else if (scr === "hub") {
+      out += `<div class="content">${tb("Classic", "Play · free game")}<div class="stage" style="padding-top:40px">${modeDetail(true)}</div></div>`;
+    } else if (scr === "year") {
+      out += `<div class="content">${tb("Year", "2026 · 254 days")}<div class="stage"><div class="ycard" style="width:min(780px, 100% - 64px)">${yearCanvas()}</div></div></div>
+        <aside class="insp"><div class="card dayc">${dayCard(true)}</div><h3 class="ih">Totals</h3>${yearTotals()}${yearLegend(true)}</aside>`;
+    }
+    return out + overlay(scr);
+  }
+
+  /* ------------------------------------------------------------ render */
+  const app = document.getElementById("app"), scaler = document.getElementById("scaler");
+  let K = 1;
+  function layoutScale() {
+    const [W, H] = dims();
+    app.style.width = W + "px"; app.style.height = H + "px";
+    if (SHOT) { K = 1; app.style.transform = "none"; scaler.style.width = W + "px"; scaler.style.height = H + "px"; return; }
+    const avail = Math.max(320, window.innerWidth - 300 - 24 - 48);
+    K = Math.min(1, avail / W);
+    app.style.transform = `scale(${K})`;
+    scaler.style.width = Math.round(W * K) + "px"; scaler.style.height = Math.round(H * K) + "px";
+  }
+  function offsetIn(el, root) {
+    let x = 0, y = 0;
+    while (el && el !== root) { x += el.offsetLeft; y += el.offsetTop; el = el.offsetParent; }
+    return { x, y };
+  }
+  function render() {
+    const root = document.documentElement;
+    root.classList.toggle("force-dark", S.theme === "dark");
+    root.classList.toggle("force-light", S.theme !== "dark");
+    const st = layout();
+    app.className = "app c" + st.lay + (st.lay === "K" && S.screen === "solved" ? " ks" : "") + (st.lay === "C" && st.cmp ? " noside" : "")
+      + (S.glass === "off" ? " no-glass" : "") + (S.c === "C" && (S.screen === "hub" || S.screen === "settings") ? " noinsp" : "");
+    layoutScale();
+    app.innerHTML = st.lay === "K" ? renderK(S.screen, st) : st.lay === "A" ? renderA(S.screen) : st.lay === "B" ? renderB(S.screen) : renderC(S.screen, st);
+    // PD-234: no auto-scroll after the solve (audit #2) — every layout shows the result card and Grid ∞ without it.
+    // Column Year: the day card is a popover next to the selected day.
+    const pop = document.getElementById("pop"), day = document.getElementById("selday");
+    if (pop && day) {
+      // the popover lives in the same scroller as the canvas: measure relative to its containing block
+      const host = pop.offsetParent || app, o = offsetIn(day, host), W = host.clientWidth, PW = pop.offsetWidth;
+      let x = o.x + day.offsetWidth + 14;
+      if (x + PW > W - 16) x = o.x - PW - 14;
+      pop.style.left = x + "px";
+      pop.style.top = Math.max(12, o.y - 40) + "px";
+    }
+    document.querySelectorAll(".ctl .seg").forEach((g) => {
+      g.querySelectorAll("button").forEach((b) => b.setAttribute("aria-pressed", String(S[g.dataset.k] === b.dataset.v)));
+    });
+    document.getElementById("about").innerHTML = ABOUT[S.c] + `<p style="margin-top:8px">Окно в CSS: <b style="display:inline">${st.w}×${st.h}</b> → ${st.lay === "C" && st.cmp ? "C без сайдбара (компакт)" : LAYNAME[st.lay]}${st.cmp && st.lay !== "C" ? " (компакт)" : ""}</p>`;
+  }
+  document.querySelectorAll(".ctl .seg").forEach((g) => {
+    g.addEventListener("click", (e) => {
+      const b = e.target.closest("button"); if (!b) return;
+      S[g.dataset.k] = b.dataset.v; render();
+    });
+  });
+  window.addEventListener("resize", layoutScale);
+
+  /* ------------------------------------------------------------ self-check */
+  function parseColor(s) {
+    if (!s) return null;
+    let m = /rgba?\(([^)]+)\)/.exec(s);
+    if (m) { const p = m[1].split(/[\s,/]+/).filter(Boolean).map(Number); return { r: p[0], g: p[1], b: p[2], a: p.length > 3 ? p[3] : 1 }; }
+    m = /color\(srgb ([^)]+)\)/.exec(s);
+    if (m) { const p = m[1].split(/[\s/]+/).filter(Boolean).map(Number); return { r: p[0] * 255, g: p[1] * 255, b: p[2] * 255, a: p.length > 3 ? p[3] : 1 }; }
+    return null;
+  }
+  const lin = (c) => { c /= 255; return c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4); };
+  const lum = (c) => 0.2126 * lin(c.r) + 0.7152 * lin(c.g) + 0.0722 * lin(c.b);
+  const over = (top, bot) => ({ r: top.r * top.a + bot.r * (1 - top.a), g: top.g * top.a + bot.g * (1 - top.a), b: top.b * top.a + bot.b * (1 - top.a), a: 1 });
+  function effBg(el) {
+    const layers = [];
+    for (let n = el; n && n.nodeType === 1; n = n.parentElement) {
+      const c = parseColor(getComputedStyle(n).backgroundColor);
+      if (c && c.a > 0) { layers.push(c); if (c.a >= 1) break; }
+      if (n === app) break;
+    }
+    let base = { r: 255, g: 255, b: 255, a: 1 };
+    const pageBg = parseColor(getComputedStyle(app).backgroundColor);
+    if (pageBg) base = pageBg;
+    for (let i = layers.length - 1; i >= 0; i--) base = layers[i].a >= 1 ? layers[i] : over(layers[i], base);
+    return base;
+  }
+  function dimmed(el) {
+    for (let n = el; n && n !== app; n = n.parentElement) if (parseFloat(getComputedStyle(n).opacity) < 1) return true;
+    return false;
+  }
+  function check() {
+    const out = [];
+    const st = layout(), W = st.w, H = st.h; // CSS px of the window (physical / zoom)
+    const a = app.getBoundingClientRect();
+    const rel = (r) => ({ l: (r.left - a.left) / K, t: (r.top - a.top) / K, r: (r.right - a.left) / K, b: (r.bottom - a.top) / K, w: r.width / K, h: r.height / K });
+    const solved = S.screen === "solved";
+    // 1. board: 81 cells, square, big enough, inside the frame. Thresholds: 420 on the desk sizes, 360 compact (125/150 %),
+    //    and the solved board in A «Pair» may step back to 240 (nothing is typed into it any more).
+    const board = app.querySelector(".board");
+    if (GAMEISH.includes(S.screen)) {
+      if (!board) out.push("нет поля");
+      else {
+        const r = rel(board.getBoundingClientRect());
+        const minB = solved && st.lay === "K" ? 240 : st.cmp ? 360 : 420;
+        if (app.querySelectorAll(".board .cell").length !== 81) out.push("клеток не 81");
+        if (Math.abs(r.w - r.h) > 1.5) out.push(`поле не квадратное ${r.w.toFixed(0)}×${r.h.toFixed(0)}`);
+        if (r.w < minB) out.push(`поле < ${minB} px (${r.w.toFixed(0)})`);
+        if (r.b > H + 0.5 || r.r > W + 0.5 || r.l < -0.5) out.push("поле выходит за окно");
+        const cell = rel(board.querySelector(".cell").getBoundingClientRect());
+        if (!solved && cell.w < 40) out.push(`клетка < 40 px (${cell.w.toFixed(0)})`);
+      }
+    }
+    // 2. non-scrolling layouts: nothing leaves the window
+    app.querySelectorAll(".rail, .krail, .insp, .sidebar, .topnav, .dlg, .sheet, .pop, .pad3, .acts").forEach((el) => {
+      if (el.closest(".scroller") || el.closest(".krail, .insp") && !el.matches(".krail, .insp")) return;
+      const r = rel(el.getBoundingClientRect());
+      if (r.r > W + 0.5 || r.b > H + 0.5 || r.l < -0.5 || r.t < -0.5) out.push(`за окном: .${el.className.split(" ")[0]} (${r.r.toFixed(0)},${r.b.toFixed(0)})`);
+    });
+    app.querySelectorAll(".rail").forEach((el) => { if (el.scrollHeight > el.clientHeight + 1) out.push("колонка B переполнена по высоте"); });
+    // PD-234: the tools rail of A «Pair» and C's inspector must not need scrolling while playing (pad and Hint stay in view);
+    //         after the solve only C at 125/150 % may scroll its inspector (documented compromise)
+    app.querySelectorAll(".krail").forEach((el) => { if (el.scrollHeight > el.clientHeight + 1) out.push(`колонка A прокручивается (+${el.scrollHeight - el.clientHeight}px)`); });
+    app.querySelectorAll(".insp").forEach((el) => {
+      if (el.scrollHeight > el.clientHeight + 1 && !(solved && st.cmp)) out.push(`инспектор C прокручивается (+${el.scrollHeight - el.clientHeight}px)`);
+    });
+    // PD-234 (audit #2): after the solve the result card and Grid ∞ are on screen without scrolling
+    if (solved && !(st.lay === "C" && st.cmp)) app.querySelectorAll(".card").forEach((el) => {
+      const r = rel(el.getBoundingClientRect());
+      if (r.b > H + 0.5 || r.t < -0.5 || r.r > W + 0.5) out.push(`после решения карточка за окном: ${(el.querySelector("h3") || el).textContent.trim().slice(0, 14)} (низ ${r.b.toFixed(0)})`);
+    });
+    // PD-234 (audit #3, #5, #6): the width scale — menus 320, sheets 560, reading/list 640, year 780
+    const capW = (sel, max, label) => app.querySelectorAll(sel).forEach((el) => {
+      const w = rel(el.getBoundingClientRect()).w; if (w > max + 0.5) out.push(`${label} шире ${max}: ${w.toFixed(0)}`);
+    });
+    capW(".pop", 320, "поповер"); capW(".sheet", 560, "шит"); capW(".dlg", 640, "диалог");
+    capW(".scol, .hlist, .col.wide", 640, "колонка списка"); capW(".ycard", 780, "год");
+    app.querySelectorAll(".sheet").forEach((el) => {
+      const w = rel(el.getBoundingClientRect()).w, want = Math.min(560, W - 64);
+      if (Math.abs(w - want) > 1) out.push(`шит ${w.toFixed(0)} вместо ${want}`);
+    });
+    // 3. targets >= 28 px (desktop default, accessibility.md); nav and pad keys >= 32
+    app.querySelectorAll("button").forEach((b) => {
+      const r = rel(b.getBoundingClientRect());
+      if (r.w < 0.5 && r.h < 0.5) return;
+      if (r.h < 28 - 0.5 || r.w < 28 - 0.5) out.push(`цель < 28 px: ${(b.textContent || b.getAttribute("aria-label") || "").trim().slice(0, 14)} ${r.w.toFixed(0)}×${r.h.toFixed(0)}`);
+    });
+    // 4. one-line text cut off
+    app.querySelectorAll(".act .al, .tab span, .side-it span").forEach((el) => {
+      if (!el.textContent.trim()) return; // icon holders (e.g. .disc) carry no text
+      if (el.scrollWidth > el.clientWidth + 1) out.push(`обрезан текст: ${el.textContent.trim()}`);
+    });
+    // 5. contrast of every visible text node
+    const walker = document.createTreeWalker(app, NodeFilter.SHOW_TEXT);
+    const seen = new Set();
+    for (let n = walker.nextNode(); n; n = walker.nextNode()) {
+      if (!n.nodeValue.trim()) continue;
+      const el = n.parentElement;
+      if (!el || seen.has(el) || el.closest(".sr, svg")) continue;
+      seen.add(el);
+      if (dimmed(el)) continue; // .key.done — closed digit, intentionally at 40 % (unchanged from the app)
+      if (el.closest(".dlg, .sheet") === null && app.querySelector(".scrim") && !el.closest(".scrim")) continue; // under the scrim
+      const cs = getComputedStyle(el);
+      const fg = parseColor(cs.color); if (!fg) continue;
+      const bg = effBg(el);
+      const f = fg.a < 1 ? over(fg, bg) : fg;
+      const L1 = lum(f), L2 = lum(bg), cr = (Math.max(L1, L2) + 0.05) / (Math.min(L1, L2) + 0.05);
+      const px = parseFloat(cs.fontSize), wt = parseInt(cs.fontWeight, 10) || 400;
+      const need = px >= 24 || (px >= 18.66 && wt >= 700) ? 3 : 4.5;
+      if (cr < need - 0.01) out.push(`контраст ${cr.toFixed(2)}:1 < ${need} «${n.nodeValue.trim().slice(0, 18)}»`);
+    }
+    if (S.st === "hover" && !app.querySelector(".is-hover")) out.push("нет демонстрации наведения");
+    if (S.st === "focus" && !app.querySelector(".is-focus")) out.push("нет демонстрации фокуса");
+    if (S.screen === "keys" && !app.querySelector(".dlg")) out.push("нет списка клавиш");
+    return Array.from(new Set(out));
+  }
+
+  window.PD229 = {
+    reset() { S = Object.assign({}, DEF); render(); },
+    apply(o) { Object.keys(o || {}).forEach((k) => { if (k in DEF) S[k] = String(o[k]); }); render(); },
+    check,
+    state() { return Object.assign({}, S); }
+  };
+  try { render(); } catch (e) { banner(String(e && e.stack || e)); }
+})();
+</script>
+</body>
+</html>

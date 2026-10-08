@@ -14,6 +14,7 @@ import "./styles/hub.css";
 import "./styles/liar.css";
 import "./styles/glyphs.css";
 import "./styles/melody.css";
+import "./styles/lantern.css";
 import "./styles/pet.css";
 import "./styles/brand.css";
 import { App } from "./App";

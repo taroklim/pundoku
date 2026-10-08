@@ -1,0 +1,48 @@
+[
+  {
+    "engine": "cr",
+    "tag": "cr-390-light-en",
+    "classic": {
+      "frame": {
+        "med": 40.8,
+        "p90": 73.9,
+        "max": 184.5
+      },
+      "sync": {
+        "med": 0.8,
+        "p90": 1.7,
+        "max": 2.2
+      }
+    },
+    "lanternBlur": {
+      "frame": {
+        "med": 122.5,
+        "p90": 221.2,
+        "max": 314.9
+      },
+      "sync": {
+        "med": 1.2,
+        "p90": 10.5,
+        "max": 32
+      }
+    },
+    "lanternNoBlur": {
+      "frame": {
+        "med": 87.4,
+        "p90": 173.5,
+        "max": 211.3
+      },
+      "sync": {
+        "med": 1.6,
+        "p90": 6.1,
+        "max": 24.8
+      }
+    },
+    "peekArrows": {
+      "med": 52.9,
+      "p90": 83.8,
+      "max": 100.2
+    },
+    "inspectOffMs": 40.9
+  }
+]

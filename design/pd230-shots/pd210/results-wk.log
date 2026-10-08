@@ -1,0 +1,111 @@
+PASS  wk-390-light-en хаб: Классика, Чернила, Лжец, Мелодия, Фонарь, Глифы  mode-classic,mode-ink,mode-liar,mode-melody,mode-lantern,mode-glyphs
+PASS  wk-390-light-en строка списка: первое предложение правила  Your digits and notes show only in the row, column and box of the selected cell.
+PASS  wk-390-light-en шит: правило §6 целиком  Your digits and notes show only in the row, column and box of the selected cell. Givens stay visible. Touch and hold the board to see it all.
+PASS  wk-390-light-en партия: настоящая генерация  1518 мс
+PASS  wk-390-light-en старт: темно, строка «нет выбора», чип «Lantern»  {"l":"dark","sh":81,"s":"dark"}
+PASS  wk-390-light-en нет выбора: строка без переполнения, подпись в одну строку, поле ≥ 150  {"field":358,"subOver":false,"over":false,"ell":false,"lines":1,"done":null,"text":"Tap a cell to light its row, column and box."}
+PASS  wk-390-light-en свет = строка/столбец/блок центра (21), остальное в тени (60)
+PASS  wk-390-light-en утечки: размытое содержимое aria-hidden, нет title, подписи без цифр, один filter blur+opacity ≤ 0.32
+PASS  wk-390-light-en туман: размыты свои цифры и заметки; вне тени и у подсказок filter нет  {"d":13,"m":3,"f":0,"g":0}
+PASS  wk-390-light-en глиф нечитаем: blur ≥ 0.17 кегля цифры, ≈ 0.11 стороны клетки (масштаб с полем)  {"font":0.177,"cell":0.11}
+PASS  wk-390-light-en поле без выделения текста (user-select: none)  none
+PASS  wk-390-light-en VoiceOver: «in shadow» / «notes, in shadow»  Row 1, column 1, in shadow | Row 3, column 1, notes, in shadow
+PASS  wk-390-light-en переход света 160 мс (только opacity)  0.16s
+PASS  wk-390-light-en свет: строка «осталось N», подпись без переполнения  25 cells left
+PASS  wk-390-light-en свет в углу
+PASS  wk-390-light-en удержание: 0,3 с — ещё нет, 0,7 с — осмотр  lit → inspect
+PASS  wk-390-light-en осмотр b: тень помечена is-peek (60), свет как был (21), тумана нет
+PASS  wk-390-light-en осмотр b: своя цифра тени читается (8), контраст ≥ 4.5:1, ореол тумана  {"ratio":4.949852361150993,"text":"8","halo":true,"color":"color(srgb 0.369725 0.411529 0.745961)"}
+PASS  wk-390-light-en удержание: чип «Inspecting», строка удержания
+PASS  wk-390-light-en удержание: строка и подпись без переполнения  {"field":358,"subOver":false,"over":false,"ell":false,"lines":1,"done":null,"text":"Inspecting the board — lift your finger to return"}
+PASS  wk-390-light-en отпустил — туман вернулся, фонарь на месте  sel=40
+PASS  wk-390-light-en ⋯ → осмотр: строка «осмотр» + «Готово», чип «Inspecting»  Inspecting the board Done
+PASS  wk-390-light-en «Готово» ≥ 44 pt, не налезает на поле/пад, строка/подпись без переполнения  {"field":358,"subOver":false,"over":false,"ell":false,"lines":1,"done":{"h":44,"w":61,"clearBoard":true,"clearPad":true},"text":"Inspecting the board Done"}
+PASS  wk-390-light-en «Готово» — туман вернулся
+PASS  wk-390-light-en замер кадров (см. pd216-perf.json)  {"classic":{"med":61,"p90":93,"max":161},"blur":{"med":82,"p90":159,"max":223},"noBlur":{"med":76,"p90":96,"max":110},"peek":{"med":35,"p90":131,"max":231},"toggle":56}
+PASS  wk-390-light-en консоль чистая
+PASS  wk-390-dark-ru строка списка: первое предложение правила  Ваши цифры и заметки видны только в строке, столбце и блоке выбранной клетки.
+PASS  wk-390-dark-ru шит: правило §6 целиком  Ваши цифры и заметки видны только в строке, столбце и блоке выбранной клетки. Данные цифры видны всегда. Удерживайте палец на поле, чтобы увидеть всё.
+PASS  wk-390-dark-ru партия: настоящая генерация  1256 мс
+PASS  wk-390-dark-ru старт: темно, строка «нет выбора», чип «Фонарь»  {"l":"dark","sh":81,"s":"dark"}
+PASS  wk-390-dark-ru нет выбора: строка без переполнения, подпись в одну строку, поле ≥ 150  {"field":358,"subOver":false,"over":false,"ell":false,"lines":1,"done":null,"text":"Коснитесь клетки — загорятся её строка, столбец и блок."}
+PASS  wk-390-dark-ru свет = строка/столбец/блок центра (21), остальное в тени (60)
+PASS  wk-390-dark-ru утечки: размытое содержимое aria-hidden, нет title, подписи без цифр, один filter blur+opacity ≤ 0.32
+PASS  wk-390-dark-ru туман: размыты свои цифры и заметки; вне тени и у подсказок filter нет  {"d":14,"m":4,"f":0,"g":0}
+PASS  wk-390-dark-ru глиф нечитаем: blur ≥ 0.17 кегля цифры, ≈ 0.11 стороны клетки (масштаб с полем)  {"font":0.177,"cell":0.11}
+PASS  wk-390-dark-ru поле без выделения текста (user-select: none)  none
+PASS  wk-390-dark-ru VoiceOver: «в тени» / «заметки, в тени»  Строка 1, столбец 1, в тени | Строка 3, столбец 1, заметки, в тени
+PASS  wk-390-dark-ru переход света 160 мс (только opacity)  0.16s
+PASS  wk-390-dark-ru свет: строка «осталось N», подпись без переполнения  Осталось 25 клеток
+PASS  wk-390-dark-ru свет в углу
+PASS  wk-390-dark-ru удержание: 0,3 с — ещё нет, 0,7 с — осмотр  lit → inspect
+PASS  wk-390-dark-ru осмотр b: тень помечена is-peek (60), свет как был (21), тумана нет
+PASS  wk-390-dark-ru осмотр b: своя цифра тени читается (9), контраст ≥ 4.5:1, ореол тумана  {"ratio":4.749715024672166,"text":"9","halo":true,"color":"color(srgb 0.469961 0.502118 0.841176)"}
+PASS  wk-390-dark-ru удержание: чип «Осмотр», строка удержания
+PASS  wk-390-dark-ru удержание: строка и подпись без переполнения  {"field":358,"subOver":false,"over":false,"ell":false,"lines":1,"done":null,"text":"Осмотр доски — отпустите палец, чтобы вернуться"}
+PASS  wk-390-dark-ru отпустил — туман вернулся, фонарь на месте  sel=40
+PASS  wk-390-dark-ru ⋯ → осмотр: строка «осмотр» + «Готово», чип «Осмотр»  Осмотр доски Готово
+PASS  wk-390-dark-ru «Готово» ≥ 44 pt, не налезает на поле/пад, строка/подпись без переполнения  {"field":358,"subOver":false,"over":false,"ell":false,"lines":1,"done":{"h":44,"w":71,"clearBoard":true,"clearPad":true},"text":"Осмотр доски Готово"}
+PASS  wk-390-dark-ru «Готово» — туман вернулся
+PASS  wk-390-dark-ru консоль чистая
+PASS  wk-320-light-ru-ax3 строка списка: первое предложение правила  Ваши цифры и заметки видны только в строке, столбце и блоке выбранной клетки.
+PASS  wk-320-light-ru-ax3 шит: правило §6 целиком  Ваши цифры и заметки видны только в строке, столбце и блоке выбранной клетки. Данные цифры видны всегда. Удерживайте палец на поле, чтобы увидеть всё.
+PASS  wk-320-light-ru-ax3 партия: настоящая генерация  1172 мс
+PASS  wk-320-light-ru-ax3 старт: темно, строка «нет выбора», чип «Фонарь»  {"l":"dark","sh":81,"s":"dark"}
+PASS  wk-320-light-ru-ax3 нет выбора: строка без переполнения, подпись в одну строку, поле ≥ 150  {"field":169,"subOver":false,"over":false,"ell":true,"lines":1,"done":null,"text":"Коснитесь клетки — загорятся её строка, столбец и блок. Коснитесь клетки"}
+PASS  wk-320-light-ru-ax3 свет = строка/столбец/блок центра (21), остальное в тени (60)
+PASS  wk-320-light-ru-ax3 утечки: размытое содержимое aria-hidden, нет title, подписи без цифр, один filter blur+opacity ≤ 0.32
+PASS  wk-320-light-ru-ax3 туман: размыты свои цифры и заметки; вне тени и у подсказок filter нет  {"d":13,"m":1,"f":0,"g":0}
+PASS  wk-320-light-ru-ax3 глиф нечитаем: blur ≥ 0.17 кегля цифры, ≈ 0.11 стороны клетки (масштаб с полем)  {"font":0.177,"cell":0.11}
+PASS  wk-320-light-ru-ax3 поле без выделения текста (user-select: none)  none
+PASS  wk-320-light-ru-ax3 VoiceOver: «в тени» / «заметки, в тени»  Строка 1, столбец 1, в тени | Строка 3, столбец 3, заметки, в тени
+PASS  wk-320-light-ru-ax3 переход света 160 мс (только opacity)  0.16s
+PASS  wk-320-light-ru-ax3 свет: строка «осталось N», подпись без переполнения  Осталось 25 клетокОсталось 25
+PASS  wk-320-light-ru-ax3 свет в углу
+PASS  wk-320-light-ru-ax3 удержание: 0,3 с — ещё нет, 0,7 с — осмотр  lit → inspect
+PASS  wk-320-light-ru-ax3 осмотр b: тень помечена is-peek (60), свет как был (21), тумана нет
+PASS  wk-320-light-ru-ax3 осмотр b: своя цифра тени читается (1), контраст ≥ 4.5:1, ореол тумана  {"ratio":4.949852361150993,"text":"1","halo":true,"color":"color(srgb 0.369725 0.411529 0.745961)"}
+PASS  wk-320-light-ru-ax3 удержание: чип «Осмотр», строка удержания
+PASS  wk-320-light-ru-ax3 удержание: строка и подпись без переполнения  {"field":169,"subOver":false,"over":false,"ell":false,"lines":1,"done":null,"text":"Осмотр доски — отпустите палец, чтобы вернуться Осмотр"}
+PASS  wk-320-light-ru-ax3 отпустил — туман вернулся, фонарь на месте  sel=40
+PASS  wk-320-light-ru-ax3 ⋯ → осмотр: строка «осмотр» + «Готово», чип «Осмотр»  Осмотр доскиГотово
+PASS  wk-320-light-ru-ax3 «Готово» ≥ 44 pt, не налезает на поле/пад, строка/подпись без переполнения  {"field":169,"subOver":false,"over":false,"ell":false,"lines":1,"done":{"h":45,"w":144,"clearBoard":true,"clearPad":true},"text":"Осмотр доскиГотово"}
+PASS  wk-320-light-ru-ax3 «Готово» — туман вернулся
+PASS  wk-320-light-ru-ax3 консоль чистая
+PASS  wk-320-dark-uk-ax3 строка списка: первое предложение правила  Ваші цифри й нотатки видно лише в рядку, стовпці та блоці вибраної клітинки.
+PASS  wk-320-dark-uk-ax3 шит: правило §6 целиком  Ваші цифри й нотатки видно лише в рядку, стовпці та блоці вибраної клітинки. Дані цифри видно завжди. Утримуйте палець на полі, щоб побачити все.
+PASS  wk-320-dark-uk-ax3 партия: настоящая генерация  1840 мс
+PASS  wk-320-dark-uk-ax3 старт: темно, строка «нет выбора», чип «Ліхтар»  {"l":"dark","sh":81,"s":"dark"}
+PASS  wk-320-dark-uk-ax3 нет выбора: строка без переполнения, подпись в одну строку, поле ≥ 150  {"field":169,"subOver":false,"over":false,"ell":true,"lines":1,"done":null,"text":"Торкніться клітинки — засвітяться її рядок, стовпець і блок. Торкніться клітинки"}
+PASS  wk-320-dark-uk-ax3 свет = строка/столбец/блок центра (21), остальное в тени (60)
+PASS  wk-320-dark-uk-ax3 утечки: размытое содержимое aria-hidden, нет title, подписи без цифр, один filter blur+opacity ≤ 0.32
+PASS  wk-320-dark-uk-ax3 туман: размыты свои цифры и заметки; вне тени и у подсказок filter нет  {"d":14,"m":3,"f":0,"g":0}
+PASS  wk-320-dark-uk-ax3 глиф нечитаем: blur ≥ 0.17 кегля цифры, ≈ 0.11 стороны клетки (масштаб с полем)  {"font":0.177,"cell":0.11}
+PASS  wk-320-dark-uk-ax3 поле без выделения текста (user-select: none)  none
+PASS  wk-320-dark-uk-ax3 VoiceOver: «у тіні» / «нотатки, у тіні»  Рядок 1, стовпець 4, у тіні | Рядок 2, стовпець 8, нотатки, у тіні
+PASS  wk-320-dark-uk-ax3 переход света 160 мс (только opacity)  0.16s
+PASS  wk-320-dark-uk-ax3 свет: строка «осталось N», подпись без переполнения  Залишилось 25 клітинокЗалишилось 25
+PASS  wk-320-dark-uk-ax3 свет в углу
+PASS  wk-320-dark-uk-ax3 удержание: 0,3 с — ещё нет, 0,7 с — осмотр  lit → inspect
+PASS  wk-320-dark-uk-ax3 осмотр b: тень помечена is-peek (60), свет как был (21), тумана нет
+PASS  wk-320-dark-uk-ax3 осмотр b: своя цифра тени читается (4), контраст ≥ 4.5:1, ореол тумана  {"ratio":4.749715024672166,"text":"4","halo":true,"color":"color(srgb 0.469961 0.502118 0.841176)"}
+PASS  wk-320-dark-uk-ax3 удержание: чип «Огляд», строка удержания
+PASS  wk-320-dark-uk-ax3 удержание: строка и подпись без переполнения  {"field":169,"subOver":false,"over":false,"ell":false,"lines":1,"done":null,"text":"Огляд дошки — відпустіть палець, щоб повернутися Огляд"}
+PASS  wk-320-dark-uk-ax3 отпустил — туман вернулся, фонарь на месте  sel=40
+PASS  wk-320-dark-uk-ax3 ⋯ → осмотр: строка «осмотр» + «Готово», чип «Огляд»  Огляд дошкиГотово
+PASS  wk-320-dark-uk-ax3 «Готово» ≥ 44 pt, не налезает на поле/пад, строка/подпись без переполнения  {"field":169,"subOver":false,"over":false,"ell":false,"lines":1,"done":{"h":45,"w":144,"clearBoard":true,"clearPad":true},"text":"Огляд дошкиГотово"}
+PASS  wk-320-dark-uk-ax3 «Готово» — туман вернулся
+PASS  wk-320-dark-uk-ax3 консоль чистая
+PASS  wk-390-light-en Year A: у дня Фонаря на полотне нет своего знака (как у обычного)  ymark is-solved | ymark is-solved
+PASS  wk-390-light-en лист дня: «Mode · Lantern»  Mode · Lantern
+PASS  wk-390-light-en обычный день — без строки режима
+PASS  wk-390-light-en Year: консоль чистая
+PASS  wk-390-dark-ru без выделения: строки режимов, таб-бар, кнопки шапки  {"n":10,"bad":0}
+PASS  wk-390-dark-ru без выделения: поле, клетки, пад, Notes/Undo/Erase, таб-бар, шапка  {"n":100,"bad":0}
+PASS  wk-390-dark-ru удержание клетки: выделения нет  ""
+PASS  wk-390-dark-ru удержание клавиши пада: выделения нет  ""
+PASS  wk-390-dark-ru двойной клик по клавише: выделения нет
+PASS  wk-390-dark-ru поля ввода выделение сохраняют (проверочное поле)  {"injected":true,"ok":true}
+PASS  wk-390-dark-ru без выделения: консоль чистая
+
+109/109 PASS

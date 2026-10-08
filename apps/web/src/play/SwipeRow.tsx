@@ -125,7 +125,8 @@ export function ModeRowBody({ mode, slot, fade = 0 }: { mode: ModeDef; slot: Slo
           </span>
         ) : (
           <span key={`d${fade}`} className={`sub${xf}`} data-testid={`mode-desc-${mode.id}`}>
-            {t(`modes.${mode.textKey}.desc`)}
+            {/* PD-210: у режима с длинным правилом в строке списка — первое предложение (`list`), целиком — в шите. */}
+            {t([`modes.${mode.textKey}.list`, `modes.${mode.textKey}.desc`])}
           </span>
         )}
       </span>

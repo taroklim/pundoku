@@ -57,6 +57,28 @@ export function MelodyModeIcon({ className }: ModeIconProps) {
   );
 }
 
+/** Фонарь — фонарь с огоньком (макет PD-163, `I.lantern`). */
+export function LanternModeIcon({ className }: ModeIconProps) {
+  return (
+    <svg {...line} className={className}>
+      <path d="M10 3h4M12 3v2.2" />
+      <path d="M9.5 5.2h5a2.5 2.5 0 0 1 2.5 2.5v8.1a2.5 2.5 0 0 1-2.5 2.5h-5A2.5 2.5 0 0 1 7 15.8V7.7a2.5 2.5 0 0 1 2.5-2.5z" />
+      <path d="M12 9.2c1.4 1.4 1.4 3.2 0 4.6-1.4-1.4-1.4-3.2 0-4.6z" />
+      <path d="M9 21h6" />
+    </svg>
+  );
+}
+
+/** PD-208: «Осмотреть доску» (пункт ⋯ партии Фонаря) — глаз. */
+export function InspectIcon({ className }: ModeIconProps) {
+  return (
+    <svg {...line} className={className}>
+      <path d="M2.8 12c2.2-4 5.4-6 9.2-6s7 2 9.2 6c-2.2 4-5.4 6-9.2 6s-7-2-9.2-6z" />
+      <circle cx="12" cy="12" r="2.8" />
+    </svg>
+  );
+}
+
 /** Глифы — четыре фигуры (макет PD-163, `I.glyphs`). */
 export function GlyphsModeIcon({ className }: ModeIconProps) {
   return (

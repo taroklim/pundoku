@@ -5,6 +5,8 @@
  * третий, «Обвинить подсказку…» (открывает то же меню-подтверждение, что долгое нажатие; путь для VoiceOver и клавиатуры).
  *
  * PD-203: в партии Мелодии — пункт «Звук» с галочкой (`menuitemcheckbox`) под разделителем (макет PD-202, вариант C).
+ * PD-208: в партии Фонаря — пункт «Осмотреть доску» с галочкой (`menuitemcheckbox`) под разделителем: свет на всём поле, пока
+ * не выключат (доступный путь для VoiceOver/клавиатуры/тех, кому неудобно удерживать палец; удержание поля делает то же).
  *
  * Недоступный пункт НЕ исчезает: он остаётся на месте с `aria-disabled="true"`, приглушён и объяснён строкой-причиной
  * («Недоступно в чернилах» / «Нечего заполнять»). Тап и Enter по нему ничего не делают; в круге фокуса он остаётся.
@@ -17,6 +19,7 @@ import { useModal } from "../shell/useModal";
 import { CheckIcon, SpeakerIcon } from "../melody/icons";
 import { SealGlyph } from "./AccuseMenu";
 import { GridGlyph, MoreIcon, NewGridGlyph } from "./hubIcons";
+import { InspectIcon } from "./modeIcons";
 
 /** Что с пунктом «Заполнить кандидатами»: можно / недоступно в Ink / заполнять нечего. */
 export type FillState = "ready" | "ink" | "empty";
@@ -32,13 +35,15 @@ export interface MoreMenuProps {
   readonly accuse?: { readonly state: AccuseState; readonly onAccuse: () => void } | null;
   /** PD-203: партия Мелодии — пункт «Звук» (вкл/выкл, настройка устройства); нет — пункта нет. */
   readonly sound?: { readonly on: boolean; readonly onToggle: () => void } | null;
+  /** PD-208: партия Фонаря — пункт «Осмотреть доску» (вкл/выкл, на эту партию); нет — пункта нет. */
+  readonly inspect?: { readonly on: boolean; readonly onToggle: () => void } | null;
 }
 
 interface Anchor {
   readonly top: number;
 }
 
-export function MoreMenu({ fill, onNew, onFill, accuse = null, sound = null }: MoreMenuProps) {
+export function MoreMenu({ fill, onNew, onFill, accuse = null, sound = null, inspect = null }: MoreMenuProps) {
   const { t } = useTranslation();
   const [anchor, setAnchor] = useState<Anchor | null>(null);
   const btn = useRef<HTMLButtonElement>(null);
@@ -64,7 +69,7 @@ export function MoreMenu({ fill, onNew, onFill, accuse = null, sound = null }: M
       >
         <MoreIcon />
       </button>
-      {anchor && createPortal(<Popup id={menuId} top={anchor.top} fill={fill} accuse={accuse} sound={sound} returnFocus={btn} onClose={close} onNew={onNew} onFill={onFill} />, document.body)}
+      {anchor && createPortal(<Popup id={menuId} top={anchor.top} fill={fill} accuse={accuse} sound={sound} inspect={inspect} returnFocus={btn} onClose={close} onNew={onNew} onFill={onFill} />, document.body)}
     </>
   );
 }
@@ -75,6 +80,7 @@ function Popup({
   fill,
   accuse,
   sound,
+  inspect,
   returnFocus,
   onClose,
   onNew,
@@ -174,6 +180,31 @@ function Popup({
                 <span>{t("melody.sound")}</span>
               </span>
               <CheckIcon className={`ck${sound.on ? "" : " off"}`} />
+            </button>
+          </>
+        )}
+        {inspect && (
+          <>
+            <div className="menu-sep" role="separator" />
+            <button
+              type="button"
+              role="menuitemcheckbox"
+              aria-checked={inspect.on}
+              aria-label={t("lantern.inspect")}
+              onClick={() => {
+                onClose();
+                inspect.onToggle();
+              }}
+              data-testid="menu-inspect"
+            >
+              <InspectIcon />
+              <span className="mi">
+                <span>{t("lantern.inspect")}</span>
+                <span className="why" aria-hidden="true">
+                  {t("lantern.inspectHint")}
+                </span>
+              </span>
+              <CheckIcon className={`ck${inspect.on ? "" : " off"}`} />
             </button>
           </>
         )}

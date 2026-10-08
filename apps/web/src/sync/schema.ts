@@ -82,6 +82,12 @@ export interface DayRecord {
    * её нет — `melodyOf(…, { synthetic })` вернёт `null`.
    */
   melody?: true;
+  /**
+   * Фонарь (PD-208, план режимов §5): партия сыграна в Фонаре (свои цифры видны только в свете выбранной клетки). Только
+   * `true`, по прецеденту `ink`/`glyphs` (у обычного дня поля нет; слияние атомарно; возвращается в партию при восстановлении).
+   * Отметка в Year — вторичная, как у Ink (визуал — PD-209/PD-210); карточка/таймлапс/отпечаток рисуют всё поле как обычно.
+   */
+  lantern?: true;
 }
 
 export interface SnapshotData {
@@ -192,6 +198,7 @@ export function sanitizeDayRecord(raw: unknown): DayRecord | null {
   }
   if (raw["glyphs"] === true) rec.glyphs = true;
   if (raw["melody"] === true) rec.melody = true;
+  if (raw["lantern"] === true) rec.lantern = true;
   if (status === "solved") {
     const solvedAt = raw["solvedAt"];
     if (typeof solvedAt !== "string" || !ISO_RE.test(solvedAt) || Number.isNaN(Date.parse(solvedAt))) return null;
@@ -245,6 +252,7 @@ export function dayRecordFromProgress(p: DayProgress, _now: Date): DayRecord | n
     ...(p.play.ink === true ? { ink: true, blots: blotsOf(log).length } : {}),
     ...(p.play.glyphs === true ? { glyphs: true as const } : {}),
     ...(p.play.melody === true ? { melody: true as const } : {}),
+    ...(p.play.lantern === true ? { lantern: true as const } : {}),
   };
   if (!p.solved) {
     return { status: "unfinished", timeMs: Math.round(p.elapsedMs), late: false, ...base };
@@ -339,6 +347,7 @@ export function progressFromRecord(date: string, rec: DayRecord): DayProgress | 
     ...(rec.ink === true ? { ink: true } : {}),
     ...(rec.glyphs === true ? { glyphs: true as const } : {}),
     ...(rec.melody === true ? { melody: true as const } : {}),
+    ...(rec.lantern === true ? { lantern: true as const } : {}),
     ...(decoded === null ? { logSynthetic: true as const } : {}),
   };
   return {
