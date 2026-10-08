@@ -174,6 +174,24 @@ describe("финал Play: dim-фаза и тап-прерывание (PD-89)",
     expect(card()).not.toBeNull();
   });
 
+  it("PD-221: тап по вкладке таб-бара в dim-фазе прерывает финал И доходит до вкладки (не гасится как призрак)", () => {
+    const bar = document.createElement("div");
+    bar.setAttribute("role", "tablist");
+    const tabBtn = document.createElement("button");
+    tabBtn.setAttribute("role", "tab");
+    bar.append(tabBtn);
+    document.body.append(bar);
+    let selected = 0;
+    tabBtn.addEventListener("click", () => selected++);
+    startAlmostSolved();
+    act(() => void vi.advanceTimersByTime(50));
+    act(() => void tabBtn.dispatchEvent(new Event("pointerdown", { bubbles: true })));
+    expect(card()).not.toBeNull(); // финал прерван
+    act(() => tap(tabBtn));
+    expect(selected).toBe(1);
+    bar.remove();
+  });
+
   it("после прерывающего тапа следующий осознанный тап по «New game» работает", () => {
     startAlmostSolved();
     act(() => void document.body.dispatchEvent(new Event("pointerdown", { bubbles: true })));

@@ -112,4 +112,29 @@ describe("swallowGhostClick", () => {
     click(1);
     expect(clicks).toBe(1);
   });
+
+  // PD-221: финал прерывается ЛЮБЫМ касанием, в том числе по таб-бару. Таб-бар под пальцем не перерисовывается, его click —
+  // не призрак: раньше тап по вкладке в dim-фазе финала Play / во время полёта Today только прерывал финал, вкладка не менялась.
+  it("касание таб-бара: click по вкладке проходит (прерывание финала по-прежнему срабатывает у вызывающего)", () => {
+    const bar = document.createElement("div");
+    bar.setAttribute("role", "tablist");
+    const tabBtn = document.createElement("button");
+    tabBtn.setAttribute("role", "tab");
+    const label = document.createElement("span");
+    tabBtn.append(label);
+    bar.append(tabBtn);
+    document.body.append(bar);
+    let tabClicks = 0;
+    tabBtn.addEventListener("click", () => tabClicks++);
+    const down = ev("pointerdown");
+    document.addEventListener("pointerdown", () => swallowGhostClick(down), { once: true, capture: true });
+    label.dispatchEvent(down); // палец на подписи вкладки
+    tabBtn.dispatchEvent(ev("pointerup"));
+    tabBtn.dispatchEvent(new MouseEvent("click", { bubbles: true, cancelable: true, detail: 1 }));
+    expect(tabClicks).toBe(1);
+    // и перехват не «висит» до следующего касания вне таб-бара
+    click(1);
+    expect(clicks).toBe(1);
+    bar.remove();
+  });
 });
