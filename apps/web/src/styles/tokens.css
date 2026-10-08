@@ -113,9 +113,6 @@
 :root {
   --mo: 1;
   --mk: 1;
-  /* PD-95: content-visibility секции Grid ∞ (today.css). `visible` — при движении секция цель «улёта» и измеряется
-     (getBoundingClientRect/scrollIntoView раскрыли бы пропущенное поддерево); при reduced полёта нет — `auto`. */
-  --cv-grid: visible;
   /* Кривые: e-out — выход, e-spring — пружина карточек/панелей, e-ring — переезд кольца выбора,
      e-io — ease-in-out для возвратов и «дыхания» (PD-189, экран ожидания генерации; design/pd188-loading.md §5). */
   --e-out: cubic-bezier(0.2, 0.7, 0.3, 1);
@@ -127,7 +124,6 @@
   :root {
     --mo: 0;
     --mk: 0.72;
-    --cv-grid: auto;
   }
 }
 
