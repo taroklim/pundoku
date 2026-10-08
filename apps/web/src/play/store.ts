@@ -17,7 +17,7 @@
  * Общая механика (ввод, undo, таймер, анимации) — `GameStore`; здесь — источник сетки (генерация в Web Worker) и слоты.
  */
 import type { Difficulty } from "@pundoku/engine";
-import type { SyncEvent } from "../sync/manager";
+import type { RemoteApplied, SyncEvent } from "../sync/manager";
 import { sync as syncRuntime } from "../sync/runtime";
 import { localDate } from "../today/dayResolver";
 import type { SyncStorage } from "../today/repository";
@@ -108,6 +108,11 @@ export interface PlayDeps {
   notify?: (event: SyncEvent) => void;
   /** PD-171: заготовки тяжёлых классов Лжеца. Нет — генерация всегда в момент старта. */
   pool?: LiarPool | null;
+  /**
+   * PD-217: данные сервера записаны в хранилище (`SyncHooks.subscribeRemote`). Решённый с другого устройства Лжец дня
+   * заменяет запись в памяти и живую партию этой даты — иначе её сохранения перезаписали бы победителя до следующего синка.
+   */
+  subscribeRemote?: (fn: (info: RemoteApplied) => void) => () => void;
 }
 
 export class PlayStore extends GameStore<PlayScreenSnapshot> {
@@ -125,6 +130,9 @@ export class PlayStore extends GameStore<PlayScreenSnapshot> {
   /** PD-171: история поимок (сравнение с собой). */
   private liarHistory: LiarHistoryEntry[] = [];
   private generationTimer: number | null = null;
+  /** PD-217: даты Лжеца дня, чья запись только что пришла с сервера и ещё не перечитана: живая партия их не пишет. */
+  private readonly remoteHold = new Set<string>();
+  private remoteSubscribed = false;
 
   /**
    * `deps` — куда писать партии. Без них (тесты, `new PlayStore()`) хранилище работает только в памяти;
@@ -178,7 +186,12 @@ export class PlayStore extends GameStore<PlayScreenSnapshot> {
     const s = this.snap;
     if (!s.play) return;
     const prev = this.dailies.get(date);
+    // PD-217: решённую запись (в т.ч. пришедшую с другого устройства) незаконченная партия не перезаписывает; пока запись с
+    // сервера не перечитана (`reloadDaily`), живая партия этой даты не пишет вовсе.
+    if (this.remoteHold.has(date) || (prev?.play.solved === true && !s.play.solved)) return;
     const solvedAt = s.play.solved ? (prev?.solvedAt ?? new Date().toISOString()) : null;
+    // Метрики восстановленной из снапшота записи (лог урезан бюджетом) переживают повторную запись той же решённой партии.
+    const liarInfo = s.play.solved && prev?.play.solved === true && s.play.log.length === 0 ? prev.liarInfo : undefined;
     const rec: SavedPlay & { daily: string } = {
       v: 1,
       mode: "liar",
@@ -192,6 +205,7 @@ export class PlayStore extends GameStore<PlayScreenSnapshot> {
       ...(s.assisted === true ? { assisted: true } : {}),
       daily: date,
       solvedAt,
+      ...(liarInfo ? { liarInfo } : {}),
     };
     this.dailies.set(date, rec);
     const { deps } = this;
@@ -269,6 +283,10 @@ export class PlayStore extends GameStore<PlayScreenSnapshot> {
     const { deps } = this;
     if (!deps || this.snap.restoring !== true) return;
     this.listen();
+    if (!this.remoteSubscribed && deps.subscribeRemote) {
+      this.remoteSubscribed = true;
+      deps.subscribeRemote(this.onRemote);
+    }
     const read = async (key: string): Promise<unknown> => {
       try {
         return await deps.storage.getMeta(key);
@@ -379,6 +397,55 @@ export class PlayStore extends GameStore<PlayScreenSnapshot> {
       changed = true;
     }
     if (changed) this.set({ dailyRev: (this.snap.dailyRev ?? 0) + 1 });
+  }
+
+  /** PD-217: синхронизация записала решённых Лжецов дня с сервера (`applyLocally` пишет только решённые). */
+  private readonly onRemote = (info: RemoteApplied): void => {
+    for (const date of info.liarDates ?? []) {
+      this.remoteHold.add(date); // синхронно: ход, сделанный до перечитывания, уже не запишется поверх
+      void this.reloadDaily(date);
+    }
+  };
+
+  /**
+   * Перечитать запись Лжеца дня после записи с сервера. Решённая — заменяет запись в памяти; живая партия этой даты (на доске
+   * или на хабе) заменяется победителем, как день Today (`DayStore.reloadSolved`). Сначала дожидаемся своих записей: если
+   * одна из них, поставленная до уведомления, всё же затёрла серверную, в хранилище окажется незаконченная — тогда ничего не
+   * меняем, слияние следующего синка вернёт решённую (данные не теряются).
+   */
+  private async reloadDaily(date: string): Promise<void> {
+    const { deps } = this;
+    try {
+      if (!deps) return;
+      await this.writes;
+      let raw: unknown;
+      try {
+        raw = await deps.storage.getMeta(liarDayKey(date));
+      } catch {
+        return;
+      }
+      const rec = parseSavedLiarDay(raw, date);
+      if (!rec?.play.solved) return;
+      this.dailies.set(date, rec);
+      const s = this.snap;
+      if (s.daily === date && s.play && (s.phase === "playing" || s.phase === "solved")) {
+        this.resumeGame(rec.play, rec.elapsedMs, {
+          hub: s.hub,
+          mode: "liar",
+          daily: date,
+          restoring: false,
+          difficulty: rec.difficulty,
+          startedOn: new Date(rec.startedOn),
+          selected: resumeSelection(rec.play, rec.selected),
+          notesMode: rec.notesMode,
+          hints: rec.hints ?? 0,
+          assisted: rec.assisted === true,
+        });
+      }
+    } finally {
+      this.remoteHold.delete(date);
+    }
+    this.set({ dailyRev: (this.snap.dailyRev ?? 0) + 1 });
   }
 
   /** Перечитать Лжеца дня (открыт шит Лжеца, вернулись на хаб): запись могла прийти из синхронизации. */
@@ -661,6 +728,7 @@ export class PlayStore extends GameStore<PlayScreenSnapshot> {
 export const playStore = new PlayStore({
   storage: syncRuntime.repository,
   notify: (event) => syncRuntime.hooks.notify(event),
+  subscribeRemote: (fn) => syncRuntime.hooks.subscribeRemote(fn),
   pool:
     typeof Worker === "undefined"
       ? null
