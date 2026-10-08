@@ -90,6 +90,8 @@ export interface PlayScreenSnapshot extends PlaySnapshot {
   readonly daily?: string | null;
   /** PD-171: растёт, когда изменились записи Лжеца дня (шит/«Продолжить» перечитывают состояние). */
   readonly dailyRev?: number;
+  /** PD-225: растёт, когда слот режима удалён с хаба или возвращён «Отменить» (строки хаба перечитывают `slots()`). */
+  readonly slotsRev?: number;
 }
 
 /** Единственный ключ записи Play до PD-167 (`meta:playGame`): читается только ради переноса в слот режима. */
@@ -125,7 +127,7 @@ export class PlayStore extends GameStore<PlayScreenSnapshot> {
    * боевой `playStore` создаётся с IndexedDB и читает слоты в `restore()`.
    */
   constructor(deps: PlayDeps | null = null) {
-    super({ ...initialSnapshot(), hub: true, mode: DEFAULT_MODE, picks: {}, reselect: 0, restoring: deps !== null, daily: null, dailyRev: 0 });
+    super({ ...initialSnapshot(), hub: true, mode: DEFAULT_MODE, picks: {}, reselect: 0, restoring: deps !== null, daily: null, dailyRev: 0, slotsRev: 0 });
     this.deps = deps;
   }
 
@@ -515,6 +517,49 @@ export class PlayStore extends GameStore<PlayScreenSnapshot> {
       hints: rec.hints ?? 0,
       assisted: rec.assisted === true,
     });
+    return true;
+  }
+
+  /**
+   * PD-225 (design/pd224-swipe-gestures.md §A6): удалить незаконченную свободную партию режима с хаба — свайп строки, пункт
+   * «Удалить сетку» меню, кнопка «Удалить». Пишется СРАЗУ (слот → `null`, как `clearSlot`): убитое во время тоста приложение
+   * партию не воскресит. Если это живая партия, запаркованная за хабом (вышли тапом по вкладке), сбрасывается и она — иначе
+   * тап по строке поднял бы удалённую. С доски не удаляем (только хаб). Выбор сложности, другие слоты, Лжец дня (не слот) и
+   * история поимок не трогаются. Синхронизация слоты не читает (`sync/manager.ts` `collectLocal`: дни, сетка, `meta:liar:*`) —
+   * удалять на сервере нечего.
+   *
+   * Возвращает удалённую запись — её вернёт «Отменить» (`restoreSlot`); `null` — удалять нечего.
+   */
+  discard(mode: ModeId): SavedPlay | null {
+    const s = this.snap;
+    const live = s.mode === mode && this.hasSlot() && !s.daily;
+    if (live && !s.hub) return null;
+    if (live) this.persist(); // свежая копия живой партии (накопленное время, выбор) — именно её вернёт «Отменить»
+    const rec = this.saved.get(mode);
+    if (!rec || rec.play.solved) return null;
+    if (live) {
+      this.cancelGeneration();
+      this.resetToLoading({ hub: true, restoring: false, daily: null });
+    }
+    this.clearSlot(mode);
+    this.set({ slotsRev: (this.snap.slotsRev ?? 0) + 1 });
+    return rec;
+  }
+
+  /**
+   * PD-225: «Отменить» в тосте — запись, которую вернул `discard`, снова слот своего режима (память и IndexedDB, тот же путь, что
+   * обычная запись слота). Строка хаба снова «● Не закончена …», тап поднимает партию на доску. Если в режиме тем временем
+   * появилась новая партия — её не затираем (`false`).
+   */
+  restoreSlot(rec: SavedPlay): boolean {
+    const mode = rec.mode ?? legacyModeOf(rec.play);
+    if (rec.play.solved || this.slots()[mode] !== undefined) return false;
+    const s = this.snap;
+    if (s.mode === mode && !s.daily && s.phase === "loading" && !s.hub) return false; // новая сетка режима строится
+    this.saved.set(mode, rec);
+    const { deps } = this;
+    if (deps) this.write(() => deps.storage.setMeta(slotKey(mode), rec));
+    this.set({ slotsRev: (this.snap.slotsRev ?? 0) + 1 });
     return true;
   }
 
