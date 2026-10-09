@@ -620,9 +620,9 @@ Gates: build → typecheck, lint, тесты web/engine/api (api с TEST_DATABAS
 | PD-273 | Жест «назад» (P3 QA PD-264): новое касание во время доводки 220 мс игнорируется (iOS даёт перехватить) — косметика | developer | P3 | pending (бэклог) | — |
 | PD-274 | Глифы (Low QA PD-247, не воспроизвелось): однажды в chromium обход стрелками закончился на подсказке при пустой клетке в строке (desk3); повторы 44/44 и 8/8 | developer | P3 | pending (бэклог) | — |
 | PD-275 | «Продолжить»: вчерашний незаконченный день Today не должен пропадать после перезапуска — сделать как у Лжеца (PD-217), с датой как в PD-262; ветка pd-275 от pd-262 6ec92cf; тест обязателен (одобрено владельцем 2026-10-09) | developer | P3 | in_progress (Dev-Pundoku-275, ветка pd-275 от pd-262 6ec92cf) | PD-262 |
-| PD-276 | P0 хотфикс прода d6bfb68: в установленной PWA на iPhone вкладки таб-бара переключаются только со второго тапа — воспроизвести в webkit hasTouch/isMobile (+ standalone), причина (pd-tab-press :active / PD-239 «тап в финале» / touch→click), фикс + тест; ветка pd-hotfix от main | developer | P0 | in_progress (Dev-Pundoku-276) | — |
-| PD-277 | Year: кнопка под «Your year starts today…» под таб-баром, скролла нет — общий нижний отступ под таб-бар + safe-area у экранов/карточек (заодно PD-256, если та же причина); тест; ветка pd-hotfix | developer | P1 | in_progress (Dev-Pundoku-276, после PD-276) | — |
-| PD-278 | QA хотфикса pd-hotfix (PD-276/277): webkit touch/isMobile/standalone переключение вкладок с первого тапа во всех состояниях (вкл. финал, Reduce Motion), Year/карточки над таб-баром 320–430 AX3, gates | qa-tester | P0 | pending | PD-276, PD-277 |
+| PD-276 | P0 хотфикс прода d6bfb68: в установленной PWA на iPhone вкладки таб-бара переключаются только со второго тапа — воспроизвести в webkit hasTouch/isMobile (+ standalone), причина (pd-tab-press :active / PD-239 «тап в финале» / touch→click), фикс + тест; ветка pd-hotfix от main | developer | P0 | completed (pd-hotfix edc6134: причина — прогрев панели PD-175 на pointerdown снимал visibility:hidden с панели-цели → iOS ContentChangeObserver глотает click; прогрев только для мыши + deferPastTabTap; pd276-check main wk 21/70 → fix 70/70 cr+wk) | — |
+| PD-277 | Year: кнопка под «Your year starts today…» под таб-баром, скролла нет — общий нижний отступ под таб-бар + safe-area у экранов/карточек (заодно PD-256, если та же причина); тест; ветка pd-hotfix | developer | P1 | completed (pd-hotfix 64e232b: на iPhone 1rem=17px; приглашение+кнопка пустого года над полотном; pd277-shots fix 28/28; PD-256 — разработчик предлагает «не дефект» после п.106 владельца; gates b1d978c зелёные, merge-tree с pd-pack2-base чисто) | — |
+| PD-278 | QA хотфикса pd-hotfix (PD-276/277): webkit touch/isMobile/standalone переключение вкладок с первого тапа во всех состояниях (вкл. финал, Reduce Motion), Year/карточки над таб-баром 320–430 AX3, gates | qa-tester | P0 | in_progress (QA-Pundoku-278, qa-278 от pd-hotfix b1d978c) | PD-276, PD-277 |
 | PD-279 | QA PD-275 (вчерашний Today в «Продолжить» после перезапуска, дата, en/uk/ru, cr+wk, gates) — на ветке pd-275 (включает pd-262) | qa-tester | P3 | pending | PD-275 |
 | PD-280 | Мерж хотфикса pd-hotfix в main (отдельно или вместе со вторым пакетом, если PD-265 PASS) + gates → hash Coordinator'у (push — владелец) | product-manager | P0 | pending | PD-278 |
 | PD-281 | Третий пакет: мерж pd-260 + pd-262/pd-275 в main после второго пакета + gates → hash Coordinator'у | product-manager | P2 | pending | PD-261, PD-263, PD-279, PD-265 |
@@ -736,6 +736,14 @@ Gates: build → typecheck, lint, тесты web/engine/api (api с `TEST_DATABA
 - 11:45 повтор: pd-swipe (c26cfb9) и pd-desk-fix (d89871f) уже содержат main; main → +pd-swipe → +pd-tabbar (186fdaa) → +pd-desk-fix → +pd-low-3 — чисто, конфликтов нет.
 - Перед выкатом пакета нужен один QA-прогон на итоговом слиянии всех веток (gates + быстрый регресс партии/таб-бара/списка режимов) — заведу после индивидуальных PASS.
 
+## iPhone-проверки хотфикса pd-hotfix (PD-276/277; владельцу после выката)
+- п.110: установленная PWA — каждая вкладка переключается с ПЕРВОГО тапа: из покоя, из партии, во время финала (тап по активной вкладке — только досрочно завершает финал), после свайпа строки, тап у самого края/полосы Home.
+- п.111: отклик нажатия вкладки (приглушение) по-прежнему виден; Reduce Motion — без перехода.
+- п.112: пустой Year — приглашение и кнопка «Open today's puzzle» над таб-баром, кнопка нажимается; Year с данными не изменился.
+- п.106 (PD-256): карточка результата Play — «New game» не под стеклом таб-бара? Если ок — PD-256 закрыть «не дефект».
+- Кадры до/после пустого Year (webkit 393, 17px): products/pundoku-worktrees/pd-hotfix/design/pd277-shots/main-Y-webkit-393-light.png → fix-Y-webkit-393-light.png (и *-320-*, *-393-AX3-*).
+- В визуальных webkit-проверках задавать html{font-size:17px} (на iPhone 1rem=17px, в Playwright 13px) — образец design/pd277-shots.mjs.
+
 ## Очередь PM-21 после сброса (2026-10-09 02:05; специалистов резюмирует Coordinator — у PM нет SendMessage)
 1. Dev-276 готов → QA PD-278 (qa-tester, P0, на pd-hotfix, слот) → PD-280: мерж pd-hotfix в main (+ второй пакет, если PD-265 PASS) + gates → hash Coordinator'у.
 2. QA-265 PASS → мерж pd-landscape + pd-fog-fade + pd-253 в main (PD-265) + gates → hash; FAIL → фикс-тикеты.
@@ -746,9 +754,8 @@ Gates: build → typecheck, lint, тесты web/engine/api (api с `TEST_DATABA
 | Имя | Роль | Статус | Тикет | Обновлено |
 |-----|------|--------|-------|-----------|
 | PM-Pundoku-21 | product-manager | working | PD-276, PD-265, PD-260/263/275 | 2026-10-09 02:00 |
-| Dev-Pundoku-276 | developer | working (ветка pd-hotfix от main; порты 5301–5309) | PD-276 → PD-277 | 2026-10-09 02:05 |
+| QA-Pundoku-278 | qa-tester | working (qa-278 от pd-hotfix b1d978c; порты 5351–5359) | PD-278 | 2026-10-09 |
 | QA-Pundoku-265 | qa-tester | working (slot-1, наборы L B F P; порты 5311–5319) | PD-265 | 2026-10-09 02:05 |
-| Dev-Pundoku-260 | developer | done (PD-260 готов, slot-2 освобождён) | PD-260 | 2026-10-09 |
 | Dev-Pundoku-275 | developer | working (ветка pd-275 от pd-262; порты 5331–5339) | PD-275 | 2026-10-09 02:05 |
 | QA-Pundoku-261 | qa-tester | working (сначала PD-263 на qa-263, затем PD-261 на qa-261; порты 5341–5349) | PD-263 → PD-261 | 2026-10-09 |
 
