@@ -10,6 +10,8 @@ import type { Root } from "react-dom/client";
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import i18n from "../i18n";
 import { DESK_QUERY, deskStore } from "../shell/desk";
+import { TabActiveContext } from "../shell/tabSlide";
+import { ModePage } from "./ModePage";
 import { modeDef } from "./modes";
 import { PlayScreen } from "./PlayScreen";
 import { playStore } from "./store";
@@ -64,7 +66,8 @@ describe("страница режима", () => {
     expect(page.querySelector("h2")!.textContent).toBe("Classic");
     expect(q("mode-desc")!.textContent).toBe("Plain sudoku: notes, undo and hints are all there.");
     expect(page.querySelectorAll('[role="radio"]').length).toBe(modeDef("classic").difficulties.length);
-    expect(q("mode-page-start")!.textContent).toBe("Start");
+    expect(q("mode-page-start")!.querySelector("span")!.textContent).toBe("Start");
+    expect(q("mode-page-enter")!.textContent).toBe("↩"); // PD-269: чип клавиши
     expect(q("mode-sheet")).toBeNull();
     expect(host.querySelector('[data-testid="mode-classic"]')).toBeNull(); // строк хаба нет
   });
@@ -114,5 +117,95 @@ describe("страница режима", () => {
     render();
     expect(q("mode-page")).toBeNull();
     expect(q("mode-classic")).not.toBeNull();
+  });
+});
+
+/**
+ * PD-269: «Start ↩» — Enter запускает партию (макет C, аудит PD-228 п. 9; правило шита режима PD-232 в). Нажатие Enter по
+ * сфокусированной кнопке jsdom в click не превращает — здесь: куда встаёт фокус и что делает Enter вне кнопок; нативный Enter
+ * по «Start» — живая проверка design/pd269-check.mjs.
+ */
+describe("страница режима: Enter = «Start»", () => {
+  const mode = modeDef("classic");
+  const page = (props: { discard?: never | null; active?: boolean; onStart?: () => void; daily?: boolean } = {}) =>
+    act(() =>
+      root.render(
+        <TabActiveContext.Provider value={props.active ?? true}>
+          <ModePage
+            mode={mode}
+            pick="easy"
+            discard={props.discard ?? null}
+            onPick={vi.fn()}
+            onStart={props.onStart ?? vi.fn()}
+            daily={props.daily ? { state: { kind: "none" }, onOpen: vi.fn() } : null}
+          />
+        </TabActiveContext.Provider>,
+      ),
+    );
+  const enter = (target: EventTarget, init: KeyboardEventInit = {}) => {
+    const e = new KeyboardEvent("keydown", { key: "Enter", bubbles: true, cancelable: true, ...init });
+    act(() => void target.dispatchEvent(e));
+    return e;
+  };
+
+  it("страница открылась — фокус на «Start», у неё чип ↩ и aria-keyshortcuts", () => {
+    page();
+    expect(document.activeElement).toBe(q("mode-page-start"));
+    expect(q("mode-page-start")!.getAttribute("aria-keyshortcuts")).toBe("Enter");
+    expect(q("mode-page-enter")!.getAttribute("aria-hidden")).toBe("true");
+  });
+
+  it("Enter с фона документа и со строки сложности — «Start»; модификаторы и повтор — нет", () => {
+    const onStart = vi.fn();
+    page({ onStart });
+    (document.activeElement as HTMLElement).blur();
+    expect(enter(document.body).defaultPrevented).toBe(true);
+    expect(onStart).toHaveBeenCalledTimes(1);
+    enter(q("difficulty-easy")!);
+    expect(onStart).toHaveBeenCalledTimes(2);
+    enter(document.body, { metaKey: true });
+    enter(document.body, { shiftKey: true });
+    enter(document.body, { repeat: true });
+    expect(onStart).toHaveBeenCalledTimes(2);
+  });
+
+  it("Enter на другой кнопке (Лжец дня, вне страницы) — её действие, не «Start»", () => {
+    const onStart = vi.fn();
+    page({ onStart, daily: true });
+    const other = document.createElement("button");
+    document.body.append(other);
+    enter(q("liar-daily")!);
+    enter(other);
+    other.remove();
+    expect(onStart).not.toHaveBeenCalled();
+  });
+
+  it("открыт шит/диалог — Enter его, не страницы", () => {
+    const onStart = vi.fn();
+    page({ onStart });
+    const dlg = document.createElement("div");
+    dlg.setAttribute("role", "dialog");
+    document.body.append(dlg);
+    enter(document.body);
+    dlg.remove();
+    expect(onStart).not.toHaveBeenCalled();
+  });
+
+  it("«Start new» отбросит незаконченную партию — ни фокуса, ни чипа, ни Enter", () => {
+    const onStart = vi.fn();
+    page({ onStart, discard: { difficulty: "medium", left: 50, elapsedMs: 60_000 } as never });
+    expect(document.activeElement).not.toBe(q("mode-page-start"));
+    expect(q("mode-page-enter")).toBeNull();
+    expect(q("mode-page-start")!.hasAttribute("aria-keyshortcuts")).toBe(false);
+    enter(document.body);
+    expect(onStart).not.toHaveBeenCalled();
+  });
+
+  it("вкладка Play скрыта — фокус не крадёт и Enter не слушает", () => {
+    const onStart = vi.fn();
+    page({ onStart, active: false });
+    expect(document.activeElement).not.toBe(q("mode-page-start"));
+    enter(document.body);
+    expect(onStart).not.toHaveBeenCalled();
   });
 });

@@ -1,0 +1,208 @@
+/*
+ * PD-269: десктоп C «Сайдбар» — экраны Today / Play (хаб, страница режима) / Year / Settings / справка / архив:
+ * шкала ширин, наведение, курсор, фокус с клавиатуры (design/pd229-desktop.md §2; макет design/pd229-desktop.html).
+ *
+ * Только раскладка с сайдбаром: КАЖДЫЙ селектор начинается с `.shell.desk` (класс ставит App по DESK_QUERY, shell/desk.ts),
+ * телефон, его ландшафт и компакт (< 1100 × 680 CSS px: ноутбук при 125/150 %) этих правил не видят — проверяет
+ * desk-screens.css.test.ts, кадры сверяет design/pd269-check.mjs. Цвета — токены tokens.css и три производных значения
+ * наведения из §2 (нового оттенка нет). Партия (тулбар, инспектор), шиты и меню (порталы в body) — PD-267/268.
+ *
+ * Шкала ширин: всё, что не поле, ложится на четыре значения, «во всю ширину окна» не бывает.
+ *   --w-menu 320   меню и поповеры у элемента/курсора                 (PD-267: порталы)
+ *   --w-sheet 560  модальные шиты                                     (PD-267: порталы)
+ *   --w-read 640   экраны-списки и текст: хаб Play, Settings, справка, карточка дня Today
+ *   --w-year 780   полотно года
+ *   --w-field 720  потолок поля; панель 1–9, Notes/Undo/Erase, строка Ink и док подсказки — по ширине поля
+ * Колонка ставится полями (`margin-inline`), а не шириной: у дочерних элементов общий containing block, поэтому `100%` у всех
+ * одно и то же; в узкой области (сайдбар + инспектор PD-267) поле обнуляется и колонка = вся область, как раньше.
+ * Шапки экранов (.toolbar, .subline, .settings-navbar) остаются во всю область контента — это тулбар C (заголовок у кнопки
+ * сайдбара, шестерёнка справа), его доделывает PD-267.
+ */
+.shell.desk {
+  --w-menu: 320px;
+  --w-sheet: 560px;
+  --w-read: 640px;
+  --w-year: 780px;
+  --w-field: 720px;
+  /* Отступ карточек от края колонки на телефоне (16 px) входит в колонку: карточка = ровно --w-read. */
+  --desk-pad: 16px;
+  /* Наведение (§2): светлая — слой label 6 %, --key-hover — тот же слой, смешанный с --elev до непрозрачного,
+     --hover-ring — чернила 50 % (декор, не единственный сигнал). */
+  --hover: rgba(60, 60, 67, 0.06);
+  --key-hover: #f3f3f4;
+  --hover-ring: rgba(59, 72, 176, 0.5);
+}
+@media (prefers-color-scheme: dark) {
+  .shell.desk {
+    --hover: rgba(235, 235, 245, 0.08);
+    --key-hover: #2d2d2f;
+    --hover-ring: rgba(140, 150, 255, 0.55);
+  }
+}
+
+/* ---------- Шкала ширин ---------- */
+
+/* Поле: потолок 720 (на 1920 × 1080 было 818). Остальная колонка партии — по ширине поля: на высоком окне поле упирается
+   в 720, на низком — в высоту (`--chrome`, play.css), и панель 1–9 вместе с ним. */
+.shell.desk .play-fit {
+  --desk-col: min(var(--w-field), 100dvh - var(--chrome));
+}
+.shell.desk .play-fit .board {
+  width: min(100%, 100dvh - var(--chrome), var(--w-field));
+  --s: calc((min(100cqi, 100dvh - var(--chrome), var(--w-field)) - 2 * var(--box-gap)) / 9);
+}
+.shell.desk .play-fit > :not(.toolbar, .subline, .sr-only, .hint-dock) {
+  margin-inline: max(0px, (100% - var(--desk-col) - 2 * var(--desk-pad)) / 2);
+}
+/* У дока свои поля 16 px (hint.css): колонка не уже их. */
+.shell.desk .play-fit > .hint-dock {
+  margin-inline: max(var(--desk-pad), (100% - var(--desk-col)) / 2);
+}
+
+/* Today после решения (и решённый архивный день): карточка дня и Grid ∞ — колонка чтения 640 (PD-268 переносит их в инспектор). */
+.shell.desk .today:not(.play-fit) > :not(.toolbar, .subline, .sr-only, .card) {
+  margin-inline: max(0px, (100% - var(--w-read) - 2 * var(--desk-pad)) / 2);
+}
+.shell.desk .today:not(.play-fit) > .card {
+  margin-inline: max(var(--desk-pad), (100% - var(--w-read)) / 2);
+}
+
+/* Хаб Play: секции «Продолжить» и «Режимы» — колонка 640. Страница режима держит свою колонку (desk.css). */
+.shell.desk .hub-scroll > :not(.mode-page) {
+  margin-inline: max(0px, (100% - var(--w-read) - 2 * var(--desk-pad)) / 2);
+}
+
+/* Settings и справка: заголовок, секции и текст — колонка 640 (≈ 70 знаков при 16 px); строка «‹ назад» — шапка. */
+.shell.desk .settings > :not(.settings-navbar) {
+  margin-inline: max(0px, (100% - var(--w-read) - 2 * var(--desk-pad)) / 2);
+}
+
+/* Year: полотно 12 месяцев, пустое состояние и легенда — колонка 780; заголовок и итоги — шапка. */
+.shell.desk .year > :not(.toolbar, .year-totals) {
+  margin-inline: max(0px, (100% - var(--w-year) - 2 * var(--desk-pad)) / 2);
+}
+
+/* ---------- Страница режима: чип клавиши «↩» на «Start» ---------- */
+.shell.desk .mode-page .mp-start {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+/* Чип клавиши (макет `kbd`): на чернилах — цветом подписи кнопки, рамка тем же цветом. */
+.shell.desk .mode-page .mp-key {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 22px;
+  height: 20px;
+  padding: 0 5px;
+  border: 1px solid currentColor;
+  border-radius: 5px;
+  font: 500 12px/1 var(--font-sans);
+  color: inherit;
+  white-space: nowrap;
+}
+@media (forced-colors: active) {
+  .shell.desk .mode-page .mp-key {
+    border-color: ButtonText;
+  }
+}
+
+/* ---------- Фокус с клавиатуры ---------- */
+/* Программный фокус на заголовке (переход в справку, deeplink) кольца не рисует (аудит PD-228 п. 17). */
+.shell.desk [tabindex="-1"]:focus:not(:focus-visible) {
+  outline: none;
+}
+/* Строки Settings/справки лежат в карточке с overflow: hidden — внешнее кольцо (2 px + отступ 2) она срезает: кольцо внутрь,
+   как у строк хаба (hub.css). Прозрачный outline остаётся для forced-colors (там box-shadow отключён). */
+.shell.desk :is(.settings-row, .settings-rowbtn):focus-visible {
+  outline: 2px solid transparent;
+  outline-offset: -2px;
+  border-radius: 0;
+  box-shadow: inset 0 0 0 2px var(--ink);
+}
+/* Кнопки шапки (шестерёнка, «⋯» и лампочка) стоят у верхнего края окна: внешнее кольцо срезал бы край — внутрь, как у лампочки. */
+.shell.desk .gear-btn:focus-visible {
+  outline-offset: -2px;
+}
+/* Tab докручивает до элемента, но не до его кольца (2 px + отступ 2): у края прокручиваемой панели кольцо срезалось
+   (месяцы Year, тумблеры Settings). Запас 8 px — кольцо видно целиком. */
+.shell.desk .scroll :is(button, input) {
+  scroll-margin-block: 8px;
+}
+/* Строка «Ink mode» под полем — в карточке с overflow: hidden, тот же приём. */
+.shell.desk .ink-row:focus-visible {
+  outline: 2px solid transparent;
+  outline-offset: -2px;
+  border-radius: 0;
+  box-shadow: inset 0 0 0 2px var(--ink);
+}
+@media (forced-colors: active) {
+  .shell.desk :is(.settings-row, .settings-rowbtn, .ink-row):focus-visible {
+    outline-color: Highlight;
+  }
+}
+
+/* ---------- Наведение и курсор: только там, где есть точное наведение (мышь, трекпад) ---------- */
+/* iPad в альбомной ориентации попадает в эту раскладку и работает пальцем: ни подсветки, ни смены курсора. Наведение не
+   перебивает нажатие (`:not(:active)`): отклик касания/клика — прежний --ink-tint. */
+@media (hover: hover) and (pointer: fine) {
+  /* Курсор (§2, аудит #7): «рука» — только на включённых кнопках, строках и тумблерах. Поле — стрелка (отклик — кольцо
+     наведения), неактивные действия — стрелка. */
+  .shell.desk .board,
+  .shell.desk .board .cell {
+    cursor: default;
+  }
+  .shell.desk :is(button, [role="button"], [role="switch"], [role="radio"], .st-switch):is(:disabled, [aria-disabled="true"]) {
+    cursor: default;
+  }
+  .shell.desk .st-switch {
+    cursor: pointer;
+  }
+
+  /* Сайдбар, кнопки-иконки, текстовые кнопки: слой --hover. */
+  .shell.desk .side-it:not([aria-current]):hover:not(:active),
+  .shell.desk :is(.gear-btn, .more-btn, .hint-btn):not(.on):hover:not(:active),
+  .shell.desk :is(.titlebtn, .archive-back, .settings-back, .help-link, .btn-plain):hover:not(:active) {
+    background: var(--hover);
+  }
+  /* У кнопки сайдбара своя непрозрачная подложка (под ней прокручивается шапка) — слой поверх неё. */
+  .shell.desk .side-toggle:hover:not(:active) {
+    background: linear-gradient(var(--hover), var(--hover)) var(--bg);
+  }
+
+  /* Строки списков: хаб, страница режима, Settings, справка, строка «Ink mode». Выбранная строка не подсвечивается. */
+  .shell.desk button.hub-row:not([aria-checked="true"]):hover:not(:active),
+  .shell.desk button.settings-row:not([aria-checked="true"]):hover:not(:active),
+  .shell.desk .settings-rowbtn:not([aria-disabled="true"]):hover:not(:active),
+  .shell.desk .settings-secondary:not([aria-disabled="true"]):hover:not(:active),
+  .shell.desk .settings-switch:hover:not(:has(.st-switch:active)),
+  .shell.desk .ink-row:hover:not(:active) {
+    background: var(--hover);
+  }
+  /* Строка режима в хабе лежит над красным слоем «Удалить» (свайп): подложка непрозрачная, слой — поверх неё. */
+  .shell.desk .srow:not(.dragging) > .fg:hover:not(:active) {
+    background: linear-gradient(var(--hover), var(--hover)) var(--card);
+  }
+  /* Месяц Year — кнопка-карточка на --elev. */
+  .shell.desk .year-month:hover:not(:active) {
+    background: linear-gradient(var(--hover), var(--hover)) var(--elev);
+  }
+
+  /* Клавиши 1–9: непрозрачный --key-hover (контраст остатка label-2 4.58:1 / 4.79:1). */
+  .shell.desk .key:not(:disabled):hover:not(:active) {
+    background: var(--key-hover);
+  }
+  /* Notes/Undo/Erase лежат на сгруппированном фоне: затемнение дало бы label-2-grouped 4.36:1 — кнопка «поднимается» до
+     поверхности клавиш (5.3:1 / 5.9:1). Включённая (Notes) и неактивная (Undo в начале) — без наведения. */
+  .shell.desk .act:not([aria-pressed="true"], [aria-disabled="true"], :disabled):hover:not(:active) {
+    background: var(--elev);
+  }
+
+  /* Клетка под курсором — тонкое кольцо 1.5 px; выбор остаётся прежним (заливка + кольцо 2 px), поэтому они не путаются.
+     Тень, а не ::before/::after: те заняты волной M3, ответом M8 и кольцом ошибки. */
+  .shell.desk .board button.cell:not(.sel):hover {
+    box-shadow: inset 0 0 0 1.5px var(--hover-ring);
+  }
+}
