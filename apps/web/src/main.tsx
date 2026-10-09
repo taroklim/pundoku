@@ -20,6 +20,7 @@ import "./styles/brand.css";
 import "./styles/desk.css";
 import "./styles/desk-play.css";
 import "./styles/desk-result.css";
+import "./styles/desk-screens.css";
 import "./styles/landscape.css";
 import { App } from "./App";
 import { ErrorBoundary } from "./shell/ErrorBoundary";

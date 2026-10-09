@@ -1,6 +1,8 @@
 import type { Difficulty } from "@pundoku/engine";
-import { useId } from "react";
+import { useEffect, useId, useRef } from "react";
 import { useTranslation } from "react-i18next";
+import { EDITABLE, overlayOpen } from "../shell/escapeBack";
+import { useTabActive } from "../shell/tabSlide";
 import type { SlotSummary } from "./daySlot";
 import { DifficultyList } from "./DifficultyList";
 import { formatClock } from "./format";
@@ -29,15 +31,51 @@ export interface ModePageProps {
  * (`ModeSheet`, PD-167): значок и имя, предупреждение об отбрасывании (если вдруг есть что отбрасывать), описание, Лжец дня,
  * сложность списком и «Начать». Модальности, «Отмены» и жеста закрытия нет — уходят сайдбаром.
  *
- * Ширина колонки — 480 по макету; шкалу ширин всего хаба (640) и чип клавиши «↩» добавляют PD-269 / PD-267.
+ * Ширина колонки — 480 по макету (`modeDetail(true)`); хаб вокруг — колонка 640 (PD-269, styles/desk-screens.css).
+ *
+ * PD-269: «Start ↩» (макет C, аудит PD-228 п. 9) — Enter запускает партию. Как у шита режима (PD-232 в): страница открылась —
+ * фокус на «Start» (Enter/пробел нажимают её нативно), если «Start» ничего не отбрасывает; иначе («Start new») ни фокуса, ни
+ * чипа, ни Enter — фокус остаётся, где был. Фокус ушёл со страницы на фон (клик по пустому месту) — Enter тоже «Start»; на
+ * другой кнопке (сайдбар, Лжец дня, шестерёнка) Enter нажимает её, в поле ввода и при открытом шите/меню — не наш.
  */
 export function ModePage({ mode, pick, discard, onPick, onStart, daily = null }: ModePageProps) {
   const { t } = useTranslation();
   const titleId = useId();
   const diffId = useId();
+  const active = useTabActive();
+  const root = useRef<HTMLElement>(null);
+  const start = useRef<HTMLButtonElement>(null);
+  const latest = useRef(onStart);
+  latest.current = onStart;
+  const enter = discard === null;
+
+  // Открыли страницу (другой режим, вернулись на вкладку) — фокус на «Start». Только пока вкладка видна: скрытая панель inert.
+  useEffect(() => {
+    if (!enter || !active) return;
+    start.current?.focus({ preventScroll: true });
+  }, [enter, active, mode.id]);
+
+  useEffect(() => {
+    if (!enter || !active) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== "Enter" || e.defaultPrevented || e.isComposing || e.repeat) return;
+      if (e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) return;
+      const el = e.target instanceof Element ? e.target : null;
+      if (el?.closest(EDITABLE) || overlayOpen()) return;
+      // Фон документа, сама страница или строка сложности (у радио Enter своего действия нет) — «Start»; любая другая
+      // кнопка — её собственное действие.
+      const mine = el === null || el === document.body || el === document.documentElement || (root.current?.contains(el) === true && (el === root.current || el.closest('[role="radio"]') !== null));
+      if (!mine) return;
+      e.preventDefault();
+      latest.current();
+    };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [enter, active]);
+
   const { Icon } = mode;
   return (
-    <section className="mode-page" aria-labelledby={titleId} data-testid="mode-page" data-mode={mode.id}>
+    <section ref={root} className="mode-page" aria-labelledby={titleId} data-testid="mode-page" data-mode={mode.id}>
       <h2 id={titleId} className="mp-title">
         <Icon className="mp-ic" />
         <span>{t(`modes.${mode.textKey}.name`)}</span>
@@ -75,8 +113,20 @@ export function ModePage({ mode, pick, discard, onPick, onStart, daily = null }:
         {t("modes.difficulty")}
       </p>
       <DifficultyList options={mode.difficulties} pick={pick} onPick={onPick} labelledBy={diffId} />
-      <button type="button" className="hub-primary mp-start" onClick={onStart} data-testid="mode-page-start">
-        {discard ? t("modes.startNew") : t("modes.start")}
+      <button
+        ref={start}
+        type="button"
+        className="hub-primary mp-start"
+        onClick={onStart}
+        aria-keyshortcuts={enter ? "Enter" : undefined}
+        data-testid="mode-page-start"
+      >
+        <span>{discard ? t("modes.startNew") : t("modes.start")}</span>
+        {enter && (
+          <kbd className="mp-key" aria-hidden="true" data-testid="mode-page-enter">
+            ↩
+          </kbd>
+        )}
       </button>
     </section>
   );
