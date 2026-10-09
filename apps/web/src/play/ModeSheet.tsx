@@ -21,6 +21,7 @@ import { CalendarGlyph } from "./hubIcons";
 import { ChevronIcon } from "./inkIcons";
 import type { ModeDef } from "./modes";
 import { slotMeta } from "./slotMeta";
+import { usePortalHost } from "../shell/portalHost";
 
 export interface ModeSheetProps {
   readonly mode: ModeDef;
@@ -43,6 +44,7 @@ export interface ModeSheetProps {
 }
 
 export function ModeSheet({ mode, pick, discard, onPick, onStart, onClose, returnFocus, daily = null }: ModeSheetProps) {
+  const portalHost = usePortalHost();
   const { t } = useTranslation();
   const scrim = useRef<HTMLDivElement>(null);
   const root = useRef<HTMLElement>(null);
@@ -125,6 +127,6 @@ export function ModeSheet({ mode, pick, discard, onPick, onStart, onClose, retur
         </button>
       </section>
     </div>,
-    document.body,
+    portalHost,
   );
 }

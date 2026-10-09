@@ -18,6 +18,7 @@ import { useModal } from "../shell/useModal";
 import { NewGridGlyph, TrashGlyph } from "./hubIcons";
 import { ChevronIcon } from "./inkIcons";
 import type { ModeDef } from "./modes";
+import { usePortalHost } from "../shell/portalHost";
 
 export interface ModeMenuProps {
   readonly mode: ModeDef;
@@ -37,6 +38,7 @@ export interface ModeMenuProps {
 const GAP = 8;
 
 export function ModeMenu({ mode, anchor, preview, canContinue, onContinue, onNew, onDelete, onClose, returnFocus }: ModeMenuProps) {
+  const portalHost = usePortalHost();
   const { t } = useTranslation();
   const scrim = useRef<HTMLDivElement>(null);
   const root = useRef<HTMLDivElement>(null);
@@ -132,6 +134,6 @@ export function ModeMenu({ mode, anchor, preview, canContinue, onContinue, onNew
         )}
       </div>
     </div>,
-    document.body,
+    portalHost,
   );
 }

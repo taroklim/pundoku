@@ -19,6 +19,9 @@ import type { ModeId } from "../play/modes";
  */
 export const DESK_QUERY = "(min-width: 1100px) and (min-height: 680px)";
 
+/** id сайдбара — для `aria-controls` его кнопки (shell/SidebarToggle.tsx). */
+export const SIDEBAR_ID = "desk-sidebar";
+
 /** Ключ «сайдбар скрыт» (значение «1»); нет ключа — показан. */
 export const SIDEBAR_HIDDEN_KEY = "pundoku.sidebarHidden";
 

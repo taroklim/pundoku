@@ -13,6 +13,7 @@ import { useLayoutEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
 import { useModal } from "../shell/useModal";
+import { usePortalHost } from "../shell/portalHost";
 
 export interface AccuseMenuProps {
   /** Клетка-подсказка: номер и показанная цифра (то, что игрок и так видит на поле). */
@@ -28,6 +29,7 @@ export interface AccuseMenuProps {
 const GAP = 8;
 
 export function AccuseMenu({ cell, digit, anchor, onAccuse, onClose, returnFocus }: AccuseMenuProps) {
+  const portalHost = usePortalHost();
   const { t } = useTranslation();
   const scrim = useRef<HTMLDivElement>(null);
   const root = useRef<HTMLDivElement>(null);
@@ -90,7 +92,7 @@ export function AccuseMenu({ cell, digit, anchor, onAccuse, onClose, returnFocus
         </button>
       </div>
     </div>,
-    document.body,
+    portalHost,
   );
 }
 

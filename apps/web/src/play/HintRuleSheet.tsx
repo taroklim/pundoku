@@ -11,6 +11,7 @@ import { useTranslation } from "react-i18next";
 import { useSheetSwipe } from "../shell/useSheetSwipe";
 import { MarkIcon, NoneIcon, RepeatIcon } from "./hintIcons";
 import { NibIcon } from "./inkIcons";
+import { usePortalHost } from "../shell/portalHost";
 
 const FOCUSABLE = "button:not([disabled])";
 
@@ -24,6 +25,7 @@ export function boldParts(text: string): ReactNode[] {
  * `glyphs`: партия в Глифах (PD-215, как лесенка PD-199) — вступление говорит «знак» / «shape», а не «цифра» (контекст i18next).
  */
 export function HintRuleSheet({ onGo, onCancel, play = false, glyphs = false }: { onGo: () => void; onCancel: () => void; play?: boolean; glyphs?: boolean }) {
+  const portalHost = usePortalHost();
   const { t } = useTranslation();
   const scrim = useRef<HTMLDivElement>(null);
   const root = useRef<HTMLElement>(null);
@@ -118,6 +120,6 @@ export function HintRuleSheet({ onGo, onCancel, play = false, glyphs = false }: 
         </div>
       </section>
     </div>,
-    document.body,
+    portalHost,
   );
 }

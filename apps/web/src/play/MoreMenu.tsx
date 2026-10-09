@@ -15,6 +15,7 @@ import type { RefObject } from "react";
 import { useId, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
+import { usePortalHost } from "../shell/portalHost";
 import { useModal } from "../shell/useModal";
 import { CheckIcon, SpeakerIcon } from "../melody/icons";
 import { SealGlyph } from "./AccuseMenu";
@@ -41,6 +42,8 @@ export interface MoreMenuProps {
 
 interface Anchor {
   readonly top: number;
+  /** PD-267: десктоп C — правая кромка меню под кнопкой (кнопка в тулбаре, справа от неё инспектор), от правого края окна. */
+  readonly right?: number;
 }
 
 export function MoreMenu({ fill, onNew, onFill, accuse = null, sound = null, inspect = null }: MoreMenuProps) {
@@ -50,6 +53,8 @@ export function MoreMenu({ fill, onNew, onFill, accuse = null, sound = null, ins
   const menuId = useId();
   const open = anchor !== null;
   const close = () => setAnchor(null);
+  const portalHost = usePortalHost();
+  const inLayer = portalHost !== document.body;
 
   return (
     <>
@@ -63,13 +68,14 @@ export function MoreMenu({ fill, onNew, onFill, accuse = null, sound = null, ins
         aria-controls={open ? menuId : undefined}
         onClick={() => {
           const r = btn.current?.getBoundingClientRect();
-          setAnchor({ top: Math.round((r?.bottom ?? 54) + 4) });
+          const top = Math.round((r?.bottom ?? 54) + 4);
+          setAnchor(inLayer && r ? { top, right: Math.max(10, Math.round(window.innerWidth - r.right)) } : { top });
         }}
         data-testid="more-button"
       >
         <MoreIcon />
       </button>
-      {anchor && createPortal(<Popup id={menuId} top={anchor.top} fill={fill} accuse={accuse} sound={sound} inspect={inspect} returnFocus={btn} onClose={close} onNew={onNew} onFill={onFill} />, document.body)}
+      {anchor && createPortal(<Popup id={menuId} top={anchor.top} right={anchor.right} fill={fill} accuse={accuse} sound={sound} inspect={inspect} returnFocus={btn} onClose={close} onNew={onNew} onFill={onFill} />, portalHost)}
     </>
   );
 }
@@ -77,6 +83,7 @@ export function MoreMenu({ fill, onNew, onFill, accuse = null, sound = null, ins
 function Popup({
   id,
   top,
+  right,
   fill,
   accuse,
   sound,
@@ -85,7 +92,7 @@ function Popup({
   onClose,
   onNew,
   onFill,
-}: MoreMenuProps & { id: string; top: number; returnFocus: RefObject<HTMLElement | null>; onClose: () => void }) {
+}: MoreMenuProps & { id: string; top: number; right?: number; returnFocus: RefObject<HTMLElement | null>; onClose: () => void }) {
   const { t } = useTranslation();
   const scrim = useRef<HTMLDivElement>(null);
   const root = useRef<HTMLDivElement>(null);
@@ -101,7 +108,7 @@ function Popup({
         role="menu"
         aria-label={t("play.hub.more")}
         tabIndex={-1}
-        style={{ top, maxHeight: `calc(100dvh - ${top}px - 8px)` }}
+        style={right === undefined ? { top, maxHeight: `calc(100dvh - ${top}px - 8px)` } : { top, right, maxHeight: `calc(100dvh - ${top}px - 8px)` }}
         onClick={(e) => e.stopPropagation()}
         data-testid="more-menu"
       >

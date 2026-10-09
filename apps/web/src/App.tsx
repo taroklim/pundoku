@@ -14,7 +14,8 @@ import { useDynamicTypeFlag } from "./shell/dynamicType";
 import { isStandalone, useEdgeBack } from "./shell/edgeBack";
 import { ErrorBoundary } from "./shell/ErrorBoundary";
 import { useEscapeBack } from "./shell/escapeBack";
-import { Sidebar, SidebarToggle } from "./shell/Sidebar";
+import { PortalHostContext } from "./shell/portalHost";
+import { Sidebar } from "./shell/Sidebar";
 import { panelDomId, tabDomId, TabBar } from "./shell/TabBar";
 import { TabActiveContext, useTabSlide } from "./shell/tabSlide";
 import type { HelpBlockId } from "./help/blocks";
@@ -65,6 +66,8 @@ export function App() {
   // PD-266: десктоп C — сайдбар вместо таб-бара (от 1100 × 680 CSS px; ниже и на телефоне — прежняя оболочка).
   const desk = useDeskLayout();
   const { hidden: sideHidden } = useDeskState();
+  // PD-267: шиты, меню и тост в раскладке с сайдбаром — в слое окна внутри `.shell.desk` (контент-область, не поверх сайдбара).
+  const [deskLayer, setDeskLayer] = useState<HTMLDivElement | null>(null);
   // Пункт сайдбара — место назначения, а не вкладка «как оставили»: Play всегда ведёт на хаб (как повторный тап по вкладке),
   // режим — на свою незаконченную партию или, если её нет, на страницу режима (хаб Play → страница режима, макет C).
   const sideTab = (next: TabId) => {
@@ -175,13 +178,10 @@ export function App() {
   );
 
   return (
+    <PortalHostContext.Provider value={desk ? deskLayer : null}>
     <div className={desk ? `shell desk${sideHidden ? " side-off" : ""}` : "shell"}>
-      {desk && (
-        <>
-          <Sidebar section={pushed ? null : tab} hidden={sideHidden} onSelectTab={sideTab} onSelectMode={sideMode} />
-          <SidebarToggle hidden={sideHidden} onToggle={deskStore.toggleHidden} />
-        </>
-      )}
+      {/* PD-267: кнопка сайдбара — в шапке каждого экрана (TabHeader, навбар Settings/справки), не поверх контента. */}
+      {desk && <Sidebar section={pushed ? null : tab} hidden={sideHidden} onSelectTab={sideTab} onSelectMode={sideMode} />}
       {/* Пока открыт экран поверх, стопка вкладок под ним скрыта и inert, но НЕ размонтирована (md §6.1.5). */}
       <main ref={stackRef} className={overlay ? "stack covered" : "stack"} inert={overlay}>
         {TAB_IDS.filter((id) => visited.has(id)).map((id) => {
@@ -249,7 +249,9 @@ export function App() {
       )}
       {/* На десктопе C таб-бар скрыт стилем (desk.css), а не размонтирован: пилюля и движок слайда живут, пока окно сужают. */}
       <TabBar active={tab} onSelect={setTab} onPrewarm={prewarm} pillRef={pillRef} />
+      {desk && <div ref={setDeskLayer} className="desk-layer" data-testid="desk-layer" />}
     </div>
+    </PortalHostContext.Provider>
   );
 }
 

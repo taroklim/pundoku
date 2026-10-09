@@ -1,0 +1,333 @@
+/*
+ * PD-267: десктоп C «Сайдбар» — партия: тулбар над полем + инспектор справа, оверлеи в контексте окна
+ * (design/pd229-desktop.html, концепция C: `.cC`, `.ctb`, `.stage`, `.insp`; md §2, §3 C). Только токены tokens.css, нового
+ * цвета нет. Как и desk.css, каждое правило висит на `.shell.desk` (окно от 1100 × 680 CSS px): телефон, его ландшафт и
+ * компакт (ноутбук при 125/150 %) этих правил не видят — там прежняя колонка «поле → статус → панель».
+ *
+ * Разметка (play/PlayScreen.tsx, today/TodayScreen.tsx — только в раскладке с сайдбаром):
+ *   .play.play-fit.desk-play            сетка 2 × 2: [тулбар | инспектор] / [поле | инспектор]
+ *     > header.toolbar.desk-tb          52 px: кнопка сайдбара · (‹ Year) · заголовок + подпись · лампочка · ⚙ · ⋯
+ *     > .desk-stage > .board-wrap       поле по центру: min(720, окно − 124, ширина области − 96) — как `--bd` макета
+ *     > aside.desk-insp                 инспектор clamp(260, 20vw, 320): время/остаток, статус, 3 × 3 + действия, клавиши
+ *   .shell.desk > .desk-layer           слой окна: шиты, меню и тост (порталы, shell/portalHost.ts) — справа от сайдбара
+ */
+
+.shell.desk {
+  --insp-w: clamp(260px, 20vw, 320px);
+}
+
+/* ---------- Шапки экранов: кнопка сайдбара первой, заголовок рядом с ней, действия справа ---------- */
+.shell.desk .toolbar {
+  justify-content: flex-start;
+  padding-left: 8px;
+}
+.shell.desk .toolbar > .toolbar-end {
+  margin-left: auto;
+}
+.shell.desk .toolbar > .side-toggle {
+  align-self: center;
+}
+
+/* ---------- Партия: сетка «тулбар + поле | инспектор» ---------- */
+.shell.desk .desk-play {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) var(--insp-w);
+  grid-template-rows: auto minmax(0, 1fr);
+  /* Обвязка поля по высоте — тулбар 52 + 20 над полем + 52 под ним (макет: 100cqh − 52 − 72). Резерва под док нет: док
+     подсказки встаёт в инспектор, поле от него не зависит. */
+  --extra: 0px;
+  --chrome0: 124px;
+  --chrome: 124px;
+}
+.shell.desk .desk-play > .desk-tb {
+  grid-column: 1;
+  grid-row: 1;
+}
+.shell.desk .desk-play > .desk-stage {
+  grid-column: 1;
+  grid-row: 2;
+  min-height: 0;
+  overflow: hidden;
+}
+.shell.desk .desk-play > .desk-insp {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+}
+
+/* ---------- Тулбар партии (макет `.ctb`) ---------- */
+.shell.desk .toolbar.desk-tb {
+  min-height: 52px;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 12px 6px 8px;
+}
+.shell.desk .desk-tb > .desk-tt {
+  /* Растягивается на всё свободное место: подпись — inline-size-контейнер (play.css) и своей ширины не задаёт. */
+  flex: 1 1 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+.shell.desk .desk-tb > .desk-tt > .title {
+  font-size: 1.06rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  line-height: 1.25;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.shell.desk .desk-tb > .desk-tt > .subline {
+  margin: 1px 0 0;
+  padding: 0;
+  font-size: 0.82rem;
+  color: var(--label-2-grouped);
+}
+.shell.desk .desk-tb > .archive-back {
+  flex: none;
+  min-height: 36px;
+  margin: 0;
+}
+
+/* ---------- Поле: по центру области контента, до 720 px ---------- */
+.shell.desk .desk-stage > .board-wrap {
+  padding: 20px 48px 0;
+}
+.shell.desk .desk-play .board {
+  width: min(100%, 720px, 100dvh - var(--chrome));
+  --s: calc((min(100cqi, 720px, 100dvh - var(--chrome)) - 2 * var(--box-gap)) / 9);
+}
+/* Панель ожидания генерации (PD-189) — на месте поля того же размера. */
+.shell.desk .desk-play .wait {
+  top: 20px;
+  left: 48px;
+  right: 48px;
+  height: min(100cqi, 720px, 100dvh - var(--chrome));
+}
+
+/* ---------- Инспектор (макет `.insp`) ---------- */
+.shell.desk .desk-insp {
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  padding: 20px;
+  background: var(--bg);
+  border-left: 1px solid var(--hairline);
+  /* Во время партии всё помещается и при 1280 × 720 (1920 × 1080 при 150 %); прокрутка — только запас на крупный текст. */
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+.shell.desk .insp-meta {
+  margin: 0;
+  display: grid;
+  gap: 10px;
+}
+.shell.desk .insp-meta > div {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--hairline);
+}
+.shell.desk .insp-meta dt {
+  font-size: 0.875rem;
+  color: var(--label-2-grouped);
+}
+.shell.desk .insp-meta dd {
+  margin: 0;
+  font-size: 0.94rem;
+  color: var(--label);
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+/* Статус: отклики (Fill, полная сетка, Лжец), подсказка звука, Фонарь, строка Ink, источник сетки дня. Слева, с переносом. */
+.shell.desk .insp-status {
+  display: grid;
+  gap: 4px;
+  justify-items: start;
+  min-width: 0;
+}
+.shell.desk .insp-status:empty {
+  display: none;
+}
+.shell.desk .insp-status .today-status {
+  justify-items: start;
+  gap: 4px;
+}
+.shell.desk .insp-status .status,
+.shell.desk .insp-status .source {
+  text-align: left;
+  overflow-wrap: break-word;
+}
+/* Мелодия и Фонарь: в инспекторе места на полную фразу хватает всегда — полная форма, с переносом, без контейнер-запросов. */
+.shell.desk .insp-status .status.melody-hint,
+.shell.desk .insp-status .status.lantern-status {
+  justify-content: flex-start;
+  flex-wrap: wrap;
+  padding: 0;
+}
+.shell.desk .insp-status .status.melody-hint > svg {
+  display: block;
+}
+.shell.desk .insp-status .status.melody-hint > .mh-long,
+.shell.desk .insp-status .status.lantern-status > .ls-long {
+  position: static;
+  width: auto;
+  height: auto;
+  overflow: visible;
+  clip-path: none;
+  white-space: normal;
+  flex: 1 1 0;
+  min-width: 0;
+  text-align: left;
+}
+.shell.desk .insp-status .status.melody-hint > :is(.mh-short, .mh-left),
+.shell.desk .insp-status .status.lantern-status > .ls-short {
+  display: none;
+}
+.shell.desk .insp-status .status.lantern-status > .ls-done {
+  margin: 0;
+}
+.shell.desk .insp-status .ink-entry {
+  width: 100%;
+}
+
+/* Панель 1–9 → 3 × 3 (1-2-3 сверху, как на телефоне), действия — столбиком с чипами клавиш. */
+.shell.desk .desk-insp .pad-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 0;
+}
+.shell.desk .desk-insp .pad {
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+.shell.desk .desk-insp .key {
+  min-height: 64px;
+  border-radius: 10px;
+  gap: 2px;
+}
+.shell.desk .desk-insp .key .kd {
+  font-size: min(1.62rem, 12cqi);
+}
+.shell.desk .desk-insp .key .kr {
+  font-size: 12px;
+}
+.shell.desk .desk-insp .gl-pad .kd .gl {
+  width: min(28px, 11cqi);
+  height: min(28px, 11cqi);
+}
+.shell.desk .desk-insp .actions {
+  grid-template-columns: 1fr;
+  gap: 6px;
+  padding: 0;
+}
+.shell.desk .desk-insp .act {
+  min-height: 44px;
+  justify-content: flex-start;
+  gap: 8px;
+  padding: 0 8px 0 10px;
+  color: var(--label-2-grouped);
+  font-size: 0.875rem;
+}
+.shell.desk .desk-insp .act[aria-pressed="true"] {
+  color: var(--ink);
+}
+.shell.desk .desk-insp .act > kbd {
+  margin-left: auto;
+}
+
+/* Чипы клавиш (макет `kbd`): на действиях и в шпаргалке. */
+.shell.desk .desk-insp kbd {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 22px;
+  height: 20px;
+  padding: 0 5px;
+  border: 1px solid var(--hairline);
+  border-radius: 5px;
+  font: 500 12px/1 var(--font-sans);
+  color: var(--label-2-grouped);
+  white-space: nowrap;
+}
+.shell.desk .desk-insp .act[aria-pressed="true"] > kbd {
+  color: var(--ink);
+  border-color: currentColor;
+}
+
+/* Шпаргалка клавиш — внизу инспектора, от высоты окна 800 (ниже места нет: остаются чипы на действиях и title). */
+.shell.desk .insp-keys {
+  margin-top: auto;
+  display: grid;
+  gap: 7px;
+}
+.shell.desk .insp-keys h3 {
+  margin: 0 0 2px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--label-2-grouped);
+}
+.shell.desk .insp-keys ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 7px;
+}
+.shell.desk .insp-keys li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.82rem;
+  color: var(--label-2-grouped);
+}
+.shell.desk .insp-keys .kk {
+  flex: none;
+  min-width: 96px;
+  display: flex;
+  gap: 3px;
+}
+@media (max-height: 799.98px) {
+  .shell.desk .insp-keys {
+    display: none;
+  }
+}
+
+/* Док подсказки — на месте панели 3 × 3 и действий (как на телефоне на месте панели); текст целиком, без своей прокрутки. */
+.shell.desk .desk-insp .hint-dock {
+  flex: none;
+  margin: 0;
+  max-height: none;
+}
+
+/* Ожидание генерации (PD-189): пока поле скрыто, скрыты и значения/панель инспектора (место держится); потом — fadeRise. */
+.shell.desk .play-waiting .desk-insp > :is(.insp-meta, .insp-status, .pad-wrap) {
+  visibility: hidden;
+}
+.shell.desk .play-in .desk-insp > .pad-wrap {
+  animation: fadeRise calc(220ms * var(--mk)) var(--e-out) backwards;
+}
+
+/* ---------- Слой окна: шиты, меню и тост — над областью контента, сайдбар не накрывают ---------- */
+.shell.desk > .desk-layer > :is(.menu-scrim, .sheet-scrim, .st-scrim, .ink-scrim, .tl-root, .ysheet-root) {
+  left: var(--desk-x);
+}
+/* Контекстные меню (Лжец, строка режима): от края области контента, а не окна. */
+.shell.desk > .desk-layer .ctx-menu {
+  left: calc(var(--desk-x) + 10px);
+}
+/* Тост «Отменить» (PD-225): в области контента, по центру, не шире шита — низ сайдбара не перекрывает. */
+.shell.desk > .desk-layer > .undo-toast {
+  left: calc(var(--desk-x) + 16px);
+  right: 16px;
+  bottom: 16px;
+  max-width: 560px;
+  margin-inline: auto;
+}

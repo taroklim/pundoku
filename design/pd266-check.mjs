@@ -150,6 +150,7 @@ async function measure(p) {
     const pane = document.querySelector(".tab-pane:not(.off)");
     const board = pane?.querySelector(".board");
     const title = (document.querySelector(".push-layer") ?? pane)?.querySelector(".toolbar .title, .settings-navbar .settings-back");
+    const toggleEl = (document.querySelector(".push-layer") ?? pane)?.querySelector(".side-toggle") ?? null;
     const texts = [];
     if (vis(side))
       for (const el of side.querySelectorAll(".side-lab, .side-meta")) {
@@ -169,8 +170,9 @@ async function measure(p) {
       sideScrolls: side ? side.scrollHeight > side.clientHeight + 1 : false,
       sideBg: sideCs?.backgroundColor,
       sideFilter: sideCs ? sideCs.backdropFilter || sideCs.webkitBackdropFilter || "none" : null,
-      toggle: vis(document.querySelector(".side-toggle")) ? r(document.querySelector(".side-toggle")) : null,
-      toggleLabel: document.querySelector(".side-toggle")?.getAttribute("aria-label") ?? null,
+      // PD-267: кнопка — в шапке каждого экрана (по одной на панель вкладки и экран поверх); берём кнопку видимого экрана.
+      toggle: vis(toggleEl) ? r(toggleEl) : null,
+      toggleLabel: toggleEl?.getAttribute("aria-label") ?? null,
       title: r(title),
       stack: r(document.querySelector(".stack")),
       board: r(board),
@@ -296,7 +298,7 @@ async function runFlow(browser, BR, NEW) {
     check(`${T}: стрелки по сайдбару`, f1 === "side-play" && f2 === "side-year", { f1, f2 });
 
     // Скрытие запоминается: перезагрузка — скрыт; контент от левого края; показать — вернулся.
-    await p.locator('[data-testid="sidebar-toggle"]').click();
+    await p.locator('.tab-pane:not(.off) [data-testid="sidebar-toggle"]').click();
     await settle();
     m = await measure(p);
     check(`${T}: скрыть — сайдбара нет, контент с левого края, кнопка «Show sidebar»`, !m.sideShown && m.stack.left === 0 && m.toggleLabel === "Show sidebar" && m.title.left >= m.toggle.right && inside(m.board, m), { stackLeft: m.stack.left, label: m.toggleLabel });
@@ -306,7 +308,7 @@ async function runFlow(browser, BR, NEW) {
     await settle();
     m = await measure(p);
     check(`${T}: после перезагрузки сайдбар по-прежнему скрыт`, !m.sideShown && m.shellClass === "shell desk side-off", { shell: m.shellClass });
-    await p.locator('[data-testid="sidebar-toggle"]').click();
+    await p.locator('.tab-pane:not(.off) [data-testid="sidebar-toggle"]').click();
     await settle();
     m = await measure(p);
     check(`${T}: показать — сайдбар на месте`, m.sideShown && m.toggleLabel === "Hide sidebar", { label: m.toggleLabel });

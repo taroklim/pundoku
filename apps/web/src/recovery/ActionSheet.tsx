@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { useEffect, useId, useRef } from "react";
 import { createPortal } from "react-dom";
+import { usePortalHost } from "../shell/portalHost";
 
 interface ActionSheetProps {
   title: string;
@@ -36,6 +37,7 @@ const FOCUSABLE = "button:not([disabled])";
  * уезжают за край (320×568, AX3, uk/ru), а прокрутка не бывает на кнопке (action-sheets.md).
  */
 export function ActionSheet({ title, message, actionLabel, destructive = false, primary = false, cancelLabel, onAction, onCancel, guardTail = false }: ActionSheetProps) {
+  const portalHost = usePortalHost();
   const tail = useRef(guardTail);
   const scrim = useRef<HTMLDivElement>(null);
   const root = useRef<HTMLDivElement>(null);
@@ -142,6 +144,6 @@ export function ActionSheet({ title, message, actionLabel, destructive = false, 
         </div>
       </div>
     </div>,
-    document.body,
+    portalHost,
   );
 }

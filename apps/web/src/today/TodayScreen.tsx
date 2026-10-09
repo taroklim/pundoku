@@ -18,6 +18,7 @@ import { HintButton } from "../play/HintButton";
 import { HintDock, HINT_DOCK_ID } from "../play/HintDock";
 import { HintRuleSheet, boldParts } from "../play/HintRuleSheet";
 import { useHintLadder } from "../play/hintStore";
+import { DeskInspector, InspectorMeta, KeyLegend } from "../play/DeskInspector";
 import { InkEntry } from "../play/InkEntry";
 import type { HelpBlockId } from "../help/blocks";
 import { cellsLeft, isGridFull } from "../play/logic";
@@ -27,6 +28,7 @@ import { Subline } from "../play/Subline";
 import { useDeferredFocus } from "../shell/afterPaint";
 import { useEscapeBack } from "../shell/escapeBack";
 import { useTabActive } from "../shell/tabSlide";
+import { useDeskLayout } from "../shell/desk";
 import { TabHeader } from "../shell/TabHeader";
 import type { DayStore } from "./dayStore";
 import { dayStore } from "./dayStore";
@@ -170,19 +172,77 @@ export function DayView({ store, archive, onOpenSettings, onOpenHelp }: { store:
   // (handleGameKey) и из партии не выводит.
   useEscapeBack(archive !== undefined && !(interactive && !stale), () => archive?.onBack());
 
+  // PD-267: десктоп C — партия дня в тулбаре + поле + инспектор (пока поле на экране; карточка «решено» прежняя — PD-268).
+  const desk = useDeskLayout();
+  const deskFit = desk && !(phase === "solved" && cardShown);
+  const backButton = archive ? (
+    <button type="button" className="archive-back" onClick={archive.onBack} aria-label={t("archive.backLabel")} data-testid="archive-back">
+      <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+        <path d="m15 6-6 6 6 6" />
+      </svg>
+      <span>{t("tabs.year")}</span>
+    </button>
+  ) : null;
+  const subline = <Subline day={dayLabel} difficulty={diffLabel} ink={play?.ink === true} help={snap.assisted === true} clock={showClock && !deskFit ? clock : null} />;
+  // Статус в зазоре (телефон) или в инспекторе (десктоп C; там «осталось N» — строка «Left», здесь только отклики).
+  const statusNode = (deskMode: boolean) => (
+    <>
+      {phase === "loading" && (
+        <p className="status" role="status">
+          {t(archive ? "archive.loading" : "today.loading")}
+        </p>
+      )}
+      {unavailable && (
+        <p className="status" role="alert" data-testid="archive-unavailable">
+          {t("archive.unavailable")}
+        </p>
+      )}
+      {phase === "error" && !unavailable && (
+        <p className="status" role="alert">
+          {t(archive ? "archive.failed" : "today.failed")}{" "}
+          <button type="button" className="link" onClick={() => void store.load()}>
+            {t("play.retry")}
+          </button>
+        </p>
+      )}
+      {inkEntry && <InkEntry on={play?.ink === true} setOn={(on) => store.setInk(on)} />}
+      {!inkEntry && !hint.open && (phase === "playing" || phase === "solved") && (
+        <div className="today-status">
+          {hint.nudge ? (
+            <p className="status nudge" data-testid="hint-nudge">
+              {boldParts(t("hint.nudge"))}
+            </p>
+          ) : deskMode && !snap.hint && !full ? null : (
+            <StatusLine left={left} full={full} hint={snap.hint} />
+          )}
+          {sourceLabel && (
+            <p className="source" data-testid="source">
+              {sourceLabel}
+            </p>
+          )}
+        </div>
+      )}
+    </>
+  );
+  const deskStatus = deskFit ? statusNode(true) : null;
+
   return (
-    <div ref={root} className={`play today${archive ? " archive" : ""}${fitClass}`} onKeyDown={(e) => handleGameKey(e, store, ladder)} data-testid={archive ? "archive-screen" : undefined} data-date={archive ? archive.date : undefined}>
+    <div ref={root} className={`play today${archive ? " archive" : ""}${fitClass}${deskFit ? " desk-play" : ""}`} onKeyDown={(e) => handleGameKey(e, store, ladder)} data-testid={archive ? "archive-screen" : undefined} data-date={archive ? archive.date : undefined}>
       <p className="sr-only" role="status" aria-live="polite" aria-atomic="true">
         {announcement}
       </p>
-      {archive ? (
+      {desk ? (
+        // PD-267: десктоп C — тулбар над полем: кнопка сайдбара, («‹ Year» архива), заголовок с подписью дня, лампочка, шестерёнка.
+        <TabHeader
+          lead={archive ? backButton : undefined}
+          title={<h1 className="title">{t(archive ? "archive.title" : "tabs.today")}</h1>}
+          sub={subline}
+          actions={hintButton}
+          onOpenSettings={archive ? undefined : onOpenSettings}
+        />
+      ) : archive ? (
         <header className="toolbar toolbar-archive">
-          <button type="button" className="archive-back" onClick={archive.onBack} aria-label={t("archive.backLabel")} data-testid="archive-back">
-            <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-              <path d="m15 6-6 6 6 6" />
-            </svg>
-            <span>{t("tabs.year")}</span>
-          </button>
+          {backButton}
           <h1 className="title">{t("archive.title")}</h1>
           {hintButton}
         </header>
@@ -190,7 +250,7 @@ export function DayView({ store, archive, onOpenSettings, onOpenHelp }: { store:
         // Шестерёнка (PD-49/PD-123): действие шапки вкладки, а не четвёртая вкладка; ведёт на `#/settings`.
         <TabHeader title={<h1 className="title">{t("tabs.today")}</h1>} actions={hintButton} onOpenSettings={onOpenSettings} />
       )}
-      <Subline day={dayLabel} difficulty={diffLabel} ink={play?.ink === true} help={snap.assisted === true} clock={showClock ? clock : null} />
+      {!desk && subline}
 
       {phase === "solved" && cardShown ? (
         <>
@@ -243,48 +303,24 @@ export function DayView({ store, archive, onOpenSettings, onOpenHelp }: { store:
             </section>
           )}
         </>
+      ) : deskFit ? (
+        // PD-267: десктоп C — поле по центру области контента, справа инспектор: время/остаток, статус и источник, панель 3×3
+        // с действиями (или док подсказки на её месте), шпаргалка клавиш. Карточка «решено» и Grid ∞ — пока прежние (PD-268).
+        <>
+          <div className="desk-stage">{!unavailable && <Board snap={snap} store={store} dim={phase === "solved"} hintMarks={hint.marks} />}</div>
+          <DeskInspector>
+            <InspectorMeta clock={showClock ? clock : null} left={play && !unavailable ? left : null} />
+            {deskStatus && <div className="insp-status">{deskStatus}</div>}
+            {!unavailable && (hint.open ? <HintDock ladder={ladder} state={hint} fit /> : <GamePad snap={snap} store={store} desk />)}
+            {!unavailable && <KeyLegend fill={play?.ink !== true} hint={store.hintAllowed()} />}
+          </DeskInspector>
+        </>
       ) : (
         <>
           {!unavailable && <Board snap={snap} store={store} dim={phase === "solved"} hintMarks={hint.marks} />}
 
           {/* Свободное место — МЕЖДУ полем и панелью (макет, находка 1); в зазоре — статус. */}
-          <div className="gap">
-            {phase === "loading" && (
-              <p className="status" role="status">
-                {t(archive ? "archive.loading" : "today.loading")}
-              </p>
-            )}
-            {unavailable && (
-              <p className="status" role="alert" data-testid="archive-unavailable">
-                {t("archive.unavailable")}
-              </p>
-            )}
-            {phase === "error" && !unavailable && (
-              <p className="status" role="alert">
-                {t(archive ? "archive.failed" : "today.failed")}{" "}
-                <button type="button" className="link" onClick={() => void store.load()}>
-                  {t("play.retry")}
-                </button>
-              </p>
-            )}
-            {inkEntry && <InkEntry on={play?.ink === true} setOn={(on) => store.setInk(on)} />}
-            {!inkEntry && !hint.open && (phase === "playing" || phase === "solved") && (
-              <div className="today-status">
-                {hint.nudge ? (
-                  <p className="status nudge" data-testid="hint-nudge">
-                    {boldParts(t("hint.nudge"))}
-                  </p>
-                ) : (
-                  <StatusLine left={left} full={full} hint={snap.hint} />
-                )}
-                {sourceLabel && (
-                  <p className="source" data-testid="source">
-                    {sourceLabel}
-                  </p>
-                )}
-              </div>
-            )}
-          </div>
+          <div className="gap">{statusNode(false)}</div>
 
           {!unavailable && (hint.open ? <HintDock ladder={ladder} state={hint} fit /> : <GamePad snap={snap} store={store} />)}
         </>

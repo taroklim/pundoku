@@ -3,6 +3,7 @@ import { useEffect, useId, useRef } from "react";
 import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
 import { useSheetSwipe } from "../shell/useSheetSwipe";
+import { inertOutside, usePortalHost } from "../shell/portalHost";
 
 interface ShellProps {
   title: string;
@@ -22,6 +23,7 @@ interface ShellProps {
  * захвата, до слушателя Year), фокус уходит на заголовок и возвращается на то, что открыло шит.
  */
 export function TimelapseSheetShell({ title, sub, onClose, testId, children, headExtra = null }: ShellProps) {
+  const portalHost = usePortalHost();
   const { t } = useTranslation();
   const rootRef = useRef<HTMLDivElement>(null);
   const headRef = useRef<HTMLHeadingElement>(null);
@@ -33,12 +35,8 @@ export function TimelapseSheetShell({ title, sub, onClose, testId, children, hea
 
   useEffect(() => {
     const opener = document.activeElement instanceof HTMLElement ? document.activeElement : null;
-    const muted: Element[] = [];
-    for (const el of Array.from(document.body.children)) {
-      if (el === rootRef.current || el.hasAttribute("inert")) continue;
-      el.setAttribute("inert", "");
-      muted.push(el);
-    }
+    // PD-267: соседи по всей цепочке предков (в `<body>` — те же дети body; в слое окна десктопа C — ещё сайдбар и стопка).
+    const unmute = inertOutside(rootRef.current);
     headRef.current?.focus({ preventScroll: true });
     const onKey = (e: KeyboardEvent) => {
       if (e.key !== "Escape") return;
@@ -49,7 +47,7 @@ export function TimelapseSheetShell({ title, sub, onClose, testId, children, hea
     window.addEventListener("keydown", onKey, true);
     return () => {
       window.removeEventListener("keydown", onKey, true);
-      for (const el of muted) el.removeAttribute("inert");
+      unmute();
       if (opener && document.contains(opener)) opener.focus({ preventScroll: true });
     };
   }, []);
@@ -72,6 +70,6 @@ export function TimelapseSheetShell({ title, sub, onClose, testId, children, hea
         <div className="tl-body">{children}</div>
       </section>
     </div>,
-    document.body,
+    portalHost,
   );
 }

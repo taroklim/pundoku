@@ -4,6 +4,8 @@
  * (DOM не меняется); (2) от 1100 × 680 — сайдбар вместо таб-бара, выделение раздела/режима, переключение раскладки «на лету»;
  * (3) скрытие/показ с запоминанием; (4) маршрутизация режимов: режим с партией — на доску, без партии — страница режима,
  * Play — всегда на хаб. Раскладку jsdom не считает — она в design/pd266-check.mjs (Playwright).
+ * PD-267: (5) кнопка сайдбара — в шапке экрана (не поверх контента); (6) порталы (шиты, меню, тост) в раскладке с сайдбаром —
+ * в слое окна `.shell.desk > .desk-layer`, на телефоне/компакте — в `<body>`, как раньше. Живая проверка — design/pd267-check.mjs.
  */
 import { act } from "react";
 import { createRoot } from "react-dom/client";
@@ -16,7 +18,23 @@ import { DESK_QUERY, deskStore, SIDEBAR_HIDDEN_KEY } from "./shell/desk";
 import { currentItem } from "./shell/Sidebar";
 
 vi.mock("./play/PlayScreen", () => ({ PlayScreen: () => <p>play</p> }));
-vi.mock("./today/TodayScreen", () => ({ TodayScreen: () => <p>today</p> }));
+// PD-267: Today — с настоящей шапкой (в ней кнопка сайдбара) и «зондом» портала: куда оболочка отдаёт шиты/меню/тост.
+vi.mock("./today/TodayScreen", async () => {
+  const { TabHeader } = await import("./shell/TabHeader");
+  const { usePortalHost } = await import("./shell/portalHost");
+  const { createPortal } = await import("react-dom");
+  return {
+    TodayScreen: () => {
+      const portalHost = usePortalHost();
+      return (
+        <>
+          <TabHeader title={<h1 className="title">today</h1>} />
+          {createPortal(<p data-testid="portal-probe">sheet</p>, portalHost)}
+        </>
+      );
+    },
+  };
+});
 vi.mock("./today/ArchiveScreen", () => ({ ArchiveScreen: () => <p>archive</p> }));
 vi.mock("./year/YearTab", () => ({ YearTab: () => <p>year</p> }));
 vi.mock("./recovery/SettingsScreen", () => ({
@@ -234,6 +252,43 @@ describe("скрытие сайдбара запоминается", () => {
     render();
     expect(shell().className).toBe("shell");
     expect(q("sidebar-toggle")).toBeNull();
+  });
+});
+
+describe("PD-267: кнопка в шапке, оверлеи в слое окна", () => {
+  it("кнопка сайдбара — первая в шапке экрана, отдельной кнопки поверх контента нет", () => {
+    deskOn = true;
+    render();
+    const toggle = q("sidebar-toggle")!;
+    expect(toggle.closest("header.toolbar")).not.toBeNull();
+    expect(toggle.parentElement!.firstElementChild).toBe(toggle);
+    expect(shell().querySelector(":scope > .side-toggle")).toBeNull();
+    expect(toggle.getAttribute("aria-controls")).toBe(q("sidebar")!.id);
+  });
+
+  it("на телефоне/компакте шапка прежняя — без кнопки", () => {
+    render();
+    expect(host.querySelector("header.toolbar")).not.toBeNull();
+    expect(q("sidebar-toggle")).toBeNull();
+  });
+
+  it("десктоп: портал — в `.shell.desk > .desk-layer` (сайдбар не накрывает); телефон — в <body>; переключение на лету", () => {
+    deskOn = true;
+    render();
+    const layer = shell().querySelector(":scope > .desk-layer")!;
+    expect(layer).not.toBeNull();
+    expect(document.querySelector('[data-testid="portal-probe"]')!.parentElement).toBe(layer);
+    flipLayout(false);
+    expect(shell().querySelector(".desk-layer")).toBeNull();
+    expect(document.querySelector('[data-testid="portal-probe"]')!.parentElement).toBe(document.body);
+    flipLayout(true);
+    expect(document.querySelector('[data-testid="portal-probe"]')!.parentElement).toBe(shell().querySelector(":scope > .desk-layer"));
+  });
+
+  it("телефон: слоя окна нет, портал в <body> (DOM прежний)", () => {
+    render();
+    expect(host.querySelector(".desk-layer")).toBeNull();
+    expect(document.querySelector('[data-testid="portal-probe"]')!.parentElement).toBe(document.body);
   });
 });
 

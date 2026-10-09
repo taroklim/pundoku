@@ -16,7 +16,21 @@
   "desk": {
     "hideSidebar": "Hide sidebar",
     "showSidebar": "Show sidebar",
-    "inProgress": "In progress"
+    "inProgress": "In progress",
+    "inspector": "Puzzle tools",
+    "time": "Time",
+    "left": "Left",
+    "cells_one": "{{count}} cell",
+    "cells_other": "{{count}} cells",
+    "keys": {
+      "title": "Keyboard",
+      "move": "move",
+      "place": "place a digit",
+      "note": "note instead",
+      "fill": "fill candidates",
+      "hint": "hint",
+      "deselect": "clear selection"
+    }
   },
   "settings": {
     "title": "Settings",

@@ -8,14 +8,14 @@ import { availableModes } from "../play/modes";
 import { playStore } from "../play/store";
 import type { PlayScreenSnapshot } from "../play/store";
 import { dayStore } from "../today/dayStore";
-import { useDeskState } from "./desk";
+import { SIDEBAR_ID, useDeskState } from "./desk";
 import { TabIcon } from "./icons";
 import type { TabId } from "./tabs";
 
 /** Что выделено в сайдбаре: раздел, режим Play (второй уровень) или ничего (Settings, справка). */
 export type SidebarItem = TabId | ModeId | null;
 
-export const SIDEBAR_ID = "desk-sidebar";
+export { SIDEBAR_ID };
 
 /**
  * Выбранный пункт: на Play — режим партии на доске (Лжец дня — это режим Лжец), страница режима или сам Play (хаб, восстановление).
@@ -122,26 +122,5 @@ export function Sidebar({ section, hidden, onSelectTab, onSelectMode }: SidebarP
       <div className="side-gap" aria-hidden="true" />
       {tabItem("year")}
     </nav>
-  );
-}
-
-/** Значок «боковая панель» (макет pd229, `I.sidebar`): рамка окна с полосой слева. Штрих 1.7, как у значков вкладок. */
-function SidebarIcon() {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <rect x="3" y="4.5" width="18" height="15" rx="3" />
-      <path d="M9.5 4.5v15" />
-    </svg>
-  );
-}
-
-/** Кнопка «Скрыть/Показать боковую панель» — в левом верхнем углу контента, на одном месте в обоих состояниях (макет C). */
-export function SidebarToggle({ hidden, onToggle }: { hidden: boolean; onToggle: () => void }) {
-  const { t } = useTranslation();
-  const label = t(hidden ? "desk.showSidebar" : "desk.hideSidebar");
-  return (
-    <button type="button" className="side-toggle" aria-label={label} title={label} aria-controls={SIDEBAR_ID} onClick={onToggle} data-testid="sidebar-toggle">
-      <SidebarIcon />
-    </button>
   );
 }
