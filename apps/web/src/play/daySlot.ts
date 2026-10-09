@@ -79,7 +79,8 @@ export function summaryFromStore(source: DaySlotSource): SlotSummary | null {
 
 /**
  * PD-275: незавершённый день из хранилища — сегодняшний, иначе самый поздний прошлый; `exclude` — дата, которую ведёт стор
- * Today (о ней судит он). Хранилище без `listDays` — только запись сегодняшнего дня (как до PD-275).
+ * Today (о ней судит он). Хранилище без `listDays` — только запись сегодняшнего дня (как до PD-275). PD-283: даты позже
+ * `today` пропускаются.
  */
 export async function summaryFromRepo(source: DaySlotSource, today: string, exclude: string | null): Promise<SlotSummary | null> {
   const list = source.repo.listDays;
@@ -88,7 +89,9 @@ export async function summaryFromRepo(source: DaySlotSource, today: string, excl
   for (const record of await list.call(source.repo)) {
     if (!record || record.date === exclude) continue;
     const s = summaryFromRecord(record);
-    if (!s?.date) continue;
+    // PD-283: день «из будущего» (часы отвели назад, сменили пояс на запад) не продолжаем — архив его не откроет; запись не
+    // трогаем, строка вернётся, когда наступит её дата.
+    if (!s?.date || s.date > today) continue;
     if (best === null || s.date === today || (best.date !== today && s.date > best.date!)) best = s;
   }
   return best;

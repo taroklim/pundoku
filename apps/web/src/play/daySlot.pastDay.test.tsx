@@ -71,6 +71,18 @@ describe("summaryFromRepo: какой день хранилища — в «Пр�
     expect((await summaryFromRepo(f.source, D2, D2))?.date).toBe(D0); // дату ведёт стор — о ней судит он
   });
 
+  it("PD-283: незаконченный день «из будущего» (часы отвели назад) в «Продолжить» не попадает, запись остаётся", async () => {
+    const D3 = "2026-10-08"; // завтра относительно сегодняшнего D2
+    const f = fakeSource({}, [unfinished(D3)]);
+    expect(await summaryFromRepo(f.source, D2, null)).toBeNull();
+    f.days.push(unfinished(D0));
+    expect((await summaryFromRepo(f.source, D2, null))?.date).toBe(D0); // будущий не перебивает прошлый
+    f.days.push(unfinished(D2));
+    expect((await summaryFromRepo(f.source, D2, null))?.date).toBe(D2);
+    expect(f.days.map((d) => d.date)).toContain(D3); // данные не удаляются
+    expect((await summaryFromRepo(f.source, D3, null))?.date).toBe(D3); // наступила его дата — строка вернулась
+  });
+
   it("хранилище без listDays — только сегодняшний, как до PD-275", async () => {
     const getDay = vi.fn(async (d: string) => (d === D2 ? unfinished(D2) : unfinished(D1)));
     const source: DaySlotSource = { store: fakeSource({}, []).source.store, repo: { getDay }, now: () => noon(D2) };

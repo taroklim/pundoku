@@ -498,7 +498,8 @@ export class PlayStore extends GameStore<PlayScreenSnapshot> {
     }
     let best: string | null = null;
     for (const [date, rec] of this.dailies) {
-      if (date === s.daily || rec.play.solved || !hasProgress(rec.play)) continue;
+      // PD-283: Лжец «из будущего» (часы отвели назад, сменили пояс на запад) в «Продолжить» не попадает; запись остаётся.
+      if (date === s.daily || date > today || rec.play.solved || !hasProgress(rec.play)) continue;
       if (best === null || date === today || (best !== today && date > best)) best = date;
     }
     if (best === null) return null;

@@ -142,6 +142,34 @@ describe("PD-217: Лжец дня после полуночи", () => {
     expect(s.liarDayContinue()).toMatchObject({ date: D1 });
   });
 
+  it("PD-283: Лжец дня «из будущего» (часы отвели назад) в «Продолжить» не попадает; запись остаётся, со своей датой вернётся", async () => {
+    const repo = new InMemoryProgressRepository();
+    at(D2);
+    const a = new PlayStore({ storage: repo });
+    await a.restore();
+    a.startDaily(D2);
+    deliver(a, P2);
+    oneMove(a);
+    a.toHub();
+    await a.flushed();
+    at(D1); // откат часов / смена пояса на запад
+    const b = new PlayStore({ storage: repo });
+    await b.restore();
+    expect(b.liarDayContinue()).toBeNull();
+    expect(await repo.getMeta(liarDayKey(D2))).toMatchObject({ daily: D2, play: { solved: false } });
+    // Вчерашний (относительно будущего) незаконченный — виден, будущий его не перебивает.
+    b.startDaily(D1);
+    deliver(b, P1);
+    oneMove(b);
+    b.toHub();
+    expect(b.liarDayContinue()).toMatchObject({ date: D1 });
+    at(D2);
+    const c = new PlayStore({ storage: repo });
+    await b.flushed();
+    await c.restore();
+    expect(c.liarDayContinue()).toMatchObject({ date: D2, summary: { date: D2 } });
+  });
+
   it("вчерашний решённый и вчерашний без прогресса в «Продолжить» не попадают", async () => {
     const repo = new InMemoryProgressRepository();
     at(D1);
