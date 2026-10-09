@@ -13,6 +13,11 @@
     "year": "Рік",
     "label": "Розділи"
   },
+  "desk": {
+    "hideSidebar": "Сховати бічну панель",
+    "showSidebar": "Показати бічну панель",
+    "inProgress": "Незавершена"
+  },
   "settings": {
     "title": "Налаштування",
     "language": "Мова",

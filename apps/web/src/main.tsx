@@ -17,6 +17,7 @@ import "./styles/melody.css";
 import "./styles/lantern.css";
 import "./styles/pet.css";
 import "./styles/brand.css";
+import "./styles/desk.css";
 import "./styles/landscape.css";
 import { App } from "./App";
 import { ErrorBoundary } from "./shell/ErrorBoundary";

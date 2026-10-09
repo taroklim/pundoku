@@ -5,6 +5,7 @@ import type { HelpBlockId } from "../help/blocks";
 import { useMelodyGame } from "../melody/game";
 import { setMelodySound, useMelodySound } from "../settings/prefs";
 import { useDeferredFocus } from "../shell/afterPaint";
+import { deskStore, useDeskLayout, useDeskState } from "../shell/desk";
 import { deferPastTabTap, swallowGhostClick } from "../shell/ghostClick";
 import { useTabActive } from "../shell/tabSlide";
 import { TabHeader } from "../shell/TabHeader";
@@ -32,6 +33,7 @@ import { HintRuleSheet, boldParts } from "./HintRuleSheet";
 import { useHintLadder } from "./hintStore";
 import { accusedCells, liarHidden, liarSummaryOf } from "./liar";
 import { canFill, cellsLeft, isGiven, isGridFull } from "./logic";
+import { ModePage } from "./ModePage";
 import { ModeSheet } from "./ModeSheet";
 import type { ModeId } from "./modes";
 import { availableModes, modeDef } from "./modes";
@@ -82,6 +84,7 @@ export function PlayScreen({ onOpenSettings, onOpenHelp, onOpenToday }: { onOpen
   useEffect(() => {
     if (seenReselect.current === snap.reselect) return;
     seenReselect.current = snap.reselect;
+    deskStore.showModePage(null); // PD-266: повторный выбор Play — на сам хаб, не на страницу режима
     setSheet(null);
     setRule(null);
     setAccuseAt(null);
@@ -106,7 +109,11 @@ export function PlayScreen({ onOpenSettings, onOpenHelp, onOpenToday }: { onOpen
     setSaid({ id: u.id, text: t("modes.restored", { mode: modeName(u.mode) }) });
     if (hadFocus) document.querySelector<HTMLElement>(`[data-testid="mode-${u.mode}"]`)?.focus({ preventScroll: true });
   };
-  const leftHub = !snap.hub || !active || sheet !== null || rule !== null;
+  // PD-266: десктоп C — хаб Play становится страницей режима, выбранного в сайдбаре (только в раскладке с сайдбаром).
+  const desk = useDeskLayout();
+  const { modePage } = useDeskState();
+  const pageMode = desk && snap.hub && snap.restoring !== true ? modePage : null;
+  const leftHub = !snap.hub || !active || sheet !== null || rule !== null || pageMode !== null;
   useEffect(() => {
     if (leftHub) setUndo(null);
   }, [leftHub]);
@@ -240,6 +247,12 @@ export function PlayScreen({ onOpenSettings, onOpenHelp, onOpenToday }: { onOpen
 
   const hub = snap.hub;
   const restoring = snap.restoring === true;
+  useEffect(() => {
+    // Страница Лжеца — как шит Лжеца: заготовить тяжёлые сетки (§1.5) и перечитать Лжеца дня.
+    if (pageMode === null || modeDef(pageMode).grid !== "liar") return;
+    playStore.warmLiar();
+    playStore.refreshDaily();
+  }, [pageMode]);
   // PD-217: «Продолжить» Лжеца дня — любой незаконченной даты (после полуночи вчерашний не пропадает), открывается его дата.
   const liarCont = hub ? playStore.liarDayContinue() : null;
   // PD-189: ожидание генерации — панель на месте поля (порог 600 мс, минимум 700 мс, «долго» с 4 с). Пока она (или пустота
@@ -324,7 +337,22 @@ export function PlayScreen({ onOpenSettings, onOpenHelp, onOpenToday }: { onOpen
           )
         }
       />
-      {restoring ? null : hub ? (
+      {restoring ? null : pageMode ? (
+        <div className="hub-scroll">
+          <ModePage
+            mode={modeDef(pageMode)}
+            pick={playStore.pickFor(pageMode)}
+            discard={playStore.slots()[pageMode] ?? null}
+            onPick={(d) => playStore.setPick(pageMode, d)}
+            onStart={() => startMode(pageMode, playStore.pickFor(pageMode))}
+            daily={
+              modeDef(pageMode).grid === "liar"
+                ? { state: playStore.liarDay(), onOpen: () => playStore.startDaily() }
+                : null
+            }
+          />
+        </div>
+      ) : hub ? (
         <PlaySetup
           modes={availableModes()}
           slots={playStore.slots()}

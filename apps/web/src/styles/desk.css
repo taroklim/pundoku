@@ -1,0 +1,254 @@
+/*
+ * PD-266: десктоп C «Сайдбар» — оболочка (design/pd229-desktop.html, концепция C; md §2, §3 C). Только токены tokens.css,
+ * нового цвета нет. Всё здесь висит на классе `.shell.desk`, который ставит App по одному условию (`shell/desk.ts`,
+ * DESK_QUERY: окно от 1100 × 680 CSS px). Без класса (телефон, ландшафт телефона, ноутбук при 125/150 %, узкое окно) ни одно
+ * правило этого файла не срабатывает — прежняя оболочка с таб-баром.
+ *
+ * Точки расширения для PD-267/268/269:
+ *  - `--desk-x` — левая кромка контента (сайдбар + зазоры; 0 при скрытом сайдбаре): от неё тулбар, инспектор, шкала ширин;
+ *  - `--desk-toggle` — место под кнопку сайдбара в левом верхнем углу контента (шапки экранов отступают на него);
+ *  - `.shell.desk.side-off` — сайдбар скрыт.
+ *
+ * Стекло — только сайдбар (таб-бар в этой раскладке скрыт, другого стекла нет), с непрозрачным фолбэком `--glass-solid`:
+ * нет backdrop-filter, «Уменьшить прозрачность», «Увеличить контраст» — как у таб-бара (shell.css).
+ */
+.shell.desk {
+  /* Таб-бара нет: всё, что резервировало под него место (.scroll, поле партии, тост), получает его обратно. */
+  --tabbar-h: 0px;
+  --side-w: 232px;
+  /* 8 px от края окна + сайдбар + 8 px до контента. */
+  --desk-x: calc(8px + var(--side-w) + 8px);
+  /* Кнопка 36 px с отступом 8 px слева и 8 px до заголовка экрана. */
+  --desk-toggle: 52px;
+}
+.shell.desk.side-off {
+  --desk-x: 0px;
+}
+.shell.desk > .tabbar {
+  display: none;
+}
+.shell.desk > .stack {
+  margin-left: var(--desk-x);
+}
+.shell.desk > .push-layer {
+  left: var(--desk-x);
+}
+/* Шапки экранов уступают место кнопке сайдбара (она на одном месте в обоих состояниях — как в макете). */
+.shell.desk .toolbar,
+.shell.desk .settings-navbar,
+.shell.desk .subline {
+  padding-left: var(--desk-toggle);
+}
+
+/* ---------- Сайдбар: плавающая стеклянная панель ---------- */
+.sidebar {
+  position: absolute;
+  z-index: 20;
+  left: 8px;
+  top: 8px;
+  bottom: 8px;
+  width: var(--side-w);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 16px 10px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  border-radius: 16px;
+  border: 1px solid var(--hairline);
+  background: var(--glass-fill);
+  -webkit-backdrop-filter: blur(24px) saturate(1.4);
+  backdrop-filter: blur(24px) saturate(1.4);
+}
+.sidebar[hidden] {
+  display: none;
+}
+.side-brand {
+  flex: none;
+  /* Вордмарк 22 px по высоте; слева на одной кромке со значками пунктов. */
+  padding: 2px 8px 16px;
+  line-height: 0;
+}
+.side-sub {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.side-it {
+  flex: none;
+  width: 100%;
+  min-height: 32px;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 0 8px;
+  border-radius: 8px;
+  color: var(--label);
+  font-size: 14px;
+  line-height: 1.25;
+  text-align: left;
+}
+.side-it svg {
+  width: 18px;
+  height: 18px;
+  flex: none;
+  color: var(--ink);
+}
+.side-it .side-lab {
+  min-width: 0;
+  overflow-wrap: break-word;
+}
+/* label-2-grouped, не label-2: на стекле label-2 даёт ниже 4.5:1 (макет §7 «уже исправлено»). */
+.side-it .side-meta {
+  flex: none;
+  margin-left: auto;
+  padding-left: 6px;
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--label-2-grouped);
+  font-variant-numeric: tabular-nums;
+}
+.side-it.subi {
+  min-height: 30px;
+  padding-left: 34px;
+  font-size: 13.5px;
+}
+.side-it.subi svg {
+  width: 16px;
+  height: 16px;
+}
+.side-it[aria-current] {
+  background: var(--ink-tint);
+  color: var(--ink);
+  font-weight: 600;
+}
+/* На подложке выбранного пункта label-2 ≈ 4.1:1 — notes-fill 5.5:1 (макет). */
+.side-it[aria-current] .side-meta {
+  color: var(--notes-fill);
+}
+/* Кольцо фокуса — внутрь: сайдбар прокручивается и срезал бы внешнее. */
+.side-it:focus-visible {
+  outline-offset: -2px;
+}
+.side-gap {
+  flex: none;
+  height: 10px;
+}
+/* Касание (iPad в альбомной ориентации попадает в эту раскладку): цели 44 pt. */
+@media (pointer: coarse) {
+  .side-it,
+  .side-it.subi {
+    min-height: 44px;
+  }
+}
+
+/* ---------- Кнопка «Скрыть/Показать боковую панель» ---------- */
+.side-toggle {
+  position: absolute;
+  z-index: 21;
+  top: 6px;
+  left: calc(var(--desk-x) + 8px);
+  width: 36px;
+  height: 36px;
+  display: grid;
+  place-items: center;
+  border-radius: 10px;
+  color: var(--label-2-grouped);
+  /* Шапка Today/Year прокручивается вместе с экраном, кнопка — нет: подложка, чтобы текст под ней не просвечивал. */
+  background: var(--bg);
+}
+.side-toggle svg {
+  width: 20px;
+  height: 20px;
+}
+@media (pointer: coarse) {
+  .side-toggle {
+    width: 44px;
+    height: 44px;
+    top: 2px;
+    left: calc(var(--desk-x) + 4px);
+  }
+}
+
+/* ---------- Фолбэк стекла (как у таб-бара) ---------- */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .sidebar {
+    background: var(--glass-solid);
+  }
+}
+@media (prefers-reduced-transparency: reduce) {
+  .sidebar {
+    background: var(--glass-solid);
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+  }
+}
+@media (prefers-contrast: more) {
+  .sidebar {
+    background: var(--glass-solid);
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+    border-color: var(--label-2);
+  }
+}
+@media (forced-colors: active) {
+  .sidebar {
+    border: 1px solid CanvasText;
+  }
+  .side-it[aria-current] {
+    outline: 2px solid Highlight;
+    outline-offset: -2px;
+  }
+}
+
+/* ---------- Страница режима (хаб Play в раскладке C, `play/ModePage.tsx`) ---------- */
+.mode-page {
+  width: min(480px, 100% - 32px);
+  margin: 40px auto 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.mode-page .mp-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  font-size: 1.24rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  overflow-wrap: break-word;
+}
+.mode-page .mp-ic {
+  width: 1.2em;
+  height: 1.2em;
+  flex: none;
+  color: var(--ink);
+}
+.mode-page .mp-desc {
+  margin: 0;
+  font-size: 0.95rem;
+  line-height: 1.3;
+  overflow-wrap: break-word;
+}
+.mode-page .mp-warn {
+  margin: 0;
+  padding: 8px 10px;
+  border-radius: 10px;
+  background: var(--wax-tint);
+  font-size: 0.85rem;
+  line-height: 1.3;
+}
+.mode-page .mp-head {
+  margin: 6px 0 0;
+  padding: 0;
+}
+.mode-page .hub-card {
+  margin: 0;
+}
+.mode-page .mp-start {
+  margin-top: 8px;
+}

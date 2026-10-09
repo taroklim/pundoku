@@ -13,6 +13,11 @@
     "year": "Year",
     "label": "Sections"
   },
+  "desk": {
+    "hideSidebar": "Hide sidebar",
+    "showSidebar": "Show sidebar",
+    "inProgress": "In progress"
+  },
   "settings": {
     "title": "Settings",
     "language": "Language",

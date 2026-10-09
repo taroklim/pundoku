@@ -13,6 +13,11 @@
     "year": "Год",
     "label": "Разделы"
   },
+  "desk": {
+    "hideSidebar": "Скрыть боковую панель",
+    "showSidebar": "Показать боковую панель",
+    "inProgress": "Не закончена"
+  },
   "settings": {
     "title": "Настройки",
     "language": "Язык",
