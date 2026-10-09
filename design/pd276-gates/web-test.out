@@ -1,0 +1,15 @@
+$ pnpm --filter @pundoku/engine build
+$ tsc -p tsconfig.build.json
+$ vitest run
+
+ RUN  v5.0.2 /Users/taroklim/Documents/KlymWork/DevTeam_v1/products/pundoku-worktrees/pd-hotfix/apps/web
+
+
+ Test Files  139 passed (139)
+      Tests  1715 passed | 1 skipped (1716)
+   Start at  03:13:16
+   Duration  408.51s (environment 52%, tests 38%, import 8%, transform 2%, worker 1%)
+
+    Isolate  139 workers spawned · ~4.93s startup each (spawn + environment, per file)
+             at least ~223.56s faster with isolate: false — reuses workers across files instead of one per file
+

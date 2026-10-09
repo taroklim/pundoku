@@ -1,0 +1,19 @@
+pnpm --filter @pundoku/engine build -> rc 0 (5s) load {{ 31.20 28.04 37.97 }}
+pnpm --filter @pundoku/engine typecheck -> rc 0 (6s) load {{ 29.18 27.70 37.73 }}
+pnpm --filter @pundoku/engine lint -> rc 0 (7s) load {{ 27.80 27.43 37.58 }}
+pnpm --filter @pundoku/engine test -> rc 0 (391s) load {{ 44.92 47.46 45.61 }}
+ Test Files  15 passed (15)
+      Tests  385 passed (385)
+pnpm --filter @pundoku/api typecheck -> rc 0 (10s) load {{ 44.94 47.39 45.61 }}
+pnpm --filter @pundoku/api lint -> rc 0 (6s) load {{ 41.82 46.70 45.38 }}
+pnpm --filter @pundoku/api test -> rc 0 (21s) load {{ 46.61 47.34 45.63 }}
+ Test Files  9 passed | 3 skipped (12)
+      Tests  151 passed | 49 skipped (200)
+pnpm --filter @pundoku/web typecheck -> rc 0 (41s) load {{ 37.63 44.81 44.77 }}
+pnpm --filter @pundoku/web lint -> rc 0 (24s) load {{ 32.18 42.97 44.11 }}
+pnpm --filter @pundoku/web test -> rc 0 (414s) load {{ 39.37 48.40 47.04 }}
+ Test Files  139 passed (139)
+      Tests  1715 passed | 1 skipped (1716)
+pnpm --filter @pundoku/web build -> rc 0 (47s) load {{ 29.61 44.49 45.67 }}
+pnpm --filter @pundoku/api build -> rc 0 (6s)
+DONE
