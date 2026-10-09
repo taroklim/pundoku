@@ -22,6 +22,7 @@ import { InkEntry } from "../play/InkEntry";
 import type { HelpBlockId } from "../help/blocks";
 import { cellsLeft, isGridFull } from "../play/logic";
 import { ResultCard } from "../play/ResultCard";
+import { useSolvedNow } from "../pet/useSolvedNow";
 import { Subline } from "../play/Subline";
 import { useDeferredFocus } from "../shell/afterPaint";
 import { useEscapeBack } from "../shell/escapeBack";
@@ -33,7 +34,7 @@ import { MiniBoard } from "./MiniBoard";
 import { hiddenSolution } from "./permanent";
 import { useSolveSequence } from "./useSolveSequence";
 import { LateSign } from "../year/LateSign";
-import { usePersonalBest } from "../pet/usePersonalBest";
+import { usePersonalBestState } from "../pet/usePersonalBest";
 import { usePetEnabled } from "../settings/prefs";
 
 /** `YYYY-MM-DD` → локальная полночь этой даты (без сдвига часовых поясов). */
@@ -100,6 +101,8 @@ export function DayView({ store, archive, onOpenSettings, onOpenHelp }: { store:
   useClearEffectsOnUnmount(store, active);
 
   const { cardShown, gridShown, finaleDone, flown } = useSolveSequence(phase, store, root, active);
+  // PD-260: посадка кляксы на карточке — только если день решили здесь и сейчас (как финал: не загрузка, не скрытая вкладка).
+  const solvedNow = useSolvedNow(phase, active);
 
   // Фокус на карточку (a11y) — после конца финала и после кадра, не посреди анимации и не в задаче монтажа (PD-95).
   const cardRef = useRef<HTMLElement>(null);
@@ -155,7 +158,7 @@ export function DayView({ store, archive, onOpenSettings, onOpenHelp }: { store:
   // PD-180: «личный рекорд» для питомца на карточке — только при включённом питомце и решённом дне.
   const petOn = usePetEnabled();
   const listDays = useMemo(() => () => store.listDays(), [store]);
-  const personalBest = usePersonalBest(
+  const { best: personalBest, ready: personalBestReady } = usePersonalBestState(
     petOn,
     listDays,
     phase === "solved" && play ? { date: snap.date, difficulty: snap.difficultyKnown ? difficulty : null, play, assisted: snap.assisted === true, hints: snap.hints } : null,
@@ -192,7 +195,7 @@ export function DayView({ store, archive, onOpenSettings, onOpenHelp }: { store:
       {phase === "solved" && cardShown ? (
         <>
           {play && (
-            <ResultCard play={play} cardRef={cardRef} title={t("today.cardTitle")} winRate={winRate} winRateScope={archive || snap.late ? "day" : "today"} hints={snap.hints} timelapse={isRealDate(snap.date) ? { date: snap.date, difficulty: snap.difficultyKnown ? difficulty : null } : undefined} onOpenHelp={onOpenHelp} personalBest={personalBest}>
+            <ResultCard play={play} cardRef={cardRef} title={t("today.cardTitle")} winRate={winRate} winRateScope={archive || snap.late ? "day" : "today"} hints={snap.hints} timelapse={isRealDate(snap.date) ? { date: snap.date, difficulty: snap.difficultyKnown ? difficulty : null } : undefined} onOpenHelp={onOpenHelp} personalBest={personalBest} petPending={!personalBestReady} solvedNow={solvedNow}>
               {sourceLabel && <p className="source">{sourceLabel}</p>}
               {snap.late && (
                 <p className="source late-line" data-testid="late-note">

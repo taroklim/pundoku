@@ -842,9 +842,9 @@ describe("SettingsScreen: Питомец-клякса (PD-180)", () => {
     expect(foot.textContent).toContain("Off by default");
     const moods = q("pet-moods")!;
     expect(moods.classList.contains("off")).toBe(true);
-    expect([...moods.querySelectorAll("svg.pet-svg")].map((s) => s.getAttribute("data-mood"))).toEqual(["happy", "tired", "surprised", "asleep"]);
+    expect([...moods.querySelectorAll(".pet")].map((s) => s.getAttribute("data-mood"))).toEqual(["happy", "tired", "surprised", "asleep"]);
     // В превью картинка — украшение: имя настроения уже в подписи, VoiceOver не читает его дважды.
-    expect([...moods.querySelectorAll("svg.pet-svg")].every((s) => s.getAttribute("aria-hidden") === "true")).toBe(true);
+    expect([...moods.querySelectorAll(".pet")].every((s) => s.getAttribute("aria-hidden") === "true")).toBe(true);
     expect([...moods.querySelectorAll("figcaption")].map((c) => c.firstChild!.textContent)).toEqual(["Pleased", "Tired", "Surprised", "Asleep"]);
   });
 

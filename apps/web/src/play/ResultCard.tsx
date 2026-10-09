@@ -6,6 +6,7 @@ import type { HelpBlockId } from "../help/blocks";
 import { TuneButton, useCardTune } from "../melody/MelodyTune";
 import { PetBlot } from "../pet/PetBlot";
 import { petDayOfPlay } from "../pet/petDay";
+import { ARRIVE_DELAY_MS } from "../pet/petMotion";
 import { usePetEnabled } from "../settings/prefs";
 import { formatClock } from "./format";
 import { heatLegend, heatOpacities } from "./heat";
@@ -40,6 +41,13 @@ interface ResultCardProps {
   liar?: { readonly info: LiarInfo; readonly average: { avg: number; games: number } | null } | null;
   /** PD-180: время партии — личный рекорд своей сложности (для «удивлён»). Считает экран, у которого есть история (Today). */
   personalBest?: boolean;
+  /**
+   * PD-260: партию решили только что (переход «играю → решено» на этом экране) — клякса один раз «приземляется» после входа
+   * карточки (макет PD-223 B). Повторное открытие, загрузка решённого дня, победа с другого устройства — только покой.
+   */
+  solvedNow?: boolean;
+  /** PD-260: настроение ещё уточняется (рекорд читается из истории) — место под кляксу держим, саму кляксу пока не рисуем. */
+  petPending?: boolean;
 }
 
 /**
@@ -47,7 +55,7 @@ interface ResultCardProps {
  * заполнения (`heatmap(moveLog)` движка), легенда Early/Late, время, «clean»/правки, достигнутая
  * техника (`summary`), «N % solved today» и Share. Общая для Today и Play.
  */
-export function ResultCard({ play, cardRef, title, winRate, winRateScope = "today", timelapse, hints, onOpenHelp, children, liar = null, personalBest = false }: ResultCardProps) {
+export function ResultCard({ play, cardRef, title, winRate, winRateScope = "today", timelapse, hints, onOpenHelp, children, liar = null, personalBest = false, solvedNow = false, petPending = false }: ResultCardProps) {
   const { t } = useTranslation();
   const tl = useTimelapseEntry(play, timelapse?.date ?? null, timelapse?.difficulty ?? null);
   // PD-203: партия Мелодии — «♪ Сыграть мелодию» под картой пути (вариант A); мелодии нет (лог урезан) — кнопки нет.
@@ -83,9 +91,9 @@ export function ResultCard({ play, cardRef, title, winRate, winRateScope = "toda
         {ink && ` ${t("ink.cardSub")}`}
       </p>
       {/* Клякса стоит в правом верхнем углу (absolute), а в DOM — после заголовка: VoiceOver сначала читает «Solved». */}
-      {mood && (
+      {mood && !petPending && (
         <div className="pet-slot" data-testid="pet-card">
-          <PetBlot mood={mood} size={44} />
+          <PetBlot mood={mood} size={44} act={solvedNow ? "arrive" : undefined} actDelay={ARRIVE_DELAY_MS} />
         </div>
       )}
       <div

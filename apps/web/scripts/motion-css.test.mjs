@@ -63,9 +63,14 @@ function keyframes() {
   return out;
 }
 
-/** Числовое значение CSS-аргумента: подставляет --mo, считает calc(); единицы (px, %, ms) отбрасываются. */
+/**
+ * Числовое значение CSS-аргумента: подставляет --mo, считает calc(); единицы (px, %, ms) отбрасываются.
+ * Прочие переменные — геометрия, а не множитель движения (PD-260 Питомец: --u px на единицу рисунка, --dx/--dy вектор брызг,
+ * --sx/--isx масштаб подгонки поз): подставляется произвольное ненулевое значение — при --mo:0 результат обязан быть единичным
+ * при ЛЮБОЙ геометрии.
+ */
 function evalArg(arg, mo) {
-  let expr = arg.replace(/var\(--mo\)/g, String(mo));
+  let expr = arg.replace(/var\(--mo\)/g, String(mo)).replace(/var\(--(?!mo\b)[\w-]+\)/g, "1.37");
   expr = expr.replace(/calc\(/g, "(").replace(/(\d*\.?\d+)(px|%|ms|s|deg|em|rem)(?![a-z])/g, "$1");
   if (/var\(|[^\d+\-*/().\s]/.test(expr)) throw new Error(`не разобрал аргумент: ${arg}`);
   return Function(`"use strict"; return (${expr});`)();

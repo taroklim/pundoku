@@ -11,10 +11,11 @@ import i18n from "../i18n";
 import { ResultCard } from "../play/ResultCard";
 import type { LiarInfo } from "../play/savedPlay";
 import { setPetEnabled } from "../settings/prefs";
+import { TabActiveContext } from "../shell/tabSlide";
 import { progressOf } from "../sync/fixtures";
 import type { DayProgress } from "../today/repository";
 import { YearScreen } from "../year/YearScreen";
-import { usePersonalBest } from "./usePersonalBest";
+import { usePersonalBest, usePersonalBestState } from "./usePersonalBest";
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
@@ -36,7 +37,7 @@ afterEach(() => {
   setPetEnabled(false);
 });
 
-const pet = (id: string) => document.querySelector(`[data-testid="${id}"] svg.pet-svg`);
+const pet = (id: string) => document.querySelector<HTMLElement>(`[data-testid="${id}"] .pet`);
 const moodOf = (id: string) => pet(id)?.getAttribute("data-mood") ?? null;
 const LIAR_FIRST: LiarInfo = { caught: true, firstTry: true, wrongAccusations: 0, catchT: 4000, catchPlacement: 12 };
 
@@ -72,6 +73,19 @@ describe("карточка результата", () => {
     expect(moodOf("pet-card")).toBe("surprised");
   });
 
+  it("PD-260: решили только что — клякса один раз «приземляется» после входа карточки; повторное открытие — только покой", () => {
+    setPetEnabled(true);
+    card(progressOf("2026-09-10", { withFix: true }).play, { solvedNow: true });
+    expect(pet("pet-card")!.getAttribute("data-act")).toBe("arrive");
+    expect(pet("pet-card")!.getAttribute("data-mood")).toBe("tired");
+    expect(pet("pet-card")!.style.getPropertyValue("--act-delay")).toBe("300ms");
+    act(() => root.unmount());
+    root = createRoot(host);
+    card(progressOf("2026-09-10", { withFix: true }).play);
+    expect(pet("pet-card")!.hasAttribute("data-act")).toBe(false);
+    expect(pet("pet-card")!.hasAttribute("data-idle")).toBe(true);
+  });
+
   it("тумблер действует на открытой карточке сразу (подписка на настройку)", () => {
     card(progressOf("2026-09-10").play);
     expect(pet("pet-card")).toBeNull();
@@ -92,14 +106,14 @@ describe("Year: только лист дня", () => {
   it("полотно и страница месяца — без клякс; лист дня — клякса рядом с датой (40 pt)", () => {
     setPetEnabled(true);
     render([progressOf("2026-09-10"), progressOf("2026-09-11", { withFix: true })]);
-    expect(document.querySelector("svg.pet-svg")).toBeNull();
+    expect(document.querySelector(".pet")).toBeNull();
     openMonth();
     expect(document.querySelector('[data-testid="month-page"]')).not.toBeNull();
-    expect(document.querySelector("svg.pet-svg")).toBeNull();
+    expect(document.querySelector(".pet")).toBeNull();
     openDay("2026-09-11");
     expect(moodOf("pet-year")).toBe("tired");
-    expect(pet("pet-year")!.getAttribute("width")).toBe("40");
-    expect(document.querySelectorAll("svg.pet-svg")).toHaveLength(1);
+    expect(pet("pet-year")!.style.width).toBe("40px");
+    expect(document.querySelectorAll(".pet")).toHaveLength(1);
     expect(document.querySelector(".dc-head h3")).not.toBeNull();
   });
 
@@ -117,6 +131,65 @@ describe("Year: только лист дня", () => {
     expect(pet("pet-year")).toBeNull();
   });
 
+  it("PD-260: день показывался «спит», потом закончен → при следующем показе «проснуться» один раз; дальше только покой", () => {
+    setPetEnabled(true);
+    render([progressOf("2026-09-12", { solved: false, moves: 4 })]);
+    openMonth();
+    openDay("2026-09-12");
+    expect(moodOf("pet-year")).toBe("asleep");
+    expect(pet("pet-year")!.hasAttribute("data-act")).toBe(false);
+    click(document.querySelector(".ysheet .back"));
+    // День закончили (архив) — Year получает решённую запись.
+    render([progressOf("2026-09-12")]);
+    openDay("2026-09-12");
+    expect(moodOf("pet-year")).toBe("happy");
+    expect(pet("pet-year")!.getAttribute("data-act")).toBe("wake");
+    expect(pet("pet-year")!.querySelector(".pose.from")!.getAttribute("data-mood")).toBe("asleep");
+    click(document.querySelector(".ysheet .back"));
+    openDay("2026-09-12");
+    expect(pet("pet-year")!.hasAttribute("data-act")).toBe(false);
+    // Решённый день, который «спящим» не показывался, — без перехода.
+    click(document.querySelector(".ysheet .back"));
+    render([progressOf("2026-09-12"), progressOf("2026-09-10")]);
+    openDay("2026-09-10");
+    expect(pet("pet-year")!.hasAttribute("data-act")).toBe(false);
+  }, 20000); // под нагрузкой полного прогона Year-сценарий с тремя рендерами дольше 5 с (прецедент PD-181, 14af416)
+
+  it("PD-287: лист открыт на прежних данных («спит»), данные обновились под ним → «проснуться» на открытом листе; скрытая вкладка ждёт", () => {
+    setPetEnabled(true);
+    const screen = (days: DayProgress[], active = true) =>
+      act(() =>
+        root.render(
+          <TabActiveContext.Provider value={active}>
+            <YearScreen days={days} firstUse="2026-09-01" today={TODAY} onOpenToday={vi.fn()} onPlayDay={vi.fn()} />
+          </TabActiveContext.Provider>,
+        ),
+      );
+    // Возврат из архива: лист дня открыт по initialDate раньше, чем Year перечитал хранилище.
+    screen([progressOf("2026-09-12", { solved: false, moves: 4 })]);
+    openMonth();
+    openDay("2026-09-12");
+    expect(moodOf("pet-year")).toBe("asleep");
+    screen([progressOf("2026-09-12")]);
+    expect(moodOf("pet-year")).toBe("happy");
+    expect(pet("pet-year")!.getAttribute("data-act")).toBe("wake");
+    expect(pet("pet-year")!.querySelector(".pose.from")!.getAttribute("data-mood")).toBe("asleep");
+    // Вкладку скрыли, на открытом листе другого дня данные обновились; вернулись — «проснуться» играет сейчас, не потеряно.
+    click(document.querySelector(".ysheet .back"));
+    screen([progressOf("2026-09-12"), progressOf("2026-09-13", { solved: false, moves: 4 })]);
+    openDay("2026-09-13");
+    expect(moodOf("pet-year")).toBe("asleep");
+    screen([progressOf("2026-09-12"), progressOf("2026-09-13", { solved: false, moves: 4 })], false);
+    screen([progressOf("2026-09-12"), progressOf("2026-09-13")], false);
+    expect(pet("pet-year")!.hasAttribute("data-act")).toBe(false);
+    screen([progressOf("2026-09-12"), progressOf("2026-09-13")], true);
+    expect(pet("pet-year")!.getAttribute("data-act")).toBe("wake");
+    // Ещё раз ушли и вернулись — покой, без повтора.
+    screen([progressOf("2026-09-12"), progressOf("2026-09-13")], false);
+    screen([progressOf("2026-09-12"), progressOf("2026-09-13")], true);
+    expect(pet("pet-year")!.hasAttribute("data-act")).toBe(false);
+  }, 20000);
+
   it("Лжец даты с первого обвинения → удивлён; выключенный тумблер — кляксы нет", () => {
     setPetEnabled(true);
     render([progressOf("2026-09-10")], new Map([["2026-09-10", LIAR_FIRST]]));
@@ -133,6 +206,39 @@ describe("игровое поле — никогда", () => {
   it.each(["../play/Board.tsx", "../play/controls.tsx", "../today/MiniBoard.tsx", "../play/ReplayField.tsx"])("%s не импортирует питомца", async (file) => {
     const src = await fs.read(file);
     expect(src).not.toMatch(/PetBlot|from "\.\.\/pet\//);
+  });
+});
+
+describe("usePersonalBestState (PD-260)", () => {
+  function Probe({ list, day }: { list: () => Promise<DayProgress[]>; day: DayProgress }) {
+    const s = usePersonalBestState(true, list, { date: day.date, difficulty: day.difficulty, play: day.play, assisted: day.assisted });
+    return <span data-testid="st">{`${s.best}/${s.ready}`}</span>;
+  }
+  const flush = () => act(async () => void (await new Promise((r) => setTimeout(r, 0))));
+  it("ready — когда рекорд для даты посчитан; новая партия той же даты не сбрасывает; сбой чтения — готово без рекорда", async () => {
+    const a = progressOf("2026-09-10");
+    const b = { ...progressOf("2026-09-11"), play: { ...progressOf("2026-09-11").play, log: progressOf("2026-09-11").play.log.map((m) => ({ ...m, t: Math.round(m.t / 2) })) } };
+    let release: (v: DayProgress[]) => void = () => undefined;
+    const slow = () => new Promise<DayProgress[]>((r) => (release = r));
+    act(() => root.render(<Probe list={slow} day={b} />));
+    expect(host.textContent).toBe("false/false");
+    await act(async () => release([a, b]));
+    await flush();
+    expect(host.textContent).toBe("true/true");
+    act(() => root.render(<Probe list={slow} day={{ ...b, play: { ...b.play } }} />));
+    expect(host.textContent).toBe("true/true");
+    act(() => root.render(<Probe list={() => Promise.reject(new Error("idb"))} day={a} />));
+    await flush();
+    expect(host.textContent).toBe("false/true");
+  });
+  it("ResultCard: пока настроение уточняется — место под кляксу есть, кляксы нет", () => {
+    setPetEnabled(true);
+    act(() => root.render(<ResultCard play={progressOf("2026-09-10").play} cardRef={{ current: null }} title="Solved" solvedNow petPending />));
+    expect(host.querySelector('[data-testid="result-card"]')!.classList.contains("has-pet")).toBe(true);
+    expect(pet("pet-card")).toBeNull();
+    act(() => root.render(<ResultCard play={progressOf("2026-09-10").play} cardRef={{ current: null }} title="Solved" solvedNow personalBest />));
+    expect(pet("pet-card")!.getAttribute("data-mood")).toBe("surprised");
+    expect(pet("pet-card")!.getAttribute("data-act")).toBe("arrive");
   });
 });
 

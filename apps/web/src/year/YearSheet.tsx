@@ -1,4 +1,5 @@
 import { heatmap, summary } from "@pundoku/engine";
+import type { PetMood } from "@pundoku/engine";
 import type { RefObject } from "react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
@@ -7,6 +8,8 @@ import { formatClock } from "../play/format";
 import { useSheetSwipe } from "../shell/useSheetSwipe";
 import { PetBlot } from "../pet/PetBlot";
 import { dayPetMood } from "../pet/petDay";
+import { useWakeOnce } from "../pet/petSeen";
+import { usePetLive } from "../pet/usePetLive";
 import { usePetEnabled } from "../settings/prefs";
 import { heatLegend, heatOpacities } from "../play/heat";
 import { hintCellSet, hintCount, HintsRow } from "../play/hintCard";
@@ -255,11 +258,7 @@ function DayCard({
         <h3 ref={headRef} tabIndex={-1}>
           {dayLong(mark.date, locale)}
         </h3>
-        {mood && (
-          <div className="pet-slot" data-testid="pet-year">
-            <PetBlot mood={mood} size={40} />
-          </div>
-        )}
+        {mood && <YearPet key={mark.date} date={mark.date} mood={mood} />}
       </div>
       {sub && <p className="sub">{sub}</p>}
       {liar && (
@@ -358,6 +357,21 @@ function DayCard({
           )}
         </>
       )}
+    </div>
+  );
+}
+
+/**
+ * Клякса листа дня (PD-180; движение PD-260, макет PD-223 B): день, который прежде показывался «спит», закончили — клякса
+ * «просыпается» один раз (память показанного настроения — `petSeen`): при показе листа или у открытого листа, когда данные
+ * обновились под ним (PD-287). Иначе только покой. Ключуется датой; ремаунт кляксы по номеру «проснуться» — чтобы действие
+ * сыграло на текущем показе, даже если лист уже уходил с экрана и возвращался.
+ */
+function YearPet({ date, mood }: { date: string; mood: PetMood }) {
+  const wake = useWakeOnce(date, mood, usePetLive());
+  return (
+    <div className="pet-slot" data-testid="pet-year">
+      <PetBlot key={wake} mood={mood} size={40} act={wake ? "wake" : undefined} />
     </div>
   );
 }
