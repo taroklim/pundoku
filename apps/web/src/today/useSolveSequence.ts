@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { flushSync } from "react-dom";
 import { prefersReducedMotion } from "../play/controls";
 import { afterPaint } from "../shell/afterPaint";
-import { swallowGhostClick } from "../shell/ghostClick";
+import { deferPastTabTap, swallowGhostClick } from "../shell/ghostClick";
 import type { DayStore } from "./dayStore";
 import { lastMoveCell } from "./dayStore";
 
@@ -99,8 +99,11 @@ export function useSolveSequence(
     let grid: "none" | "scheduled" | "painted" = "none";
     let cancelGrid: (() => void) | null = null;
     let delayElapsed = reduce; // пауза 60 мс «карточка → вылет» (при reduced её нет)
+    let held: (() => void) | null = null; // PD-276: финал ждёт click касания другой вкладки (deferPastTabTap)
 
     const teardown = () => {
+      held?.();
+      held = null;
       window.clearTimeout(timer);
       anim?.cancel();
       flyer?.remove();
@@ -134,6 +137,21 @@ export function useSolveSequence(
     };
     function onInterrupt(e: Event) {
       if (finished) return;
+      held?.(); // следующее касание, пока финал ждёт click вкладки, — обычное прерывание
+      held = deferPastTabTap(e, () => finish(false));
+      if (held) {
+        // PD-276: касание другой вкладки — до его click ничего не показываем (иначе iOS не шлёт click: вкладка со второго
+        // тапа). Финал замирает: таймер карточки/вылета снят, монтаж Grid ∞ отложен, полёт на паузе. Дальше либо вкладка
+        // сменится (очистка эффекта ниже, конечное состояние — ветка `!active`), либо `finish(false)` после click/отпускания.
+        window.clearTimeout(timer);
+        anim?.pause();
+        if (grid === "scheduled") {
+          cancelGrid?.();
+          cancelGrid = null;
+          grid = "none";
+        }
+        return;
+      }
       finish(false);
       swallowGhostClick(e); // хвост этого касания (click над карточкой) не должен нажать кнопку под пальцем — PD-94
     }

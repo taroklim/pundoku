@@ -1,0 +1,13 @@
+$ vitest run
+
+ RUN  v5.0.2 /Users/taroklim/Documents/KlymWork/DevTeam_v1/products/pundoku-worktrees/pd-hotfix/apps/api
+
+
+ Test Files  9 passed | 3 skipped (12)
+      Tests  151 passed | 49 skipped (200)
+   Start at  03:11:47
+   Duration  19.20s (tests 61%, import 30%, transform 7%, worker 2%)
+
+    Isolate  12 workers spawned · ~782ms startup each (spawn + environment, per file)
+             at least ~2.34s faster with isolate: false — reuses workers across files instead of one per file
+

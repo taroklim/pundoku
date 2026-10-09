@@ -1,0 +1,150 @@
+{
+  "meta": {
+    "base": "http://127.0.0.1:5303",
+    "label": "main",
+    "engine": "webkit 18.4",
+    "at": "2026-10-08T23:49:34.724Z",
+    "loadStart": [
+      31.61572265625,
+      37.10205078125,
+      61.24951171875
+    ],
+    "loadEnd": [
+      26.09375,
+      35.490234375,
+      60.10986328125
+    ]
+  },
+  "results": [
+    {
+      "name": "Y webkit-320-light: «Open today's puzzle» целиком над таб-баром в покое, тап по центру — в кнопку",
+      "pass": false,
+      "extra": "{\"barTop\":504,\"rem\":17,\"type\":null,\"range\":177,\"rest\":{\"top\":607,\"bottom\":653,\"hitsSelf\":false,\"hitTab\":null},\"end\":{\"bottom\":476,\"lastContentBottom\":488}}"
+    },
+    {
+      "name": "Y webkit-320-light: в конце прокрутки всё содержимое над таб-баром (peek PD-144)",
+      "pass": true,
+      "extra": "{\"bottom\":476,\"lastContentBottom\":488}"
+    },
+    {
+      "name": "Y webkit-320-light: без ошибок страницы",
+      "pass": true,
+      "extra": ""
+    },
+    {
+      "name": "Y webkit-320-dark: «Open today's puzzle» целиком над таб-баром в покое, тап по центру — в кнопку",
+      "pass": false,
+      "extra": "{\"barTop\":504,\"rem\":17,\"type\":null,\"range\":177,\"rest\":{\"top\":607,\"bottom\":653,\"hitsSelf\":false,\"hitTab\":null},\"end\":{\"bottom\":476,\"lastContentBottom\":488}}"
+    },
+    {
+      "name": "Y webkit-320-dark: в конце прокрутки всё содержимое над таб-баром (peek PD-144)",
+      "pass": true,
+      "extra": "{\"bottom\":476,\"lastContentBottom\":488}"
+    },
+    {
+      "name": "Y webkit-320-dark: без ошибок страницы",
+      "pass": true,
+      "extra": ""
+    },
+    {
+      "name": "Y webkit-393-light: «Open today's puzzle» целиком над таб-баром в покое, тап по центру — в кнопку",
+      "pass": false,
+      "extra": "{\"barTop\":754,\"rem\":17,\"type\":null,\"range\":52,\"rest\":{\"top\":732,\"bottom\":778,\"hitsSelf\":false,\"hitTab\":\"tab-today\"},\"end\":{\"bottom\":726,\"lastContentBottom\":738}}"
+    },
+    {
+      "name": "Y webkit-393-light: в конце прокрутки всё содержимое над таб-баром (peek PD-144)",
+      "pass": true,
+      "extra": "{\"bottom\":726,\"lastContentBottom\":738}"
+    },
+    {
+      "name": "Y webkit-393-light: без ошибок страницы",
+      "pass": true,
+      "extra": ""
+    },
+    {
+      "name": "Y webkit-393-dark: «Open today's puzzle» целиком над таб-баром в покое, тап по центру — в кнопку",
+      "pass": false,
+      "extra": "{\"barTop\":754,\"rem\":17,\"type\":null,\"range\":52,\"rest\":{\"top\":732,\"bottom\":778,\"hitsSelf\":false,\"hitTab\":\"tab-today\"},\"end\":{\"bottom\":726,\"lastContentBottom\":738}}"
+    },
+    {
+      "name": "Y webkit-393-dark: в конце прокрутки всё содержимое над таб-баром (peek PD-144)",
+      "pass": true,
+      "extra": "{\"bottom\":726,\"lastContentBottom\":738}"
+    },
+    {
+      "name": "Y webkit-393-dark: без ошибок страницы",
+      "pass": true,
+      "extra": ""
+    },
+    {
+      "name": "Y webkit-430-light: «Open today's puzzle» целиком над таб-баром в покое, тап по центру — в кнопку",
+      "pass": true,
+      "extra": "{\"barTop\":834,\"rem\":17,\"type\":null,\"range\":7,\"rest\":{\"top\":767,\"bottom\":813,\"hitsSelf\":true,\"hitTab\":null},\"end\":{\"bottom\":806,\"lastContentBottom\":818}}"
+    },
+    {
+      "name": "Y webkit-430-light: в конце прокрутки всё содержимое над таб-баром (peek PD-144)",
+      "pass": true,
+      "extra": "{\"bottom\":806,\"lastContentBottom\":818}"
+    },
+    {
+      "name": "Y webkit-430-light: без ошибок страницы",
+      "pass": true,
+      "extra": ""
+    },
+    {
+      "name": "Y webkit-430-dark: «Open today's puzzle» целиком над таб-баром в покое, тап по центру — в кнопку",
+      "pass": true,
+      "extra": "{\"barTop\":834,\"rem\":17,\"type\":null,\"range\":7,\"rest\":{\"top\":767,\"bottom\":813,\"hitsSelf\":true,\"hitTab\":null},\"end\":{\"bottom\":806,\"lastContentBottom\":818}}"
+    },
+    {
+      "name": "Y webkit-430-dark: в конце прокрутки всё содержимое над таб-баром (peek PD-144)",
+      "pass": true,
+      "extra": "{\"bottom\":806,\"lastContentBottom\":818}"
+    },
+    {
+      "name": "Y webkit-430-dark: без ошибок страницы",
+      "pass": true,
+      "extra": ""
+    },
+    {
+      "name": "Y webkit-393-AX3-light: «Open today's puzzle» целиком над таб-баром в покое, тап по центру — в кнопку",
+      "pass": false,
+      "extra": "{\"barTop\":752,\"rem\":40,\"type\":\"ax3\",\"range\":357,\"rest\":{\"top\":982,\"bottom\":1080,\"hitsSelf\":false,\"hitTab\":null},\"end\":{\"bottom\":723,\"lastContentBottom\":735}}"
+    },
+    {
+      "name": "Y webkit-393-AX3-light: в конце прокрутки всё содержимое над таб-баром (peek PD-144)",
+      "pass": true,
+      "extra": "{\"bottom\":723,\"lastContentBottom\":735}"
+    },
+    {
+      "name": "Y webkit-393-AX3-light: AX3 распознан (data-type=ax3)",
+      "pass": true,
+      "extra": "ax3"
+    },
+    {
+      "name": "Y webkit-393-AX3-light: без ошибок страницы",
+      "pass": true,
+      "extra": ""
+    },
+    {
+      "name": "Y webkit-393-AX3-dark: «Open today's puzzle» целиком над таб-баром в покое, тап по центру — в кнопку",
+      "pass": false,
+      "extra": "{\"barTop\":752,\"rem\":40,\"type\":\"ax3\",\"range\":357,\"rest\":{\"top\":982,\"bottom\":1080,\"hitsSelf\":false,\"hitTab\":null},\"end\":{\"bottom\":723,\"lastContentBottom\":735}}"
+    },
+    {
+      "name": "Y webkit-393-AX3-dark: в конце прокрутки всё содержимое над таб-баром (peek PD-144)",
+      "pass": true,
+      "extra": "{\"bottom\":723,\"lastContentBottom\":735}"
+    },
+    {
+      "name": "Y webkit-393-AX3-dark: AX3 распознан (data-type=ax3)",
+      "pass": true,
+      "extra": "ax3"
+    },
+    {
+      "name": "Y webkit-393-AX3-dark: без ошибок страницы",
+      "pass": true,
+      "extra": ""
+    }
+  ]
+}

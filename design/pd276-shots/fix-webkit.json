@@ -1,0 +1,374 @@
+{
+  "meta": {
+    "base": "http://127.0.0.1:5302",
+    "label": "fix",
+    "engine": "webkit 18.4",
+    "w": 393,
+    "h": 852,
+    "inset": 34,
+    "stretch": 5,
+    "at": "2026-10-08T23:55:39.210Z",
+    "loadStart": [
+      28.5361328125,
+      30.0322265625,
+      48.9267578125
+    ],
+    "loadEnd": [
+      35.85400390625,
+      26.4609375,
+      41.29248046875
+    ]
+  },
+  "results": [
+    {
+      "name": "T webkit: today → play (center) одним тапом; iOS-наблюдатель: click",
+      "pass": true,
+      "extra": "{\"sel\":\"play\",\"became\":0,\"sample\":[]}"
+    },
+    {
+      "name": "T webkit: today → play (home) одним тапом; iOS-наблюдатель: click",
+      "pass": true,
+      "extra": "{\"sel\":\"play\",\"became\":0,\"sample\":[]}"
+    },
+    {
+      "name": "T webkit: today → play (top) одним тапом; iOS-наблюдатель: click",
+      "pass": true,
+      "extra": "{\"sel\":\"play\",\"became\":0,\"sample\":[]}"
+    },
+    {
+      "name": "T webkit: today → year (center) одним тапом; iOS-наблюдатель: click",
+      "pass": true,
+      "extra": "{\"sel\":\"year\",\"became\":0,\"sample\":[]}"
+    },
+    {
+      "name": "T webkit: today → year (home) одним тапом; iOS-наблюдатель: click",
+      "pass": true,
+      "extra": "{\"sel\":\"year\",\"became\":0,\"sample\":[]}"
+    },
+    {
+      "name": "T webkit: today → year (side) одним тапом; iOS-наблюдатель: click",
+      "pass": true,
+      "extra": "{\"sel\":\"year\",\"became\":0,\"sample\":[]}"
+    },
+    {
+      "name": "T webkit: play → today (center) одним тапом; iOS-наблюдатель: click",
+      "pass": true,
+      "extra": "{\"sel\":\"today\",\"became\":0,\"sample\":[]}"
+    },
+    {
+      "name": "T webkit: play → today (home) одним тапом; iOS-наблюдатель: click",
+      "pass": true,
+      "extra": "{\"sel\":\"today\",\"became\":0,\"sample\":[]}"
+    },
+    {
+      "name": "T webkit: play → today (side) одним тапом; iOS-наблюдатель: click",
+      "pass": true,
+      "extra": "{\"sel\":\"today\",\"became\":0,\"sample\":[]}"
+    },
+    {
+      "name": "T webkit: play → year (center) одним тапом; iOS-наблюдатель: click",
+      "pass": true,
+      "extra": "{\"sel\":\"year\",\"became\":0,\"sample\":[]}"
+    },
+    {
+      "name": "T webkit: play → year (home) одним тапом; iOS-наблюдатель: click",
+      "pass": true,
+      "extra": "{\"sel\":\"year\",\"became\":0,\"sample\":[]}"
+    },
+    {
+      "name": "T webkit: play → year (side) одним тапом; iOS-наблюдатель: click",
+      "pass": true,
+      "extra": "{\"sel\":\"year\",\"became\":0,\"sample\":[]}"
+    },
+    {
+      "name": "T webkit: year → today (center) одним тапом; iOS-наблюдатель: click",
+      "pass": true,
+      "extra": "{\"sel\":\"today\",\"became\":0,\"sample\":[]}"
+    },
+    {
+      "name": "T webkit: year → today (home) одним тапом; iOS-наблюдатель: click",
+      "pass": true,
+      "extra": "{\"sel\":\"today\",\"became\":0,\"sample\":[]}"
+    },
+    {
+      "name": "T webkit: year → today (side) одним тапом; iOS-наблюдатель: click",
+      "pass": true,
+      "extra": "{\"sel\":\"today\",\"became\":0,\"sample\":[]}"
+    },
+    {
+      "name": "T webkit: year → play (center) одним тапом; iOS-наблюдатель: click",
+      "pass": true,
+      "extra": "{\"sel\":\"play\",\"became\":0,\"sample\":[]}"
+    },
+    {
+      "name": "T webkit: year → play (home) одним тапом; iOS-наблюдатель: click",
+      "pass": true,
+      "extra": "{\"sel\":\"play\",\"became\":0,\"sample\":[]}"
+    },
+    {
+      "name": "T webkit: year → play (top) одним тапом; iOS-наблюдатель: click",
+      "pass": true,
+      "extra": "{\"sel\":\"play\",\"became\":0,\"sample\":[]}"
+    },
+    {
+      "name": "T webkit: быстрый тап → play (250 мс после предыдущего); iOS: click",
+      "pass": true,
+      "extra": "{\"sel\":\"play\",\"became\":0,\"sample\":[]}"
+    },
+    {
+      "name": "T webkit: быстрый тап → year (250 мс после предыдущего); iOS: click",
+      "pass": true,
+      "extra": "{\"sel\":\"year\",\"became\":0,\"sample\":[]}"
+    },
+    {
+      "name": "T webkit: быстрый тап → today (250 мс после предыдущего); iOS: click",
+      "pass": true,
+      "extra": "{\"sel\":\"today\",\"became\":0,\"sample\":[]}"
+    },
+    {
+      "name": "T webkit: быстрый тап → year (250 мс после предыдущего); iOS: click",
+      "pass": true,
+      "extra": "{\"sel\":\"year\",\"became\":0,\"sample\":[]}"
+    },
+    {
+      "name": "T webkit: быстрый тап → play (250 мс после предыдущего); iOS: click",
+      "pass": true,
+      "extra": "{\"sel\":\"play\",\"became\":0,\"sample\":[]}"
+    },
+    {
+      "name": "T webkit: контроль — после серии 18 тапов матрицы ни одного «HOVER», ни одной пропущенной смены",
+      "pass": true,
+      "extra": "bad=0"
+    },
+    {
+      "name": "T webkit: контрольный тап после паузы 1.2 с → today",
+      "pass": true,
+      "extra": "[{\"down\":\"tab-today\",\"downCard\":false,\"downFlying\":false,\"downTabSel\":\"false\",\"click\":\"tab-today\",\"became\":0,\"sample\":[]}]"
+    },
+    {
+      "name": "T webkit: на панелях нет следов прогрева/перехода в покое",
+      "pass": true,
+      "extra": ""
+    },
+    {
+      "name": "T webkit: без ошибок страницы",
+      "pass": true,
+      "extra": ""
+    },
+    {
+      "name": "R webkit: today → play (center) одним тапом; iOS-наблюдатель: click",
+      "pass": true,
+      "extra": "{\"sel\":\"play\",\"became\":0,\"sample\":[]}"
+    },
+    {
+      "name": "R webkit: today → play (home) одним тапом; iOS-наблюдатель: click",
+      "pass": true,
+      "extra": "{\"sel\":\"play\",\"became\":0,\"sample\":[]}"
+    },
+    {
+      "name": "R webkit: today → play (top) одним тапом; iOS-наблюдатель: click",
+      "pass": true,
+      "extra": "{\"sel\":\"play\",\"became\":0,\"sample\":[]}"
+    },
+    {
+      "name": "R webkit: today → year (center) одним тапом; iOS-наблюдатель: click",
+      "pass": true,
+      "extra": "{\"sel\":\"year\",\"became\":0,\"sample\":[]}"
+    },
+    {
+      "name": "R webkit: today → year (home) одним тапом; iOS-наблюдатель: click",
+      "pass": true,
+      "extra": "{\"sel\":\"year\",\"became\":0,\"sample\":[]}"
+    },
+    {
+      "name": "R webkit: today → year (side) одним тапом; iOS-наблюдатель: click",
+      "pass": true,
+      "extra": "{\"sel\":\"year\",\"became\":0,\"sample\":[]}"
+    },
+    {
+      "name": "R webkit: play → today (center) одним тапом; iOS-наблюдатель: click",
+      "pass": true,
+      "extra": "{\"sel\":\"today\",\"became\":0,\"sample\":[]}"
+    },
+    {
+      "name": "R webkit: play → today (home) одним тапом; iOS-наблюдатель: click",
+      "pass": true,
+      "extra": "{\"sel\":\"today\",\"became\":0,\"sample\":[]}"
+    },
+    {
+      "name": "R webkit: play → today (side) одним тапом; iOS-наблюдатель: click",
+      "pass": true,
+      "extra": "{\"sel\":\"today\",\"became\":0,\"sample\":[]}"
+    },
+    {
+      "name": "R webkit: play → year (center) одним тапом; iOS-наблюдатель: click",
+      "pass": true,
+      "extra": "{\"sel\":\"year\",\"became\":0,\"sample\":[]}"
+    },
+    {
+      "name": "R webkit: play → year (home) одним тапом; iOS-наблюдатель: click",
+      "pass": true,
+      "extra": "{\"sel\":\"year\",\"became\":0,\"sample\":[]}"
+    },
+    {
+      "name": "R webkit: play → year (side) одним тапом; iOS-наблюдатель: click",
+      "pass": true,
+      "extra": "{\"sel\":\"year\",\"became\":0,\"sample\":[]}"
+    },
+    {
+      "name": "R webkit: year → today (center) одним тапом; iOS-наблюдатель: click",
+      "pass": true,
+      "extra": "{\"sel\":\"today\",\"became\":0,\"sample\":[]}"
+    },
+    {
+      "name": "R webkit: year → today (home) одним тапом; iOS-наблюдатель: click",
+      "pass": true,
+      "extra": "{\"sel\":\"today\",\"became\":0,\"sample\":[]}"
+    },
+    {
+      "name": "R webkit: year → today (side) одним тапом; iOS-наблюдатель: click",
+      "pass": true,
+      "extra": "{\"sel\":\"today\",\"became\":0,\"sample\":[]}"
+    },
+    {
+      "name": "R webkit: year → play (center) одним тапом; iOS-наблюдатель: click",
+      "pass": true,
+      "extra": "{\"sel\":\"play\",\"became\":0,\"sample\":[]}"
+    },
+    {
+      "name": "R webkit: year → play (home) одним тапом; iOS-наблюдатель: click",
+      "pass": true,
+      "extra": "{\"sel\":\"play\",\"became\":0,\"sample\":[]}"
+    },
+    {
+      "name": "R webkit: year → play (top) одним тапом; iOS-наблюдатель: click",
+      "pass": true,
+      "extra": "{\"sel\":\"play\",\"became\":0,\"sample\":[]}"
+    },
+    {
+      "name": "R webkit: быстрый тап → play (250 мс после предыдущего); iOS: click",
+      "pass": true,
+      "extra": "{\"sel\":\"play\",\"became\":0,\"sample\":[]}"
+    },
+    {
+      "name": "R webkit: быстрый тап → year (250 мс после предыдущего); iOS: click",
+      "pass": true,
+      "extra": "{\"sel\":\"year\",\"became\":0,\"sample\":[]}"
+    },
+    {
+      "name": "R webkit: быстрый тап → today (250 мс после предыдущего); iOS: click",
+      "pass": true,
+      "extra": "{\"sel\":\"today\",\"became\":0,\"sample\":[]}"
+    },
+    {
+      "name": "R webkit: быстрый тап → year (250 мс после предыдущего); iOS: click",
+      "pass": true,
+      "extra": "{\"sel\":\"year\",\"became\":0,\"sample\":[]}"
+    },
+    {
+      "name": "R webkit: быстрый тап → play (250 мс после предыдущего); iOS: click",
+      "pass": true,
+      "extra": "{\"sel\":\"play\",\"became\":0,\"sample\":[]}"
+    },
+    {
+      "name": "R webkit: контроль — после серии 18 тапов матрицы ни одного «HOVER», ни одной пропущенной смены",
+      "pass": true,
+      "extra": "bad=0"
+    },
+    {
+      "name": "R webkit: контрольный тап после паузы 1.2 с → today",
+      "pass": true,
+      "extra": "[{\"down\":\"tab-today\",\"downCard\":false,\"downFlying\":false,\"downTabSel\":\"false\",\"click\":\"tab-today\",\"became\":0,\"sample\":[]}]"
+    },
+    {
+      "name": "R webkit: на панелях нет следов прогрева/перехода в покое",
+      "pass": true,
+      "extra": ""
+    },
+    {
+      "name": "R webkit: без ошибок страницы",
+      "pass": true,
+      "extra": ""
+    },
+    {
+      "name": "F webkit: Play dim → year одним тапом; iOS-наблюдатель: click",
+      "pass": true,
+      "extra": "{\"sel\":\"year\",\"c\":{\"down\":\"tab-year\",\"downCard\":false,\"downFlying\":false,\"downTabSel\":\"false\",\"click\":\"tab-year\",\"became\":0,\"sample\":[]}}"
+    },
+    {
+      "name": "F webkit: (Play dim → year) назад на Play — карточка результата, не хаб",
+      "pass": true,
+      "extra": ""
+    },
+    {
+      "name": "F webkit: (Play dim → year) без ошибок страницы",
+      "pass": true,
+      "extra": ""
+    },
+    {
+      "name": "F webkit: Play dim → today одним тапом; iOS-наблюдатель: click",
+      "pass": true,
+      "extra": "{\"sel\":\"today\",\"c\":{\"down\":\"tab-today\",\"downCard\":false,\"downFlying\":false,\"downTabSel\":\"false\",\"click\":\"tab-today\",\"became\":0,\"sample\":[]}}"
+    },
+    {
+      "name": "F webkit: (Play dim → today) назад на Play — карточка результата, не хаб",
+      "pass": true,
+      "extra": ""
+    },
+    {
+      "name": "F webkit: (Play dim → today) без ошибок страницы",
+      "pass": true,
+      "extra": ""
+    },
+    {
+      "name": "F webkit PD-239: Play dim, тап по АКТИВНОЙ Play — карточка, не хаб, click погашен",
+      "pass": true,
+      "extra": "{\"reached\":[null],\"hub\":0}"
+    },
+    {
+      "name": "F webkit: (Play dim → play) без ошибок страницы",
+      "pass": true,
+      "extra": ""
+    },
+    {
+      "name": "F webkit: Today flight → play одним тапом; iOS-наблюдатель: click",
+      "pass": true,
+      "extra": "{\"sel\":\"play\",\"c\":{\"down\":\"tab-play\",\"downCard\":true,\"downFlying\":true,\"downTabSel\":\"false\",\"click\":\"tab-play\",\"became\":0,\"sample\":[]},\"running\":0}"
+    },
+    {
+      "name": "F webkit: (Today flight → play) назад на Today — карточка дня, Grid ∞",
+      "pass": true,
+      "extra": ""
+    },
+    {
+      "name": "F webkit: (Today flight → play) без ошибок страницы",
+      "pass": true,
+      "extra": ""
+    },
+    {
+      "name": "F webkit: Today dim → year одним тапом; iOS-наблюдатель: click",
+      "pass": true,
+      "extra": "{\"sel\":\"year\",\"c\":{\"down\":\"tab-year\",\"downCard\":false,\"downFlying\":false,\"downTabSel\":\"false\",\"click\":\"tab-year\",\"became\":0,\"sample\":[]},\"running\":0}"
+    },
+    {
+      "name": "F webkit: (Today dim → year) назад на Today — карточка дня, Grid ∞",
+      "pass": true,
+      "extra": ""
+    },
+    {
+      "name": "F webkit: (Today dim → year) без ошибок страницы",
+      "pass": true,
+      "extra": ""
+    },
+    {
+      "name": "F webkit PD-239: Today полёт, тап по АКТИВНОЙ Today — финал завершён, карточка, click погашен",
+      "pass": true,
+      "extra": "{\"reached\":[null]}"
+    },
+    {
+      "name": "F webkit: (Today flight → today) без ошибок страницы",
+      "pass": true,
+      "extra": ""
+    }
+  ]
+}

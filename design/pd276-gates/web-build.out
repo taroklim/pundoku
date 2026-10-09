@@ -1,0 +1,28 @@
+$ pnpm --filter @pundoku/engine build
+$ tsc -p tsconfig.build.json
+$ tsc -p tsconfig.json --noEmit && vite build
+vite v8.3.1 building client environment for production...
+transforming...
+✓ 193 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/registerSW.js                         0.13 kB
+dist/manifest.webmanifest                  0.46 kB
+dist/index.html                            8.44 kB │ gzip:   1.45 kB
+dist/assets/generate.worker-LXIfPPTh.js   20.63 kB
+dist/assets/index-CHd9XxgM.css            93.17 kB │ gzip:  18.13 kB
+dist/assets/index-CF4X7NSu.js            717.04 kB │ gzip: 215.15 kB
+
+[plugin builtin:vite-reporter] 
+(!) Some chunks are larger than 500 kB after minification. Consider:
+- Using dynamic import() to code-split the application
+- Use build.rolldownOptions.output.codeSplitting to improve chunking: https://rolldown.rs/reference/OutputOptions.codeSplitting
+- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+✓ built in 1.53s
+
+PWA v1.3.0
+mode      generateSW
+precache  42 entries (918.03 KiB)
+files generated
+  dist/sw.js
+  dist/workbox-9c191d2f.js

@@ -5,7 +5,7 @@ import type { HelpBlockId } from "../help/blocks";
 import { useMelodyGame } from "../melody/game";
 import { setMelodySound, useMelodySound } from "../settings/prefs";
 import { useDeferredFocus } from "../shell/afterPaint";
-import { swallowGhostClick } from "../shell/ghostClick";
+import { deferPastTabTap, swallowGhostClick } from "../shell/ghostClick";
 import { useTabActive } from "../shell/tabSlide";
 import { TabHeader } from "../shell/TabHeader";
 import { UndoToast } from "../shell/UndoToast";
@@ -161,21 +161,28 @@ export function PlayScreen({ onOpenSettings, onOpenHelp, onOpenToday }: { onOpen
       return;
     }
     let shown = false;
+    let held: (() => void) | null = null;
     const show = () => {
       shown = true;
       cardShownRef.current = true;
       setCardShown(true);
     };
+    const id = window.setTimeout(show, prefersReducedMotion() ? 140 : 240);
     // Тап-прерывание: хвост этого касания (click над новой карточкой) гасим — иначе тап в позиции «New game» запускал её.
+    // PD-276: касание другой вкладки — карточка ждёт его click (иначе iOS не шлёт click: вкладка со второго тапа).
     const onTap = (e: Event) => {
       if (shown) return;
+      held?.(); // следующее касание, пока карточка ждёт click вкладки, — обычное прерывание
+      window.clearTimeout(id);
+      held = deferPastTabTap(e, show);
+      if (held) return;
       show();
       swallowGhostClick(e);
     };
-    const id = window.setTimeout(show, prefersReducedMotion() ? 140 : 240);
     document.addEventListener("pointerdown", onTap, true);
     return () => {
       window.clearTimeout(id);
+      held?.();
       document.removeEventListener("pointerdown", onTap, true);
     };
   }, [phase, remoteSolved]);

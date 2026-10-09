@@ -63,7 +63,7 @@ function Harness({ phase, active = true }: { phase: string; active?: boolean }) 
 let host: HTMLDivElement;
 let reactRoot: Root;
 let animate: ReturnType<typeof vi.fn>;
-let anim: { cancel: ReturnType<typeof vi.fn>; onfinish: (() => void) | null };
+let anim: { cancel: ReturnType<typeof vi.fn>; pause: ReturnType<typeof vi.fn>; onfinish: (() => void) | null };
 
 function setReduced(reduced: boolean) {
   window.matchMedia = ((q: string) => ({ matches: reduced && q.includes("reduce"), media: q, addEventListener() {}, removeEventListener() {} })) as never;
@@ -78,7 +78,7 @@ beforeEach(() => {
   acknowledgeLanding.mockClear();
   onWatch.mockClear();
   setReduced(false);
-  anim = { cancel: vi.fn(), onfinish: null };
+  anim = { cancel: vi.fn(), pause: vi.fn(), onfinish: null };
   animate = vi.fn(() => anim);
   (Element.prototype as unknown as { animate: unknown }).animate = animate;
   Element.prototype.scrollIntoView = () => {};
@@ -320,13 +320,89 @@ describe("финал V2 (PD-89)", () => {
     remove();
   });
 
+  // PD-276: на iPhone click касания приходит, только если между touchstart и click ничего кликабельного не появилось
+  // (WebKit ContentChangeObserver). Касание ДРУГОЙ вкладки в dim-фазе не показывает карточку до своего click.
+  it("PD-276: касание ДРУГОЙ вкладки в dim — до click карточки нет (финал замер), после click — конечное состояние", () => {
+    const bar = document.createElement("div");
+    bar.setAttribute("role", "tablist");
+    const tabBtn = document.createElement("button");
+    tabBtn.setAttribute("role", "tab");
+    tabBtn.setAttribute("aria-selected", "false");
+    bar.append(tabBtn);
+    document.body.append(bar);
+    const onTab = vi.fn();
+    tabBtn.addEventListener("click", onTab);
+    solve();
+    wait(100);
+    act(() => void tabBtn.dispatchEvent(new Event("pointerdown", { bubbles: true })));
+    wait(FINALE_DIM_MS * 2); // таймер карточки снят: палец ещё на вкладке — ничего не появляется
+    expect(latest.cardShown).toBe(false);
+    act(() => {
+      tabBtn.dispatchEvent(new Event("pointerup", { bubbles: true }));
+      tabBtn.dispatchEvent(new MouseEvent("click", { bubbles: true, cancelable: true, detail: 1 }));
+    });
+    expect(onTab).toHaveBeenCalledTimes(1);
+    expect(latest.cardShown).toBe(false); // ещё в задаче click
+    wait(0);
+    expect(latest.cardShown).toBe(true);
+    expect(latest.finaleDone).toBe(true);
+    expect(latest.flown).toBe(false);
+    expect(animate).not.toHaveBeenCalled();
+    expect(acknowledgeLanding).toHaveBeenCalledTimes(1);
+    bar.remove();
+  });
+
+  it("PD-276: касание ДРУГОЙ вкладки в полёте — полёт на паузе до click; палец увели (pointercancel) — конечное состояние", () => {
+    const bar = document.createElement("div");
+    bar.setAttribute("role", "tablist");
+    const tabBtn = document.createElement("button");
+    tabBtn.setAttribute("role", "tab");
+    tabBtn.setAttribute("aria-selected", "false");
+    bar.append(tabBtn);
+    document.body.append(bar);
+    solve();
+    wait(FINALE_DIM_MS + FINALE_FLIGHT_DELAY_MS + 100);
+    act(() => void tabBtn.dispatchEvent(new Event("pointerdown", { bubbles: true })));
+    expect(anim.pause).toHaveBeenCalled();
+    expect(anim.cancel).not.toHaveBeenCalled();
+    expect(latest.finaleDone).toBe(false);
+    act(() => void tabBtn.dispatchEvent(new Event("pointercancel", { bubbles: true })));
+    expect(anim.cancel).toHaveBeenCalled();
+    expect(document.querySelector(".flyer")).toBeNull();
+    expect(latest.finaleDone).toBe(true);
+    expect(acknowledgeLanding).toHaveBeenCalledTimes(1);
+    bar.remove();
+  });
+
+  it("PD-276: касание другой вкладки без click, затем обычный тап — обычное прерывание с гашением хвоста (PD-94)", () => {
+    const bar = document.createElement("div");
+    bar.setAttribute("role", "tablist");
+    const tabBtn = document.createElement("button");
+    tabBtn.setAttribute("role", "tab");
+    tabBtn.setAttribute("aria-selected", "false");
+    bar.append(tabBtn);
+    document.body.append(bar);
+    solve();
+    wait(FINALE_DIM_MS + FINALE_FLIGHT_DELAY_MS + 100);
+    act(() => void tabBtn.dispatchEvent(new Event("pointerdown", { bubbles: true })));
+    act(() => void host.querySelector('[data-testid="tl-watch"]')!.dispatchEvent(new Event("pointerdown", { bubbles: true })));
+    expect(latest.finaleDone).toBe(true);
+    tapOnWatch();
+    expect(onWatch).not.toHaveBeenCalled();
+    wait(1000);
+    expect(acknowledgeLanding).toHaveBeenCalledTimes(1);
+    bar.remove();
+  });
+
   it("PD-221: тап по ДРУГОЙ вкладке в полёте — финал прерван И вкладка переключается", () => {
     const { onTab, touch, remove } = todayTabBar(false);
     solve();
     wait(FINALE_DIM_MS + FINALE_FLIGHT_DELAY_MS + 100);
     touch();
     expect(onTab).toHaveBeenCalledTimes(1);
+    wait(0); // PD-276: конечное состояние — следующей задачей после click вкладки
     expect(latest.cardShown).toBe(true);
+    expect(latest.finaleDone).toBe(true);
     remove();
   });
 

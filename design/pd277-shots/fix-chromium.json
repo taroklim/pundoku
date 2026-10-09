@@ -1,0 +1,165 @@
+{
+  "meta": {
+    "base": "http://127.0.0.1:5302",
+    "label": "fix",
+    "engine": "chromium 136.0.7103.25",
+    "at": "2026-10-08T23:48:44.355Z",
+    "loadStart": [
+      35.54052734375,
+      38.22412109375,
+      63.06494140625
+    ],
+    "loadEnd": [
+      39.3798828125,
+      38.79052734375,
+      62.26318359375
+    ]
+  },
+  "results": [
+    {
+      "name": "Y chromium-320-light: «Open today's puzzle» целиком над таб-баром в покое, тап по центру — в кнопку",
+      "pass": true,
+      "extra": "{\"barTop\":504,\"rem\":17,\"type\":null,\"range\":171,\"rest\":{\"top\":209,\"bottom\":255,\"hitsSelf\":true,\"hitTab\":null},\"end\":{\"bottom\":84,\"lastContentBottom\":487}}"
+    },
+    {
+      "name": "Y chromium-320-light: в конце прокрутки всё содержимое над таб-баром (peek PD-144)",
+      "pass": true,
+      "extra": "{\"bottom\":84,\"lastContentBottom\":487}"
+    },
+    {
+      "name": "Y chromium-320-light: без ошибок страницы",
+      "pass": true,
+      "extra": ""
+    },
+    {
+      "name": "Y chromium-320-dark: «Open today's puzzle» целиком над таб-баром в покое, тап по центру — в кнопку",
+      "pass": true,
+      "extra": "{\"barTop\":504,\"rem\":17,\"type\":null,\"range\":171,\"rest\":{\"top\":209,\"bottom\":255,\"hitsSelf\":true,\"hitTab\":null},\"end\":{\"bottom\":84,\"lastContentBottom\":487}}"
+    },
+    {
+      "name": "Y chromium-320-dark: в конце прокрутки всё содержимое над таб-баром (peek PD-144)",
+      "pass": true,
+      "extra": "{\"bottom\":84,\"lastContentBottom\":487}"
+    },
+    {
+      "name": "Y chromium-320-dark: без ошибок страницы",
+      "pass": true,
+      "extra": ""
+    },
+    {
+      "name": "Y chromium-393-light: «Open today's puzzle» целиком над таб-баром в покое, тап по центру — в кнопку",
+      "pass": true,
+      "extra": "{\"barTop\":754,\"rem\":17,\"type\":null,\"range\":46,\"rest\":{\"top\":248,\"bottom\":294,\"hitsSelf\":true,\"hitTab\":null},\"end\":{\"bottom\":248,\"lastContentBottom\":738}}"
+    },
+    {
+      "name": "Y chromium-393-light: в конце прокрутки всё содержимое над таб-баром (peek PD-144)",
+      "pass": true,
+      "extra": "{\"bottom\":248,\"lastContentBottom\":738}"
+    },
+    {
+      "name": "Y chromium-393-light: без ошибок страницы",
+      "pass": true,
+      "extra": ""
+    },
+    {
+      "name": "Y chromium-393-dark: «Open today's puzzle» целиком над таб-баром в покое, тап по центру — в кнопку",
+      "pass": true,
+      "extra": "{\"barTop\":754,\"rem\":17,\"type\":null,\"range\":46,\"rest\":{\"top\":248,\"bottom\":294,\"hitsSelf\":true,\"hitTab\":null},\"end\":{\"bottom\":248,\"lastContentBottom\":738}}"
+    },
+    {
+      "name": "Y chromium-393-dark: в конце прокрутки всё содержимое над таб-баром (peek PD-144)",
+      "pass": true,
+      "extra": "{\"bottom\":248,\"lastContentBottom\":738}"
+    },
+    {
+      "name": "Y chromium-393-dark: без ошибок страницы",
+      "pass": true,
+      "extra": ""
+    },
+    {
+      "name": "Y chromium-430-light: «Open today's puzzle» целиком над таб-баром в покое, тап по центру — в кнопку",
+      "pass": true,
+      "extra": "{\"barTop\":834,\"rem\":17,\"type\":null,\"range\":1,\"rest\":{\"top\":248,\"bottom\":294,\"hitsSelf\":true,\"hitTab\":null},\"end\":{\"bottom\":293,\"lastContentBottom\":818}}"
+    },
+    {
+      "name": "Y chromium-430-light: в конце прокрутки всё содержимое над таб-баром (peek PD-144)",
+      "pass": true,
+      "extra": "{\"bottom\":293,\"lastContentBottom\":818}"
+    },
+    {
+      "name": "Y chromium-430-light: без ошибок страницы",
+      "pass": true,
+      "extra": ""
+    },
+    {
+      "name": "Y chromium-430-dark: «Open today's puzzle» целиком над таб-баром в покое, тап по центру — в кнопку",
+      "pass": true,
+      "extra": "{\"barTop\":834,\"rem\":17,\"type\":null,\"range\":1,\"rest\":{\"top\":248,\"bottom\":294,\"hitsSelf\":true,\"hitTab\":null},\"end\":{\"bottom\":293,\"lastContentBottom\":818}}"
+    },
+    {
+      "name": "Y chromium-430-dark: в конце прокрутки всё содержимое над таб-баром (peek PD-144)",
+      "pass": true,
+      "extra": "{\"bottom\":293,\"lastContentBottom\":818}"
+    },
+    {
+      "name": "Y chromium-430-dark: без ошибок страницы",
+      "pass": true,
+      "extra": ""
+    },
+    {
+      "name": "Y chromium-393-AX3-light: «Open today's puzzle» целиком над таб-баром в покое, тап по центру — в кнопку",
+      "pass": true,
+      "extra": "{\"barTop\":751,\"rem\":40,\"type\":\"ax3\",\"range\":355,\"rest\":{\"top\":420,\"bottom\":519,\"hitsSelf\":true,\"hitTab\":null},\"end\":{\"bottom\":164,\"lastContentBottom\":735}}"
+    },
+    {
+      "name": "Y chromium-393-AX3-light: в конце прокрутки всё содержимое над таб-баром (peek PD-144)",
+      "pass": true,
+      "extra": "{\"bottom\":164,\"lastContentBottom\":735}"
+    },
+    {
+      "name": "Y chromium-393-AX3-light: AX3 распознан (data-type=ax3)",
+      "pass": true,
+      "extra": "ax3"
+    },
+    {
+      "name": "Y chromium-393-AX3-light: без ошибок страницы",
+      "pass": true,
+      "extra": ""
+    },
+    {
+      "name": "Y chromium-393-AX3-dark: «Open today's puzzle» целиком над таб-баром в покое, тап по центру — в кнопку",
+      "pass": true,
+      "extra": "{\"barTop\":751,\"rem\":40,\"type\":\"ax3\",\"range\":355,\"rest\":{\"top\":420,\"bottom\":519,\"hitsSelf\":true,\"hitTab\":null},\"end\":{\"bottom\":164,\"lastContentBottom\":735}}"
+    },
+    {
+      "name": "Y chromium-393-AX3-dark: в конце прокрутки всё содержимое над таб-баром (peek PD-144)",
+      "pass": true,
+      "extra": "{\"bottom\":164,\"lastContentBottom\":735}"
+    },
+    {
+      "name": "Y chromium-393-AX3-dark: AX3 распознан (data-type=ax3)",
+      "pass": true,
+      "extra": "ax3"
+    },
+    {
+      "name": "Y chromium-393-AX3-dark: без ошибок страницы",
+      "pass": true,
+      "extra": ""
+    },
+    {
+      "name": "P chromium-393 PD-256: «New game» в покое под таб-баром (низ 898, бар 754), прокрутка 204 px; в конце прокрутки низ 694",
+      "pass": null,
+      "extra": "{\"barTop\":754,\"rem\":17,\"type\":null,\"range\":204,\"rest\":{\"top\":850,\"bottom\":898,\"hitsSelf\":false,\"hitTab\":null},\"end\":{\"bottom\":694,\"lastContentBottom\":738}}"
+    },
+    {
+      "name": "P chromium-393: в конце прокрутки «New game» и всё содержимое над таб-баром",
+      "pass": true,
+      "extra": "{\"bottom\":694,\"lastContentBottom\":738}"
+    },
+    {
+      "name": "P chromium: без ошибок страницы",
+      "pass": true,
+      "extra": ""
+    }
+  ]
+}

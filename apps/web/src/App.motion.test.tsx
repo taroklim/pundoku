@@ -248,8 +248,13 @@ describe("PD-161: слайд «Лента»", () => {
   });
 });
 
-describe("PD-175: прогрев экрана по касанию вкладки", () => {
-  const touch = (i: number) => act(() => void tab(i).dispatchEvent(new Event("pointerdown", { bubbles: true })));
+describe("PD-175: прогрев экрана по нажатию вкладки (мышь/трекпад; касание — PD-276)", () => {
+  const down = (i: number, pointerType: string) => {
+    const e = new Event("pointerdown", { bubbles: true });
+    Object.defineProperty(e, "pointerType", { value: pointerType });
+    act(() => void tab(i).dispatchEvent(e));
+  };
+  const touch = (i: number) => down(i, "mouse");
   /** Today активна, Play и Year уже посещены (смонтированы), переходы закончены; ширина стопки 390. */
   const ready = async () => {
     act(() => root.render(<App />));
@@ -307,6 +312,28 @@ describe("PD-175: прогрев экрана по касанию вкладки
     expect(play.hasAttribute("data-slide")).toBe(false);
     expect(play.style.transform).toBe("");
     expect(paneAnims().map((v) => (v.el as HTMLElement).dataset.tab).sort()).toEqual(["today", "year"]);
+  });
+
+  // PD-276: на iPhone прогрев съедал первый тап — WebKit iOS (ContentChangeObserver) видит, что между touchstart и click
+  // кликабельное стало видимым (панель-цель теряет visibility: hidden), и вместо click оставляет «наведение». Касанием и
+  // пером прогрев не делается: между pointerdown и click ни одна панель не меняет видимость, слайд стартует по click.
+  it("касание (touch) и перо (pen): прогрева нет — до click ни одна панель не становится видимой; click переключает сразу", async () => {
+    await ready();
+    for (const type of ["touch", "pen"]) {
+      down(1, type);
+      down(2, type);
+      expect(host.querySelectorAll("[data-slide]")).toHaveLength(0);
+      for (const id of ["play", "year"]) {
+        const el = pane(id)!;
+        expect(el.style.transform).toBe("");
+        expect(el.style.opacity).toBe("");
+        expect(el.style.willChange).toBe("");
+      }
+    }
+    expect(anims).toHaveLength(0);
+    act(() => tab(1).click());
+    expect(tab(1).getAttribute("aria-selected")).toBe("true");
+    expect(paneAnims().map((v) => (v.el as HTMLElement).dataset.tab).sort()).toEqual(["play", "today"]);
   });
 
   it("Reduce Motion: прогретый экран прозрачен и на месте (кроссфейд)", async () => {

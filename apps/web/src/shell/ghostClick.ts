@@ -63,3 +63,54 @@ export function swallowGhostClick(down: Event): void {
   timer = window.setTimeout(disarm, MAX_HOLD_MS);
   disarmCurrent = disarm;
 }
+
+/**
+ * PD-276: касание ДРУГОЙ вкладки посреди финала (Play — карточка результата, Today — карточка дня/полёт) — показ конечного
+ * состояния откладывается до click этого касания. Иначе на iPhone вкладка не переключалась с первого тапа: WebKit iOS между
+ * touchstart и синтетическим click следит за страницей (ContentChangeObserver) и, если за это время что-то кликабельное
+ * появилось (карточка с «New game»), считает тап «наведением» и click не шлёт. После решения о click наблюдение снято —
+ * показывать можно что угодно.
+ *
+ * Не касание вкладки (или касание выбранной, PD-239) — возвращает `null`, вызывающий прерывает финал как раньше. Иначе —
+ * `reveal` выполнится ровно один раз: следующей задачей после click; если click не пришёл (палец увели — `pointercancel`,
+ * нет click за `GHOST_CLICK_GRACE_MS` после `pointerup`, страховка `MAX_HOLD_MS`) — тогда. Возвращает отмену (без вызова
+ * `reveal`): для очистки эффекта и для СЛЕДУЮЩЕГО касания, пока ждём, — его вызывающий обрабатывает своим pointerdown как
+ * обычное прерывание (отмена + показ + `swallowGhostClick`, PD-94). Пока ждём, вызывающий замирает: таймеры финала сняты,
+ * ничего не показывается.
+ */
+export function deferPastTabTap(down: Event, reveal: () => void): (() => void) | null {
+  if (!touchesOtherTab(down)) return null;
+  let timer = 0;
+  let after = 0;
+  let done = false;
+  const stop = () => {
+    window.clearTimeout(timer);
+    window.removeEventListener("click", onClick, true);
+    window.removeEventListener("pointerup", onRelease, true);
+    window.removeEventListener("pointercancel", run, true);
+  };
+  function run() {
+    if (done) return;
+    done = true;
+    stop();
+    reveal();
+  }
+  function onClick() {
+    stop();
+    // Следующей задачей: сначала выбор вкладки (обработчик React этого же click), потом — конечное состояние финала.
+    after = window.setTimeout(run, 0);
+  }
+  function onRelease() {
+    window.clearTimeout(timer);
+    timer = window.setTimeout(run, GHOST_CLICK_GRACE_MS);
+  }
+  window.addEventListener("click", onClick, true);
+  window.addEventListener("pointerup", onRelease, true);
+  window.addEventListener("pointercancel", run, true);
+  timer = window.setTimeout(run, MAX_HOLD_MS);
+  return () => {
+    done = true;
+    window.clearTimeout(after);
+    stop();
+  };
+}

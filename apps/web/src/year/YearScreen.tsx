@@ -160,6 +160,18 @@ export function YearScreen({ days, firstUse, liar = NO_LIAR, today, onOpenToday,
         </p>
       )}
 
+      {/* PD-277: пустой год — строка и «Open today's puzzle» НАД полотном, не под ним. Под полотном кнопка на iPhone (1rem = 17 px)
+          ложилась под стекло таб-бара уже на 393×852, а прокрутка на 60–70 px не читается как «есть ещё». Полотно — следом. */}
+      {empty && (
+        <div className="year-empty" data-testid="year-empty">
+          <Mark size={56} className="year-empty-mark" />
+          <p>{t("year.emptyLine")}</p>
+          <button type="button" className="cta" onClick={onOpenToday}>
+            {t("year.openToday")}
+          </button>
+        </div>
+      )}
+
       <div className="year-months" role="group" aria-label={t("year.canvasLabel", { year })} data-testid="year-canvas">
         {view.months.map((m) => (
           <button
@@ -187,15 +199,7 @@ export function YearScreen({ days, firstUse, liar = NO_LIAR, today, onOpenToday,
         ))}
       </div>
 
-      {empty ? (
-        <div className="year-empty" data-testid="year-empty">
-          <Mark size={56} className="year-empty-mark" />
-          <p>{t("year.emptyLine")}</p>
-          <button type="button" className="cta" onClick={onOpenToday}>
-            {t("year.openToday")}
-          </button>
-        </div>
-      ) : (
+      {!empty && (
         <ul className="year-legend" aria-label={t("year.legendLabel")}>
           <li>
             <i className="ymark is-solved" aria-hidden="true" />
