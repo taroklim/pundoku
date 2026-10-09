@@ -1,0 +1,911 @@
+{
+ "fails": [],
+ "results": {
+  "cr-852x393-light today: поле слева, панель справа, всё над таб-баром": {
+   "ok": true,
+   "board": [
+    16,
+    12,
+    305,
+    305
+   ],
+   "padL": 345,
+   "lowB": 329,
+   "tabT": 329,
+   "square": true,
+   "inWin": true,
+   "right": true,
+   "above": true,
+   "rightEdge": true,
+   "hscroll": false
+  },
+  "cr-852x393-light today-dock: док справа, над таб-баром": {
+   "ok": true,
+   "board": [
+    16,
+    12,
+    305,
+    305
+   ],
+   "padL": 345,
+   "lowB": 319,
+   "tabT": 329,
+   "square": true,
+   "inWin": true,
+   "right": true,
+   "above": true,
+   "rightEdge": true,
+   "hscroll": false
+  },
+  "cr-852x393-light card: прокрутка до конца, всё над таб-баром": {
+   "ok": true,
+   "st": 891,
+   "sh": 1284,
+   "ch": 393,
+   "lastB": 285,
+   "lastTxt": "Each daily puzzle you solve ad",
+   "limit": 329,
+   "wide": [],
+   "hscroll": false
+  },
+  "cr-852x393-light hub: прокрутка до конца": {
+   "ok": true,
+   "st": 145,
+   "sh": 435,
+   "ch": 290,
+   "lastB": 317,
+   "lastTxt": "Free games aren’t recorded in ",
+   "limit": 329,
+   "wide": [],
+   "hscroll": false
+  },
+  "cr-852x393-light play classic": {
+   "ok": true,
+   "board": [
+    16,
+    12,
+    305,
+    305
+   ],
+   "padL": 345,
+   "lowB": 329,
+   "tabT": 329,
+   "square": true,
+   "inWin": true,
+   "right": true,
+   "above": true,
+   "rightEdge": true,
+   "hscroll": false
+  },
+  "cr-852x393-light year: прокрутка до конца": {
+   "ok": true,
+   "st": 674,
+   "sh": 1067,
+   "ch": 393,
+   "lastB": 301,
+   "lastTxt": "Solved",
+   "limit": 329,
+   "wide": [],
+   "hscroll": false
+  },
+  "cr-852x393-light settings: прокрутка до конца": {
+   "ok": true,
+   "st": 1068,
+   "sh": 1461,
+   "ch": 393,
+   "lastB": 289,
+   "lastTxt": "Version 0.1.0v0.1.0",
+   "limit": 329,
+   "wide": [],
+   "hscroll": false
+  },
+  "cr-852x393-light help: прокрутка до конца": {
+   "ok": true,
+   "st": 1071,
+   "sh": 1464,
+   "ch": 393,
+   "lastB": 289,
+   "lastTxt": "The small number under a digit",
+   "limit": 329,
+   "wide": [],
+   "hscroll": false
+  },
+  "cr-852x393-light без ошибок страницы": {
+   "ok": true,
+   "errs": []
+  },
+  "cr-852x393-light archive + safe-area iPhone 16": {
+   "ok": true,
+   "board": [
+    59,
+    12,
+    284,
+    284
+   ],
+   "padL": 367,
+   "lowB": 308,
+   "tabT": 308,
+   "square": true,
+   "inWin": true,
+   "right": true,
+   "above": true,
+   "rightEdge": true,
+   "hscroll": false
+  },
+  "cr-852x393-dark today: поле слева, панель справа, всё над таб-баром": {
+   "ok": true,
+   "board": [
+    16,
+    12,
+    305,
+    305
+   ],
+   "padL": 345,
+   "lowB": 329,
+   "tabT": 329,
+   "square": true,
+   "inWin": true,
+   "right": true,
+   "above": true,
+   "rightEdge": true,
+   "hscroll": false
+  },
+  "cr-852x393-dark today-dock: док справа, над таб-баром": {
+   "ok": true,
+   "board": [
+    16,
+    12,
+    305,
+    305
+   ],
+   "padL": 345,
+   "lowB": 319,
+   "tabT": 329,
+   "square": true,
+   "inWin": true,
+   "right": true,
+   "above": true,
+   "rightEdge": true,
+   "hscroll": false
+  },
+  "cr-852x393-dark card: прокрутка до конца, всё над таб-баром": {
+   "ok": true,
+   "st": 891,
+   "sh": 1284,
+   "ch": 393,
+   "lastB": 285,
+   "lastTxt": "Each daily puzzle you solve ad",
+   "limit": 329,
+   "wide": [],
+   "hscroll": false
+  },
+  "cr-852x393-dark hub: прокрутка до конца": {
+   "ok": true,
+   "st": 145,
+   "sh": 435,
+   "ch": 290,
+   "lastB": 317,
+   "lastTxt": "Free games aren’t recorded in ",
+   "limit": 329,
+   "wide": [],
+   "hscroll": false
+  },
+  "cr-852x393-dark play classic": {
+   "ok": true,
+   "board": [
+    16,
+    12,
+    305,
+    305
+   ],
+   "padL": 345,
+   "lowB": 329,
+   "tabT": 329,
+   "square": true,
+   "inWin": true,
+   "right": true,
+   "above": true,
+   "rightEdge": true,
+   "hscroll": false
+  },
+  "cr-852x393-dark year: прокрутка до конца": {
+   "ok": true,
+   "st": 674,
+   "sh": 1067,
+   "ch": 393,
+   "lastB": 301,
+   "lastTxt": "Solved",
+   "limit": 329,
+   "wide": [],
+   "hscroll": false
+  },
+  "cr-852x393-dark settings: прокрутка до конца": {
+   "ok": true,
+   "st": 1068,
+   "sh": 1461,
+   "ch": 393,
+   "lastB": 289,
+   "lastTxt": "Version 0.1.0v0.1.0",
+   "limit": 329,
+   "wide": [],
+   "hscroll": false
+  },
+  "cr-852x393-dark help: прокрутка до конца": {
+   "ok": true,
+   "st": 1071,
+   "sh": 1464,
+   "ch": 393,
+   "lastB": 289,
+   "lastTxt": "The small number under a digit",
+   "limit": 329,
+   "wide": [],
+   "hscroll": false
+  },
+  "cr-852x393-dark без ошибок страницы": {
+   "ok": true,
+   "errs": []
+  },
+  "cr-852x393-dark archive + safe-area iPhone 16": {
+   "ok": true,
+   "board": [
+    59,
+    12,
+    284,
+    284
+   ],
+   "padL": 367,
+   "lowB": 308,
+   "tabT": 308,
+   "square": true,
+   "inWin": true,
+   "right": true,
+   "above": true,
+   "rightEdge": true,
+   "hscroll": false
+  },
+  "cr-932x430-light today: поле слева, панель справа, всё над таб-баром": {
+   "ok": true,
+   "board": [
+    16,
+    12,
+    342,
+    342
+   ],
+   "padL": 382,
+   "lowB": 366,
+   "tabT": 366,
+   "square": true,
+   "inWin": true,
+   "right": true,
+   "above": true,
+   "rightEdge": true,
+   "hscroll": false
+  },
+  "cr-932x430-light today-dock: док справа, над таб-баром": {
+   "ok": true,
+   "board": [
+    16,
+    12,
+    342,
+    342
+   ],
+   "padL": 382,
+   "lowB": 356,
+   "tabT": 366,
+   "square": true,
+   "inWin": true,
+   "right": true,
+   "above": true,
+   "rightEdge": true,
+   "hscroll": false
+  },
+  "cr-932x430-light card: прокрутка до конца, всё над таб-баром": {
+   "ok": true,
+   "st": 928,
+   "sh": 1358,
+   "ch": 430,
+   "lastB": 322,
+   "lastTxt": "Each daily puzzle you solve ad",
+   "limit": 366,
+   "wide": [],
+   "hscroll": false
+  },
+  "cr-932x430-light hub: прокрутка до конца": {
+   "ok": true,
+   "st": 108,
+   "sh": 435,
+   "ch": 327,
+   "lastB": 354,
+   "lastTxt": "Free games aren’t recorded in ",
+   "limit": 366,
+   "wide": [],
+   "hscroll": false
+  },
+  "cr-932x430-light play classic": {
+   "ok": true,
+   "board": [
+    16,
+    12,
+    342,
+    342
+   ],
+   "padL": 382,
+   "lowB": 366,
+   "tabT": 366,
+   "square": true,
+   "inWin": true,
+   "right": true,
+   "above": true,
+   "rightEdge": true,
+   "hscroll": false
+  },
+  "cr-932x430-light year: прокрутка до конца": {
+   "ok": true,
+   "st": 713,
+   "sh": 1143,
+   "ch": 430,
+   "lastB": 338,
+   "lastTxt": "Solved",
+   "limit": 366,
+   "wide": [],
+   "hscroll": false
+  },
+  "cr-932x430-light settings: прокрутка до конца": {
+   "ok": true,
+   "st": 996,
+   "sh": 1426,
+   "ch": 430,
+   "lastB": 326,
+   "lastTxt": "Version 0.1.0v0.1.0",
+   "limit": 366,
+   "wide": [],
+   "hscroll": false
+  },
+  "cr-932x430-light help: прокрутка до конца": {
+   "ok": true,
+   "st": 989,
+   "sh": 1419,
+   "ch": 430,
+   "lastB": 326,
+   "lastTxt": "The small number under a digit",
+   "limit": 366,
+   "wide": [],
+   "hscroll": false
+  },
+  "cr-932x430-light без ошибок страницы": {
+   "ok": true,
+   "errs": []
+  },
+  "cr-932x430-light archive + safe-area iPhone 16": {
+   "ok": true,
+   "board": [
+    59,
+    12,
+    321,
+    321
+   ],
+   "padL": 404,
+   "lowB": 345,
+   "tabT": 345,
+   "square": true,
+   "inWin": true,
+   "right": true,
+   "above": true,
+   "rightEdge": true,
+   "hscroll": false
+  },
+  "cr-932x430-dark today: поле слева, панель справа, всё над таб-баром": {
+   "ok": true,
+   "board": [
+    16,
+    12,
+    342,
+    342
+   ],
+   "padL": 382,
+   "lowB": 366,
+   "tabT": 366,
+   "square": true,
+   "inWin": true,
+   "right": true,
+   "above": true,
+   "rightEdge": true,
+   "hscroll": false
+  },
+  "cr-932x430-dark today-dock: док справа, над таб-баром": {
+   "ok": true,
+   "board": [
+    16,
+    12,
+    342,
+    342
+   ],
+   "padL": 382,
+   "lowB": 356,
+   "tabT": 366,
+   "square": true,
+   "inWin": true,
+   "right": true,
+   "above": true,
+   "rightEdge": true,
+   "hscroll": false
+  },
+  "cr-932x430-dark card: прокрутка до конца, всё над таб-баром": {
+   "ok": true,
+   "st": 928,
+   "sh": 1358,
+   "ch": 430,
+   "lastB": 322,
+   "lastTxt": "Each daily puzzle you solve ad",
+   "limit": 366,
+   "wide": [],
+   "hscroll": false
+  },
+  "cr-932x430-dark hub: прокрутка до конца": {
+   "ok": true,
+   "st": 108,
+   "sh": 435,
+   "ch": 327,
+   "lastB": 354,
+   "lastTxt": "Free games aren’t recorded in ",
+   "limit": 366,
+   "wide": [],
+   "hscroll": false
+  },
+  "cr-932x430-dark play classic": {
+   "ok": true,
+   "board": [
+    16,
+    12,
+    342,
+    342
+   ],
+   "padL": 382,
+   "lowB": 366,
+   "tabT": 366,
+   "square": true,
+   "inWin": true,
+   "right": true,
+   "above": true,
+   "rightEdge": true,
+   "hscroll": false
+  },
+  "cr-932x430-dark year: прокрутка до конца": {
+   "ok": true,
+   "st": 713,
+   "sh": 1143,
+   "ch": 430,
+   "lastB": 338,
+   "lastTxt": "Solved",
+   "limit": 366,
+   "wide": [],
+   "hscroll": false
+  },
+  "cr-932x430-dark settings: прокрутка до конца": {
+   "ok": true,
+   "st": 996,
+   "sh": 1426,
+   "ch": 430,
+   "lastB": 326,
+   "lastTxt": "Version 0.1.0v0.1.0",
+   "limit": 366,
+   "wide": [],
+   "hscroll": false
+  },
+  "cr-932x430-dark help: прокрутка до конца": {
+   "ok": true,
+   "st": 989,
+   "sh": 1419,
+   "ch": 430,
+   "lastB": 326,
+   "lastTxt": "The small number under a digit",
+   "limit": 366,
+   "wide": [],
+   "hscroll": false
+  },
+  "cr-932x430-dark без ошибок страницы": {
+   "ok": true,
+   "errs": []
+  },
+  "cr-932x430-dark archive + safe-area iPhone 16": {
+   "ok": true,
+   "board": [
+    59,
+    12,
+    321,
+    321
+   ],
+   "padL": 404,
+   "lowB": 345,
+   "tabT": 345,
+   "square": true,
+   "inWin": true,
+   "right": true,
+   "above": true,
+   "rightEdge": true,
+   "hscroll": false
+  },
+  "cr-852x393-light play ink": {
+   "ok": true,
+   "board": [
+    16,
+    12,
+    305,
+    305
+   ],
+   "padL": 345,
+   "lowB": 329,
+   "tabT": 329,
+   "square": true,
+   "inWin": true,
+   "right": true,
+   "above": true,
+   "rightEdge": true,
+   "hscroll": false
+  },
+  "cr-852x393-light ink без ошибок страницы": {
+   "ok": true,
+   "errs": []
+  },
+  "cr-852x393-light play liar": {
+   "ok": true,
+   "board": [
+    16,
+    12,
+    305,
+    305
+   ],
+   "padL": 345,
+   "lowB": 329,
+   "tabT": 329,
+   "square": true,
+   "inWin": true,
+   "right": true,
+   "above": true,
+   "rightEdge": true,
+   "hscroll": false
+  },
+  "cr-852x393-light liar без ошибок страницы": {
+   "ok": true,
+   "errs": []
+  },
+  "cr-852x393-light play melody": {
+   "ok": true,
+   "board": [
+    16,
+    12,
+    305,
+    305
+   ],
+   "padL": 345,
+   "lowB": 329,
+   "tabT": 329,
+   "square": true,
+   "inWin": true,
+   "right": true,
+   "above": true,
+   "rightEdge": true,
+   "hscroll": false
+  },
+  "cr-852x393-light melody без ошибок страницы": {
+   "ok": true,
+   "errs": []
+  },
+  "cr-852x393-light play lantern": {
+   "ok": true,
+   "board": [
+    16,
+    12,
+    305,
+    305
+   ],
+   "padL": 345,
+   "lowB": 329,
+   "tabT": 329,
+   "square": true,
+   "inWin": true,
+   "right": true,
+   "above": true,
+   "rightEdge": true,
+   "hscroll": false
+  },
+  "cr-852x393-light lantern без ошибок страницы": {
+   "ok": true,
+   "errs": []
+  },
+  "cr-852x393-dark play lantern": {
+   "ok": true,
+   "board": [
+    16,
+    12,
+    305,
+    305
+   ],
+   "padL": 345,
+   "lowB": 329,
+   "tabT": 329,
+   "square": true,
+   "inWin": true,
+   "right": true,
+   "above": true,
+   "rightEdge": true,
+   "hscroll": false
+  },
+  "cr-852x393-dark lantern без ошибок страницы": {
+   "ok": true,
+   "errs": []
+  },
+  "cr-852x393-light play glyphs": {
+   "ok": true,
+   "board": [
+    16,
+    12,
+    305,
+    305
+   ],
+   "padL": 345,
+   "lowB": 329,
+   "tabT": 329,
+   "square": true,
+   "inWin": true,
+   "right": true,
+   "above": true,
+   "rightEdge": true,
+   "hscroll": false
+  },
+  "cr-852x393-light glyphs без ошибок страницы": {
+   "ok": true,
+   "errs": []
+  },
+  "cr-852x393-dark play glyphs": {
+   "ok": true,
+   "board": [
+    16,
+    12,
+    305,
+    305
+   ],
+   "padL": 345,
+   "lowB": 329,
+   "tabT": 329,
+   "square": true,
+   "inWin": true,
+   "right": true,
+   "above": true,
+   "rightEdge": true,
+   "hscroll": false
+  },
+  "cr-852x393-dark glyphs без ошибок страницы": {
+   "ok": true,
+   "errs": []
+  },
+  "cr-852x393 ink-sheet в окне": {
+   "ok": true,
+   "t": 39,
+   "b": 393,
+   "sh": 354,
+   "ch": 354
+  },
+  "cr-568x320-light today: ряд действий достижим прокруткой": {
+   "ok": true,
+   "st": 0,
+   "sh": 320,
+   "ch": 320,
+   "lastB": 244,
+   "lastTxt": "Notes",
+   "limit": 256,
+   "wide": [],
+   "hscroll": false
+  },
+  "cr-568x320-light today: две колонки, поле слева, панель справа": {
+   "ok": true,
+   "board": [
+    16,
+    12,
+    232
+   ],
+   "padL": 272,
+   "sc": 0
+  },
+  "cr-852x393-light-ax3 today: ряд действий достижим прокруткой": {
+   "ok": true,
+   "st": 44,
+   "sh": 437,
+   "ch": 393,
+   "lastB": 314,
+   "lastTxt": "Notes",
+   "limit": 326,
+   "wide": [],
+   "hscroll": false
+  },
+  "cr-852x393-light-ax3 today: две колонки, поле слева, панель справа": {
+   "ok": true,
+   "board": [
+    16,
+    12,
+    302
+   ],
+   "padL": 342,
+   "sc": 44
+  },
+  "wk-852x393-light today (webkit)": {
+   "ok": true,
+   "board": [
+    16,
+    12,
+    305,
+    305
+   ],
+   "padL": 345,
+   "lowB": 329,
+   "tabT": 329,
+   "square": true,
+   "inWin": true,
+   "right": true,
+   "above": true,
+   "rightEdge": true,
+   "hscroll": false
+  },
+  "wk-852x393-light play (webkit)": {
+   "ok": true,
+   "board": [
+    16,
+    12,
+    305,
+    305
+   ],
+   "padL": 345,
+   "lowB": 329,
+   "tabT": 329,
+   "square": true,
+   "inWin": true,
+   "right": true,
+   "above": true,
+   "rightEdge": true,
+   "hscroll": false
+  },
+  "wk-852x393-light year (webkit)": {
+   "ok": true,
+   "st": 806,
+   "sh": 1199,
+   "ch": 393,
+   "lastB": 301,
+   "lastTxt": "Open today’s puzzle",
+   "limit": 329,
+   "wide": [],
+   "hscroll": false
+  },
+  "wk-932x430-dark today (webkit)": {
+   "ok": true,
+   "board": [
+    16,
+    12,
+    342,
+    342
+   ],
+   "padL": 382,
+   "lowB": 366,
+   "tabT": 366,
+   "square": true,
+   "inWin": true,
+   "right": true,
+   "above": true,
+   "rightEdge": true,
+   "hscroll": false
+  },
+  "wk-852x393-dark day/2026-10-07 (webkit)": {
+   "ok": true,
+   "board": [
+    59,
+    12,
+    284,
+    284
+   ],
+   "padL": 367,
+   "lowB": 308,
+   "tabT": 308,
+   "square": true,
+   "inWin": true,
+   "right": true,
+   "above": true,
+   "rightEdge": true,
+   "hscroll": false
+  },
+  "portrait 393x852 light today: = main": {
+   "ok": true,
+   "diffPx": 0
+  },
+  "portrait 393x852 light hub: = main": {
+   "ok": true,
+   "diffPx": 0
+  },
+  "portrait 393x852 light play: = main": {
+   "ok": true,
+   "diffPx": 0
+  },
+  "portrait 393x852 light year: = main": {
+   "ok": true,
+   "diffPx": 0
+  },
+  "portrait 393x852 dark today: = main": {
+   "ok": true,
+   "diffPx": 0
+  },
+  "portrait 393x852 dark hub: = main": {
+   "ok": true,
+   "diffPx": 0
+  },
+  "portrait 393x852 dark play: = main": {
+   "ok": true,
+   "diffPx": 0
+  },
+  "portrait 393x852 dark year: = main": {
+   "ok": true,
+   "diffPx": 0
+  },
+  "portrait 320x568 light today: = main": {
+   "ok": true,
+   "diffPx": 0
+  },
+  "portrait 320x568 light hub: = main": {
+   "ok": true,
+   "diffPx": 0
+  },
+  "portrait 320x568 light play: = main": {
+   "ok": true,
+   "diffPx": 0
+  },
+  "portrait 320x568 light year: = main": {
+   "ok": true,
+   "diffPx": 0
+  },
+  "portrait 320x568 dark today: = main": {
+   "ok": true,
+   "diffPx": 0
+  },
+  "portrait 320x568 dark hub: = main": {
+   "ok": true,
+   "diffPx": 0
+  },
+  "portrait 320x568 dark play: = main": {
+   "ok": true,
+   "diffPx": 0
+  },
+  "portrait 320x568 dark year: = main": {
+   "ok": true,
+   "diffPx": 0
+  },
+  "portrait 430x932 light today: = main": {
+   "ok": true,
+   "diffPx": 0
+  },
+  "portrait 430x932 light hub: = main": {
+   "ok": true,
+   "diffPx": 0
+  },
+  "portrait 430x932 light play: = main": {
+   "ok": true,
+   "diffPx": 0
+  },
+  "portrait 430x932 light year: = main": {
+   "ok": true,
+   "diffPx": 0
+  },
+  "portrait 430x932 dark today: = main": {
+   "ok": true,
+   "diffPx": 0
+  },
+  "portrait 430x932 dark hub: = main": {
+   "ok": true,
+   "diffPx": 0
+  },
+  "portrait 430x932 dark play: = main": {
+   "ok": true,
+   "diffPx": 0
+  },
+  "portrait 430x932 dark year: = main": {
+   "ok": true,
+   "diffPx": 0
+  }
+ }
+}

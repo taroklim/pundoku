@@ -43,18 +43,10 @@ describe("Today на экране партии: резерв держится п
     expect(css).toMatch(/:root\[data-type="ax3"\] \.today\.play-fit \.box \{ grid-auto-rows: var\(--s\)/);
   });
 
-  it("PD-159: ландшафт телефона — экран партии прокручивается, поле по высоте окна (≥ 160 pt), ничего не сжимается; портрет не затронут", () => {
+  it("PD-159 → PD-249: ландшафт телефона — две колонки в styles/landscape.css (держит landscape.css.test.ts); портрет не затронут", () => {
     const play = fs.readFileSync(new URL("../styles/play.css", import.meta.url), "utf8").replace(/\/\*[\s\S]*?\*\//g, "").replace(/\s+/g, " ");
-    const m = play.match(/@media \(orientation: landscape\) and \(max-height: 500px\) \{(.*)\} *$/);
-    expect(m, "ландшафтный блок в конце play.css").not.toBeNull();
-    const land = m![1]!;
-    expect(land).toMatch(/\.scroll:has\(\.play-fit\) \{ overflow-y: auto; \}/);
-    expect(land).toMatch(/\.scroll:has\(\.play-fit\) > \.panel, \.scroll:has\(\.play-fit\) \.play \{ min-height: auto; \}/);
-    expect(land).toMatch(/\.play-fit > \.gap, \.play-fit > \.hint-dock \{ flex-shrink: 0; \}/);
-    expect(land).toMatch(/--side: max\( 160px, 100dvh - var\(--bar\) - var\(--sa-top\) - var\(--sa-bot\) - 2rem - 8px - 1\.15rem - 2px - 12px - var\(--tabbar-h\) - 8px \)/);
-    expect(land).toMatch(/width: min\(100%, var\(--side\)\)/);
-    expect(land).toMatch(/\.play-fit \.box \{ grid-auto-rows: var\(--s\); \}/); // WebKit: ряды сетки не пересчитывались после смены поля
-    // портретная формула поля прежняя (её держит pd144.css.test.ts) — ландшафт её только перекрывает
+    expect(play).not.toMatch(/@media \(orientation: landscape\)/);
+    // портретная формула поля прежняя (её держит pd144.css.test.ts)
     expect(play).toMatch(/\.play-fit \.board \{ width: min\(100%, calc\(100dvh - var\(--chrome\)\)\)/);
   });
 });

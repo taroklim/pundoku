@@ -24,15 +24,13 @@ describe("CSS движения", () => {
     for (const k of ["--e-out", "--e-spring", "--e-ring"]) expect(css).toContain(k);
   });
 
-  it("PD-95: content-visibility секции Grid ∞ — только при reduced (цель полёта при движении не пропускается), печать — visible", () => {
-    const tokens = read("tokens.css");
-    expect(tokens).toMatch(/:root\s*\{[^}]*--cv-grid:\s*visible;/);
-    expect(tokens).toMatch(/prefers-reduced-motion:\s*reduce\)\s*\{\s*:root\s*\{[^}]*--cv-grid:\s*auto;/);
-    const today = read("today.css");
-    expect(today).toMatch(/\[data-testid="grid-inf-section"\]\s*\{[^}]*content-visibility:\s*var\(--cv-grid\);[^}]*contain-intrinsic-size:\s*auto\s/);
-    expect(today).toMatch(/@media print\s*\{\s*\[data-testid="grid-inf-section"\]\s*\{\s*content-visibility:\s*visible;/);
-    // ни одного безусловного auto/hidden на цели полёта и на карточке
-    expect(files.map(read).join("\n")).not.toMatch(/content-visibility:\s*(auto|hidden)/);
+  it("PD-257: никакого content-visibility (в т.ч. при reduced) — WebKit не пересчитывал прокрутку под карточкой «решено»", () => {
+    // PD-95 ставил секции Grid ∞ `content-visibility: auto` при reduced motion; в WebKit после решения область прокрутки
+    // `.scroll` оставалась устаревшей, и карточку нельзя было докрутить до конца (D1 QA PD-250). Не возвращать.
+    const css = files.map(read).join("\n");
+    expect(css).not.toMatch(/content-visibility/);
+    expect(css).not.toMatch(/contain-intrinsic-size/);
+    expect(css).not.toContain("--cv-grid");
   });
 
   it("forced-colors и reduced-transparency не потеряны", () => {
