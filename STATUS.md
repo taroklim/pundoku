@@ -627,7 +627,7 @@ Gates: build → typecheck, lint, тесты web/engine/api (api с TEST_DATABAS
 | PD-280 | Мерж хотфикса pd-hotfix в main (отдельно или вместе со вторым пакетом, если PD-265 PASS) + gates → hash Coordinator'у (push — владелец) | product-manager | P0 | completed (на проде origin/main 1907e4c (Deploy run 37872617601 success, смоук 200), ждёт iPhone-проверки владельца (п.110–118, 106); merge bc661fa в main, дерево кода = pd-hotfix b1d978c; на слитом engine build, web typecheck/lint/build, api typecheck rc 0; FF от origin/main d6bfb68; push — владелец) | PD-278 |
 | PD-281 | Третий пакет: мерж pd-260 + pd-262/pd-275 в main после второго пакета + gates → hash Coordinator'у | product-manager | P2 | pending | PD-261, PD-263, PD-279, PD-265 |
 | PD-282 | Архив: «‹ Year» у дня, открытого из «Продолжить»/хаба Play, ведёт в Year, а не обратно (находка Dev-275) — маршрут возврата по источнику | developer | P3 | pending (бэклог) | — |
-| PD-283 | Фикс по QA PD-279 (P4) в pd-275: незаконченный день с датой > сегодня (откат часов/смена пояса на запад) не показывать в «Продолжить» — summaryFromRepo (play/daySlot.ts); проверить то же у Лжеца; тест; до мержа третьего пакета (узкая перепроверка — в общем QA третьего пакета) | developer | P3 | in_progress (Dev-Pundoku-283) | PD-279 |
+| PD-283 | Фикс по QA PD-279 (P4) в pd-275: незаконченный день с датой > сегодня (откат часов/смена пояса на запад) не показывать в «Продолжить» — summaryFromRepo (play/daySlot.ts); проверить то же у Лжеца; тест; до мержа третьего пакета (узкая перепроверка — в общем QA третьего пакета) | developer | P3 | completed (pd-275 @ 93e90b2: summaryFromRepo (daySlot.ts) и PlayStore.liarDayContinue (store.ts) отсекают date > today, данные не удаляются; тесты daySlot.pastDay + liar.midnight (без фикса падают), таргетно 125/125, tsc/eslint ок; pd275-check 187/188 — флак «‹ Year» из архива wk-393-light-uk, перепрогон 2×23/23; qa279-extra 98/98; узкая перепроверка — в общем QA третьего пакета, флак иметь в виду) | PD-279 |
 | PD-284 | Перф: listDays перечитывается при каждом возврате на Play (~40 мс сейчас) — кэшировать/инвалидировать по записи (находка QA PD-279) | developer | P3 | pending (бэклог) | — |
 | PD-285 | Дизайн (Low UX, QA PD-278/PD-256): карточка результата Play в покое — «New puzzle» целиком под стеклом таб-бара на 320/393/430, «Watch your solve» выглядывает на 12 px и выглядит обрезанной (в конце прокрутки всё доступно); предложить компоновку/подсказку прокрутки, кадры; без реализации | designer | P3 | pending (бэклог; после третьего пакета) | — |
 
@@ -763,7 +763,7 @@ Gates: build → typecheck, lint, тесты web/engine/api (api с `TEST_DATABA
 
 ## Хотфикс на проде (2026-10-09, PM-21)
 - origin/main 1907e4c = merge bc661fa pd-hotfix (PD-276/277) + STATUS; push — Coordinator по просьбе владельца; Deploy run 37872617601 success. Откат: revert bc661fa к d6bfb68. Второй пакет мержить поверх нового main (merge-tree с pd-pack2-base чисто).
-- Лимит 5h 81% — новых агентов не запускать до сброса/команды Coordinator'а; ведём текущих (QA-265, QA-261, Dev-283).
+- Лимит 5h 81% — новых агентов не запускать до сброса/команды Coordinator'а; ведём текущих (QA-265, QA-261). Третий пакет = pd-260 + pd-275 @ 93e90b2 (вкл. pd-262, PD-283).
 
 ## Очередь PM-21 после сброса (2026-10-09 02:05; специалистов резюмирует Coordinator — у PM нет SendMessage)
 1. Dev-276 готов → QA PD-278 (qa-tester, P0, на pd-hotfix, слот) → PD-280: мерж pd-hotfix в main (+ второй пакет, если PD-265 PASS) + gates → hash Coordinator'у.
@@ -776,7 +776,6 @@ Gates: build → typecheck, lint, тесты web/engine/api (api с `TEST_DATABA
 |-----|------|--------|-------|-----------|
 | PM-Pundoku-21 | product-manager | working | PD-276, PD-265, PD-260/263/275 | 2026-10-09 02:00 |
 | QA-Pundoku-265 | qa-tester | working (slot-1, наборы L B F P; порты 5311–5319) | PD-265 | 2026-10-09 02:05 |
-| Dev-Pundoku-283 | developer | working (pd-275, фикс дня из будущего; порты 5371–5379) | PD-283 | 2026-10-09 |
 | QA-Pundoku-261 | qa-tester | working (сначала PD-263 на qa-263, затем PD-261 на qa-261; порты 5341–5349) | PD-263 → PD-261 | 2026-10-09 |
 
 ## Чек-пойнт 2026-10-01 (конец сессии PM-Pundoku-7)
