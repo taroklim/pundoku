@@ -9,6 +9,7 @@ import { useSheetSwipe } from "../shell/useSheetSwipe";
 import { PetBlot } from "../pet/PetBlot";
 import { dayPetMood } from "../pet/petDay";
 import { useWakeOnce } from "../pet/petSeen";
+import { usePetLive } from "../pet/usePetLive";
 import { usePetEnabled } from "../settings/prefs";
 import { heatLegend, heatOpacities } from "../play/heat";
 import { hintCellSet, hintCount, HintsRow } from "../play/hintCard";
@@ -361,23 +362,24 @@ function DayCard({
 }
 
 /**
- * Предупреждение ДО старта (PD-125): что станет с днём, если решить его сейчас, — до кнопки «Play/Finish», а не после победы.
- * Только факт о том, как день отметится в году; ничего не обещает сверх этого и не пугает пропуском.
- */
-/**
- * Клякса листа дня (PD-180; движение PD-260, макет PD-223 B): день, который прежде показывался «спит», закончили — при первом
- * показе после этого клякса «просыпается» (один раз; память показанного настроения — `petSeen`). Иначе только покой.
- * Ключуется датой: решение «проснуться» принимается на показ даты.
+ * Клякса листа дня (PD-180; движение PD-260, макет PD-223 B): день, который прежде показывался «спит», закончили — клякса
+ * «просыпается» один раз (память показанного настроения — `petSeen`): при показе листа или у открытого листа, когда данные
+ * обновились под ним (PD-287). Иначе только покой. Ключуется датой; ремаунт кляксы по номеру «проснуться» — чтобы действие
+ * сыграло на текущем показе, даже если лист уже уходил с экрана и возвращался.
  */
 function YearPet({ date, mood }: { date: string; mood: PetMood }) {
-  const wake = useWakeOnce(date, mood);
+  const wake = useWakeOnce(date, mood, usePetLive());
   return (
     <div className="pet-slot" data-testid="pet-year">
-      <PetBlot mood={mood} size={40} act={wake ? "wake" : undefined} />
+      <PetBlot key={wake} mood={mood} size={40} act={wake ? "wake" : undefined} />
     </div>
   );
 }
 
+/**
+ * Предупреждение ДО старта (PD-125): что станет с днём, если решить его сейчас, — до кнопки «Play/Finish», а не после победы.
+ * Только факт о том, как день отметится в году; ничего не обещает сверх этого и не пугает пропуском.
+ */
 function LateWarning() {
   const { t } = useTranslation();
   return (

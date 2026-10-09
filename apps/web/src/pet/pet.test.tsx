@@ -240,7 +240,7 @@ describe("petSeen: «проснуться» один раз", () => {
     rememberMood("2026-09-10", "asleep");
     expect(seenMood("2026-09-10")).toBe("asleep");
     function Probe({ date, mood }: { date: string; mood: PetMood }) {
-      return <i data-wake={String(useWakeOnce(date, mood))} />;
+      return <i data-wake={String(useWakeOnce(date, mood) > 0)} />;
     }
     const wake = () => host.querySelector("i")!.getAttribute("data-wake");
     act(() => root.render(<Probe key="a" date="2026-09-10" mood="asleep" />));
@@ -254,6 +254,52 @@ describe("petSeen: «проснуться» один раз", () => {
     expect(Object.keys(JSON.parse(localStorage.getItem(PET_SEEN_KEY)!) as object)).toHaveLength(PET_SEEN_MAX);
     localStorage.setItem(PET_SEEN_KEY, "{broken");
     expect(seenMood("2026-09-10")).toBeNull();
+  });
+
+  // PD-287: данные обновились под уже открытым листом (возврат из архива на прежних данных Year, снапшот с другого устройства).
+  function Live({ date, mood, live }: { date: string; mood: PetMood; live?: boolean }) {
+    return <i data-wake={String(useWakeOnce(date, mood, live))} />;
+  }
+  const wakeId = () => Number(host.querySelector("i")!.getAttribute("data-wake"));
+
+  it("PD-287: у смонтированного листа «спит» → закончен — «проснуться» сразу; смена настроения закрытого дня — без него", () => {
+    act(() => root.render(<Live date="2026-09-12" mood="asleep" />));
+    expect(wakeId()).toBe(0);
+    expect(seenMood("2026-09-12")).toBe("asleep");
+    act(() => root.render(<Live date="2026-09-12" mood="happy" />));
+    const first = wakeId();
+    expect(first).toBeGreaterThan(0);
+    expect(seenMood("2026-09-12")).toBe("happy");
+    act(() => root.render(<Live date="2026-09-12" mood="happy" />)); // перерисовка без новых данных — то же «проснуться», не новое
+    expect(wakeId()).toBe(first);
+    act(() => root.render(<Live date="2026-09-12" mood="surprised" />)); // Лжец пойман позже — не «проснуться» заново
+    expect(wakeId()).toBe(0);
+    // День снова «спит» (чистка хранилища показана) и снова закончен — новое «проснуться» с новым номером (ремаунт кляксы).
+    act(() => root.render(<Live date="2026-09-12" mood="asleep" />));
+    expect(wakeId()).toBe(0);
+    act(() => root.render(<Live date="2026-09-12" mood="tired" />));
+    expect(wakeId()).toBeGreaterThan(first);
+  });
+
+  it("PD-287: скрытая клякса ничего не «видела» — «проснуться» ждёт возврата на экран и не теряется; ложного нет", () => {
+    act(() => root.render(<Live date="2026-09-12" mood="asleep" live />));
+    act(() => root.render(<Live date="2026-09-12" mood="asleep" live={false} />));
+    act(() => root.render(<Live date="2026-09-12" mood="happy" live={false} />)); // день закончили, пока лист не видно
+    expect(wakeId()).toBe(0);
+    expect(seenMood("2026-09-12")).toBe("asleep"); // скрытое настроение не запоминается
+    act(() => root.render(<Live date="2026-09-12" mood="happy" live />));
+    const id = wakeId();
+    expect(id).toBeGreaterThan(0);
+    expect(seenMood("2026-09-12")).toBe("happy");
+    // Ушли и вернулись — «проснуться» не повторяется новым номером (клякса не ремаунтится; повтор гасит PetBlot по `run`).
+    act(() => root.render(<Live date="2026-09-12" mood="happy" live={false} />));
+    act(() => root.render(<Live date="2026-09-12" mood="happy" live />));
+    expect(wakeId()).toBe(id);
+    // Решённый день, «спящим» не показанный (впервые на экране уже закончен), — без «проснуться»; скрытый показ «спит» не в счёт.
+    act(() => root.render(<Live key="b" date="2026-09-13" mood="asleep" live={false} />));
+    expect(seenMood("2026-09-13")).toBeNull();
+    act(() => root.render(<Live key="b" date="2026-09-13" mood="happy" live />));
+    expect(wakeId()).toBe(0);
   });
 });
 

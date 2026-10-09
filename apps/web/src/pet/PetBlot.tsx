@@ -1,11 +1,12 @@
 import type { PetMood } from "@pundoku/engine";
 import type { CSSProperties } from "react";
-import { useEffect, useId, useMemo, useState } from "react";
+import { useId, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { motionReduced, useTabActive } from "../shell/tabSlide";
+import { motionReduced } from "../shell/tabSlide";
 import { petShape } from "./petGeometry";
 import type { PetAct } from "./petMotion";
 import { actDuration, dropBoxes, fitScale } from "./petMotion";
+import { usePetLive } from "./usePetLive";
 
 /**
  * Клякса-питомец (PD-180, рисунок — вариант A «Капля» макета PD-170; движение — вариант B «Капля» макета PD-223, PD-260).
@@ -133,14 +134,7 @@ function Drops({ mood, role, size }: { mood: PetMood; role: "from" | "to"; size:
  * `run` растёт при каждом возвращении — ремаунт заново запускает покой (это не цикл: 3 вдоха и снова стоит).
  */
 function useLiveRun(): { live: boolean; run: number } {
-  const tabActive = useTabActive();
-  const [visible, setVisible] = useState(() => typeof document === "undefined" || document.visibilityState !== "hidden");
-  useEffect(() => {
-    const on = () => setVisible(document.visibilityState !== "hidden");
-    document.addEventListener("visibilitychange", on);
-    return () => document.removeEventListener("visibilitychange", on);
-  }, []);
-  const live = tabActive && visible;
+  const live = usePetLive();
   // Производное состояние от предыдущего рендера (паттерн React «storing information from previous renders»), без эффекта.
   const [seen, setSeen] = useState({ live, run: 0 });
   let cur = seen;

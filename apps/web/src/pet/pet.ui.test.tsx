@@ -11,6 +11,7 @@ import i18n from "../i18n";
 import { ResultCard } from "../play/ResultCard";
 import type { LiarInfo } from "../play/savedPlay";
 import { setPetEnabled } from "../settings/prefs";
+import { TabActiveContext } from "../shell/tabSlide";
 import { progressOf } from "../sync/fixtures";
 import type { DayProgress } from "../today/repository";
 import { YearScreen } from "../year/YearScreen";
@@ -153,6 +154,41 @@ describe("Year: только лист дня", () => {
     openDay("2026-09-10");
     expect(pet("pet-year")!.hasAttribute("data-act")).toBe(false);
   }, 20000); // под нагрузкой полного прогона Year-сценарий с тремя рендерами дольше 5 с (прецедент PD-181, 14af416)
+
+  it("PD-287: лист открыт на прежних данных («спит»), данные обновились под ним → «проснуться» на открытом листе; скрытая вкладка ждёт", () => {
+    setPetEnabled(true);
+    const screen = (days: DayProgress[], active = true) =>
+      act(() =>
+        root.render(
+          <TabActiveContext.Provider value={active}>
+            <YearScreen days={days} firstUse="2026-09-01" today={TODAY} onOpenToday={vi.fn()} onPlayDay={vi.fn()} />
+          </TabActiveContext.Provider>,
+        ),
+      );
+    // Возврат из архива: лист дня открыт по initialDate раньше, чем Year перечитал хранилище.
+    screen([progressOf("2026-09-12", { solved: false, moves: 4 })]);
+    openMonth();
+    openDay("2026-09-12");
+    expect(moodOf("pet-year")).toBe("asleep");
+    screen([progressOf("2026-09-12")]);
+    expect(moodOf("pet-year")).toBe("happy");
+    expect(pet("pet-year")!.getAttribute("data-act")).toBe("wake");
+    expect(pet("pet-year")!.querySelector(".pose.from")!.getAttribute("data-mood")).toBe("asleep");
+    // Вкладку скрыли, на открытом листе другого дня данные обновились; вернулись — «проснуться» играет сейчас, не потеряно.
+    click(document.querySelector(".ysheet .back"));
+    screen([progressOf("2026-09-12"), progressOf("2026-09-13", { solved: false, moves: 4 })]);
+    openDay("2026-09-13");
+    expect(moodOf("pet-year")).toBe("asleep");
+    screen([progressOf("2026-09-12"), progressOf("2026-09-13", { solved: false, moves: 4 })], false);
+    screen([progressOf("2026-09-12"), progressOf("2026-09-13")], false);
+    expect(pet("pet-year")!.hasAttribute("data-act")).toBe(false);
+    screen([progressOf("2026-09-12"), progressOf("2026-09-13")], true);
+    expect(pet("pet-year")!.getAttribute("data-act")).toBe("wake");
+    // Ещё раз ушли и вернулись — покой, без повтора.
+    screen([progressOf("2026-09-12"), progressOf("2026-09-13")], false);
+    screen([progressOf("2026-09-12"), progressOf("2026-09-13")], true);
+    expect(pet("pet-year")!.hasAttribute("data-act")).toBe(false);
+  }, 20000);
 
   it("Лжец даты с первого обвинения → удивлён; выключенный тумблер — кляксы нет", () => {
     setPetEnabled(true);
