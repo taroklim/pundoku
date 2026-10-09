@@ -28,6 +28,11 @@ export const RISE_PX = 6;
 
 /** Атрибут «экран участвует в переходе»: снимает с неактивной панели `visibility: hidden` на время анимации (shell.css). */
 export const SLIDE_ATTR = "data-slide";
+/**
+ * PD-253: атрибут стопки «вкладка видна под уезжающим экраном поверх» (жест «назад» от края, `edgeBack.ts`). Вкладка уже на
+ * экране — возврат на неё входом M10 не играется (иначе она мигнула бы: пропала и проявилась заново).
+ */
+export const PEEK_ATTR = "data-peek";
 
 /** Вкладка показана пользователю (не скрыта под соседней и не под Settings/справкой/архивом). Вне стопки вкладок — true. */
 export const TabActiveContext = createContext(true);
@@ -216,7 +221,7 @@ export function useTabSlide(
 
     if (from === tab) {
       // Вернулись с экрана поверх (Settings/справка/архив) на ту же вкладку — прежний вход M10 (fadeRise).
-      if (!wasCovered || covered) return;
+      if (!wasCovered || covered || host.hasAttribute(PEEK_ATTR)) return;
       const el = paneOf(tab);
       if (!el || !canAnimate(el)) return;
       cancelAll();

@@ -168,6 +168,37 @@ textarea,
 .push-layer {
   z-index: 1;
 }
+/* PD-253: «назад» от левого края на Settings/справке (edgeBack.ts), только в установленном приложении. Вертикаль ведёт браузер
+   (и шлёт pointercancel), горизонталь приходит в JS. Вторая строка — щипок-зум, где движок понимает сочетание (иначе первая). */
+.push-layer[data-edge-back] {
+  touch-action: pan-y;
+  touch-action: pan-y pinch-zoom;
+}
+/* Экран едет за пальцем: тень по левому краю отделяет его от того, что под ним. Только на время жеста — transform в покое
+   не остаётся (containing block для position: fixed). */
+.push-layer[data-edge-drag] {
+  box-shadow:
+    -1px 0 0 var(--hairline),
+    -12px 0 28px rgba(0, 0, 0, 0.14);
+}
+/* Под уезжающим экраном видна вкладка, куда ведёт «назад» (она inert и aria-hidden, как и под закрытым слоем), с затемнением,
+   которое уходит по мере сдвига (`--edge-p` 0…1 ставит жест). */
+.stack.covered[data-peek] > .tab-pane:not(.off) {
+  visibility: visible;
+}
+/* Своя стопка наложения на время показа: элементы вкладки с z-index (карточка хаба, тосты — до 60) не всплывают над слоем. */
+.stack[data-peek] {
+  isolation: isolate;
+}
+.stack[data-peek]::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 100;
+  pointer-events: none;
+  background: rgba(0, 0, 0, 0.12);
+  opacity: calc(1 - var(--edge-p, 0));
+}
 
 /* Панель вкладки занимает всю прокручиваемую область; фокус на ней не рисуем рамкой. */
 .panel {
