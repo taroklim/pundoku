@@ -285,8 +285,13 @@ async function run(br, [W, H, scheme, lang, ax3]) {
     await p.waitForTimeout(600);
     await toHub(p);
     await p.locator('[data-testid="continue-liar-day"]').waitFor({ timeout: 10000 });
-    await p.waitForTimeout(500);
-    check(`${tag}: решённый 7-й из «Продолжить» ушёл`, (await p.locator('[data-testid="continue-day"]').count()) === 0);
+    // Хаб перечитывает хранилище при возврате на вкладку (IndexedDB, асинхронно): до ответа строка держит прежнюю сводку.
+    const t0 = Date.now();
+    const gone = await p
+      .locator('[data-testid="continue-day"]')
+      .waitFor({ state: "detached", timeout: 5000 })
+      .then(() => true, () => false);
+    check(`${tag}: решённый 7-й из «Продолжить» ушёл`, gone, `${Date.now() - t0} ms`);
     liar = await rowInfo(p, "continue-liar-day");
     check(`${tag}: Лжец дня 7-го на месте с датой`, liar?.title === `${T.liar} · ${T.date}`, liar?.title);
     await p.locator('[data-testid="continue-liar-day"]').click();
