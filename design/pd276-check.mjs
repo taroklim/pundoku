@@ -248,17 +248,13 @@ const S = {
         const r = await tapOnce(page, pts[`${to}-center`], 250);
         ok(`${tag} ${bname}: быстрый тап → ${to} (250 мс после предыдущего); iOS: ${r.became ? "HOVER" : "click"}`, r.sel === to && r.became === 0, JSON.stringify({ sel: r.sel, became: r.became, sample: r.sample }));
       }
-      // нажатие держат (палец на вкладке 300 мс) — отклик PD-254 и никакой смены видимости до click
+      // итог матрицы + контрольный тап после паузы (панель-цель давно скрыта — как первый тап на iPhone)
       {
+        await page.waitForTimeout(1200);
         const pt = pts[`${(await sel(page)) === "today" ? "play" : "today"}-center`];
-        await takeCco(page);
-        const to = pt.owner;
-        const cdp = page.touchscreen;
-        await cdp.tap(pt.x, pt.y);
-        await page.waitForTimeout(700);
-        const cco = await takeCco(page);
+        const r = await tapOnce(page, pt);
         ok(`${tag} ${bname}: контроль — после серии ${n} тапов матрицы ни одного «HOVER», ни одной пропущенной смены`, bad === 0, `bad=${bad}`);
-        ok(`${tag} ${bname}: последний контрольный тап → ${to}`, (await sel(page)) === to && cco.every((c) => c.became === 0), JSON.stringify(cco));
+        ok(`${tag} ${bname}: контрольный тап после паузы 1.2 с → ${pt.owner}`, r.sel === pt.owner && r.became === 0, JSON.stringify(r.cco));
       }
       ok(`${tag} ${bname}: на панелях нет следов прогрева/перехода в покое`, (await page.evaluate(() => [...document.querySelectorAll(".tab-pane")].filter((p) => p.hasAttribute("data-slide") || p.style.transform || p.style.willChange || p.style.opacity).length)) === 0);
       ok(`${tag} ${bname}: без ошибок страницы`, errs.length === 0, errs.join("|"));
