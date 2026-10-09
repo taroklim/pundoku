@@ -494,15 +494,17 @@ export class PlayStore extends GameStore<PlayScreenSnapshot> {
   liarDayContinue(today: string = localDate()): { date: string; summary: SlotSummary } | null {
     const s = this.snap;
     if (s.daily && s.play && s.phase === "playing" && !s.play.solved && hasProgress(s.play)) {
-      return { date: s.daily, summary: { difficulty: s.difficulty, left: cellsLeft(s.play), elapsedMs: this.getElapsedMs(), ink: false } };
+      return { date: s.daily, summary: { difficulty: s.difficulty, left: cellsLeft(s.play), elapsedMs: this.getElapsedMs(), ink: false, date: s.daily } };
     }
     let best: string | null = null;
     for (const [date, rec] of this.dailies) {
-      if (date === s.daily || rec.play.solved || !hasProgress(rec.play)) continue;
+      // PD-283: Лжец «из будущего» (часы отвели назад, сменили пояс на запад) в «Продолжить» не попадает; запись остаётся.
+      if (date === s.daily || date > today || rec.play.solved || !hasProgress(rec.play)) continue;
       if (best === null || date === today || (best !== today && date > best)) best = date;
     }
     if (best === null) return null;
-    return { date: best, summary: summaryOf(this.dailies.get(best)!) };
+    // PD-262: дата дня головоломки в сводке — строка «Продолжить» подписывает ею не сегодняшнего Лжеца.
+    return { date: best, summary: { ...summaryOf(this.dailies.get(best)!), date: best } };
   }
 
   /**

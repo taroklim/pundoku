@@ -6,6 +6,7 @@ import { playStore } from "./play/store";
 import { recoveryStore } from "./recovery/runtime";
 import { BACK_LABEL, SettingsScreen } from "./recovery/SettingsScreen";
 import { ArchiveScreen } from "./today/ArchiveScreen";
+import { localDate } from "./today/dayResolver";
 import { dayStore } from "./today/dayStore";
 import { TodayScreen } from "./today/TodayScreen";
 import { useDynamicTypeFlag } from "./shell/dynamicType";
@@ -51,6 +52,15 @@ export function App() {
   const playDay = (date: string) => {
     const s = dayStore.getSnapshot();
     if (s.date === date && s.phase === "playing" && s.play !== null && s.play.log.length > 0) setTab("today");
+    else go({ archive: date });
+  };
+
+  // PD-275: строка дня в «Продолжить» хаба Play. Сегодняшний день (или прошлый, который стор Today ещё держит — полночь на
+  // открытом приложении) — вкладка Today; прошлый, найденный в хранилище после перезапуска (стор Today уже на сегодняшнем), —
+  // архив этой даты: та же запись, та же сетка, сегодняшний день на Today не вытесняется. Одна запись — один стор.
+  const continueDay = (date?: string) => {
+    const s = dayStore.getSnapshot();
+    if (!date || date === localDate() || (s.date === date && s.phase === "playing")) setTab("today");
     else go({ archive: date });
   };
 
@@ -110,14 +120,15 @@ export function App() {
   // PD-221: колбэки экранов вкладок — стабильные (одни и те же функции весь срок жизни App), но всегда зовут актуальные
   // `go`/`setTab`/`playDay`: иначе каждая смена вкладки давала экранам новые пропсы и React перерисовывал все три экрана
   // до подсветки вкладки и старта слайда.
-  const latest = useRef({ go, setTab, playDay, openHelp });
-  latest.current = { go, setTab, playDay, openHelp };
+  const latest = useRef({ go, setTab, playDay, continueDay, openHelp });
+  latest.current = { go, setTab, playDay, continueDay, openHelp };
   const actions = useMemo<TabActions>(
     () => ({
       openSettings: () => latest.current.go({ settings: true }),
       openHelp: (block) => latest.current.openHelp(block),
       openToday: () => latest.current.setTab("today"),
       playDay: (date) => latest.current.playDay(date),
+      continueDay: (date) => latest.current.continueDay(date),
       yearConsumed: () => latest.current.go({ tab: "year" }),
     }),
     [],
@@ -200,6 +211,7 @@ interface TabActions {
   openHelp: (block: HelpBlockId | null) => void;
   openToday: () => void;
   playDay: (date: string) => void;
+  continueDay: (date?: string) => void;
   yearConsumed: () => void;
 }
 
@@ -209,7 +221,7 @@ interface TabActions {
  * только её потребители. Свои сторы экраны читают подпиской, от перерисовки родителя они не зависят.
  */
 const TabScreen = memo(function TabScreen({ id, actions, yearDate }: { id: TabId; actions: TabActions; yearDate: string | null }) {
-  if (id === "play") return <PlayScreen onOpenSettings={actions.openSettings} onOpenHelp={actions.openHelp} onOpenToday={actions.openToday} />;
+  if (id === "play") return <PlayScreen onOpenSettings={actions.openSettings} onOpenHelp={actions.openHelp} onOpenToday={actions.continueDay} />;
   if (id === "today") return <TodayScreen onOpenSettings={actions.openSettings} onOpenHelp={actions.openHelp} />;
   return (
     <YearTab

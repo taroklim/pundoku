@@ -23,7 +23,7 @@ describe("summaryFromRecord: что считается незавершённы�
   it("идущий день: сложность, сколько осталось, накопленное время", () => {
     const r = record(5);
     const s = summaryFromRecord(r)!;
-    expect(s).toEqual({ difficulty: "easy", left: cellsLeft(r.play), elapsedMs: r.elapsedMs, ink: false });
+    expect(s).toEqual({ difficulty: "easy", left: cellsLeft(r.play), elapsedMs: r.elapsedMs, ink: false, date: DATE });
     expect(s.left).toBeLessThan(cellsLeft(createPlay({ mission: r.mission, solution: r.play.solution.join("") }))); // ходы учтены
   });
 
@@ -79,6 +79,10 @@ describe("summaryFromStore: живая партия стора Today", () => {
     expect(summaryFromStore(fakeSource({ phase: "playing", play: createPlay({ mission: record(0).mission, solution: play.solution.join("") }) }).source)).toBeNull();
     expect(summaryFromStore(fakeSource({ phase: "solved", play }).source)).toBeNull();
     expect(summaryFromStore(fakeSource({ phase: "loading" }).source)).toBeNull();
+  });
+
+  it("PD-262: сводка несёт дату партии стора (после полуночи стор держит вчерашний день — строка подпишет его датой)", () => {
+    expect(summaryFromStore(fakeSource({ phase: "playing", play: playedStub(), date: "2026-10-02" }).source)!.date).toBe("2026-10-02");
   });
 
   it("сложность дня неизвестна движку — подпись без неё (difficulty: null)", () => {

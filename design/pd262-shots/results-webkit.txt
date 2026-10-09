@@ -1,0 +1,81 @@
+PASS wk-320-light-en-ax3: 23:5x — Лжец дня без даты {"title":"Liar of the day","titleLines":2,"dateLines":2,"overflow":0,"bOverflow":0,"rowRight":304,"vw":320,"ax3":"ax3","aria":"- button \"Liar of the day Medium · 49 cells left · 0:01\""}
+PASS wk-320-light-en-ax3: 23:5x — день Today без даты {"title":"Today’s puzzle","titleLines":2,"dateLines":1,"overflow":0,"bOverflow":0,"rowRight":304,"vw":320,"ax3":"ax3","aria":"- button \"Today’s puzzle Medium · 50 cells left · 0:01\""}
+PASS wk-320-light-en-ax3: AX3 включён ax3
+PASS wk-320-light-en-ax3: после полуночи — Лжец дня с датой Liar of the day · 7 Oct
+PASS wk-320-light-en-ax3: после полуночи — день Today с датой Daily puzzle · 7 Oct
+PASS wk-320-light-en-ax3: VoiceOver-имя Лжеца содержит дату - button "Liar of the day · 7 Oct Medium · 49 cells left · 0:01"
+PASS wk-320-light-en-ax3: VoiceOver-имя дня содержит дату - button "Daily puzzle · 7 Oct Medium · 50 cells left · 0:01"
+PASS wk-320-light-en-ax3: строка «Лжец» не шире экрана, заголовок не обрезан {"overflow":0,"bOverflow":0,"right":304,"vw":320}
+PASS wk-320-light-en-ax3: дата «Лжец» на одной строке {"dateLines":1,"titleLines":2}
+PASS wk-320-light-en-ax3: строка «день» не шире экрана, заголовок не обрезан {"overflow":0,"bOverflow":0,"right":304,"vw":320}
+PASS wk-320-light-en-ax3: дата «день» на одной строке {"dateLines":1,"titleLines":3}
+PASS wk-320-light-en-ax3: перезапуск 8-го — Лжец дня 7-го с датой Liar of the day · 7 Oct
+PASS wk-320-light-en-ax3: тап открывает партию 
+PASS wk-320-light-en-ax3: без ошибок страницы 
+PASS wk-320-dark-ru-ax3: 23:5x — Лжец дня без даты {"title":"Лжец дня","titleLines":1,"dateLines":1,"overflow":0,"bOverflow":0,"rowRight":304,"vw":320,"ax3":"ax3","aria":"- button \"Лжец дня Средне · осталось 49 · 0:01\""}
+PASS wk-320-dark-ru-ax3: 23:5x — день Today без даты {"title":"Головоломка дня","titleLines":2,"dateLines":2,"overflow":0,"bOverflow":0,"rowRight":304,"vw":320,"ax3":"ax3","aria":"- button \"Головоломка дня Средне · осталось 50 · 0:01\""}
+PASS wk-320-dark-ru-ax3: AX3 включён ax3
+PASS wk-320-dark-ru-ax3: после полуночи — Лжец дня с датой Лжец дня · 7 окт.
+PASS wk-320-dark-ru-ax3: после полуночи — день Today с датой Головоломка дня · 7 окт.
+PASS wk-320-dark-ru-ax3: VoiceOver-имя Лжеца содержит дату - button "Лжец дня · 7 окт. Средне · осталось 49 · 0:01"
+PASS wk-320-dark-ru-ax3: VoiceOver-имя дня содержит дату - button "Головоломка дня · 7 окт. Средне · осталось 50 · 0:01"
+PASS wk-320-dark-ru-ax3: строка «Лжец» не шире экрана, заголовок не обрезан {"overflow":0,"bOverflow":0,"right":304,"vw":320}
+PASS wk-320-dark-ru-ax3: дата «Лжец» на одной строке {"dateLines":1,"titleLines":2}
+PASS wk-320-dark-ru-ax3: строка «день» не шире экрана, заголовок не обрезан {"overflow":0,"bOverflow":0,"right":304,"vw":320}
+PASS wk-320-dark-ru-ax3: дата «день» на одной строке {"dateLines":1,"titleLines":2}
+PASS wk-320-dark-ru-ax3: перезапуск 8-го — Лжец дня 7-го с датой Лжец дня · 7 окт.
+PASS wk-320-dark-ru-ax3: тап открывает партию 
+PASS wk-320-dark-ru-ax3: без ошибок страницы 
+PASS wk-320-light-uk-ax3: 23:5x — Лжец дня без даты {"title":"Брехун дня","titleLines":1,"dateLines":1,"overflow":0,"bOverflow":0,"rowRight":304,"vw":320,"ax3":"ax3","aria":"- button \"Брехун дня Середньо · залишилось 49 · 0:01\""}
+PASS wk-320-light-uk-ax3: 23:5x — день Today без даты {"title":"Головоломка дня","titleLines":2,"dateLines":2,"overflow":0,"bOverflow":0,"rowRight":304,"vw":320,"ax3":"ax3","aria":"- button \"Головоломка дня Середньо · залишилось 50 · 0:01\""}
+PASS wk-320-light-uk-ax3: AX3 включён ax3
+PASS wk-320-light-uk-ax3: после полуночи — Лжец дня с датой Брехун дня · 7 жовт.
+PASS wk-320-light-uk-ax3: после полуночи — день Today с датой Головоломка дня · 7 жовт.
+PASS wk-320-light-uk-ax3: VoiceOver-имя Лжеца содержит дату - button "Брехун дня · 7 жовт. Середньо · залишилось 49 · 0:01"
+PASS wk-320-light-uk-ax3: VoiceOver-имя дня содержит дату - button "Головоломка дня · 7 жовт. Середньо · залишилось 50 · 0:01"
+PASS wk-320-light-uk-ax3: строка «Лжец» не шире экрана, заголовок не обрезан {"overflow":0,"bOverflow":0,"right":304,"vw":320}
+PASS wk-320-light-uk-ax3: дата «Лжец» на одной строке {"dateLines":1,"titleLines":3}
+PASS wk-320-light-uk-ax3: строка «день» не шире экрана, заголовок не обрезан {"overflow":0,"bOverflow":0,"right":304,"vw":320}
+PASS wk-320-light-uk-ax3: дата «день» на одной строке {"dateLines":1,"titleLines":2}
+PASS wk-320-light-uk-ax3: перезапуск 8-го — Лжец дня 7-го с датой Брехун дня · 7 жовт.
+PASS wk-320-light-uk-ax3: тап открывает партию 
+PASS wk-320-light-uk-ax3: без ошибок страницы 
+PASS wk-393-light-en: 23:5x — Лжец дня без даты {"title":"Liar of the day","titleLines":1,"dateLines":1,"overflow":0,"bOverflow":0,"rowRight":377,"vw":393,"ax3":null,"aria":"- button \"Liar of the day Medium · 49 cells left · 0:01\""}
+PASS wk-393-light-en: 23:5x — день Today без даты {"title":"Today’s puzzle","titleLines":1,"dateLines":1,"overflow":0,"bOverflow":0,"rowRight":377,"vw":393,"ax3":null,"aria":"- button \"Today’s puzzle Medium · 50 cells left · 0:01\""}
+PASS wk-393-light-en: после полуночи — Лжец дня с датой Liar of the day · 7 Oct
+PASS wk-393-light-en: после полуночи — день Today с датой Daily puzzle · 7 Oct
+PASS wk-393-light-en: VoiceOver-имя Лжеца содержит дату - button "Liar of the day · 7 Oct Medium · 49 cells left · 0:01"
+PASS wk-393-light-en: VoiceOver-имя дня содержит дату - button "Daily puzzle · 7 Oct Medium · 50 cells left · 0:01"
+PASS wk-393-light-en: строка «Лжец» не шире экрана, заголовок не обрезан {"overflow":0,"bOverflow":0,"right":377,"vw":393}
+PASS wk-393-light-en: дата «Лжец» на одной строке {"dateLines":1,"titleLines":1}
+PASS wk-393-light-en: строка «день» не шире экрана, заголовок не обрезан {"overflow":0,"bOverflow":0,"right":377,"vw":393}
+PASS wk-393-light-en: дата «день» на одной строке {"dateLines":1,"titleLines":1}
+PASS wk-393-light-en: перезапуск 8-го — Лжец дня 7-го с датой Liar of the day · 7 Oct
+PASS wk-393-light-en: тап открывает партию 
+PASS wk-393-light-en: без ошибок страницы 
+PASS wk-393-dark-ru: 23:5x — Лжец дня без даты {"title":"Лжец дня","titleLines":1,"dateLines":1,"overflow":0,"bOverflow":0,"rowRight":377,"vw":393,"ax3":null,"aria":"- button \"Лжец дня Средне · осталось 49 · 0:01\""}
+PASS wk-393-dark-ru: 23:5x — день Today без даты {"title":"Головоломка дня","titleLines":1,"dateLines":1,"overflow":0,"bOverflow":0,"rowRight":377,"vw":393,"ax3":null,"aria":"- button \"Головоломка дня Средне · осталось 50 · 0:01\""}
+PASS wk-393-dark-ru: после полуночи — Лжец дня с датой Лжец дня · 7 окт.
+PASS wk-393-dark-ru: после полуночи — день Today с датой Головоломка дня · 7 окт.
+PASS wk-393-dark-ru: VoiceOver-имя Лжеца содержит дату - button "Лжец дня · 7 окт. Средне · осталось 49 · 0:01"
+PASS wk-393-dark-ru: VoiceOver-имя дня содержит дату - button "Головоломка дня · 7 окт. Средне · осталось 50 · 0:01"
+PASS wk-393-dark-ru: строка «Лжец» не шире экрана, заголовок не обрезан {"overflow":0,"bOverflow":0,"right":377,"vw":393}
+PASS wk-393-dark-ru: дата «Лжец» на одной строке {"dateLines":1,"titleLines":1}
+PASS wk-393-dark-ru: строка «день» не шире экрана, заголовок не обрезан {"overflow":0,"bOverflow":0,"right":377,"vw":393}
+PASS wk-393-dark-ru: дата «день» на одной строке {"dateLines":1,"titleLines":1}
+PASS wk-393-dark-ru: перезапуск 8-го — Лжец дня 7-го с датой Лжец дня · 7 окт.
+PASS wk-393-dark-ru: тап открывает партию 
+PASS wk-393-dark-ru: без ошибок страницы 
+PASS wk-393-dark-uk: 23:5x — Лжец дня без даты {"title":"Брехун дня","titleLines":1,"dateLines":1,"overflow":0,"bOverflow":0,"rowRight":377,"vw":393,"ax3":null,"aria":"- button \"Брехун дня Середньо · залишилось 49 · 0:01\""}
+PASS wk-393-dark-uk: 23:5x — день Today без даты {"title":"Головоломка дня","titleLines":1,"dateLines":1,"overflow":0,"bOverflow":0,"rowRight":377,"vw":393,"ax3":null,"aria":"- button \"Головоломка дня Середньо · залишилось 50 · 0:01\""}
+PASS wk-393-dark-uk: после полуночи — Лжец дня с датой Брехун дня · 7 жовт.
+PASS wk-393-dark-uk: после полуночи — день Today с датой Головоломка дня · 7 жовт.
+PASS wk-393-dark-uk: VoiceOver-имя Лжеца содержит дату - button "Брехун дня · 7 жовт. Середньо · залишилось 49 · 0:01"
+PASS wk-393-dark-uk: VoiceOver-имя дня содержит дату - button "Головоломка дня · 7 жовт. Середньо · залишилось 50 · 0:01"
+PASS wk-393-dark-uk: строка «Лжец» не шире экрана, заголовок не обрезан {"overflow":0,"bOverflow":0,"right":377,"vw":393}
+PASS wk-393-dark-uk: дата «Лжец» на одной строке {"dateLines":1,"titleLines":1}
+PASS wk-393-dark-uk: строка «день» не шире экрана, заголовок не обрезан {"overflow":0,"bOverflow":0,"right":377,"vw":393}
+PASS wk-393-dark-uk: дата «день» на одной строке {"dateLines":1,"titleLines":1}
+PASS wk-393-dark-uk: перезапуск 8-го — Лжец дня 7-го с датой Брехун дня · 7 жовт.
+PASS wk-393-dark-uk: тап открывает партию 
+PASS wk-393-dark-uk: без ошибок страницы 

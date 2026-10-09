@@ -223,6 +223,7 @@
     "hub": {
       "contHead": "Продовжити",
       "contDay": "Головоломка дня",
+      "contDayPast": "Головоломка дня",
       "clues_one": "{{count}} відкритих",
       "clues_few": "{{count}} відкритих",
       "clues_many": "{{count}} відкритих",
