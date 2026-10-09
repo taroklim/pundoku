@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-import { deskStore, SIDEBAR_ID, useDeskLayout, useDeskState } from "./desk";
+import { SIDEBAR_ID, useDeskLayout, useSidebarView } from "./desk";
 
 /** Значок «боковая панель» (макет pd229, `I.sidebar`): рамка окна с полосой слева. Штрих 1.7, как у значков вкладок. */
 function SidebarIcon() {
@@ -15,19 +15,32 @@ function SidebarIcon() {
  * Кнопка «Скрыть/Показать боковую панель» — первая в тулбаре (шапке) экрана, в левом верхнем углу контента, в обоих состояниях
  * (макет C, `tb()`). PD-267: живёт в самой шапке (TabHeader, навбар Settings/справки), а не поверх неё.
  */
-export function SidebarToggle({ hidden, onToggle }: { hidden: boolean; onToggle: () => void }) {
+export function SidebarToggle({ hidden, onToggle, overlay = false }: { hidden: boolean; onToggle: () => void; overlay?: boolean }) {
   const { t } = useTranslation();
   const label = t(hidden ? "desk.showSidebar" : "desk.hideSidebar");
   return (
-    <button type="button" className="side-toggle" aria-label={label} title={label} aria-controls={SIDEBAR_ID} onClick={onToggle} data-testid="sidebar-toggle">
+    <button
+      type="button"
+      className="side-toggle"
+      aria-label={label}
+      title={label}
+      aria-controls={SIDEBAR_ID}
+      // PD-268: на компакте сайдбар — всплывающая панель поверх контента: кнопка её раскрывает.
+      aria-expanded={overlay ? !hidden : undefined}
+      onClick={onToggle}
+      data-testid="sidebar-toggle"
+    >
       <SidebarIcon />
     </button>
   );
 }
 
-/** PD-267: кнопка сайдбара для шапки экрана — только в раскладке с сайдбаром; на телефоне и компакте ничего не рисует (DOM прежний). */
+/**
+ * PD-267: кнопка сайдбара для шапки экрана — только в раскладке C; на телефоне ничего не рисует (DOM прежний). PD-268: на компакте
+ * она показывает сайдбар поверх контента (не запоминается), в полной раскладке — прячет/показывает его (запоминается).
+ */
 export function DeskSidebarToggle() {
   const desk = useDeskLayout();
-  const { hidden } = useDeskState();
-  return desk ? <SidebarToggle hidden={hidden} onToggle={deskStore.toggleHidden} /> : null;
+  const { hidden, compact, toggle } = useSidebarView();
+  return desk ? <SidebarToggle hidden={hidden} onToggle={toggle} overlay={compact} /> : null;
 }

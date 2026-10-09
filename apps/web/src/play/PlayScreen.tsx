@@ -294,7 +294,8 @@ export function PlayScreen({ onOpenSettings, onOpenHelp, onOpenToday }: { onOpen
   // PD-144 (D-1): место под док подсказки отложено постоянно, пока подсказки возможны (партия не в Ink): поле не зависит от дока.
   // До загрузки партии `play` нет — подсказки берутся из реестра режима, чтобы поле не прыгало при появлении партии.
   const hintable = !hub && (play ? !ink : def.hints);
-  const fitClass = hub ? " play-hub" : fitClassName({ fit: !cardView, hintable, docked: hint.open });
+  // PD-268: на десктопе C решённая партия остаётся на экране (поле + карточка в инспекторе) — экран партии, а не прокрутка.
+  const fitClass = hub ? " play-hub" : fitClassName({ fit: (desk && !restoring) || !cardView, hintable, docked: hint.open });
   const waitClass = hub || restoring ? "" : waiting ? " play-waiting" : wait.entered ? " play-in" : "";
 
   const onGameKey = (e: GameKeyEvent) => {
@@ -311,10 +312,11 @@ export function PlayScreen({ onOpenSettings, onOpenHelp, onOpenToday }: { onOpen
   // PD-232 (а): те же клавиши, когда фокус вне экрана (<body> после загрузки, вкладка таб-бара) — пока партия на экране.
   useDocumentGameKeys(screenRef, active && !hub && !waiting && !restoring && phase === "playing", onGameKey, playStore);
 
-  // PD-267: десктоп C — партия (не хаб, не страница режима) идёт в тулбаре + поле + инспектор; карточка «решено» пока прежняя
-  // (её перенос в инспектор — PD-268), но тулбар у неё тот же.
+  // PD-267: десктоп C — партия (не хаб, не страница режима) идёт в тулбаре + поле + инспектор. PD-268: и решённая — поле на
+  // месте (приглушено, не интерактивно), в инспекторе карточка результата с «Новой сеткой» вместо времени и панели.
   const deskParty = desk && !hub && !restoring;
   const deskFit = deskParty && !cardView;
+  const deskSolved = deskParty && cardView;
   const subline = (
     <Subline
       day=""
@@ -381,8 +383,27 @@ export function PlayScreen({ onOpenSettings, onOpenHelp, onOpenToday }: { onOpen
     ));
   const deskStatus = deskFit && !waiting ? statusNode(true) : null;
 
+  // Карточка «решено»: на телефоне — вместо поля, на десктопе C — в инспекторе рядом с полем (PD-268). Только когда она на экране.
+  const resultCard = cardView && play && (
+    <ResultCard
+      play={play}
+      cardRef={cardRef}
+      title={play.liar ? t("liar.solvedTitle") : t("solved.title")}
+      timelapse={{ date: snap.daily ?? localDate(snap.startedOn), difficulty }}
+      hints={snap.hints}
+      onOpenHelp={onOpenHelp}
+      liar={liarSum ? { info: liarSum, average: playStore.liarAverage() } : null}
+      solvedNow={solvedNow}
+    >
+      {/* PD-144: единственная кнопка нового пазла на экране (шапка на решённой партии действий не несёт). PD-167: шит режима партии. */}
+      <button type="button" className="btn-plain newgrid" onClick={(e) => openSheet(snap.mode, e.currentTarget)} data-testid="new-puzzle">
+        {t("play.newPuzzle")}
+      </button>
+    </ResultCard>
+  );
+
   return (
-    <div ref={screenRef} className={`play${fitClass}${waitClass}${deskFit ? " desk-play" : ""}`} onKeyDown={hub || waiting ? undefined : onGameKey}>
+    <div ref={screenRef} className={`play${fitClass}${waitClass}${deskParty ? " desk-play" : ""}`} onKeyDown={hub || waiting ? undefined : onGameKey}>
       {/* Live-регион для скринридера: «N cells left» только на порогах (см. хук выше). */}
       <p className="sr-only" role="status" aria-live="polite" aria-atomic="true">
         {announcement}
@@ -442,35 +463,26 @@ export function PlayScreen({ onOpenSettings, onOpenHelp, onOpenToday }: { onOpen
       ) : (
         <>
           {!deskParty && subline}
-          {cardView ? (
-            play && (
-              <ResultCard
-                play={play}
-                cardRef={cardRef}
-                title={play.liar ? t("liar.solvedTitle") : t("solved.title")}
-                timelapse={{ date: snap.daily ?? localDate(snap.startedOn), difficulty }}
-                hints={snap.hints}
-                onOpenHelp={onOpenHelp}
-                liar={liarSum ? { info: liarSum, average: playStore.liarAverage() } : null}
-                solvedNow={solvedNow}
-              >
-                {/* PD-144: единственная кнопка нового пазла на экране (шапка на решённой партии действий не несёт). PD-167: шит режима партии. */}
-                <button type="button" className="btn-plain newgrid" onClick={(e) => openSheet(snap.mode, e.currentTarget)} data-testid="new-puzzle">
-                  {t("play.newPuzzle")}
-                </button>
-              </ResultCard>
-            )
+          {cardView && !desk ? (
+            resultCard
           ) : deskParty ? (
             // PD-267: десктоп C — поле по центру области контента, справа инспектор (время/остаток, статус, панель 3×3 с
-            // действиями или док подсказки, шпаргалка клавиш). Тулбар над полем — TabHeader с `sub` выше.
+            // действиями или док подсказки, шпаргалка клавиш). Тулбар над полем — TabHeader с `sub` выше. PD-268: решённая
+            // партия — поле на месте (вне фокуса и касаний), в инспекторе компактная карточка результата.
             <>
-              <div className="desk-stage">{board}</div>
-              <DeskInspector>
-                <InspectorMeta clock={showClock && !waiting ? clock : null} left={play && !waiting ? left : null} />
-                {deskStatus && <div className="insp-status">{deskStatus}</div>}
-                {hint.open ? <HintDock ladder={ladder} state={hint} play glyphs={play?.glyphs === true} /> : <GamePad snap={snap} store={playStore} desk />}
-                <KeyLegend fill={!ink} hint={showLamp} />
-              </DeskInspector>
+              <div className="desk-stage" inert={deskSolved || undefined}>
+                {board}
+              </div>
+              {deskSolved ? (
+                <DeskInspector solved>{resultCard}</DeskInspector>
+              ) : (
+                <DeskInspector>
+                  <InspectorMeta clock={showClock && !waiting ? clock : null} left={play && !waiting ? left : null} />
+                  {deskStatus && <div className="insp-status">{deskStatus}</div>}
+                  {hint.open ? <HintDock ladder={ladder} state={hint} play glyphs={play?.glyphs === true} /> : <GamePad snap={snap} store={playStore} desk />}
+                  <KeyLegend fill={!ink} hint={showLamp} />
+                </DeskInspector>
+              )}
             </>
           ) : (
             <>

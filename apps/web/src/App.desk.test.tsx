@@ -1,11 +1,12 @@
 // @vitest-environment jsdom
 /**
- * PD-266: десктоп C «Сайдбар» — оболочка. Держат: (1) телефон/компакт — прежняя оболочка, ни сайдбара, ни кнопки, ни класса
+ * PD-266: десктоп C «Сайдбар» — оболочка. Держат: (1) телефон — прежняя оболочка, ни сайдбара, ни кнопки, ни класса
  * (DOM не меняется); (2) от 1100 × 680 — сайдбар вместо таб-бара, выделение раздела/режима, переключение раскладки «на лету»;
  * (3) скрытие/показ с запоминанием; (4) маршрутизация режимов: режим с партией — на доску, без партии — страница режима,
  * Play — всегда на хаб. Раскладку jsdom не считает — она в design/pd266-check.mjs (Playwright).
  * PD-267: (5) кнопка сайдбара — в шапке экрана (не поверх контента); (6) порталы (шиты, меню, тост) в раскладке с сайдбаром —
- * в слое окна `.shell.desk > .desk-layer`, на телефоне/компакте — в `<body>`, как раньше. Живая проверка — design/pd267-check.mjs.
+ * в слое окна `.shell.desk > .desk-layer`, на телефоне — в `<body>`, как раньше. Живая проверка — design/pd267-check.mjs.
+ * PD-268: компакт окна (ниже 1100 × 680, альбомное) — та же раскладка C без сайдбара: App.compact.test.tsx.
  */
 import { act } from "react";
 import { createRoot } from "react-dom/client";
@@ -107,7 +108,7 @@ const q = (id: string) => host.querySelector<HTMLElement>(`[data-testid="${id}"]
 const click = (el: Element | null) => act(() => (el as HTMLElement).click());
 const currentIds = () => [...host.querySelectorAll('.sidebar [aria-current="page"]')].map((el) => el.getAttribute("data-testid"));
 
-describe("раскладка: телефон и компакт не меняются", () => {
+describe("раскладка: телефон не меняется", () => {
   it("без DESK_QUERY — прежняя оболочка: класс `shell`, таб-бар, ни сайдбара, ни кнопки", () => {
     render();
     expect(shell().className).toBe("shell");
@@ -129,7 +130,7 @@ describe("раскладка: телефон и компакт не меняют
     expect(q("sidebar-toggle")!.getAttribute("aria-label")).toBe("Hide sidebar");
   });
 
-  it("окно сузили (зум 125/150 %) — сайдбар уходит, вернули — возвращается; маршрут не теряется", () => {
+  it("окно сузили до телефонного — сайдбар уходит, вернули — возвращается; маршрут не теряется", () => {
     deskOn = true;
     render();
     click(q("side-year"));
@@ -246,7 +247,7 @@ describe("скрытие сайдбара запоминается", () => {
     expect(localStorage.getItem(SIDEBAR_HIDDEN_KEY)).toBeNull();
   });
 
-  it("на компакте скрытый сайдбар не мешает: прежняя оболочка, без кнопки", () => {
+  it("на телефоне скрытый сайдбар не мешает: прежняя оболочка, без кнопки", () => {
     localStorage.setItem(SIDEBAR_HIDDEN_KEY, "1");
     deskStore.reset();
     render();
@@ -266,7 +267,7 @@ describe("PD-267: кнопка в шапке, оверлеи в слое окн�
     expect(toggle.getAttribute("aria-controls")).toBe(q("sidebar")!.id);
   });
 
-  it("на телефоне/компакте шапка прежняя — без кнопки", () => {
+  it("на телефоне шапка прежняя — без кнопки", () => {
     render();
     expect(host.querySelector("header.toolbar")).not.toBeNull();
     expect(q("sidebar-toggle")).toBeNull();

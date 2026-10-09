@@ -34,7 +34,7 @@ const rule = (sel: string) => {
 };
 
 describe("desk-play.css", () => {
-  it("каждый селектор — внутри `.shell.desk` (телефон и компакт этих правил не видят)", () => {
+  it("каждый селектор — внутри `.shell.desk` (телефон этих правил не видит; компакт — тоже .shell.desk)", () => {
     const all = selectors(css);
     expect(all.length).toBeGreaterThan(40);
     expect(all.filter((s) => !s.startsWith(".shell.desk"))).toEqual([]);

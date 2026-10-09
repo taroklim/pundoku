@@ -9,12 +9,14 @@ import { deskKeys } from "./deskKeys";
  *
  * Состав — блоки-дети, а не фиксированная разметка: партия кладёт сюда время/остаток (`InspectorMeta`), строку статуса,
  * панель 3×3 с действиями (`GamePad desk`, или док подсказки на её месте) и шпаргалку клавиш (`KeyLegend`). PD-268 положит
- * сюда же карточку результата и Grid ∞ после решения — те же `DeskInspector` + свои блоки, стили колонки общие (desk-play.css).
+ * сюда же карточку результата и Grid ∞ после решения — те же `DeskInspector` + свои блоки, стили колонки общие (desk-play.css),
+ * компактная карточка, Grid ∞ и компакт окна (ниже 1100 × 680: действия 2 × 2, без шпаргалки) — desk-result.css.
  */
-export function DeskInspector({ children }: { children: ReactNode }) {
+export function DeskInspector({ children, solved = false }: { children: ReactNode; solved?: boolean }) {
   const { t } = useTranslation();
   return (
-    <aside className="desk-insp" aria-label={t("desk.inspector")} data-testid="desk-inspector">
+    // PD-268: `solved` — партия решена: в инспекторе карточка результата (+ Grid ∞ у дня) вместо времени и панели (desk-result.css).
+    <aside className={solved ? "desk-insp solved" : "desk-insp"} aria-label={t("desk.inspector")} data-testid="desk-inspector">
       {children}
     </aside>
   );
