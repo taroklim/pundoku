@@ -1,4 +1,4 @@
-import { memo, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { memo, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { HelpScreen } from "./help/HelpScreen";
 import { PlayScreen } from "./play/PlayScreen";
@@ -9,13 +9,17 @@ import { ArchiveScreen } from "./today/ArchiveScreen";
 import { localDate } from "./today/dayResolver";
 import { dayStore } from "./today/dayStore";
 import { TodayScreen } from "./today/TodayScreen";
+import { deskStore, SIDEBAR_ID, useDeskLayout, useSidebarView } from "./shell/desk";
 import { useDynamicTypeFlag } from "./shell/dynamicType";
 import { isStandalone, useEdgeBack } from "./shell/edgeBack";
 import { ErrorBoundary } from "./shell/ErrorBoundary";
 import { useEscapeBack } from "./shell/escapeBack";
+import { PortalHostContext } from "./shell/portalHost";
+import { Sidebar } from "./shell/Sidebar";
 import { panelDomId, tabDomId, TabBar } from "./shell/TabBar";
 import { TabActiveContext, useTabSlide } from "./shell/tabSlide";
 import type { HelpBlockId } from "./help/blocks";
+import type { ModeId } from "./play/modes";
 import type { TabId } from "./shell/tabs";
 import { leaveHelp, leaveSettings, TAB_IDS, useRoute } from "./shell/tabs";
 import { YearTab } from "./year/YearTab";
@@ -35,14 +39,58 @@ export function App() {
   const pushed = settings || help !== null;
   // Пока ключ показан и не подтверждён, уход с Settings (вкладка, «‹ …») идёт через action sheet «Ключ ещё не сохранён».
   // PD-123: «‹» ведёт на вкладку-источник; тап по ней самой в таб-баре — тот же «назад» (не новая запись истории).
+  // `then` — что сделать после перехода (PD-266: сайдбар открывает ещё и режим/хаб Play); с Settings — только после guard'а.
+  const navigate = (next: TabId, then?: () => void) => {
+    if (help !== null) {
+      if (next === tab && help.via === "tab") leaveHelp(go);
+      else go({ tab: next });
+      return then?.();
+    }
+    if (!settings) {
+      go({ tab: next });
+      return then?.();
+    }
+    recoveryStore.requestLeave(() => {
+      if (next === tab) leaveSettings(go);
+      else go({ tab: next });
+      then?.();
+    });
+  };
   const setTab = (next: TabId) => {
     // PD-144: повторный тап по ВЫБРАННОЙ вкладке Play — на хаб (привычка iOS: второе нажатие возвращает вкладку к корню).
     if (next === "play" && tab === "play" && !settings && help === null) return playStore.reselect();
-    if (help !== null) return next === tab && help.via === "tab" ? leaveHelp(go) : go({ tab: next });
-    if (!settings) return go({ tab: next });
-    recoveryStore.requestLeave(() => (next === tab ? leaveSettings(go) : go({ tab: next })));
+    navigate(next);
   };
   const openHelp = (block: HelpBlockId | null) => go({ help: block });
+
+  // PD-266: десктоп C — сайдбар вместо таб-бара (от 1100 × 680 CSS px; на телефоне — прежняя оболочка). PD-268: компакт C
+  // (альбомное окно ниже 1100 × 680 — ноутбук при 125/150 %) — та же раскладка, сайдбар скрыт и показывается поверх контента.
+  const desk = useDeskLayout();
+  const { hidden: sideHidden, compact } = useSidebarView();
+  useCompactSidebar(desk && compact && !sideHidden);
+  // PD-267: шиты, меню и тост в раскладке с сайдбаром — в слое окна внутри `.shell.desk` (контент-область, не поверх сайдбара).
+  const [deskLayer, setDeskLayer] = useState<HTMLDivElement | null>(null);
+  // Пункт сайдбара — место назначения, а не вкладка «как оставили»: Play всегда ведёт на хаб (как повторный тап по вкладке),
+  // режим — на свою незаконченную партию или, если её нет, на страницу режима (хаб Play → страница режима, макет C).
+  const sideTab = (next: TabId) => {
+    // PD-268: на компакте сайдбар поверх контента — выбор пункта его убирает (как всплывающая панель).
+    deskStore.setCompactOpen(false);
+    if (next !== "play") return setTab(next);
+    navigate("play", () => {
+      deskStore.showModePage(null);
+      playStore.reselect();
+    });
+  };
+  const sideMode = (mode: ModeId) => {
+    deskStore.setCompactOpen(false);
+    navigate("play", () => {
+      const s = playStore.getSnapshot();
+      // Партия этого режима уже на доске (идёт, грузится или решена) — оставить как есть.
+      if (!s.hub && s.mode === mode && !s.daily) return deskStore.showModePage(null);
+      playStore.toHub();
+      deskStore.showModePage(playStore.open(mode) ? null : mode);
+    });
+  };
   // PD-232 (г): Esc на Settings/справке — то же, что «‹» (архив решает сам: в партии Esc снимает выбор, а не уводит).
   useEscapeBack(pushed, () => (help !== null ? leaveHelp(go) : recoveryStore.requestLeave(() => leaveSettings(go))));
 
@@ -95,7 +143,8 @@ export function App() {
   }, [panelKey, overlay]);
   const stackRef = useRef<HTMLElement>(null);
   const pillRef = useRef<HTMLSpanElement>(null);
-  const prewarm = useTabSlide(stackRef, pillRef, tab, overlay);
+  // PD-266: в раскладке с сайдбаром разделы сменяются кроссфейдом (вертикальный список — горизонтальная лента не к месту).
+  const prewarm = useTabSlide(stackRef, pillRef, tab, overlay, desk);
 
   // PD-253: «назад» от левого края на Settings/справке — только в установленном приложении (в Safari-вкладке у системы свой).
   // Ведёт ровно туда же, куда «‹»/Esc; Settings — через guard PD-57 (несохранённый ключ → шит, экран остаётся). После
@@ -135,7 +184,10 @@ export function App() {
   );
 
   return (
-    <div className="shell">
+    <PortalHostContext.Provider value={desk ? deskLayer : null}>
+    <div className={desk ? `shell desk${compact ? " compact" : ""}${sideHidden ? " side-off" : ""}` : "shell"}>
+      {/* PD-267: кнопка сайдбара — в шапке каждого экрана (TabHeader, навбар Settings/справки), не поверх контента. */}
+      {desk && <Sidebar section={pushed ? null : tab} hidden={sideHidden} onSelectTab={sideTab} onSelectMode={sideMode} />}
       {/* Пока открыт экран поверх, стопка вкладок под ним скрыта и inert, но НЕ размонтирована (md §6.1.5). */}
       <main ref={stackRef} className={overlay ? "stack covered" : "stack"} inert={overlay}>
         {TAB_IDS.filter((id) => visited.has(id)).map((id) => {
@@ -201,8 +253,11 @@ export function App() {
           </div>
         </div>
       )}
+      {/* На десктопе C таб-бар скрыт стилем (desk.css), а не размонтирован: пилюля и движок слайда живут, пока окно сужают. */}
       <TabBar active={tab} onSelect={setTab} onPrewarm={prewarm} pillRef={pillRef} />
+      {desk && <div ref={setDeskLayer} className="desk-layer" data-testid="desk-layer" />}
     </div>
+    </PortalHostContext.Provider>
   );
 }
 
@@ -233,3 +288,46 @@ const TabScreen = memo(function TabScreen({ id, actions, yearDate }: { id: TabId
     />
   );
 });
+
+/**
+ * PD-268: сайдбар поверх контента на компакте — всплывающая панель, не модальная: при показе фокус на выбранном пункте (или
+ * первом), Esc убирает её и возвращает фокус на кнопку, клик/касание мимо панели и кнопки — убирает (сам клик проходит дальше,
+ * как у сайдбара в узком окне на Mac). Сменилась раскладка (окно расширили до полной) — состояние сбрасывается.
+ */
+function useCompactSidebar(open: boolean) {
+  useEffect(() => {
+    if (!open) return;
+    // Куда вернуть фокус: кнопка сайдбара на экране. Safari по клику мышью кнопку не фокусирует — тогда ищем видимую кнопку.
+    const toggles = [...document.querySelectorAll<HTMLElement>(`[aria-controls="${SIDEBAR_ID}"]`)];
+    const opener = toggles.find((el) => el === document.activeElement) ?? toggles.find((el) => el.getClientRects().length > 0 && !el.closest("[inert]")) ?? null;
+    const side = document.getElementById(SIDEBAR_ID);
+    (side?.querySelector<HTMLElement>('.side-it[aria-current="page"]') ?? side?.querySelector<HTMLElement>(".side-it"))?.focus({ preventScroll: true });
+    const close = (refocus: boolean) => {
+      deskStore.setCompactOpen(false);
+      if (refocus && opener?.isConnected) opener.focus({ preventScroll: true });
+    };
+    const onDown = (e: PointerEvent) => {
+      const t = e.target instanceof Element ? e.target : null;
+      if (t?.closest(`#${SIDEBAR_ID}, .side-toggle`)) return;
+      close(false);
+    };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== "Escape" || e.defaultPrevented) return;
+      // Раньше Esc экрана (назад с Settings, снять выбор клетки): сначала уходит панель.
+      e.preventDefault();
+      e.stopImmediatePropagation();
+      close(true);
+    };
+    document.addEventListener("pointerdown", onDown, true);
+    window.addEventListener("keydown", onKey, true);
+    return () => {
+      document.removeEventListener("pointerdown", onDown, true);
+      window.removeEventListener("keydown", onKey, true);
+    };
+  }, [open]);
+  // Ушли с компакта (окно расширили, зум вернули) — панель не должна «всплыть» при следующем сужении.
+  const { compact } = useSidebarView();
+  useEffect(() => {
+    if (!compact) deskStore.setCompactOpen(false);
+  }, [compact]);
+}

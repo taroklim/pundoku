@@ -23,6 +23,7 @@ import { dayLong, leadingBlanks, monthName, monthTitle, weekdayInitials } from "
 import { dayStateKey, markClass, monthSummaryText } from "./labels";
 import { LateSign } from "./LateSign";
 import type { DayMark, YearContext, YearMonth } from "./model";
+import { inertOutside, usePortalHost } from "../shell/portalHost";
 
 /** Длительность выезда/скрытия шита, мс (CSS: 280; при reduced motion — 160, таймер берёт максимум). */
 export const SHEET_MS = 300;
@@ -61,6 +62,7 @@ interface YearSheetProps {
 const NO_LIAR: ReadonlyMap<string, LiarInfo> = new Map();
 
 export function YearSheet({ year, month, date, closing, ctx, progress, liar = NO_LIAR, onOpenDay, onBack, onClose, onOpenToday, onPlayDay, inertTarget }: YearSheetProps) {
+  const portalHost = usePortalHost();
   const { t, i18n } = useTranslation();
   const locale = i18n.resolvedLanguage ?? "en";
   const sheetRef = useRef<HTMLElement>(null);
@@ -75,11 +77,15 @@ export function YearSheet({ year, month, date, closing, ctx, progress, liar = NO
   }, []);
 
   // Фон недоступен (VoiceOver/Tab), пока шит открыт.
+  // PD-267: в слое окна десктопа C шит живёт внутри #root — там inert получают соседи по цепочке предков, а не весь #root.
+  const rootRef = useRef<HTMLDivElement>(null);
+  const inLayer = portalHost !== document.body;
   useEffect(() => {
+    if (!inertTarget && inLayer) return inertOutside(rootRef.current);
     const target = (inertTarget ?? (() => document.getElementById("root")))();
     target?.setAttribute("inert", "");
     return () => target?.removeAttribute("inert");
-  }, [inertTarget]);
+  }, [inertTarget, inLayer]);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -102,7 +108,7 @@ export function YearSheet({ year, month, date, closing, ctx, progress, liar = NO
   const label = mark ? dayLong(mark.date, locale) : title;
 
   return createPortal(
-    <div className={`ysheet-root${entered && !closing ? " is-open" : ""}`} data-testid="year-sheet-root">
+    <div ref={rootRef} className={`ysheet-root${entered && !closing ? " is-open" : ""}`} data-testid="year-sheet-root">
       <div className="ysheet-scrim" onClick={onClose} aria-hidden="true" />
       <section
         ref={sheetRef}
@@ -146,7 +152,7 @@ export function YearSheet({ year, month, date, closing, ctx, progress, liar = NO
         </div>
       </section>
     </div>,
-    document.body,
+    portalHost,
   );
 }
 

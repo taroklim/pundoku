@@ -1,6 +1,7 @@
 import { useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { HELP_BLOCKS, type HelpBlockId } from "./blocks";
+import { DeskSidebarToggle } from "../shell/SidebarToggle";
 
 /** Метки года в справке: класс метки (как в легенде Year) и ключ названия/пояснения. «Late» выглядит как «Missed» (контур): год хранит его пропуском. */
 const YEAR_ROWS = [
@@ -75,6 +76,7 @@ export function HelpScreen({ block, backName, backLabel, onBack }: HelpScreenPro
   return (
     <div className="settings help" ref={root} data-testid="help-screen">
       <header className="settings-navbar">
+        <DeskSidebarToggle />
         <button type="button" className="settings-back" onClick={onBack} aria-label={backLabel} data-testid="help-back">
           <BackIcon />
           <span>{backName}</span>

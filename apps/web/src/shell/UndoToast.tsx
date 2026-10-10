@@ -15,6 +15,7 @@ import type { ReactNode } from "react";
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { afterPaint } from "./afterPaint";
+import { usePortalHost } from "./portalHost";
 
 export const UNDO_TOAST_MS = 6000;
 /** Отпущенный палец оставляет не меньше стольких мс — тост не гаснет прямо из-под руки. */
@@ -36,6 +37,7 @@ export interface UndoToastProps {
 }
 
 export function UndoToast({ toast, announce = null, actionLabel, onAction, onExpire }: UndoToastProps) {
+  const portalHost = usePortalHost();
   const box = useRef<HTMLDivElement>(null);
   const action = useRef<HTMLButtonElement>(null);
   const expire = useRef(onExpire);
@@ -170,6 +172,6 @@ export function UndoToast({ toast, announce = null, actionLabel, onAction, onExp
         </div>
       )}
     </>,
-    document.body,
+    portalHost,
   );
 }

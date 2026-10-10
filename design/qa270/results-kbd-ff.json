@@ -1,0 +1,531 @@
+{
+ "total": 74,
+ "fails": [
+  "ff kbd year compact 1024x640 light: Tab walk 16 stops; rings un-clipped",
+  "ff kbd year compact 1024x640 light: month 10 focus ring (outline 2px) not clipped",
+  "ff kbd year compact 1024x640 light: month 11 focus ring (outline 2px) not clipped",
+  "ff kbd year compact 1024x640 light: month 12 focus ring (outline 2px) not clipped",
+  "ff kbd year compact 1024x640 dark: Tab walk 16 stops; rings un-clipped",
+  "ff kbd year compact 1024x640 dark: month 10 focus ring (outline 2px) not clipped",
+  "ff kbd year compact 1024x640 dark: month 11 focus ring (outline 2px) not clipped",
+  "ff kbd year compact 1024x640 dark: month 12 focus ring (outline 2px) not clipped"
+ ],
+ "results": {
+  "ff kbd 1440x900@100 light Today: Tab walk — 26 stops, every focus has a visible un-clipped ring": {
+   "ok": true,
+   "bad": []
+  },
+  "ff kbd 1440x900@100 light Play: click selects cell 0": {
+   "ok": true
+  },
+  "ff kbd 1440x900@100 light Play: arrows move selection (0 -> 10)": {
+   "ok": true
+  },
+  "ff kbd 1440x900@100 light Play: digit key places digit": {
+   "ok": true
+  },
+  "ff kbd 1440x900@100 light Play: Backspace erases the digit and does not navigate (#/play -> #/play)": {
+   "ok": true
+  },
+  "ff kbd 1440x900@100 light Play: Delete erases the digit": {
+   "ok": true
+  },
+  "ff kbd 1440x900@100 light Play: ⌘Z undoes": {
+   "ok": true
+  },
+  "ff kbd 1440x900@100 light Play: N toggles notes (aria-pressed=true)": {
+   "ok": true
+  },
+  "ff kbd 1440x900@100 light Play: H opens hint (rule sheet or dock)": {
+   "ok": true
+  },
+  "ff kbd 1440x900@100 light Play: Esc closes hint sheet; focus afterwards on \"Row 1, column 1, empty\" (was \"hint-rule-go\")": {
+   "ok": true,
+   "aH": "Row 1, column 1, empty"
+  },
+  "ff kbd 1440x900@100 light Play: \"⋯\" Enter opens menu (focus→menu-new); Esc closes, focus returns to \"more-button\"": {
+   "ok": true,
+   "aM": "more-button"
+  },
+  "ff kbd 1440x900@100 light Play: Tab walk — 14 stops, rings visible un-clipped": {
+   "ok": true,
+   "bad": []
+  },
+  "ff kbd 1440x900@100 light Play: Esc does not leave the game": {
+   "ok": true
+  },
+  "ff kbd 1440x900@100 light sidebar: Enter on toggle hides it (ls=1); board re-centred in 1440": {
+   "ok": true,
+   "board": [
+    216,
+    72,
+    720,
+    720
+   ],
+   "ls": "1"
+  },
+  "ff kbd 1440x900@100 light sidebar: hidden state persists after reload": {
+   "ok": true
+  },
+  "ff kbd 1440x900@100 light sidebar: Enter on toggle shows it again": {
+   "ok": true
+  },
+  "ff kbd 1440x900@100 light: no JS errors": {
+   "ok": true,
+   "errs": []
+  },
+  "ff kbd 1440x900@100 dark Today: Tab walk — 26 stops, every focus has a visible un-clipped ring": {
+   "ok": true,
+   "bad": []
+  },
+  "ff kbd 1440x900@100 dark Play: click selects cell 0": {
+   "ok": true
+  },
+  "ff kbd 1440x900@100 dark Play: arrows move selection (0 -> 10)": {
+   "ok": true
+  },
+  "ff kbd 1440x900@100 dark Play: digit key places digit": {
+   "ok": true
+  },
+  "ff kbd 1440x900@100 dark Play: Backspace erases the digit and does not navigate (#/play -> #/play)": {
+   "ok": true
+  },
+  "ff kbd 1440x900@100 dark Play: Delete erases the digit": {
+   "ok": true
+  },
+  "ff kbd 1440x900@100 dark Play: ⌘Z undoes": {
+   "ok": true
+  },
+  "ff kbd 1440x900@100 dark Play: N toggles notes (aria-pressed=true)": {
+   "ok": true
+  },
+  "ff kbd 1440x900@100 dark Play: H opens hint (rule sheet or dock)": {
+   "ok": true
+  },
+  "ff kbd 1440x900@100 dark Play: Esc closes hint sheet; focus afterwards on \"Row 1, column 1, empty\" (was \"hint-rule-go\")": {
+   "ok": true,
+   "aH": "Row 1, column 1, empty"
+  },
+  "ff kbd 1440x900@100 dark Play: \"⋯\" Enter opens menu (focus→menu-new); Esc closes, focus returns to \"more-button\"": {
+   "ok": true,
+   "aM": "more-button"
+  },
+  "ff kbd 1440x900@100 dark Play: Tab walk — 14 stops, rings visible un-clipped": {
+   "ok": true,
+   "bad": []
+  },
+  "ff kbd 1440x900@100 dark Play: Esc does not leave the game": {
+   "ok": true
+  },
+  "ff kbd 1440x900@100 dark sidebar: Enter on toggle hides it (ls=1); board re-centred in 1440": {
+   "ok": true,
+   "board": [
+    216,
+    72,
+    720,
+    720
+   ],
+   "ls": "1"
+  },
+  "ff kbd 1440x900@100 dark sidebar: hidden state persists after reload": {
+   "ok": true
+  },
+  "ff kbd 1440x900@100 dark sidebar: Enter on toggle shows it again": {
+   "ok": true
+  },
+  "ff kbd 1440x900@100 dark: no JS errors": {
+   "ok": true,
+   "errs": []
+  },
+  "ff kbd compact-1024x640 light Today: Tab walk — 17 stops, every focus has a visible un-clipped ring": {
+   "ok": true,
+   "bad": []
+  },
+  "ff kbd compact-1024x640 light Play: click selects cell 0": {
+   "ok": true
+  },
+  "ff kbd compact-1024x640 light Play: arrows move selection (0 -> 10)": {
+   "ok": true
+  },
+  "ff kbd compact-1024x640 light Play: digit key places digit": {
+   "ok": true
+  },
+  "ff kbd compact-1024x640 light Play: Backspace erases the digit and does not navigate (#/play -> #/play)": {
+   "ok": true
+  },
+  "ff kbd compact-1024x640 light Play: Delete erases the digit": {
+   "ok": true
+  },
+  "ff kbd compact-1024x640 light Play: ⌘Z undoes": {
+   "ok": true
+  },
+  "ff kbd compact-1024x640 light Play: N toggles notes (aria-pressed=true)": {
+   "ok": true
+  },
+  "ff kbd compact-1024x640 light Play: H opens hint (rule sheet or dock)": {
+   "ok": true
+  },
+  "ff kbd compact-1024x640 light Play: Esc closes hint sheet; focus afterwards on \"Row 1, column 1, empty\" (was \"hint-rule-go\")": {
+   "ok": true,
+   "aH": "Row 1, column 1, empty"
+  },
+  "ff kbd compact-1024x640 light Play: \"⋯\" Enter opens menu (focus→menu-new); Esc closes, focus returns to \"more-button\"": {
+   "ok": true,
+   "aM": "more-button"
+  },
+  "ff kbd compact-1024x640 light Play: Tab walk — 14 stops, rings visible un-clipped": {
+   "ok": true,
+   "bad": []
+  },
+  "ff kbd compact-1024x640 light Play: Esc does not leave the game": {
+   "ok": true
+  },
+  "ff kbd compact-1024x640 light compact: overlay sidebar shown; Esc closes it (sidebar after Esc: 0,0,0,0; focus sidebar-toggle)": {
+   "ok": true,
+   "a2": "sidebar-toggle"
+  },
+  "ff kbd compact-1024x640 light: no JS errors": {
+   "ok": true,
+   "errs": []
+  },
+  "ff kbd compact-1024x640 dark Today: Tab walk — 17 stops, every focus has a visible un-clipped ring": {
+   "ok": true,
+   "bad": []
+  },
+  "ff kbd compact-1024x640 dark Play: click selects cell 0": {
+   "ok": true
+  },
+  "ff kbd compact-1024x640 dark Play: arrows move selection (0 -> 10)": {
+   "ok": true
+  },
+  "ff kbd compact-1024x640 dark Play: digit key places digit": {
+   "ok": true
+  },
+  "ff kbd compact-1024x640 dark Play: Backspace erases the digit and does not navigate (#/play -> #/play)": {
+   "ok": true
+  },
+  "ff kbd compact-1024x640 dark Play: Delete erases the digit": {
+   "ok": true
+  },
+  "ff kbd compact-1024x640 dark Play: ⌘Z undoes": {
+   "ok": true
+  },
+  "ff kbd compact-1024x640 dark Play: N toggles notes (aria-pressed=true)": {
+   "ok": true
+  },
+  "ff kbd compact-1024x640 dark Play: H opens hint (rule sheet or dock)": {
+   "ok": true
+  },
+  "ff kbd compact-1024x640 dark Play: Esc closes hint sheet; focus afterwards on \"Row 1, column 1, empty\" (was \"hint-rule-go\")": {
+   "ok": true,
+   "aH": "Row 1, column 1, empty"
+  },
+  "ff kbd compact-1024x640 dark Play: \"⋯\" Enter opens menu (focus→menu-new); Esc closes, focus returns to \"more-button\"": {
+   "ok": true,
+   "aM": "more-button"
+  },
+  "ff kbd compact-1024x640 dark Play: Tab walk — 14 stops, rings visible un-clipped": {
+   "ok": true,
+   "bad": []
+  },
+  "ff kbd compact-1024x640 dark Play: Esc does not leave the game": {
+   "ok": true
+  },
+  "ff kbd compact-1024x640 dark compact: overlay sidebar shown; Esc closes it (sidebar after Esc: 0,0,0,0; focus sidebar-toggle)": {
+   "ok": true,
+   "a2": "sidebar-toggle"
+  },
+  "ff kbd compact-1024x640 dark: no JS errors": {
+   "ok": true,
+   "errs": []
+  },
+  "ff kbd year compact 1024x640 light: Tab walk 16 stops; rings un-clipped": {
+   "ok": false,
+   "bad": [
+    {
+     "id": "scroll tab-pane",
+     "visible": true,
+     "kind": "outline",
+     "clips": [
+      "stack",
+      "shell desk compact side-off",
+      "BODY",
+      "HTML",
+      "viewport"
+     ],
+     "inertAnc": false
+    },
+    {
+     "id": "April, nothing yet",
+     "visible": true,
+     "kind": "outline",
+     "clips": [
+      "scroll tab-pane",
+      "stack",
+      "shell desk compact side-off",
+      "BODY",
+      "HTML",
+      "viewport"
+     ],
+     "inertAnc": false
+    },
+    {
+     "id": "May, nothing yet",
+     "visible": true,
+     "kind": "outline",
+     "clips": [
+      "scroll tab-pane",
+      "stack",
+      "shell desk compact side-off",
+      "BODY",
+      "HTML",
+      "viewport"
+     ],
+     "inertAnc": false
+    },
+    {
+     "id": "June, nothing yet",
+     "visible": true,
+     "kind": "outline",
+     "clips": [
+      "scroll tab-pane",
+      "stack",
+      "shell desk compact side-off",
+      "BODY",
+      "HTML",
+      "viewport"
+     ],
+     "inertAnc": false
+    },
+    {
+     "id": "October, nothing yet",
+     "visible": true,
+     "kind": "outline",
+     "clips": [
+      "scroll tab-pane",
+      "stack",
+      "shell desk compact side-off",
+      "BODY",
+      "HTML",
+      "viewport"
+     ],
+     "inertAnc": false
+    }
+   ],
+   "ids": [
+    "scroll tab-pane",
+    "sidebar-toggle",
+    "open-settings",
+    "cta",
+    "January, nothing yet",
+    "February, nothing yet",
+    "March, nothing yet",
+    "April, nothing yet",
+    "May, nothing yet",
+    "June, nothing yet",
+    "July, nothing yet",
+    "August, nothing yet",
+    "September, nothing yet",
+    "October, nothing yet",
+    "November, nothing yet",
+    "December, nothing yet"
+   ]
+  },
+  "ff kbd year compact 1024x640 light: month 10 focus ring (outline 2px) not clipped": {
+   "ok": false,
+   "fv": {
+    "fv": true,
+    "ow": "2px",
+    "off": "-2px"
+   },
+   "clip": [
+    "scroll tab-pane",
+    "stack",
+    "shell desk compact side-off",
+    "",
+    "",
+    "viewport-bottom"
+   ]
+  },
+  "ff kbd year compact 1024x640 light: month 11 focus ring (outline 2px) not clipped": {
+   "ok": false,
+   "fv": {
+    "fv": true,
+    "ow": "2px",
+    "off": "-2px"
+   },
+   "clip": [
+    "scroll tab-pane",
+    "stack",
+    "shell desk compact side-off",
+    "",
+    "",
+    "viewport-bottom"
+   ]
+  },
+  "ff kbd year compact 1024x640 light: month 12 focus ring (outline 2px) not clipped": {
+   "ok": false,
+   "fv": {
+    "fv": true,
+    "ow": "2px",
+    "off": "-2px"
+   },
+   "clip": [
+    "scroll tab-pane",
+    "stack",
+    "shell desk compact side-off",
+    "",
+    "",
+    "viewport-bottom"
+   ]
+  },
+  "ff kbd year compact 1024x640 light: no JS errors": {
+   "ok": true,
+   "errs": []
+  },
+  "ff kbd year compact 1024x640 dark: Tab walk 16 stops; rings un-clipped": {
+   "ok": false,
+   "bad": [
+    {
+     "id": "scroll tab-pane",
+     "visible": true,
+     "kind": "outline",
+     "clips": [
+      "stack",
+      "shell desk compact side-off",
+      "BODY",
+      "HTML",
+      "viewport"
+     ],
+     "inertAnc": false
+    },
+    {
+     "id": "April, nothing yet",
+     "visible": true,
+     "kind": "outline",
+     "clips": [
+      "scroll tab-pane",
+      "stack",
+      "shell desk compact side-off",
+      "BODY",
+      "HTML",
+      "viewport"
+     ],
+     "inertAnc": false
+    },
+    {
+     "id": "May, nothing yet",
+     "visible": true,
+     "kind": "outline",
+     "clips": [
+      "scroll tab-pane",
+      "stack",
+      "shell desk compact side-off",
+      "BODY",
+      "HTML",
+      "viewport"
+     ],
+     "inertAnc": false
+    },
+    {
+     "id": "June, nothing yet",
+     "visible": true,
+     "kind": "outline",
+     "clips": [
+      "scroll tab-pane",
+      "stack",
+      "shell desk compact side-off",
+      "BODY",
+      "HTML",
+      "viewport"
+     ],
+     "inertAnc": false
+    },
+    {
+     "id": "October, nothing yet",
+     "visible": true,
+     "kind": "outline",
+     "clips": [
+      "scroll tab-pane",
+      "stack",
+      "shell desk compact side-off",
+      "BODY",
+      "HTML",
+      "viewport"
+     ],
+     "inertAnc": false
+    }
+   ],
+   "ids": [
+    "scroll tab-pane",
+    "sidebar-toggle",
+    "open-settings",
+    "cta",
+    "January, nothing yet",
+    "February, nothing yet",
+    "March, nothing yet",
+    "April, nothing yet",
+    "May, nothing yet",
+    "June, nothing yet",
+    "July, nothing yet",
+    "August, nothing yet",
+    "September, nothing yet",
+    "October, nothing yet",
+    "November, nothing yet",
+    "December, nothing yet"
+   ]
+  },
+  "ff kbd year compact 1024x640 dark: month 10 focus ring (outline 2px) not clipped": {
+   "ok": false,
+   "fv": {
+    "fv": true,
+    "ow": "2px",
+    "off": "-2px"
+   },
+   "clip": [
+    "scroll tab-pane",
+    "stack",
+    "shell desk compact side-off",
+    "",
+    "",
+    "viewport-bottom"
+   ]
+  },
+  "ff kbd year compact 1024x640 dark: month 11 focus ring (outline 2px) not clipped": {
+   "ok": false,
+   "fv": {
+    "fv": true,
+    "ow": "2px",
+    "off": "-2px"
+   },
+   "clip": [
+    "scroll tab-pane",
+    "stack",
+    "shell desk compact side-off",
+    "",
+    "",
+    "viewport-bottom"
+   ]
+  },
+  "ff kbd year compact 1024x640 dark: month 12 focus ring (outline 2px) not clipped": {
+   "ok": false,
+   "fv": {
+    "fv": true,
+    "ow": "2px",
+    "off": "-2px"
+   },
+   "clip": [
+    "scroll tab-pane",
+    "stack",
+    "shell desk compact side-off",
+    "",
+    "",
+    "viewport-bottom"
+   ]
+  },
+  "ff kbd year compact 1024x640 dark: no JS errors": {
+   "ok": true,
+   "errs": []
+  }
+ }
+}

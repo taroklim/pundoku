@@ -165,8 +165,18 @@ export function useSolveSequence(
       const dstEl = root.current?.querySelector<HTMLElement>('[data-testid="grid-inf-target"]');
       if (!landing || !dstEl) return finish(false);
       if (reduce) return finish(true);
-      // Раскладка чистая (мы после кадра с Grid ∞): скролл мгновенный, чтения — пачкой, до любой записи.
-      dstEl.scrollIntoView({ block: "center", behavior: "auto" });
+      // PD-268: десктоп C — Grid ∞ в инспекторе рядом с полем. Экран сам к Grid ∞ не едет (pd229 §2 «без автопрокрутки после
+      // решения»): цель видна — летим к ней; за краем прокручиваемого инспектора (компакт, крупный текст) — без полёта,
+      // кольцо посадки просто встаёт на место.
+      const insp = dstEl.closest<HTMLElement>(".desk-insp");
+      if (insp) {
+        const box = insp.getBoundingClientRect();
+        const t = dstEl.getBoundingClientRect();
+        if (t.top < box.top || t.bottom > box.bottom || t.left < box.left || t.right > box.right) return finish(true);
+      } else {
+        // Раскладка чистая (мы после кадра с Grid ∞): скролл мгновенный, чтения — пачкой, до любой записи.
+        dstEl.scrollIntoView({ block: "center", behavior: "auto" });
+      }
       const dst = dstEl.getBoundingClientRect();
       const srcRect: DOMRect | null = measured;
       if (!srcRect || !dst.width) return finish(true);

@@ -120,13 +120,17 @@ const clearPane = (el: HTMLElement): void => {
 /**
  * Переход между панелями стопки вкладок. `stack` — контейнер панелей (`[data-tab]`), `pill` — пилюля в таб-баре.
  * `covered` — поверх стопки открыт Settings/справка/архив (у них свой вход, M10): переход не играется.
+ * `fade` (PD-266) — раскладка с сайдбаром: вместо ленты кроссфейд (тот же, что при Reduce Motion).
  */
 export function useTabSlide(
   stack: RefObject<HTMLElement | null>,
   pill: RefObject<HTMLElement | null>,
   tab: TabId,
   covered: boolean,
+  fade = false,
 ): (to: TabId) => void {
+  const fadeRef = useRef(fade);
+  fadeRef.current = fade;
   const engine = useRef<Engine>({ tab, covered, visible: new Set([tab]), running: [], token: 0, warm: null, warmTimer: undefined });
 
   const unwarm = useCallback(() => {
@@ -252,7 +256,7 @@ export function useTabSlide(
     }
 
     // ---------- Слайд from → to ----------
-    const reduced = motionReduced();
+    const reduced = motionReduced() || fadeRef.current;
     const width = host.clientWidth;
     const duration = reduced ? FADE_MS : SLIDE_MS;
     const easing = reduced ? FADE_EASE : SLIDE_EASE;

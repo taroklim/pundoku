@@ -21,6 +21,7 @@ import { ActionSheet } from "./ActionSheet";
 import { KEY_GROUP, KEY_GROUPS, keyGroups, isCompleteKey, spellGroup } from "./key";
 import type { TabId } from "../shell/tabs";
 import type { RecoveryError, RecoveryStore } from "./store";
+import { DeskSidebarToggle } from "../shell/SidebarToggle";
 
 /** Названия языков — на самих языках (не переводятся: человек ищет свой язык глазами). */
 const NATIVE_NAMES: Record<Locale, string> = { en: "English", uk: "Українська", ru: "Русский" };
@@ -530,6 +531,7 @@ export function SettingsScreen({ store, onBack, origin = "today", onOpenHelp }: 
   return (
     <div className="settings" data-testid="settings-screen">
       <header className="settings-navbar">
+        <DeskSidebarToggle />
         <button type="button" className="settings-back" onClick={onBack} aria-label={t(BACK_LABEL[origin])} data-testid="settings-back">
           <BackIcon />
           <span>{t(`tabs.${origin}`)}</span>

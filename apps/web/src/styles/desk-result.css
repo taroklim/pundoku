@@ -1,0 +1,205 @@
+/*
+ * PD-268: десктоп C — после решения карточка результата и Grid ∞ в инспекторе (компактно), и компакт окна
+ * (design/pd229-desktop.html, концепция C: `renderC` «solved», `.card.cmp`, `.meta.g2`, `.cC.noside`; md §2, §3 C).
+ * Только токены tokens.css, нового цвета нет. Как desk.css / desk-play.css, каждое правило висит на `.shell.desk`: телефон и его
+ * ландшафт этих правил не видят. Подключён сразу после desk-play.css (main.tsx), landscape.css — по-прежнему последним.
+ *
+ * Разметка (today/TodayScreen.tsx, play/PlayScreen.tsx — только в раскладке C):
+ *   .play.play-fit.desk-play            партия и после решения: тулбар | поле (приглушено, inert) | инспектор
+ *     > aside.desk-insp.solved          карточка результата (`.card`) + Grid ∞ (`section.desk-grid`, только у дня)
+ *   .shell.desk.compact                 компакт: альбомное окно ниже 1100 × 680 (ноутбук при 125/150 %) — без сайдбара
+ *
+ * Прокрутка инспектора после решения (решение PD-268): весь экран не прокручивается никогда — прокручивается только сам
+ * инспектор, и только когда карточка + Grid ∞ выше окна (компакт, 1440 × 900 при 125 %, крупный текст). Поле и тулбар стоят;
+ * карточка — первой (видна сразу, фокус на ней), Grid ∞ — под ней, к нему инспектор сам не едет (pd229 §2 «без автопрокрутки»).
+ * На 1280 × 800 и больше при 100 % всё помещается без прокрутки (проверяет design/pd268-check.mjs).
+ */
+
+/* ---------- Решено: инспектор с карточкой и Grid ∞ ---------- */
+.shell.desk .desk-insp.solved {
+  gap: 12px;
+  padding: 12px;
+}
+/* Фаза «решено» на телефоне добавляет запас снизу и маску края прокрутки — на десктопе экран не прокручивается, не нужно. */
+.shell.desk .play.desk-play:has(.card) {
+  padding-bottom: 0;
+}
+.shell.desk .scroll:has(.desk-play .card) {
+  -webkit-mask-image: none;
+  mask-image: none;
+}
+
+/* Карточка (макет `.card.cmp`): без подзаголовка, тепловая карта 150 px, цифры 2 × 2, кнопки ниже. */
+.shell.desk .desk-insp .card {
+  flex: none;
+  margin: 0;
+  padding: 12px;
+  border-radius: 14px;
+}
+.shell.desk .desk-insp .card > h2 {
+  margin-bottom: 10px;
+}
+.shell.desk .desk-insp .card > .sub {
+  display: none;
+}
+.shell.desk .desk-insp .card .heat,
+.shell.desk .desk-insp .card .legend {
+  width: min(100%, 150px);
+  margin-inline: auto;
+}
+.shell.desk .desk-insp .card .legend {
+  margin-top: 6px;
+}
+.shell.desk .desk-insp .card .tune {
+  min-height: 32px;
+  margin-top: 2px;
+}
+.shell.desk .desk-insp .card .rows {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px 12px;
+  margin-top: 10px;
+  padding-top: 10px;
+}
+.shell.desk .desk-insp .card .row {
+  display: block;
+  padding: 0;
+  border: 0;
+  min-width: 0;
+}
+.shell.desk .desk-insp .card .row dd {
+  margin: 1px 0 0;
+  text-align: start;
+}
+/* Длинное значение (техника + «What's this?», строки Лжеца) — на всю ширину, а не в половине. */
+.shell.desk .desk-insp .card .row:has(.help-link),
+.shell.desk .desk-insp .card .row:last-child:nth-child(odd) {
+  grid-column: 1 / -1;
+}
+.shell.desk .desk-insp .card .winrate {
+  margin-top: 8px;
+  font-size: 0.8rem;
+}
+.shell.desk .desk-insp .card :is(.tl-watch, .share, .newgrid, .tl-nolog) {
+  margin-top: 8px;
+  min-height: 36px;
+  padding-block: 6px;
+  font-size: 0.9rem;
+}
+.shell.desk .desk-insp .card .newgrid {
+  margin-top: 4px;
+}
+.shell.desk .desk-insp .card .source {
+  margin-top: 8px;
+  text-align: start;
+}
+/* «What's this?» мышью — цель 28 px (pd229 §7: кнопки ≥ 28 × 28); касанием (iPad) — прежние 44. */
+@media (pointer: fine) {
+  .shell.desk .desk-insp .help-link {
+    min-height: 28px;
+  }
+}
+
+/* Grid ∞ (макет `gridInf(true)`): заголовок и счёт, сетка 150 px, строка «клетка дня легла сюда», ссылка на справку. Без своей
+   подложки, прямо на фоне инспектора, как на телефоне: белые блоки сетки на подложке карточки сливались бы с ней. */
+.shell.desk .desk-grid {
+  position: relative;
+  flex: none;
+  padding: 2px 12px 0;
+}
+.shell.desk .desk-grid > .section-head {
+  flex-wrap: wrap;
+  gap: 2px 8px;
+  padding: 0;
+}
+.shell.desk .desk-grid > .section-head .meta {
+  text-align: start;
+}
+.shell.desk .desk-grid > .board-wrap {
+  width: 150px;
+  margin: 10px auto 0;
+  padding: 0;
+}
+.shell.desk .desk-grid .board {
+  width: 100%;
+  --s: calc((100cqi - 2 * var(--box-gap)) / 9);
+}
+.shell.desk .desk-grid > .hint {
+  padding: 8px 0 0;
+  font-size: 0.78rem;
+}
+/* Пояснение — только для скринридера (sr-only в разметке), видна ссылка «What's this?» — в строке заголовка, справа. */
+.shell.desk .desk-grid > .grid-explain {
+  position: absolute;
+  top: -2px;
+  right: 8px;
+  padding: 0;
+}
+.shell.desk .desk-grid .help-link {
+  margin: 0;
+  font-size: 0.85rem;
+}
+.shell.desk .desk-grid > .section-head > h2 {
+  padding-right: 96px;
+}
+
+/* ---------- Компакт окна (ниже 1100 × 680): без сайдбара, компактный инспектор ---------- */
+/* Сайдбар — всплывающая панель поверх контента: контент под ним не сдвигается (на компакте места на два столбца нет). */
+.shell.desk.compact {
+  --desk-x: 0px;
+}
+.shell.desk.compact > .sidebar {
+  z-index: 30;
+  box-shadow: var(--toast-shadow);
+}
+.shell.desk.compact .desk-insp:not(.solved) {
+  gap: 14px;
+  padding: 16px;
+}
+.shell.desk.compact .desk-insp .key {
+  min-height: 52px;
+}
+/* Действия 2 × 2 (макет `.acts.g2`): значок и подпись строкой, чип клавиши под ними — подпись не режется и в uk/ru. Нечётное
+   последнее (Erase из трёх) — во всю ширину. */
+.shell.desk.compact .desk-insp .actions {
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+}
+.shell.desk.compact .desk-insp .act {
+  display: grid;
+  grid-template-columns: auto minmax(0, auto);
+  grid-template-areas:
+    "i l"
+    "k k";
+  justify-content: center;
+  align-content: center;
+  justify-items: center;
+  column-gap: 5px;
+  row-gap: 2px;
+  min-height: 44px;
+  padding: 3px 6px;
+  font-size: 0.8rem;
+}
+.shell.desk.compact .desk-insp .act > svg {
+  grid-area: i;
+  width: 17px;
+  height: 17px;
+}
+.shell.desk.compact .desk-insp .act > span {
+  grid-area: l;
+  justify-self: start;
+}
+.shell.desk.compact .desk-insp .act > kbd {
+  grid-area: k;
+  margin: 0;
+  height: 17px;
+  min-width: 20px;
+  font-size: 11px;
+}
+.shell.desk.compact .desk-insp .act:last-child:nth-child(odd) {
+  grid-column: 1 / -1;
+}
+/* Шпаргалки на компакте нет (макет: «действия 2 × 2, без шпаргалки») — остаются чипы на действиях и `title`. */
+.shell.desk.compact .insp-keys {
+  display: none;
+}

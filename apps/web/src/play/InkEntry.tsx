@@ -10,6 +10,7 @@ import { useTranslation } from "react-i18next";
 import { useSheetSwipe } from "../shell/useSheetSwipe";
 import { NotesIcon, UndoIcon } from "./icons";
 import { ChevronIcon, LockIcon, NibIcon, WarnIcon } from "./inkIcons";
+import { usePortalHost } from "../shell/portalHost";
 
 /** Строка-кнопка «Ink mode · Off/On ›». Значение — словом (не только цветом). */
 export function InkModeRow({ on, onPress }: { on: boolean; onPress: () => void }) {
@@ -68,6 +69,7 @@ const FOCUSABLE = "button:not([disabled])";
  * фокус возвращается на открывшую строку.
  */
 export function InkRuleSheet({ onStart, onCancel }: { onStart: () => void; onCancel: () => void }) {
+  const portalHost = usePortalHost();
   const { t } = useTranslation();
   const scrim = useRef<HTMLDivElement>(null);
   const root = useRef<HTMLElement>(null);
@@ -161,6 +163,6 @@ export function InkRuleSheet({ onStart, onCancel }: { onStart: () => void; onCan
         </div>
       </section>
     </div>,
-    document.body,
+    portalHost,
   );
 }

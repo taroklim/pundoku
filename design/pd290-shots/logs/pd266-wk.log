@@ -1,0 +1,180 @@
+PASS wk 1280x800@100 light (1280x800): раскладка с сайдбаром {"shell":"shell desk","side":true,"tabbar":false,"css":"1280x800"}
+PASS wk 1280x800@100 light (1280x800): нет горизонтальной прокрутки {"scrollW":1280,"vw":1280}
+PASS wk 1280x800@100 light (1280x800): поле 81 клетка, квадратное, в окне {"cells":81,"board":[296,72,676,676]}
+PASS wk 1280x800@100 light (1280x800): сайдбар в окне, без прокрутки {"side":[8,8,232,784],"scrolls":false}
+PASS wk 1280x800@100 light (1280x800): контент и поле правее сайдбара {"stackLeft":248,"boardLeft":296,"sideRight":240}
+PASS wk 1280x800@100 light (1280x800): кнопка сайдбара не наезжает на заголовок {"toggle":[256,292],"titleLeft":302}
+PASS wk 1280x800@100 light (1280x800): контраст текстов сайдбара ≥ 4.5:1 {"n":10,"min":5.52,"low":[]}
+PASS wk 1280x800@100 light (1280x800): стекло (backdrop-filter) на сайдбаре {"filter":"blur(24px) saturate(1.4)","bg":"rgba(255, 255, 255, 0.72)"}
+PASS wk 1280x800@100 light (1280x800): Today выбран в сайдбаре {"current":["side-today"]}
+PASS wk 1280x800@100 light (1280x800): без ошибок JS {"errs":[]}
+PASS wk 1280x800@100 dark (1280x800): раскладка с сайдбаром {"shell":"shell desk","side":true,"tabbar":false,"css":"1280x800"}
+PASS wk 1280x800@100 dark (1280x800): нет горизонтальной прокрутки {"scrollW":1280,"vw":1280}
+PASS wk 1280x800@100 dark (1280x800): поле 81 клетка, квадратное, в окне {"cells":81,"board":[296,72,676,676]}
+PASS wk 1280x800@100 dark (1280x800): сайдбар в окне, без прокрутки {"side":[8,8,232,784],"scrolls":false}
+PASS wk 1280x800@100 dark (1280x800): контент и поле правее сайдбара {"stackLeft":248,"boardLeft":296,"sideRight":240}
+PASS wk 1280x800@100 dark (1280x800): кнопка сайдбара не наезжает на заголовок {"toggle":[256,292],"titleLeft":302}
+PASS wk 1280x800@100 dark (1280x800): контраст текстов сайдбара ≥ 4.5:1 {"n":10,"min":5.2,"low":[]}
+PASS wk 1280x800@100 dark (1280x800): стекло (backdrop-filter) на сайдбаре {"filter":"blur(24px) saturate(1.4)","bg":"rgba(28, 28, 30, 0.72)"}
+PASS wk 1280x800@100 dark (1280x800): Today выбран в сайдбаре {"current":["side-today"]}
+PASS wk 1280x800@100 dark (1280x800): без ошибок JS {"errs":[]}
+PASS wk 1280x800@125 light (1024x640): раскладка компакт C (без сайдбара и таб-бара, «Show sidebar») {"shell":"shell desk compact side-off","side":false,"tabbar":false,"css":"1024x640"}
+PASS wk 1280x800@125 light (1024x640): нет горизонтальной прокрутки {"scrollW":1024,"vw":1024}
+PASS wk 1280x800@125 light (1024x640): поле 81 клетка, квадратное, в окне {"cells":81,"board":[124,72,516,516]}
+PASS wk 1280x800@125 light (1024x640): без ошибок JS {"errs":[]}
+PASS wk 1280x800@150 light (853x533): раскладка компакт C (без сайдбара и таб-бара, «Show sidebar») {"shell":"shell desk compact side-off","side":false,"tabbar":false,"css":"853x533"}
+PASS wk 1280x800@150 light (853x533): нет горизонтальной прокрутки {"scrollW":853,"vw":853}
+PASS wk 1280x800@150 light (853x533): поле 81 клетка, квадратное, в окне {"cells":81,"board":[92,72,409,409]}
+PASS wk 1280x800@150 light (853x533): без ошибок JS {"errs":[]}
+PASS wk 1440x900@100 light (1440x900): раскладка с сайдбаром {"shell":"shell desk","side":true,"tabbar":false,"css":"1440x900"}
+PASS wk 1440x900@100 light (1440x900): нет горизонтальной прокрутки {"scrollW":1440,"vw":1440}
+PASS wk 1440x900@100 light (1440x900): поле 81 клетка, квадратное, в окне {"cells":81,"board":[340,72,720,720]}
+PASS wk 1440x900@100 light (1440x900): сайдбар в окне, без прокрутки {"side":[8,8,232,884],"scrolls":false}
+PASS wk 1440x900@100 light (1440x900): контент и поле правее сайдбара {"stackLeft":248,"boardLeft":340,"sideRight":240}
+PASS wk 1440x900@100 light (1440x900): кнопка сайдбара не наезжает на заголовок {"toggle":[256,292],"titleLeft":302}
+PASS wk 1440x900@100 light (1440x900): контраст текстов сайдбара ≥ 4.5:1 {"n":10,"min":5.52,"low":[]}
+PASS wk 1440x900@100 light (1440x900): стекло (backdrop-filter) на сайдбаре {"filter":"blur(24px) saturate(1.4)","bg":"rgba(255, 255, 255, 0.72)"}
+PASS wk 1440x900@100 light (1440x900): Today выбран в сайдбаре {"current":["side-today"]}
+PASS wk 1440x900@100 light (1440x900): без ошибок JS {"errs":[]}
+PASS wk 1440x900@100 dark (1440x900): раскладка с сайдбаром {"shell":"shell desk","side":true,"tabbar":false,"css":"1440x900"}
+PASS wk 1440x900@100 dark (1440x900): нет горизонтальной прокрутки {"scrollW":1440,"vw":1440}
+PASS wk 1440x900@100 dark (1440x900): поле 81 клетка, квадратное, в окне {"cells":81,"board":[340,72,720,720]}
+PASS wk 1440x900@100 dark (1440x900): сайдбар в окне, без прокрутки {"side":[8,8,232,884],"scrolls":false}
+PASS wk 1440x900@100 dark (1440x900): контент и поле правее сайдбара {"stackLeft":248,"boardLeft":340,"sideRight":240}
+PASS wk 1440x900@100 dark (1440x900): кнопка сайдбара не наезжает на заголовок {"toggle":[256,292],"titleLeft":302}
+PASS wk 1440x900@100 dark (1440x900): контраст текстов сайдбара ≥ 4.5:1 {"n":10,"min":5.2,"low":[]}
+PASS wk 1440x900@100 dark (1440x900): стекло (backdrop-filter) на сайдбаре {"filter":"blur(24px) saturate(1.4)","bg":"rgba(28, 28, 30, 0.72)"}
+PASS wk 1440x900@100 dark (1440x900): Today выбран в сайдбаре {"current":["side-today"]}
+PASS wk 1440x900@100 dark (1440x900): без ошибок JS {"errs":[]}
+PASS wk 1440x900@125 light (1152x720): раскладка с сайдбаром {"shell":"shell desk","side":true,"tabbar":false,"css":"1152x720"}
+PASS wk 1440x900@125 light (1152x720): нет горизонтальной прокрутки {"scrollW":1152,"vw":1152}
+PASS wk 1440x900@125 light (1152x720): поле 81 клетка, квадратное, в окне {"cells":81,"board":[296,72,548,548]}
+PASS wk 1440x900@125 light (1152x720): сайдбар в окне, без прокрутки {"side":[8,8,232,704],"scrolls":false}
+PASS wk 1440x900@125 light (1152x720): контент и поле правее сайдбара {"stackLeft":248,"boardLeft":296,"sideRight":240}
+PASS wk 1440x900@125 light (1152x720): кнопка сайдбара не наезжает на заголовок {"toggle":[256,292],"titleLeft":302}
+PASS wk 1440x900@125 light (1152x720): контраст текстов сайдбара ≥ 4.5:1 {"n":10,"min":5.52,"low":[]}
+PASS wk 1440x900@125 light (1152x720): стекло (backdrop-filter) на сайдбаре {"filter":"blur(24px) saturate(1.4)","bg":"rgba(255, 255, 255, 0.72)"}
+PASS wk 1440x900@125 light (1152x720): Today выбран в сайдбаре {"current":["side-today"]}
+PASS wk 1440x900@125 light (1152x720): без ошибок JS {"errs":[]}
+PASS wk 1440x900@150 light (960x600): раскладка компакт C (без сайдбара и таб-бара, «Show sidebar») {"shell":"shell desk compact side-off","side":false,"tabbar":false,"css":"960x600"}
+PASS wk 1440x900@150 light (960x600): нет горизонтальной прокрутки {"scrollW":960,"vw":960}
+PASS wk 1440x900@150 light (960x600): поле 81 клетка, квадратное, в окне {"cells":81,"board":[112,72,476,476]}
+PASS wk 1440x900@150 light (960x600): без ошибок JS {"errs":[]}
+PASS wk 1920x1080@100 light (1920x1080): раскладка с сайдбаром {"shell":"shell desk","side":true,"tabbar":false,"css":"1920x1080"}
+PASS wk 1920x1080@100 light (1920x1080): нет горизонтальной прокрутки {"scrollW":1920,"vw":1920}
+PASS wk 1920x1080@100 light (1920x1080): поле 81 клетка, квадратное, в окне {"cells":81,"board":[564,72,720,720]}
+PASS wk 1920x1080@100 light (1920x1080): сайдбар в окне, без прокрутки {"side":[8,8,232,1064],"scrolls":false}
+PASS wk 1920x1080@100 light (1920x1080): контент и поле правее сайдбара {"stackLeft":248,"boardLeft":564,"sideRight":240}
+PASS wk 1920x1080@100 light (1920x1080): кнопка сайдбара не наезжает на заголовок {"toggle":[256,292],"titleLeft":302}
+PASS wk 1920x1080@100 light (1920x1080): контраст текстов сайдбара ≥ 4.5:1 {"n":10,"min":5.52,"low":[]}
+PASS wk 1920x1080@100 light (1920x1080): стекло (backdrop-filter) на сайдбаре {"filter":"blur(24px) saturate(1.4)","bg":"rgba(255, 255, 255, 0.72)"}
+PASS wk 1920x1080@100 light (1920x1080): Today выбран в сайдбаре {"current":["side-today"]}
+PASS wk 1920x1080@100 light (1920x1080): без ошибок JS {"errs":[]}
+PASS wk 1920x1080@100 dark (1920x1080): раскладка с сайдбаром {"shell":"shell desk","side":true,"tabbar":false,"css":"1920x1080"}
+PASS wk 1920x1080@100 dark (1920x1080): нет горизонтальной прокрутки {"scrollW":1920,"vw":1920}
+PASS wk 1920x1080@100 dark (1920x1080): поле 81 клетка, квадратное, в окне {"cells":81,"board":[564,72,720,720]}
+PASS wk 1920x1080@100 dark (1920x1080): сайдбар в окне, без прокрутки {"side":[8,8,232,1064],"scrolls":false}
+PASS wk 1920x1080@100 dark (1920x1080): контент и поле правее сайдбара {"stackLeft":248,"boardLeft":564,"sideRight":240}
+PASS wk 1920x1080@100 dark (1920x1080): кнопка сайдбара не наезжает на заголовок {"toggle":[256,292],"titleLeft":302}
+PASS wk 1920x1080@100 dark (1920x1080): контраст текстов сайдбара ≥ 4.5:1 {"n":10,"min":5.2,"low":[]}
+PASS wk 1920x1080@100 dark (1920x1080): стекло (backdrop-filter) на сайдбаре {"filter":"blur(24px) saturate(1.4)","bg":"rgba(28, 28, 30, 0.72)"}
+PASS wk 1920x1080@100 dark (1920x1080): Today выбран в сайдбаре {"current":["side-today"]}
+PASS wk 1920x1080@100 dark (1920x1080): без ошибок JS {"errs":[]}
+PASS wk 1920x1080@125 light (1536x864): раскладка с сайдбаром {"shell":"shell desk","side":true,"tabbar":false,"css":"1536x864"}
+PASS wk 1920x1080@125 light (1536x864): нет горизонтальной прокрутки {"scrollW":1536,"vw":1536}
+PASS wk 1920x1080@125 light (1536x864): поле 81 клетка, квадратное, в окне {"cells":81,"board":[378,72,720,720]}
+PASS wk 1920x1080@125 light (1536x864): сайдбар в окне, без прокрутки {"side":[8,8,232,848],"scrolls":false}
+PASS wk 1920x1080@125 light (1536x864): контент и поле правее сайдбара {"stackLeft":248,"boardLeft":378,"sideRight":240}
+PASS wk 1920x1080@125 light (1536x864): кнопка сайдбара не наезжает на заголовок {"toggle":[256,292],"titleLeft":302}
+PASS wk 1920x1080@125 light (1536x864): контраст текстов сайдбара ≥ 4.5:1 {"n":10,"min":5.52,"low":[]}
+PASS wk 1920x1080@125 light (1536x864): стекло (backdrop-filter) на сайдбаре {"filter":"blur(24px) saturate(1.4)","bg":"rgba(255, 255, 255, 0.72)"}
+PASS wk 1920x1080@125 light (1536x864): Today выбран в сайдбаре {"current":["side-today"]}
+PASS wk 1920x1080@125 light (1536x864): без ошибок JS {"errs":[]}
+PASS wk 1920x1080@150 light (1280x720): раскладка с сайдбаром {"shell":"shell desk","side":true,"tabbar":false,"css":"1280x720"}
+PASS wk 1920x1080@150 light (1280x720): нет горизонтальной прокрутки {"scrollW":1280,"vw":1280}
+PASS wk 1920x1080@150 light (1280x720): поле 81 клетка, квадратное, в окне {"cells":81,"board":[336,72,596,596]}
+PASS wk 1920x1080@150 light (1280x720): сайдбар в окне, без прокрутки {"side":[8,8,232,704],"scrolls":false}
+PASS wk 1920x1080@150 light (1280x720): контент и поле правее сайдбара {"stackLeft":248,"boardLeft":336,"sideRight":240}
+PASS wk 1920x1080@150 light (1280x720): кнопка сайдбара не наезжает на заголовок {"toggle":[256,292],"titleLeft":302}
+PASS wk 1920x1080@150 light (1280x720): контраст текстов сайдбара ≥ 4.5:1 {"n":10,"min":5.52,"low":[]}
+PASS wk 1920x1080@150 light (1280x720): стекло (backdrop-filter) на сайдбаре {"filter":"blur(24px) saturate(1.4)","bg":"rgba(255, 255, 255, 0.72)"}
+PASS wk 1920x1080@150 light (1280x720): Today выбран в сайдбаре {"current":["side-today"]}
+PASS wk 1920x1080@150 light (1280x720): без ошибок JS {"errs":[]}
+PASS wk 1440x900 light contrast:more: сайдбар непрозрачный (--glass-solid), без размытия {"bg":"rgb(246, 246, 249)","filter":"none"}
+PASS wk 1440x900 light contrast:more: контраст ≥ 4.5:1 {"min":5.91}
+PASS wk 1440x900 dark contrast:more: сайдбар непрозрачный (--glass-solid), без размытия {"bg":"rgb(20, 20, 22)","filter":"none"}
+PASS wk 1440x900 dark contrast:more: контраст ≥ 4.5:1 {"min":5.78}
+PASS wk flow 1440x900@100: Year из сайдбара {"hash":"#/year","current":["side-year"]}
+PASS wk flow 1440x900@100: режим без партии → страница режима {"hash":"#/play","current":["side-mode-glyphs"]}
+PASS wk flow 1440x900@100: страница режима — колонка ≤ 480, правее сайдбара, в окне {"page":[604,480]}
+PASS wk flow 1440x900@100: «Start» → доска режима, режим выбран, «In progress» {"cells":81,"current":["side-mode-glyphs"],"meta":"In progress"}
+PASS wk flow 1440x900@100: режим с партией → снова доска (не страница) {"cells":81,"current":["side-mode-glyphs"]}
+PASS wk flow 1440x900@100: Play → хаб (строки режимов), выбран Play {"hubRows":1,"current":["side-play"]}
+PASS wk flow 1440x900@100: Settings — ни один пункт не выбран, экран правее сайдбара {"hash":"#/settings","current":[]}
+PASS wk flow 1440x900@100: из Settings сайдбаром на Today {"hash":"#/today"}
+PASS wk flow 1440x900@100: стрелки по сайдбару {"f1":"side-play","f2":"side-year"}
+PASS wk flow 1440x900@100: скрыть — сайдбара нет, контент с левого края, кнопка «Show sidebar» {"stackLeft":0,"label":"Show sidebar"}
+PASS wk flow 1440x900@100: после перезагрузки сайдбар по-прежнему скрыт {"shell":"shell desk side-off"}
+PASS wk flow 1440x900@100: показать — сайдбар на месте {"label":"Hide sidebar"}
+PASS wk flow 1440x900@100: сузили до 1024×640 — компакт C: без сайдбара и таб-бара, «Show sidebar» {"shell":"shell desk compact side-off","label":"Show sidebar"}
+PASS wk flow 1440x900@100: на компакте навигация сайдбаром поверх работает, сайдбар уходит после выбора {"hash":"#/play","side":false}
+PASS wk flow 1440x900@100: расширили — сайдбар, выбран Play/режим {"current":["side-play"]}
+PASS wk flow 1440x900@100: без ошибок JS {"errs":[]}
+PASS wk flow 1920x1080@150: Year из сайдбара {"hash":"#/year","current":["side-year"]}
+PASS wk flow 1920x1080@150: режим без партии → страница режима {"hash":"#/play","current":["side-mode-glyphs"]}
+PASS wk flow 1920x1080@150: страница режима — колонка ≤ 480, правее сайдбара, в окне {"page":[524,480]}
+PASS wk flow 1920x1080@150: «Start» → доска режима, режим выбран, «In progress» {"cells":81,"current":["side-mode-glyphs"],"meta":"In progress"}
+PASS wk flow 1920x1080@150: режим с партией → снова доска (не страница) {"cells":81,"current":["side-mode-glyphs"]}
+PASS wk flow 1920x1080@150: Play → хаб (строки режимов), выбран Play {"hubRows":1,"current":["side-play"]}
+PASS wk flow 1920x1080@150: Settings — ни один пункт не выбран, экран правее сайдбара {"hash":"#/settings","current":[]}
+PASS wk flow 1920x1080@150: из Settings сайдбаром на Today {"hash":"#/today"}
+PASS wk flow 1920x1080@150: стрелки по сайдбару {"f1":"side-play","f2":"side-year"}
+PASS wk flow 1920x1080@150: скрыть — сайдбара нет, контент с левого края, кнопка «Show sidebar» {"stackLeft":0,"label":"Show sidebar"}
+PASS wk flow 1920x1080@150: после перезагрузки сайдбар по-прежнему скрыт {"shell":"shell desk side-off"}
+PASS wk flow 1920x1080@150: показать — сайдбар на месте {"label":"Hide sidebar"}
+PASS wk flow 1920x1080@150: сузили до 1024×640 — компакт C: без сайдбара и таб-бара, «Show sidebar» {"shell":"shell desk compact side-off","label":"Show sidebar"}
+PASS wk flow 1920x1080@150: на компакте навигация сайдбаром поверх работает, сайдбар уходит после выбора {"hash":"#/play","side":false}
+PASS wk flow 1920x1080@150: расширили — сайдбар, выбран Play/режим {"current":["side-play"]}
+PASS wk flow 1920x1080@150: без ошибок JS {"errs":[]}
+PASS wk phone 393x852 light today: кадр = main {"diffPx":0,"attempt":1}
+PASS wk phone 393x852 light today: DOM = main {}
+PASS wk phone 393x852 light hub: кадр = main {"diffPx":0,"attempt":1}
+PASS wk phone 393x852 light hub: DOM = main {}
+PASS wk phone 393x852 light play: кадр = main {"diffPx":0,"attempt":1}
+PASS wk phone 393x852 light play: DOM = main {}
+PASS wk phone 393x852 light year: кадр = main {"diffPx":0,"attempt":1}
+PASS wk phone 393x852 light year: DOM = main {}
+PASS wk phone 393x852 light settings: кадр = main {"diffPx":0,"attempt":1}
+PASS wk phone 393x852 light settings: DOM = main {}
+PASS wk phone 393x852 dark today: кадр = main {"diffPx":0,"attempt":1}
+PASS wk phone 393x852 dark today: DOM = main {}
+PASS wk phone 393x852 dark hub: кадр = main {"diffPx":0,"attempt":1}
+PASS wk phone 393x852 dark hub: DOM = main {}
+PASS wk phone 393x852 dark play: кадр = main {"diffPx":0,"attempt":1}
+PASS wk phone 393x852 dark play: DOM = main {}
+PASS wk phone 393x852 dark year: кадр = main {"diffPx":0,"attempt":1}
+PASS wk phone 393x852 dark year: DOM = main {}
+PASS wk phone 393x852 dark settings: кадр = main {"diffPx":0,"attempt":1}
+PASS wk phone 393x852 dark settings: DOM = main {}
+PASS wk phone 320x568 light today: кадр = main {"diffPx":0,"attempt":1}
+PASS wk phone 320x568 light today: DOM = main {}
+PASS wk phone 320x568 light hub: кадр = main {"diffPx":0,"attempt":1}
+PASS wk phone 320x568 light hub: DOM = main {}
+PASS wk phone 320x568 light play: кадр = main {"diffPx":0,"attempt":1}
+PASS wk phone 320x568 light play: DOM = main {}
+PASS wk phone 320x568 light year: кадр = main {"diffPx":0,"attempt":1}
+PASS wk phone 320x568 light year: DOM = main {}
+PASS wk phone 320x568 light settings: кадр = main {"diffPx":0,"attempt":1}
+PASS wk phone 320x568 light settings: DOM = main {}
+PASS wk phone 852x393 light today: кадр = main {"diffPx":0,"attempt":1}
+PASS wk phone 852x393 light today: DOM = main {}
+PASS wk phone 852x393 light hub: кадр = main {"diffPx":0,"attempt":1}
+PASS wk phone 852x393 light hub: DOM = main {}
+PASS wk phone 852x393 light play: кадр = main {"diffPx":0,"attempt":1}
+PASS wk phone 852x393 light play: DOM = main {}
+PASS wk phone 852x393 light year: кадр = main {"diffPx":0,"attempt":1}
+PASS wk phone 852x393 light year: DOM = main {}
+PASS wk phone 852x393 light settings: кадр = main {"diffPx":0,"attempt":1}
+PASS wk phone 852x393 light settings: DOM = main {}
+
+178/178 PASS

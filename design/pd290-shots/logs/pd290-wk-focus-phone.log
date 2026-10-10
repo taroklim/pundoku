@@ -1,0 +1,78 @@
+PASS wk focus 1440x900@100 (1440x900): страница режима — фокус на «Start», чип ↩ внутри кнопки {"active":"mode-page-start","onStart":true,"fv":false,"chip":"↩","chipIn":true,"page":true,"sideShown":true}
+PASS wk focus 1440x900@100 (1440x900): клавиши на странице режима не доходят до партии Today {"placed0":1,"sel0":"2"}
+PASS wk focus 1440x900@100 (1440x900): фокус на пункте сайдбара (Year) + Enter — Year, а не «Start» {"hash":"#/year","cells":0}
+PASS wk focus 1440x900@100 (1440x900): снова страница режима — фокус на «Start» {"active":"mode-page-start","onStart":true,"fv":false,"chip":"↩","chipIn":true,"page":true,"sideShown":true}
+PASS wk focus 1440x900@100 (1440x900): Enter — партия Classic в раскладке C (поле + инспектор), фокус не в скрытой панели {"cells":81,"insp":true,"page":false,"active":"title","inPane":true}
+PASS wk focus 1440x900@100 (1440x900): партия Today не тронута (цифр 1, выбор 2) {}
+PASS wk focus 1440x900@100 (1440x900): цифра с клавиатуры — в партии Play (0 → 1) {"empty":"0"}
+PASS wk focus 1440x900@100 (1440x900): Enter в партии — партия та же (цифр 1), новой не началось {"after2":1,"still":81}
+PASS wk focus 1440x900@100 (1440x900): Tab по партии Play — у каждого фокуса видимое кольцо, не срезано (26 шт.) {"n":26,"bad":[]}
+PASS wk focus 1440x900@100 (1440x900): без ошибок JS {"errs":[]}
+PASS wk focus compact 1024x640 (1024x640): страница режима — фокус на «Start», чип ↩ внутри кнопки, сайдбар ушёл {"active":"mode-page-start","onStart":true,"fv":false,"chip":"↩","chipIn":true,"page":true,"sideShown":false}
+PASS wk focus compact 1024x640 (1024x640): клавиши на странице режима не доходят до партии Today {"placed0":1,"sel0":"2"}
+PASS wk focus compact 1024x640 (1024x640): сайдбар поверх страницы режима — фокус на пункте, Enter нажимает пункт, партия не запускается {"onItem":true,"cells":0,"after":{"active":"mode-page-start","onStart":true,"fv":false,"chip":"↩","chipIn":true,"page":true,"sideShown":false}}
+PASS wk focus compact 1024x640 (1024x640): снова страница режима — фокус на «Start» {"active":"mode-page-start","onStart":true,"fv":false,"chip":"↩","chipIn":true,"page":true,"sideShown":false}
+PASS wk focus compact 1024x640 (1024x640): Enter — партия Classic в раскладке C (поле + инспектор), фокус не в скрытой панели {"cells":81,"insp":true,"page":false,"active":"title","inPane":true}
+PASS wk focus compact 1024x640 (1024x640): партия Today не тронута (цифр 1, выбор 2) {}
+PASS wk focus compact 1024x640 (1024x640): цифра с клавиатуры — в партии Play (0 → 1) {"empty":"0"}
+PASS wk focus compact 1024x640 (1024x640): Enter в партии — партия та же (цифр 1), новой не началось {"after2":1,"still":81}
+PASS wk focus compact 1024x640 (1024x640): Tab по партии Play — у каждого фокуса видимое кольцо, не срезано (17 шт.) {"n":17,"bad":[]}
+PASS wk focus compact 1024x640 (1024x640): без ошибок JS {"errs":[]}
+PASS wk phone 393x852 light today: кадр = main {"diffPx":0,"tries":1}
+PASS wk phone 393x852 light today: DOM = main {"len":12059}
+PASS wk phone 393x852 light hub: кадр = main {"diffPx":0,"tries":1}
+PASS wk phone 393x852 light hub: DOM = main {"len":15233}
+PASS wk phone 393x852 light ctx-menu: кадр = main {"diffPx":0,"tries":1}
+PASS wk phone 393x852 light ctx-menu: DOM = main {"len":15752}
+PASS wk phone 393x852 light mode-sheet: кадр = main {"diffPx":0,"tries":1}
+PASS wk phone 393x852 light mode-sheet: DOM = main {"len":16685}
+PASS wk phone 393x852 light play: кадр = main {"diffPx":0,"tries":1}
+PASS wk phone 393x852 light play: DOM = main {"len":23507}
+PASS wk phone 393x852 light year: кадр = main {"diffPx":0,"tries":1}
+PASS wk phone 393x852 light year: DOM = main {"len":35400}
+PASS wk phone 393x852 light settings: кадр = main {"diffPx":0,"tries":1}
+PASS wk phone 393x852 light settings: DOM = main {"len":39663}
+PASS wk phone 393x852 dark today: кадр = main {"diffPx":0,"tries":1}
+PASS wk phone 393x852 dark today: DOM = main {"len":12059}
+PASS wk phone 393x852 dark hub: кадр = main {"diffPx":0,"tries":1}
+PASS wk phone 393x852 dark hub: DOM = main {"len":15233}
+PASS wk phone 393x852 dark ctx-menu: кадр = main {"diffPx":0,"tries":1}
+PASS wk phone 393x852 dark ctx-menu: DOM = main {"len":15752}
+PASS wk phone 393x852 dark mode-sheet: кадр = main {"diffPx":0,"tries":1}
+PASS wk phone 393x852 dark mode-sheet: DOM = main {"len":16685}
+PASS wk phone 393x852 dark play: кадр = main {"diffPx":0,"tries":1}
+PASS wk phone 393x852 dark play: DOM = main {"len":23507}
+PASS wk phone 393x852 dark year: кадр = main {"diffPx":0,"tries":1}
+PASS wk phone 393x852 dark year: DOM = main {"len":35400}
+PASS wk phone 393x852 dark settings: кадр = main {"diffPx":0,"tries":1}
+PASS wk phone 393x852 dark settings: DOM = main {"len":39663}
+PASS wk phone 320x568 light today: кадр = main {"diffPx":0,"tries":1}
+PASS wk phone 320x568 light today: DOM = main {"len":12059}
+PASS wk phone 320x568 light hub: кадр = main {"diffPx":0,"tries":1}
+PASS wk phone 320x568 light hub: DOM = main {"len":15233}
+PASS wk phone 320x568 light ctx-menu: кадр = main {"diffPx":0,"tries":1}
+PASS wk phone 320x568 light ctx-menu: DOM = main {"len":15752}
+PASS wk phone 320x568 light mode-sheet: кадр = main {"diffPx":0,"tries":1}
+PASS wk phone 320x568 light mode-sheet: DOM = main {"len":16685}
+PASS wk phone 320x568 light play: кадр = main {"diffPx":0,"tries":1}
+PASS wk phone 320x568 light play: DOM = main {"len":23507}
+PASS wk phone 320x568 light year: кадр = main {"diffPx":0,"tries":1}
+PASS wk phone 320x568 light year: DOM = main {"len":35400}
+PASS wk phone 320x568 light settings: кадр = main {"diffPx":0,"tries":1}
+PASS wk phone 320x568 light settings: DOM = main {"len":39663}
+PASS wk phone 852x393 light today: кадр = main {"diffPx":0,"tries":1}
+PASS wk phone 852x393 light today: DOM = main {"len":12059}
+PASS wk phone 852x393 light hub: кадр = main {"diffPx":0,"tries":1}
+PASS wk phone 852x393 light hub: DOM = main {"len":15233}
+PASS wk phone 852x393 light ctx-menu: кадр = main {"diffPx":0,"tries":1}
+PASS wk phone 852x393 light ctx-menu: DOM = main {"len":15752}
+PASS wk phone 852x393 light mode-sheet: кадр = main {"diffPx":0,"tries":1}
+PASS wk phone 852x393 light mode-sheet: DOM = main {"len":16685}
+PASS wk phone 852x393 light play: кадр = main {"diffPx":0,"tries":1}
+PASS wk phone 852x393 light play: DOM = main {"len":23507}
+PASS wk phone 852x393 light year: кадр = main {"diffPx":0,"tries":1}
+PASS wk phone 852x393 light year: DOM = main {"len":35400}
+PASS wk phone 852x393 light settings: кадр = main {"diffPx":0,"tries":1}
+PASS wk phone 852x393 light settings: DOM = main {"len":39663}
+
+76/76 PASS

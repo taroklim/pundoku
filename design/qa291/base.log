@@ -1,0 +1,49 @@
+OK   cr base phone today=open key-A {"cell":[16,271,39,39],"cellI":"45","lift":[16,271,39,39],"menu":[10,319,373,95],"firstBoardPane":"today","activePane":"play"}
+     фокус после Esc: BUG {"tag":"BODY","i":null,"pane":null,"visible":"visible"}
+OK   cr base phone today=open more-accuse {"cell":[16,271,39,39],"cellI":"45","lift":[16,271,39,39],"menu":[10,319,373,95],"firstBoardPane":"today","activePane":"play"}
+     фокус после Esc: BUG {"tag":"BODY","i":null,"pane":null,"visible":"visible"}
+OK   cr base phone today=open cell-gesture {"cell":[16,271,39,39],"cellI":"45","lift":[16,271,39,39],"menu":[10,319,373,95],"firstBoardPane":"today","activePane":"play"}
+     фокус после Esc: OK  {"tag":"BUTTON","i":"45","pane":"play","visible":"visible"}
+BUG  cr base phone today=solved key-A {"cell":[16,193,39,39],"cellI":"27","lift":[16,1010,39,39],"menu":[10,907,373,95],"firstBoardPane":"today","activePane":"play"}
+     фокус после Esc: BUG {"tag":"BODY","i":null,"pane":null,"visible":"visible"}
+BUG  cr base phone today=solved more-accuse {"cell":[16,193,39,39],"cellI":"27","lift":[16,1010,39,39],"menu":[10,907,373,95],"firstBoardPane":"today","activePane":"play"}
+     фокус после Esc: BUG {"tag":"BODY","i":null,"pane":null,"visible":"visible"}
+OK   cr base phone today=solved cell-gesture {"cell":[16,193,39,39],"cellI":"27","lift":[16,193,39,39],"menu":[10,240,373,95],"firstBoardPane":"today","activePane":"play"}
+     фокус после Esc: OK  {"tag":"BUTTON","i":"27","pane":"play","visible":"visible"}
+OK   cr base desk today=open key-A {"cell":[496,327,63,63],"cellI":"37","lift":[496,327,63,63],"menu":[10,398,1420,79],"firstBoardPane":"today","activePane":"play"}
+     фокус после Esc: BUG {"tag":"BODY","i":null,"pane":null,"visible":"visible"}
+OK   cr base desk today=open more-accuse {"cell":[496,327,63,63],"cellI":"37","lift":[496,327,63,63],"menu":[10,398,1420,79],"firstBoardPane":"today","activePane":"play"}
+     фокус после Esc: BUG {"tag":"BODY","i":null,"pane":null,"visible":"visible"}
+OK   cr base desk today=open cell-gesture {"cell":[496,327,63,63],"cellI":"37","lift":[496,327,63,63],"menu":[10,398,1420,79],"firstBoardPane":"today","activePane":"play"}
+     фокус после Esc: OK  {"tag":"BUTTON","i":"37","pane":"play","visible":"visible"}
+BUG  cr base desk today=solved key-A {"cell":[818,197,63,63],"cellI":"24","lift":[957,2247,156,156],"menu":[10,2160,1420,79],"firstBoardPane":"today","activePane":"play"}
+     фокус после Esc: BUG {"tag":"BODY","i":null,"pane":null,"visible":"visible"}
+BUG  cr base desk today=solved more-accuse {"cell":[818,197,63,63],"cellI":"24","lift":[957,2247,156,156],"menu":[10,2160,1420,79],"firstBoardPane":"today","activePane":"play"}
+     фокус после Esc: BUG {"tag":"BODY","i":null,"pane":null,"visible":"visible"}
+OK   cr base desk today=solved cell-gesture {"cell":[818,197,63,63],"cellI":"24","lift":[818,197,63,63],"menu":[10,268,1420,79],"firstBoardPane":"today","activePane":"play"}
+     фокус после Esc: OK  {"tag":"BUTTON","i":"24","pane":"play","visible":"visible"}
+OK   wk base phone today=open key-A {"cell":[94,186,39,39],"cellI":"29","lift":[94,186,39,39],"menu":[10,233,373,76],"firstBoardPane":"today","activePane":"play"}
+     фокус после Esc: BUG {"tag":"BODY","i":null,"pane":null,"visible":"visible"}
+OK   wk base phone today=open more-accuse {"cell":[94,186,39,39],"cellI":"29","lift":[94,186,39,39],"menu":[10,233,373,76],"firstBoardPane":"today","activePane":"play"}
+     фокус после Esc: BUG {"tag":"BODY","i":null,"pane":null,"visible":"visible"}
+OK   wk base phone today=open cell-gesture {"cell":[94,186,39,39],"cellI":"29","lift":[94,186,39,39],"menu":[10,233,373,76],"firstBoardPane":"today","activePane":"play"}
+     фокус после Esc: OK  {"tag":"BUTTON","i":"29","pane":"play","visible":"visible"}
+BUG  wk base phone today=solved key-A {"cell":[259,142,39,39],"cellI":"24","lift":[259,929,39,39],"menu":[10,845,373,76],"firstBoardPane":"today","activePane":"play"}
+     фокус после Esc: BUG {"tag":"BODY","i":null,"pane":null,"visible":"visible"}
+BUG  wk base phone today=solved more-accuse {"cell":[259,142,39,39],"cellI":"24","lift":[259,929,39,39],"menu":[10,845,373,76],"firstBoardPane":"today","activePane":"play"}
+     фокус после Esc: BUG {"tag":"BODY","i":null,"pane":null,"visible":"visible"}
+OK   wk base phone today=solved cell-gesture {"cell":[259,142,39,39],"cellI":"24","lift":[259,142,39,39],"menu":[10,190,373,76],"firstBoardPane":"today","activePane":"play"}
+     фокус после Esc: OK  {"tag":"BUTTON","i":"24","pane":"play","visible":"visible"}
+OK   wk base desk today=open key-A {"cell":[428,260,64,64],"cellI":"27","lift":[428,260,64,64],"menu":[10,332,1420,76],"firstBoardPane":"today","activePane":"play"}
+     фокус после Esc: BUG {"tag":"BODY","i":null,"pane":null,"visible":"visible"}
+OK   wk base desk today=open more-accuse {"cell":[428,260,64,64],"cellI":"27","lift":[428,260,64,64],"menu":[10,332,1420,76],"firstBoardPane":"today","activePane":"play"}
+     фокус после Esc: BUG {"tag":"BODY","i":null,"pane":null,"visible":"visible"}
+OK   wk base desk today=open cell-gesture {"cell":[428,260,64,64],"cellI":"27","lift":[428,260,64,64],"menu":[10,332,1420,76],"firstBoardPane":"today","activePane":"play"}
+     фокус после Esc: OK  {"tag":"BUTTON","i":"27","pane":"play","visible":"visible"}
+BUG  wk base desk today=solved key-A {"cell":[948,128,64,64],"cellI":"17","lift":[1268,2053,156,156],"menu":[10,1969,1420,76],"firstBoardPane":"today","activePane":"play"}
+     фокус после Esc: BUG {"tag":"BODY","i":null,"pane":null,"visible":"visible"}
+BUG  wk base desk today=solved more-accuse {"cell":[948,128,64,64],"cellI":"17","lift":[1268,2053,156,156],"menu":[10,1969,1420,76],"firstBoardPane":"today","activePane":"play"}
+     фокус после Esc: BUG {"tag":"BODY","i":null,"pane":null,"visible":"visible"}
+OK   wk base desk today=solved cell-gesture {"cell":[948,128,64,64],"cellI":"17","lift":[948,128,64,64],"menu":[10,200,1420,76],"firstBoardPane":"today","activePane":"play"}
+     фокус после Esc: OK  {"tag":"BUTTON","i":"17","pane":"play","visible":"visible"}
+8/24 PASS — FAIL: cr phone open key-A; cr phone open more-accuse; cr phone solved key-A; cr phone solved more-accuse; cr desk open key-A; cr desk open more-accuse; cr desk solved key-A; cr desk solved more-accuse; wk phone open key-A; wk phone open more-accuse; wk phone solved key-A; wk phone solved more-accuse; wk desk open key-A; wk desk open more-accuse; wk desk solved key-A; wk desk solved more-accuse

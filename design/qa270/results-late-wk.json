@@ -1,0 +1,318 @@
+{
+ "total": 48,
+ "fails": [],
+ "results": {
+  "wk late 1280x800@100 en-US hint+late (lang=en, late=true, assisted=false): inspector overflow 0px; controls unreachable at bottom: 0": {
+   "ok": true,
+   "over": 0,
+   "sh": 800,
+   "ch": 800,
+   "cut": [],
+   "late": true,
+   "hintsRow": false
+  },
+  "wk late 1280x800@100 en-US hint+late: no JS errors": {
+   "ok": true,
+   "errs": []
+  },
+  "wk late 1280x800@100 en-US plain (lang=en, late=false, assisted=false): inspector overflow 0px; controls unreachable at bottom: 0": {
+   "ok": true,
+   "over": 0,
+   "sh": 800,
+   "ch": 800,
+   "cut": [],
+   "late": false,
+   "hintsRow": false
+  },
+  "wk late 1280x800@100 en-US plain: no JS errors": {
+   "ok": true,
+   "errs": []
+  },
+  "wk late 1280x800@100 ru-RU hint+late (lang=ru, late=true, assisted=false): inspector overflow 0px; controls unreachable at bottom: 0": {
+   "ok": true,
+   "over": 0,
+   "sh": 800,
+   "ch": 800,
+   "cut": [],
+   "late": true,
+   "hintsRow": false
+  },
+  "wk late 1280x800@100 ru-RU hint+late: no JS errors": {
+   "ok": true,
+   "errs": []
+  },
+  "wk late 1280x800@100 ru-RU plain (lang=ru, late=false, assisted=false): inspector overflow 0px; controls unreachable at bottom: 0": {
+   "ok": true,
+   "over": 0,
+   "sh": 800,
+   "ch": 800,
+   "cut": [],
+   "late": false,
+   "hintsRow": false
+  },
+  "wk late 1280x800@100 ru-RU plain: no JS errors": {
+   "ok": true,
+   "errs": []
+  },
+  "wk late 1280x800@100 uk-UA hint+late (lang=uk, late=true, assisted=false): inspector overflow 2px; controls unreachable at bottom: 0": {
+   "ok": true,
+   "over": 2,
+   "sh": 802,
+   "ch": 800,
+   "cut": [],
+   "late": true,
+   "hintsRow": false
+  },
+  "wk late 1280x800@100 uk-UA hint+late: no JS errors": {
+   "ok": true,
+   "errs": []
+  },
+  "wk late 1280x800@100 uk-UA plain (lang=uk, late=false, assisted=false): inspector overflow 0px; controls unreachable at bottom: 0": {
+   "ok": true,
+   "over": 0,
+   "sh": 800,
+   "ch": 800,
+   "cut": [],
+   "late": false,
+   "hintsRow": false
+  },
+  "wk late 1280x800@100 uk-UA plain: no JS errors": {
+   "ok": true,
+   "errs": []
+  },
+  "wk late 1440x900@100 en-US hint+late (lang=en, late=true, assisted=false): inspector overflow 0px; controls unreachable at bottom: 0": {
+   "ok": true,
+   "over": 0,
+   "sh": 900,
+   "ch": 900,
+   "cut": [],
+   "late": true,
+   "hintsRow": false
+  },
+  "wk late 1440x900@100 en-US hint+late: no JS errors": {
+   "ok": true,
+   "errs": []
+  },
+  "wk late 1440x900@100 en-US plain (lang=en, late=false, assisted=false): inspector overflow 0px; controls unreachable at bottom: 0": {
+   "ok": true,
+   "over": 0,
+   "sh": 900,
+   "ch": 900,
+   "cut": [],
+   "late": false,
+   "hintsRow": false
+  },
+  "wk late 1440x900@100 en-US plain: no JS errors": {
+   "ok": true,
+   "errs": []
+  },
+  "wk late 1440x900@100 ru-RU hint+late (lang=ru, late=true, assisted=false): inspector overflow 0px; controls unreachable at bottom: 0": {
+   "ok": true,
+   "over": 0,
+   "sh": 900,
+   "ch": 900,
+   "cut": [],
+   "late": true,
+   "hintsRow": false
+  },
+  "wk late 1440x900@100 ru-RU hint+late: no JS errors": {
+   "ok": true,
+   "errs": []
+  },
+  "wk late 1440x900@100 ru-RU plain (lang=ru, late=false, assisted=false): inspector overflow 0px; controls unreachable at bottom: 0": {
+   "ok": true,
+   "over": 0,
+   "sh": 900,
+   "ch": 900,
+   "cut": [],
+   "late": false,
+   "hintsRow": false
+  },
+  "wk late 1440x900@100 ru-RU plain: no JS errors": {
+   "ok": true,
+   "errs": []
+  },
+  "wk late 1440x900@100 uk-UA hint+late (lang=uk, late=true, assisted=false): inspector overflow 0px; controls unreachable at bottom: 0": {
+   "ok": true,
+   "over": 0,
+   "sh": 900,
+   "ch": 900,
+   "cut": [],
+   "late": true,
+   "hintsRow": false
+  },
+  "wk late 1440x900@100 uk-UA hint+late: no JS errors": {
+   "ok": true,
+   "errs": []
+  },
+  "wk late 1440x900@100 uk-UA plain (lang=uk, late=false, assisted=false): inspector overflow 0px; controls unreachable at bottom: 0": {
+   "ok": true,
+   "over": 0,
+   "sh": 900,
+   "ch": 900,
+   "cut": [],
+   "late": false,
+   "hintsRow": false
+  },
+  "wk late 1440x900@100 uk-UA plain: no JS errors": {
+   "ok": true,
+   "errs": []
+  },
+  "wk late 1920x1080@100 en-US hint+late (lang=en, late=true, assisted=false): inspector overflow 0px; controls unreachable at bottom: 0": {
+   "ok": true,
+   "over": 0,
+   "sh": 1080,
+   "ch": 1080,
+   "cut": [],
+   "late": true,
+   "hintsRow": false
+  },
+  "wk late 1920x1080@100 en-US hint+late: no JS errors": {
+   "ok": true,
+   "errs": []
+  },
+  "wk late 1920x1080@100 en-US plain (lang=en, late=false, assisted=false): inspector overflow 0px; controls unreachable at bottom: 0": {
+   "ok": true,
+   "over": 0,
+   "sh": 1080,
+   "ch": 1080,
+   "cut": [],
+   "late": false,
+   "hintsRow": false
+  },
+  "wk late 1920x1080@100 en-US plain: no JS errors": {
+   "ok": true,
+   "errs": []
+  },
+  "wk late 1920x1080@100 ru-RU hint+late (lang=ru, late=true, assisted=false): inspector overflow 0px; controls unreachable at bottom: 0": {
+   "ok": true,
+   "over": 0,
+   "sh": 1080,
+   "ch": 1080,
+   "cut": [],
+   "late": true,
+   "hintsRow": false
+  },
+  "wk late 1920x1080@100 ru-RU hint+late: no JS errors": {
+   "ok": true,
+   "errs": []
+  },
+  "wk late 1920x1080@100 ru-RU plain (lang=ru, late=false, assisted=false): inspector overflow 0px; controls unreachable at bottom: 0": {
+   "ok": true,
+   "over": 0,
+   "sh": 1080,
+   "ch": 1080,
+   "cut": [],
+   "late": false,
+   "hintsRow": false
+  },
+  "wk late 1920x1080@100 ru-RU plain: no JS errors": {
+   "ok": true,
+   "errs": []
+  },
+  "wk late 1920x1080@100 uk-UA hint+late (lang=uk, late=true, assisted=false): inspector overflow 0px; controls unreachable at bottom: 0": {
+   "ok": true,
+   "over": 0,
+   "sh": 1080,
+   "ch": 1080,
+   "cut": [],
+   "late": true,
+   "hintsRow": false
+  },
+  "wk late 1920x1080@100 uk-UA hint+late: no JS errors": {
+   "ok": true,
+   "errs": []
+  },
+  "wk late 1920x1080@100 uk-UA plain (lang=uk, late=false, assisted=false): inspector overflow 0px; controls unreachable at bottom: 0": {
+   "ok": true,
+   "over": 0,
+   "sh": 1080,
+   "ch": 1080,
+   "cut": [],
+   "late": false,
+   "hintsRow": false
+  },
+  "wk late 1920x1080@100 uk-UA plain: no JS errors": {
+   "ok": true,
+   "errs": []
+  },
+  "wk late 1536x960@125 en-US hint+late (lang=en, late=true, assisted=false): inspector overflow 0px; controls unreachable at bottom: 0": {
+   "ok": true,
+   "over": 0,
+   "sh": 960,
+   "ch": 960,
+   "cut": [],
+   "late": true,
+   "hintsRow": false
+  },
+  "wk late 1536x960@125 en-US hint+late: no JS errors": {
+   "ok": true,
+   "errs": []
+  },
+  "wk late 1536x960@125 en-US plain (lang=en, late=false, assisted=false): inspector overflow 0px; controls unreachable at bottom: 0": {
+   "ok": true,
+   "over": 0,
+   "sh": 960,
+   "ch": 960,
+   "cut": [],
+   "late": false,
+   "hintsRow": false
+  },
+  "wk late 1536x960@125 en-US plain: no JS errors": {
+   "ok": true,
+   "errs": []
+  },
+  "wk late 1536x960@125 ru-RU hint+late (lang=ru, late=true, assisted=false): inspector overflow 0px; controls unreachable at bottom: 0": {
+   "ok": true,
+   "over": 0,
+   "sh": 960,
+   "ch": 960,
+   "cut": [],
+   "late": true,
+   "hintsRow": false
+  },
+  "wk late 1536x960@125 ru-RU hint+late: no JS errors": {
+   "ok": true,
+   "errs": []
+  },
+  "wk late 1536x960@125 ru-RU plain (lang=ru, late=false, assisted=false): inspector overflow 0px; controls unreachable at bottom: 0": {
+   "ok": true,
+   "over": 0,
+   "sh": 960,
+   "ch": 960,
+   "cut": [],
+   "late": false,
+   "hintsRow": false
+  },
+  "wk late 1536x960@125 ru-RU plain: no JS errors": {
+   "ok": true,
+   "errs": []
+  },
+  "wk late 1536x960@125 uk-UA hint+late (lang=uk, late=true, assisted=false): inspector overflow 0px; controls unreachable at bottom: 0": {
+   "ok": true,
+   "over": 0,
+   "sh": 960,
+   "ch": 960,
+   "cut": [],
+   "late": true,
+   "hintsRow": false
+  },
+  "wk late 1536x960@125 uk-UA hint+late: no JS errors": {
+   "ok": true,
+   "errs": []
+  },
+  "wk late 1536x960@125 uk-UA plain (lang=uk, late=false, assisted=false): inspector overflow 0px; controls unreachable at bottom: 0": {
+   "ok": true,
+   "over": 0,
+   "sh": 960,
+   "ch": 960,
+   "cut": [],
+   "late": false,
+   "hintsRow": false
+  },
+  "wk late 1536x960@125 uk-UA plain: no JS errors": {
+   "ok": true,
+   "errs": []
+  }
+ }
+}

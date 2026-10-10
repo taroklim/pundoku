@@ -5,6 +5,7 @@ import type { HelpBlockId } from "../help/blocks";
 import { useMelodyGame } from "../melody/game";
 import { setMelodySound, useMelodySound } from "../settings/prefs";
 import { useDeferredFocus } from "../shell/afterPaint";
+import { deskStore, useDeskLayout, useDeskState } from "../shell/desk";
 import { deferPastTabTap, swallowGhostClick } from "../shell/ghostClick";
 import { useTabActive } from "../shell/tabSlide";
 import { TabHeader } from "../shell/TabHeader";
@@ -32,9 +33,11 @@ import { HintRuleSheet, boldParts } from "./HintRuleSheet";
 import { useHintLadder } from "./hintStore";
 import { accusedCells, liarHidden, liarSummaryOf } from "./liar";
 import { canFill, cellsLeft, isGiven, isGridFull } from "./logic";
+import { ModePage } from "./ModePage";
 import { ModeSheet } from "./ModeSheet";
 import type { ModeId } from "./modes";
 import { availableModes, modeDef } from "./modes";
+import { DeskInspector, InspectorMeta, KeyLegend } from "./DeskInspector";
 import { LanternStatus } from "./LanternStatus";
 import type { LanternStatusKind } from "./LanternStatus";
 import { MelodyModeIcon } from "./modeIcons";
@@ -82,6 +85,7 @@ export function PlayScreen({ onOpenSettings, onOpenHelp, onOpenToday }: { onOpen
   useEffect(() => {
     if (seenReselect.current === snap.reselect) return;
     seenReselect.current = snap.reselect;
+    deskStore.showModePage(null); // PD-266: повторный выбор Play — на сам хаб, не на страницу режима
     setSheet(null);
     setRule(null);
     setAccuseAt(null);
@@ -106,7 +110,11 @@ export function PlayScreen({ onOpenSettings, onOpenHelp, onOpenToday }: { onOpen
     setSaid({ id: u.id, text: t("modes.restored", { mode: modeName(u.mode) }) });
     if (hadFocus) document.querySelector<HTMLElement>(`[data-testid="mode-${u.mode}"]`)?.focus({ preventScroll: true });
   };
-  const leftHub = !snap.hub || !active || sheet !== null || rule !== null;
+  // PD-266: десктоп C — хаб Play становится страницей режима, выбранного в сайдбаре (только в раскладке с сайдбаром).
+  const desk = useDeskLayout();
+  const { modePage } = useDeskState();
+  const pageMode = desk && snap.hub && snap.restoring !== true ? modePage : null;
+  const leftHub = !snap.hub || !active || sheet !== null || rule !== null || pageMode !== null;
   useEffect(() => {
     if (leftHub) setUndo(null);
   }, [leftHub]);
@@ -200,7 +208,10 @@ export function PlayScreen({ onOpenSettings, onOpenHelp, onOpenToday }: { onOpen
   const openAccuse = (cell: number, el: HTMLElement | null) => {
     if (!play || !playStore.canAccuse(cell)) return;
     playStore.select(cell);
-    const cellEl = el ?? document.querySelector<HTMLElement>(`.board [data-i="${cell}"]`);
+    // PD-291: клавиша A и «⋯ → Обвинить» передают `el = null` — клетку ищем только на СВОЁМ экране (панель Play). Поиск по всему
+    // документу находил первую доску в DOM — поле Today из скрытой панели (или Grid ∞ решённого дня): меню вставало по ней
+    // (на телефоне — за нижний край), а фокус после Esc возвращался на скрытую клетку, то есть на <body>.
+    const cellEl = el ?? screenRef.current?.querySelector<HTMLElement>(`.board [data-i="${cell}"]`) ?? null;
     const r = cellEl?.getBoundingClientRect();
     const anchor = r ? { top: r.top, bottom: r.bottom, left: r.left, width: r.width, height: r.height } : { top: 80, bottom: 120, left: 20, width: 40, height: 40 };
     setAccuseAt({ cell, digit: play.mission[cell] ?? 0, anchor, opener: cellEl });
@@ -240,6 +251,12 @@ export function PlayScreen({ onOpenSettings, onOpenHelp, onOpenToday }: { onOpen
 
   const hub = snap.hub;
   const restoring = snap.restoring === true;
+  useEffect(() => {
+    // Страница Лжеца — как шит Лжеца: заготовить тяжёлые сетки (§1.5) и перечитать Лжеца дня.
+    if (pageMode === null || modeDef(pageMode).grid !== "liar") return;
+    playStore.warmLiar();
+    playStore.refreshDaily();
+  }, [pageMode]);
   // PD-217: «Продолжить» Лжеца дня — любой незаконченной даты (после полуночи вчерашний не пропадает), открывается его дата.
   const liarCont = hub ? playStore.liarDayContinue() : null;
   // PD-189: ожидание генерации — панель на месте поля (порог 600 мс, минимум 700 мс, «долго» с 4 с). Пока она (или пустота
@@ -280,7 +297,8 @@ export function PlayScreen({ onOpenSettings, onOpenHelp, onOpenToday }: { onOpen
   // PD-144 (D-1): место под док подсказки отложено постоянно, пока подсказки возможны (партия не в Ink): поле не зависит от дока.
   // До загрузки партии `play` нет — подсказки берутся из реестра режима, чтобы поле не прыгало при появлении партии.
   const hintable = !hub && (play ? !ink : def.hints);
-  const fitClass = hub ? " play-hub" : fitClassName({ fit: !cardView, hintable, docked: hint.open });
+  // PD-268: на десктопе C решённая партия остаётся на экране (поле + карточка в инспекторе) — экран партии, а не прокрутка.
+  const fitClass = hub ? " play-hub" : fitClassName({ fit: (desk && !restoring) || !cardView, hintable, docked: hint.open });
   const waitClass = hub || restoring ? "" : waiting ? " play-waiting" : wait.entered ? " play-in" : "";
 
   const onGameKey = (e: GameKeyEvent) => {
@@ -297,8 +315,98 @@ export function PlayScreen({ onOpenSettings, onOpenHelp, onOpenToday }: { onOpen
   // PD-232 (а): те же клавиши, когда фокус вне экрана (<body> после загрузки, вкладка таб-бара) — пока партия на экране.
   useDocumentGameKeys(screenRef, active && !hub && !waiting && !restoring && phase === "playing", onGameKey, playStore);
 
+  // PD-267: десктоп C — партия (не хаб, не страница режима) идёт в тулбаре + поле + инспектор. PD-268: и решённая — поле на
+  // месте (приглушено, не интерактивно), в инспекторе карточка результата с «Новой сеткой» вместо времени и панели.
+  const deskParty = desk && !hub && !restoring;
+  const deskFit = deskParty && !cardView;
+  const deskSolved = deskParty && cardView;
+  const subline = (
+    <Subline
+      day=""
+      difficulty={diffLabel}
+      chip={play ? (ink ? modeDef("ink") : def) : def}
+      muted={melody && !soundOn && phase !== "solved"}
+      inspecting={inspecting}
+      help={snap.assisted === true}
+      clock={showClock && !deskFit ? clock : null}
+    />
+  );
+  const board = (
+    <Board
+      snap={snap}
+      store={playStore}
+      dim={phase === "solved"}
+      hintMarks={hint.marks}
+      inspect={inspectOn}
+      onInspectEnd={() => setInspectKey(null)}
+      onHoldChange={setHeld}
+      onAccuse={liarOpen ? openAccuse : undefined}
+      canAccuse={liarOpen ? (cell) => playStore.canAccuse(cell) : undefined}
+      overlay={
+        waiting && (
+          <WaitPanel
+            view={wait.view}
+            onFocusIn={() => (waitFocus.current = true)}
+            onRetry={() => {
+              wait.armImmediate();
+              playStore.retry();
+            }}
+            onCancel={() => playStore.toHub()}
+          />
+        )
+      }
+    />
+  );
+  // Строка статуса партии. Телефон — в зазоре между полем и панелью; десктоп C — в инспекторе, где «осталось N» уже стоит
+  // строкой «Left», поэтому там она только для откликов (Fill, полная сетка, Лжец), подсказки звука и Фонаря.
+  const statusNode = (deskMode: boolean) =>
+    (phase === "playing" || phase === "solved") &&
+    !hint.open &&
+    (hint.nudge ? (
+      <p className="status nudge" data-testid="hint-nudge">
+        {boldParts(t("hint.nudge"))}
+      </p>
+    ) : melodyHint && !snap.hint ? (
+      // PD-203: новая партия Мелодии, до первого хода — одна строка о звуке вместо «осталось N» (макет PD-202 §2 п. 2).
+      // PD-206: форма по месту в зазоре (melody.css, melody/hintFit.ts): полная → короткая → «осталось N»; AX3 — «осталось N».
+      <p className="status melody-hint" data-testid="melody-hint">
+        <MelodyModeIcon />
+        <span className="mh-long">{t("melody.hint")}</span>
+        <span className="mh-short" aria-hidden="true">
+          {t("melody.hintShort")}
+        </span>
+        <span className="mh-left" aria-hidden="true">
+          {t("play.cellsLeftShort", { count: left })}
+        </span>
+      </p>
+    ) : lanternStatus ? (
+      <LanternStatus kind={lanternStatus} onDone={() => setInspectKey(null)} />
+    ) : deskMode && !snap.hint && !full ? null : (
+      <StatusLine left={left} full={full} hint={snap.hint} />
+    ));
+  const deskStatus = deskFit && !waiting ? statusNode(true) : null;
+
+  // Карточка «решено»: на телефоне — вместо поля, на десктопе C — в инспекторе рядом с полем (PD-268). Только когда она на экране.
+  const resultCard = cardView && play && (
+    <ResultCard
+      play={play}
+      cardRef={cardRef}
+      title={play.liar ? t("liar.solvedTitle") : t("solved.title")}
+      timelapse={{ date: snap.daily ?? localDate(snap.startedOn), difficulty }}
+      hints={snap.hints}
+      onOpenHelp={onOpenHelp}
+      liar={liarSum ? { info: liarSum, average: playStore.liarAverage() } : null}
+      solvedNow={solvedNow}
+    >
+      {/* PD-144: единственная кнопка нового пазла на экране (шапка на решённой партии действий не несёт). PD-167: шит режима партии. */}
+      <button type="button" className="btn-plain newgrid" onClick={(e) => openSheet(snap.mode, e.currentTarget)} data-testid="new-puzzle">
+        {t("play.newPuzzle")}
+      </button>
+    </ResultCard>
+  );
+
   return (
-    <div ref={screenRef} className={`play${fitClass}${waitClass}`} onKeyDown={hub || waiting ? undefined : onGameKey}>
+    <div ref={screenRef} className={`play${fitClass}${waitClass}${deskParty ? " desk-play" : ""}`} onKeyDown={hub || waiting ? undefined : onGameKey}>
       {/* Live-регион для скринридера: «N cells left» только на порогах (см. хук выше). */}
       <p className="sr-only" role="status" aria-live="polite" aria-atomic="true">
         {announcement}
@@ -310,6 +418,7 @@ export function PlayScreen({ onOpenSettings, onOpenHelp, onOpenToday }: { onOpen
           </h1>
         }
         onOpenSettings={onOpenSettings}
+        sub={deskParty ? subline : undefined}
         actions={showLamp && <HintButton open={hint.open} used={snap.hints ?? 0} play onPress={() => ladder.toggle()} controls={HINT_DOCK_ID} />}
         trailing={
           showMore && (
@@ -324,7 +433,22 @@ export function PlayScreen({ onOpenSettings, onOpenHelp, onOpenToday }: { onOpen
           )
         }
       />
-      {restoring ? null : hub ? (
+      {restoring ? null : pageMode ? (
+        <div className="hub-scroll">
+          <ModePage
+            mode={modeDef(pageMode)}
+            pick={playStore.pickFor(pageMode)}
+            discard={playStore.slots()[pageMode] ?? null}
+            onPick={(d) => playStore.setPick(pageMode, d)}
+            onStart={() => startMode(pageMode, playStore.pickFor(pageMode))}
+            daily={
+              modeDef(pageMode).grid === "liar"
+                ? { state: playStore.liarDay(), onOpen: () => playStore.startDaily() }
+                : null
+            }
+          />
+        </div>
+      ) : hub ? (
         <PlaySetup
           modes={availableModes()}
           slots={playStore.slots()}
@@ -341,86 +465,37 @@ export function PlayScreen({ onOpenSettings, onOpenHelp, onOpenToday }: { onOpen
         />
       ) : (
         <>
-          <Subline
-            day=""
-            difficulty={diffLabel}
-            chip={play ? (ink ? modeDef("ink") : def) : def}
-            muted={melody && !soundOn && phase !== "solved"}
-            inspecting={inspecting}
-            help={snap.assisted === true}
-            clock={showClock ? clock : null}
-          />
-          {cardView ? (
-            play && (
-              <ResultCard
-                play={play}
-                cardRef={cardRef}
-                title={play.liar ? t("liar.solvedTitle") : t("solved.title")}
-                timelapse={{ date: snap.daily ?? localDate(snap.startedOn), difficulty }}
-                hints={snap.hints}
-                onOpenHelp={onOpenHelp}
-                liar={liarSum ? { info: liarSum, average: playStore.liarAverage() } : null}
-                solvedNow={solvedNow}
-              >
-                {/* PD-144: единственная кнопка нового пазла на экране (шапка на решённой партии действий не несёт). PD-167: шит режима партии. */}
-                <button type="button" className="btn-plain newgrid" onClick={(e) => openSheet(snap.mode, e.currentTarget)} data-testid="new-puzzle">
-                  {t("play.newPuzzle")}
-                </button>
-              </ResultCard>
-            )
+          {!deskParty && subline}
+          {cardView && !desk ? (
+            resultCard
+          ) : deskParty ? (
+            // PD-267: десктоп C — поле по центру области контента, справа инспектор (время/остаток, статус, панель 3×3 с
+            // действиями или док подсказки, шпаргалка клавиш). Тулбар над полем — TabHeader с `sub` выше. PD-268: решённая
+            // партия — поле на месте (вне фокуса и касаний), в инспекторе компактная карточка результата.
+            <>
+              <div className="desk-stage" inert={deskSolved || undefined}>
+                {board}
+              </div>
+              {deskSolved ? (
+                <DeskInspector solved>{resultCard}</DeskInspector>
+              ) : (
+                <DeskInspector>
+                  <InspectorMeta clock={showClock && !waiting ? clock : null} left={play && !waiting ? left : null} />
+                  {deskStatus && <div className="insp-status">{deskStatus}</div>}
+                  {hint.open ? <HintDock ladder={ladder} state={hint} play glyphs={play?.glyphs === true} /> : <GamePad snap={snap} store={playStore} desk />}
+                  <KeyLegend fill={!ink} hint={showLamp} />
+                </DeskInspector>
+              )}
+            </>
           ) : (
             <>
-              <Board
-                snap={snap}
-                store={playStore}
-                dim={phase === "solved"}
-                hintMarks={hint.marks}
-                inspect={inspectOn}
-                onInspectEnd={() => setInspectKey(null)}
-                onHoldChange={setHeld}
-                onAccuse={liarOpen ? openAccuse : undefined}
-                canAccuse={liarOpen ? (cell) => playStore.canAccuse(cell) : undefined}
-                overlay={
-                  waiting && (
-                    <WaitPanel
-                      view={wait.view}
-                      onFocusIn={() => (waitFocus.current = true)}
-                      onRetry={() => {
-                        wait.armImmediate();
-                        playStore.retry();
-                      }}
-                      onCancel={() => playStore.toHub()}
-                    />
-                  )
-                }
-              />
+              {board}
 
               {/* Свободное место — МЕЖДУ полем и панелью (макет, находка 1); в зазоре — статус. Гибкий — только он (и поле). */}
               <div className="gap">
                 {/* PD-189: «Готовим…» / «Не удалось» — в панели ожидания на месте поля (`WaitPanel`), не в строке статуса.
                     Пока док открыт, строка «N cells left» скрыта: сообщение на экране одно (макет PD-133 §4). */}
-                {(phase === "playing" || phase === "solved") && !hint.open && (hint.nudge ? (
-                  <p className="status nudge" data-testid="hint-nudge">
-                    {boldParts(t("hint.nudge"))}
-                  </p>
-                ) : melodyHint && !snap.hint ? (
-                  // PD-203: новая партия Мелодии, до первого хода — одна строка о звуке вместо «осталось N» (макет PD-202 §2 п. 2).
-                  // PD-206: форма по месту в зазоре (melody.css, melody/hintFit.ts): полная → короткая → «осталось N»; AX3 — «осталось N».
-                  <p className="status melody-hint" data-testid="melody-hint">
-                    <MelodyModeIcon />
-                    <span className="mh-long">{t("melody.hint")}</span>
-                    <span className="mh-short" aria-hidden="true">
-                      {t("melody.hintShort")}
-                    </span>
-                    <span className="mh-left" aria-hidden="true">
-                      {t("play.cellsLeftShort", { count: left })}
-                    </span>
-                  </p>
-                ) : lanternStatus ? (
-                  <LanternStatus kind={lanternStatus} onDone={() => setInspectKey(null)} />
-                ) : (
-                  <StatusLine left={left} full={full} hint={snap.hint} />
-                ))}
+                {statusNode(false)}
               </div>
 
               {hint.open ? <HintDock ladder={ladder} state={hint} play glyphs={play?.glyphs === true} /> : <GamePad snap={snap} store={playStore} />}

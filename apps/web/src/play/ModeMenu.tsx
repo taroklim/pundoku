@@ -18,6 +18,7 @@ import { useModal } from "../shell/useModal";
 import { NewGridGlyph, TrashGlyph } from "./hubIcons";
 import { ChevronIcon } from "./inkIcons";
 import type { ModeDef } from "./modes";
+import { fixedOrigin, menuLeftInLayer, usePortalHost } from "../shell/portalHost";
 
 export interface ModeMenuProps {
   readonly mode: ModeDef;
@@ -37,11 +38,15 @@ export interface ModeMenuProps {
 const GAP = 8;
 
 export function ModeMenu({ mode, anchor, preview, canContinue, onContinue, onNew, onDelete, onClose, returnFocus }: ModeMenuProps) {
+  const portalHost = usePortalHost();
+  const inLayer = portalHost !== document.body;
   const { t } = useTranslation();
   const scrim = useRef<HTMLDivElement>(null);
   const root = useRef<HTMLDivElement>(null);
+  const lift = useRef<HTMLDivElement>(null);
   const armed = useRef(false);
-  const [pos, setPos] = useState<{ top: number } | null>(null);
+  // Координаты — окна; `ox`/`oy` — начало отсчёта fixed-потомков затемнения (PD-290, `fixedOrigin`), на них сдвигаются копия и меню.
+  const [pos, setPos] = useState<{ top: number; left?: number; ox: number; oy: number } | null>(null);
   // Фокус — только когда меню стало видимым (до позиционирования оно visibility:hidden, PD-182).
   useModal(scrim, root, { kind: "menu", onClose, returnFocus, initialFocus: '[role="menuitem"]', ready: pos !== null });
 
@@ -51,8 +56,12 @@ export function ModeMenu({ mode, anchor, preview, canContinue, onContinue, onNew
     const vh = window.innerHeight;
     const below = anchor.bottom + GAP;
     const top = below + h <= vh - GAP ? below : Math.max(GAP, anchor.top - h - GAP);
-    setPos({ top });
-  }, [anchor]);
+    // PD-290: в слое окна десктопа C меню не шире 320 — по горизонтали у якоря (на телефоне — во всю ширину, как было).
+    const area = inLayer ? scrim.current?.getBoundingClientRect().left : undefined;
+    const left = area !== undefined && root.current ? menuLeftInLayer(anchor.left, root.current.offsetWidth, area, window.innerWidth) : undefined;
+    const { x: ox, y: oy } = fixedOrigin(lift.current);
+    setPos(left === undefined ? { top, ox, oy } : { top, left, ox, oy });
+  }, [anchor, inLayer]);
 
   const guard = (fn: () => void) => (e: React.MouseEvent) => {
     if (e.detail !== 0 && !armed.current) return; // хвост долгого нажатия
@@ -72,7 +81,12 @@ export function ModeMenu({ mode, anchor, preview, canContinue, onContinue, onNew
       }}
       data-testid="ctx-scrim"
     >
-      <div className="ctx-lift" style={{ top: anchor.top, left: anchor.left, width: anchor.width, height: anchor.height }} aria-hidden="true">
+      <div
+        ref={lift}
+        className="ctx-lift"
+        style={{ top: anchor.top - (pos?.oy ?? 0), left: anchor.left - (pos?.ox ?? 0), width: anchor.width, height: anchor.height }}
+        aria-hidden="true"
+      >
         {preview}
       </div>
       <div
@@ -81,7 +95,7 @@ export function ModeMenu({ mode, anchor, preview, canContinue, onContinue, onNew
         role="menu"
         aria-label={t(`modes.${mode.textKey}.name`)}
         tabIndex={-1}
-        style={{ top: pos?.top ?? anchor.bottom + GAP, visibility: pos ? "visible" : "hidden", maxHeight: `calc(100dvh - ${GAP * 2}px)` }}
+        style={{ top: pos ? pos.top - pos.oy : anchor.bottom + GAP, ...(pos?.left === undefined ? null : { left: pos.left - pos.ox }), visibility: pos ? "visible" : "hidden", maxHeight: `calc(100dvh - ${GAP * 2}px)` }}
         onClick={(e) => e.stopPropagation()}
         data-testid="ctx-menu"
       >
@@ -132,6 +146,6 @@ export function ModeMenu({ mode, anchor, preview, canContinue, onContinue, onNew
         )}
       </div>
     </div>,
-    document.body,
+    portalHost,
   );
 }

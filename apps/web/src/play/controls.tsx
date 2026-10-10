@@ -15,6 +15,7 @@ import type { HintLadder } from "./hintStore";
 import { Glyph, glyphName } from "./glyphs";
 import { EraseIcon, NotesIcon, UndoIcon } from "./icons";
 import { remaining } from "./logic";
+import { deskKeys } from "./deskKeys";
 import { MOTION_FLAGS, MOTION_MS } from "./motion";
 
 const DIGITS = [1, 2, 3, 4, 5, 6, 7, 8, 9] as const;
@@ -340,8 +341,10 @@ function useEchoKey(echo: PlaySnapshot["echo"]): NonNullable<PlaySnapshot["echo"
  * Чернильный режим (PD-74): Undo исчезает целиком (не приглушён), ластик цифр заменён на «Erase notes» — ряд из двух
  * кнопок по 50 %, высота та же 46 pt.
  */
-export function GamePad({ snap, store }: { snap: PlaySnapshot; store: GameStore }) {
+export function GamePad({ snap, store, desk = false }: { snap: PlaySnapshot; store: GameStore; desk?: boolean }) {
   const { t } = useTranslation();
+  // PD-267: инспектор десктопа C — на действиях чипы клавиш (макет pd229 §2 «Клавиши видны») и `aria-keyshortcuts`.
+  const keys = desk ? deskKeys() : null;
   const { play, phase } = snap;
   const interactive = phase === "playing" && play !== null;
   const ink = play?.ink === true;
@@ -403,6 +406,8 @@ export function GamePad({ snap, store }: { snap: PlaySnapshot; store: GameStore 
           className="act"
           aria-label={t("actions.notes")}
           aria-pressed={snap.notesMode}
+          aria-keyshortcuts={keys ? "N" : undefined}
+          title={keys ? `${t("actions.notes")}  ${keys.notes}` : undefined}
           disabled={!interactive}
           onPointerDown={() => {
             stopPress();
@@ -437,16 +442,35 @@ export function GamePad({ snap, store }: { snap: PlaySnapshot; store: GameStore 
         >
           <NotesIcon />
           <span>{t("actions.notes")}</span>
+          {keys && <kbd aria-hidden="true">{keys.notes}</kbd>}
         </button>
         {!ink && (
-          <button type="button" className="act" aria-label={t("actions.undo")} aria-disabled={!canUndo} onClick={() => store.undo()}>
+          <button
+            type="button"
+            className="act"
+            aria-label={t("actions.undo")}
+            aria-disabled={!canUndo}
+            aria-keyshortcuts={keys ? keys.undoAria : undefined}
+            title={keys ? `${t("actions.undo")}  ${keys.undo}` : undefined}
+            onClick={() => store.undo()}
+          >
             <UndoIcon />
             <span>{t("actions.undo")}</span>
+            {keys && <kbd aria-hidden="true">{keys.undo}</kbd>}
           </button>
         )}
-        <button type="button" className="act" aria-label={ink ? t("ink.eraseNotes") : t("actions.erase")} disabled={!interactive} onClick={() => store.erase()}>
+        <button
+          type="button"
+          className="act"
+          aria-label={ink ? t("ink.eraseNotes") : t("actions.erase")}
+          aria-keyshortcuts={keys ? "Backspace Delete" : undefined}
+          title={keys ? `${ink ? t("ink.eraseNotes") : t("actions.erase")}  ${keys.erase}` : undefined}
+          disabled={!interactive}
+          onClick={() => store.erase()}
+        >
           <EraseIcon />
           <span>{ink ? t("ink.eraseNotes") : t("actions.erase")}</span>
+          {keys && <kbd aria-hidden="true">{keys.erase}</kbd>}
         </button>
       </div>
       {filling && (
