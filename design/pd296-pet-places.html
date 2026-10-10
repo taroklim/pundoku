@@ -1,0 +1,725 @@
+<!doctype html>
+<html lang="ru" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>PD-296 · Питомец «Капля»: реакция на тап и новые места</title>
+<!--
+  PD-296. Макет поверх НАСТОЯЩИХ стилей приложения: tokens.css и pet.css подключены из apps/web/src/styles (по file://).
+  Разметка Питомца — дословно как в PetBlot.tsx (.pet[data-v=B] › .breath › .pose.to › svg с маской глаз + .drops.to › .drop),
+  геометрия — дословно petGeometry.ts. Новое в макете (предложение, не прод):
+    - слой .poke между .pet и .breath (реакция на тап; складывается с дыханием, ничего не перезапускает);
+    - слой .lid (только вариант C: та же поза с закрытыми глазами);
+    - зона нажатия .pd296-hit ≥ 44×44 вокруг кляксы (сама .pet по-прежнему pointer-events:none);
+    - дыхание бесконечное (решение владельца в PD-296: Питомец включён по умолчанию и всегда дышит; Reduce Motion главнее).
+  Анимируются только transform/opacity HTML-обёрток; амплитуды × --mo (PD-89) × --amp (усталость от частых тапов).
+  ?shot=1 — режим съёмки для design/pd296-shots.mjs (API window.PD296).
+-->
+<link rel="stylesheet" href="../apps/web/src/styles/tokens.css">
+<link rel="stylesheet" href="../apps/web/src/styles/pet.css">
+<style>
+html{ font-size:17px; -webkit-text-size-adjust:100% }
+/* Переключатель темы макета (tokens.css читает только prefers-color-scheme; при съёмке тема эмулируется и совпадает). */
+html[data-theme="light"]{ color-scheme:light;
+  --bg-plain:#ffffff; --bg-grouped:#f2f2f7; --elev:#ffffff; --bg:#f2f2f7; --surface:#ffffff; --card:#ffffff; --key-bg:#ffffff;
+  --label:#1c1c1e; --label-2:#6e6e73; --label-2-grouped:#6a6a6e; --ink:#3b48b0; --on-ink:#ffffff; --wax:#b3261e;
+  --hairline:rgba(60,60,67,.29); --ink-tint:rgba(59,72,176,.12); --box-shadow:0 1px 2px rgba(0,0,0,.04);
+  --glass-solid:#f6f6f9; --scrim:rgba(0,0,0,.28); --mark-ink:#3b48b0; --mark-ink-soft:#8589ce; --mark-wax-soft:#d07874; --chip-bg:#f2f2f7 }
+html[data-theme="dark"]{ color-scheme:dark;
+  --bg-plain:#000000; --bg-grouped:#000000; --elev:#1c1c1e; --bg:#000000; --surface:#1c1c1e; --card:#1c1c1e; --key-bg:#1c1c1e;
+  --label:#ffffff; --label-2:#98989d; --label-2-grouped:#98989d; --ink:#8c96ff; --on-ink:#000000; --wax:#ff6b5e;
+  --hairline:rgba(235,235,245,.22); --ink-tint:rgba(140,150,255,.18); --box-shadow:none;
+  --glass-solid:#141416; --scrim:rgba(0,0,0,.5); --mark-ink:#8c96ff; --mark-ink-soft:#6168aa; --mark-wax-soft:#b14d46; --chip-bg:#2c2c2e }
+html.rm-on{ --mo:0; --mk:.72 }
+html.rm-off{ --mo:1; --mk:1 }
+
+*{ box-sizing:border-box }
+body{ margin:0; background:var(--bg); color:var(--label); font-family:var(--font-sans); -webkit-font-smoothing:antialiased }
+button{ font:inherit; color:inherit; background:none; border:0; padding:0; cursor:pointer }
+#pd296-err{ position:fixed; left:0; right:0; top:0; z-index:99; background:#b3261e; color:#fff; font:13px/1.3 var(--font-sans); padding:8px 12px }
+
+/* ------------------------------------------------------------------ хром страницы (px) */
+header.ctl{ position:sticky; top:0; z-index:5; background:var(--glass-solid); border-bottom:1px solid var(--hairline);
+  padding:10px 20px; font-size:13px; display:flex; flex-wrap:wrap; gap:8px 16px; align-items:center }
+.ctl h1{ font-size:15px; margin:0 8px 0 0 }
+.ctl label.k{ color:var(--label-2); font-size:12px; margin-right:4px }
+.seg{ display:inline-flex; border:1px solid var(--hairline); border-radius:8px; overflow:hidden; vertical-align:middle }
+.seg button{ font-size:12px; color:var(--label); padding:5px 9px }
+.seg button+button{ border-left:1px solid var(--hairline) }
+.seg button[aria-pressed="true"]{ background:var(--ink); color:var(--on-ink) }
+main.page{ padding:8px 20px 40px }
+.sec-h{ font-size:18px; margin:18px 0 4px }
+.lead{ font-size:13px; color:var(--label-2); max-width:1100px; line-height:1.45; margin:0 0 14px }
+.lead b{ color:var(--label) }
+.grid{ display:flex; gap:22px; flex-wrap:wrap; align-items:flex-start }
+.cellx{ flex:none; width:calc(393px * var(--z, .62)) }
+.cellx h3{ font-size:14.5px; margin:0 0 2px; line-height:1.3 }
+.cellx p{ font-size:12px; color:var(--label-2); line-height:1.38; margin:4px 0 8px }
+.verdict{ display:inline-block; font-size:10.5px; font-weight:700; letter-spacing:.04em; text-transform:uppercase; padding:2px 7px; border-radius:6px; margin-left:4px; vertical-align:2px }
+.v-yes{ background:var(--ink); color:var(--on-ink) } .v-later{ background:var(--ink-tint); color:var(--ink) } .v-no{ box-shadow:inset 0 0 0 1px var(--hairline); color:var(--label-2) }
+.zoomer{ zoom:var(--z, .62) }
+.log{ font-size:12px; color:var(--label-2); margin-top:6px; min-height:16px; font-variant-numeric:tabular-nums }
+#shot{ display:none } body.shot #shot{ display:block } body.shot header.ctl, body.shot main.page{ display:none }
+
+/* ------------------------------------------------------------------ телефон (контент в rem — как в приложении) */
+.ph{ position:relative; width:var(--w); height:var(--h); background:var(--bg); color:var(--label); overflow:hidden;
+  border-radius:28px; box-shadow:0 0 0 1px var(--hairline) }
+body.shot .ph{ border-radius:0; box-shadow:none }
+.ph .scr{ position:absolute; inset:0; overflow:hidden }
+.ph .sat{ height:var(--sat) }
+.tabbar{ position:absolute; left:0; right:0; bottom:0; height:calc(49px + var(--sab)); background:var(--glass-solid); border-top:.5px solid var(--hairline);
+  display:grid; grid-template-columns:repeat(3,1fr); padding-top:7px; z-index:3 }
+.tabbar span{ display:flex; flex-direction:column; align-items:center; gap:3px; font-size:10px; font-weight:500; color:var(--label-2); white-space:nowrap }
+.tabbar span.on{ color:var(--ink) }
+.tabbar svg{ width:24px; height:24px }
+
+.th{ display:flex; align-items:center; gap:2px; padding:2px 6px 0 16px; min-height:52px }
+.th .title{ flex:1 1 auto; min-width:0; margin:0; font-size:min(2rem, 44px); font-weight:700; letter-spacing:.01em; line-height:1.15; display:flex; align-items:center; gap:6px }
+.th .title .chev{ color:var(--ink); width:20px; height:20px; flex:none }
+.ib{ flex:none; width:44px; height:44px; display:grid; place-items:center; color:var(--ink) }
+.subl{ margin:0 16px; color:var(--label-2); font-size:.88rem; line-height:1.3 }
+
+.bd{ margin:12px 16px 0; display:grid; grid-template-columns:repeat(3,1fr); gap:4px; aspect-ratio:1 }
+.bd.idle{ opacity:.55 }
+.bx{ background:var(--surface); border-radius:10px; display:grid; grid-template-columns:repeat(3,1fr); grid-template-rows:repeat(3,1fr); box-shadow:var(--box-shadow) }
+.c{ display:grid; place-items:center; font-family:var(--font-serif); font-weight:600; font-size:1.2rem; color:var(--label) }
+.c.y{ font-family:var(--font-sans); font-weight:500; color:var(--ink) }
+.gap{ min-height:48px; display:flex; align-items:center; justify-content:center; gap:10px; padding:4px 16px; color:var(--label-2); font-size:.88rem; text-align:center }
+.gap p{ margin:0; line-height:1.3 }
+.gap .lnk{ color:var(--ink); font-weight:600 }
+.pad{ margin:0 16px; display:grid; grid-template-columns:repeat(9,1fr); gap:4px }
+.pad.dim{ opacity:.45 }
+.key{ background:var(--surface); border-radius:8px; height:52px; display:flex; flex-direction:column; align-items:center; justify-content:center; font-size:1.35rem; color:var(--ink); box-shadow:var(--box-shadow); line-height:1 }
+.key small{ font-size:.6rem; color:var(--label-2); margin-top:3px }
+.acts{ display:grid; grid-template-columns:repeat(4,1fr); margin:8px 16px 0; color:var(--ink); font-size:.7rem; text-align:center }
+.acts span{ display:flex; flex-direction:column; align-items:center; gap:2px; min-height:44px; justify-content:center }
+.acts svg{ width:22px; height:22px }
+.acts.dim{ opacity:.45 }
+
+/* Карточка результата — как play.css (.card), Питомец — слот из pet.css (.card .pet-slot). */
+.card{ position:relative; background:var(--card); border-radius:14px; margin:12px 16px 0; padding:16px; box-shadow:var(--box-shadow) }
+.card h2{ font-size:1rem; font-weight:600; margin:0 0 2px; line-height:1.25 }
+.card .sub{ color:var(--label-2); font-size:.8rem; margin:0 0 12px; line-height:1.3 }
+.heat{ display:grid; grid-template-columns:repeat(9,1fr); gap:2px }
+.heat i{ aspect-ratio:1; border-radius:2px; display:block; background:var(--ink) }
+.heat i.g{ background:transparent; box-shadow:inset 0 0 0 1px var(--hairline) }
+.legend{ display:flex; align-items:center; gap:8px; margin-top:10px; color:var(--label-2); font-size:.72rem }
+.legend .bar{ flex:1; display:grid; grid-template-columns:repeat(9,1fr); gap:1px }
+.legend .bar i{ height:6px; border-radius:1px; background:var(--ink); display:block }
+.rows{ margin:14px 0 0; border-top:1px solid var(--hairline) }
+.row{ display:flex; justify-content:space-between; align-items:baseline; gap:0 12px; padding:8px 0; border-bottom:1px solid var(--hairline); font-size:.88rem }
+.row:last-child{ border-bottom:0 }
+.row dt{ color:var(--label-2) } .row dd{ margin:0; font-weight:500 }
+
+/* Year */
+.ytot{ margin:2px 16px 0; color:var(--label-2); font-size:.82rem }
+.ym{ margin:16px 16px 0 }
+.ym h3{ font-size:.82rem; color:var(--label-2-grouped); font-weight:600; margin:0 0 6px }
+.yg{ display:grid; grid-template-columns:repeat(7,1fr); gap:5px }
+.yg i{ aspect-ratio:1; border-radius:5px; background:var(--mark-ink); display:block }
+.yg i.s{ background:var(--mark-ink-soft) } .yg i.w{ background:var(--mark-wax-soft) }
+.yg i.e{ background:transparent; box-shadow:inset 0 0 0 1px var(--hairline) }
+.yempty{ display:flex; flex-direction:column; align-items:center; text-align:center; gap:12px; margin:26px 24px 0 }
+.yempty p{ margin:0; color:var(--label-2); font-size:1rem; line-height:1.35; max-width:18em }
+.btn{ display:block; width:100%; min-height:50px; border-radius:12px; background:var(--ink); color:var(--on-ink); font-size:1rem; font-weight:600; padding:12px; text-align:center }
+.scrim{ position:absolute; inset:0; background:var(--scrim); z-index:4 }
+.sheet{ position:absolute; left:0; right:0; bottom:0; top:calc(var(--sat) + 10px); background:var(--bg); border-radius:14px 14px 0 0; z-index:5; display:flex; flex-direction:column }
+.grabber{ width:36px; height:5px; border-radius:3px; background:var(--hairline); margin:6px auto 0; flex:none }
+.sh-head{ display:grid; grid-template-columns:1fr auto 1fr; align-items:center; gap:8px; padding:8px 12px 6px; font-size:min(1rem, 20px); min-height:44px }
+.sh-head .l{ color:var(--ink); justify-self:start } .sh-head .r{ color:var(--ink); font-weight:600; justify-self:end } .sh-head .t{ font-weight:600 }
+.sh-body{ padding:0 16px 8px }
+.daycard{ background:var(--card); border-radius:14px; padding:14px 16px }
+.daycard h3{ margin:2px 0; font-size:1.15rem; font-weight:700; letter-spacing:-.01em; line-height:1.25 }
+.daycard .sub{ margin:0 0 10px; color:var(--label-2); font-size:.82rem }
+.daycard .emptyday{ margin:6px 0 14px; color:var(--label-2); font-size:.88rem }
+
+/* Хаб Play (hub.css упрощённо) */
+.hh{ margin:16px 16px 6px; font-size:.82rem; color:var(--label-2-grouped) }
+.hc{ margin:0 16px; background:var(--card); border-radius:12px; overflow:hidden; box-shadow:var(--box-shadow) }
+.hr{ position:relative; min-height:44px; display:flex; align-items:center; gap:12px; padding:11px 16px; font-size:1rem }
+.hr + .hr{ border-top:.5px solid var(--hairline) }
+.hr .lab{ flex:1 } .hr .val{ color:var(--label-2); font-size:.9rem }
+.hf{ margin:7px 16px 0; font-size:.82rem; color:var(--label-2-grouped); line-height:1.35 }
+
+/* Ожидание генерации (play.css .wait) */
+.tb{ display:grid; grid-template-columns:1fr auto 1fr; align-items:center; min-height:44px; padding:0 8px }
+.tb .l{ color:var(--ink); display:flex; align-items:center; gap:2px } .tb .t{ font-weight:600 }
+.waitbox{ margin:12px 16px 0; aspect-ratio:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:12px; text-align:center }
+.waitbox p{ margin:0; color:var(--label-2); font-size:1rem; line-height:1.2; max-width:18em }
+
+/* Настройки (settings.css упрощённо) */
+.nav{ display:flex; align-items:center; min-height:44px; padding:0 8px; color:var(--ink) }
+.large{ margin:2px 16px 4px; font-size:min(2rem,44px); font-weight:700 }
+.sh2{ margin:18px 16px 6px; font-size:.82rem; color:var(--label-2-grouped); font-weight:400; text-transform:uppercase; letter-spacing:.02em }
+.sc{ margin:0 16px; background:var(--card); border-radius:12px; overflow:hidden }
+.sr{ min-height:44px; display:flex; align-items:center; gap:12px; padding:10px 16px; font-size:1rem }
+.sr .lab{ flex:1 }
+.sw{ width:51px; height:31px; border-radius:16px; background:var(--ink); position:relative; flex:none }
+.sw::after{ content:""; position:absolute; right:2px; top:2px; width:27px; height:27px; border-radius:50%; background:#fff; box-shadow:0 1px 3px rgba(0,0,0,.2) }
+.sf{ margin:7px 16px 0; font-size:.82rem; color:var(--label-2-grouped); line-height:1.35 }
+.sc + .sc{ margin-top:12px }
+.pet-moods figure .pd296-hit{ margin:-2px 0 }
+
+/* Поделиться: лист экспорта + превью PNG (PNG всегда светлый — цвета зашиты, как в fingerprint.ts) */
+.fpwrap{ display:flex; justify-content:center; padding:4px 0 12px }
+.fp{ position:relative; width:252px; aspect-ratio:1080/1350; background:#ffffff; border-radius:6px; box-shadow:0 0 0 1px var(--hairline), 0 4px 16px rgba(0,0,0,.12); overflow:hidden }
+.fp .g{ position:absolute; left:17.7px; top:35px; width:216.5px; display:grid; grid-template-columns:repeat(9,1fr); gap:1.87px }
+.fp .g i{ aspect-ratio:1; border-radius:1.4px; background:#3b48b0; display:block }
+.fp .g i.o{ background:transparent; box-shadow:inset 0 0 0 .5px rgba(60,60,67,.29) }
+.fp .cap{ position:absolute; left:17.7px; right:17.7px; bottom:12px; display:flex; align-items:baseline; justify-content:space-between; font-size:7.5px; color:#6e6e73 }
+.fp .cap b{ font-family:var(--font-serif); font-size:10.3px; color:#1c1c1e }
+.fp .stamp{ position:absolute; right:17.7px; top:5px }
+.fp .pet{ color:#3b48b0 }   /* PNG всегда светлый: чернила светлой темы, глаза-прорези показывают бумагу */
+
+/* ------------------------------------------------------------------ ПРЕДЛОЖЕНИЕ PD-296 (не прод) */
+/* Покой: дыхание постоянно (решение владельца). pet.css даёт 3 вдоха — здесь бесконечно. */
+.pet[data-idle] .breath{ animation-iteration-count:infinite }
+/* Зона нажатия: ≥ 44×44 вокруг кляксы; сама .pet — pointer-events:none (pet.css). Не фокусируется, не кнопка. */
+.pd296-hit{ display:inline-grid; place-items:center; min-width:44px; min-height:44px; flex:none; pointer-events:auto; touch-action:manipulation;
+  -webkit-tap-highlight-color:transparent; -webkit-user-select:none; user-select:none; color:var(--ink) }
+.card .pet-slot.pd296-hit, .daycard .pet-slot.pd296-hit{ pointer-events:auto }
+.pet{ --k: calc(var(--mo) * var(--amp, 1)) }
+.pet .poke, .pet .lid{ position:absolute; inset:0; display:block }
+.pet .poke{ transform-origin:50% 81.25% }   /* «земля» y = 39 из 48 */
+.pet .lid{ opacity:0 }
+.pet[data-poke]{ --Dp: calc(var(--dp-rm) + var(--mo) * (var(--dp-full) - var(--dp-rm))) }
+.pet[data-poke="A"]{ --dp-full:440ms; --dp-rm:200ms }
+.pet[data-poke="B"]{ --dp-full:660ms; --dp-rm:200ms }
+.pet[data-poke="C"]{ --dp-full:360ms; --dp-rm:300ms }
+.pet[data-poke="S"]{ --dp-full:560ms; --dp-rm:200ms }
+.pet[data-poke] .poke, .pet[data-poke] .drop, .pet[data-poke] .lid{ animation-duration:var(--Dp); animation-delay:0ms; animation-iteration-count:1;
+  animation-fill-mode:none; animation-timing-function:linear }
+.pet[data-poke] .drop{ animation-name:pd296DropFlick }
+.pet[data-poke="A"] .poke{ animation-name:pd296PokeA }
+.pet[data-poke="A"] .drop{ animation-name:pd296DropA }
+.pet[data-poke="B"] .poke{ animation-name:pd296PokeB }
+.pet[data-poke="C"] .poke{ animation-name:pd296PokeC }
+.pet[data-poke="C"] .lid{ animation-name:pd296Blink }
+.pet[data-poke="S"] .poke{ animation-name:pd296Stir }
+
+/* A · «Плюх»: сплющивается к «земле» и пружинит обратно; брызги отскакивают от тела и возвращаются. 440 мс. */
+@keyframes pd296PokeA{
+  0%{ transform:scale(1,1); animation-timing-function:cubic-bezier(.3,0,.5,1) }
+  25%{ transform:scale(calc(1 + .16 * var(--k)), calc(1 - .18 * var(--k))); animation-timing-function:cubic-bezier(.22,1,.36,1) }
+  58%{ transform:scale(calc(1 - .05 * var(--k)), calc(1 + .06 * var(--k))); animation-timing-function:cubic-bezier(.45,0,.55,1) }
+  82%{ transform:scale(calc(1 + .015 * var(--k)), calc(1 - .015 * var(--k))) }
+  100%{ transform:scale(1,1) } }
+@keyframes pd296DropA{
+  0%{ transform:translate(0px,0px) scale(1); opacity:1; animation-timing-function:cubic-bezier(.2,.7,.3,1) }
+  28%{ transform:translate(calc(var(--dx) * -.45 * var(--k)), calc(var(--dy) * -.45 * var(--k))) scale(calc(1 + .3 * var(--k)));
+       opacity:calc(1 - .75 * (1 - var(--k))); animation-timing-function:cubic-bezier(.22,1,.36,1) }
+  100%{ transform:translate(0px,0px) scale(1); opacity:1 } }
+/* B · «Подскок»: присел → подпрыгнул на 7/48 → приземлился с приседом. Брызги лежат на бумаге (не прыгают). 660 мс. */
+@keyframes pd296PokeB{
+  0%{ transform:translateY(0px) scale(1,1); animation-timing-function:cubic-bezier(.3,0,.5,1) }
+  14%{ transform:translateY(0px) scale(calc(1 + .12 * var(--k)), calc(1 - .14 * var(--k))); animation-timing-function:cubic-bezier(.2,.7,.3,1) }
+  44%{ transform:translateY(calc(-7 * var(--u) * var(--k))) scale(calc(1 - .08 * var(--k)), calc(1 + .1 * var(--k))); animation-timing-function:cubic-bezier(.5,0,.8,.5) }
+  64%{ transform:translateY(0px) scale(calc(1 + .14 * var(--k)), calc(1 - .16 * var(--k))); animation-timing-function:cubic-bezier(.22,1,.36,1) }
+  84%{ transform:translateY(0px) scale(calc(1 - .03 * var(--k)), calc(1 + .03 * var(--k))) }
+  100%{ transform:translateY(0px) scale(1,1) } }
+/* C · «Моргание»: вздрагивает (−4 %/+5 %) и моргает (слой век). Моргание — прозрачность, остаётся и при Reduce Motion. 360 мс. */
+@keyframes pd296PokeC{
+  0%,100%{ transform:scale(1,1) }
+  30%{ transform:scale(calc(1 - .04 * var(--k)), calc(1 + .05 * var(--k))) } }
+@keyframes pd296Blink{
+  0%{ opacity:0 } 16%,62%{ opacity:calc(var(--amp, 1) * 2) } 84%,100%{ opacity:0 } }
+/* «Спит» (B и C): не прыгает и не моргает — ворочается. 560 мс. */
+@keyframes pd296Stir{
+  0%,100%{ transform:skewX(0deg) scale(1,1) }
+  25%{ transform:skewX(calc(4deg * var(--k))) scale(calc(1 + .03 * var(--k)), calc(1 - .04 * var(--k))) }
+  55%{ transform:skewX(calc(-3deg * var(--k))) scale(1,1) }
+  80%{ transform:skewX(calc(1deg * var(--k))) scale(1,1) } }
+/* Общий отклик при Reduce Motion и при «усталости»: брызги мигают прозрачностью. При полном движении (k = 1) — ничего. */
+@keyframes pd296DropFlick{
+  0%,100%{ opacity:1 }
+  30%{ opacity:calc(1 - .75 * (1 - var(--k))) } }
+
+/* Лупа на кадрах тапа: та же клякса ×3 (только для показа, в приложении её нет). */
+.loupe{ position:absolute; left:16px; right:16px; bottom:calc(49px + var(--sab) + 12px); z-index:6; background:var(--card); border-radius:14px; padding:12px 14px;
+  display:flex; align-items:center; gap:14px; box-shadow:0 0 0 1px var(--hairline), 0 6px 20px rgba(0,0,0,.10) }
+.loupe .lp{ width:140px; height:140px; flex:none; display:grid; place-items:center; border-radius:10px; background:var(--bg) }
+.loupe .lt{ font-size:13px; line-height:1.38; color:var(--label-2) }
+.loupe .lt b{ display:block; color:var(--label); font-size:14px; margin-bottom:2px }
+.touch{ position:absolute; width:44px; height:44px; border-radius:50%; box-shadow:0 0 0 2px var(--ink); background:var(--ink-tint); opacity:.9; z-index:7; pointer-events:none }
+</style>
+</head>
+<body>
+<div id="pd296-err" hidden></div>
+
+<header class="ctl">
+  <h1>PD-296 · Питомец: тап и новые места</h1>
+  <span><label class="k">Тема</label><span class="seg" data-k="theme"><button data-val="light">Светлая</button><button data-val="dark">Тёмная</button></span></span>
+  <span><label class="k">Reduce Motion</label><span class="seg" data-k="rm"><button data-val="off">выкл</button><button data-val="on">вкл</button></span></span>
+  <span><label class="k">Настроение (тап)</label><span class="seg" data-k="mood"><button data-val="happy">доволен</button><button data-val="tired">устал</button><button data-val="surprised">удивлён</button><button data-val="asleep">спит</button></span></span>
+  <span><label class="k">Тап в «Местах»</label><span class="seg" data-k="tap"><button data-val="A">A</button><button data-val="B">B</button><button data-val="C">C</button></span></span>
+</header>
+
+<main class="page">
+  <h2 class="sec-h">1. Реакция на тап — три варианта (нажмите на кляксу)</h2>
+  <p class="lead">Питомец по умолчанию включён и всегда дышит. Тап по кляксе (зона 44×44) запускает короткую реакцию поверх дыхания. Настроение тапом
+    <b>не меняется</b> — оно несёт смысл (каким был день). Анти-спам общий: тап во время реакции игнорируется (без перезапуска и очереди); 4–6 тапов
+    за 5 с — амплитуда ½; 7-й и дальше — только брызги мигают (как при Reduce Motion); 5 с тишины — снова полная реакция. Спящая клякса в B и C
+    не прыгает и не моргает — ворочается.</p>
+  <div class="grid" id="taps"></div>
+
+  <h2 class="sec-h">2. Куда ещё добавить Питомца — 8 мест</h2>
+  <p class="lead">Правила для всех мест: <b>на экране с полем Питомца нет</b>; <b>не больше одного дышащего Питомца на экране</b> (превью в Настройках
+    стоят и оживают только по тапу); настроение — всегда «сегодняшнее» или «спит», новых смыслов не придумываем; размер 40–64 pt, с Dynamic Type не
+    растёт; в листе дня / на карточке — как сейчас. Клякса во всех местах отвечает на тап выбранным вариантом (переключатель «Тап в Местах»).</p>
+  <div class="grid" id="places"></div>
+</main>
+
+<div id="shot"></div>
+
+<script>
+(() => {
+"use strict";
+const errs = [];
+function banner(){ const b = document.getElementById("pd296-err"); b.hidden = false; b.textContent = "Ошибка JS: " + errs.join(" | "); }
+window.addEventListener("error", (e) => { errs.push(String(e.message || e)); banner(); });
+window.addEventListener("unhandledrejection", (e) => { errs.push(String(e.reason)); banner(); });
+
+/* ================================================================ геометрия — дословно petGeometry.ts */
+const MOOD_SHAPE = {
+  happy: { ry: 13, rx: 15, widen: 0.12, lift: 0 },
+  tired: { ry: 10.5, rx: 16.5, widen: 0.18, lift: 0 },
+  surprised: { ry: 14.5, rx: 14, widen: 0.06, lift: 1.6 },
+  asleep: { ry: 7.5, rx: 18, widen: 0.15, lift: 0 },
+};
+const GROUND = 39;
+const HARM = [[2, 0.03, 0.4], [3, 0.035, 1.3], [5, 0.015, 2.1]];
+const NPTS = 40;
+const f2 = (v) => v.toFixed(2);
+function smoothClosed(pts){
+  const n = pts.length, at = (i) => pts[((i % n) + n) % n];
+  let d = `M${f2(at(0)[0])} ${f2(at(0)[1])}`;
+  for (let i = 0; i < n; i++) {
+    const p0 = at(i - 1), p1 = at(i), p2 = at(i + 1), p3 = at(i + 2);
+    const c1 = [p1[0] + (p2[0] - p0[0]) / 6, p1[1] + (p2[1] - p0[1]) / 6];
+    const c2 = [p2[0] - (p3[0] - p1[0]) / 6, p2[1] - (p3[1] - p1[1]) / 6];
+    d += `C${f2(c1[0])} ${f2(c1[1])} ${f2(c2[0])} ${f2(c2[1])} ${f2(p2[0])} ${f2(p2[1])}`;
+  }
+  return d + "z";
+}
+function bodyOf(m){
+  const cx = 24, cy = GROUND - 0.82 * m.ry - m.lift, pts = [];
+  for (let i = 0; i < NPTS; i++) {
+    const t = (2 * Math.PI * i) / NPTS, s = Math.sin(t), c = Math.cos(t);
+    let r = 1;
+    for (const [k, a, ph] of HARM) r += a * Math.cos(k * t + ph);
+    pts.push([cx + m.rx * c * r * (1 + m.widen * Math.max(0, s)), cy + m.ry * s * r * (s > 0 ? 0.82 : 1)]);
+  }
+  return { d: smoothClosed(pts), cx, cy };
+}
+function eyesOf(mood, m, cx, cy){
+  const ex = Math.max(4.6, m.rx * 0.33), ey = cy - m.ry * (mood === "asleep" ? 0 : 0.12), L = cx - ex, R = cx + ex;
+  switch (mood) {
+    case "happy": return { kind: "stroke", d: `M${L - 2.6} ${ey + 1.2}q2.6-3.6 5.2 0M${R - 2.6} ${ey + 1.2}q2.6-3.6 5.2 0` };
+    case "tired": return { kind: "fill", d: `M${L - 3} ${ey}h6a3 3 0 0 1-6 0zM${R - 3} ${ey}h6a3 3 0 0 1-6 0z` };
+    case "surprised": return { kind: "circles", cx: [L, R], cy: ey, r: 3.6 };
+    default: return { kind: "stroke", d: `M${L - 2.7} ${ey}h5.4M${R - 2.7} ${ey}h5.4` };
+  }
+}
+/* Вариант C: та же поза с закрытыми глазами (черточки, как у «спит»). */
+function lidOf(m, cx, cy){
+  const ex = Math.max(4.6, m.rx * 0.33), ey = cy - m.ry * 0.12, L = cx - ex, R = cx + ex;
+  return { kind: "stroke", d: `M${L - 2.7} ${ey}h5.4M${R - 2.7} ${ey}h5.4` };
+}
+function dropsOf(mood, m, cx, cy){
+  const top = cy - m.ry, bot = cy + 0.82 * m.ry;
+  switch (mood) {
+    case "happy": return [[cx + m.rx + 4, bot - 3.5, 1.7]];
+    case "tired": return [[cx - m.rx - 3.4, bot - 1.6, 1.5], [cx + m.rx + 3, bot - 1, 1.1]];
+    case "surprised": return [[cx + m.rx * 0.55, top - 4.5, 2.0], [cx - m.rx * 0.5, top - 3, 1.4]];
+    default: return [[cx + m.rx + 3.4, bot - 2.4, 1.4]];
+  }
+}
+const GEO = {};
+function geo(mood){
+  if (GEO[mood]) return GEO[mood];
+  const m = MOOD_SHAPE[mood], b = bodyOf(m);
+  return (GEO[mood] = { body: b.d, cx: b.cx, cy: b.cy, eyes: eyesOf(mood, m, b.cx, b.cy), lid: lidOf(m, b.cx, b.cy), drops: dropsOf(mood, m, b.cx, b.cy) });
+}
+const LABEL = { happy: "Blot, pleased", tired: "Blot, tired", surprised: "Blot, surprised", asleep: "Blot, asleep" };
+
+/* ================================================================ Питомец: разметка PetBlot + слои предложения */
+let MID = 0;
+function eyesMarkup(e){
+  if (e.kind === "stroke") return `<path fill="none" stroke="#000" stroke-width="2.6" stroke-linecap="round" d="${e.d}"/>`;
+  if (e.kind === "fill") return `<path fill="#000" d="${e.d}"/>`;
+  return `<circle fill="#000" cx="${e.cx[0]}" cy="${e.cy}" r="${e.r}"/><circle fill="#000" cx="${e.cx[1]}" cy="${e.cy}" r="${e.r}"/>`;
+}
+function poseSVG(body, eyes){
+  const id = "pd296m" + (++MID);
+  return `<svg class="pet-svg" viewBox="0 0 48 48" aria-hidden="true" focusable="false"><defs><mask id="${id}" maskUnits="userSpaceOnUse" x="-4" y="-4" width="56" height="56">` +
+    `<rect x="-4" y="-4" width="56" height="56" fill="#fff"/>${eyesMarkup(eyes)}</mask></defs><path class="pet-ink" d="${body}" mask="url(#${id})"/></svg>`;
+}
+function mk(tag, cls, html){ const e = document.createElement(tag); if (cls) e.className = cls; if (html != null) e.innerHTML = html; return e; }
+/** o: { idle, twin, decorative } */
+function makePet(mood, size, o = {}){
+  const u = size / 48, g = geo(mood);
+  const el = mk("span", "pet");
+  el.dataset.v = "B"; el.dataset.mood = mood;
+  if (o.idle && !rmActive()) el.setAttribute("data-idle", "");
+  if (o.twin) el.dataset.twin = "1";
+  if (o.decorative) el.setAttribute("aria-hidden", "true"); else { el.setAttribute("role", "img"); el.setAttribute("aria-label", LABEL[mood]); }
+  el.style.cssText = `width:${size}px;height:${size}px;--u:${(size / 48).toFixed(4)}px`;
+  const poke = mk("span", "poke"), breath = mk("span", "breath");
+  breath.appendChild(mk("span", "pose to", poseSVG(g.body, g.eyes)));
+  if (mood !== "asleep") breath.appendChild(mk("span", "lid", poseSVG(g.body, g.lid)));
+  poke.appendChild(breath);
+  el.appendChild(poke);
+  const drops = mk("span", "drops to");
+  for (const [x, y, r] of g.drops) {
+    const s = mk("span", "drop");
+    s.style.cssText = `left:${f2((x - r) * u)}px;top:${f2((y - r) * u)}px;width:${f2(2 * r * u)}px;height:${f2(2 * r * u)}px;` +
+      `--dx:${f2((g.cx - x) * 0.8 * u)}px;--dy:${f2((g.cy - y) * 0.8 * u)}px`;
+    drops.appendChild(s);
+  }
+  el.appendChild(drops);
+  return el;
+}
+const rmActive = () => getComputedStyle(document.documentElement).getPropertyValue("--mo").trim() === "0";
+
+/* ================================================================ тап: анти-спам и запуск */
+const WINDOW_MS = 5000;
+function ampFor(n){ return n <= 3 ? 1 : n <= 6 ? 0.5 : 0; }
+/** Тап по кляксе в рамке `ph`. variant: A|B|C. Возвращает строку для журнала. */
+function pokeFrame(ph, pet, variant, now){
+  const busy = [...ph.querySelectorAll(".pet[data-poke]")];
+  if (busy.length) return "тап во время реакции — пропущен (без перезапуска и очереди)";
+  ph._taps = (ph._taps || []).filter((t) => now - t < WINDOW_MS);
+  ph._taps.push(now);
+  const n = ph._taps.length, amp = ampFor(n);
+  const pets = pet.dataset.twin ? [...ph.querySelectorAll('.pet[data-twin="1"]')] : [pet];
+  for (const p of pets) {
+    const kind = p.dataset.mood === "asleep" && variant !== "A" ? "S" : variant;
+    p.style.setProperty("--amp", String(amp));
+    p.dataset.poke = kind;
+  }
+  const anims = pets.flatMap((p) => p.getAnimations({ subtree: true })).filter((a) => String(a.animationName || "").startsWith("pd296"));
+  Promise.all(anims.map((a) => a.finished.catch(() => null))).then(() => { for (const p of pets) delete p.dataset.poke; });
+  return `тап ${n} за 5 с → ${amp === 1 ? "полная реакция" : amp > 0 ? "амплитуда ½" : "устал: только брызги мигают"}${rmActive() ? " · Reduce Motion: только прозрачность" : ""}`;
+}
+let down = null;
+document.addEventListener("pointerdown", (e) => { const h = e.target.closest(".pd296-hit"); down = h ? { h, x: e.clientX, y: e.clientY, t: performance.now() } : null; });
+document.addEventListener("pointerup", (e) => {
+  if (!down) return;
+  const h = e.target.closest(".pd296-hit");
+  const d = down; down = null;
+  // Тап = отпустили на той же зоне, сдвиг < 8 px, < 500 мс. Иначе это прокрутка/свайп листа — не трогаем.
+  if (h !== d.h || Math.hypot(e.clientX - d.x, e.clientY - d.y) >= 8 || performance.now() - d.t > 500) return;
+  const ph = h.closest(".ph"), pet = h.querySelector(".pet");
+  if (!ph || !pet) return;
+  const v = ph.dataset.tapv || S.tap;
+  const msg = pokeFrame(ph, pet, v, performance.now());
+  const log = ph.parentElement && ph.parentElement.parentElement ? ph.parentElement.parentElement.querySelector(".log") : null;
+  if (log) log.textContent = msg;
+});
+
+/* ================================================================ содержимое экранов */
+function lcg(seed){ let s = seed; return () => (s = (s * 1103515245 + 12345) & 0x7fffffff) / 0x7fffffff; }
+const MISSION = "530070000600195000098000060800060003400803001700020006060000280000419005000080079";
+const SOLUTION = "534678912672195348198342567859761423426853791713924856961537284287419635345286179";
+const ICON = {
+  bulb: '<svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3.6 10.8c.6.5 1 1.2 1 2V16h5.2v-.2c0-.8.4-1.5 1-2A6 6 0 0 0 12 3z"/></svg>',
+  gear: '<svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="3.2"/><path d="M12 2.8v2.6M12 18.6v2.6M2.8 12h2.6M18.6 12h2.6M5.5 5.5l1.8 1.8M16.7 16.7l1.8 1.8M5.5 18.5l1.8-1.8M16.7 7.3l1.8-1.8"/></svg>',
+  back: '<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 6-6 6 6 6"/></svg>',
+  chev: '<svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>',
+  undo: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14 4 9l5-5"/><path d="M4 9h10a6 6 0 0 1 0 12h-3"/></svg>',
+  erase: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 20H8l-5-5 10-10 8 8-6 7"/></svg>',
+  notes: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h4L19 9l-4-4L4 16z"/></svg>',
+  fill: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="4" y="4" width="16" height="16" rx="3"/><path d="M9.3 4v16M14.7 4v16M4 9.3h16M4 14.7h16"/></svg>',
+};
+const TAB_ICONS = [
+  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="8"/><path d="M12 8v4l3 2" stroke-linecap="round"/></svg>',
+  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="4" y="4" width="16" height="16" rx="3"/><path d="M9.3 4v16M14.7 4v16M4 9.3h16M4 14.7h16"/></svg>',
+  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="4" y="5" width="16" height="15" rx="3"/><path d="M4 10h16M9 3v4M15 3v4" stroke-linecap="round"/></svg>',
+];
+const tabbar = (on) => `<nav class="tabbar" aria-label="Tabs">` + ["Today", "Play", "Year"].map((t, i) => `<span class="${i === on ? "on" : ""}">${TAB_ICONS[i]}${t}</span>`).join("") + `</nav>`;
+/** Плейсхолдер Питомца: заменяется настоящей разметкой в hydrate(). hit — обернуть зоной 44×44. */
+const P = (mood, size, o = {}) => `<i class="petph" data-mood="${mood}" data-size="${size}" data-idle="${o.idle === false ? 0 : 1}" data-hit="${o.hit === false ? 0 : 1}"${o.twin ? ' data-twin="1"' : ""}${o.slot ? ' data-slot="1"' : ""}></i>`;
+const gearBtn = `<span class="ib" aria-label="Settings">${ICON.gear}</span>`;
+const bulbBtn = `<span class="ib" aria-label="Hint">${ICON.bulb}</span>`;
+
+function boardHTML(o = {}){
+  let h = `<div class="bd${o.idle ? " idle" : ""}" role="img" aria-label="Sudoku grid">`;
+  for (let b = 0; b < 9; b++) {
+    h += '<div class="bx">';
+    for (let k = 0; k < 9; k++) {
+      const r = Math.floor(b / 3) * 3 + Math.floor(k / 3), c = (b % 3) * 3 + (k % 3), i = r * 9 + c;
+      if (o.empty) { h += '<span class="c"></span>'; continue; }
+      const g = MISSION.charAt(i);
+      if (g !== "0") h += `<span class="c">${g}</span>`;
+      else if (i % 7 === 3) h += `<span class="c y">${SOLUTION.charAt(i)}</span>`;
+      else h += '<span class="c"></span>';
+    }
+    h += "</div>";
+  }
+  return h + "</div>";
+}
+function padHTML(dim){
+  let h = `<div class="pad${dim ? " dim" : ""}">`;
+  for (let d = 1; d <= 9; d++) h += `<span class="key">${d}<small>${(d * 5) % 9 || 9}</small></span>`;
+  h += `</div><div class="acts${dim ? " dim" : ""}"><span>${ICON.undo}Undo</span><span>${ICON.erase}Erase</span><span>${ICON.notes}Notes</span><span>${ICON.fill}Fill</span></div>`;
+  return h;
+}
+function heatHTML(seed){ const r = lcg(seed); let h = ""; for (let i = 0; i < 81; i++) h += r() < 0.36 ? '<i class="g"></i>' : `<i style="opacity:${(0.18 + 0.82 * r()).toFixed(2)}"></i>`; return h; }
+function legendHTML(){ let h = ""; for (let i = 0; i < 9; i++) h += `<i style="opacity:${(0.18 + 0.82 * i / 8).toFixed(2)}"></i>`; return h; }
+const ROWS = {
+  happy: [["Time", "6:42"], ["Fixes", "clean"], ["Technique reached", "Hidden Pair"]],
+  tired: [["Time", "14:05"], ["Fixes", "5"], ["Hints", "1"], ["Technique reached", "Locked Candidates"]],
+  surprised: [["Time", "4:58"], ["Fixes", "2"], ["Technique reached", "Hidden Pair"]],
+  asleep: [["Time", "6:42"], ["Fixes", "clean"], ["Technique reached", "Hidden Pair"]],
+};
+const rowsHTML = (mood) => ROWS[mood].map(([k, v]) => `<div class="row"><dt>${k}</dt><dd>${v}</dd></div>`).join("");
+function cardHTML(mood, petPh){
+  return `<section class="card has-pet"><h2>Your path</h2><p class="sub">Every cell shaded by when you filled it.</p>${petPh}` +
+    `<div class="heat" role="img" aria-label="Heat map of your path">${heatHTML(7)}</div>` +
+    `<div class="legend"><span>Early</span><span class="bar" aria-hidden="true">${legendHTML()}</span><span>Late</span></div>` +
+    `<dl class="rows">${rowsHTML(mood)}</dl></section>`;
+}
+function monthHTML(name, seed, empty){
+  const r = lcg(seed); let h = `<div class="ym"><h3>${name}</h3><div class="yg">`;
+  for (let i = 0; i < 35; i++) {
+    if (empty || i > 30) { h += '<i class="e"></i>'; continue; }
+    const x = r();
+    h += x < 0.18 ? '<i class="e"></i>' : x < 0.3 ? '<i class="w"></i>' : x < 0.5 ? '<i class="s"></i>' : "<i></i>";
+  }
+  return h + "</div></div>";
+}
+const todayHead = (pet) => `<header class="th"><h1 class="title">Today</h1>${pet || ""}${bulbBtn}${gearBtn}</header><p class="subl">Thursday, October 8 · Medium</p>`;
+
+/* --- места (каждое — { title, verdict, what, html(W), tab }) --- */
+const PLACES = {
+  "place-01-today-before-solve": { n: 1, title: "Today до решения (шапка)", verdict: "no", tab: 0,
+    what: "Спит рядом с заголовком, пока день не решён; после решения «прилетает» на карточку. Но поле на экране: дышащая клякса в поле зрения мешает судоку, и раз Питомец теперь включён у всех — мешает всем.",
+    html: () => todayHead(P("asleep", 40)) + boardHTML() + `<div class="gap"><p>41 cells left</p></div>` + padHTML(false) },
+  "place-02-play-hub": { n: 2, title: "Хаб Play (шапка)", verdict: "no", tab: 1,
+    what: "Сидит у заголовка Play с настроением сегодняшнего дня. Хаб — выбор игры; настроение дня здесь ничего не сообщает, клякса — чистое украшение рядом с меню.",
+    html: () => `<header class="th"><h1 class="title">Play</h1>${P("asleep", 40)}${gearBtn}</header>` +
+      `<p class="hh">Continue</p><div class="hc"><div class="hr"><span class="lab">Today’s puzzle</span><span class="val">41 cells left</span></div></div>` +
+      `<p class="hh">New game</p><div class="hc">` + [["Classic", "Medium"], ["Ink", "no undo"], ["Liar", "one false clue"], ["Melody", ""], ["Lantern", ""], ["Glyphs", ""]]
+        .map(([a, b]) => `<div class="hr"><span class="lab">${a}</span><span class="val">${b}</span></div>`).join("") + `</div>` +
+      `<p class="hf">Daily puzzles live on Today. Here you can play as much as you like.</p>` },
+  "place-03-loading": { n: 3, title: "Ожидание генерации", verdict: "later", tab: 1,
+    what: "Вместо знака P4 на панели «Preparing a puzzle…» спит и дышит. Мило, но знак P4 там утверждён (PD-188/189), а панель видна только при ожидании > 600 мс — редко.",
+    html: () => `<header class="tb"><span class="l">${ICON.back}Play</span><span class="t">Expert</span><span></span></header>` +
+      `<div class="waitbox">${P("asleep", 56)}<p>Preparing a puzzle…</p></div>` },
+  "place-04-year-empty": { n: 4, title: "Пустой Year", verdict: "yes", tab: 2,
+    what: "Спит над строкой «Your year starts today». Пустое состояние — естественное место персонажа: поля нет, смысл честный (ещё не играли), первое знакомство с Питомцем.",
+    html: () => `<header class="th"><h1 class="title">2026${ICON.chev}</h1>${gearBtn}</header>` +
+      `<div class="yempty">${P("asleep", 64)}<p>Your year starts today. Each day you play leaves one mark here.</p><span class="btn" role="button">Open today’s puzzle</span></div>` +
+      monthHTML("October", 1, true) },
+  "place-05-year-top": { n: 5, title: "Верх Year (сегодняшний)", verdict: "yes", tab: 2,
+    what: "У заголовка года — Питомец сегодняшнего дня: спит, пока день не решён, потом — настроение дня. Year — его «дом» (листы дней). Пока открыт лист дня — этот не дышит (один на экране).",
+    html: () => `<header class="th"><h1 class="title">2026${ICON.chev}</h1>${P("happy", 40)}${gearBtn}</header>` +
+      `<p class="ytot">212 days · 160 clean · 41 with fixes</p>` + monthHTML("October", 3, false) + monthHTML("September", 5, false) },
+  "place-06-settings": { n: 6, title: "Настройки: превью оживает по тапу", verdict: "yes", tab: -1,
+    what: "Четыре превью стоят (не дышат хором), тап по любому показывает реакцию. Честно объясняет новую возможность там, где её включают/выключают. Текст сноски обновляется.",
+    html: () => `<div class="nav">${ICON.back}<span>Today</span></div><h1 class="large">Settings</h1>` +
+      `<h2 class="sh2">Game</h2><div class="sc"><div class="sr"><span class="lab">Highlight row, column and box</span><span class="sw"></span></div></div>` +
+      `<h2 class="sh2">Extras</h2><div class="sc"><div class="sr"><span class="lab">Blot the pet</span><span class="sw"></span></div></div>` +
+      `<p class="sf">A tiny ink blot on your result card and in Year. It breathes, shows how the day went and reacts when you tap it. It never comes onto the board.</p>` +
+      `<div class="sc"><div class="pet-moods" role="list" aria-label="How the blot looks">` +
+      [["happy", "Pleased", "clean solve"], ["tired", "Tired", "fixes, blots or hints"], ["surprised", "Surprised", "a special day"], ["asleep", "Asleep", "not played or unfinished"]]
+        .map(([m, a, b]) => `<figure role="listitem">${P(m, 40, { idle: false })}<figcaption>${a}<small>${b}</small></figcaption></figure>`).join("") +
+      `</div></div><p class="sf">Tap a blot to see how it reacts.</p>` },
+  "place-07-offline-error": { n: 7, title: "Офлайн / не загрузилось", verdict: "yes", tab: 0,
+    what: "Спит рядом с «Couldn’t load today’s puzzle. Try again». Смягчает ошибку, не отвлекает: играть всё равно нечего, поле пустое и приглушено. Смысл «спит» = день не сыгран — честный.",
+    html: () => todayHead("") + boardHTML({ idle: true, empty: true }) +
+      `<div class="gap">${P("asleep", 40)}<p>Couldn’t load today’s puzzle. <span class="lnk">Try again</span></p></div>` + padHTML(true) },
+  "place-08-share-png": { n: 8, title: "Картинка «Поделиться»", verdict: "later", tab: 0,
+    what: "Клякса-печать в правом верхнем углу PNG (настроение дня), переключатель «Show Blot» в листе экспорта. Делает отпечаток узнаваемым, но меняет утверждённый PNG и выдаёт «устал» (были правки) — нужен отдельный выбор.",
+    html: () => todayHead("") + cardHTML("happy", "") + `<div class="scrim"></div>` +
+      `<div class="sheet"><div class="grabber"></div><div class="sh-head"><span class="l">Cancel</span><span class="t">Share</span><span class="r"></span></div><div class="sh-body">` +
+      `<div class="fpwrap"><div class="fp">${fpGrid()}<span class="stamp">${P("happy", 26, { idle: false, hit: false })}</span>` +
+      `<div class="cap"><b>Pundoku</b><span>8 Oct 2026 · 6:42 · clean</span></div></div></div>` +
+      `<div class="sc"><div class="sr"><span class="lab">Show Blot</span><span class="sw"></span></div></div>` +
+      `<p class="sf">The blot shows how the day went.</p><div style="margin:14px 0 0"><span class="btn" role="button">Share</span></div></div></div>` },
+};
+function fpGrid(){
+  const r = lcg(13); let h = '<div class="g">';
+  for (let i = 0; i < 81; i++) {
+    if (MISSION.charAt(i) !== "0") { h += '<i class="o"></i>'; continue; }
+    const s = 0.55 + 0.45 * r();
+    h += `<i style="opacity:${(0.2 + 0.8 * (i / 81)).toFixed(2)};transform:scale(${s.toFixed(2)})"></i>`;
+  }
+  return h + "</div>";
+}
+
+/* --- экраны реакции на тап --- */
+const TAPV = {
+  A: { name: "A · «Плюх»", short: "сплющивание + брызги", dur: 440 },
+  B: { name: "B · «Подскок»", short: "присел — прыжок — посадка", dur: 660 },
+  C: { name: "C · «Моргание»", short: "вздрогнул и моргнул", dur: 360 },
+};
+function tapScreenHTML(v, mood, label){
+  const card = mood === "asleep"
+    ? null
+    : `<div class="pet-slot pd296-hit">${P(mood, 44, { twin: true, slot: true })}</div>`;
+  let body;
+  if (card) body = todayHead("").replace(bulbBtn, "") + cardHTML(mood, card) + `<p class="hf">Grid ∞ · 31 cells · needs more clues</p>`;
+  else body = `<header class="th"><h1 class="title">2026${ICON.chev}</h1>${gearBtn}</header>` + monthHTML("October", 3, false) + `<div class="scrim"></div>` +
+    `<div class="sheet"><div class="grabber"></div><div class="sh-head"><span class="l">${ICON.back}October</span><span class="t"></span><span class="r">Done</span></div>` +
+    `<div class="sh-body"><div class="daycard"><div class="dc-head"><h3>Wednesday, October 7</h3><div class="pet-slot pd296-hit">${P("asleep", 40, { twin: true, slot: true })}</div></div>` +
+    `<p class="sub">Daily puzzle</p><p class="emptyday">Not played.</p><span class="btn" role="button">Play this day</span></div></div></div>`;
+  return body + `<div class="loupe"><span class="lp">${P(mood, 132, { twin: true })}</span><span class="lt"><b>${TAPV[v].name}</b>${label || "увеличено ×3 · в приложении лупы нет"}</span></div>`;
+}
+
+/* ================================================================ сборка рамки */
+const SIZES = { 393: { h: 852, sat: 59, sab: 34 }, 320: { h: 568, sat: 20, sab: 0 } };
+function frame(W, inner, tab, tapv){
+  const s = SIZES[W];
+  const f = mk("div", "ph");
+  f.style.cssText = `--w:${W}px;--h:${s.h}px;--sat:${s.sat}px;--sab:${s.sab}px`;
+  if (tapv) f.dataset.tapv = tapv;
+  f.innerHTML = `<div class="scr"><div class="sat"></div>${inner}</div>` + (tab >= 0 ? tabbar(tab) : "");
+  hydrate(f);
+  return f;
+}
+function hydrate(root){
+  for (const ph of [...root.querySelectorAll(".petph")]) {
+    const mood = ph.dataset.mood, size = +ph.dataset.size;
+    const pet = makePet(mood, size, { idle: ph.dataset.idle === "1", twin: ph.dataset.twin === "1" });
+    if (ph.dataset.slot === "1" || ph.dataset.hit !== "1") { ph.replaceWith(pet); continue; }
+    const hit = mk("span", "pd296-hit");
+    hit.appendChild(pet);
+    ph.replaceWith(hit);
+  }
+}
+
+/* ================================================================ интерактивная страница */
+const mq = (q) => window.matchMedia(q).matches;
+const S = { theme: mq("(prefers-color-scheme: dark)") ? "dark" : "light", rm: mq("(prefers-reduced-motion: reduce)") ? "on" : "off", mood: "happy", tap: "A" };
+function applyRoot(o){
+  const h = document.documentElement;
+  h.dataset.theme = o.theme;
+  h.classList.toggle("rm-on", o.rm === "on"); h.classList.toggle("rm-off", o.rm !== "on");
+}
+function syncControls(){
+  for (const seg of document.querySelectorAll(".seg")) for (const b of seg.querySelectorAll("button")) b.setAttribute("aria-pressed", String(S[seg.dataset.k] === b.dataset.val));
+}
+const VLABEL = { yes: ["да", "v-yes"], later: ["позже", "v-later"], no: ["нет", "v-no"] };
+function render(){
+  const taps = document.getElementById("taps"); taps.innerHTML = "";
+  for (const v of ["A", "B", "C"]) {
+    const c = mk("div", "cellx");
+    c.innerHTML = `<h3>${TAPV[v].name} <span style="font-weight:400;color:var(--label-2)">— ${TAPV[v].short}, ${TAPV[v].dur} мс</span>${v === "A" ? '<span class="verdict v-yes">рекомендую</span>' : ""}</h3>`;
+    const z = mk("div", "zoomer");
+    z.appendChild(frame(393, tapScreenHTML(v, S.mood, "нажмите на кляксу в карточке или здесь"), S.mood === "asleep" ? -1 : 0, v));
+    c.appendChild(z);
+    c.appendChild(mk("div", "log", "—"));
+    taps.appendChild(c);
+  }
+  const pl = document.getElementById("places"); pl.innerHTML = "";
+  for (const [key, p] of Object.entries(PLACES)) {
+    const c = mk("div", "cellx");
+    const [vl, vc] = VLABEL[p.verdict];
+    c.innerHTML = `<h3>${p.n}. ${p.title}<span class="verdict ${vc}">${vl}</span></h3><p>${p.what}</p>`;
+    const z = mk("div", "zoomer");
+    z.appendChild(frame(393, p.html(), p.tab, null));
+    c.appendChild(z);
+    c.appendChild(mk("div", "log", key));
+    pl.appendChild(c);
+  }
+  syncControls();
+}
+function initUI(){
+  for (const seg of document.querySelectorAll(".seg")) seg.addEventListener("click", (e) => {
+    const b = e.target.closest("button"); if (!b) return;
+    S[seg.dataset.k] = b.dataset.val; applyRoot(S); render();
+  });
+  applyRoot(S); render();
+}
+
+/* ================================================================ съёмка */
+/** Кадры: places — 393 светлая/тёмная, 320 для тесных; tap — раскадровки (t, мс от тапа). */
+const SHOTS = [];
+for (const key of Object.keys(PLACES)) {
+  SHOTS.push({ name: key, kind: "place", key, w: 393, theme: "light" });
+  SHOTS.push({ name: key + "-dark", kind: "place", key, w: 393, theme: "dark" });
+}
+for (const key of ["place-01-today-before-solve", "place-02-play-hub", "place-05-year-top", "place-07-offline-error"]) SHOTS.push({ name: key + "-320", kind: "place", key, w: 320, theme: "light" });
+SHOTS.push({ name: "tap-0-rest", kind: "tap", v: "A", mood: "happy", t: null, w: 393, theme: "light" });
+for (const [i, t] of [[1, 110], [2, 255], [3, 360]]) SHOTS.push({ name: `tap-A-squash-${i}`, kind: "tap", v: "A", mood: "happy", t, w: 393, theme: "light" });
+SHOTS.push({ name: "tap-A-squash-1-dark", kind: "tap", v: "A", mood: "happy", t: 110, w: 393, theme: "dark" });
+SHOTS.push({ name: "tap-A-tired-1", kind: "tap", v: "A", mood: "tired", t: 110, w: 393, theme: "light" });
+SHOTS.push({ name: "tap-A-rm", kind: "tap", v: "A", mood: "happy", t: 60, w: 393, theme: "light", rm: true });
+SHOTS.push({ name: "tap-A-fatigue-7th", kind: "tap", v: "A", mood: "happy", t: 60, w: 393, theme: "light", taps: 7 });
+for (const [i, t] of [[1, 92], [2, 290], [3, 422]]) SHOTS.push({ name: `tap-B-hop-${i}`, kind: "tap", v: "B", mood: "happy", t, w: 393, theme: "light" });
+SHOTS.push({ name: "tap-B-hop-2-surprised", kind: "tap", v: "B", mood: "surprised", t: 290, w: 393, theme: "light" });
+for (const [i, t] of [[1, 60], [2, 200], [3, 270]]) SHOTS.push({ name: `tap-C-blink-${i}`, kind: "tap", v: "C", mood: "happy", t, w: 393, theme: "light" });
+SHOTS.push({ name: "tap-C-rm", kind: "tap", v: "C", mood: "happy", t: 120, w: 393, theme: "light", rm: true });
+SHOTS.push({ name: "tap-asleep-stir", kind: "tap", v: "B", mood: "asleep", t: 140, w: 393, theme: "light" });
+
+function freeze(root, t){
+  for (const a of root.getAnimations({ subtree: true })) {
+    a.pause();
+    a.currentTime = String(a.animationName || "").startsWith("pd296") && t != null ? t : 0;
+  }
+}
+function textRects(node){
+  const out = [], w = document.createTreeWalker(node, NodeFilter.SHOW_TEXT);
+  while (w.nextNode()) {
+    const n = w.currentNode;
+    if (!n.textContent.trim() || n.parentElement.closest(".loupe, .tabbar, .fp")) continue;
+    const r = document.createRange(); r.selectNodeContents(n);
+    for (const q of r.getClientRects()) out.push(q);
+  }
+  return out;
+}
+const hit = (a, b) => a.left < b.right - 1 && a.right > b.left + 1 && a.top < b.bottom - 1 && a.bottom > b.top + 1;
+function check(ph){
+  const out = [];
+  const zm = ph.closest(".zoomer");
+  const z = zm ? ph.getBoundingClientRect().width / parseFloat(ph.style.getPropertyValue("--w")) : 1;  // масштаб превью страницы
+  const scr = ph.querySelector(".scr");
+  if (scr.scrollWidth > scr.clientWidth + 1) out.push(`горизонтальное переполнение ${scr.scrollWidth} > ${scr.clientWidth}`);
+  const texts = textRects(ph);
+  const ctrls = [...ph.querySelectorAll(".ib, .btn, .key, .hr, .sr, .lnk, .tb .l")].map((e) => e.getBoundingClientRect());
+  for (const h of ph.querySelectorAll(".pd296-hit")) {
+    if (h.closest(".loupe")) continue;
+    const r = h.getBoundingClientRect();
+    if (r.width / z < 43.5 || r.height / z < 43.5) out.push(`зона тапа ${Math.round(r.width / z)}×${Math.round(r.height / z)} < 44`);
+    for (const c of ctrls) if (hit(r, c)) { out.push("зона тапа пересекает элемент управления"); break; }
+  }
+  for (const p of ph.querySelectorAll(".pet")) {
+    if (p.closest(".loupe, .fp")) continue;
+    const r = p.getBoundingClientRect();
+    for (const t of texts) if (hit(r, t)) { out.push(`клякса ${p.dataset.mood} наезжает на текст`); break; }
+  }
+  const breathing = [...ph.querySelectorAll(".pet[data-idle]")].filter((p) => !p.closest(".loupe"));
+  if (breathing.length > 1) out.push(`дышит больше одной кляксы: ${breathing.length}`);
+  if (errs.length) out.push(...errs);
+  return out;
+}
+function shot(name){
+  const s = SHOTS.find((x) => x.name === name);
+  if (!s) throw new Error("нет кадра " + name);
+  applyRoot({ theme: s.theme, rm: s.rm ? "on" : "off" });
+  const host = document.getElementById("shot"); host.innerHTML = "";
+  let ph;
+  if (s.kind === "place") { const p = PLACES[s.key]; ph = frame(s.w, p.html(), p.tab, null); }
+  else ph = frame(s.w, tapScreenHTML(s.v, s.mood, s.t == null ? "покой (до тапа)" : `t = ${s.t} мс из ${s.rm ? "короткой при Reduce Motion" : TAPV[s.v].dur}${s.taps ? ` · ${s.taps}-й тап за 5 с` : ""}${s.rm ? " · Reduce Motion" : ""}`), s.mood === "asleep" ? -1 : 0, s.v);
+  host.appendChild(ph);
+  if (s.kind === "tap" && s.t != null) {
+    const pet = ph.querySelector('.pet[data-twin="1"]');
+    const now = 100000;
+    if (s.taps) ph._taps = Array.from({ length: s.taps - 1 }, (_, i) => now - 300 * (s.taps - 1 - i) - 1);
+    pokeFrame(ph, pet, s.v, now);
+    const slot = pet.closest(".pd296-hit"), fr = ph.getBoundingClientRect(), r = slot.getBoundingClientRect();
+    const t = mk("span", "touch"); t.style.left = (r.left - fr.left + r.width / 2 - 22) + "px"; t.style.top = (r.top - fr.top + r.height / 2 - 22) + "px";
+    ph.appendChild(t);
+  }
+  freeze(ph, s.t);
+  return { name, w: s.w, theme: s.theme, problems: check(ph) };
+}
+window.PD296 = { SHOTS: SHOTS.map((s) => ({ name: s.name, w: s.w, h: SIZES[s.w].h, theme: s.theme, rm: !!s.rm })), shot, check: () => [...document.querySelectorAll(".ph")].flatMap(check) };
+
+if (new URLSearchParams(location.search).has("shot")) document.body.classList.add("shot");
+else initUI();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,261 @@
+[
+  {
+    "shot": "place-01-today-before-solve",
+    "w": 393,
+    "h": 852,
+    "theme": "light",
+    "problems": []
+  },
+  {
+    "shot": "place-01-today-before-solve-dark",
+    "w": 393,
+    "h": 852,
+    "theme": "dark",
+    "problems": []
+  },
+  {
+    "shot": "place-02-play-hub",
+    "w": 393,
+    "h": 852,
+    "theme": "light",
+    "problems": []
+  },
+  {
+    "shot": "place-02-play-hub-dark",
+    "w": 393,
+    "h": 852,
+    "theme": "dark",
+    "problems": []
+  },
+  {
+    "shot": "place-03-loading",
+    "w": 393,
+    "h": 852,
+    "theme": "light",
+    "problems": []
+  },
+  {
+    "shot": "place-03-loading-dark",
+    "w": 393,
+    "h": 852,
+    "theme": "dark",
+    "problems": []
+  },
+  {
+    "shot": "place-04-year-empty",
+    "w": 393,
+    "h": 852,
+    "theme": "light",
+    "problems": []
+  },
+  {
+    "shot": "place-04-year-empty-dark",
+    "w": 393,
+    "h": 852,
+    "theme": "dark",
+    "problems": []
+  },
+  {
+    "shot": "place-05-year-top",
+    "w": 393,
+    "h": 852,
+    "theme": "light",
+    "problems": []
+  },
+  {
+    "shot": "place-05-year-top-dark",
+    "w": 393,
+    "h": 852,
+    "theme": "dark",
+    "problems": []
+  },
+  {
+    "shot": "place-06-settings",
+    "w": 393,
+    "h": 852,
+    "theme": "light",
+    "problems": []
+  },
+  {
+    "shot": "place-06-settings-dark",
+    "w": 393,
+    "h": 852,
+    "theme": "dark",
+    "problems": []
+  },
+  {
+    "shot": "place-07-offline-error",
+    "w": 393,
+    "h": 852,
+    "theme": "light",
+    "problems": []
+  },
+  {
+    "shot": "place-07-offline-error-dark",
+    "w": 393,
+    "h": 852,
+    "theme": "dark",
+    "problems": []
+  },
+  {
+    "shot": "place-08-share-png",
+    "w": 393,
+    "h": 852,
+    "theme": "light",
+    "problems": []
+  },
+  {
+    "shot": "place-08-share-png-dark",
+    "w": 393,
+    "h": 852,
+    "theme": "dark",
+    "problems": []
+  },
+  {
+    "shot": "place-01-today-before-solve-320",
+    "w": 320,
+    "h": 568,
+    "theme": "light",
+    "problems": []
+  },
+  {
+    "shot": "place-02-play-hub-320",
+    "w": 320,
+    "h": 568,
+    "theme": "light",
+    "problems": []
+  },
+  {
+    "shot": "place-05-year-top-320",
+    "w": 320,
+    "h": 568,
+    "theme": "light",
+    "problems": []
+  },
+  {
+    "shot": "place-07-offline-error-320",
+    "w": 320,
+    "h": 568,
+    "theme": "light",
+    "problems": []
+  },
+  {
+    "shot": "tap-0-rest",
+    "w": 393,
+    "h": 852,
+    "theme": "light",
+    "problems": []
+  },
+  {
+    "shot": "tap-A-squash-1",
+    "w": 393,
+    "h": 852,
+    "theme": "light",
+    "problems": []
+  },
+  {
+    "shot": "tap-A-squash-2",
+    "w": 393,
+    "h": 852,
+    "theme": "light",
+    "problems": []
+  },
+  {
+    "shot": "tap-A-squash-3",
+    "w": 393,
+    "h": 852,
+    "theme": "light",
+    "problems": []
+  },
+  {
+    "shot": "tap-A-squash-1-dark",
+    "w": 393,
+    "h": 852,
+    "theme": "dark",
+    "problems": []
+  },
+  {
+    "shot": "tap-A-tired-1",
+    "w": 393,
+    "h": 852,
+    "theme": "light",
+    "problems": []
+  },
+  {
+    "shot": "tap-A-rm",
+    "w": 393,
+    "h": 852,
+    "theme": "light",
+    "problems": []
+  },
+  {
+    "shot": "tap-A-fatigue-7th",
+    "w": 393,
+    "h": 852,
+    "theme": "light",
+    "problems": []
+  },
+  {
+    "shot": "tap-B-hop-1",
+    "w": 393,
+    "h": 852,
+    "theme": "light",
+    "problems": []
+  },
+  {
+    "shot": "tap-B-hop-2",
+    "w": 393,
+    "h": 852,
+    "theme": "light",
+    "problems": []
+  },
+  {
+    "shot": "tap-B-hop-3",
+    "w": 393,
+    "h": 852,
+    "theme": "light",
+    "problems": []
+  },
+  {
+    "shot": "tap-B-hop-2-surprised",
+    "w": 393,
+    "h": 852,
+    "theme": "light",
+    "problems": []
+  },
+  {
+    "shot": "tap-C-blink-1",
+    "w": 393,
+    "h": 852,
+    "theme": "light",
+    "problems": []
+  },
+  {
+    "shot": "tap-C-blink-2",
+    "w": 393,
+    "h": 852,
+    "theme": "light",
+    "problems": []
+  },
+  {
+    "shot": "tap-C-blink-3",
+    "w": 393,
+    "h": 852,
+    "theme": "light",
+    "problems": []
+  },
+  {
+    "shot": "tap-C-rm",
+    "w": 393,
+    "h": 852,
+    "theme": "light",
+    "problems": []
+  },
+  {
+    "shot": "tap-asleep-stir",
+    "w": 393,
+    "h": 852,
+    "theme": "light",
+    "problems": []
+  }
+]
