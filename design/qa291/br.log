@@ -1,0 +1,49 @@
+OK   cr br phone today=open key-A {"cell":[338,111,39,39],"cellI":"17","lift":[338,111,39,39],"menu":[10,158,373,95],"firstBoardPane":"today","activePane":"play"}
+     фокус после Esc: OK  {"tag":"BUTTON","i":"17","pane":"play","visible":"visible"}
+OK   cr br phone today=open more-accuse {"cell":[338,111,39,39],"cellI":"17","lift":[338,111,39,39],"menu":[10,158,373,95],"firstBoardPane":"today","activePane":"play"}
+     фокус после Esc: OK  {"tag":"BUTTON","i":"17","pane":"play","visible":"visible"}
+OK   cr br phone today=open cell-gesture {"cell":[338,111,39,39],"cellI":"17","lift":[338,111,39,39],"menu":[10,158,373,95],"firstBoardPane":"today","activePane":"play"}
+     фокус после Esc: OK  {"tag":"BUTTON","i":"17","pane":"play","visible":"visible"}
+OK   cr br phone today=solved key-A {"cell":[177,232,39,39],"cellI":"40","lift":[177,232,39,39],"menu":[10,279,373,95],"firstBoardPane":"today","activePane":"play"}
+     фокус после Esc: OK  {"tag":"BUTTON","i":"40","pane":"play","visible":"visible"}
+OK   cr br phone today=solved more-accuse {"cell":[177,232,39,39],"cellI":"40","lift":[177,232,39,39],"menu":[10,279,373,95],"firstBoardPane":"today","activePane":"play"}
+     фокус после Esc: OK  {"tag":"BUTTON","i":"40","pane":"play","visible":"visible"}
+OK   cr br phone today=solved cell-gesture {"cell":[177,232,39,39],"cellI":"40","lift":[177,232,39,39],"menu":[10,279,373,95],"firstBoardPane":"today","activePane":"play"}
+     фокус после Esc: OK  {"tag":"BUTTON","i":"40","pane":"play","visible":"visible"}
+OK   cr br desk today=open key-A {"cell":[559,390,63,63],"cellI":"47","lift":[559,390,63,63],"menu":[10,460,1420,79],"firstBoardPane":"today","activePane":"play"}
+     фокус после Esc: OK  {"tag":"BUTTON","i":"47","pane":"play","visible":"visible"}
+OK   cr br desk today=open more-accuse {"cell":[559,390,63,63],"cellI":"47","lift":[559,390,63,63],"menu":[10,460,1420,79],"firstBoardPane":"today","activePane":"play"}
+     фокус после Esc: OK  {"tag":"BUTTON","i":"47","pane":"play","visible":"visible"}
+OK   cr br desk today=open cell-gesture {"cell":[559,390,63,63],"cellI":"47","lift":[559,390,63,63],"menu":[10,460,1420,79],"firstBoardPane":"today","activePane":"play"}
+     фокус после Esc: OK  {"tag":"BUTTON","i":"47","pane":"play","visible":"visible"}
+OK   cr br desk today=solved key-A {"cell":[818,197,63,63],"cellI":"24","lift":[818,197,63,63],"menu":[10,268,1420,79],"firstBoardPane":"today","activePane":"play"}
+     фокус после Esc: OK  {"tag":"BUTTON","i":"24","pane":"play","visible":"visible"}
+OK   cr br desk today=solved more-accuse {"cell":[818,197,63,63],"cellI":"24","lift":[818,197,63,63],"menu":[10,268,1420,79],"firstBoardPane":"today","activePane":"play"}
+     фокус после Esc: OK  {"tag":"BUTTON","i":"24","pane":"play","visible":"visible"}
+OK   cr br desk today=solved cell-gesture {"cell":[818,197,63,63],"cellI":"24","lift":[818,197,63,63],"menu":[10,268,1420,79],"firstBoardPane":"today","activePane":"play"}
+     фокус после Esc: OK  {"tag":"BUTTON","i":"24","pane":"play","visible":"visible"}
+OK   wk br phone today=open key-A {"cell":[55,225,39,39],"cellI":"37","lift":[55,225,39,39],"menu":[10,272,373,76],"firstBoardPane":"today","activePane":"play"}
+     фокус после Esc: OK  {"tag":"BUTTON","i":"37","pane":"play","visible":"visible"}
+OK   wk br phone today=open more-accuse {"cell":[55,225,39,39],"cellI":"37","lift":[55,225,39,39],"menu":[10,272,373,76],"firstBoardPane":"today","activePane":"play"}
+     фокус после Esc: OK  {"tag":"BUTTON","i":"37","pane":"play","visible":"visible"}
+OK   wk br phone today=open cell-gesture {"cell":[55,225,39,39],"cellI":"37","lift":[55,225,39,39],"menu":[10,272,373,76],"firstBoardPane":"today","activePane":"play"}
+     фокус после Esc: OK  {"tag":"BUTTON","i":"37","pane":"play","visible":"visible"}
+OK   wk br phone today=solved key-A {"cell":[216,103,39,39],"cellI":"14","lift":[216,103,39,39],"menu":[10,150,373,76],"firstBoardPane":"today","activePane":"play"}
+     фокус после Esc: OK  {"tag":"BUTTON","i":"14","pane":"play","visible":"visible"}
+OK   wk br phone today=solved more-accuse {"cell":[216,103,39,39],"cellI":"14","lift":[216,103,39,39],"menu":[10,150,373,76],"firstBoardPane":"today","activePane":"play"}
+     фокус после Esc: OK  {"tag":"BUTTON","i":"14","pane":"play","visible":"visible"}
+OK   wk br phone today=solved cell-gesture {"cell":[216,103,39,39],"cellI":"14","lift":[216,103,39,39],"menu":[10,150,373,76],"firstBoardPane":"today","activePane":"play"}
+     фокус после Esc: OK  {"tag":"BUTTON","i":"14","pane":"play","visible":"visible"}
+OK   wk br desk today=open key-A {"cell":[556,260,64,64],"cellI":"29","lift":[556,260,64,64],"menu":[10,332,1420,76],"firstBoardPane":"today","activePane":"play"}
+     фокус после Esc: OK  {"tag":"BUTTON","i":"29","pane":"play","visible":"visible"}
+OK   wk br desk today=open more-accuse {"cell":[556,260,64,64],"cellI":"29","lift":[556,260,64,64],"menu":[10,332,1420,76],"firstBoardPane":"today","activePane":"play"}
+     фокус после Esc: OK  {"tag":"BUTTON","i":"29","pane":"play","visible":"visible"}
+OK   wk br desk today=open cell-gesture {"cell":[556,260,64,64],"cellI":"29","lift":[556,260,64,64],"menu":[10,332,1420,76],"firstBoardPane":"today","activePane":"play"}
+     фокус после Esc: OK  {"tag":"BUTTON","i":"29","pane":"play","visible":"visible"}
+OK   wk br desk today=solved key-A {"cell":[884,128,64,64],"cellI":"16","lift":[884,128,64,64],"menu":[10,200,1420,76],"firstBoardPane":"today","activePane":"play"}
+     фокус после Esc: OK  {"tag":"BUTTON","i":"16","pane":"play","visible":"visible"}
+OK   wk br desk today=solved more-accuse {"cell":[884,128,64,64],"cellI":"16","lift":[884,128,64,64],"menu":[10,200,1420,76],"firstBoardPane":"today","activePane":"play"}
+     фокус после Esc: OK  {"tag":"BUTTON","i":"16","pane":"play","visible":"visible"}
+OK   wk br desk today=solved cell-gesture {"cell":[884,128,64,64],"cellI":"16","lift":[884,128,64,64],"menu":[10,200,1420,76],"firstBoardPane":"today","activePane":"play"}
+     фокус после Esc: OK  {"tag":"BUTTON","i":"16","pane":"play","visible":"visible"}
+24/24 PASS

@@ -1,0 +1,215 @@
+[
+  {
+    "br": "cr",
+    "build": "dbg",
+    "ctx": "p393-solved-light",
+    "how": "modemenu",
+    "reg": {
+      "ctxName": "p393-solved-light",
+      "modeMenu": {
+        "menu": [
+          10,
+          314,
+          373,
+          95
+        ],
+        "lift": [
+          16,
+          228,
+          361,
+          78
+        ],
+        "ih": 852
+      },
+      "modeFocus": {
+        "tag": "BUTTON",
+        "testid": "mode-liar",
+        "i": null,
+        "pane": "play"
+      }
+    },
+    "errs": []
+  },
+  {
+    "br": "cr",
+    "build": "dbg",
+    "ctx": "p393-solved-light",
+    "how": "more",
+    "more": {
+      "menu": [
+        153,
+        51,
+        230,
+        145
+      ],
+      "items": [
+        "menu-new",
+        "menu-fill",
+        "menu-accuse"
+      ],
+      "focus": {
+        "tag": "BUTTON",
+        "testid": "more-button",
+        "i": null,
+        "pane": "play"
+      }
+    },
+    "errs": []
+  },
+  {
+    "br": "cr",
+    "build": "dbg",
+    "ctx": "p393-solved-light",
+    "how": "kbd-nav-A",
+    "which": "first",
+    "cell": [
+      138,
+      111,
+      39,
+      39
+    ],
+    "cellI": "12",
+    "lift": [
+      138,
+      928,
+      39,
+      39
+    ],
+    "menu": [
+      10,
+      825,
+      373,
+      95
+    ],
+    "ih": 852,
+    "iw": 393,
+    "firstBoardPane": "today",
+    "liftOk": false,
+    "menuIn": false,
+    "near": false,
+    "errs": [],
+    "focusAfterEsc": {
+      "tag": "BODY",
+      "testid": null,
+      "i": null,
+      "pane": null
+    },
+    "focusOk": false,
+    "ok": false
+  },
+  {
+    "br": "cr",
+    "build": "dbg",
+    "ctx": "p393-solved-light",
+    "how": "kbd-nav-A",
+    "which": "last",
+    "cell": [
+      338,
+      393,
+      39,
+      39
+    ],
+    "cellI": "80",
+    "lift": null,
+    "menu": null,
+    "ih": 852,
+    "iw": 393,
+    "firstBoardPane": "today",
+    "liftOk": false,
+    "menuIn": false,
+    "near": false,
+    "errs": [],
+    "focusOk": false,
+    "ok": false
+  },
+  {
+    "br": "cr",
+    "build": "dbg",
+    "ctx": "p393-solved-light",
+    "how": "longpress-touch",
+    "which": "first",
+    "cell": [
+      55,
+      71,
+      39,
+      39
+    ],
+    "cellI": "1",
+    "lift": [
+      55,
+      71,
+      39,
+      39
+    ],
+    "menu": [
+      10,
+      119,
+      373,
+      95
+    ],
+    "ih": 852,
+    "iw": 393,
+    "firstBoardPane": "today",
+    "liftOk": true,
+    "menuIn": true,
+    "near": true,
+    "errs": [],
+    "focusAfterEsc": {
+      "tag": "BUTTON",
+      "testid": null,
+      "i": "1",
+      "pane": "play"
+    },
+    "focusOk": true,
+    "ok": true
+  },
+  {
+    "br": "cr",
+    "build": "dbg",
+    "ctx": "p393-solved-light",
+    "how": "longpress-touch",
+    "which": "last",
+    "cell": [
+      299,
+      393,
+      39,
+      39
+    ],
+    "cellI": "79",
+    "lift": [
+      299,
+      393,
+      39,
+      39
+    ],
+    "menu": [
+      10,
+      440,
+      373,
+      95
+    ],
+    "ih": 852,
+    "iw": 393,
+    "firstBoardPane": "today",
+    "liftOk": true,
+    "menuIn": true,
+    "near": true,
+    "errs": [],
+    "focusAfterEsc": {
+      "tag": "BUTTON",
+      "testid": null,
+      "i": "79",
+      "pane": "play"
+    },
+    "focusOk": true,
+    "ok": true
+  },
+  {
+    "br": "cr",
+    "build": "dbg",
+    "ctx": "p393-solved-light",
+    "how": "exception",
+    "ok": false,
+    "err": "locator.click: Timeout 30000ms exceeded."
+  }
+]

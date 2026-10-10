@@ -208,7 +208,10 @@ export function PlayScreen({ onOpenSettings, onOpenHelp, onOpenToday }: { onOpen
   const openAccuse = (cell: number, el: HTMLElement | null) => {
     if (!play || !playStore.canAccuse(cell)) return;
     playStore.select(cell);
-    const cellEl = el ?? document.querySelector<HTMLElement>(`.board [data-i="${cell}"]`);
+    // PD-291: клавиша A и «⋯ → Обвинить» передают `el = null` — клетку ищем только на СВОЁМ экране (панель Play). Поиск по всему
+    // документу находил первую доску в DOM — поле Today из скрытой панели (или Grid ∞ решённого дня): меню вставало по ней
+    // (на телефоне — за нижний край), а фокус после Esc возвращался на скрытую клетку, то есть на <body>.
+    const cellEl = el ?? screenRef.current?.querySelector<HTMLElement>(`.board [data-i="${cell}"]`) ?? null;
     const r = cellEl?.getBoundingClientRect();
     const anchor = r ? { top: r.top, bottom: r.bottom, left: r.left, width: r.width, height: r.height } : { top: 80, bottom: 120, left: 20, width: 40, height: 40 };
     setAccuseAt({ cell, digit: play.mission[cell] ?? 0, anchor, opener: cellEl });

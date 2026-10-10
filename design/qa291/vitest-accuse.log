@@ -1,0 +1,13 @@
+
+ RUN  v5.0.2 /Users/taroklim/Documents/KlymWork/DevTeam_v1/products/pundoku-worktrees/pd-291/apps/web
+
+
+ Test Files  1 passed (1)
+      Tests  2 passed (2)
+   Start at  07:43:44
+   Duration  25.94s (environment 39%, transform 33%, tests 22%, import 6%)
+
+  Transform  transforming modules took 8.14s · 33% of tracked time, re-done on every run
+             persist transforms across runs with fsModuleCache: true
+             learn more: https://vitest.dev/guide/improving-performance#caching-between-reruns
+
