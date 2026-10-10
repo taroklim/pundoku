@@ -162,8 +162,8 @@
   max-height: 248px;
   overflow-y: auto;
   overscroll-behavior: contain;
-  /* Today (прокручивается): на низком экране док не помещается над таб-баром — страница докручивается до него (scrollIntoView). */
-  scroll-margin-bottom: calc(16px + var(--tabbar-h) + var(--sa-bot));
+  /* Today (прокручивается): на низком экране док не помещается над таб-баром — страница докручивается до него (scrollIntoView);
+     зазор над таб-баром даёт `scroll-padding-bottom` прокручиваемой панели (`.scroll`, PD-292), свой отступ дока не нужен. */
   animation: fadeRise calc(220ms * var(--mk)) var(--e-out) both;
 }
 /* PD-144 (D-1): на экране партии Play (не прокручивается) док ЗАНИМАЕТ место панели 1–9 + ряда действий + строки статуса и
