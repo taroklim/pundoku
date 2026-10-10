@@ -1,0 +1,470 @@
+[
+  {
+    "br": "cr",
+    "build": "pd291",
+    "kind": "phone",
+    "today": "open",
+    "how": "key-A",
+    "ok": true,
+    "liftOk": true,
+    "menuIn": true,
+    "cell": [
+      299,
+      111,
+      39,
+      39
+    ],
+    "cellI": "16",
+    "lift": [
+      299,
+      111,
+      39,
+      39
+    ],
+    "menu": [
+      10,
+      158,
+      373,
+      95
+    ],
+    "firstBoardPane": "today",
+    "activePane": "play",
+    "errs": [],
+    "focusAfterEsc": {
+      "tag": "BUTTON",
+      "i": "16",
+      "pane": "play",
+      "visible": "visible"
+    },
+    "focusOk": true
+  },
+  {
+    "br": "cr",
+    "build": "pd291",
+    "kind": "phone",
+    "today": "open",
+    "how": "more-accuse",
+    "ok": true,
+    "liftOk": true,
+    "menuIn": true,
+    "cell": [
+      299,
+      111,
+      39,
+      39
+    ],
+    "cellI": "16",
+    "lift": [
+      299,
+      111,
+      39,
+      39
+    ],
+    "menu": [
+      10,
+      158,
+      373,
+      95
+    ],
+    "firstBoardPane": "today",
+    "activePane": "play",
+    "errs": [],
+    "focusAfterEsc": {
+      "tag": "BUTTON",
+      "i": "16",
+      "pane": "play",
+      "visible": "visible"
+    },
+    "focusOk": true
+  },
+  {
+    "br": "cr",
+    "build": "pd291",
+    "kind": "phone",
+    "today": "open",
+    "how": "cell-gesture",
+    "ok": true,
+    "liftOk": true,
+    "menuIn": true,
+    "cell": [
+      299,
+      111,
+      39,
+      39
+    ],
+    "cellI": "16",
+    "lift": [
+      299,
+      111,
+      39,
+      39
+    ],
+    "menu": [
+      10,
+      158,
+      373,
+      95
+    ],
+    "firstBoardPane": "today",
+    "activePane": "play",
+    "errs": [],
+    "focusAfterEsc": {
+      "tag": "BUTTON",
+      "i": "16",
+      "pane": "play",
+      "visible": "visible"
+    },
+    "focusOk": true
+  },
+  {
+    "br": "cr",
+    "build": "pd291",
+    "kind": "phone",
+    "today": "solved",
+    "how": "key-A",
+    "ok": true,
+    "liftOk": true,
+    "menuIn": true,
+    "cell": [
+      299,
+      111,
+      39,
+      39
+    ],
+    "cellI": "16",
+    "lift": [
+      299,
+      111,
+      39,
+      39
+    ],
+    "menu": [
+      10,
+      158,
+      373,
+      95
+    ],
+    "firstBoardPane": "today",
+    "activePane": "play",
+    "errs": [],
+    "focusAfterEsc": {
+      "tag": "BUTTON",
+      "i": "16",
+      "pane": "play",
+      "visible": "visible"
+    },
+    "focusOk": true
+  },
+  {
+    "br": "cr",
+    "build": "pd291",
+    "kind": "phone",
+    "today": "solved",
+    "how": "more-accuse",
+    "ok": true,
+    "liftOk": true,
+    "menuIn": true,
+    "cell": [
+      299,
+      111,
+      39,
+      39
+    ],
+    "cellI": "16",
+    "lift": [
+      299,
+      111,
+      39,
+      39
+    ],
+    "menu": [
+      10,
+      158,
+      373,
+      95
+    ],
+    "firstBoardPane": "today",
+    "activePane": "play",
+    "errs": [],
+    "focusAfterEsc": {
+      "tag": "BUTTON",
+      "i": "16",
+      "pane": "play",
+      "visible": "visible"
+    },
+    "focusOk": true
+  },
+  {
+    "br": "cr",
+    "build": "pd291",
+    "kind": "phone",
+    "today": "solved",
+    "how": "cell-gesture",
+    "ok": true,
+    "liftOk": true,
+    "menuIn": true,
+    "cell": [
+      299,
+      111,
+      39,
+      39
+    ],
+    "cellI": "16",
+    "lift": [
+      299,
+      111,
+      39,
+      39
+    ],
+    "menu": [
+      10,
+      158,
+      373,
+      95
+    ],
+    "firstBoardPane": "today",
+    "activePane": "play",
+    "errs": [],
+    "focusAfterEsc": {
+      "tag": "BUTTON",
+      "i": "16",
+      "pane": "play",
+      "visible": "visible"
+    },
+    "focusOk": true
+  },
+  {
+    "br": "cr",
+    "build": "pd291",
+    "kind": "desk",
+    "today": "open",
+    "how": "key-A",
+    "ok": true,
+    "liftOk": true,
+    "menuIn": true,
+    "cell": [
+      433,
+      327,
+      63,
+      63
+    ],
+    "cellI": "36",
+    "lift": [
+      433,
+      327,
+      63,
+      63
+    ],
+    "menu": [
+      10,
+      398,
+      1420,
+      79
+    ],
+    "firstBoardPane": "today",
+    "activePane": "play",
+    "errs": [],
+    "focusAfterEsc": {
+      "tag": "BUTTON",
+      "i": "36",
+      "pane": "play",
+      "visible": "visible"
+    },
+    "focusOk": true
+  },
+  {
+    "br": "cr",
+    "build": "pd291",
+    "kind": "desk",
+    "today": "open",
+    "how": "more-accuse",
+    "ok": true,
+    "liftOk": true,
+    "menuIn": true,
+    "cell": [
+      433,
+      327,
+      63,
+      63
+    ],
+    "cellI": "36",
+    "lift": [
+      433,
+      327,
+      63,
+      63
+    ],
+    "menu": [
+      10,
+      398,
+      1420,
+      79
+    ],
+    "firstBoardPane": "today",
+    "activePane": "play",
+    "errs": [],
+    "focusAfterEsc": {
+      "tag": "BUTTON",
+      "i": "36",
+      "pane": "play",
+      "visible": "visible"
+    },
+    "focusOk": true
+  },
+  {
+    "br": "cr",
+    "build": "pd291",
+    "kind": "desk",
+    "today": "open",
+    "how": "cell-gesture",
+    "ok": true,
+    "liftOk": true,
+    "menuIn": true,
+    "cell": [
+      433,
+      327,
+      63,
+      63
+    ],
+    "cellI": "36",
+    "lift": [
+      433,
+      327,
+      63,
+      63
+    ],
+    "menu": [
+      10,
+      398,
+      1420,
+      79
+    ],
+    "firstBoardPane": "today",
+    "activePane": "play",
+    "errs": [],
+    "focusAfterEsc": {
+      "tag": "BUTTON",
+      "i": "36",
+      "pane": "play",
+      "visible": "visible"
+    },
+    "focusOk": true
+  },
+  {
+    "br": "cr",
+    "build": "pd291",
+    "kind": "desk",
+    "today": "solved",
+    "how": "key-A",
+    "ok": true,
+    "liftOk": true,
+    "menuIn": true,
+    "cell": [
+      496,
+      264,
+      63,
+      63
+    ],
+    "cellI": "28",
+    "lift": [
+      496,
+      264,
+      63,
+      63
+    ],
+    "menu": [
+      10,
+      335,
+      1420,
+      79
+    ],
+    "firstBoardPane": "today",
+    "activePane": "play",
+    "errs": [],
+    "focusAfterEsc": {
+      "tag": "BUTTON",
+      "i": "28",
+      "pane": "play",
+      "visible": "visible"
+    },
+    "focusOk": true
+  },
+  {
+    "br": "cr",
+    "build": "pd291",
+    "kind": "desk",
+    "today": "solved",
+    "how": "more-accuse",
+    "ok": true,
+    "liftOk": true,
+    "menuIn": true,
+    "cell": [
+      496,
+      264,
+      63,
+      63
+    ],
+    "cellI": "28",
+    "lift": [
+      496,
+      264,
+      63,
+      63
+    ],
+    "menu": [
+      10,
+      335,
+      1420,
+      79
+    ],
+    "firstBoardPane": "today",
+    "activePane": "play",
+    "errs": [],
+    "focusAfterEsc": {
+      "tag": "BUTTON",
+      "i": "28",
+      "pane": "play",
+      "visible": "visible"
+    },
+    "focusOk": true
+  },
+  {
+    "br": "cr",
+    "build": "pd291",
+    "kind": "desk",
+    "today": "solved",
+    "how": "cell-gesture",
+    "ok": true,
+    "liftOk": true,
+    "menuIn": true,
+    "cell": [
+      496,
+      264,
+      63,
+      63
+    ],
+    "cellI": "28",
+    "lift": [
+      496,
+      264,
+      63,
+      63
+    ],
+    "menu": [
+      10,
+      335,
+      1420,
+      79
+    ],
+    "firstBoardPane": "today",
+    "activePane": "play",
+    "errs": [],
+    "focusAfterEsc": {
+      "tag": "BUTTON",
+      "i": "28",
+      "pane": "play",
+      "visible": "visible"
+    },
+    "focusOk": true
+  }
+]
