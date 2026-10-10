@@ -639,6 +639,7 @@ Gates: build → typecheck, lint, тесты web/engine/api (api с TEST_DATABAS
 | PD-294 | Бэклог (Dev-low4, P3, косметика): у архива, открытого из Play, в таб-баре подсвечен Year; решить, если владелец захочет | developer | P3 | pending (бэклог, решение владельца) | — |
 | PD-285 | Дизайн (Low UX, QA PD-278/PD-256): карточка результата Play в покое — «New puzzle» целиком под стеклом таб-бара на 320/393/430, «Watch your solve» выглядывает на 12 px и выглядит обрезанной (в конце прокрутки всё доступно); предложить компоновку/подсказку прокрутки, кадры; без реализации | designer | P3 | completed (на проде 2026-10-10: main 779352b, пакет 4; QA PASS; completed (QA PASS 2026-10-10 на pd-285 @ c2a20ed, дефектов нет: vitest web 1943, typecheck+lint чисто, pd285-check 374/374, свой extra 18/18, §7.1–7.11 PASS; ждёт сведения с pd-low-4; прежний статус: pd-285 @ c2a20ed готов: gates web 1943, pd285-check cr+wk 374/374; QA-Pundoku-285 запущен; владелец выбрал вариант A «док в 2 ряда»; дизайн в main da1111d: design/pd285-result-card.md §6–7; Dev-Pundoku-285/opus, ветка pd-285 от main; затем QA sonnet; можно выкатывать вместе с pd-low-4)) | — |
 | PD-286 | Жест «назад» (Low P3, QA PD-265): второй палец на таб-баре посреди жеста не отменяет жест (уходит на #/play) — edgeBack.ts слушает pointerdown второго пальца только на .push-layer | developer | P3 | completed (на проде 2026-10-10: main 779352b, пакет 4; QA PASS; прежний статус: pd-low-4 @ bee8063 готов, gates зелёные web 1941; QA-Pundoku-low4 запущен) | — |
+| PD-295 | P1 дефект на проде (владелец): экран Год — нижние месяцы перекрыты, прокрутки нет; нужен запас снизу и скролл, чтобы весь год был виден. Проверить: PD-292/PD-285 не протекли ли на Year, height/overflow контейнера (100vh/100dvh, safe-area), play-result-dock не снимается; сравнить с 3e8d8c8 | developer | P1 | in_progress (Dev-Pundoku-295/opus, ветка pd-295 от main 779352b; затем QA sonnet → hash Coordinator'у) | — |
 
 ### Бриф PD-8 (developer, P1 — пункт (a) блокирует UI-тикеты поля/Today)
 Движок: (a) зафиксировать и реализовать контракт `undo` в `MoveLog` — undo после `erase` не должен
@@ -797,7 +798,8 @@ Gates: build → typecheck, lint, тесты web/engine/api (api с `TEST_DATABA
 | Dev-Pundoku-285 | developer (opus) | done | PD-285 | 2026-10-10 |
 | QA-Pundoku-285-2 (agent a51c303c…) | qa-tester (sonnet) | done (PASS) | PD-285 | 2026-10-10 |
 | Dev-Pundoku-merge4 | developer (opus) | done (выкачен) | PD-282/284/285/286/288/292 | 2026-10-10 |
-| PM-Pundoku-24 | product-manager | idle (пакет 4 на проде; после PASS — сведение pd-low-4 + pd-285 → hash, push не делать) | PD-282/284/285/286/288/292 | 2026-10-10 |
+| Dev-Pundoku-295 | developer (opus) | working (PD-295: Year не прокручивается внизу, ветка pd-295) | PD-295 | 2026-10-10 |
+| PM-Pundoku-24 | product-manager | waiting (Dev-295 идёт, затем QA; пакет 4 на проде; после PASS — сведение pd-low-4 + pd-285 → hash, push не делать) | PD-282/284/285/286/288/292 | 2026-10-10 |
 | PM-Pundoku-23 | product-manager | waiting (Dev-desk-all2 сводит десктоп C; затем QA PD-270) | PD-290 | 2026-10-10 |
 | Dev-Pundoku-desk-all2 | developer (opus) | done | PD-290 | 2026-10-10 |
 | Dev-Pundoku-merge | developer (opus) | done | PD-290/PD-291 | 2026-10-10 |
