@@ -1,6 +1,7 @@
 import { heatmap, petMood, summary } from "@pundoku/engine";
 import type { ReactNode, RefObject } from "react";
 import { useMemo } from "react";
+import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
 import type { HelpBlockId } from "../help/blocks";
 import { TuneButton, useCardTune } from "../melody/MelodyTune";
@@ -48,6 +49,12 @@ interface ResultCardProps {
   solvedNow?: boolean;
   /** PD-260: настроение ещё уточняется (рекорд читается из истории) — место под кляксу держим, саму кляксу пока не рисуем. */
   petPending?: boolean;
+  /**
+   * PD-285: док действий Play на телефоне (`div.result-dock`, play/resultDock.ts). Задан — кнопки карточки (Watch, Share и
+   * `children`) уходят туда порталом: копия одна, testid прежние, порядок DOM «карточка → док». Строка «повтор недоступен»
+   * остаётся в карточке (это пояснение, а не действие). Не задан — кнопки в конце карточки, как раньше.
+   */
+  dock?: HTMLElement | null;
 }
 
 /**
@@ -55,7 +62,7 @@ interface ResultCardProps {
  * заполнения (`heatmap(moveLog)` движка), легенда Early/Late, время, «clean»/правки, достигнутая
  * техника (`summary`), «N % solved today» и Share. Общая для Today и Play.
  */
-export function ResultCard({ play, cardRef, title, winRate, winRateScope = "today", timelapse, hints, onOpenHelp, children, liar = null, personalBest = false, solvedNow = false, petPending = false }: ResultCardProps) {
+export function ResultCard({ play, cardRef, title, winRate, winRateScope = "today", timelapse, hints, onOpenHelp, children, liar = null, personalBest = false, solvedNow = false, petPending = false, dock = null }: ResultCardProps) {
   const { t } = useTranslation();
   const tl = useTimelapseEntry(play, timelapse?.date ?? null, timelapse?.difficulty ?? null);
   // PD-203: партия Мелодии — «♪ Сыграть мелодию» под картой пути (вариант A); мелодии нет (лог урезан) — кнопки нет.
@@ -79,6 +86,22 @@ export function ResultCard({ play, cardRef, title, winRate, winRateScope = "toda
   const mood = useMemo(
     () => (petOn ? petMood(petDayOfPlay(play, true, { hints, liar: liar?.info ?? null, personalBest })) : null),
     [petOn, play, hints, liar, personalBest],
+  );
+  // Кнопки карточки: Watch (главная), Share, затем `children` (Play: «New puzzle»). PD-285: на телефоне в Play — в доке.
+  const actions = (
+    <>
+      {tl.enabled && tl.available && <WatchRow available onWatch={() => openTl("player")} />}
+      {/* Share — PNG-отпечаток без цифр (PD-75), вторичное действие (PD-129): главное на карточке — «Watch your solve».
+          Нет цельного лога — нечем делиться, и кнопки нет вовсе (не серая: мёртвая кнопка путает; у дня без лога
+          вместо Watch — тихая строка). */}
+      {tl.available && (
+        <button type="button" className="share" data-testid="share" onClick={() => openTl("export")}>
+          <ShareIcon />
+          {t("solved.share")}
+        </button>
+      )}
+      {children}
+    </>
   );
   return (
     <section className={`card${mood ? " has-pet" : ""}`} ref={cardRef} tabIndex={-1} aria-labelledby="result-title" data-testid="result-card">
@@ -154,17 +177,8 @@ export function ResultCard({ play, cardRef, title, winRate, winRateScope = "toda
           {t(winRateScope === "day" ? "result.winRateDay" : "result.winRate", { percent: Math.round(winRate) })}
         </p>
       )}
-      {tl.enabled && <WatchRow available={tl.available} onWatch={() => openTl("player")} />}
-      {/* Share — PNG-отпечаток без цифр (PD-75), вторичное действие (PD-129): главное на карточке — «Watch your solve».
-          Нет цельного лога — нечем делиться, и кнопки нет вовсе (не серая: мёртвая кнопка путает; у дня без лога
-          вместо Watch — тихая строка). */}
-      {tl.available && (
-        <button type="button" className="share" data-testid="share" onClick={() => openTl("export")}>
-          <ShareIcon />
-          {t("solved.share")}
-        </button>
-      )}
-      {children}
+      {tl.enabled && !tl.available && <WatchRow available={false} onWatch={() => openTl("player")} />}
+      {dock ? createPortal(actions, dock) : actions}
       {tl.sheets}
     </section>
   );
