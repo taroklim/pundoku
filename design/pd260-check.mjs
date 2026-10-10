@@ -12,7 +12,8 @@
  *  - карточка: решили сейчас → `data-act="arrive"` (один раз, после входа карточки), посадка по настроению (760/900/860 мс);
  *    поза в движении не выходит за карточку (худший случай — «устал» 320 AX3); keyframes только transform/opacity;
  *    повторное открытие (решённый день из записи) — только покой; на поле кляксы нет;
- *  - покой: 3 вдоха (4,2 с) после действия, потом ни одной идущей анимации (живое ожидание ≈ 14 с в одном конфиге);
+ *  - покой (PD-297: постоянное дыхание, было «3 вдоха»): вдохи 4,2 с после действия, бесконечно — живьём через ≈ 14 с
+ *    дыхание всё ещё идёт (в одном конфиге); пауза вне экрана — design/pd297-check.mjs;
  *    вкладка скрыта → у кляксы нет анимаций; вернулись → покой заново, посадка не повторяется; фон (visibilitychange) — так же;
  *  - Reduce Motion: покоя нет, в каждой точке посадки/пробуждения transform тождественный (остаётся растворение 220/260 мс);
  *  - Year: «проснуться» (день показывался «спит», потом решён) один раз; повторный показ — покой;
@@ -230,8 +231,8 @@ async function cardRun(browser, name, c, mood, { frames = [], final = true } = {
     if (c.rm) ok(`${tag}: RM — покоя нет`, !breath, breath ? breath.name : "");
     else
       ok(
-        `${tag}: покой — 3 вдоха 4,2 с после посадки`,
-        breath && breath.iterations === 3 && Math.round(breath.duration) === 4200 && Math.round(breath.delay) === DELAY + D,
+        `${tag}: покой — бесконечные вдохи 4,2 с после посадки (PD-297)`,
+        breath && breath.iterations === Infinity && Math.round(breath.duration) === 4200 && Math.round(breath.delay) === DELAY + D,
         breath ? `${breath.iterations}×${breath.duration} delay ${breath.delay}` : "нет",
       );
     // Все точки посадки: поза внутри карточки; при RM — тождественный transform.
@@ -248,11 +249,16 @@ async function cardRun(browser, name, c, mood, { frames = [], final = true } = {
     ok(`${tag}: поза в движении внутри карточки`, out === 0, `${out} точек вне`);
     if (c.rm) ok(`${tag}: RM — в каждой точке transform тождественный`, moved === 0, `${moved} точек со сдвигом`);
     else ok(`${tag}: без RM — капля движется`, moved > 5, `${moved} точек`);
-    // Конец: 3 вдоха прошли → стоит.
-    const endT = c.rm ? DELAY + D + 10 : DELAY + D + 3 * 4200 + 10;
-    await freeze(page, sel, endT);
-    const g = await poseGeo(page, sel, ".card");
-    ok(`${tag}: после покоя стоит (тождественный transform)`, g.tf.every(isIdentity), g.tf.filter((t) => !isIdentity(t)).join(" "));
+    // Конец: RM — после растворения стоит; без RM (PD-297) покой не кончается — через «3 вдоха» вдох всё ещё идёт.
+    if (c.rm) {
+      await freeze(page, sel, DELAY + D + 10);
+      const g = await poseGeo(page, sel, ".card");
+      ok(`${tag}: RM — после растворения стоит (тождественный transform)`, g.tf.every(isIdentity), g.tf.filter((t) => !isIdentity(t)).join(" "));
+    } else {
+      await freeze(page, sel, DELAY + D + 3 * 4200 + 1050); // четверть 4-го вдоха — прежде здесь клякса уже стояла
+      const g = await poseGeo(page, sel, ".card");
+      ok(`${tag}: после «3 вдохов» дыхание продолжается (PD-297)`, !g.tf.every(isIdentity) && inside(g), g.tf.join(" "));
+    }
     // Заголовок не под кляксой.
     const overlap = await page.evaluate(() => {
       const p = document.querySelector('[data-testid="pet-card"] .pet').getBoundingClientRect();
@@ -269,7 +275,7 @@ async function cardRun(browser, name, c, mood, { frames = [], final = true } = {
   }
 }
 
-/** Живое время (без пауз и перемоток): посадка → 3 вдоха → ни одной идущей анимации. */
+/** Живое время (без пауз и перемоток): посадка → вдохи; через время прежних «3 вдохов» дыхание всё ещё идёт (PD-297). */
 async function cardLive(browser, name, c, mood) {
   const tag = `${name}-${c.w}-${c.scheme}-${c.lang}`;
   const P = SEED.pending[mood];
@@ -280,6 +286,10 @@ async function cardLive(browser, name, c, mood) {
     await page.goto(`${BASE}/#/today`);
     await solveLast(page, P.last);
     await page.locator(`${sel}[data-act="arrive"]`).waitFor({ timeout: 15000 });
+    // PD-297: после решения панель докручивает к Grid ∞ (≈300 мс после карточки) — карточка уходит из вида, и клякса стоит на
+    // паузе. Дождаться докрутки и вернуть карточку в вид.
+    await page.waitForTimeout(900);
+    await cardTop(page);
     const t0 = Date.now();
     await page.waitForTimeout(1600);
     const mid = await animsOf(page, sel);
@@ -290,7 +300,11 @@ async function cardLive(browser, name, c, mood) {
     );
     await page.waitForTimeout(Math.max(0, DELAY + D + 3 * 4200 + 1000 - (Date.now() - t0)));
     const after = await animsOf(page, sel);
-    ok(`${tag}: живьём через ≈${((DELAY + D + 13600) / 1000).toFixed(1)} с — ни одной идущей анимации (3 вдоха и стоит)`, after.every((a) => a.state !== "running"), after.map((a) => `${a.name}:${a.state}`).join(" "));
+    ok(
+      `${tag}: живьём через ≈${((DELAY + D + 13600) / 1000).toFixed(1)} с — дыхание всё ещё идёт (PD-297: бесконечно), посадка закончена`,
+      after.some((a) => a.cls === "breath" && a.state === "running" && a.iterations === Infinity) && after.every((a) => a.cls === "breath" || a.state === "finished"),
+      after.map((a) => `${a.name}:${a.state}`).join(" "),
+    );
     ok(`${tag}: живьём без ошибок консоли`, errs.length === 0, errs.join(" | "));
   } finally {
     await ctx.close();
@@ -307,7 +321,9 @@ async function cardTab(browser, name, c) {
     await page.goto(`${BASE}/#/today`);
     await solveLast(page, P.last);
     await page.locator(`${sel}[data-act="arrive"]`).waitFor({ timeout: 15000 });
-    await page.waitForTimeout(450); // посреди посадки
+    await page.waitForTimeout(400); // PD-297: докрутка к Grid ∞ прошла; вне экрана клякса на паузе — держим карточку в виду
+    await cardTop(page);
+    await page.waitForTimeout(300); // посреди посадки (пока карточка была за краем, посадка стояла на паузе)
     await page.locator("#tab-play").click();
     await page.waitForTimeout(500);
     const hidden = await animsOf(page, sel);
@@ -315,11 +331,12 @@ async function cardTab(browser, name, c) {
     ok(`${tag}: вкладка скрыта — data-still, без действия`, (await page.locator(`${sel}[data-still]:not([data-act])`).count()) === 1);
     await page.locator("#tab-today").click();
     await page.waitForTimeout(400);
+    await cardTop(page);
     const back = await animsOf(page, sel);
     const act = await page.locator(sel).getAttribute("data-act");
     ok(
       `${tag}: вернулись — покой заново, посадка не повторяется`,
-      act === null && back.length === 1 && back[0].cls === "breath" && back[0].state === "running" && back[0].ct < 1500 && back[0].iterations === 3,
+      act === null && back.length === 1 && back[0].cls === "breath" && back[0].state === "running" && back[0].ct < 1500 && back[0].iterations === Infinity,
       back.map((a) => `${a.name}@${Math.round(a.ct)}`).join(" "),
     );
     // Приложение в фоне (эмуляция visibilitychange — WebKit на iPhone и сам гасит анимации фона): стоит; вернулось — покой заново.
@@ -354,7 +371,7 @@ async function cardReopen(browser, name, c) {
     await page.waitForTimeout(400);
     ok(`${tag}: решённый день из записи — без посадки`, (await page.locator(sel).getAttribute("data-act")) === null);
     const A = await animsOf(page, sel);
-    ok(`${tag}: решённый день — ${c.rm ? "RM: без анимаций" : "только покой (3 вдоха)"}`, c.rm ? A.length === 0 : A.length === 1 && A[0].iterations === 3, A.map((a) => `${a.name}×${a.iterations}`).join(" "));
+    ok(`${tag}: решённый день — ${c.rm ? "RM: без анимаций" : "только покой (бесконечный, PD-297)"}`, c.rm ? A.length === 0 : A.length === 1 && A[0].iterations === Infinity, A.map((a) => `${a.name}×${a.iterations}`).join(" "));
     ok(`${tag}: повторное открытие без ошибок`, errs.length === 0, errs.join(" | "));
   } finally {
     await ctx.close();

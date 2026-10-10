@@ -107,18 +107,28 @@ describe.each([
   });
 });
 
-describe("prefs: питомец-клякса (PD-180)", () => {
-  beforeEach(() => setPetEnabled(false));
+describe("prefs: питомец-клякса (PD-180, PD-297 — по умолчанию ВКЛ)", () => {
+  beforeEach(() => setPetEnabled(true));
 
-  it("по умолчанию ВЫКЛ (ключа нет), включено только значением «1», выкл удаляет ключ", () => {
+  it("чистый профиль и профиль со старым состоянием без ключа — вкл", () => {
+    localStorage.clear();
+    expect(getPetEnabled()).toBe(true);
+    localStorage.setItem("pundoku.locale", "uk"); // «старое» состояние: язык есть, питомца никто не трогал
+    expect(getPetEnabled()).toBe(true);
+  });
+
+  it("прежний формат «1» (включал до PD-297) — вкл без миграции", () => {
+    localStorage.setItem(PET_KEY, "1");
+    expect(getPetEnabled()).toBe(true);
+  });
+
+  it("явный выкл — «0» и уважается; вкл снова удаляет ключ", () => {
+    setPetEnabled(false);
+    expect(localStorage.getItem(PET_KEY)).toBe("0");
     expect(getPetEnabled()).toBe(false);
     setPetEnabled(true);
-    expect(localStorage.getItem(PET_KEY)).toBe("1");
-    expect(getPetEnabled()).toBe(true);
-    localStorage.setItem(PET_KEY, "true");
-    expect(getPetEnabled()).toBe(false);
-    setPetEnabled(false);
     expect(localStorage.getItem(PET_KEY)).toBeNull();
+    expect(getPetEnabled()).toBe(true);
   });
 
   it("localStorage недоступен: значение живёт в памяти", () => {
@@ -128,6 +138,11 @@ describe("prefs: питомец-клякса (PD-180)", () => {
     vi.spyOn(Storage.prototype, "setItem").mockImplementation(() => {
       throw new Error("denied");
     });
+    vi.spyOn(Storage.prototype, "removeItem").mockImplementation(() => {
+      throw new Error("denied");
+    });
+    setPetEnabled(false);
+    expect(getPetEnabled()).toBe(false);
     setPetEnabled(true);
     expect(getPetEnabled()).toBe(true);
   });

@@ -102,7 +102,7 @@ beforeEach(async () => {
   await i18n.changeLanguage("en");
   localStorage.clear();
   setHighlightWrong(false);
-  setPetEnabled(false);
+  setPetEnabled(true); // PD-297: умолчание — вкл (ключа нет)
   host = document.createElement("div");
   document.body.append(host);
   root = createRoot(host);
@@ -828,39 +828,54 @@ describe("SettingsScreen: автоочистка заметок (PD-119) и за
   });
 });
 
-describe("SettingsScreen: Питомец-клякса (PD-180)", () => {
-  it("раздел «Extras»: нативный switch, ВЫКЛ по умолчанию, футер через aria-describedby; превью 4 настроений приглушено", async () => {
+describe("SettingsScreen: Питомец-клякса (PD-180, PD-297)", () => {
+  it("раздел «Extras»: нативный switch, ВКЛ по умолчанию (PD-297), футер через aria-describedby; превью 4 настроений дышит", async () => {
+    expect(localStorage.getItem(PET_KEY)).toBeNull();
     await mount();
     const el = q<HTMLInputElement>("pet-toggle")!;
     expect(el.type).toBe("checkbox");
     expect(el.getAttribute("role")).toBe("switch");
-    expect(el.checked).toBe(false);
+    expect(el.checked).toBe(true);
     expect(el.closest("label")!.textContent).toBe("Blot the pet");
     expect(host.querySelector("#settings-h-extras")!.textContent).toBe("Extras");
     const foot = host.querySelector("#" + el.getAttribute("aria-describedby"))!;
     expect(foot.textContent).toContain("never comes onto the board");
-    expect(foot.textContent).toContain("Off by default");
+    expect(foot.textContent).toContain("On by default");
     const moods = q("pet-moods")!;
-    expect(moods.classList.contains("off")).toBe(true);
+    expect(moods.classList.contains("off")).toBe(false);
     expect([...moods.querySelectorAll(".pet")].map((s) => s.getAttribute("data-mood"))).toEqual(["happy", "tired", "surprised", "asleep"]);
     // В превью картинка — украшение: имя настроения уже в подписи, VoiceOver не читает его дважды.
     expect([...moods.querySelectorAll(".pet")].every((s) => s.getAttribute("aria-hidden") === "true")).toBe(true);
-    // PD-288: превью стоит — по макету PD-223 §1 Питомец дышит только на карточке результата и в листе дня Year.
-    expect([...moods.querySelectorAll(".pet")].some((s) => s.hasAttribute("data-idle"))).toBe(false);
+    // PD-297 (отменяет «превью стоит» PD-288): при включённом Питомце превью дышит, как на карточке.
+    expect([...moods.querySelectorAll(".pet")].every((s) => s.hasAttribute("data-idle"))).toBe(true);
     expect([...moods.querySelectorAll("figcaption")].map((c) => c.firstChild!.textContent)).toEqual(["Pleased", "Tired", "Surprised", "Asleep"]);
   });
 
-  it("включение пишет локальную настройку «1», выключение удаляет ключ; превью проявляется", async () => {
+  it("выключение пишет «0», превью приглушено и стоит; включение удаляет ключ, превью снова дышит", async () => {
     await mount();
+    const pets = () => [...q("pet-moods")!.querySelectorAll(".pet")];
     await act(async () => q<HTMLInputElement>("pet-toggle")!.closest("label")!.dispatchEvent(new MouseEvent("click", { bubbles: true })));
-    expect(localStorage.getItem(PET_KEY)).toBe("1");
-    expect(getPetEnabled()).toBe(true);
-    expect(q<HTMLInputElement>("pet-toggle")!.checked).toBe(true);
-    expect(q("pet-moods")!.classList.contains("off")).toBe(false);
+    expect(localStorage.getItem(PET_KEY)).toBe("0");
+    expect(getPetEnabled()).toBe(false);
+    expect(q<HTMLInputElement>("pet-toggle")!.checked).toBe(false);
+    expect(q("pet-moods")!.classList.contains("off")).toBe(true);
+    expect(pets().some((s) => s.hasAttribute("data-idle"))).toBe(false);
     // Другие тумблеры не задеты.
     expect(q<HTMLInputElement>("highlight-wrong")!.checked).toBe(false);
     await act(async () => q<HTMLInputElement>("pet-toggle")!.closest("label")!.dispatchEvent(new MouseEvent("click", { bubbles: true })));
     expect(localStorage.getItem(PET_KEY)).toBeNull();
+    expect(q("pet-moods")!.classList.contains("off")).toBe(false);
+    expect(pets().every((s) => s.hasAttribute("data-idle"))).toBe(true);
+  });
+
+  it("явный выкл переживает перемонтирование (перезагрузку); подписи футера uk/ru — «за замовчуванням увімкнено» / «по умолчанию включено»", async () => {
+    setPetEnabled(false);
+    await mount();
+    expect(q<HTMLInputElement>("pet-toggle")!.checked).toBe(false);
+    await click("lang-uk");
+    expect(host.querySelector("#settings-pet-foot")!.textContent).toContain("За замовчуванням увімкнено.");
+    await click("lang-ru");
+    expect(host.querySelector("#settings-pet-foot")!.textContent).toContain("По умолчанию включено.");
   });
 
   it("подписи на uk и ru", async () => {

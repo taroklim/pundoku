@@ -15,3 +15,26 @@ export function usePetLive(): boolean {
   }, []);
   return tabActive && visible;
 }
+
+/**
+ * PD-297: клякса в пределах экрана (IntersectionObserver, корень — окно: учитывается и обрезка прокручиваемыми предками —
+ * карточка результата, лист дня Year, Настройки). Ушла за край — `PetBlot` ставит дыханию паузу (`animation-play-state`), без
+ * ремаунта: вернулась — вдох продолжается с того же места. Пока наблюдатель не ответил (и там, где его нет) — считаем видимой.
+ */
+export function usePetOnScreen(): [(el: Element | null) => void, boolean] {
+  const [el, setEl] = useState<Element | null>(null);
+  const [onScreen, setOnScreen] = useState(true);
+  useEffect(() => {
+    if (!el || typeof IntersectionObserver === "undefined") return;
+    const io = new IntersectionObserver((entries) => {
+      const last = entries[entries.length - 1];
+      if (last) setOnScreen(last.isIntersecting);
+    });
+    io.observe(el);
+    return () => {
+      io.disconnect();
+      setOnScreen(true);
+    };
+  }, [el]);
+  return [setEl, onScreen];
+}

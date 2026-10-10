@@ -6,7 +6,8 @@
  *   неё. Посадка = настроение: доволен — ровно, устал — оседает тяжелее, удивлён — подпрыгивает.
  * - «wake» — лист дня Year: день, который был показан «спит», закончили — при первом показе после этого, один раз.
  * - «Уснуть» в приложении не бывает (решённый день не засыпает) — не переносим.
- * - Покой — 3 вдоха и замирает (`IDLE_BREATHS`), не бесконечное дыхание (md §1).
+ * - Покой — постоянное дыхание (PD-297, решение владельца 2026-10-10: вместо «3 вдоха и замирает» макета md §1). Вне экрана, в
+ *   скрытой вкладке и в фоне — стоит (`PetBlot`), при Reduce Motion — покоя нет.
  * JS только ставит атрибуты и переменные; движение — CSS (`pet.css`), только transform/opacity на HTML-слоях.
  */
 import type { PetMood } from "@pundoku/engine";
@@ -14,8 +15,7 @@ import { petShape } from "./petGeometry";
 
 export type PetAct = "arrive" | "wake";
 
-/** Покой: число вдохов после действия (или сразу), потом клякса стоит (md §1: 3 × 4,2 с ≈ 12,6 с; «спит» — 3 × 6,5 с). */
-export const IDLE_BREATHS = 3;
+/** Покой: длительность одного вдоха (md §1: 4,2 с; «спит» — 6,5 с). Вдохи повторяются бесконечно (PD-297), значения — в `pet.css`. */
 export const BREATH_MS: Readonly<Record<PetMood, number>> = { happy: 4200, tired: 4200, surprised: 4200, asleep: 6500 };
 
 /** Задержка реакции на карточке: после входа карточки (`cardUp` 300 мс) — макет «cardUp 300 мс → задержка 300 мс». */
@@ -28,9 +28,6 @@ export function actDuration(act: PetAct, mood: PetMood): readonly [number, numbe
   if (mood === "surprised") return [860, 220];
   return [760, 220];
 }
-
-/** Полное время покоя, мс (без действия): сколько клякса «живёт» после показа, прежде чем замереть. */
-export const idleTotalMs = (mood: PetMood): number => IDLE_BREATHS * BREATH_MS[mood];
 
 const f4 = (v: number) => v.toFixed(4);
 const f2 = (v: number) => v.toFixed(2);

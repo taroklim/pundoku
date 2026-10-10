@@ -626,7 +626,8 @@ export function SettingsScreen({ store, onBack, origin = "today", onOpenHelp }: 
         </p>
       </section>
 
-      {/* PD-180: «Дополнительно» — Питомец-клякса (опция, не режим; выкл по умолчанию). Превью настроений — честное описание. */}
+      {/* PD-180: «Дополнительно» — Питомец-клякса (опция, не режим; PD-297: вкл по умолчанию). Превью настроений — честное описание;
+          при включённом Питомце дышит, как на карточке (PD-297), при выключенном — приглушено и стоит. */}
       <section className="settings-sec" aria-labelledby="settings-h-extras">
         <h2 className="settings-head" id="settings-h-extras">
           {t("settings.extras.head")}
@@ -652,7 +653,7 @@ export function SettingsScreen({ store, onBack, origin = "today", onOpenHelp }: 
           <div className={`pet-moods${petOn ? "" : " off"}`} role="list" aria-label={t("settings.extras.previewLabel")} data-testid="pet-moods">
             {PET_MOODS.map((m) => (
               <figure key={m} role="listitem">
-                <PetBlot mood={m} size={40} decorative idle={false} />
+                <PetBlot mood={m} size={40} decorative idle={petOn} />
                 <figcaption>
                   {t(`pet.mood.${m}`)}
                   <small>{t(`pet.when.${m}`)}</small>

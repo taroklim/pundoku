@@ -48,14 +48,14 @@
   --D: calc(var(--d-rm) + var(--mo) * (var(--d-full) - var(--d-rm)));
 }
 
-/* Покой: 3 вдоха после действия (или сразу), потом клякса стоит — не бесконечное дыхание (макет md §1). data-idle ставит
-   PetBlot, только когда клякса видна и движение не уменьшено. */
+/* Покой: постоянное дыхание после действия (или сразу) — PD-297, решение владельца 2026-10-10 (было «3 вдоха и замирает»,
+   макет md §1). data-idle ставит PetBlot, только когда клякса видна и движение не уменьшено. */
 .pet[data-idle] .breath {
   animation-name: petBreathB;
   animation-duration: 4.2s;
   animation-timing-function: var(--e-io);
   animation-delay: calc(var(--act-delay, 0ms) + var(--D, 0ms));
-  animation-iteration-count: 3;
+  animation-iteration-count: infinite;
   animation-fill-mode: none;
 }
 .pet[data-idle][data-mood="asleep"] .breath {
@@ -103,6 +103,11 @@
 /* Не видна (вкладка скрыта, приложение в фоне): ни одной анимации; вернулась — PetBlot перезапускает покой ремаунтом. */
 .pet[data-still] * {
   animation: none !important;
+}
+/* PD-297: ушла за край экрана (IntersectionObserver в PetBlot) — пауза, без ремаунта: вернулась — продолжает с того же кадра.
+   Батарея: бесконечный покой не крутится там, где его не видно. */
+.pet[data-paused] * {
+  animation-play-state: paused !important;
 }
 
 /* keyframes — только transform / opacity */
