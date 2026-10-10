@@ -1,0 +1,73 @@
+OK   cr desk-c-all phone today=open key-A {"cell":[16,193,39,39],"cellI":"27","lift":[16,193,39,39],"menu":[10,240,373,95],"firstBoardPane":"today","activePane":"play"}
+     фокус после Esc: OK  {"tag":"BUTTON","i":"27","pane":"play","visible":"visible"}
+OK   cr desk-c-all phone today=open more-accuse {"cell":[16,193,39,39],"cellI":"27","lift":[16,193,39,39],"menu":[10,240,373,95],"firstBoardPane":"today","activePane":"play"}
+     фокус после Esc: OK  {"tag":"BUTTON","i":"27","pane":"play","visible":"visible"}
+OK   cr desk-c-all phone today=open cell-gesture {"cell":[16,193,39,39],"cellI":"27","lift":[16,193,39,39],"menu":[10,240,373,95],"firstBoardPane":"today","activePane":"play"}
+     фокус после Esc: OK  {"tag":"BUTTON","i":"27","pane":"play","visible":"visible"}
+OK   cr desk-c-all phone today=solved key-A {"cell":[299,111,39,39],"cellI":"16","lift":[299,111,39,39],"menu":[10,158,373,95],"firstBoardPane":"today","activePane":"play"}
+     фокус после Esc: OK  {"tag":"BUTTON","i":"16","pane":"play","visible":"visible"}
+OK   cr desk-c-all phone today=solved more-accuse {"cell":[299,111,39,39],"cellI":"16","lift":[299,111,39,39],"menu":[10,158,373,95],"firstBoardPane":"today","activePane":"play"}
+     фокус после Esc: OK  {"tag":"BUTTON","i":"16","pane":"play","visible":"visible"}
+OK   cr desk-c-all phone today=solved cell-gesture {"cell":[299,111,39,39],"cellI":"16","lift":[299,111,39,39],"menu":[10,158,373,95],"firstBoardPane":"today","activePane":"play"}
+     фокус после Esc: OK  {"tag":"BUTTON","i":"16","pane":"play","visible":"visible"}
+OK   cr desk-c-all desk today=open key-A {"cell":[419,313,79,79],"cellI":"28","lift":[419,313,79,79],"menu":[419,400,320,95],"firstBoardPane":"today","activePane":"play"}
+     фокус после Esc: OK  {"tag":"BUTTON","i":"28","pane":"play","visible":"visible"}
+OK   cr desk-c-all desk today=open more-accuse {"cell":[419,313,79,79],"cellI":"28","lift":[419,313,79,79],"menu":[419,400,320,95],"firstBoardPane":"today","activePane":"play"}
+     фокус после Esc: OK  {"tag":"BUTTON","i":"28","pane":"play","visible":"visible"}
+OK   cr desk-c-all desk today=open cell-gesture {"cell":[419,313,79,79],"cellI":"28","lift":[419,313,79,79],"menu":[419,400,320,95],"firstBoardPane":"today","activePane":"play"}
+     фокус после Esc: OK  {"tag":"BUTTON","i":"28","pane":"play","visible":"visible"}
+OK   cr desk-c-all desk today=solved key-A {"cell":[981,151,79,79],"cellI":"17","lift":[981,151,79,79],"menu":[981,238,320,95],"firstBoardPane":"today","activePane":"play"}
+     фокус после Esc: OK  {"tag":"BUTTON","i":"17","pane":"play","visible":"visible"}
+OK   cr desk-c-all desk today=solved more-accuse {"cell":[981,151,79,79],"cellI":"17","lift":[981,151,79,79],"menu":[981,238,320,95],"firstBoardPane":"today","activePane":"play"}
+     фокус после Esc: OK  {"tag":"BUTTON","i":"17","pane":"play","visible":"visible"}
+OK   cr desk-c-all desk today=solved cell-gesture {"cell":[981,151,79,79],"cellI":"17","lift":[981,151,79,79],"menu":[981,238,320,95],"firstBoardPane":"today","activePane":"play"}
+     фокус после Esc: OK  {"tag":"BUTTON","i":"17","pane":"play","visible":"visible"}
+OK   cr desk-c-all compact today=open key-A {"cell":[527,72,56,56],"cellI":"7","lift":[527,72,56,56],"menu":[527,136,320,95],"firstBoardPane":"today","activePane":"play"}
+     фокус после Esc: OK  {"tag":"BUTTON","i":"7","pane":"play","visible":"visible"}
+OK   cr desk-c-all compact today=open more-accuse {"cell":[527,72,56,56],"cellI":"7","lift":[527,72,56,56],"menu":[527,136,320,95],"firstBoardPane":"today","activePane":"play"}
+     фокус после Esc: OK  {"tag":"BUTTON","i":"7","pane":"play","visible":"visible"}
+OK   cr desk-c-all compact today=open cell-gesture {"cell":[527,72,56,56],"cellI":"7","lift":[527,72,56,56],"menu":[527,136,320,95],"firstBoardPane":"today","activePane":"play"}
+     фокус после Esc: OK  {"tag":"BUTTON","i":"7","pane":"play","visible":"visible"}
+OK   cr desk-c-all compact today=solved key-A {"cell":[124,302,56,56],"cellI":"36","lift":[124,302,56,56],"menu":[124,366,320,95],"firstBoardPane":"today","activePane":"play"}
+     фокус после Esc: OK  {"tag":"BUTTON","i":"36","pane":"play","visible":"visible"}
+OK   cr desk-c-all compact today=solved more-accuse {"cell":[124,302,56,56],"cellI":"36","lift":[124,302,56,56],"menu":[124,366,320,95],"firstBoardPane":"today","activePane":"play"}
+     фокус после Esc: OK  {"tag":"BUTTON","i":"36","pane":"play","visible":"visible"}
+OK   cr desk-c-all compact today=solved cell-gesture {"cell":[124,302,56,56],"cellI":"36","lift":[124,302,56,56],"menu":[124,366,320,95],"firstBoardPane":"today","activePane":"play"}
+     фокус после Esc: OK  {"tag":"BUTTON","i":"36","pane":"play","visible":"visible"}
+OK   wk desk-c-all phone today=open key-A {"cell":[299,142,39,39],"cellI":"25","lift":[299,142,39,39],"menu":[10,190,373,76],"firstBoardPane":"today","activePane":"play"}
+     фокус после Esc: OK  {"tag":"BUTTON","i":"25","pane":"play","visible":"visible"}
+OK   wk desk-c-all phone today=open more-accuse {"cell":[299,142,39,39],"cellI":"25","lift":[299,142,39,39],"menu":[10,190,373,76],"firstBoardPane":"today","activePane":"play"}
+     фокус после Esc: OK  {"tag":"BUTTON","i":"25","pane":"play","visible":"visible"}
+OK   wk desk-c-all phone today=open cell-gesture {"cell":[299,142,39,39],"cellI":"25","lift":[299,142,39,39],"menu":[10,190,373,76],"firstBoardPane":"today","activePane":"play"}
+     фокус после Esc: OK  {"tag":"BUTTON","i":"25","pane":"play","visible":"visible"}
+OK   wk desk-c-all phone today=solved key-A {"cell":[138,186,39,39],"cellI":"30","lift":[138,186,39,39],"menu":[10,233,373,76],"firstBoardPane":"today","activePane":"play"}
+     фокус после Esc: OK  {"tag":"BUTTON","i":"30","pane":"play","visible":"visible"}
+OK   wk desk-c-all phone today=solved more-accuse {"cell":[138,186,39,39],"cellI":"30","lift":[138,186,39,39],"menu":[10,233,373,76],"firstBoardPane":"today","activePane":"play"}
+     фокус после Esc: OK  {"tag":"BUTTON","i":"30","pane":"play","visible":"visible"}
+OK   wk desk-c-all phone today=solved cell-gesture {"cell":[138,186,39,39],"cellI":"30","lift":[138,186,39,39],"menu":[10,233,373,76],"firstBoardPane":"today","activePane":"play"}
+     фокус после Esc: OK  {"tag":"BUTTON","i":"30","pane":"play","visible":"visible"}
+OK   wk desk-c-all desk today=open key-A {"cell":[340,313,79,79],"cellI":"27","lift":[340,313,79,79],"menu":[340,400,320,89],"firstBoardPane":"today","activePane":"play"}
+     фокус после Esc: OK  {"tag":"BUTTON","i":"27","pane":"play","visible":"visible"}
+OK   wk desk-c-all desk today=open more-accuse {"cell":[340,313,79,79],"cellI":"27","lift":[340,313,79,79],"menu":[340,400,320,89],"firstBoardPane":"today","activePane":"play"}
+     фокус после Esc: OK  {"tag":"BUTTON","i":"27","pane":"play","visible":"visible"}
+OK   wk desk-c-all desk today=open cell-gesture {"cell":[340,313,79,79],"cellI":"27","lift":[340,313,79,79],"menu":[340,400,320,89],"firstBoardPane":"today","activePane":"play"}
+     фокус после Esc: OK  {"tag":"BUTTON","i":"27","pane":"play","visible":"visible"}
+OK   wk desk-c-all desk today=solved key-A {"cell":[340,313,79,79],"cellI":"27","lift":[340,313,79,79],"menu":[340,400,320,89],"firstBoardPane":"today","activePane":"play"}
+     фокус после Esc: OK  {"tag":"BUTTON","i":"27","pane":"play","visible":"visible"}
+OK   wk desk-c-all desk today=solved more-accuse {"cell":[340,313,79,79],"cellI":"27","lift":[340,313,79,79],"menu":[340,400,320,89],"firstBoardPane":"today","activePane":"play"}
+     фокус после Esc: OK  {"tag":"BUTTON","i":"27","pane":"play","visible":"visible"}
+OK   wk desk-c-all desk today=solved cell-gesture {"cell":[340,313,79,79],"cellI":"27","lift":[340,313,79,79],"menu":[340,400,320,89],"firstBoardPane":"today","activePane":"play"}
+     фокус после Esc: OK  {"tag":"BUTTON","i":"27","pane":"play","visible":"visible"}
+OK   wk desk-c-all compact today=open key-A {"cell":[584,128,56,56],"cellI":"17","lift":[584,128,56,56],"menu":[584,193,320,89],"firstBoardPane":"today","activePane":"play"}
+     фокус после Esc: OK  {"tag":"BUTTON","i":"17","pane":"play","visible":"visible"}
+OK   wk desk-c-all compact today=open more-accuse {"cell":[584,128,56,56],"cellI":"17","lift":[584,128,56,56],"menu":[584,193,320,89],"firstBoardPane":"today","activePane":"play"}
+     фокус после Esc: OK  {"tag":"BUTTON","i":"17","pane":"play","visible":"visible"}
+OK   wk desk-c-all compact today=open cell-gesture {"cell":[584,128,56,56],"cellI":"17","lift":[584,128,56,56],"menu":[584,193,320,89],"firstBoardPane":"today","activePane":"play"}
+     фокус после Esc: OK  {"tag":"BUTTON","i":"17","pane":"play","visible":"visible"}
+OK   wk desk-c-all compact today=solved key-A {"cell":[471,128,56,56],"cellI":"15","lift":[471,128,56,56],"menu":[471,193,320,89],"firstBoardPane":"today","activePane":"play"}
+     фокус после Esc: OK  {"tag":"BUTTON","i":"15","pane":"play","visible":"visible"}
+OK   wk desk-c-all compact today=solved more-accuse {"cell":[471,128,56,56],"cellI":"15","lift":[471,128,56,56],"menu":[471,193,320,89],"firstBoardPane":"today","activePane":"play"}
+     фокус после Esc: OK  {"tag":"BUTTON","i":"15","pane":"play","visible":"visible"}
+OK   wk desk-c-all compact today=solved cell-gesture {"cell":[471,128,56,56],"cellI":"15","lift":[471,128,56,56],"menu":[471,193,320,89],"firstBoardPane":"today","activePane":"play"}
+     фокус после Esc: OK  {"tag":"BUTTON","i":"15","pane":"play","visible":"visible"}
+36/36 PASS

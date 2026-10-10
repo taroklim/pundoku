@@ -1,0 +1,370 @@
+PASS cr party 1280x800@100 light (1280x800): раскладка с сайдбаром, партия .play-fit.desk-play {"shell":"shell desk","play":"play today play-fit play-hintable desk-play"}
+PASS cr party 1280x800@100 light (1280x800): у детей партии (тулбар, область поля, инспектор) нет полей колонки PD-269 {"kids":[]}
+PASS cr party 1280x800@100 light (1280x800): поле = min(720, окно − 124, область − 96) = 676, по центру области поля {"board":[296,72,676,676],"stage":[248,52,772,748],"want":676}
+PASS cr party 1280x800@100 light (1280x800): инспектор clamp(260, 20vw, 320) = 260 у правого края, во всю высоту {"insp":[1020,0,260,800]}
+PASS cr party 1280x800@100 light (1280x800): нет горизонтальной прокрутки {"scrollW":1280}
+PASS cr party 1280x800@100 light (1280x800): панель 1–9 и действия — в инспекторе {"pad":[1041,171,219,208],"actions":[1041,391,219,144]}
+PASS cr party 1280x800@100 light (1280x800) solved: Today остаётся партией — .today:not(.play-fit) (колонка 640 PD-269) нет {"notFit":0,"play":"play today play-fit play-hintable desk-play"}
+PASS cr party 1280x800@100 light (1280x800) solved: поле того же размера на месте, область без полей {"board0":[296,72,676,676],"board1":[296,72,676,676]}
+PASS cr party 1280x800@100 light (1280x800) solved: карточка — в инспекторе во всю его ширину (− 24), без полей колонки {"card":[1033,12,235,475],"insp":[1020,0,260,800],"margin":["0px","0px"]}
+PASS cr party 1280x800@100 light (1280x800) solved: Grid ∞ — в инспекторе {"grid":[1076,550,150,150]}
+PASS cr party 1280x800@100 light (1280x800) solved: Timelapse — шит 560 (≤ 560) по центру области контента, правее сайдбара, в окне {"sheet":[484,96,560,704],"scrim":[248,0,1032,800]}
+PASS cr party 1280x800@100 light (1280x800): без ошибок JS {"errs":[]}
+PASS cr party 1280x800@100 dark (1280x800): раскладка с сайдбаром, партия .play-fit.desk-play {"shell":"shell desk","play":"play today play-fit play-hintable desk-play"}
+PASS cr party 1280x800@100 dark (1280x800): у детей партии (тулбар, область поля, инспектор) нет полей колонки PD-269 {"kids":[]}
+PASS cr party 1280x800@100 dark (1280x800): поле = min(720, окно − 124, область − 96) = 676, по центру области поля {"board":[296,72,676,676],"stage":[248,52,772,748],"want":676}
+PASS cr party 1280x800@100 dark (1280x800): инспектор clamp(260, 20vw, 320) = 260 у правого края, во всю высоту {"insp":[1020,0,260,800]}
+PASS cr party 1280x800@100 dark (1280x800): нет горизонтальной прокрутки {"scrollW":1280}
+PASS cr party 1280x800@100 dark (1280x800): панель 1–9 и действия — в инспекторе {"pad":[1041,171,219,208],"actions":[1041,391,219,144]}
+PASS cr party 1280x800@100 dark (1280x800): без ошибок JS {"errs":[]}
+PASS cr party 1280x800@125 light (1024x640): раскладка компакт C, партия .play-fit.desk-play {"shell":"shell desk compact side-off","play":"play today play-fit play-hintable desk-play"}
+PASS cr party 1280x800@125 light (1024x640): у детей партии (тулбар, область поля, инспектор) нет полей колонки PD-269 {"kids":[]}
+PASS cr party 1280x800@125 light (1024x640): поле = min(720, окно − 124, область − 96) = 516, по центру области поля {"board":[124,72,516,516],"stage":[0,52,764,588],"want":516}
+PASS cr party 1280x800@125 light (1024x640): инспектор clamp(260, 20vw, 320) = 260 у правого края, во всю высоту {"insp":[764,0,260,640]}
+PASS cr party 1280x800@125 light (1024x640): нет горизонтальной прокрутки {"scrollW":1024}
+PASS cr party 1280x800@125 light (1024x640): панель 1–9 и действия — в инспекторе {"pad":[781,159,227,172],"actions":[781,343,227,94]}
+PASS cr party 1280x800@125 light (1024x640): без ошибок JS {"errs":[]}
+PASS cr party 1280x800@125 dark (1024x640): раскладка компакт C, партия .play-fit.desk-play {"shell":"shell desk compact side-off","play":"play today play-fit play-hintable desk-play"}
+PASS cr party 1280x800@125 dark (1024x640): у детей партии (тулбар, область поля, инспектор) нет полей колонки PD-269 {"kids":[]}
+PASS cr party 1280x800@125 dark (1024x640): поле = min(720, окно − 124, область − 96) = 516, по центру области поля {"board":[124,72,516,516],"stage":[0,52,764,588],"want":516}
+PASS cr party 1280x800@125 dark (1024x640): инспектор clamp(260, 20vw, 320) = 260 у правого края, во всю высоту {"insp":[764,0,260,640]}
+PASS cr party 1280x800@125 dark (1024x640): нет горизонтальной прокрутки {"scrollW":1024}
+PASS cr party 1280x800@125 dark (1024x640): панель 1–9 и действия — в инспекторе {"pad":[781,159,227,172],"actions":[781,343,227,94]}
+PASS cr party 1280x800@125 dark (1024x640): без ошибок JS {"errs":[]}
+PASS cr party 1280x800@150 light (853x533): раскладка компакт C, партия .play-fit.desk-play {"shell":"shell desk compact side-off","play":"play today play-fit play-hintable desk-play"}
+PASS cr party 1280x800@150 light (853x533): у детей партии (тулбар, область поля, инспектор) нет полей колонки PD-269 {"kids":[]}
+PASS cr party 1280x800@150 light (853x533): поле = min(720, окно − 124, область − 96) = 409, по центру области поля {"board":[92,72,409,409],"stage":[0,52,593,481],"want":409}
+PASS cr party 1280x800@150 light (853x533): инспектор clamp(260, 20vw, 320) = 260 у правого края, во всю высоту {"insp":[593,0,260,533]}
+PASS cr party 1280x800@150 light (853x533): нет горизонтальной прокрутки {"scrollW":853}
+PASS cr party 1280x800@150 light (853x533): панель 1–9 и действия — в инспекторе {"pad":[610,159,227,172],"actions":[610,343,227,94]}
+PASS cr party 1280x800@150 light (853x533): без ошибок JS {"errs":[]}
+PASS cr party 1280x800@150 dark (853x533): раскладка компакт C, партия .play-fit.desk-play {"shell":"shell desk compact side-off","play":"play today play-fit play-hintable desk-play"}
+PASS cr party 1280x800@150 dark (853x533): у детей партии (тулбар, область поля, инспектор) нет полей колонки PD-269 {"kids":[]}
+PASS cr party 1280x800@150 dark (853x533): поле = min(720, окно − 124, область − 96) = 409, по центру области поля {"board":[92,72,409,409],"stage":[0,52,593,481],"want":409}
+PASS cr party 1280x800@150 dark (853x533): инспектор clamp(260, 20vw, 320) = 260 у правого края, во всю высоту {"insp":[593,0,260,533]}
+PASS cr party 1280x800@150 dark (853x533): нет горизонтальной прокрутки {"scrollW":853}
+PASS cr party 1280x800@150 dark (853x533): панель 1–9 и действия — в инспекторе {"pad":[610,159,227,172],"actions":[610,343,227,94]}
+PASS cr party 1280x800@150 dark (853x533): без ошибок JS {"errs":[]}
+PASS cr party 1440x900@100 light (1440x900): раскладка с сайдбаром, партия .play-fit.desk-play {"shell":"shell desk","play":"play today play-fit play-hintable desk-play"}
+PASS cr party 1440x900@100 light (1440x900): у детей партии (тулбар, область поля, инспектор) нет полей колонки PD-269 {"kids":[]}
+PASS cr party 1440x900@100 light (1440x900): поле = min(720, окно − 124, область − 96) = 720, по центру области поля {"board":[340,72,720,720],"stage":[248,52,904,848],"want":720}
+PASS cr party 1440x900@100 light (1440x900): инспектор clamp(260, 20vw, 320) = 288 у правого края, во всю высоту {"insp":[1152,0,288,900]}
+PASS cr party 1440x900@100 light (1440x900): нет горизонтальной прокрутки {"scrollW":1440}
+PASS cr party 1440x900@100 light (1440x900): панель 1–9 и действия — в инспекторе {"pad":[1173,171,247,208],"actions":[1173,391,247,144]}
+PASS cr party 1440x900@100 light (1440x900): без ошибок JS {"errs":[]}
+PASS cr party 1440x900@100 dark (1440x900): раскладка с сайдбаром, партия .play-fit.desk-play {"shell":"shell desk","play":"play today play-fit play-hintable desk-play"}
+PASS cr party 1440x900@100 dark (1440x900): у детей партии (тулбар, область поля, инспектор) нет полей колонки PD-269 {"kids":[]}
+PASS cr party 1440x900@100 dark (1440x900): поле = min(720, окно − 124, область − 96) = 720, по центру области поля {"board":[340,72,720,720],"stage":[248,52,904,848],"want":720}
+PASS cr party 1440x900@100 dark (1440x900): инспектор clamp(260, 20vw, 320) = 288 у правого края, во всю высоту {"insp":[1152,0,288,900]}
+PASS cr party 1440x900@100 dark (1440x900): нет горизонтальной прокрутки {"scrollW":1440}
+PASS cr party 1440x900@100 dark (1440x900): панель 1–9 и действия — в инспекторе {"pad":[1173,171,247,208],"actions":[1173,391,247,144]}
+PASS cr party 1440x900@100 dark (1440x900): без ошибок JS {"errs":[]}
+PASS cr party 1440x900@125 light (1152x720): раскладка с сайдбаром, партия .play-fit.desk-play {"shell":"shell desk","play":"play today play-fit play-hintable desk-play"}
+PASS cr party 1440x900@125 light (1152x720): у детей партии (тулбар, область поля, инспектор) нет полей колонки PD-269 {"kids":[]}
+PASS cr party 1440x900@125 light (1152x720): поле = min(720, окно − 124, область − 96) = 548, по центру области поля {"board":[296,72,548,548],"stage":[248,52,644,668],"want":548}
+PASS cr party 1440x900@125 light (1152x720): инспектор clamp(260, 20vw, 320) = 260 у правого края, во всю высоту {"insp":[892,0,260,720]}
+PASS cr party 1440x900@125 light (1152x720): нет горизонтальной прокрутки {"scrollW":1152}
+PASS cr party 1440x900@125 light (1152x720): панель 1–9 и действия — в инспекторе {"pad":[913,171,219,208],"actions":[913,391,219,144]}
+PASS cr party 1440x900@125 light (1152x720) solved: Today остаётся партией — .today:not(.play-fit) (колонка 640 PD-269) нет {"notFit":0,"play":"play today play-fit play-hintable desk-play"}
+PASS cr party 1440x900@125 light (1152x720) solved: поле того же размера на месте, область без полей {"board0":[296,72,548,548],"board1":[296,72,548,548]}
+PASS cr party 1440x900@125 light (1152x720) solved: карточка — в инспекторе во всю его ширину (− 24), без полей колонки {"card":[905,12,235,475],"insp":[892,0,260,720],"margin":["0px","0px"]}
+PASS cr party 1440x900@125 light (1152x720) solved: Grid ∞ — в инспекторе {"grid":[948,550,150,150]}
+PASS cr party 1440x900@125 light (1152x720) solved: Timelapse — шит 560 (≤ 560) по центру области контента, правее сайдбара, в окне {"sheet":[420,86,560,634],"scrim":[248,0,904,720]}
+PASS cr party 1440x900@125 light (1152x720): без ошибок JS {"errs":[]}
+PASS cr party 1440x900@125 dark (1152x720): раскладка с сайдбаром, партия .play-fit.desk-play {"shell":"shell desk","play":"play today play-fit play-hintable desk-play"}
+PASS cr party 1440x900@125 dark (1152x720): у детей партии (тулбар, область поля, инспектор) нет полей колонки PD-269 {"kids":[]}
+PASS cr party 1440x900@125 dark (1152x720): поле = min(720, окно − 124, область − 96) = 548, по центру области поля {"board":[296,72,548,548],"stage":[248,52,644,668],"want":548}
+PASS cr party 1440x900@125 dark (1152x720): инспектор clamp(260, 20vw, 320) = 260 у правого края, во всю высоту {"insp":[892,0,260,720]}
+PASS cr party 1440x900@125 dark (1152x720): нет горизонтальной прокрутки {"scrollW":1152}
+PASS cr party 1440x900@125 dark (1152x720): панель 1–9 и действия — в инспекторе {"pad":[913,171,219,208],"actions":[913,391,219,144]}
+PASS cr party 1440x900@125 dark (1152x720): без ошибок JS {"errs":[]}
+PASS cr party 1440x900@150 light (960x600): раскладка компакт C, партия .play-fit.desk-play {"shell":"shell desk compact side-off","play":"play today play-fit play-hintable desk-play"}
+PASS cr party 1440x900@150 light (960x600): у детей партии (тулбар, область поля, инспектор) нет полей колонки PD-269 {"kids":[]}
+PASS cr party 1440x900@150 light (960x600): поле = min(720, окно − 124, область − 96) = 476, по центру области поля {"board":[112,72,476,476],"stage":[0,52,700,548],"want":476}
+PASS cr party 1440x900@150 light (960x600): инспектор clamp(260, 20vw, 320) = 260 у правого края, во всю высоту {"insp":[700,0,260,600]}
+PASS cr party 1440x900@150 light (960x600): нет горизонтальной прокрутки {"scrollW":960}
+PASS cr party 1440x900@150 light (960x600): панель 1–9 и действия — в инспекторе {"pad":[717,159,227,172],"actions":[717,343,227,94]}
+PASS cr party 1440x900@150 light (960x600): без ошибок JS {"errs":[]}
+PASS cr party 1440x900@150 dark (960x600): раскладка компакт C, партия .play-fit.desk-play {"shell":"shell desk compact side-off","play":"play today play-fit play-hintable desk-play"}
+PASS cr party 1440x900@150 dark (960x600): у детей партии (тулбар, область поля, инспектор) нет полей колонки PD-269 {"kids":[]}
+PASS cr party 1440x900@150 dark (960x600): поле = min(720, окно − 124, область − 96) = 476, по центру области поля {"board":[112,72,476,476],"stage":[0,52,700,548],"want":476}
+PASS cr party 1440x900@150 dark (960x600): инспектор clamp(260, 20vw, 320) = 260 у правого края, во всю высоту {"insp":[700,0,260,600]}
+PASS cr party 1440x900@150 dark (960x600): нет горизонтальной прокрутки {"scrollW":960}
+PASS cr party 1440x900@150 dark (960x600): панель 1–9 и действия — в инспекторе {"pad":[717,159,227,172],"actions":[717,343,227,94]}
+PASS cr party 1440x900@150 dark (960x600): без ошибок JS {"errs":[]}
+PASS cr party 1920x1080@100 light (1920x1080): раскладка с сайдбаром, партия .play-fit.desk-play {"shell":"shell desk","play":"play today play-fit play-hintable desk-play"}
+PASS cr party 1920x1080@100 light (1920x1080): у детей партии (тулбар, область поля, инспектор) нет полей колонки PD-269 {"kids":[]}
+PASS cr party 1920x1080@100 light (1920x1080): поле = min(720, окно − 124, область − 96) = 720, по центру области поля {"board":[564,72,720,720],"stage":[248,52,1352,1028],"want":720}
+PASS cr party 1920x1080@100 light (1920x1080): инспектор clamp(260, 20vw, 320) = 320 у правого края, во всю высоту {"insp":[1600,0,320,1080]}
+PASS cr party 1920x1080@100 light (1920x1080): нет горизонтальной прокрутки {"scrollW":1920}
+PASS cr party 1920x1080@100 light (1920x1080): панель 1–9 и действия — в инспекторе {"pad":[1621,171,279,208],"actions":[1621,391,279,144]}
+PASS cr party 1920x1080@100 light (1920x1080): без ошибок JS {"errs":[]}
+PASS cr party 1920x1080@100 dark (1920x1080): раскладка с сайдбаром, партия .play-fit.desk-play {"shell":"shell desk","play":"play today play-fit play-hintable desk-play"}
+PASS cr party 1920x1080@100 dark (1920x1080): у детей партии (тулбар, область поля, инспектор) нет полей колонки PD-269 {"kids":[]}
+PASS cr party 1920x1080@100 dark (1920x1080): поле = min(720, окно − 124, область − 96) = 720, по центру области поля {"board":[564,72,720,720],"stage":[248,52,1352,1028],"want":720}
+PASS cr party 1920x1080@100 dark (1920x1080): инспектор clamp(260, 20vw, 320) = 320 у правого края, во всю высоту {"insp":[1600,0,320,1080]}
+PASS cr party 1920x1080@100 dark (1920x1080): нет горизонтальной прокрутки {"scrollW":1920}
+PASS cr party 1920x1080@100 dark (1920x1080): панель 1–9 и действия — в инспекторе {"pad":[1621,171,279,208],"actions":[1621,391,279,144]}
+PASS cr party 1920x1080@100 dark (1920x1080) solved: Today остаётся партией — .today:not(.play-fit) (колонка 640 PD-269) нет {"notFit":0,"play":"play today play-fit play-hintable desk-play"}
+PASS cr party 1920x1080@100 dark (1920x1080) solved: поле того же размера на месте, область без полей {"board0":[564,72,720,720],"board1":[564,72,720,720]}
+PASS cr party 1920x1080@100 dark (1920x1080) solved: карточка — в инспекторе во всю его ширину (− 24), без полей колонки {"card":[1613,12,295,475],"insp":[1600,0,320,1080],"margin":["0px","0px"]}
+PASS cr party 1920x1080@100 dark (1920x1080) solved: Grid ∞ — в инспекторе {"grid":[1686,550,150,150]}
+PASS cr party 1920x1080@100 dark (1920x1080) solved: Timelapse — шит 560 (≤ 560) по центру области контента, правее сайдбара, в окне {"sheet":[804,303,560,777],"scrim":[248,0,1672,1080]}
+PASS cr party 1920x1080@100 dark (1920x1080): без ошибок JS {"errs":[]}
+PASS cr party 1920x1080@125 light (1536x864): раскладка с сайдбаром, партия .play-fit.desk-play {"shell":"shell desk","play":"play today play-fit play-hintable desk-play"}
+PASS cr party 1920x1080@125 light (1536x864): у детей партии (тулбар, область поля, инспектор) нет полей колонки PD-269 {"kids":[]}
+PASS cr party 1920x1080@125 light (1536x864): поле = min(720, окно − 124, область − 96) = 720, по центру области поля {"board":[378,72,720,720],"stage":[248,52,981,812],"want":720}
+PASS cr party 1920x1080@125 light (1536x864): инспектор clamp(260, 20vw, 320) = 307 у правого края, во всю высоту {"insp":[1229,0,307,864]}
+PASS cr party 1920x1080@125 light (1536x864): нет горизонтальной прокрутки {"scrollW":1536}
+PASS cr party 1920x1080@125 light (1536x864): панель 1–9 и действия — в инспекторе {"pad":[1250,171,266,208],"actions":[1250,391,266,144]}
+PASS cr party 1920x1080@125 light (1536x864): без ошибок JS {"errs":[]}
+PASS cr party 1920x1080@125 dark (1536x864): раскладка с сайдбаром, партия .play-fit.desk-play {"shell":"shell desk","play":"play today play-fit play-hintable desk-play"}
+PASS cr party 1920x1080@125 dark (1536x864): у детей партии (тулбар, область поля, инспектор) нет полей колонки PD-269 {"kids":[]}
+PASS cr party 1920x1080@125 dark (1536x864): поле = min(720, окно − 124, область − 96) = 720, по центру области поля {"board":[378,72,720,720],"stage":[248,52,981,812],"want":720}
+PASS cr party 1920x1080@125 dark (1536x864): инспектор clamp(260, 20vw, 320) = 307 у правого края, во всю высоту {"insp":[1229,0,307,864]}
+PASS cr party 1920x1080@125 dark (1536x864): нет горизонтальной прокрутки {"scrollW":1536}
+PASS cr party 1920x1080@125 dark (1536x864): панель 1–9 и действия — в инспекторе {"pad":[1250,171,266,208],"actions":[1250,391,266,144]}
+PASS cr party 1920x1080@125 dark (1536x864): без ошибок JS {"errs":[]}
+PASS cr party 1920x1080@150 light (1280x720): раскладка с сайдбаром, партия .play-fit.desk-play {"shell":"shell desk","play":"play today play-fit play-hintable desk-play"}
+PASS cr party 1920x1080@150 light (1280x720): у детей партии (тулбар, область поля, инспектор) нет полей колонки PD-269 {"kids":[]}
+PASS cr party 1920x1080@150 light (1280x720): поле = min(720, окно − 124, область − 96) = 596, по центру области поля {"board":[336,72,596,596],"stage":[248,52,772,668],"want":596}
+PASS cr party 1920x1080@150 light (1280x720): инспектор clamp(260, 20vw, 320) = 260 у правого края, во всю высоту {"insp":[1020,0,260,720]}
+PASS cr party 1920x1080@150 light (1280x720): нет горизонтальной прокрутки {"scrollW":1280}
+PASS cr party 1920x1080@150 light (1280x720): панель 1–9 и действия — в инспекторе {"pad":[1041,171,219,208],"actions":[1041,391,219,144]}
+PASS cr party 1920x1080@150 light (1280x720) solved: Today остаётся партией — .today:not(.play-fit) (колонка 640 PD-269) нет {"notFit":0,"play":"play today play-fit play-hintable desk-play"}
+PASS cr party 1920x1080@150 light (1280x720) solved: поле того же размера на месте, область без полей {"board0":[336,72,596,596],"board1":[336,72,596,596]}
+PASS cr party 1920x1080@150 light (1280x720) solved: карточка — в инспекторе во всю его ширину (− 24), без полей колонки {"card":[1033,12,235,475],"insp":[1020,0,260,720],"margin":["0px","0px"]}
+PASS cr party 1920x1080@150 light (1280x720) solved: Grid ∞ — в инспекторе {"grid":[1076,550,150,150]}
+PASS cr party 1920x1080@150 light (1280x720) solved: Timelapse — шит 560 (≤ 560) по центру области контента, правее сайдбара, в окне {"sheet":[484,86,560,634],"scrim":[248,0,1032,720]}
+PASS cr party 1920x1080@150 light (1280x720): без ошибок JS {"errs":[]}
+PASS cr party 1920x1080@150 dark (1280x720): раскладка с сайдбаром, партия .play-fit.desk-play {"shell":"shell desk","play":"play today play-fit play-hintable desk-play"}
+PASS cr party 1920x1080@150 dark (1280x720): у детей партии (тулбар, область поля, инспектор) нет полей колонки PD-269 {"kids":[]}
+PASS cr party 1920x1080@150 dark (1280x720): поле = min(720, окно − 124, область − 96) = 596, по центру области поля {"board":[336,72,596,596],"stage":[248,52,772,668],"want":596}
+PASS cr party 1920x1080@150 dark (1280x720): инспектор clamp(260, 20vw, 320) = 260 у правого края, во всю высоту {"insp":[1020,0,260,720]}
+PASS cr party 1920x1080@150 dark (1280x720): нет горизонтальной прокрутки {"scrollW":1280}
+PASS cr party 1920x1080@150 dark (1280x720): панель 1–9 и действия — в инспекторе {"pad":[1041,171,219,208],"actions":[1041,391,219,144]}
+PASS cr party 1920x1080@150 dark (1280x720): без ошибок JS {"errs":[]}
+PASS cr party compact 1024x640 light (1024x640): раскладка компакт C, партия .play-fit.desk-play {"shell":"shell desk compact side-off","play":"play today play-fit play-hintable desk-play"}
+PASS cr party compact 1024x640 light (1024x640): у детей партии (тулбар, область поля, инспектор) нет полей колонки PD-269 {"kids":[]}
+PASS cr party compact 1024x640 light (1024x640): поле = min(720, окно − 124, область − 96) = 516, по центру области поля {"board":[124,72,516,516],"stage":[0,52,764,588],"want":516}
+PASS cr party compact 1024x640 light (1024x640): инспектор clamp(260, 20vw, 320) = 260 у правого края, во всю высоту {"insp":[764,0,260,640]}
+PASS cr party compact 1024x640 light (1024x640): нет горизонтальной прокрутки {"scrollW":1024}
+PASS cr party compact 1024x640 light (1024x640): панель 1–9 и действия — в инспекторе {"pad":[781,159,227,172],"actions":[781,343,227,94]}
+PASS cr party compact 1024x640 light (1024x640) solved: Today остаётся партией — .today:not(.play-fit) (колонка 640 PD-269) нет {"notFit":0,"play":"play today play-fit play-hintable desk-play"}
+PASS cr party compact 1024x640 light (1024x640) solved: поле того же размера на месте, область без полей {"board0":[124,72,516,516],"board1":[124,72,516,516]}
+PASS cr party compact 1024x640 light (1024x640) solved: карточка — в инспекторе во всю его ширину (− 24), без полей колонки {"card":[777,12,235,475],"insp":[764,0,260,640],"margin":["0px","0px"]}
+PASS cr party compact 1024x640 light (1024x640) solved: Grid ∞ — в инспекторе {"grid":[820,550,150,150]}
+PASS cr party compact 1024x640 light (1024x640) solved: Timelapse — шит 560 (≤ 560) по центру области контента, правее сайдбара, в окне {"sheet":[232,77,560,563],"scrim":[0,0,1024,640]}
+PASS cr party compact 1024x640 light (1024x640): без ошибок JS {"errs":[]}
+PASS cr party compact 1024x640 dark (1024x640): раскладка компакт C, партия .play-fit.desk-play {"shell":"shell desk compact side-off","play":"play today play-fit play-hintable desk-play"}
+PASS cr party compact 1024x640 dark (1024x640): у детей партии (тулбар, область поля, инспектор) нет полей колонки PD-269 {"kids":[]}
+PASS cr party compact 1024x640 dark (1024x640): поле = min(720, окно − 124, область − 96) = 516, по центру области поля {"board":[124,72,516,516],"stage":[0,52,764,588],"want":516}
+PASS cr party compact 1024x640 dark (1024x640): инспектор clamp(260, 20vw, 320) = 260 у правого края, во всю высоту {"insp":[764,0,260,640]}
+PASS cr party compact 1024x640 dark (1024x640): нет горизонтальной прокрутки {"scrollW":1024}
+PASS cr party compact 1024x640 dark (1024x640): панель 1–9 и действия — в инспекторе {"pad":[781,159,227,172],"actions":[781,343,227,94]}
+PASS cr party compact 1024x640 dark (1024x640): без ошибок JS {"errs":[]}
+PASS cr party compact 960x600 light (960x600): раскладка компакт C, партия .play-fit.desk-play {"shell":"shell desk compact side-off","play":"play today play-fit play-hintable desk-play"}
+PASS cr party compact 960x600 light (960x600): у детей партии (тулбар, область поля, инспектор) нет полей колонки PD-269 {"kids":[]}
+PASS cr party compact 960x600 light (960x600): поле = min(720, окно − 124, область − 96) = 476, по центру области поля {"board":[112,72,476,476],"stage":[0,52,700,548],"want":476}
+PASS cr party compact 960x600 light (960x600): инспектор clamp(260, 20vw, 320) = 260 у правого края, во всю высоту {"insp":[700,0,260,600]}
+PASS cr party compact 960x600 light (960x600): нет горизонтальной прокрутки {"scrollW":960}
+PASS cr party compact 960x600 light (960x600): панель 1–9 и действия — в инспекторе {"pad":[717,159,227,172],"actions":[717,343,227,94]}
+PASS cr party compact 960x600 light (960x600): без ошибок JS {"errs":[]}
+PASS cr party compact 960x600 dark (960x600): раскладка компакт C, партия .play-fit.desk-play {"shell":"shell desk compact side-off","play":"play today play-fit play-hintable desk-play"}
+PASS cr party compact 960x600 dark (960x600): у детей партии (тулбар, область поля, инспектор) нет полей колонки PD-269 {"kids":[]}
+PASS cr party compact 960x600 dark (960x600): поле = min(720, окно − 124, область − 96) = 476, по центру области поля {"board":[112,72,476,476],"stage":[0,52,700,548],"want":476}
+PASS cr party compact 960x600 dark (960x600): инспектор clamp(260, 20vw, 320) = 260 у правого края, во всю высоту {"insp":[700,0,260,600]}
+PASS cr party compact 960x600 dark (960x600): нет горизонтальной прокрутки {"scrollW":960}
+PASS cr party compact 960x600 dark (960x600): панель 1–9 и действия — в инспекторе {"pad":[717,159,227,172],"actions":[717,343,227,94]}
+PASS cr party compact 960x600 dark (960x600) solved: Today остаётся партией — .today:not(.play-fit) (колонка 640 PD-269) нет {"notFit":0,"play":"play today play-fit play-hintable desk-play"}
+PASS cr party compact 960x600 dark (960x600) solved: поле того же размера на месте, область без полей {"board0":[112,72,476,476],"board1":[112,72,476,476]}
+PASS cr party compact 960x600 dark (960x600) solved: карточка — в инспекторе во всю его ширину (− 24), без полей колонки {"card":[713,12,235,475],"insp":[700,0,260,600],"margin":["0px","0px"]}
+PASS cr party compact 960x600 dark (960x600) solved: Grid ∞ — в инспекторе {"grid":[756,550,150,150]}
+PASS cr party compact 960x600 dark (960x600) solved: Timelapse — шит 560 (≤ 560) по центру области контента, правее сайдбара, в окне {"sheet":[200,72,560,528],"scrim":[0,0,960,600]}
+PASS cr party compact 960x600 dark (960x600): без ошибок JS {"errs":[]}
+PASS wk party 1280x800@100 light (1280x800): раскладка с сайдбаром, партия .play-fit.desk-play {"shell":"shell desk","play":"play today play-fit play-hintable desk-play"}
+PASS wk party 1280x800@100 light (1280x800): у детей партии (тулбар, область поля, инспектор) нет полей колонки PD-269 {"kids":[]}
+PASS wk party 1280x800@100 light (1280x800): поле = min(720, окно − 124, область − 96) = 676, по центру области поля {"board":[296,72,676,676],"stage":[248,52,772,748],"want":676}
+PASS wk party 1280x800@100 light (1280x800): инспектор clamp(260, 20vw, 320) = 260 у правого края, во всю высоту {"insp":[1020,0,260,800]}
+PASS wk party 1280x800@100 light (1280x800): нет горизонтальной прокрутки {"scrollW":1280}
+PASS wk party 1280x800@100 light (1280x800): панель 1–9 и действия — в инспекторе {"pad":[1041,162,219,208],"actions":[1041,382,219,144]}
+PASS wk party 1280x800@100 light (1280x800) solved: Today остаётся партией — .today:not(.play-fit) (колонка 640 PD-269) нет {"notFit":0,"play":"play today play-fit play-hintable desk-play"}
+PASS wk party 1280x800@100 light (1280x800) solved: поле того же размера на месте, область без полей {"board0":[296,72,676,676],"board1":[296,72,676,676]}
+PASS wk party 1280x800@100 light (1280x800) solved: карточка — в инспекторе во всю его ширину (− 24), без полей колонки {"card":[1033,12,235,448],"insp":[1020,0,260,800],"margin":["0px","0px"]}
+PASS wk party 1280x800@100 light (1280x800) solved: Grid ∞ — в инспекторе {"grid":[1076,515,150,150]}
+PASS wk party 1280x800@100 light (1280x800) solved: Timelapse — шит 560 (≤ 560) по центру области контента, правее сайдбара, в окне {"sheet":[484,96,560,704],"scrim":[248,0,1032,800]}
+PASS wk party 1280x800@100 light (1280x800): без ошибок JS {"errs":[]}
+PASS wk party 1280x800@100 dark (1280x800): раскладка с сайдбаром, партия .play-fit.desk-play {"shell":"shell desk","play":"play today play-fit play-hintable desk-play"}
+PASS wk party 1280x800@100 dark (1280x800): у детей партии (тулбар, область поля, инспектор) нет полей колонки PD-269 {"kids":[]}
+PASS wk party 1280x800@100 dark (1280x800): поле = min(720, окно − 124, область − 96) = 676, по центру области поля {"board":[296,72,676,676],"stage":[248,52,772,748],"want":676}
+PASS wk party 1280x800@100 dark (1280x800): инспектор clamp(260, 20vw, 320) = 260 у правого края, во всю высоту {"insp":[1020,0,260,800]}
+PASS wk party 1280x800@100 dark (1280x800): нет горизонтальной прокрутки {"scrollW":1280}
+PASS wk party 1280x800@100 dark (1280x800): панель 1–9 и действия — в инспекторе {"pad":[1041,162,219,208],"actions":[1041,382,219,144]}
+PASS wk party 1280x800@100 dark (1280x800): без ошибок JS {"errs":[]}
+PASS wk party 1280x800@125 light (1024x640): раскладка компакт C, партия .play-fit.desk-play {"shell":"shell desk compact side-off","play":"play today play-fit play-hintable desk-play"}
+PASS wk party 1280x800@125 light (1024x640): у детей партии (тулбар, область поля, инспектор) нет полей колонки PD-269 {"kids":[]}
+PASS wk party 1280x800@125 light (1024x640): поле = min(720, окно − 124, область − 96) = 516, по центру области поля {"board":[124,72,516,516],"stage":[0,52,764,588],"want":516}
+PASS wk party 1280x800@125 light (1024x640): инспектор clamp(260, 20vw, 320) = 260 у правого края, во всю высоту {"insp":[764,0,260,640]}
+PASS wk party 1280x800@125 light (1024x640): нет горизонтальной прокрутки {"scrollW":1024}
+PASS wk party 1280x800@125 light (1024x640): панель 1–9 и действия — в инспекторе {"pad":[781,150,227,172],"actions":[781,334,227,94]}
+PASS wk party 1280x800@125 light (1024x640): без ошибок JS {"errs":[]}
+PASS wk party 1280x800@125 dark (1024x640): раскладка компакт C, партия .play-fit.desk-play {"shell":"shell desk compact side-off","play":"play today play-fit play-hintable desk-play"}
+PASS wk party 1280x800@125 dark (1024x640): у детей партии (тулбар, область поля, инспектор) нет полей колонки PD-269 {"kids":[]}
+PASS wk party 1280x800@125 dark (1024x640): поле = min(720, окно − 124, область − 96) = 516, по центру области поля {"board":[124,72,516,516],"stage":[0,52,764,588],"want":516}
+PASS wk party 1280x800@125 dark (1024x640): инспектор clamp(260, 20vw, 320) = 260 у правого края, во всю высоту {"insp":[764,0,260,640]}
+PASS wk party 1280x800@125 dark (1024x640): нет горизонтальной прокрутки {"scrollW":1024}
+PASS wk party 1280x800@125 dark (1024x640): панель 1–9 и действия — в инспекторе {"pad":[781,150,227,172],"actions":[781,334,227,94]}
+PASS wk party 1280x800@125 dark (1024x640): без ошибок JS {"errs":[]}
+PASS wk party 1280x800@150 light (853x533): раскладка компакт C, партия .play-fit.desk-play {"shell":"shell desk compact side-off","play":"play today play-fit play-hintable desk-play"}
+PASS wk party 1280x800@150 light (853x533): у детей партии (тулбар, область поля, инспектор) нет полей колонки PD-269 {"kids":[]}
+PASS wk party 1280x800@150 light (853x533): поле = min(720, окно − 124, область − 96) = 409, по центру области поля {"board":[92,72,409,409],"stage":[0,52,593,481],"want":409}
+PASS wk party 1280x800@150 light (853x533): инспектор clamp(260, 20vw, 320) = 260 у правого края, во всю высоту {"insp":[593,0,260,533]}
+PASS wk party 1280x800@150 light (853x533): нет горизонтальной прокрутки {"scrollW":853}
+PASS wk party 1280x800@150 light (853x533): панель 1–9 и действия — в инспекторе {"pad":[610,149,227,172],"actions":[610,333,227,94]}
+PASS wk party 1280x800@150 light (853x533): без ошибок JS {"errs":[]}
+PASS wk party 1280x800@150 dark (853x533): раскладка компакт C, партия .play-fit.desk-play {"shell":"shell desk compact side-off","play":"play today play-fit play-hintable desk-play"}
+PASS wk party 1280x800@150 dark (853x533): у детей партии (тулбар, область поля, инспектор) нет полей колонки PD-269 {"kids":[]}
+PASS wk party 1280x800@150 dark (853x533): поле = min(720, окно − 124, область − 96) = 409, по центру области поля {"board":[92,72,409,409],"stage":[0,52,593,481],"want":409}
+PASS wk party 1280x800@150 dark (853x533): инспектор clamp(260, 20vw, 320) = 260 у правого края, во всю высоту {"insp":[593,0,260,533]}
+PASS wk party 1280x800@150 dark (853x533): нет горизонтальной прокрутки {"scrollW":853}
+PASS wk party 1280x800@150 dark (853x533): панель 1–9 и действия — в инспекторе {"pad":[610,149,227,172],"actions":[610,333,227,94]}
+PASS wk party 1280x800@150 dark (853x533): без ошибок JS {"errs":[]}
+PASS wk party 1440x900@100 light (1440x900): раскладка с сайдбаром, партия .play-fit.desk-play {"shell":"shell desk","play":"play today play-fit play-hintable desk-play"}
+PASS wk party 1440x900@100 light (1440x900): у детей партии (тулбар, область поля, инспектор) нет полей колонки PD-269 {"kids":[]}
+PASS wk party 1440x900@100 light (1440x900): поле = min(720, окно − 124, область − 96) = 720, по центру области поля {"board":[340,72,720,720],"stage":[248,52,904,848],"want":720}
+PASS wk party 1440x900@100 light (1440x900): инспектор clamp(260, 20vw, 320) = 288 у правого края, во всю высоту {"insp":[1152,0,288,900]}
+PASS wk party 1440x900@100 light (1440x900): нет горизонтальной прокрутки {"scrollW":1440}
+PASS wk party 1440x900@100 light (1440x900): панель 1–9 и действия — в инспекторе {"pad":[1173,162,247,208],"actions":[1173,382,247,144]}
+PASS wk party 1440x900@100 light (1440x900): без ошибок JS {"errs":[]}
+PASS wk party 1440x900@100 dark (1440x900): раскладка с сайдбаром, партия .play-fit.desk-play {"shell":"shell desk","play":"play today play-fit play-hintable desk-play"}
+PASS wk party 1440x900@100 dark (1440x900): у детей партии (тулбар, область поля, инспектор) нет полей колонки PD-269 {"kids":[]}
+PASS wk party 1440x900@100 dark (1440x900): поле = min(720, окно − 124, область − 96) = 720, по центру области поля {"board":[340,72,720,720],"stage":[248,52,904,848],"want":720}
+PASS wk party 1440x900@100 dark (1440x900): инспектор clamp(260, 20vw, 320) = 288 у правого края, во всю высоту {"insp":[1152,0,288,900]}
+PASS wk party 1440x900@100 dark (1440x900): нет горизонтальной прокрутки {"scrollW":1440}
+PASS wk party 1440x900@100 dark (1440x900): панель 1–9 и действия — в инспекторе {"pad":[1173,162,247,208],"actions":[1173,382,247,144]}
+PASS wk party 1440x900@100 dark (1440x900): без ошибок JS {"errs":[]}
+PASS wk party 1440x900@125 light (1152x720): раскладка с сайдбаром, партия .play-fit.desk-play {"shell":"shell desk","play":"play today play-fit play-hintable desk-play"}
+PASS wk party 1440x900@125 light (1152x720): у детей партии (тулбар, область поля, инспектор) нет полей колонки PD-269 {"kids":[]}
+PASS wk party 1440x900@125 light (1152x720): поле = min(720, окно − 124, область − 96) = 548, по центру области поля {"board":[296,72,548,548],"stage":[248,52,644,668],"want":548}
+PASS wk party 1440x900@125 light (1152x720): инспектор clamp(260, 20vw, 320) = 260 у правого края, во всю высоту {"insp":[892,0,260,720]}
+PASS wk party 1440x900@125 light (1152x720): нет горизонтальной прокрутки {"scrollW":1152}
+PASS wk party 1440x900@125 light (1152x720): панель 1–9 и действия — в инспекторе {"pad":[913,162,219,208],"actions":[913,382,219,144]}
+PASS wk party 1440x900@125 light (1152x720) solved: Today остаётся партией — .today:not(.play-fit) (колонка 640 PD-269) нет {"notFit":0,"play":"play today play-fit play-hintable desk-play"}
+PASS wk party 1440x900@125 light (1152x720) solved: поле того же размера на месте, область без полей {"board0":[296,72,548,548],"board1":[296,72,548,548]}
+PASS wk party 1440x900@125 light (1152x720) solved: карточка — в инспекторе во всю его ширину (− 24), без полей колонки {"card":[905,12,235,448],"insp":[892,0,260,720],"margin":["0px","0px"]}
+PASS wk party 1440x900@125 light (1152x720) solved: Grid ∞ — в инспекторе {"grid":[947,515,150,150]}
+PASS wk party 1440x900@125 light (1152x720) solved: Timelapse — шит 560 (≤ 560) по центру области контента, правее сайдбара, в окне {"sheet":[420,86,560,634],"scrim":[248,0,904,720]}
+PASS wk party 1440x900@125 light (1152x720): без ошибок JS {"errs":[]}
+PASS wk party 1440x900@125 dark (1152x720): раскладка с сайдбаром, партия .play-fit.desk-play {"shell":"shell desk","play":"play today play-fit play-hintable desk-play"}
+PASS wk party 1440x900@125 dark (1152x720): у детей партии (тулбар, область поля, инспектор) нет полей колонки PD-269 {"kids":[]}
+PASS wk party 1440x900@125 dark (1152x720): поле = min(720, окно − 124, область − 96) = 548, по центру области поля {"board":[296,72,548,548],"stage":[248,52,644,668],"want":548}
+PASS wk party 1440x900@125 dark (1152x720): инспектор clamp(260, 20vw, 320) = 260 у правого края, во всю высоту {"insp":[892,0,260,720]}
+PASS wk party 1440x900@125 dark (1152x720): нет горизонтальной прокрутки {"scrollW":1152}
+PASS wk party 1440x900@125 dark (1152x720): панель 1–9 и действия — в инспекторе {"pad":[913,162,219,208],"actions":[913,382,219,144]}
+PASS wk party 1440x900@125 dark (1152x720): без ошибок JS {"errs":[]}
+PASS wk party 1440x900@150 light (960x600): раскладка компакт C, партия .play-fit.desk-play {"shell":"shell desk compact side-off","play":"play today play-fit play-hintable desk-play"}
+PASS wk party 1440x900@150 light (960x600): у детей партии (тулбар, область поля, инспектор) нет полей колонки PD-269 {"kids":[]}
+PASS wk party 1440x900@150 light (960x600): поле = min(720, окно − 124, область − 96) = 476, по центру области поля {"board":[112,72,476,476],"stage":[0,52,700,548],"want":476}
+PASS wk party 1440x900@150 light (960x600): инспектор clamp(260, 20vw, 320) = 260 у правого края, во всю высоту {"insp":[700,0,260,600]}
+PASS wk party 1440x900@150 light (960x600): нет горизонтальной прокрутки {"scrollW":960}
+PASS wk party 1440x900@150 light (960x600): панель 1–9 и действия — в инспекторе {"pad":[717,149,227,172],"actions":[717,333,227,94]}
+PASS wk party 1440x900@150 light (960x600): без ошибок JS {"errs":[]}
+PASS wk party 1440x900@150 dark (960x600): раскладка компакт C, партия .play-fit.desk-play {"shell":"shell desk compact side-off","play":"play today play-fit play-hintable desk-play"}
+PASS wk party 1440x900@150 dark (960x600): у детей партии (тулбар, область поля, инспектор) нет полей колонки PD-269 {"kids":[]}
+PASS wk party 1440x900@150 dark (960x600): поле = min(720, окно − 124, область − 96) = 476, по центру области поля {"board":[112,72,476,476],"stage":[0,52,700,548],"want":476}
+PASS wk party 1440x900@150 dark (960x600): инспектор clamp(260, 20vw, 320) = 260 у правого края, во всю высоту {"insp":[700,0,260,600]}
+PASS wk party 1440x900@150 dark (960x600): нет горизонтальной прокрутки {"scrollW":960}
+PASS wk party 1440x900@150 dark (960x600): панель 1–9 и действия — в инспекторе {"pad":[717,149,227,172],"actions":[717,333,227,94]}
+PASS wk party 1440x900@150 dark (960x600): без ошибок JS {"errs":[]}
+PASS wk party 1920x1080@100 light (1920x1080): раскладка с сайдбаром, партия .play-fit.desk-play {"shell":"shell desk","play":"play today play-fit play-hintable desk-play"}
+PASS wk party 1920x1080@100 light (1920x1080): у детей партии (тулбар, область поля, инспектор) нет полей колонки PD-269 {"kids":[]}
+PASS wk party 1920x1080@100 light (1920x1080): поле = min(720, окно − 124, область − 96) = 720, по центру области поля {"board":[564,72,720,720],"stage":[248,52,1352,1028],"want":720}
+PASS wk party 1920x1080@100 light (1920x1080): инспектор clamp(260, 20vw, 320) = 320 у правого края, во всю высоту {"insp":[1600,0,320,1080]}
+PASS wk party 1920x1080@100 light (1920x1080): нет горизонтальной прокрутки {"scrollW":1920}
+PASS wk party 1920x1080@100 light (1920x1080): панель 1–9 и действия — в инспекторе {"pad":[1621,162,279,208],"actions":[1621,382,279,144]}
+PASS wk party 1920x1080@100 light (1920x1080): без ошибок JS {"errs":[]}
+PASS wk party 1920x1080@100 dark (1920x1080): раскладка с сайдбаром, партия .play-fit.desk-play {"shell":"shell desk","play":"play today play-fit play-hintable desk-play"}
+PASS wk party 1920x1080@100 dark (1920x1080): у детей партии (тулбар, область поля, инспектор) нет полей колонки PD-269 {"kids":[]}
+PASS wk party 1920x1080@100 dark (1920x1080): поле = min(720, окно − 124, область − 96) = 720, по центру области поля {"board":[564,72,720,720],"stage":[248,52,1352,1028],"want":720}
+PASS wk party 1920x1080@100 dark (1920x1080): инспектор clamp(260, 20vw, 320) = 320 у правого края, во всю высоту {"insp":[1600,0,320,1080]}
+PASS wk party 1920x1080@100 dark (1920x1080): нет горизонтальной прокрутки {"scrollW":1920}
+PASS wk party 1920x1080@100 dark (1920x1080): панель 1–9 и действия — в инспекторе {"pad":[1621,162,279,208],"actions":[1621,382,279,144]}
+PASS wk party 1920x1080@100 dark (1920x1080) solved: Today остаётся партией — .today:not(.play-fit) (колонка 640 PD-269) нет {"notFit":0,"play":"play today play-fit play-hintable desk-play"}
+PASS wk party 1920x1080@100 dark (1920x1080) solved: поле того же размера на месте, область без полей {"board0":[564,72,720,720],"board1":[564,72,720,720]}
+PASS wk party 1920x1080@100 dark (1920x1080) solved: карточка — в инспекторе во всю его ширину (− 24), без полей колонки {"card":[1613,12,295,448],"insp":[1600,0,320,1080],"margin":["0px","0px"]}
+PASS wk party 1920x1080@100 dark (1920x1080) solved: Grid ∞ — в инспекторе {"grid":[1686,500,150,150]}
+PASS wk party 1920x1080@100 dark (1920x1080) solved: Timelapse — шит 560 (≤ 560) по центру области контента, правее сайдбара, в окне {"sheet":[804,319,560,761],"scrim":[248,0,1672,1080]}
+PASS wk party 1920x1080@100 dark (1920x1080): без ошибок JS {"errs":[]}
+PASS wk party 1920x1080@125 light (1536x864): раскладка с сайдбаром, партия .play-fit.desk-play {"shell":"shell desk","play":"play today play-fit play-hintable desk-play"}
+PASS wk party 1920x1080@125 light (1536x864): у детей партии (тулбар, область поля, инспектор) нет полей колонки PD-269 {"kids":[]}
+PASS wk party 1920x1080@125 light (1536x864): поле = min(720, окно − 124, область − 96) = 720, по центру области поля {"board":[378,72,720,720],"stage":[248,52,981,812],"want":720}
+PASS wk party 1920x1080@125 light (1536x864): инспектор clamp(260, 20vw, 320) = 307 у правого края, во всю высоту {"insp":[1229,0,307,864]}
+PASS wk party 1920x1080@125 light (1536x864): нет горизонтальной прокрутки {"scrollW":1536}
+PASS wk party 1920x1080@125 light (1536x864): панель 1–9 и действия — в инспекторе {"pad":[1250,162,266,208],"actions":[1250,382,266,144]}
+PASS wk party 1920x1080@125 light (1536x864): без ошибок JS {"errs":[]}
+PASS wk party 1920x1080@125 dark (1536x864): раскладка с сайдбаром, партия .play-fit.desk-play {"shell":"shell desk","play":"play today play-fit play-hintable desk-play"}
+PASS wk party 1920x1080@125 dark (1536x864): у детей партии (тулбар, область поля, инспектор) нет полей колонки PD-269 {"kids":[]}
+PASS wk party 1920x1080@125 dark (1536x864): поле = min(720, окно − 124, область − 96) = 720, по центру области поля {"board":[378,72,720,720],"stage":[248,52,981,812],"want":720}
+PASS wk party 1920x1080@125 dark (1536x864): инспектор clamp(260, 20vw, 320) = 307 у правого края, во всю высоту {"insp":[1229,0,307,864]}
+PASS wk party 1920x1080@125 dark (1536x864): нет горизонтальной прокрутки {"scrollW":1536}
+PASS wk party 1920x1080@125 dark (1536x864): панель 1–9 и действия — в инспекторе {"pad":[1250,162,266,208],"actions":[1250,382,266,144]}
+PASS wk party 1920x1080@125 dark (1536x864): без ошибок JS {"errs":[]}
+PASS wk party 1920x1080@150 light (1280x720): раскладка с сайдбаром, партия .play-fit.desk-play {"shell":"shell desk","play":"play today play-fit play-hintable desk-play"}
+PASS wk party 1920x1080@150 light (1280x720): у детей партии (тулбар, область поля, инспектор) нет полей колонки PD-269 {"kids":[]}
+PASS wk party 1920x1080@150 light (1280x720): поле = min(720, окно − 124, область − 96) = 596, по центру области поля {"board":[336,72,596,596],"stage":[248,52,772,668],"want":596}
+PASS wk party 1920x1080@150 light (1280x720): инспектор clamp(260, 20vw, 320) = 260 у правого края, во всю высоту {"insp":[1020,0,260,720]}
+PASS wk party 1920x1080@150 light (1280x720): нет горизонтальной прокрутки {"scrollW":1280}
+PASS wk party 1920x1080@150 light (1280x720): панель 1–9 и действия — в инспекторе {"pad":[1041,161,219,208],"actions":[1041,381,219,144]}
+PASS wk party 1920x1080@150 light (1280x720) solved: Today остаётся партией — .today:not(.play-fit) (колонка 640 PD-269) нет {"notFit":0,"play":"play today play-fit play-hintable desk-play"}
+PASS wk party 1920x1080@150 light (1280x720) solved: поле того же размера на месте, область без полей {"board0":[336,72,596,596],"board1":[336,72,596,596]}
+PASS wk party 1920x1080@150 light (1280x720) solved: карточка — в инспекторе во всю его ширину (− 24), без полей колонки {"card":[1033,12,235,448],"insp":[1020,0,260,720],"margin":["0px","0px"]}
+PASS wk party 1920x1080@150 light (1280x720) solved: Grid ∞ — в инспекторе {"grid":[1075,515,150,150]}
+PASS wk party 1920x1080@150 light (1280x720) solved: Timelapse — шит 560 (≤ 560) по центру области контента, правее сайдбара, в окне {"sheet":[484,86,560,634],"scrim":[248,0,1032,720]}
+PASS wk party 1920x1080@150 light (1280x720): без ошибок JS {"errs":[]}
+PASS wk party 1920x1080@150 dark (1280x720): раскладка с сайдбаром, партия .play-fit.desk-play {"shell":"shell desk","play":"play today play-fit play-hintable desk-play"}
+PASS wk party 1920x1080@150 dark (1280x720): у детей партии (тулбар, область поля, инспектор) нет полей колонки PD-269 {"kids":[]}
+PASS wk party 1920x1080@150 dark (1280x720): поле = min(720, окно − 124, область − 96) = 596, по центру области поля {"board":[336,72,596,596],"stage":[248,52,772,668],"want":596}
+PASS wk party 1920x1080@150 dark (1280x720): инспектор clamp(260, 20vw, 320) = 260 у правого края, во всю высоту {"insp":[1020,0,260,720]}
+PASS wk party 1920x1080@150 dark (1280x720): нет горизонтальной прокрутки {"scrollW":1280}
+PASS wk party 1920x1080@150 dark (1280x720): панель 1–9 и действия — в инспекторе {"pad":[1041,161,219,208],"actions":[1041,381,219,144]}
+PASS wk party 1920x1080@150 dark (1280x720): без ошибок JS {"errs":[]}
+PASS wk party compact 1024x640 light (1024x640): раскладка компакт C, партия .play-fit.desk-play {"shell":"shell desk compact side-off","play":"play today play-fit play-hintable desk-play"}
+PASS wk party compact 1024x640 light (1024x640): у детей партии (тулбар, область поля, инспектор) нет полей колонки PD-269 {"kids":[]}
+PASS wk party compact 1024x640 light (1024x640): поле = min(720, окно − 124, область − 96) = 516, по центру области поля {"board":[124,72,516,516],"stage":[0,52,764,588],"want":516}
+PASS wk party compact 1024x640 light (1024x640): инспектор clamp(260, 20vw, 320) = 260 у правого края, во всю высоту {"insp":[764,0,260,640]}
+PASS wk party compact 1024x640 light (1024x640): нет горизонтальной прокрутки {"scrollW":1024}
+PASS wk party compact 1024x640 light (1024x640): панель 1–9 и действия — в инспекторе {"pad":[781,150,227,172],"actions":[781,334,227,94]}
+PASS wk party compact 1024x640 light (1024x640) solved: Today остаётся партией — .today:not(.play-fit) (колонка 640 PD-269) нет {"notFit":0,"play":"play today play-fit play-hintable desk-play"}
+PASS wk party compact 1024x640 light (1024x640) solved: поле того же размера на месте, область без полей {"board0":[124,72,516,516],"board1":[124,72,516,516]}
+PASS wk party compact 1024x640 light (1024x640) solved: карточка — в инспекторе во всю его ширину (− 24), без полей колонки {"card":[777,12,235,448],"insp":[764,0,260,640],"margin":["0px","0px"]}
+PASS wk party compact 1024x640 light (1024x640) solved: Grid ∞ — в инспекторе {"grid":[819,515,150,150]}
+PASS wk party compact 1024x640 light (1024x640) solved: Timelapse — шит 560 (≤ 560) по центру области контента, правее сайдбара, в окне {"sheet":[232,77,560,563],"scrim":[0,0,1024,640]}
+PASS wk party compact 1024x640 light (1024x640): без ошибок JS {"errs":[]}
+PASS wk party compact 1024x640 dark (1024x640): раскладка компакт C, партия .play-fit.desk-play {"shell":"shell desk compact side-off","play":"play today play-fit play-hintable desk-play"}
+PASS wk party compact 1024x640 dark (1024x640): у детей партии (тулбар, область поля, инспектор) нет полей колонки PD-269 {"kids":[]}
+PASS wk party compact 1024x640 dark (1024x640): поле = min(720, окно − 124, область − 96) = 516, по центру области поля {"board":[124,72,516,516],"stage":[0,52,764,588],"want":516}
+PASS wk party compact 1024x640 dark (1024x640): инспектор clamp(260, 20vw, 320) = 260 у правого края, во всю высоту {"insp":[764,0,260,640]}
+PASS wk party compact 1024x640 dark (1024x640): нет горизонтальной прокрутки {"scrollW":1024}
+PASS wk party compact 1024x640 dark (1024x640): панель 1–9 и действия — в инспекторе {"pad":[781,150,227,172],"actions":[781,334,227,94]}
+PASS wk party compact 1024x640 dark (1024x640): без ошибок JS {"errs":[]}
+PASS wk party compact 960x600 light (960x600): раскладка компакт C, партия .play-fit.desk-play {"shell":"shell desk compact side-off","play":"play today play-fit play-hintable desk-play"}
+PASS wk party compact 960x600 light (960x600): у детей партии (тулбар, область поля, инспектор) нет полей колонки PD-269 {"kids":[]}
+PASS wk party compact 960x600 light (960x600): поле = min(720, окно − 124, область − 96) = 476, по центру области поля {"board":[112,72,476,476],"stage":[0,52,700,548],"want":476}
+PASS wk party compact 960x600 light (960x600): инспектор clamp(260, 20vw, 320) = 260 у правого края, во всю высоту {"insp":[700,0,260,600]}
+PASS wk party compact 960x600 light (960x600): нет горизонтальной прокрутки {"scrollW":960}
+PASS wk party compact 960x600 light (960x600): панель 1–9 и действия — в инспекторе {"pad":[717,149,227,172],"actions":[717,333,227,94]}
+PASS wk party compact 960x600 light (960x600): без ошибок JS {"errs":[]}
+PASS wk party compact 960x600 dark (960x600): раскладка компакт C, партия .play-fit.desk-play {"shell":"shell desk compact side-off","play":"play today play-fit play-hintable desk-play"}
+PASS wk party compact 960x600 dark (960x600): у детей партии (тулбар, область поля, инспектор) нет полей колонки PD-269 {"kids":[]}
+PASS wk party compact 960x600 dark (960x600): поле = min(720, окно − 124, область − 96) = 476, по центру области поля {"board":[112,72,476,476],"stage":[0,52,700,548],"want":476}
+PASS wk party compact 960x600 dark (960x600): инспектор clamp(260, 20vw, 320) = 260 у правого края, во всю высоту {"insp":[700,0,260,600]}
+PASS wk party compact 960x600 dark (960x600): нет горизонтальной прокрутки {"scrollW":960}
+PASS wk party compact 960x600 dark (960x600): панель 1–9 и действия — в инспекторе {"pad":[717,149,227,172],"actions":[717,333,227,94]}
+PASS wk party compact 960x600 dark (960x600) solved: Today остаётся партией — .today:not(.play-fit) (колонка 640 PD-269) нет {"notFit":0,"play":"play today play-fit play-hintable desk-play"}
+PASS wk party compact 960x600 dark (960x600) solved: поле того же размера на месте, область без полей {"board0":[112,72,476,476],"board1":[112,72,476,476]}
+PASS wk party compact 960x600 dark (960x600) solved: карточка — в инспекторе во всю его ширину (− 24), без полей колонки {"card":[713,12,235,448],"insp":[700,0,260,600],"margin":["0px","0px"]}
+PASS wk party compact 960x600 dark (960x600) solved: Grid ∞ — в инспекторе {"grid":[755,515,150,150]}
+PASS wk party compact 960x600 dark (960x600) solved: Timelapse — шит 560 (≤ 560) по центру области контента, правее сайдбара, в окне {"sheet":[200,72,560,528],"scrim":[0,0,960,600]}
+PASS wk party compact 960x600 dark (960x600): без ошибок JS {"errs":[]}
+
+368/368 PASS

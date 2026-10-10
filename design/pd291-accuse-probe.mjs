@@ -8,7 +8,8 @@
  * Сценарий — как у живого игрока: старт на Today (панель Today смонтирована; «open» — день начат, «solved» — решён), переход
  * в Play → Лжец → партия, выбрать подсказку → (1) A, (2) «⋯ → Обвинить», (3) правый клик по клетке (эталон: el передан явно).
  * PASS строки = копия клетки (`.liar-lift`) на выбранной клетке активной панели (±1 px) И меню целиком в окне И после Esc
- * фокус на той же клетке панели Play (не <body>, не клетка Today). Телефон 393×852 (touch) и десктоп 1440×900.
+ * фокус на той же клетке панели Play (не <body>, не клетка Today). Телефон 393×852 (touch) и десктоп 1440×900;
+ * COMPACT=1 — плюс компакт C 1024×640 @125 % (сайдбар через «Show sidebar»).
  */
 import { createRequire } from "node:module";
 import http from "node:http";
@@ -67,9 +68,12 @@ async function probe(p) {
 
 async function run(browser, BR, base) {
   // today: «open» — день начат (поле Today в скрытой панели), «solved» — день решён (в панели Today карточка и Grid ∞).
-  for (const [kind, w, h, touch, today] of [["phone", 393, 852, true, "open"], ["phone", 393, 852, true, "solved"], ["desk", 1440, 900, false, "open"], ["desk", 1440, 900, false, "solved"]]) {
+  // COMPACT=1 — плюс компакт C 1024×640 при масштабе 125 % (DPR 1.25, сайдбар скрыт — показывается кнопкой), как в pd290-check.
+  const cases = [["phone", 393, 852, true, "open"], ["phone", 393, 852, true, "solved"], ["desk", 1440, 900, false, "open"], ["desk", 1440, 900, false, "solved"]];
+  if (process.env.COMPACT === "1") cases.push(["compact", 1024, 640, false, "open"], ["compact", 1024, 640, false, "solved"]);
+  for (const [kind, w, h, touch, today] of cases) {
     const name = browser.browserType().name();
-    const ctx = await browser.newContext({ viewport: { width: w, height: h }, deviceScaleFactor: touch ? 3 : 1, isMobile: touch && name !== "firefox", hasTouch: touch, locale: "en-US", timezoneId: "UTC", reducedMotion: "reduce", serviceWorkers: "block" });
+    const ctx = await browser.newContext({ viewport: { width: w, height: h }, deviceScaleFactor: touch ? 3 : kind === "compact" ? 1.25 : 1, isMobile: touch && name !== "firefox", hasTouch: touch, locale: "en-US", timezoneId: "UTC", reducedMotion: "reduce", serviceWorkers: "block" });
     await ctx.clock.setFixedTime(NOW);
     const p = await ctx.newPage();
     const errs = [];
@@ -88,6 +92,10 @@ async function run(browser, BR, base) {
         await settle(p, 1200);
       }
       // В Play → Лжец (на main и в портрете — таб-бар и шит режима; в раскладке C — сайдбар и страница режима).
+      if (kind === "compact") {
+        await p.locator('[data-testid="sidebar-toggle"]:visible').first().click();
+        await settle(p, 300);
+      }
       if (!(await p.locator('[data-testid="side-mode-liar"]').count())) {
         await p.locator(".tabbar .tab").nth(1).click();
         await p.waitForSelector('[data-testid="hub-modes"]', { timeout: 20000 });

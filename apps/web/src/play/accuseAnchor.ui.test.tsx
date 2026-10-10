@@ -49,6 +49,15 @@ const esc = () => act(() => void document.dispatchEvent(new KeyboardEvent("keydo
 
 /** Клетки чужой доски «ниже экрана» (как поле Today под решённым днём), клетки Play — в верхней части. */
 const rectOf = (el: Element): DOMRect => {
+  // Копия клетки (position: fixed) стоит там, куда её поставил стиль: у затемнения нет transform-предка, начало отсчёта fixed —
+  // окно. Без этого `fixedOrigin` (PD-290, сведение десктопа C) брал бы для копии прямоугольник «клетки 0» и сдвигал её.
+  if (el instanceof HTMLElement && el.classList.contains("ctx-lift")) {
+    const left = parseFloat(el.style.left) || 0;
+    const top = parseFloat(el.style.top) || 0;
+    const width = parseFloat(el.style.width) || 0;
+    const height = parseFloat(el.style.height) || 0;
+    return { top, bottom: top + height, left, right: left + width, width, height, x: left, y: top, toJSON() {} } as DOMRect;
+  }
   const i = Number((el as HTMLElement).dataset?.i ?? -1);
   const top = el.closest("#decoy") ? 2000 : 100 + Math.floor(Math.max(i, 0) / 9) * 40;
   const left = 10 + (Math.max(i, 0) % 9) * 40;
