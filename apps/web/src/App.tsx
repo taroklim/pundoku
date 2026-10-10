@@ -32,7 +32,7 @@ export function App() {
   const { t, i18n } = useTranslation();
   // Браузерное «назад»/edge-swipe/правка адреса при показанном ключе — тот же шит «Ключ ещё не сохранён» (PD-57).
   const [route, go] = useRoute((proceed) => recoveryStore.guardLeave(proceed));
-  const { tab, archiveDate } = route;
+  const { tab, archiveDate, archiveFrom } = route;
   useDynamicTypeFlag();
   const settings = route.settings === true;
   const help = route.help ?? null;
@@ -109,7 +109,7 @@ export function App() {
   const continueDay = (date?: string) => {
     const s = dayStore.getSnapshot();
     if (!date || date === localDate() || (s.date === date && s.phase === "playing")) setTab("today");
-    else go({ archive: date });
+    else go({ archive: date, from: "play" }); // PD-282: «‹ Play» — обратно в хаб, а не в Year
   };
 
   // Экран поверх стопки вкладок (Settings/справка/архив): вход M10 (fadeRise) только при навигации, не при первом показе.
@@ -247,7 +247,12 @@ export function App() {
                   onOpenHelp={() => recoveryStore.requestLeave(() => openHelp(null))}
                 />
               ) : archiveDate ? (
-                <ArchiveScreen date={archiveDate} onBack={() => go({ yearDay: archiveDate })} onOpenHelp={openHelp} />
+                <ArchiveScreen
+                  date={archiveDate}
+                  backTo={archiveFrom ?? "year"}
+                  onBack={() => go(archiveFrom ? { tab: archiveFrom } : { yearDay: archiveDate })}
+                  onOpenHelp={openHelp}
+                />
               ) : null}
             </ErrorBoundary>
           </div>

@@ -32,6 +32,11 @@ export interface Route {
   readonly tab: TabId;
   /** Открыта игра архивного дня. */
   readonly archiveDate: string | null;
+  /**
+   * PD-282: откуда открыт архив, если не из Year — «‹» ведёт обратно туда (строка дня в «Продолжить» хаба Play → Play). Метка
+   * `pdFrom` в `history.state` записи; без неё (из Year, глубокая ссылка, перезагрузка) — поля нет, «‹ Year» на карточку дня.
+   */
+  readonly archiveFrom?: "play";
   /** Year открывается сразу на карточке этого дня. */
   readonly yearDate: string | null;
   /** Открыт экран Settings (PD-49); у остальных адресов поля нет. */
@@ -42,7 +47,7 @@ export interface Route {
 
 export type Target =
   | { readonly tab: TabId }
-  | { readonly archive: string }
+  | { readonly archive: string; readonly from?: "play" }
   | { readonly yearDay: string }
   | { readonly settings: true }
   | { readonly help: HelpBlockId | null };
@@ -78,6 +83,7 @@ const originOf = (state: PushState | null): TabId => (typeof state?.pdFrom === "
 /** Маршрут по адресу и метке записи: у Settings и справки вкладка — та, с которой их открыли (`pdFrom`), иначе Today. */
 export function readRoute(): Route {
   const route = parseRoute(window.location.hash);
+  if (route.archiveDate !== null) return historyState()?.pdFrom === "play" ? { ...route, archiveFrom: "play" } : route;
   if (route.settings !== true && route.help === undefined) return route;
   const state = historyState();
   const tab = originOf(state);
@@ -134,7 +140,7 @@ export function useRoute(guard?: LeaveGuard): [Route, (target: Target) => void] 
     const current = routeRef.current;
     if ("settings" in target) window.history.pushState({ pdSettings: true, pdFrom: current.tab }, "", hash);
     else if ("help" in target) window.history.pushState({ pdHelp: true, pdFrom: current.tab, pdVia: current.settings === true ? "settings" : "tab" }, "", hash);
-    else window.history.replaceState(null, "", hash);
+    else window.history.replaceState("archive" in target && target.from ? { pdFrom: target.from } : null, "", hash);
     const next = readRoute();
     routeRef.current = next;
     setRoute(next);

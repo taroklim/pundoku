@@ -72,6 +72,18 @@ describe("экран архивного дня", () => {
     expect(q('[data-testid="grid-inf-section"]')).toBeNull();
   });
 
+  it("PD-282: открыт из «Продолжить» хаба Play — кнопка «‹ Play» (aria «Back to Play»)", async () => {
+    const { store } = make(ok);
+    const onBack = vi.fn();
+    await act(async () => root.render(<DayView store={store} archive={{ date: PAST, onBack, backTo: "play" }} />));
+    await settle();
+    const back = q('[data-testid="archive-back"]')!;
+    expect(back.textContent).toBe("Play");
+    expect(back.getAttribute("aria-label")).toBe("Back to Play");
+    act(() => back.click());
+    expect(onBack).toHaveBeenCalledTimes(1);
+  });
+
   it("Today не затронут: в шапке сегодняшнего стора нет кнопки «‹ Year»", async () => {
     const { store } = make(ok);
     const today = new DayStore((store as unknown as { deps: DayDeps }).deps);
