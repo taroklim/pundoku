@@ -635,7 +635,7 @@ Gates: build → typecheck, lint, тесты web/engine/api (api с TEST_DATABAS
 | PD-282 | Архив: «‹ Year» у дня, открытого из «Продолжить»/хаба Play, ведёт в Year, а не обратно (находка Dev-275) — маршрут возврата по источнику | developer | P3 | in_progress (Dev-Pundoku-low4, 2026-10-10; пакет pd-low-4) | — |
 | PD-283 | Фикс по QA PD-279 (P4) в pd-275: незаконченный день с датой > сегодня (откат часов/смена пояса на запад) не показывать в «Продолжить» — summaryFromRepo (play/daySlot.ts); проверить то же у Лжеца; тест; до мержа третьего пакета (узкая перепроверка — в общем QA третьего пакета) | developer | P3 | completed (pd-275 @ 93e90b2: summaryFromRepo (daySlot.ts) и PlayStore.liarDayContinue (store.ts) отсекают date > today, данные не удаляются; тесты daySlot.pastDay + liar.midnight (без фикса падают), таргетно 125/125, tsc/eslint ок; pd275-check 187/188 — флак «‹ Year» из архива wk-393-light-uk, перепрогон 2×23/23; qa279-extra 98/98; узкая перепроверка — в общем QA третьего пакета, флак иметь в виду) | PD-279 |
 | PD-284 | Перф: listDays перечитывается при каждом возврате на Play (~40 мс сейчас) — кэшировать/инвалидировать по записи (находка QA PD-279) | developer | P3 | in_progress (Dev-Pundoku-low4, 2026-10-10; пакет pd-low-4) | — |
-| PD-285 | Дизайн (Low UX, QA PD-278/PD-256): карточка результата Play в покое — «New puzzle» целиком под стеклом таб-бара на 320/393/430, «Watch your solve» выглядывает на 12 px и выглядит обрезанной (в конце прокрутки всё доступно); предложить компоновку/подсказку прокрутки, кадры; без реализации | designer | P3 | in_progress (Designer-Pundoku-285, 2026-10-10; пакет pd-low-4) | — |
+| PD-285 | Дизайн (Low UX, QA PD-278/PD-256): карточка результата Play в покое — «New puzzle» целиком под стеклом таб-бара на 320/393/430, «Watch your solve» выглядывает на 12 px и выглядит обрезанной (в конце прокрутки всё доступно); предложить компоновку/подсказку прокрутки, кадры; без реализации | designer | P3 | in_progress (владелец выбрал вариант A «док в 2 ряда»; дизайн в main da1111d: design/pd285-result-card.md §6–7; Dev-Pundoku-285/opus, ветка pd-285 от main; затем QA sonnet; можно выкатывать вместе с pd-low-4) | — |
 | PD-286 | Жест «назад» (Low P3, QA PD-265): второй палец на таб-баре посреди жеста не отменяет жест (уходит на #/play) — edgeBack.ts слушает pointerdown второго пальца только на .push-layer | developer | P3 | in_progress (Dev-Pundoku-low4, 2026-10-10; пакет pd-low-4) | — |
 
 ### Бриф PD-8 (developer, P1 — пункт (a) блокирует UI-тикеты поля/Today)
@@ -791,7 +791,7 @@ Gates: build → typecheck, lint, тесты web/engine/api (api с `TEST_DATABA
 | Имя | Роль | Статус | Тикет | Обновлено |
 |-----|------|--------|-------|-----------|
 | Dev-Pundoku-low4 | developer (opus) | working | PD-282/284/286/288/292 | 2026-10-10 |
-| Designer-Pundoku-285 | designer | working | PD-285 | 2026-10-10 |
+| Dev-Pundoku-285 | developer (opus) | working | PD-285 | 2026-10-10 |
 | PM-Pundoku-23 | product-manager | waiting (Dev-desk-all2 сводит десктоп C; затем QA PD-270) | PD-290 | 2026-10-10 |
 | Dev-Pundoku-desk-all2 | developer (opus) | done | PD-290 | 2026-10-10 |
 | Dev-Pundoku-merge | developer (opus) | done | PD-290/PD-291 | 2026-10-10 |
