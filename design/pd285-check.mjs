@@ -21,6 +21,11 @@
  *   «What's this?» → Watch → Share → New puzzle, фокус над доком; имя группы. п. 10 — Reduce Motion: у дока только fadeIn.
  *   Плюс: тап по New puzzle открывает шит (не вкладку); Play → Today → Play — док на месте (риск §8 п. 3).
  * ONLY_SAME=1 — только сравнения с main (AX3, ландшафт, десктоп C, Today). Время партии в этих кадрах — под маской.
+ * Питомец (PD-297): с пакета 5 он включён по умолчанию, и его клякса на карточке/Today (посадка, затем бесконечное дыхание)
+ *   делает кадры «= main» несравнимыми со сборкой main до PD-297 и нестабильными от кадра к кадру. Поэтому в ОБЕИХ сборках
+ *   (ветка и BASE_DIST) до загрузки страницы пишется localStorage pundoku.pet = "0" — Питомец выключен, как было по умолчанию
+ *   до PD-297; док и карточка проверяются без него. PET=1 — не трогать ключ (Питомец по умолчанию, вкл) — для ручной проверки
+ *   дока с Питомцем; сравнения «кадр = main» тогда честны, только если BASE_DIST тоже собран с PD-297.
  * Кадры — design/pd285-shots/impl-*.png; итог — design/pd285-shots/impl-results-<браузеры>.json.
  */
 import { createRequire } from "node:module";
@@ -34,6 +39,7 @@ const DIST = path.resolve(process.env.DIST ?? path.join(HERE, "../apps/web/dist"
 const BASE_DIST = process.env.BASE_DIST ? path.resolve(process.env.BASE_DIST) : null;
 const OUT = path.join(HERE, "pd285-shots");
 const PORT = +(process.env.PORT ?? 5481);
+const PET_ON = process.env.PET === "1";
 const NOW = new Date("2026-10-10T09:00:00Z");
 const DATE = "2026-10-10";
 const MISSION = "530070000600195000098000060800060003400803001700020006060000280000419005000080079";
@@ -142,6 +148,14 @@ async function open(browser, { w, h, dpr = 2, scheme = "light", route = "play", 
     serviceWorkers: "block",
   });
   await ctx.clock.setFixedTime(NOW);
+  // PD-297: Питомец вкл по умолчанию — выключаем в обеих сборках, чтобы «кадр = main» сравнивал док, а не кляксу (см. шапку).
+  if (!PET_ON) {
+    await ctx.addInitScript(() => {
+      try {
+        localStorage.setItem("pundoku.pet", "0");
+      } catch {}
+    });
+  }
   await ctx.addInitScript(() => {
     let x = 0x9e3779b9;
     crypto.getRandomValues = (a) => {
