@@ -430,6 +430,7 @@
   "archive": {
     "title": "Archive",
     "backLabel": "Back to Year",
+    "backLabelPlay": "Back to Play",
     "loading": "Loading this day’s puzzle…",
     "failed": "Couldn’t load this day’s puzzle.",
     "unavailable": "This day’s puzzle isn’t available."

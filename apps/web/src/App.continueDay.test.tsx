@@ -10,6 +10,7 @@ import "./i18n";
 
 const day = vi.hoisted(() => ({ snap: { date: "2026-10-07", phase: "playing", play: null as unknown } }));
 const opened = vi.hoisted(() => ({ fn: null as ((date?: string) => void) | null }));
+const archive = vi.hoisted(() => ({ props: null as { backTo?: string; onBack: () => void } | null }));
 vi.mock("./today/dayStore", () => ({ dayStore: { getSnapshot: () => day.snap } }));
 vi.mock("./play/store", () => ({ playStore: { reselect: vi.fn() } }));
 vi.mock("./recovery/runtime", () => ({ recoveryStore: { held: false, guardLeave: () => false, requestLeave: (p: () => void) => p() } }));
@@ -20,7 +21,12 @@ vi.mock("./play/PlayScreen", () => ({
   },
 }));
 vi.mock("./today/TodayScreen", () => ({ TodayScreen: () => <p>today</p> }));
-vi.mock("./today/ArchiveScreen", () => ({ ArchiveScreen: ({ date }: { date: string }) => <p>archive {date}</p> }));
+vi.mock("./today/ArchiveScreen", () => ({
+  ArchiveScreen: (props: { date: string; backTo?: string; onBack: () => void }) => {
+    archive.props = props;
+    return <p>archive {props.date}</p>;
+  },
+}));
 vi.mock("./year/YearTab", () => ({ YearTab: () => <p>year</p> }));
 vi.mock("./help/HelpScreen", () => ({ HelpScreen: () => <p>help</p> }));
 vi.mock("./recovery/SettingsScreen", () => ({ BACK_LABEL: { today: "Today", play: "Play", year: "Year" }, SettingsScreen: () => <p>settings</p> }));
@@ -55,6 +61,27 @@ describe("App › continueDay (PD-275)", () => {
     await act(async () => opened.fn!(YESTERDAY));
     expect(window.location.hash).toBe(`#/day/${YESTERDAY}`);
     expect(host.textContent).toContain(`archive ${YESTERDAY}`);
+  });
+
+  it("PD-282: архив, открытый из «Продолжить», — «‹ Play» обратно в Play (и после перезагрузки записи), а не в Year", async () => {
+    await act(async () => opened.fn!(YESTERDAY));
+    expect(archive.props!.backTo).toBe("play");
+    expect(window.history.state).toEqual({ pdFrom: "play" });
+    // popstate/hashchange той же записи (метка в history.state) — источник не теряется
+    await act(async () => window.dispatchEvent(new HashChangeEvent("hashchange")));
+    expect(archive.props!.backTo).toBe("play");
+    await act(async () => archive.props!.onBack());
+    expect(window.location.hash).toBe("#/play");
+    expect(host.textContent).toContain("play");
+    expect(host.textContent).not.toContain("archive");
+  });
+
+  it("PD-282: архив без метки источника (из Year, глубокая ссылка) — «‹ Year» на карточку дня, как раньше", async () => {
+    window.history.replaceState(null, "", `#/day/${YESTERDAY}`);
+    await act(async () => window.dispatchEvent(new HashChangeEvent("hashchange")));
+    expect(archive.props!.backTo).toBe("year");
+    await act(async () => archive.props!.onBack());
+    expect(window.location.hash).toBe(`#/year/${YESTERDAY}`);
   });
 
   it("сегодняшний и без даты — вкладка Today", async () => {

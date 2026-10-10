@@ -22,6 +22,8 @@ import { usePetLive } from "./usePetLive";
  * - Покой — 3 вдоха и замирает. Вкладка скрыта / приложение в фоне — клякса стоит (ни одной анимации); вернулись — покой
  *   запускается заново (ремаунт), действие повторно не играет.
  * - Reduce Motion (`--mo: 0`): покоя нет, действие — короткое растворение на месте (амплитуды × `--mo` в `pet.css`).
+ * - `idle={false}` — без покоя вовсе (превью в Настройках, PD-288: по макету PD-223 §1 Питомец дышит только на карточке
+ *   результата и в листе дня Year).
  *
  * VoiceOver: `role="img"` и имя «Blot, pleased» — украшение с подписью, смысл дублируют строки карточки. Движение ничего не
  * объявляет. На игровое поле компонент не попадает никогда (только карточка результата, лист дня Year и превью в Настройках).
@@ -32,6 +34,7 @@ export function PetBlot({
   decorative = false,
   act,
   actDelay = 0,
+  idle = true,
 }: {
   mood: PetMood;
   size?: number;
@@ -40,6 +43,8 @@ export function PetBlot({
   act?: PetAct;
   /** Задержка действия, мс (карточка: после её входа). */
   actDelay?: number;
+  /** Покой «3 вдоха» (по умолчанию да). Превью в Настройках — `false`: клякса стоит. */
+  idle?: boolean;
 }) {
   const { t } = useTranslation();
   // useId даёт «:r1:»/««r1»» — в url(#…) берём только буквы и цифры.
@@ -66,7 +71,7 @@ export function PetBlot({
       data-v="B"
       data-mood={mood}
       data-act={action}
-      data-idle={live && !reduced ? "" : undefined}
+      data-idle={idle && live && !reduced ? "" : undefined}
       data-still={live ? undefined : ""}
       role={decorative ? undefined : "img"}
       aria-label={decorative ? undefined : t(`pet.label.${mood}`)}

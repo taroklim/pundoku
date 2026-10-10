@@ -198,6 +198,41 @@ describe("установленное приложение: Settings", () => {
     expect(shift()).toBe("");
   });
 
+  it("второй палец на самом экране посреди жеста — отмена, Settings на месте", async () => {
+    await openSettings("play");
+    drag(6, [40, 200], { release: false });
+    pointer(layer()!, "pointerdown", 330, 500, { id: 2 });
+    pointer(document, "pointermove", 260, 300);
+    pointer(document, "pointerup", 260, 300, { dt: 200 });
+    await wait(EDGE_BACK.SETTLE_MS + EDGE_BACK.FALLBACK_MS);
+    expect(store.guardLeave).not.toHaveBeenCalled();
+    expect(q("settings-screen")).not.toBeNull();
+    expect(window.location.hash).toBe("#/settings");
+    expect(shift()).toBe("");
+  });
+
+  it("PD-286: второй палец на таб-баре (вне слоя) посреди жеста — тоже отмена, не уход на вкладку-источник", async () => {
+    await openSettings("play");
+    drag(6, [40, 200], { release: false });
+    const tabbar = host.querySelector<HTMLElement>(".tabbar")!;
+    expect(layer()!.contains(tabbar)).toBe(false);
+    pointer(tabbar, "pointerdown", 300, 820, { id: 2 });
+    expect(layer()!.hasAttribute("data-edge-drag")).toBe(true); // доводка назад на место идёт
+    pointer(document, "pointermove", 260, 300);
+    pointer(document, "pointerup", 260, 300, { dt: 200 });
+    await wait(EDGE_BACK.SETTLE_MS + EDGE_BACK.FALLBACK_MS);
+    expect(store.guardLeave).not.toHaveBeenCalled();
+    expect(q("settings-screen")).not.toBeNull();
+    expect(window.location.hash).toBe("#/settings");
+    expect(shift()).toBe("");
+    expect(stack().hasAttribute("data-peek")).toBe(false);
+    // после отмены жест снова доступен
+    drag(6, [40, 200], { dt: 60 });
+    await wait(EDGE_BACK.SETTLE_MS + 40);
+    await settle();
+    expect(window.location.hash).toBe("#/play");
+  });
+
   it("клик хвоста жеста под пальцем не срабатывает как тап", async () => {
     await openSettings();
     const onClick = vi.fn();

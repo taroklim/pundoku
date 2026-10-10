@@ -43,7 +43,7 @@ describe("i18n: блок year.* (PD-25)", () => {
   it("блок archive.* (PD-33): те же ключи и плейсхолдеры во всех локалях, без пустых строк", () => {
     const a = (l: object) => flatten((l as { archive: Tree }).archive);
     const e = a(en);
-    expect(Object.keys(e).sort()).toEqual(["backLabel", "failed", "loading", "title", "unavailable"]);
+    expect(Object.keys(e).sort()).toEqual(["backLabel", "backLabelPlay", "failed", "loading", "title", "unavailable"]); // backLabelPlay — PD-282
     for (const l of [uk, ru]) {
       expect(Object.keys(a(l)).sort()).toEqual(Object.keys(e).sort());
       for (const [k, v] of Object.entries(a(l))) {
