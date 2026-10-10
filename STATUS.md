@@ -793,9 +793,10 @@ Gates: build → typecheck, lint, тесты web/engine/api (api с `TEST_DATABA
 | Имя | Роль | Статус | Тикет | Обновлено |
 |-----|------|--------|-------|-----------|
 | Dev-Pundoku-low4 | developer (opus) | done | PD-282/284/286/288/292 | 2026-10-10 |
-| QA-Pundoku-low4 | qa-tester (sonnet) | working | PD-282/284/286/288/292 | 2026-10-10 |
+| QA-Pundoku-low4-2 (agent a3f70f94…) | qa-tester (sonnet) | working (перезапуск с нуля, порт 5341) | PD-282/284/286/288/292 | 2026-10-10 |
 | Dev-Pundoku-285 | developer (opus) | done | PD-285 | 2026-10-10 |
-| QA-Pundoku-285 | qa-tester (sonnet) | working | PD-285 | 2026-10-10 |
+| QA-Pundoku-285-2 (agent a51c303c…) | qa-tester (sonnet) | working (перезапуск с нуля, порт 5481) | PD-285 | 2026-10-10 |
+| PM-Pundoku-24 | product-manager | waiting (оба QA идут; после PASS — сведение pd-low-4 + pd-285 → hash, push не делать) | PD-282/284/285/286/288/292 | 2026-10-10 |
 | PM-Pundoku-23 | product-manager | waiting (Dev-desk-all2 сводит десктоп C; затем QA PD-270) | PD-290 | 2026-10-10 |
 | Dev-Pundoku-desk-all2 | developer (opus) | done | PD-290 | 2026-10-10 |
 | Dev-Pundoku-merge | developer (opus) | done | PD-290/PD-291 | 2026-10-10 |
