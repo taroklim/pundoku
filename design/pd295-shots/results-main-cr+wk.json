@@ -1,0 +1,1886 @@
+{
+ "label": "main",
+ "dist": "/tmp/pd295-main",
+ "total": 370,
+ "fails": [],
+ "results": {
+  "cr 393 full en light: панель прокручивается (overflow auto), док PD-285 не протёк": {
+   "ok": true,
+   "ov": "auto",
+   "cls": "scroll tab-pane"
+  },
+  "cr 393 full en light: резерв снизу = 16 + таб-бар + inset (PD-144; десктоп C — 16)": {
+   "ok": true,
+   "pb": 114.1,
+   "want": 114.1
+  },
+  "cr 393 full en light: scroll-padding-bottom = тот же резерв (PD-292)": {
+   "ok": true,
+   "spb": 114.1,
+   "want": 114.1
+  },
+  "cr 393 full en light: в конце прокрутки Dec и легенда над таб-баром/краем ≥ 16 px": {
+   "ok": true,
+   "decBottom": 595,
+   "legBottom": 645.4,
+   "barTop": 753.6,
+   "gap": 108.2,
+   "range": 0
+  },
+  "cr 393 full en light: Dec достижим — elementFromPoint в его центре = Dec": {
+   "ok": true
+  },
+  "cr 393 full en light: жест докручивает до конца": {
+   "ok": true,
+   "st": 0,
+   "range": 0
+  },
+  "cr 393 full en light: без ошибок страницы": {
+   "ok": true,
+   "errs": []
+  },
+  "cr 393 full en dark: панель прокручивается (overflow auto), док PD-285 не протёк": {
+   "ok": true,
+   "ov": "auto",
+   "cls": "scroll tab-pane"
+  },
+  "cr 393 full en dark: резерв снизу = 16 + таб-бар + inset (PD-144; десктоп C — 16)": {
+   "ok": true,
+   "pb": 114.1,
+   "want": 114.1
+  },
+  "cr 393 full en dark: scroll-padding-bottom = тот же резерв (PD-292)": {
+   "ok": true,
+   "spb": 114.1,
+   "want": 114.1
+  },
+  "cr 393 full en dark: в конце прокрутки Dec и легенда над таб-баром/краем ≥ 16 px": {
+   "ok": true,
+   "decBottom": 595,
+   "legBottom": 645.4,
+   "barTop": 753.6,
+   "gap": 108.2,
+   "range": 0
+  },
+  "cr 393 full en dark: Dec достижим — elementFromPoint в его центре = Dec": {
+   "ok": true
+  },
+  "cr 393 full en dark: жест докручивает до конца": {
+   "ok": true,
+   "st": 0,
+   "range": 0
+  },
+  "cr 393 full en dark: без ошибок страницы": {
+   "ok": true,
+   "errs": []
+  },
+  "cr 393 full ru light: панель прокручивается (overflow auto), док PD-285 не протёк": {
+   "ok": true,
+   "ov": "auto",
+   "cls": "scroll tab-pane"
+  },
+  "cr 393 full ru light: резерв снизу = 16 + таб-бар + inset (PD-144; десктоп C — 16)": {
+   "ok": true,
+   "pb": 114.1,
+   "want": 114.1
+  },
+  "cr 393 full ru light: scroll-padding-bottom = тот же резерв (PD-292)": {
+   "ok": true,
+   "spb": 114.1,
+   "want": 114.1
+  },
+  "cr 393 full ru light: в конце прокрутки Dec и легенда над таб-баром/краем ≥ 16 px": {
+   "ok": true,
+   "decBottom": 614.4,
+   "legBottom": 664.8,
+   "barTop": 753.6,
+   "gap": 88.8,
+   "range": 0
+  },
+  "cr 393 full ru light: Dec достижим — elementFromPoint в его центре = Dec": {
+   "ok": true
+  },
+  "cr 393 full ru light: жест докручивает до конца": {
+   "ok": true,
+   "st": 0,
+   "range": 0
+  },
+  "cr 393 full ru light: без ошибок страницы": {
+   "ok": true,
+   "errs": []
+  },
+  "cr 393 full uk light: панель прокручивается (overflow auto), док PD-285 не протёк": {
+   "ok": true,
+   "ov": "auto",
+   "cls": "scroll tab-pane"
+  },
+  "cr 393 full uk light: резерв снизу = 16 + таб-бар + inset (PD-144; десктоп C — 16)": {
+   "ok": true,
+   "pb": 114.1,
+   "want": 114.1
+  },
+  "cr 393 full uk light: scroll-padding-bottom = тот же резерв (PD-292)": {
+   "ok": true,
+   "spb": 114.1,
+   "want": 114.1
+  },
+  "cr 393 full uk light: в конце прокрутки Dec и легенда над таб-баром/краем ≥ 16 px": {
+   "ok": true,
+   "decBottom": 614.4,
+   "legBottom": 664.8,
+   "barTop": 753.6,
+   "gap": 88.8,
+   "range": 0
+  },
+  "cr 393 full uk light: Dec достижим — elementFromPoint в его центре = Dec": {
+   "ok": true
+  },
+  "cr 393 full uk light: жест докручивает до конца": {
+   "ok": true,
+   "st": 0,
+   "range": 0
+  },
+  "cr 393 full uk light: без ошибок страницы": {
+   "ok": true,
+   "errs": []
+  },
+  "cr 393 empty en light: панель прокручивается (overflow auto), док PD-285 не протёк": {
+   "ok": true,
+   "ov": "auto",
+   "cls": "scroll tab-pane"
+  },
+  "cr 393 empty en light: резерв снизу = 16 + таб-бар + inset (PD-144; десктоп C — 16)": {
+   "ok": true,
+   "pb": 114.1,
+   "want": 114.1
+  },
+  "cr 393 empty en light: scroll-padding-bottom = тот же резерв (PD-292)": {
+   "ok": true,
+   "spb": 114.1,
+   "want": 114.1
+  },
+  "cr 393 empty en light: в конце прокрутки Dec и легенда над таб-баром/краем ≥ 16 px": {
+   "ok": true,
+   "decBottom": 725.9,
+   "legBottom": null,
+   "barTop": 753.6,
+   "gap": 27.7,
+   "range": 46
+  },
+  "cr 393 empty en light: Dec достижим — elementFromPoint в его центре = Dec": {
+   "ok": true
+  },
+  "cr 393 empty en light: жест докручивает до конца": {
+   "ok": true,
+   "st": 46,
+   "range": 46
+  },
+  "cr 320 full en light: панель прокручивается (overflow auto), док PD-285 не протёк": {
+   "ok": true,
+   "ov": "auto",
+   "cls": "scroll tab-pane"
+  },
+  "cr 320 full en light: резерв снизу = 16 + таб-бар + inset (PD-144; десктоп C — 16)": {
+   "ok": true,
+   "pb": 80.1,
+   "want": 80.1
+  },
+  "cr 320 full en light: scroll-padding-bottom = тот же резерв (PD-292)": {
+   "ok": true,
+   "spb": 80.1,
+   "want": 80.1
+  },
+  "cr 320 full en light: в конце прокрутки Dec и легенда над таб-баром/краем ≥ 16 px": {
+   "ok": true,
+   "decBottom": 434,
+   "legBottom": 476.4,
+   "barTop": 503.6,
+   "gap": 27.2,
+   "range": 55
+  },
+  "cr 320 full en light: Dec достижим — elementFromPoint в его центре = Dec": {
+   "ok": true
+  },
+  "cr 320 full en light: жест докручивает до конца": {
+   "ok": true,
+   "st": 55,
+   "range": 55
+  },
+  "cr 320 full en light: без ошибок страницы": {
+   "ok": true,
+   "errs": []
+  },
+  "cr 320 full en dark: панель прокручивается (overflow auto), док PD-285 не протёк": {
+   "ok": true,
+   "ov": "auto",
+   "cls": "scroll tab-pane"
+  },
+  "cr 320 full en dark: резерв снизу = 16 + таб-бар + inset (PD-144; десктоп C — 16)": {
+   "ok": true,
+   "pb": 80.1,
+   "want": 80.1
+  },
+  "cr 320 full en dark: scroll-padding-bottom = тот же резерв (PD-292)": {
+   "ok": true,
+   "spb": 80.1,
+   "want": 80.1
+  },
+  "cr 320 full en dark: в конце прокрутки Dec и легенда над таб-баром/краем ≥ 16 px": {
+   "ok": true,
+   "decBottom": 434,
+   "legBottom": 476.4,
+   "barTop": 503.6,
+   "gap": 27.2,
+   "range": 55
+  },
+  "cr 320 full en dark: Dec достижим — elementFromPoint в его центре = Dec": {
+   "ok": true
+  },
+  "cr 320 full en dark: жест докручивает до конца": {
+   "ok": true,
+   "st": 55,
+   "range": 55
+  },
+  "cr 320 full en dark: без ошибок страницы": {
+   "ok": true,
+   "errs": []
+  },
+  "cr 320 full ru light: панель прокручивается (overflow auto), док PD-285 не протёк": {
+   "ok": true,
+   "ov": "auto",
+   "cls": "scroll tab-pane"
+  },
+  "cr 320 full ru light: резерв снизу = 16 + таб-бар + inset (PD-144; десктоп C — 16)": {
+   "ok": true,
+   "pb": 80.1,
+   "want": 80.1
+  },
+  "cr 320 full ru light: scroll-padding-bottom = тот же резерв (PD-292)": {
+   "ok": true,
+   "spb": 80.1,
+   "want": 80.1
+  },
+  "cr 320 full ru light: в конце прокрутки Dec и легенда над таб-баром/краем ≥ 16 px": {
+   "ok": true,
+   "decBottom": 414,
+   "legBottom": 475.6,
+   "barTop": 503.6,
+   "gap": 28,
+   "range": 75
+  },
+  "cr 320 full ru light: Dec достижим — elementFromPoint в его центре = Dec": {
+   "ok": true
+  },
+  "cr 320 full ru light: жест докручивает до конца": {
+   "ok": true,
+   "st": 75,
+   "range": 75
+  },
+  "cr 320 full ru light: без ошибок страницы": {
+   "ok": true,
+   "errs": []
+  },
+  "cr 320 full uk light: панель прокручивается (overflow auto), док PD-285 не протёк": {
+   "ok": true,
+   "ov": "auto",
+   "cls": "scroll tab-pane"
+  },
+  "cr 320 full uk light: резерв снизу = 16 + таб-бар + inset (PD-144; десктоп C — 16)": {
+   "ok": true,
+   "pb": 80.1,
+   "want": 80.1
+  },
+  "cr 320 full uk light: scroll-padding-bottom = тот же резерв (PD-292)": {
+   "ok": true,
+   "spb": 80.1,
+   "want": 80.1
+  },
+  "cr 320 full uk light: в конце прокрутки Dec и легенда над таб-баром/краем ≥ 16 px": {
+   "ok": true,
+   "decBottom": 414,
+   "legBottom": 475.6,
+   "barTop": 503.6,
+   "gap": 28,
+   "range": 75
+  },
+  "cr 320 full uk light: Dec достижим — elementFromPoint в его центре = Dec": {
+   "ok": true
+  },
+  "cr 320 full uk light: жест докручивает до конца": {
+   "ok": true,
+   "st": 75,
+   "range": 75
+  },
+  "cr 320 full uk light: без ошибок страницы": {
+   "ok": true,
+   "errs": []
+  },
+  "cr 320 empty en light: панель прокручивается (overflow auto), док PD-285 не протёк": {
+   "ok": true,
+   "ov": "auto",
+   "cls": "scroll tab-pane"
+  },
+  "cr 320 empty en light: резерв снизу = 16 + таб-бар + inset (PD-144; десктоп C — 16)": {
+   "ok": true,
+   "pb": 80.1,
+   "want": 80.1
+  },
+  "cr 320 empty en light: scroll-padding-bottom = тот же резерв (PD-292)": {
+   "ok": true,
+   "spb": 80.1,
+   "want": 80.1
+  },
+  "cr 320 empty en light: в конце прокрутки Dec и легенда над таб-баром/краем ≥ 16 px": {
+   "ok": true,
+   "decBottom": 475.5,
+   "legBottom": null,
+   "barTop": 503.6,
+   "gap": 28.1,
+   "range": 171
+  },
+  "cr 320 empty en light: Dec достижим — elementFromPoint в его центре = Dec": {
+   "ok": true
+  },
+  "cr 320 empty en light: жест докручивает до конца": {
+   "ok": true,
+   "st": 171,
+   "range": 171
+  },
+  "cr 430 full en light: панель прокручивается (overflow auto), док PD-285 не протёк": {
+   "ok": true,
+   "ov": "auto",
+   "cls": "scroll tab-pane"
+  },
+  "cr 430 full en light: резерв снизу = 16 + таб-бар + inset (PD-144; десктоп C — 16)": {
+   "ok": true,
+   "pb": 114.1,
+   "want": 114.1
+  },
+  "cr 430 full en light: scroll-padding-bottom = тот же резерв (PD-292)": {
+   "ok": true,
+   "spb": 114.1,
+   "want": 114.1
+  },
+  "cr 430 full en light: в конце прокрутки Dec и легенда над таб-баром/краем ≥ 16 px": {
+   "ok": true,
+   "decBottom": 630.3,
+   "legBottom": 680.7,
+   "barTop": 833.6,
+   "gap": 152.9,
+   "range": 0
+  },
+  "cr 430 full en light: Dec достижим — elementFromPoint в его центре = Dec": {
+   "ok": true
+  },
+  "cr 430 full en light: жест докручивает до конца": {
+   "ok": true,
+   "st": 0,
+   "range": 0
+  },
+  "cr 430 full en light: без ошибок страницы": {
+   "ok": true,
+   "errs": []
+  },
+  "cr 430 full en dark: панель прокручивается (overflow auto), док PD-285 не протёк": {
+   "ok": true,
+   "ov": "auto",
+   "cls": "scroll tab-pane"
+  },
+  "cr 430 full en dark: резерв снизу = 16 + таб-бар + inset (PD-144; десктоп C — 16)": {
+   "ok": true,
+   "pb": 114.1,
+   "want": 114.1
+  },
+  "cr 430 full en dark: scroll-padding-bottom = тот же резерв (PD-292)": {
+   "ok": true,
+   "spb": 114.1,
+   "want": 114.1
+  },
+  "cr 430 full en dark: в конце прокрутки Dec и легенда над таб-баром/краем ≥ 16 px": {
+   "ok": true,
+   "decBottom": 630.3,
+   "legBottom": 680.7,
+   "barTop": 833.6,
+   "gap": 152.9,
+   "range": 0
+  },
+  "cr 430 full en dark: Dec достижим — elementFromPoint в его центре = Dec": {
+   "ok": true
+  },
+  "cr 430 full en dark: жест докручивает до конца": {
+   "ok": true,
+   "st": 0,
+   "range": 0
+  },
+  "cr 430 full en dark: без ошибок страницы": {
+   "ok": true,
+   "errs": []
+  },
+  "cr 430 full ru light: панель прокручивается (overflow auto), док PD-285 не протёк": {
+   "ok": true,
+   "ov": "auto",
+   "cls": "scroll tab-pane"
+  },
+  "cr 430 full ru light: резерв снизу = 16 + таб-бар + inset (PD-144; десктоп C — 16)": {
+   "ok": true,
+   "pb": 114.1,
+   "want": 114.1
+  },
+  "cr 430 full ru light: scroll-padding-bottom = тот же резерв (PD-292)": {
+   "ok": true,
+   "spb": 114.1,
+   "want": 114.1
+  },
+  "cr 430 full ru light: в конце прокрутки Dec и легенда над таб-баром/краем ≥ 16 px": {
+   "ok": true,
+   "decBottom": 649.7,
+   "legBottom": 700.1,
+   "barTop": 833.6,
+   "gap": 133.5,
+   "range": 0
+  },
+  "cr 430 full ru light: Dec достижим — elementFromPoint в его центре = Dec": {
+   "ok": true
+  },
+  "cr 430 full ru light: жест докручивает до конца": {
+   "ok": true,
+   "st": 0,
+   "range": 0
+  },
+  "cr 430 full ru light: без ошибок страницы": {
+   "ok": true,
+   "errs": []
+  },
+  "cr 430 full uk light: панель прокручивается (overflow auto), док PD-285 не протёк": {
+   "ok": true,
+   "ov": "auto",
+   "cls": "scroll tab-pane"
+  },
+  "cr 430 full uk light: резерв снизу = 16 + таб-бар + inset (PD-144; десктоп C — 16)": {
+   "ok": true,
+   "pb": 114.1,
+   "want": 114.1
+  },
+  "cr 430 full uk light: scroll-padding-bottom = тот же резерв (PD-292)": {
+   "ok": true,
+   "spb": 114.1,
+   "want": 114.1
+  },
+  "cr 430 full uk light: в конце прокрутки Dec и легенда над таб-баром/краем ≥ 16 px": {
+   "ok": true,
+   "decBottom": 649.7,
+   "legBottom": 700.1,
+   "barTop": 833.6,
+   "gap": 133.5,
+   "range": 0
+  },
+  "cr 430 full uk light: Dec достижим — elementFromPoint в его центре = Dec": {
+   "ok": true
+  },
+  "cr 430 full uk light: жест докручивает до конца": {
+   "ok": true,
+   "st": 0,
+   "range": 0
+  },
+  "cr 430 full uk light: без ошибок страницы": {
+   "ok": true,
+   "errs": []
+  },
+  "cr 430 empty en light: панель прокручивается (overflow auto), док PD-285 не протёк": {
+   "ok": true,
+   "ov": "auto",
+   "cls": "scroll tab-pane"
+  },
+  "cr 430 empty en light: резерв снизу = 16 + таб-бар + inset (PD-144; десктоп C — 16)": {
+   "ok": true,
+   "pb": 114.1,
+   "want": 114.1
+  },
+  "cr 430 empty en light: scroll-padding-bottom = тот же резерв (PD-292)": {
+   "ok": true,
+   "spb": 114.1,
+   "want": 114.1
+  },
+  "cr 430 empty en light: в конце прокрутки Dec и легенда над таб-баром/краем ≥ 16 px": {
+   "ok": true,
+   "decBottom": 806.2,
+   "legBottom": null,
+   "barTop": 833.6,
+   "gap": 27.4,
+   "range": 1
+  },
+  "cr 430 empty en light: Dec достижим — elementFromPoint в его центре = Dec": {
+   "ok": true
+  },
+  "cr 430 empty en light: жест докручивает до конца": {
+   "ok": true,
+   "st": 1,
+   "range": 1
+  },
+  "cr 393-AX3 full en light: панель прокручивается (overflow auto), док PD-285 не протёк": {
+   "ok": true,
+   "ov": "auto",
+   "cls": "scroll tab-pane"
+  },
+  "cr 393-AX3 full en light: резерв снизу = 16 + таб-бар + inset (PD-144; десктоп C — 16)": {
+   "ok": true,
+   "pb": 117,
+   "want": 117
+  },
+  "cr 393-AX3 full en light: scroll-padding-bottom = тот же резерв (PD-292)": {
+   "ok": true,
+   "spb": 117,
+   "want": 117
+  },
+  "cr 393-AX3 full en light: в конце прокрутки Dec и легенда над таб-баром/краем ≥ 16 px": {
+   "ok": true,
+   "decBottom": 589.8,
+   "legBottom": 723,
+   "barTop": 751.1,
+   "gap": 28.1,
+   "range": 250
+  },
+  "cr 393-AX3 full en light: Dec достижим — elementFromPoint в его центре = Dec": {
+   "ok": true
+  },
+  "cr 393-AX3 full en light: жест докручивает до конца": {
+   "ok": true,
+   "st": 250,
+   "range": 250
+  },
+  "cr 393-AX3 full en light: без ошибок страницы": {
+   "ok": true,
+   "errs": []
+  },
+  "cr 393-AX3 full en dark: панель прокручивается (overflow auto), док PD-285 не протёк": {
+   "ok": true,
+   "ov": "auto",
+   "cls": "scroll tab-pane"
+  },
+  "cr 393-AX3 full en dark: резерв снизу = 16 + таб-бар + inset (PD-144; десктоп C — 16)": {
+   "ok": true,
+   "pb": 117,
+   "want": 117
+  },
+  "cr 393-AX3 full en dark: scroll-padding-bottom = тот же резерв (PD-292)": {
+   "ok": true,
+   "spb": 117,
+   "want": 117
+  },
+  "cr 393-AX3 full en dark: в конце прокрутки Dec и легенда над таб-баром/краем ≥ 16 px": {
+   "ok": true,
+   "decBottom": 589.8,
+   "legBottom": 723,
+   "barTop": 751.1,
+   "gap": 28.1,
+   "range": 250
+  },
+  "cr 393-AX3 full en dark: Dec достижим — elementFromPoint в его центре = Dec": {
+   "ok": true
+  },
+  "cr 393-AX3 full en dark: жест докручивает до конца": {
+   "ok": true,
+   "st": 250,
+   "range": 250
+  },
+  "cr 393-AX3 full en dark: без ошибок страницы": {
+   "ok": true,
+   "errs": []
+  },
+  "cr 393-AX3 full ru light: панель прокручивается (overflow auto), док PD-285 не протёк": {
+   "ok": true,
+   "ov": "auto",
+   "cls": "scroll tab-pane"
+  },
+  "cr 393-AX3 full ru light: резерв снизу = 16 + таб-бар + inset (PD-144; десктоп C — 16)": {
+   "ok": true,
+   "pb": 117,
+   "want": 117
+  },
+  "cr 393-AX3 full ru light: scroll-padding-bottom = тот же резерв (PD-292)": {
+   "ok": true,
+   "spb": 117,
+   "want": 117
+  },
+  "cr 393-AX3 full ru light: в конце прокрутки Dec и легенда над таб-баром/краем ≥ 16 px": {
+   "ok": true,
+   "decBottom": 547.8,
+   "legBottom": 722.8,
+   "barTop": 751.1,
+   "gap": 28.3,
+   "range": 292
+  },
+  "cr 393-AX3 full ru light: Dec достижим — elementFromPoint в его центре = Dec": {
+   "ok": true
+  },
+  "cr 393-AX3 full ru light: жест докручивает до конца": {
+   "ok": true,
+   "st": 292,
+   "range": 292
+  },
+  "cr 393-AX3 full ru light: без ошибок страницы": {
+   "ok": true,
+   "errs": []
+  },
+  "cr 393-AX3 full uk light: панель прокручивается (overflow auto), док PD-285 не протёк": {
+   "ok": true,
+   "ov": "auto",
+   "cls": "scroll tab-pane"
+  },
+  "cr 393-AX3 full uk light: резерв снизу = 16 + таб-бар + inset (PD-144; десктоп C — 16)": {
+   "ok": true,
+   "pb": 117,
+   "want": 117
+  },
+  "cr 393-AX3 full uk light: scroll-padding-bottom = тот же резерв (PD-292)": {
+   "ok": true,
+   "spb": 117,
+   "want": 117
+  },
+  "cr 393-AX3 full uk light: в конце прокрутки Dec и легенда над таб-баром/краем ≥ 16 px": {
+   "ok": true,
+   "decBottom": 505.8,
+   "legBottom": 722.5,
+   "barTop": 751.1,
+   "gap": 28.6,
+   "range": 334
+  },
+  "cr 393-AX3 full uk light: Dec достижим — elementFromPoint в его центре = Dec": {
+   "ok": true
+  },
+  "cr 393-AX3 full uk light: жест докручивает до конца": {
+   "ok": true,
+   "st": 334,
+   "range": 334
+  },
+  "cr 393-AX3 full uk light: без ошибок страницы": {
+   "ok": true,
+   "errs": []
+  },
+  "cr 393-AX3 empty en light: панель прокручивается (overflow auto), док PD-285 не протёк": {
+   "ok": true,
+   "ov": "auto",
+   "cls": "scroll tab-pane"
+  },
+  "cr 393-AX3 empty en light: резерв снизу = 16 + таб-бар + inset (PD-144; десктоп C — 16)": {
+   "ok": true,
+   "pb": 117,
+   "want": 117
+  },
+  "cr 393-AX3 empty en light: scroll-padding-bottom = тот же резерв (PD-292)": {
+   "ok": true,
+   "spb": 117,
+   "want": 117
+  },
+  "cr 393-AX3 empty en light: в конце прокрутки Dec и легенда над таб-баром/краем ≥ 16 px": {
+   "ok": true,
+   "decBottom": 723.3,
+   "legBottom": null,
+   "barTop": 751.1,
+   "gap": 27.8,
+   "range": 355
+  },
+  "cr 393-AX3 empty en light: Dec достижим — elementFromPoint в его центре = Dec": {
+   "ok": true
+  },
+  "cr 393-AX3 empty en light: жест докручивает до конца": {
+   "ok": true,
+   "st": 355,
+   "range": 355
+  },
+  "cr 393 full via today: панель прокручивается (overflow auto), док PD-285 не протёк": {
+   "ok": true,
+   "ov": "auto",
+   "cls": "scroll tab-pane"
+  },
+  "cr 393 full via today: резерв снизу = 16 + таб-бар + inset (PD-144; десктоп C — 16)": {
+   "ok": true,
+   "pb": 114.1,
+   "want": 114.1
+  },
+  "cr 393 full via today: scroll-padding-bottom = тот же резерв (PD-292)": {
+   "ok": true,
+   "spb": 114.1,
+   "want": 114.1
+  },
+  "cr 393 full via today: в конце прокрутки Dec и легенда над таб-баром/краем ≥ 16 px": {
+   "ok": true,
+   "decBottom": 595,
+   "legBottom": 645.4,
+   "barTop": 753.6,
+   "gap": 108.2,
+   "range": 0
+  },
+  "cr 393 full via today: Dec достижим — elementFromPoint в его центре = Dec": {
+   "ok": true
+  },
+  "cr 393 full via today: жест докручивает до конца": {
+   "ok": true,
+   "st": 0,
+   "range": 0
+  },
+  "cr 393 full via play: панель прокручивается (overflow auto), док PD-285 не протёк": {
+   "ok": true,
+   "ov": "auto",
+   "cls": "scroll tab-pane"
+  },
+  "cr 393 full via play: резерв снизу = 16 + таб-бар + inset (PD-144; десктоп C — 16)": {
+   "ok": true,
+   "pb": 114.1,
+   "want": 114.1
+  },
+  "cr 393 full via play: scroll-padding-bottom = тот же резерв (PD-292)": {
+   "ok": true,
+   "spb": 114.1,
+   "want": 114.1
+  },
+  "cr 393 full via play: в конце прокрутки Dec и легенда над таб-баром/краем ≥ 16 px": {
+   "ok": true,
+   "decBottom": 595,
+   "legBottom": 645.4,
+   "barTop": 753.6,
+   "gap": 108.2,
+   "range": 0
+  },
+  "cr 393 full via play: Dec достижим — elementFromPoint в его центре = Dec": {
+   "ok": true
+  },
+  "cr 393 full via play: жест докручивает до конца": {
+   "ok": true,
+   "st": 0,
+   "range": 0
+  },
+  "cr desk 1280x800 full: панель прокручивается (overflow auto), док PD-285 не протёк": {
+   "ok": true,
+   "ov": "auto",
+   "cls": "scroll tab-pane"
+  },
+  "cr desk 1280x800 full: резерв снизу = 16 + таб-бар + inset (PD-144; десктоп C — 16)": {
+   "ok": true,
+   "pb": 16,
+   "want": 16
+  },
+  "cr desk 1280x800 full: scroll-padding-bottom = тот же резерв (PD-292)": {
+   "ok": true,
+   "spb": 16,
+   "want": 16
+  },
+  "cr desk 1280x800 full: в конце прокрутки Dec и легенда над таб-баром/краем ≥ 16 px": {
+   "ok": true,
+   "decBottom": 743.3,
+   "legBottom": 771.6,
+   "barTop": 800,
+   "gap": 28.4,
+   "range": 190
+  },
+  "cr desk 1280x800 full: Dec достижим — elementFromPoint в его центре = Dec": {
+   "ok": true
+  },
+  "cr desk 1280x800 full: жест докручивает до конца": {
+   "ok": true,
+   "st": 190,
+   "range": 190
+  },
+  "cr desk 1280x800 empty: панель прокручивается (overflow auto), док PD-285 не протёк": {
+   "ok": true,
+   "ov": "auto",
+   "cls": "scroll tab-pane"
+  },
+  "cr desk 1280x800 empty: резерв снизу = 16 + таб-бар + inset (PD-144; десктоп C — 16)": {
+   "ok": true,
+   "pb": 16,
+   "want": 16
+  },
+  "cr desk 1280x800 empty: scroll-padding-bottom = тот же резерв (PD-292)": {
+   "ok": true,
+   "spb": 16,
+   "want": 16
+  },
+  "cr desk 1280x800 empty: в конце прокрутки Dec и легенда над таб-баром/краем ≥ 16 px": {
+   "ok": true,
+   "decBottom": 771.9,
+   "legBottom": null,
+   "barTop": 800,
+   "gap": 28.1,
+   "range": 336
+  },
+  "cr desk 1280x800 empty: Dec достижим — elementFromPoint в его центре = Dec": {
+   "ok": true
+  },
+  "cr desk 1280x800 empty: жест докручивает до конца": {
+   "ok": true,
+   "st": 336,
+   "range": 336
+  },
+  "cr desk 1440x900 full: панель прокручивается (overflow auto), док PD-285 не протёк": {
+   "ok": true,
+   "ov": "auto",
+   "cls": "scroll tab-pane"
+  },
+  "cr desk 1440x900 full: резерв снизу = 16 + таб-бар + inset (PD-144; десктоп C — 16)": {
+   "ok": true,
+   "pb": 16,
+   "want": 16
+  },
+  "cr desk 1440x900 full: scroll-padding-bottom = тот же резерв (PD-292)": {
+   "ok": true,
+   "spb": 16,
+   "want": 16
+  },
+  "cr desk 1440x900 full: в конце прокрутки Dec и легенда над таб-баром/краем ≥ 16 px": {
+   "ok": true,
+   "decBottom": 843.3,
+   "legBottom": 871.6,
+   "barTop": 900,
+   "gap": 28.4,
+   "range": 90
+  },
+  "cr desk 1440x900 full: Dec достижим — elementFromPoint в его центре = Dec": {
+   "ok": true
+  },
+  "cr desk 1440x900 full: жест докручивает до конца": {
+   "ok": true,
+   "st": 90,
+   "range": 90
+  },
+  "cr desk 1440x900 empty: панель прокручивается (overflow auto), док PD-285 не протёк": {
+   "ok": true,
+   "ov": "auto",
+   "cls": "scroll tab-pane"
+  },
+  "cr desk 1440x900 empty: резерв снизу = 16 + таб-бар + inset (PD-144; десктоп C — 16)": {
+   "ok": true,
+   "pb": 16,
+   "want": 16
+  },
+  "cr desk 1440x900 empty: scroll-padding-bottom = тот же резерв (PD-292)": {
+   "ok": true,
+   "spb": 16,
+   "want": 16
+  },
+  "cr desk 1440x900 empty: в конце прокрутки Dec и легенда над таб-баром/краем ≥ 16 px": {
+   "ok": true,
+   "decBottom": 871.9,
+   "legBottom": null,
+   "barTop": 900,
+   "gap": 28.1,
+   "range": 236
+  },
+  "cr desk 1440x900 empty: Dec достижим — elementFromPoint в его центре = Dec": {
+   "ok": true
+  },
+  "cr desk 1440x900 empty: жест докручивает до конца": {
+   "ok": true,
+   "st": 236,
+   "range": 236
+  },
+  "cr desk 1024x640@1.25 full: панель прокручивается (overflow auto), док PD-285 не протёк": {
+   "ok": true,
+   "ov": "auto",
+   "cls": "scroll tab-pane"
+  },
+  "cr desk 1024x640@1.25 full: резерв снизу = 16 + таб-бар + inset (PD-144; десктоп C — 16)": {
+   "ok": true,
+   "pb": 16,
+   "want": 16
+  },
+  "cr desk 1024x640@1.25 full: scroll-padding-bottom = тот же резерв (PD-292)": {
+   "ok": true,
+   "spb": 16,
+   "want": 16
+  },
+  "cr desk 1024x640@1.25 full: в конце прокрутки Dec и легенда над таб-баром/краем ≥ 16 px": {
+   "ok": true,
+   "decBottom": 583.3,
+   "legBottom": 611.6,
+   "barTop": 640,
+   "gap": 28.4,
+   "range": 350
+  },
+  "cr desk 1024x640@1.25 full: Dec достижим — elementFromPoint в его центре = Dec": {
+   "ok": true
+  },
+  "cr desk 1024x640@1.25 full: жест докручивает до конца": {
+   "ok": true,
+   "st": 350,
+   "range": 350
+  },
+  "cr desk 1024x640@1.25 empty: панель прокручивается (overflow auto), док PD-285 не протёк": {
+   "ok": true,
+   "ov": "auto",
+   "cls": "scroll tab-pane"
+  },
+  "cr desk 1024x640@1.25 empty: резерв снизу = 16 + таб-бар + inset (PD-144; десктоп C — 16)": {
+   "ok": true,
+   "pb": 16,
+   "want": 16
+  },
+  "cr desk 1024x640@1.25 empty: scroll-padding-bottom = тот же резерв (PD-292)": {
+   "ok": true,
+   "spb": 16,
+   "want": 16
+  },
+  "cr desk 1024x640@1.25 empty: в конце прокрутки Dec и легенда над таб-баром/краем ≥ 16 px": {
+   "ok": true,
+   "decBottom": 611.9,
+   "legBottom": null,
+   "barTop": 640,
+   "gap": 28.1,
+   "range": 496
+  },
+  "cr desk 1024x640@1.25 empty: Dec достижим — elementFromPoint в его центре = Dec": {
+   "ok": true
+  },
+  "cr desk 1024x640@1.25 empty: жест докручивает до конца": {
+   "ok": true,
+   "st": 496,
+   "range": 496
+  },
+  "cr desk 1024x640@1.5 full: панель прокручивается (overflow auto), док PD-285 не протёк": {
+   "ok": true,
+   "ov": "auto",
+   "cls": "scroll tab-pane"
+  },
+  "cr desk 1024x640@1.5 full: резерв снизу = 16 + таб-бар + inset (PD-144; десктоп C — 16)": {
+   "ok": true,
+   "pb": 16,
+   "want": 16
+  },
+  "cr desk 1024x640@1.5 full: scroll-padding-bottom = тот же резерв (PD-292)": {
+   "ok": true,
+   "spb": 16,
+   "want": 16
+  },
+  "cr desk 1024x640@1.5 full: в конце прокрутки Dec и легенда над таб-баром/краем ≥ 16 px": {
+   "ok": true,
+   "decBottom": 583.3,
+   "legBottom": 611.6,
+   "barTop": 640,
+   "gap": 28.4,
+   "range": 350
+  },
+  "cr desk 1024x640@1.5 full: Dec достижим — elementFromPoint в его центре = Dec": {
+   "ok": true
+  },
+  "cr desk 1024x640@1.5 full: жест докручивает до конца": {
+   "ok": true,
+   "st": 350,
+   "range": 350
+  },
+  "cr desk 1024x640@1.5 empty: панель прокручивается (overflow auto), док PD-285 не протёк": {
+   "ok": true,
+   "ov": "auto",
+   "cls": "scroll tab-pane"
+  },
+  "cr desk 1024x640@1.5 empty: резерв снизу = 16 + таб-бар + inset (PD-144; десктоп C — 16)": {
+   "ok": true,
+   "pb": 16,
+   "want": 16
+  },
+  "cr desk 1024x640@1.5 empty: scroll-padding-bottom = тот же резерв (PD-292)": {
+   "ok": true,
+   "spb": 16,
+   "want": 16
+  },
+  "cr desk 1024x640@1.5 empty: в конце прокрутки Dec и легенда над таб-баром/краем ≥ 16 px": {
+   "ok": true,
+   "decBottom": 611.9,
+   "legBottom": null,
+   "barTop": 640,
+   "gap": 28.1,
+   "range": 496
+  },
+  "cr desk 1024x640@1.5 empty: Dec достижим — elementFromPoint в его центре = Dec": {
+   "ok": true
+  },
+  "cr desk 1024x640@1.5 empty: жест докручивает до конца": {
+   "ok": true,
+   "st": 496,
+   "range": 496
+  },
+  "wk 393 full en light: панель прокручивается (overflow auto), док PD-285 не протёк": {
+   "ok": true,
+   "ov": "auto",
+   "cls": "scroll tab-pane"
+  },
+  "wk 393 full en light: резерв снизу = 16 + таб-бар + inset (PD-144; десктоп C — 16)": {
+   "ok": true,
+   "pb": 114.1,
+   "want": 114.1
+  },
+  "wk 393 full en light: scroll-padding-bottom = тот же резерв (PD-292)": {
+   "ok": true,
+   "spb": 114.1,
+   "want": 114.1
+  },
+  "wk 393 full en light: в конце прокрутки Dec и легенда над таб-баром/краем ≥ 16 px": {
+   "ok": true,
+   "decBottom": 612.8,
+   "legBottom": 662.8,
+   "barTop": 754,
+   "gap": 91.2,
+   "range": 0
+  },
+  "wk 393 full en light: Dec достижим — elementFromPoint в его центре = Dec": {
+   "ok": true
+  },
+  "wk 393 full en light: без ошибок страницы": {
+   "ok": true,
+   "errs": []
+  },
+  "wk 393 full en dark: панель прокручивается (overflow auto), док PD-285 не протёк": {
+   "ok": true,
+   "ov": "auto",
+   "cls": "scroll tab-pane"
+  },
+  "wk 393 full en dark: резерв снизу = 16 + таб-бар + inset (PD-144; десктоп C — 16)": {
+   "ok": true,
+   "pb": 114.1,
+   "want": 114.1
+  },
+  "wk 393 full en dark: scroll-padding-bottom = тот же резерв (PD-292)": {
+   "ok": true,
+   "spb": 114.1,
+   "want": 114.1
+  },
+  "wk 393 full en dark: в конце прокрутки Dec и легенда над таб-баром/краем ≥ 16 px": {
+   "ok": true,
+   "decBottom": 612.8,
+   "legBottom": 662.8,
+   "barTop": 754,
+   "gap": 91.2,
+   "range": 0
+  },
+  "wk 393 full en dark: Dec достижим — elementFromPoint в его центре = Dec": {
+   "ok": true
+  },
+  "wk 393 full en dark: без ошибок страницы": {
+   "ok": true,
+   "errs": []
+  },
+  "wk 393 full ru light: панель прокручивается (overflow auto), док PD-285 не протёк": {
+   "ok": true,
+   "ov": "auto",
+   "cls": "scroll tab-pane"
+  },
+  "wk 393 full ru light: резерв снизу = 16 + таб-бар + inset (PD-144; десктоп C — 16)": {
+   "ok": true,
+   "pb": 114.1,
+   "want": 114.1
+  },
+  "wk 393 full ru light: scroll-padding-bottom = тот же резерв (PD-292)": {
+   "ok": true,
+   "spb": 114.1,
+   "want": 114.1
+  },
+  "wk 393 full ru light: в конце прокрутки Dec и легенда над таб-баром/краем ≥ 16 px": {
+   "ok": true,
+   "decBottom": 612.8,
+   "legBottom": 662.8,
+   "barTop": 754,
+   "gap": 91.2,
+   "range": 0
+  },
+  "wk 393 full ru light: Dec достижим — elementFromPoint в его центре = Dec": {
+   "ok": true
+  },
+  "wk 393 full ru light: без ошибок страницы": {
+   "ok": true,
+   "errs": []
+  },
+  "wk 393 full uk light: панель прокручивается (overflow auto), док PD-285 не протёк": {
+   "ok": true,
+   "ov": "auto",
+   "cls": "scroll tab-pane"
+  },
+  "wk 393 full uk light: резерв снизу = 16 + таб-бар + inset (PD-144; десктоп C — 16)": {
+   "ok": true,
+   "pb": 114.1,
+   "want": 114.1
+  },
+  "wk 393 full uk light: scroll-padding-bottom = тот же резерв (PD-292)": {
+   "ok": true,
+   "spb": 114.1,
+   "want": 114.1
+  },
+  "wk 393 full uk light: в конце прокрутки Dec и легенда над таб-баром/краем ≥ 16 px": {
+   "ok": true,
+   "decBottom": 612.8,
+   "legBottom": 662.8,
+   "barTop": 754,
+   "gap": 91.2,
+   "range": 0
+  },
+  "wk 393 full uk light: Dec достижим — elementFromPoint в его центре = Dec": {
+   "ok": true
+  },
+  "wk 393 full uk light: без ошибок страницы": {
+   "ok": true,
+   "errs": []
+  },
+  "wk 393 empty en light: панель прокручивается (overflow auto), док PD-285 не протёк": {
+   "ok": true,
+   "ov": "auto",
+   "cls": "scroll tab-pane"
+  },
+  "wk 393 empty en light: резерв снизу = 16 + таб-бар + inset (PD-144; десктоп C — 16)": {
+   "ok": true,
+   "pb": 114.1,
+   "want": 114.1
+  },
+  "wk 393 empty en light: scroll-padding-bottom = тот же резерв (PD-292)": {
+   "ok": true,
+   "spb": 114.1,
+   "want": 114.1
+  },
+  "wk 393 empty en light: в конце прокрутки Dec и легенда над таб-баром/краем ≥ 16 px": {
+   "ok": true,
+   "decBottom": 726.2,
+   "legBottom": null,
+   "barTop": 754,
+   "gap": 27.8,
+   "range": 44
+  },
+  "wk 393 empty en light: Dec достижим — elementFromPoint в его центре = Dec": {
+   "ok": true
+  },
+  "wk 320 full en light: панель прокручивается (overflow auto), док PD-285 не протёк": {
+   "ok": true,
+   "ov": "auto",
+   "cls": "scroll tab-pane"
+  },
+  "wk 320 full en light: резерв снизу = 16 + таб-бар + inset (PD-144; десктоп C — 16)": {
+   "ok": true,
+   "pb": 80.1,
+   "want": 80.1
+  },
+  "wk 320 full en light: scroll-padding-bottom = тот же резерв (PD-292)": {
+   "ok": true,
+   "spb": 80.1,
+   "want": 80.1
+  },
+  "wk 320 full en light: в конце прокрутки Dec и легенда над таб-баром/краем ≥ 16 px": {
+   "ok": true,
+   "decBottom": 434.4,
+   "legBottom": 476.4,
+   "barTop": 504,
+   "gap": 27.6,
+   "range": 53
+  },
+  "wk 320 full en light: Dec достижим — elementFromPoint в его центре = Dec": {
+   "ok": true
+  },
+  "wk 320 full en light: без ошибок страницы": {
+   "ok": true,
+   "errs": []
+  },
+  "wk 320 full en dark: панель прокручивается (overflow auto), док PD-285 не протёк": {
+   "ok": true,
+   "ov": "auto",
+   "cls": "scroll tab-pane"
+  },
+  "wk 320 full en dark: резерв снизу = 16 + таб-бар + inset (PD-144; десктоп C — 16)": {
+   "ok": true,
+   "pb": 80.1,
+   "want": 80.1
+  },
+  "wk 320 full en dark: scroll-padding-bottom = тот же резерв (PD-292)": {
+   "ok": true,
+   "spb": 80.1,
+   "want": 80.1
+  },
+  "wk 320 full en dark: в конце прокрутки Dec и легенда над таб-баром/краем ≥ 16 px": {
+   "ok": true,
+   "decBottom": 434.4,
+   "legBottom": 476.4,
+   "barTop": 504,
+   "gap": 27.6,
+   "range": 53
+  },
+  "wk 320 full en dark: Dec достижим — elementFromPoint в его центре = Dec": {
+   "ok": true
+  },
+  "wk 320 full en dark: без ошибок страницы": {
+   "ok": true,
+   "errs": []
+  },
+  "wk 320 full ru light: панель прокручивается (overflow auto), док PD-285 не протёк": {
+   "ok": true,
+   "ov": "auto",
+   "cls": "scroll tab-pane"
+  },
+  "wk 320 full ru light: резерв снизу = 16 + таб-бар + inset (PD-144; десктоп C — 16)": {
+   "ok": true,
+   "pb": 80.1,
+   "want": 80.1
+  },
+  "wk 320 full ru light: scroll-padding-bottom = тот же резерв (PD-292)": {
+   "ok": true,
+   "spb": 80.1,
+   "want": 80.1
+  },
+  "wk 320 full ru light: в конце прокрутки Dec и легенда над таб-баром/краем ≥ 16 px": {
+   "ok": true,
+   "decBottom": 415.4,
+   "legBottom": 476.4,
+   "barTop": 504,
+   "gap": 27.6,
+   "range": 91
+  },
+  "wk 320 full ru light: Dec достижим — elementFromPoint в его центре = Dec": {
+   "ok": true
+  },
+  "wk 320 full ru light: без ошибок страницы": {
+   "ok": true,
+   "errs": []
+  },
+  "wk 320 full uk light: панель прокручивается (overflow auto), док PD-285 не протёк": {
+   "ok": true,
+   "ov": "auto",
+   "cls": "scroll tab-pane"
+  },
+  "wk 320 full uk light: резерв снизу = 16 + таб-бар + inset (PD-144; десктоп C — 16)": {
+   "ok": true,
+   "pb": 80.1,
+   "want": 80.1
+  },
+  "wk 320 full uk light: scroll-padding-bottom = тот же резерв (PD-292)": {
+   "ok": true,
+   "spb": 80.1,
+   "want": 80.1
+  },
+  "wk 320 full uk light: в конце прокрутки Dec и легенда над таб-баром/краем ≥ 16 px": {
+   "ok": true,
+   "decBottom": 415.4,
+   "legBottom": 476.4,
+   "barTop": 504,
+   "gap": 27.6,
+   "range": 91
+  },
+  "wk 320 full uk light: Dec достижим — elementFromPoint в его центре = Dec": {
+   "ok": true
+  },
+  "wk 320 full uk light: без ошибок страницы": {
+   "ok": true,
+   "errs": []
+  },
+  "wk 320 empty en light: панель прокручивается (overflow auto), док PD-285 не протёк": {
+   "ok": true,
+   "ov": "auto",
+   "cls": "scroll tab-pane"
+  },
+  "wk 320 empty en light: резерв снизу = 16 + таб-бар + inset (PD-144; десктоп C — 16)": {
+   "ok": true,
+   "pb": 80.1,
+   "want": 80.1
+  },
+  "wk 320 empty en light: scroll-padding-bottom = тот же резерв (PD-292)": {
+   "ok": true,
+   "spb": 80.1,
+   "want": 80.1
+  },
+  "wk 320 empty en light: в конце прокрутки Dec и легенда над таб-баром/краем ≥ 16 px": {
+   "ok": true,
+   "decBottom": 475.8,
+   "legBottom": null,
+   "barTop": 504,
+   "gap": 28.2,
+   "range": 169
+  },
+  "wk 320 empty en light: Dec достижим — elementFromPoint в его центре = Dec": {
+   "ok": true
+  },
+  "wk 430 full en light: панель прокручивается (overflow auto), док PD-285 не протёк": {
+   "ok": true,
+   "ov": "auto",
+   "cls": "scroll tab-pane"
+  },
+  "wk 430 full en light: резерв снизу = 16 + таб-бар + inset (PD-144; десктоп C — 16)": {
+   "ok": true,
+   "pb": 114.1,
+   "want": 114.1
+  },
+  "wk 430 full en light: scroll-padding-bottom = тот же резерв (PD-292)": {
+   "ok": true,
+   "spb": 114.1,
+   "want": 114.1
+  },
+  "wk 430 full en light: в конце прокрутки Dec и легенда над таб-баром/краем ≥ 16 px": {
+   "ok": true,
+   "decBottom": 647.8,
+   "legBottom": 697.8,
+   "barTop": 834,
+   "gap": 136.2,
+   "range": 0
+  },
+  "wk 430 full en light: Dec достижим — elementFromPoint в его центре = Dec": {
+   "ok": true
+  },
+  "wk 430 full en light: без ошибок страницы": {
+   "ok": true,
+   "errs": []
+  },
+  "wk 430 full en dark: панель прокручивается (overflow auto), док PD-285 не протёк": {
+   "ok": true,
+   "ov": "auto",
+   "cls": "scroll tab-pane"
+  },
+  "wk 430 full en dark: резерв снизу = 16 + таб-бар + inset (PD-144; десктоп C — 16)": {
+   "ok": true,
+   "pb": 114.1,
+   "want": 114.1
+  },
+  "wk 430 full en dark: scroll-padding-bottom = тот же резерв (PD-292)": {
+   "ok": true,
+   "spb": 114.1,
+   "want": 114.1
+  },
+  "wk 430 full en dark: в конце прокрутки Dec и легенда над таб-баром/краем ≥ 16 px": {
+   "ok": true,
+   "decBottom": 647.8,
+   "legBottom": 697.8,
+   "barTop": 834,
+   "gap": 136.2,
+   "range": 0
+  },
+  "wk 430 full en dark: Dec достижим — elementFromPoint в его центре = Dec": {
+   "ok": true
+  },
+  "wk 430 full en dark: без ошибок страницы": {
+   "ok": true,
+   "errs": []
+  },
+  "wk 430 full ru light: панель прокручивается (overflow auto), док PD-285 не протёк": {
+   "ok": true,
+   "ov": "auto",
+   "cls": "scroll tab-pane"
+  },
+  "wk 430 full ru light: резерв снизу = 16 + таб-бар + inset (PD-144; десктоп C — 16)": {
+   "ok": true,
+   "pb": 114.1,
+   "want": 114.1
+  },
+  "wk 430 full ru light: scroll-padding-bottom = тот же резерв (PD-292)": {
+   "ok": true,
+   "spb": 114.1,
+   "want": 114.1
+  },
+  "wk 430 full ru light: в конце прокрутки Dec и легенда над таб-баром/краем ≥ 16 px": {
+   "ok": true,
+   "decBottom": 647.8,
+   "legBottom": 697.8,
+   "barTop": 834,
+   "gap": 136.2,
+   "range": 0
+  },
+  "wk 430 full ru light: Dec достижим — elementFromPoint в его центре = Dec": {
+   "ok": true
+  },
+  "wk 430 full ru light: без ошибок страницы": {
+   "ok": true,
+   "errs": []
+  },
+  "wk 430 full uk light: панель прокручивается (overflow auto), док PD-285 не протёк": {
+   "ok": true,
+   "ov": "auto",
+   "cls": "scroll tab-pane"
+  },
+  "wk 430 full uk light: резерв снизу = 16 + таб-бар + inset (PD-144; десктоп C — 16)": {
+   "ok": true,
+   "pb": 114.1,
+   "want": 114.1
+  },
+  "wk 430 full uk light: scroll-padding-bottom = тот же резерв (PD-292)": {
+   "ok": true,
+   "spb": 114.1,
+   "want": 114.1
+  },
+  "wk 430 full uk light: в конце прокрутки Dec и легенда над таб-баром/краем ≥ 16 px": {
+   "ok": true,
+   "decBottom": 647.8,
+   "legBottom": 697.8,
+   "barTop": 834,
+   "gap": 136.2,
+   "range": 0
+  },
+  "wk 430 full uk light: Dec достижим — elementFromPoint в его центре = Dec": {
+   "ok": true
+  },
+  "wk 430 full uk light: без ошибок страницы": {
+   "ok": true,
+   "errs": []
+  },
+  "wk 430 empty en light: панель прокручивается (overflow auto), док PD-285 не протёк": {
+   "ok": true,
+   "ov": "auto",
+   "cls": "scroll tab-pane"
+  },
+  "wk 430 empty en light: резерв снизу = 16 + таб-бар + inset (PD-144; десктоп C — 16)": {
+   "ok": true,
+   "pb": 114.1,
+   "want": 114.1
+  },
+  "wk 430 empty en light: scroll-padding-bottom = тот же резерв (PD-292)": {
+   "ok": true,
+   "spb": 114.1,
+   "want": 114.1
+  },
+  "wk 430 empty en light: в конце прокрутки Dec и легенда над таб-баром/краем ≥ 16 px": {
+   "ok": true,
+   "decBottom": 805.2,
+   "legBottom": null,
+   "barTop": 834,
+   "gap": 28.8,
+   "range": 0
+  },
+  "wk 430 empty en light: Dec достижим — elementFromPoint в его центре = Dec": {
+   "ok": true
+  },
+  "wk 393-AX3 full en light: панель прокручивается (overflow auto), док PD-285 не протёк": {
+   "ok": true,
+   "ov": "auto",
+   "cls": "scroll tab-pane"
+  },
+  "wk 393-AX3 full en light: резерв снизу = 16 + таб-бар + inset (PD-144; десктоп C — 16)": {
+   "ok": true,
+   "pb": 117,
+   "want": 117
+  },
+  "wk 393-AX3 full en light: scroll-padding-bottom = тот же резерв (PD-292)": {
+   "ok": true,
+   "spb": 117,
+   "want": 117
+  },
+  "wk 393-AX3 full en light: в конце прокрутки Dec и легенда над таб-баром/краем ≥ 16 px": {
+   "ok": true,
+   "decBottom": 591.8,
+   "legBottom": 722.8,
+   "barTop": 752,
+   "gap": 29.2,
+   "range": 242
+  },
+  "wk 393-AX3 full en light: Dec достижим — elementFromPoint в его центре = Dec": {
+   "ok": true
+  },
+  "wk 393-AX3 full en light: без ошибок страницы": {
+   "ok": true,
+   "errs": []
+  },
+  "wk 393-AX3 full en dark: панель прокручивается (overflow auto), док PD-285 не протёк": {
+   "ok": true,
+   "ov": "auto",
+   "cls": "scroll tab-pane"
+  },
+  "wk 393-AX3 full en dark: резерв снизу = 16 + таб-бар + inset (PD-144; десктоп C — 16)": {
+   "ok": true,
+   "pb": 117,
+   "want": 117
+  },
+  "wk 393-AX3 full en dark: scroll-padding-bottom = тот же резерв (PD-292)": {
+   "ok": true,
+   "spb": 117,
+   "want": 117
+  },
+  "wk 393-AX3 full en dark: в конце прокрутки Dec и легенда над таб-баром/краем ≥ 16 px": {
+   "ok": true,
+   "decBottom": 591.8,
+   "legBottom": 722.8,
+   "barTop": 752,
+   "gap": 29.2,
+   "range": 242
+  },
+  "wk 393-AX3 full en dark: Dec достижим — elementFromPoint в его центре = Dec": {
+   "ok": true
+  },
+  "wk 393-AX3 full en dark: без ошибок страницы": {
+   "ok": true,
+   "errs": []
+  },
+  "wk 393-AX3 full ru light: панель прокручивается (overflow auto), док PD-285 не протёк": {
+   "ok": true,
+   "ov": "auto",
+   "cls": "scroll tab-pane"
+  },
+  "wk 393-AX3 full ru light: резерв снизу = 16 + таб-бар + inset (PD-144; десктоп C — 16)": {
+   "ok": true,
+   "pb": 117,
+   "want": 117
+  },
+  "wk 393-AX3 full ru light: scroll-padding-bottom = тот же резерв (PD-292)": {
+   "ok": true,
+   "spb": 117,
+   "want": 117
+  },
+  "wk 393-AX3 full ru light: в конце прокрутки Dec и легенда над таб-баром/краем ≥ 16 px": {
+   "ok": true,
+   "decBottom": 550.8,
+   "legBottom": 722.8,
+   "barTop": 752,
+   "gap": 29.2,
+   "range": 328
+  },
+  "wk 393-AX3 full ru light: Dec достижим — elementFromPoint в его центре = Dec": {
+   "ok": true
+  },
+  "wk 393-AX3 full ru light: без ошибок страницы": {
+   "ok": true,
+   "errs": []
+  },
+  "wk 393-AX3 full uk light: панель прокручивается (overflow auto), док PD-285 не протёк": {
+   "ok": true,
+   "ov": "auto",
+   "cls": "scroll tab-pane"
+  },
+  "wk 393-AX3 full uk light: резерв снизу = 16 + таб-бар + inset (PD-144; десктоп C — 16)": {
+   "ok": true,
+   "pb": 117,
+   "want": 117
+  },
+  "wk 393-AX3 full uk light: scroll-padding-bottom = тот же резерв (PD-292)": {
+   "ok": true,
+   "spb": 117,
+   "want": 117
+  },
+  "wk 393-AX3 full uk light: в конце прокрутки Dec и легенда над таб-баром/краем ≥ 16 px": {
+   "ok": true,
+   "decBottom": 509.8,
+   "legBottom": 722.8,
+   "barTop": 752,
+   "gap": 29.2,
+   "range": 369
+  },
+  "wk 393-AX3 full uk light: Dec достижим — elementFromPoint в его центре = Dec": {
+   "ok": true
+  },
+  "wk 393-AX3 full uk light: без ошибок страницы": {
+   "ok": true,
+   "errs": []
+  },
+  "wk 393-AX3 empty en light: панель прокручивается (overflow auto), док PD-285 не протёк": {
+   "ok": true,
+   "ov": "auto",
+   "cls": "scroll tab-pane"
+  },
+  "wk 393-AX3 empty en light: резерв снизу = 16 + таб-бар + inset (PD-144; десктоп C — 16)": {
+   "ok": true,
+   "pb": 117,
+   "want": 117
+  },
+  "wk 393-AX3 empty en light: scroll-padding-bottom = тот же резерв (PD-292)": {
+   "ok": true,
+   "spb": 117,
+   "want": 117
+  },
+  "wk 393-AX3 empty en light: в конце прокрутки Dec и легенда над таб-баром/краем ≥ 16 px": {
+   "ok": true,
+   "decBottom": 722.5,
+   "legBottom": null,
+   "barTop": 752,
+   "gap": 29.5,
+   "range": 349
+  },
+  "wk 393-AX3 empty en light: Dec достижим — elementFromPoint в его центре = Dec": {
+   "ok": true
+  },
+  "wk 393 full via today: панель прокручивается (overflow auto), док PD-285 не протёк": {
+   "ok": true,
+   "ov": "auto",
+   "cls": "scroll tab-pane"
+  },
+  "wk 393 full via today: резерв снизу = 16 + таб-бар + inset (PD-144; десктоп C — 16)": {
+   "ok": true,
+   "pb": 114.1,
+   "want": 114.1
+  },
+  "wk 393 full via today: scroll-padding-bottom = тот же резерв (PD-292)": {
+   "ok": true,
+   "spb": 114.1,
+   "want": 114.1
+  },
+  "wk 393 full via today: в конце прокрутки Dec и легенда над таб-баром/краем ≥ 16 px": {
+   "ok": true,
+   "decBottom": 612.8,
+   "legBottom": 662.8,
+   "barTop": 754,
+   "gap": 91.2,
+   "range": 0
+  },
+  "wk 393 full via today: Dec достижим — elementFromPoint в его центре = Dec": {
+   "ok": true
+  },
+  "wk 393 full via play: панель прокручивается (overflow auto), док PD-285 не протёк": {
+   "ok": true,
+   "ov": "auto",
+   "cls": "scroll tab-pane"
+  },
+  "wk 393 full via play: резерв снизу = 16 + таб-бар + inset (PD-144; десктоп C — 16)": {
+   "ok": true,
+   "pb": 114.1,
+   "want": 114.1
+  },
+  "wk 393 full via play: scroll-padding-bottom = тот же резерв (PD-292)": {
+   "ok": true,
+   "spb": 114.1,
+   "want": 114.1
+  },
+  "wk 393 full via play: в конце прокрутки Dec и легенда над таб-баром/краем ≥ 16 px": {
+   "ok": true,
+   "decBottom": 612.8,
+   "legBottom": 662.8,
+   "barTop": 754,
+   "gap": 91.2,
+   "range": 0
+  },
+  "wk 393 full via play: Dec достижим — elementFromPoint в его центре = Dec": {
+   "ok": true
+  },
+  "wk desk 1280x800 full: панель прокручивается (overflow auto), док PD-285 не протёк": {
+   "ok": true,
+   "ov": "auto",
+   "cls": "scroll tab-pane"
+  },
+  "wk desk 1280x800 full: резерв снизу = 16 + таб-бар + inset (PD-144; десктоп C — 16)": {
+   "ok": true,
+   "pb": 16,
+   "want": 16
+  },
+  "wk desk 1280x800 full: scroll-padding-bottom = тот же резерв (PD-292)": {
+   "ok": true,
+   "spb": 16,
+   "want": 16
+  },
+  "wk desk 1280x800 full: в конце прокрутки Dec и легенда над таб-баром/краем ≥ 16 px": {
+   "ok": true,
+   "decBottom": 745.7,
+   "legBottom": 771.7,
+   "barTop": 800,
+   "gap": 28.3,
+   "range": 171
+  },
+  "wk desk 1280x800 full: Dec достижим — elementFromPoint в его центре = Dec": {
+   "ok": true
+  },
+  "wk desk 1280x800 full: жест докручивает до конца": {
+   "ok": true,
+   "st": 171,
+   "range": 171
+  },
+  "wk desk 1280x800 empty: панель прокручивается (overflow auto), док PD-285 не протёк": {
+   "ok": true,
+   "ov": "auto",
+   "cls": "scroll tab-pane"
+  },
+  "wk desk 1280x800 empty: резерв снизу = 16 + таб-бар + inset (PD-144; десктоп C — 16)": {
+   "ok": true,
+   "pb": 16,
+   "want": 16
+  },
+  "wk desk 1280x800 empty: scroll-padding-bottom = тот же резерв (PD-292)": {
+   "ok": true,
+   "spb": 16,
+   "want": 16
+  },
+  "wk desk 1280x800 empty: в конце прокрутки Dec и легенда над таб-баром/краем ≥ 16 px": {
+   "ok": true,
+   "decBottom": 771.7,
+   "legBottom": null,
+   "barTop": 800,
+   "gap": 28.3,
+   "range": 311
+  },
+  "wk desk 1280x800 empty: Dec достижим — elementFromPoint в его центре = Dec": {
+   "ok": true
+  },
+  "wk desk 1280x800 empty: жест докручивает до конца": {
+   "ok": true,
+   "st": 311,
+   "range": 311
+  },
+  "wk desk 1440x900 full: панель прокручивается (overflow auto), док PD-285 не протёк": {
+   "ok": true,
+   "ov": "auto",
+   "cls": "scroll tab-pane"
+  },
+  "wk desk 1440x900 full: резерв снизу = 16 + таб-бар + inset (PD-144; десктоп C — 16)": {
+   "ok": true,
+   "pb": 16,
+   "want": 16
+  },
+  "wk desk 1440x900 full: scroll-padding-bottom = тот же резерв (PD-292)": {
+   "ok": true,
+   "spb": 16,
+   "want": 16
+  },
+  "wk desk 1440x900 full: в конце прокрутки Dec и легенда над таб-баром/краем ≥ 16 px": {
+   "ok": true,
+   "decBottom": 845.7,
+   "legBottom": 871.7,
+   "barTop": 900,
+   "gap": 28.3,
+   "range": 71
+  },
+  "wk desk 1440x900 full: Dec достижим — elementFromPoint в его центре = Dec": {
+   "ok": true
+  },
+  "wk desk 1440x900 full: жест докручивает до конца": {
+   "ok": true,
+   "st": 71,
+   "range": 71
+  },
+  "wk desk 1440x900 empty: панель прокручивается (overflow auto), док PD-285 не протёк": {
+   "ok": true,
+   "ov": "auto",
+   "cls": "scroll tab-pane"
+  },
+  "wk desk 1440x900 empty: резерв снизу = 16 + таб-бар + inset (PD-144; десктоп C — 16)": {
+   "ok": true,
+   "pb": 16,
+   "want": 16
+  },
+  "wk desk 1440x900 empty: scroll-padding-bottom = тот же резерв (PD-292)": {
+   "ok": true,
+   "spb": 16,
+   "want": 16
+  },
+  "wk desk 1440x900 empty: в конце прокрутки Dec и легенда над таб-баром/краем ≥ 16 px": {
+   "ok": true,
+   "decBottom": 871.7,
+   "legBottom": null,
+   "barTop": 900,
+   "gap": 28.3,
+   "range": 211
+  },
+  "wk desk 1440x900 empty: Dec достижим — elementFromPoint в его центре = Dec": {
+   "ok": true
+  },
+  "wk desk 1440x900 empty: жест докручивает до конца": {
+   "ok": true,
+   "st": 211,
+   "range": 211
+  },
+  "wk desk 1024x640@1.25 full: панель прокручивается (overflow auto), док PD-285 не протёк": {
+   "ok": true,
+   "ov": "auto",
+   "cls": "scroll tab-pane"
+  },
+  "wk desk 1024x640@1.25 full: резерв снизу = 16 + таб-бар + inset (PD-144; десктоп C — 16)": {
+   "ok": true,
+   "pb": 16,
+   "want": 16
+  },
+  "wk desk 1024x640@1.25 full: scroll-padding-bottom = тот же резерв (PD-292)": {
+   "ok": true,
+   "spb": 16,
+   "want": 16
+  },
+  "wk desk 1024x640@1.25 full: в конце прокрутки Dec и легенда над таб-баром/краем ≥ 16 px": {
+   "ok": true,
+   "decBottom": 585.7,
+   "legBottom": 611.7,
+   "barTop": 640,
+   "gap": 28.3,
+   "range": 331
+  },
+  "wk desk 1024x640@1.25 full: Dec достижим — elementFromPoint в его центре = Dec": {
+   "ok": true
+  },
+  "wk desk 1024x640@1.25 full: жест докручивает до конца": {
+   "ok": true,
+   "st": 331,
+   "range": 331
+  },
+  "wk desk 1024x640@1.25 empty: панель прокручивается (overflow auto), док PD-285 не протёк": {
+   "ok": true,
+   "ov": "auto",
+   "cls": "scroll tab-pane"
+  },
+  "wk desk 1024x640@1.25 empty: резерв снизу = 16 + таб-бар + inset (PD-144; десктоп C — 16)": {
+   "ok": true,
+   "pb": 16,
+   "want": 16
+  },
+  "wk desk 1024x640@1.25 empty: scroll-padding-bottom = тот же резерв (PD-292)": {
+   "ok": true,
+   "spb": 16,
+   "want": 16
+  },
+  "wk desk 1024x640@1.25 empty: в конце прокрутки Dec и легенда над таб-баром/краем ≥ 16 px": {
+   "ok": true,
+   "decBottom": 611.7,
+   "legBottom": null,
+   "barTop": 640,
+   "gap": 28.3,
+   "range": 471
+  },
+  "wk desk 1024x640@1.25 empty: Dec достижим — elementFromPoint в его центре = Dec": {
+   "ok": true
+  },
+  "wk desk 1024x640@1.25 empty: жест докручивает до конца": {
+   "ok": true,
+   "st": 471,
+   "range": 471
+  },
+  "wk desk 1024x640@1.5 full: панель прокручивается (overflow auto), док PD-285 не протёк": {
+   "ok": true,
+   "ov": "auto",
+   "cls": "scroll tab-pane"
+  },
+  "wk desk 1024x640@1.5 full: резерв снизу = 16 + таб-бар + inset (PD-144; десктоп C — 16)": {
+   "ok": true,
+   "pb": 16,
+   "want": 16
+  },
+  "wk desk 1024x640@1.5 full: scroll-padding-bottom = тот же резерв (PD-292)": {
+   "ok": true,
+   "spb": 16,
+   "want": 16
+  },
+  "wk desk 1024x640@1.5 full: в конце прокрутки Dec и легенда над таб-баром/краем ≥ 16 px": {
+   "ok": true,
+   "decBottom": 585.7,
+   "legBottom": 611.7,
+   "barTop": 640,
+   "gap": 28.3,
+   "range": 331
+  },
+  "wk desk 1024x640@1.5 full: Dec достижим — elementFromPoint в его центре = Dec": {
+   "ok": true
+  },
+  "wk desk 1024x640@1.5 full: жест докручивает до конца": {
+   "ok": true,
+   "st": 331,
+   "range": 331
+  },
+  "wk desk 1024x640@1.5 empty: панель прокручивается (overflow auto), док PD-285 не протёк": {
+   "ok": true,
+   "ov": "auto",
+   "cls": "scroll tab-pane"
+  },
+  "wk desk 1024x640@1.5 empty: резерв снизу = 16 + таб-бар + inset (PD-144; десктоп C — 16)": {
+   "ok": true,
+   "pb": 16,
+   "want": 16
+  },
+  "wk desk 1024x640@1.5 empty: scroll-padding-bottom = тот же резерв (PD-292)": {
+   "ok": true,
+   "spb": 16,
+   "want": 16
+  },
+  "wk desk 1024x640@1.5 empty: в конце прокрутки Dec и легенда над таб-баром/краем ≥ 16 px": {
+   "ok": true,
+   "decBottom": 611.7,
+   "legBottom": null,
+   "barTop": 640,
+   "gap": 28.3,
+   "range": 471
+  },
+  "wk desk 1024x640@1.5 empty: Dec достижим — elementFromPoint в его центре = Dec": {
+   "ok": true
+  },
+  "wk desk 1024x640@1.5 empty: жест докручивает до конца": {
+   "ok": true,
+   "st": 471,
+   "range": 471
+  }
+ }
+}
