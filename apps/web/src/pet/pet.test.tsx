@@ -120,6 +120,14 @@ describe("PetBlot: покой, реакция, Reduce Motion, видимость
     expect(petEl().hasAttribute("data-still")).toBe(false);
   });
 
+  it("PD-288: idle={false} (превью в Настройках) — покоя нет, клякса стоит; без анимаций и без data-still", () => {
+    act(() => root.render(<PetBlot mood="happy" idle={false} />));
+    expect(petEl().hasAttribute("data-idle")).toBe(false);
+    expect(petEl().hasAttribute("data-still")).toBe(false);
+    act(() => root.render(<PetBlot mood="asleep" idle={false} />));
+    expect(petEl().hasAttribute("data-idle")).toBe(false);
+  });
+
   it("реакция на решённый день: посадка по настроению (доволен 760, устал 900, удивлён 860 мс; RM 220), после задержки", () => {
     const want = { happy: "760ms", tired: "900ms", surprised: "860ms" } as const;
     for (const mood of ["happy", "tired", "surprised"] as const) {

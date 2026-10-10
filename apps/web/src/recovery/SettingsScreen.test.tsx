@@ -845,6 +845,8 @@ describe("SettingsScreen: Питомец-клякса (PD-180)", () => {
     expect([...moods.querySelectorAll(".pet")].map((s) => s.getAttribute("data-mood"))).toEqual(["happy", "tired", "surprised", "asleep"]);
     // В превью картинка — украшение: имя настроения уже в подписи, VoiceOver не читает его дважды.
     expect([...moods.querySelectorAll(".pet")].every((s) => s.getAttribute("aria-hidden") === "true")).toBe(true);
+    // PD-288: превью стоит — по макету PD-223 §1 Питомец дышит только на карточке результата и в листе дня Year.
+    expect([...moods.querySelectorAll(".pet")].some((s) => s.hasAttribute("data-idle"))).toBe(false);
     expect([...moods.querySelectorAll("figcaption")].map((c) => c.firstChild!.textContent)).toEqual(["Pleased", "Tired", "Surprised", "Asleep"]);
   });
 
