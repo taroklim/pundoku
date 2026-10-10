@@ -111,8 +111,8 @@ interface Gesture {
 type Phase = "idle" | "drag" | "settle" | "leaving";
 
 /**
- * Жест на слое `layer` (`.push-layer`); `under` — стопка вкладок под ним (для `peek`). Слушатель — на самом слое, move/up —
- * на документе, пока палец на экране. Переход (смена `screen`) снимает с слоя всё inline-состояние жеста.
+ * Жест на слое `layer` (`.push-layer`); `under` — стопка вкладок под ним (для `peek`). Слушатель старта — на самом слое;
+ * move/up и второй палец (pointerdown, фаза захвата) — на документе, пока палец на экране. Переход (смена `screen`) снимает с слоя всё inline-состояние жеста.
  */
 export function useEdgeBack(layer: RefObject<HTMLElement | null>, under: RefObject<HTMLElement | null>, options: EdgeBackOptions): void {
   const opts = useRef(options);
@@ -121,6 +121,8 @@ export function useEdgeBack(layer: RefObject<HTMLElement | null>, under: RefObje
   const phase = useRef<Phase>("idle");
   const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const unlisten = useRef<(() => void) | null>(null);
+  /** pointerdown второго пальца, уже отменивший жест (PD-286) — слушатель слоя его не повторяет и не начинает с ним жест. */
+  const secondDown = useRef<PointerEvent | null>(null);
 
   // Один набор функций на весь срок жизни хука: они читают только ref'ы.
   const api = useRef<{ reset: () => void; down: (e: PointerEvent) => void } | null>(null);
@@ -223,9 +225,17 @@ export function useEdgeBack(layer: RefObject<HTMLElement | null>, under: RefObje
       if (cur.samples.length > 12) cur.samples.shift();
       if (!motionReduced()) setShift(cur.x, cur.width);
     };
+    // Второй палец посреди жеста — жест отменяется, где бы палец ни лёг (PD-286: и на таб-баре вне слоя). Слушатель — на
+    // документе в фазе захвата, пока ведётся касание: до обработчиков таб-бара и до слушателя самого слоя.
+    const second = (e: PointerEvent) => {
+      const cur = g.current;
+      if (!cur || e.pointerId === cur.id) return;
+      secondDown.current = e;
+      finish(e, true);
+    };
     const down = (e: PointerEvent) => {
+      if (e === secondDown.current) return; // этот же второй палец уже отменил жест (слой — ниже по всплытию)
       if (g.current) {
-        // Второй палец посреди жеста — жест отменяется.
         if (e.pointerId !== g.current.id) finish(e, true);
         return;
       }
@@ -238,10 +248,12 @@ export function useEdgeBack(layer: RefObject<HTMLElement | null>, under: RefObje
       const id = e.pointerId;
       const up = (ev: PointerEvent) => ev.pointerId === id && finish(ev, false);
       const cancel = (ev: PointerEvent) => ev.pointerId === id && finish(ev, true);
+      document.addEventListener("pointerdown", second, true);
       document.addEventListener("pointermove", move);
       document.addEventListener("pointerup", up);
       document.addEventListener("pointercancel", cancel);
       unlisten.current = () => {
+        document.removeEventListener("pointerdown", second, true);
         document.removeEventListener("pointermove", move);
         document.removeEventListener("pointerup", up);
         document.removeEventListener("pointercancel", cancel);
