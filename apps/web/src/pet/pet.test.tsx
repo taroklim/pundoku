@@ -1,13 +1,13 @@
 // @vitest-environment jsdom
 /**
  * PD-180: Питомец-клякса — компонент (4 позы, VoiceOver en/uk/ru, маска глаз) и сводка дня → настроение.
- * PD-260: движение B «Капля» — покой «3 вдоха», посадка на решённый день, «проснуться», Reduce Motion, скрытая вкладка/фон.
+ * PD-260: движение B «Капля» — покой (PD-297: постоянное дыхание), посадка на решённый день, «проснуться», Reduce Motion, скрытая вкладка/фон.
  * Геометрия против макета и стили — `pet.geometry.test.ts` (node-окружение: читает файлы).
  */
 import { act } from "react";
 import { createRoot } from "react-dom/client";
 import type { Root } from "react-dom/client";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { PET_MOODS } from "@pundoku/engine";
 import i18n from "../i18n";
 import { progressOf } from "../sync/fixtures";
@@ -18,7 +18,7 @@ import { TabActiveContext } from "../shell/tabSlide";
 import { PetBlot } from "./PetBlot";
 import { dayPetMood, personalBestOf, petDayOfPlay } from "./petDay";
 import { petShape } from "./petGeometry";
-import { ARRIVE_DELAY_MS, IDLE_BREATHS, idleTotalMs } from "./petMotion";
+import { ARRIVE_DELAY_MS, BREATH_MS } from "./petMotion";
 import { PET_SEEN_KEY, PET_SEEN_MAX, rememberMood, seenMood, useWakeOnce } from "./petSeen";
 import { useSolvedNow } from "./useSolvedNow";
 
@@ -105,13 +105,13 @@ describe("PetBlot: покой, реакция, Reduce Motion, видимость
     Object.defineProperty(document, "visibilityState", { configurable: true, get: () => "visible" });
   });
 
-  it("покой: «3 вдоха и замирает» включён (data-idle), без действия; при Reduce Motion (--mo: 0) — статично, покоя нет", () => {
+  it("покой (PD-297: постоянное дыхание) включён (data-idle), без действия; при Reduce Motion (--mo: 0) — статично, покоя нет", () => {
     act(() => root.render(<PetBlot mood="happy" />));
     expect(petEl().hasAttribute("data-idle")).toBe(true);
     expect(petEl().hasAttribute("data-act")).toBe(false);
-    expect(IDLE_BREATHS).toBe(3);
-    expect(idleTotalMs("happy")).toBe(12600);
-    expect(idleTotalMs("asleep")).toBe(19500);
+    expect(petEl().hasAttribute("data-paused")).toBe(false);
+    expect(BREATH_MS.happy).toBe(4200);
+    expect(BREATH_MS.asleep).toBe(6500);
     act(() => root.unmount());
     document.documentElement.style.setProperty("--mo", "0");
     root = createRoot(host);
@@ -120,7 +120,7 @@ describe("PetBlot: покой, реакция, Reduce Motion, видимость
     expect(petEl().hasAttribute("data-still")).toBe(false);
   });
 
-  it("PD-288: idle={false} (превью в Настройках) — покоя нет, клякса стоит; без анимаций и без data-still", () => {
+  it("idle={false} (превью в Настройках при выключенном Питомце) — покоя нет, клякса стоит; без анимаций и без data-still", () => {
     act(() => root.render(<PetBlot mood="happy" idle={false} />));
     expect(petEl().hasAttribute("data-idle")).toBe(false);
     expect(petEl().hasAttribute("data-still")).toBe(false);
@@ -202,6 +202,79 @@ describe("PetBlot: покой, реакция, Reduce Motion, видимость
     act(() => void document.dispatchEvent(new Event("visibilitychange")));
     expect(petEl()).not.toBe(first);
     expect(petEl().hasAttribute("data-idle")).toBe(true);
+  });
+
+  it("PD-297: ушла за край экрана (IntersectionObserver) — пауза без ремаунта; вернулась — дышит дальше; отписка при размонтировании", () => {
+    const observers: { cb: IntersectionObserverCallback; els: Element[]; off: boolean }[] = [];
+    vi.stubGlobal(
+      "IntersectionObserver",
+      class {
+        rec: { cb: IntersectionObserverCallback; els: Element[]; off: boolean };
+        constructor(cb: IntersectionObserverCallback) {
+          this.rec = { cb, els: [], off: false };
+          observers.push(this.rec);
+        }
+        observe(el: Element) {
+          this.rec.els.push(el);
+        }
+        disconnect() {
+          this.rec.off = true;
+        }
+      },
+    );
+    try {
+      const fire = (isIntersecting: boolean) =>
+        act(() => {
+          const o = observers.find((r) => !r.off)!;
+          o.cb([{ isIntersecting, target: o.els[0]! } as IntersectionObserverEntry], {} as IntersectionObserver);
+        });
+      act(() => root.render(<PetBlot mood="happy" act="arrive" />));
+      const first = petEl();
+      expect(observers.filter((r) => !r.off)).toHaveLength(1);
+      expect(observers.find((r) => !r.off)!.els).toEqual([first]);
+      expect(first.hasAttribute("data-paused")).toBe(false); // до ответа наблюдателя — видима
+      fire(false);
+      expect(petEl()).toBe(first);
+      expect(first.hasAttribute("data-paused")).toBe(true);
+      expect(first.hasAttribute("data-idle")).toBe(true); // покой не снят — только пауза
+      expect(first.getAttribute("data-act")).toBe("arrive");
+      fire(true);
+      expect(petEl()).toBe(first);
+      expect(first.hasAttribute("data-paused")).toBe(false);
+      act(() => root.render(<></>));
+      expect(observers.every((r) => r.off)).toBe(true);
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+
+  it("PD-297: в скрытой вкладке вне экрана — стоит (data-still), паузы поверх нет", () => {
+    const cbs: IntersectionObserverCallback[] = [];
+    vi.stubGlobal(
+      "IntersectionObserver",
+      class {
+        constructor(cb: IntersectionObserverCallback) {
+          cbs.push(cb);
+        }
+        observe() {}
+        disconnect() {}
+      },
+    );
+    try {
+      const view = (on: boolean) => (
+        <TabActiveContext.Provider value={on}>
+          <PetBlot mood="happy" />
+        </TabActiveContext.Provider>
+      );
+      act(() => root.render(view(true)));
+      act(() => cbs.at(-1)!([{ isIntersecting: false } as IntersectionObserverEntry], {} as IntersectionObserver));
+      expect(petEl().hasAttribute("data-paused")).toBe(true);
+      act(() => root.render(view(false)));
+      expect(petEl().hasAttribute("data-still")).toBe(true);
+      expect(petEl().hasAttribute("data-paused")).toBe(false);
+    } finally {
+      vi.unstubAllGlobals();
+    }
   });
 
   it("скрытая при монтаже (решили в скрытой вкладке) — посадка не играет и после показа", () => {

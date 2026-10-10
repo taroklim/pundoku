@@ -7,7 +7,8 @@
  * PD-292: Tab по Year и Settings — у каждого элемента в фокусе нижняя линия кольца (outline + offset) не ниже видимого низа
  * прокручиваемой панели (низ панели или верх таб-бара на телефоне). Компакт C 1024×640 DPR 1,25 и 960×600 DPR 1,5 (там QA PD-270
  * видел срез в Firefox), десктоп C 1280×800, телефон 393×852. Отдельно — месяцы Oct–Dec и key-status-retry / highlight-wrong.
- * PD-288: превью Питомца в Settings — без анимаций (нет покоя «3 вдоха»), data-idle нет.
+ * PD-288 → PD-297: превью Питомца в Settings дышит, как на карточке (Питомец по умолчанию вкл): у каждого data-idle и одна
+ *   анимация покоя (идёт или на паузе за краем панели). Подробно (бесконечность, пауза, RM) — design/pd297-check.mjs.
  * Известный остаток (не PD-292, есть и до него): Firefox не докручивает к элементу в фокусе, если тот уже ЧАСТИЧНО виден —
  * месяцы Year Apr–Sep на десктопе C и Oct–Dec на 960×600@1,5 остаются подрезанными; проверка «Year — кольца … (все)» в
  * Firefox поэтому FAIL. Тикетные случаи (1024×640@1,25: Oct–Dec, key-status-retry; 960×600@1,5: highlight-wrong) — PASS.
@@ -84,9 +85,9 @@ try {
       await p.locator('[data-testid="open-settings"]:visible, .gear-btn:visible').first().click();
       await p.locator('[data-testid="settings-screen"]').waitFor();
       await settle(p, 900);
-      // PD-288: превью Питомца стоит
+      // PD-297: превью дышит (по умолчанию Питомец вкл)
       const prev = await p.evaluate(() => [...document.querySelectorAll('[data-testid="pet-moods"] .pet')].map((x) => ({ idle: x.hasAttribute("data-idle"), n: x.getAnimations({ subtree: true }).length })));
-      check(`${tag}: PD-288 — превью Питомца: 4 настроения, ни одной анимации, без data-idle`, prev.length === 4 && prev.every((x) => !x.idle && x.n === 0), prev);
+      check(`${tag}: PD-297 — превью Питомца: 4 настроения, у каждого покой (data-idle, 1 анимация)`, prev.length === 4 && prev.every((x) => x.idle && x.n === 1), prev);
       // Старт последовательного фокуса — с «‹» экрана (Firefox после клика мышью продолжил бы с таб-бара и ушёл из документа).
       await p.locator('[data-testid="settings-back"]').focus();
       const stAll = await tabAll(p, 70);

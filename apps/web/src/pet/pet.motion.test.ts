@@ -1,7 +1,7 @@
 /**
  * PD-260: движение Питомца = макет PD-223, вариант B «Капля» (`design/pd223-pet-motion.html`). Читаем CSS и сам макет и сверяем:
  * keyframes и тайминги дословно, только transform/opacity, амплитуды × --mo (Reduce Motion → тождественный transform в каждом
- * ключевом кадре), покой — 3 вдоха (не бесконечно), раскладка листа дня Year на AX3 (зазор до кляксы, перенос длинного слова).
+ * ключевом кадре), покой — постоянное дыхание (PD-297; было «3 вдоха»), пауза вне экрана, раскладка листа дня Year на AX3 (зазор до кляксы, перенос длинного слова).
  * Живая проверка тех же правил в chromium/webkit — `design/pd260-check.mjs`.
  */
 import { describe, expect, it } from "vitest";
@@ -46,9 +46,11 @@ const MAP: Record<string, string> = {
 };
 
 describe("keyframes = макет PD-223 B", () => {
-  it("набор: только вариант B (без A/C и без «уснуть» — в приложении не бывает), старого бесконечного дыхания нет", () => {
+  it("набор: только вариант B (без A/C и без «уснуть» — в приложении не бывает), старого дыхания petBreathe нет", () => {
     expect([...ours.keys()].sort()).toEqual(Object.keys(MAP).sort());
-    expect(css).not.toMatch(/petBreathe|infinite/);
+    expect(css).not.toMatch(/petBreathe/);
+    // PD-297: бесконечен только покой (.breath), действия — один раз.
+    expect(css.match(/infinite/g)).toHaveLength(1);
   });
   it.each(Object.entries(MAP))("%s дословно = %s макета", (name, theirs) => {
     expect(mock.has(theirs)).toBe(true);
@@ -104,14 +106,15 @@ describe("лёгкость для WebKit и Reduce Motion", () => {
     expect(css).toMatch(/\.pet\[data-act\]\s*\{\s*--D: calc\(var\(--d-rm\) \+ var\(--mo\) \* \(var\(--d-full\) - var\(--d-rm\)\)\);/);
   });
 
-  it("покой: 3 вдоха (4,2 с; «спит» — 6,5 с) после действия, потом стоит; только при data-idle; скрытая — без анимаций", () => {
+  it("покой (PD-297): дыхание бесконечно (4,2 с; «спит» — 6,5 с) после действия; только при data-idle; скрытая — без анимаций, вне экрана — пауза", () => {
     const idle = /\.pet\[data-idle\] \.breath\s*\{([^}]*)\}/.exec(css)![1]!;
     expect(idle).toMatch(/animation-name: petBreathB;/);
     expect(idle).toMatch(/animation-duration: 4\.2s;/);
-    expect(idle).toMatch(/animation-iteration-count: 3;/);
+    expect(idle).toMatch(/animation-iteration-count: infinite;/);
     expect(idle).toMatch(/animation-delay: calc\(var\(--act-delay, 0ms\) \+ var\(--D, 0ms\)\);/);
     expect(css).toMatch(/\.pet\[data-idle\]\[data-mood="asleep"\] \.breath\s*\{\s*animation-name: petBreathS;\s*animation-duration: 6\.5s;/);
     expect(css).toMatch(/\.pet\[data-still\] \*\s*\{\s*animation: none !important;/);
+    expect(css).toMatch(/\.pet\[data-paused\] \*\s*\{\s*animation-play-state: paused !important;/);
     // Без data-idle у .breath нет анимации (RM, скрытая вкладка).
     expect(css).not.toMatch(/(^|\})\s*\.pet \.breath\s*\{[^}]*animation/);
   });

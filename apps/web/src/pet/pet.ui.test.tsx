@@ -45,10 +45,17 @@ describe("карточка результата", () => {
   const card = (play: DayProgress["play"], extra: Partial<Parameters<typeof ResultCard>[0]> = {}) =>
     act(() => root.render(<ResultCard play={play} cardRef={{ current: null }} title="Solved" {...extra} />));
 
-  it("по умолчанию (тумблер выкл) кляксы нет и место под неё не резервируется", () => {
+  it("тумблер выкл (явный «0») — кляксы нет и место под неё не резервируется", () => {
     card(progressOf("2026-09-10").play);
     expect(pet("pet-card")).toBeNull();
     expect(host.querySelector('[data-testid="result-card"]')!.classList.contains("has-pet")).toBe(false);
+  });
+
+  it("PD-297: чистый профиль (ключа нет, никто не трогал) — клякса по умолчанию есть и дышит", () => {
+    localStorage.clear();
+    card(progressOf("2026-09-10").play);
+    expect(moodOf("pet-card")).toBe("happy");
+    expect(pet("pet-card")!.hasAttribute("data-idle")).toBe(true);
   });
 
   it("включена: чисто → доволен, правка → устал, подсказка → устал; клякса после заголовка в DOM", () => {
