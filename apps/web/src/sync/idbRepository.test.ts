@@ -203,3 +203,100 @@ describe("listMeta (PD-171: записи Лжеца дня)", () => {
     vi.unstubAllGlobals();
   });
 });
+
+describe("IndexedDbProgressRepository: кэш listDays (PD-284)", () => {
+  /** Сколько транзакций над `days` открыл репозиторий (чтение из базы = транзакция). */
+  const countDaysTx = (repo: IndexedDbProgressRepository) => {
+    const db = (repo as unknown as { db: IDBDatabase }).db;
+    const orig = db.transaction.bind(db);
+    const calls: IDBTransactionMode[] = [];
+    db.transaction = ((store: string | string[], mode?: IDBTransactionMode) => {
+      if (store === "days") calls.push(mode ?? "readonly");
+      return orig(store, mode);
+    }) as IDBDatabase["transaction"];
+    return calls;
+  };
+  const tick = (ms = 20) => new Promise((r) => setTimeout(r, ms));
+
+  it("повторный listDays без записей — из кэша (база не читается), каждый раз новый массив с теми же днями", async () => {
+    const repo = await IndexedDbProgressRepository.open(fresh());
+    await repo.saveDay(progressOf("2026-09-28"));
+    await repo.saveDay(progressOf("2026-09-29", { solved: false, moves: 4 }));
+    const tx = countDaysTx(repo);
+    const a = await repo.listDays();
+    const b = await repo.listDays();
+    const [c, d] = await Promise.all([repo.listDays(), repo.listDays()]);
+    expect(tx).toEqual(["readonly"]);
+    expect(b).toEqual(a);
+    expect(b).not.toBe(a);
+    expect(c).not.toBe(d);
+    expect(a.map((x) => x.date).sort()).toEqual(["2026-09-28", "2026-09-29"]);
+    repo.close();
+  });
+
+  it("saveDay сбрасывает кэш: следующий listDays видит запись (ход, решение, новый день)", async () => {
+    const repo = await IndexedDbProgressRepository.open(fresh());
+    await repo.saveDay(progressOf("2026-09-29", { solved: false, moves: 4 }));
+    expect((await repo.listDays()).map((d) => [d.date, d.solved])).toEqual([["2026-09-29", false]]);
+    await repo.saveDay(progressOf("2026-09-29"));
+    expect((await repo.listDays()).map((d) => [d.date, d.solved])).toEqual([["2026-09-29", true]]);
+    await repo.saveDay(progressOf("2026-09-30", { solved: false, moves: 2 }));
+    expect((await repo.listDays()).map((d) => d.date).sort()).toEqual(["2026-09-29", "2026-09-30"]);
+    repo.close();
+  });
+
+  it("чтение, начатое до/во время записи, не остаётся в кэше: после записи — свежие данные", async () => {
+    const repo = await IndexedDbProgressRepository.open(fresh());
+    await repo.saveDay(progressOf("2026-09-29", { solved: false, moves: 4 }));
+    const before = repo.listDays();
+    const write = repo.saveDay(progressOf("2026-09-29"));
+    const during = repo.listDays();
+    await write;
+    expect((await before)[0]!.solved).toBe(false);
+    void (await during);
+    expect((await repo.listDays())[0]!.solved).toBe(true);
+    repo.close();
+  });
+
+  it("запись в другой вкладке (второй экземпляр на той же базе) сбрасывает кэш через BroadcastChannel", async () => {
+    const factory = fresh();
+    const a = await IndexedDbProgressRepository.open(factory);
+    const b = await IndexedDbProgressRepository.open(factory);
+    await a.saveDay(progressOf("2026-09-29", { solved: false, moves: 4 }));
+    expect((await a.listDays())[0]!.solved).toBe(false);
+    await b.saveDay(progressOf("2026-09-29"));
+    await tick();
+    expect((await a.listDays())[0]!.solved).toBe(true);
+    a.close();
+    b.close();
+  });
+
+  it("нет BroadcastChannel — без кэша: каждый listDays читает базу (как до PD-284)", async () => {
+    vi.stubGlobal("BroadcastChannel", undefined);
+    try {
+      const repo = await IndexedDbProgressRepository.open(fresh());
+      await repo.saveDay(progressOf("2026-09-29"));
+      const tx = countDaysTx(repo);
+      await repo.listDays();
+      await repo.listDays();
+      expect(tx).toEqual(["readonly", "readonly"]);
+      repo.close();
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+
+  it("сбой чтения не кэшируется: следующий вызов читает заново", async () => {
+    const repo = await IndexedDbProgressRepository.open(fresh());
+    await repo.saveDay(progressOf("2026-09-29"));
+    const db = (repo as unknown as { db: IDBDatabase }).db;
+    const orig = db.transaction.bind(db);
+    db.transaction = (() => {
+      throw new Error("boom");
+    }) as unknown as IDBDatabase["transaction"];
+    await expect(repo.listDays()).rejects.toThrow("boom");
+    db.transaction = orig;
+    expect((await repo.listDays()).map((d) => d.date)).toEqual(["2026-09-29"]);
+    repo.close();
+  });
+});
