@@ -207,6 +207,7 @@ describe("Play, десктоп C: после решения", () => {
     expect([...insp.children].map((c) => c.getAttribute("data-testid"))).toEqual(["result-card"]);
     const btn = insp.querySelector<HTMLElement>('[data-testid="new-puzzle"]')!;
     expect(insp.querySelector(".insp-meta, .pad")).toBeNull();
+    expect(q(".result-dock")).toBeNull(); // PD-285: док — только на телефоне
     // ⋯ на решённой партии не показывается (как на телефоне); заголовок и кнопка сайдбара — в тулбаре.
     expect(q('[data-testid="more-button"]')).toBeNull();
     expect(q("header.toolbar")!.firstElementChild!.getAttribute("data-testid")).toBe("sidebar-toggle");
@@ -214,11 +215,12 @@ describe("Play, десктоп C: после решения", () => {
     expect(document.querySelector('[data-testid="mode-sheet"]')).not.toBeNull();
   });
 
-  it("телефон — прежняя карточка вместо поля", () => {
+  it("телефон — прежняя карточка вместо поля (PD-285: кнопки — в доке сразу после неё)", () => {
     act(() => inner.set({ hub: false, mode: "classic", phase: "solved", remoteSolved: true, play: solved() }));
     act(() => root.render(<PlayScreen onOpenSettings={() => undefined} />));
     expect(q(".desk-insp, .desk-stage")).toBeNull();
-    expect(q(".play > .card [data-testid='new-puzzle']")).not.toBeNull();
+    expect(q(".play > .card")).not.toBeNull();
+    expect(q(".play > .card + .result-dock [data-testid='new-puzzle']")).not.toBeNull();
     expect(q(".board")).toBeNull();
   });
 });
