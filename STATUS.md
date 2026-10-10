@@ -637,7 +637,7 @@ Gates: build → typecheck, lint, тесты web/engine/api (api с TEST_DATABAS
 | PD-284 | Перф: listDays перечитывается при каждом возврате на Play (~40 мс сейчас) — кэшировать/инвалидировать по записи (находка QA PD-279) | developer | P3 | in_progress (pd-low-4 @ bee8063 готов, gates зелёные web 1941; QA-Pundoku-low4 запущен) | — |
 | PD-293 | Бэклог (Dev-low4, P3): Firefox не докручивает к частично видимому фокусу — Year Apr–Sep на десктопе C и Oct–Dec на 960×600@1,5 (−9,8) подрезаны; нужен JS | developer | P3 | pending (бэклог) | PD-292 |
 | PD-294 | Бэклог (Dev-low4, P3, косметика): у архива, открытого из Play, в таб-баре подсвечен Year; решить, если владелец захочет | developer | P3 | pending (бэклог, решение владельца) | — |
-| PD-285 | Дизайн (Low UX, QA PD-278/PD-256): карточка результата Play в покое — «New puzzle» целиком под стеклом таб-бара на 320/393/430, «Watch your solve» выглядывает на 12 px и выглядит обрезанной (в конце прокрутки всё доступно); предложить компоновку/подсказку прокрутки, кадры; без реализации | designer | P3 | in_progress (pd-285 @ c2a20ed готов: gates web 1943, pd285-check cr+wk 374/374; QA-Pundoku-285 запущен; владелец выбрал вариант A «док в 2 ряда»; дизайн в main da1111d: design/pd285-result-card.md §6–7; Dev-Pundoku-285/opus, ветка pd-285 от main; затем QA sonnet; можно выкатывать вместе с pd-low-4) | — |
+| PD-285 | Дизайн (Low UX, QA PD-278/PD-256): карточка результата Play в покое — «New puzzle» целиком под стеклом таб-бара на 320/393/430, «Watch your solve» выглядывает на 12 px и выглядит обрезанной (в конце прокрутки всё доступно); предложить компоновку/подсказку прокрутки, кадры; без реализации | designer | P3 | completed (QA PASS 2026-10-10 на pd-285 @ c2a20ed, дефектов нет: vitest web 1943, typecheck+lint чисто, pd285-check 374/374, свой extra 18/18, §7.1–7.11 PASS; ждёт сведения с pd-low-4; прежний статус: pd-285 @ c2a20ed готов: gates web 1943, pd285-check cr+wk 374/374; QA-Pundoku-285 запущен; владелец выбрал вариант A «док в 2 ряда»; дизайн в main da1111d: design/pd285-result-card.md §6–7; Dev-Pundoku-285/opus, ветка pd-285 от main; затем QA sonnet; можно выкатывать вместе с pd-low-4) | — |
 | PD-286 | Жест «назад» (Low P3, QA PD-265): второй палец на таб-баре посреди жеста не отменяет жест (уходит на #/play) — edgeBack.ts слушает pointerdown второго пальца только на .push-layer | developer | P3 | in_progress (pd-low-4 @ bee8063 готов, gates зелёные web 1941; QA-Pundoku-low4 запущен) | — |
 
 ### Бриф PD-8 (developer, P1 — пункт (a) блокирует UI-тикеты поля/Today)
@@ -795,8 +795,8 @@ Gates: build → typecheck, lint, тесты web/engine/api (api с `TEST_DATABA
 | Dev-Pundoku-low4 | developer (opus) | done | PD-282/284/286/288/292 | 2026-10-10 |
 | QA-Pundoku-low4-2 (agent a3f70f94…) | qa-tester (sonnet) | working (перезапуск с нуля, порт 5341) | PD-282/284/286/288/292 | 2026-10-10 |
 | Dev-Pundoku-285 | developer (opus) | done | PD-285 | 2026-10-10 |
-| QA-Pundoku-285-2 (agent a51c303c…) | qa-tester (sonnet) | working (перезапуск с нуля, порт 5481) | PD-285 | 2026-10-10 |
-| PM-Pundoku-24 | product-manager | waiting (оба QA идут; после PASS — сведение pd-low-4 + pd-285 → hash, push не делать) | PD-282/284/285/286/288/292 | 2026-10-10 |
+| QA-Pundoku-285-2 (agent a51c303c…) | qa-tester (sonnet) | done (PASS) | PD-285 | 2026-10-10 |
+| PM-Pundoku-24 | product-manager | waiting (QA pd-285 PASS, QA pd-low-4 идёт; после PASS — сведение pd-low-4 + pd-285 → hash, push не делать) | PD-282/284/285/286/288/292 | 2026-10-10 |
 | PM-Pundoku-23 | product-manager | waiting (Dev-desk-all2 сводит десктоп C; затем QA PD-270) | PD-290 | 2026-10-10 |
 | Dev-Pundoku-desk-all2 | developer (opus) | done | PD-290 | 2026-10-10 |
 | Dev-Pundoku-merge | developer (opus) | done | PD-290/PD-291 | 2026-10-10 |
@@ -965,3 +965,9 @@ Gates: build → typecheck, lint, тесты web/engine/api (api с `TEST_DATABA
 - Слоты .heavy освобождены Coordinator'ом. Висят старые vite preview PID 1272/8828 (с 2026-10-08, не наши, не трогать).
 - Бэклог новые: PD-293 (Firefox докрутка к частично видимому фокусу, JS), PD-294 (подсветка Play в таб-баре у архива из Play).
 - iPhone-проверки владельцу: «⋯ → Обвинить»/клавиша A после решённого Today; Mac Safari (кегль, Reduce Transparency/Increase Contrast — меню у строки/клетки), Firefox вручную.
+
+## QA PD-285 PASS (2026-10-10, pd-285 @ c2a20ed)
+- Gates: vitest web 162 файла/1943, typecheck+lint чисто; pd285-check 374/374 (cr 188, wk 186) + extra 18/18; §7.1–7.11 PASS, регресс PASS.
+- Low (известный риск §8.1, не тикет): 320×568 при 1rem 33px (ниже порога AX3 36px) док 216–219 из 501 px, от карточки видны заголовок+подпись, всё доступно. Оставлено по спеке; если владелец увидит на iPhone SE с крупным текстом — поднять порог до 1rem ≥ 28px. На iPhone 16 не проявляется.
+- Владельцу (iOS, агенты не могут, §7.12): живой iPhone/Safari/PWA — док в 2 ряда над таб-баром после решённой партии Play. Не проверено QA: reduced transparency в webkit, лист дня Year живьём, forced-colors.
+- Сведение с pd-low-4 — после результата QA pd-low-4.
