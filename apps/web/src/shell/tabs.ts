@@ -26,7 +26,7 @@ export function parseHash(hash: string): TabId {
  * в историю (`pushState`): свайп от края и «назад» возвращают на ту вкладку. Четвёртый — `#/help[/блок]` (PD-120):
  * экран «How Pundoku works», тоже push; открывается из Settings или ссылкой «What's this?» на карточке дня.
  * Источник (`pdFrom`) и «через что» (`pdVia`) лежат в `history.state` записи — адрес остаётся короткой ссылкой без них
- * (глубокая ссылка/перезагрузка без метки → Today).
+ * (глубокая ссылка без метки → Today; перезагрузка страницы `history.state` сохраняет — источник остаётся).
  */
 export interface Route {
   readonly tab: TabId;
@@ -34,7 +34,8 @@ export interface Route {
   readonly archiveDate: string | null;
   /**
    * PD-282: откуда открыт архив, если не из Year — «‹» ведёт обратно туда (строка дня в «Продолжить» хаба Play → Play). Метка
-   * `pdFrom` в `history.state` записи; без неё (из Year, глубокая ссылка, перезагрузка) — поля нет, «‹ Year» на карточку дня.
+   * `pdFrom` в `history.state` записи; без неё (из Year, глубокая ссылка) — поля нет, «‹ Year» на карточку дня. Перезагрузка
+   * страницы `history.state` сохраняет — после неё остаётся «‹ Play».
    */
   readonly archiveFrom?: "play";
   /** Year открывается сразу на карточке этого дня. */
