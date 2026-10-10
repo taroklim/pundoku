@@ -16,15 +16,18 @@
  *     clamp(260, 20vw, 320): время/остаток, панель 3 × 3, действия с чипами клавиш, шпаргалка только от высоты 800;
  *     инспектор не прокручивается; поле не под сайдбаром и не под инспектором; нет горизонтальной прокрутки;
  *   - контраст каждого видимого текста тулбара и инспектора по computed-цветам ≥ 4.5:1;
- *   - ниже (ноутбук при 125/150 %) — прежняя колонка: ни тулбара партии, ни инспектора, таб-бар.
+ *   - ниже (ноутбук при 125/150 %) — PD-268 (сведение PD-290): компакт C — та же раскладка (тулбар партии, поле, инспектор),
+ *     без сайдбара и таб-бара, кнопка «Show sidebar» в тулбаре (до PD-268 тут была прежняя колонка — ожидание устарело).
  * flow — 1440×900@100, 1280×800@100 (тёмная), 1920×1080@150: клавиатура без клика (стрелка, цифра, N, ⌘/Ctrl+Z, Esc),
  *   клик по панели 3 × 3; лампочка → шит правила подсказки в области контента (сайдбар не накрыт) → Enter → док в инспекторе,
  *   поле не сдвинулось; правый клик по Notes → шит Fill в области контента; режим из сайдбара → Start → партия Play: ⋯ — меню
  *   под кнопкой (не над инспектором), «Новая сетка» → шит режима в области контента; хаб → правый клик по режиму → Delete →
  *   тост в области контента, не над сайдбаром; скрыть сайдбар кнопкой в тулбаре → поле по центру всей ширины; кнопка в шапке
  *   Year, Settings и архивного дня; Tab по тулбару и инспектору — фокус видим и в окне.
- * phone — 393×852 (свет/тьма), 320×568, 852×393 (touch, DPR 3) и компакт ноутбука 1024×640 (1280@125), 853×533 (1280@150),
- *   960×600 (1440@150) мышью: Today, хаб Play, партия Classic, Year, Settings — кадр ветки = кадр main попиксельно (часы под
+ * phone — 393×852 (свет/тьма), 320×568, 852×393 (touch, DPR 3): Today, хаб Play, партия Classic, Year, Settings — кадр ветки
+ *   = кадр main попиксельно (часы под маской) и одинаковое DOM-дерево. Компакт ноутбука (1024×640 / 853×533 / 960×600) после
+ *   PD-268 НЕ равен main (это раскладка C без сайдбара) — из попиксельного набора убран, его проверяют desk (выше), pd268 и pd290.
+ *   (было: кадр ветки = кадр main попиксельно (часы под
  *   маской) и одинаковое DOM-дерево (теги, классы, роли, aria, data-testid).
  * Кадры — design/pd267-shots/; итог — PASS/FAIL построчно и сводка в design/pd267-shots/results-<части>-<браузеры>.json.
  */
@@ -112,6 +115,9 @@ async function open(browser, { w, h, dpr = 1, scheme = "light", route = "today",
   if (route === "today" || route.startsWith("day/")) await p.waitForSelector(".board button.cell", { timeout: 40000 });
   else await p.waitForTimeout(600);
   await p.waitForTimeout(500);
+  // PD-290: под нагрузкой проявление панели 1–9 (fadeRise, `.play-in`, fill backwards) ещё идёт через 500 мс — её подписи с
+  // opacity < 1 выпадали из подсчёта контраста (n = 11 вместо 29 на случайном размере в WebKit). Ждём конца анимаций.
+  await p.waitForFunction(() => document.getAnimations().every((a) => a.playState !== "running" || a.effect?.getTiming().iterations === Infinity), null, { timeout: 10000 }).catch(() => {});
   return { ctx, p, errs };
 }
 
@@ -237,10 +243,10 @@ function deskPartyChecks(tag, m) {
   check(`${tag}: контраст текстов тулбара и инспектора ≥ 4.5:1`, m.texts.length >= 20 && low.length === 0, { n: m.texts.length, min: Math.min(...m.texts.map((x) => x.ratio)), low });
 }
 
+// PD-290: компакт после PD-268 — раскладка C без сайдбара: те же проверки партии (deskX = 0), плюс класс оболочки и «Show sidebar».
 function compactChecks(tag, m) {
-  check(`${tag}: компакт — прежняя колонка (таб-бар, зазор со статусом), ни тулбара партии, ни инспектора, ни кнопки`, !m.deskPlay && !m.tbDesk && !m.insp && m.gapShown && m.tabbarShown && !m.toggle && m.shellClass === "shell", { deskPlay: m.deskPlay, insp: !!m.insp, tabbar: m.tabbarShown, shell: m.shellClass });
-  check(`${tag}: нет горизонтальной прокрутки`, m.scrollW <= m.vw, { scrollW: m.scrollW, vw: m.vw });
-  check(`${tag}: поле 81 клетка, квадратное, в окне`, m.cells === 81 && near(m.board.width, m.board.height) && inside(m.board, m), { board: box(m.board) });
+  check(`${tag}: компакт C — .shell.desk.compact, без сайдбара и таб-бара, кнопка «Show sidebar» в тулбаре`, /^shell desk compact\b/.test(m.shellClass) && !m.sideShown && !m.tabbarShown && m.toggleInTb && m.toggleLabel === "Show sidebar", { shell: m.shellClass, side: m.sideShown, tabbar: m.tabbarShown, label: m.toggleLabel });
+  deskPartyChecks(tag, m);
 }
 
 const WINDOWS = [[1280, 800], [1440, 900], [1920, 1080]];
@@ -444,8 +450,8 @@ async function runFlow(browser, BR, NEW) {
     check(`${T}: Tab — фокус с кольцом и в окне (${seen.length} остановок)`, seen.length >= 8 && bad.length === 0, { stops: seen.map((f) => f.id).slice(0, 16), bad });
     await shot("11-focus");
 
-    // 10. Решить день до конца с клавиатуры: карточка «решено» (её перенос в инспектор — PD-268) — тулбар тот же, без инспектора,
-    //     ничего не ломается (нет горизонтальной прокрутки, карточка правее сайдбара и в окне по ширине).
+    // 10. Решить день до конца с клавиатуры: PD-268 (сведение PD-290) — поле остаётся, карточка «решено» в инспекторе
+    //     (до PD-268 ожидалась прежняя карточка без инспектора — устарело); тулбар тот же, нет горизонтальной прокрутки.
     const SOL = "534678912672195348198342567859761423426853791713924856961537284287419635345286179";
     for (let i = 0; i < 81; i++) {
       if (MISSION[i] !== "0") continue;
@@ -455,8 +461,8 @@ async function runFlow(browser, BR, NEW) {
     await p.waitForSelector(`${pane} [data-testid="result-card"], ${pane} .card`, { timeout: 15000 });
     await settle(900);
     m = await measure(p);
-    const card = await rect(p, `${pane} .card`);
-    check(`${T}: решено — карточка (пока прежняя, PD-268): тулбар партии с кнопкой, без инспектора, карточка в области контента`, m.tbDesk && m.toggleInTb && !m.insp && !m.deskPlay && card && card.left >= deskX(m) && card.right <= m.vw + 0.5 && m.scrollW <= m.vw, { card: box(card), insp: !!m.insp });
+    const card = await rect(p, `${pane} .desk-insp .card`);
+    check(`${T}: решено — тулбар партии с кнопкой, поле на месте, карточка в инспекторе (PD-268)`, m.tbDesk && m.toggleInTb && m.deskPlay && !!m.insp && m.cells === 81 && card && card.left >= m.insp.left - 0.5 && card.right <= m.insp.right + 0.5 && m.scrollW <= m.vw, { card: box(card), insp: box(m.insp) });
     await shot("12-solved");
     check(`${T}: без ошибок JS`, errs.length === 0, { errs });
     await ctx.close();
@@ -495,9 +501,7 @@ async function runPhone(browser, BR, NEW, OLD) {
     [393, 852, "dark", 3, true, "phone"],
     [320, 568, "light", 3, true, "phone"],
     [852, 393, "light", 3, true, "phone"],
-    [1024, 640, "light", 1.25, false, "compact"],
-    [853, 533, "light", 1.5, false, "compact"],
-    [960, 600, "dark", 1.5, false, "compact"],
+    // PD-290: компакт ноутбука 1024×640 / 853×533 / 960×600 убран — после PD-268 это раскладка C, не main.
   ];
   // Растр при дробном DPR (1.25/1.5) и под нагрузкой машины недетерминирован: main против самого себя даёт 1–2 px, изредка
   // десятки–сотни px на одной линии. Поэтому набор снимается до 3 раз, и кадр засчитывается по ЛУЧШЕЙ попытке (сколько

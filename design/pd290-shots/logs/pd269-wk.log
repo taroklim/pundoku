@@ -1,0 +1,333 @@
+PASS wk 1280x800@100 light (1280x800): раскладка с сайдбаром {"shell":"shell desk"}
+PASS wk 1280x800@100 light (1280x800): нет горизонтальной прокрутки {"scrollW":1280}
+PASS wk 1280x800@100 light (1280x800) today: поле 81 клетка, квадрат, в окне, ≤ 720 {"board":[296,72,676]}
+PASS wk 1280x800@100 light (1280x800) today: область поля без полей колонки, поле по центру области; панель 1–9 и действия — в инспекторе {"stage":[248,772],"margin":["0px","0px"],"board":[296,676],"insp":[1020,260],"pad":[1041,219],"actions":[1041,219]}
+PASS wk 1280x800@100 light (1280x800) today: поле правее сайдбара {"boardLeft":296,"sideRight":240}
+PASS wk 1280x800@100 light (1280x800) hub: карточки = 640 по центру {"cards":[[444,640]],"area":[248,1032]}
+PASS wk 1280x800@100 light (1280x800) mode page: колонка ≤ 480 по центру {"page":[524,480],"area":[248,1032]}
+PASS wk 1280x800@100 light (1280x800) year: полотно = 780 по центру {"year":[374,780],"area":[248,1032]}
+PASS wk 1280x800@100 light (1280x800) settings: карточки = 640 по центру {"n":9,"first":[444,640],"area":[248,1032]}
+PASS wk 1280x800@100 light (1280x800) help: текст в карточках = 640 по центру {"n":6,"first":[444,640]}
+PASS wk 1280x800@100 light (1280x800): нет горизонтальной прокрутки (после всех экранов), без ошибок JS {"scrollW":1280,"errs":[]}
+PASS wk 1280x800@100 dark (1280x800): раскладка с сайдбаром {"shell":"shell desk"}
+PASS wk 1280x800@100 dark (1280x800): нет горизонтальной прокрутки {"scrollW":1280}
+PASS wk 1280x800@100 dark (1280x800) today: поле 81 клетка, квадрат, в окне, ≤ 720 {"board":[296,72,676]}
+PASS wk 1280x800@100 dark (1280x800) today: область поля без полей колонки, поле по центру области; панель 1–9 и действия — в инспекторе {"stage":[248,772],"margin":["0px","0px"],"board":[296,676],"insp":[1020,260],"pad":[1041,219],"actions":[1041,219]}
+PASS wk 1280x800@100 dark (1280x800) today: поле правее сайдбара {"boardLeft":296,"sideRight":240}
+PASS wk 1280x800@100 dark (1280x800) hub: карточки = 640 по центру {"cards":[[444,640]],"area":[248,1032]}
+PASS wk 1280x800@100 dark (1280x800) mode page: колонка ≤ 480 по центру {"page":[524,480],"area":[248,1032]}
+PASS wk 1280x800@100 dark (1280x800) year: полотно = 780 по центру {"year":[374,780],"area":[248,1032]}
+PASS wk 1280x800@100 dark (1280x800) settings: карточки = 640 по центру {"n":9,"first":[444,640],"area":[248,1032]}
+PASS wk 1280x800@100 dark (1280x800) help: текст в карточках = 640 по центру {"n":6,"first":[444,640]}
+PASS wk 1280x800@100 dark (1280x800): нет горизонтальной прокрутки (после всех экранов), без ошибок JS {"scrollW":1280,"errs":[]}
+PASS wk 1280x800@125 light (1024x640): раскладка C компакт (без сайдбара) {"shell":"shell desk compact side-off"}
+PASS wk 1280x800@125 light (1024x640): нет горизонтальной прокрутки {"scrollW":1024}
+PASS wk 1280x800@125 light (1024x640) today: поле 81 клетка, квадрат, в окне, ≤ 720 {"board":[124,72,516]}
+PASS wk 1280x800@125 light (1024x640) today: область поля без полей колонки, поле по центру области; панель 1–9 и действия — в инспекторе {"stage":[0,764],"margin":["0px","0px"],"board":[124,516],"insp":[764,260],"pad":[781,227],"actions":[781,227]}
+PASS wk 1280x800@125 light (1024x640) hub: карточки = 640 по центру {"cards":[[192,640]],"area":[0,1024]}
+PASS wk 1280x800@125 light (1024x640) mode page: колонка ≤ 480 по центру {"page":[272,480],"area":[0,1024]}
+PASS wk 1280x800@125 light (1024x640) year: полотно = 780 по центру {"year":[122,780],"area":[0,1024]}
+PASS wk 1280x800@125 light (1024x640) settings: карточки = 640 по центру {"n":9,"first":[192,640],"area":[0,1024]}
+PASS wk 1280x800@125 light (1024x640) help: текст в карточках = 640 по центру {"n":6,"first":[192,640]}
+PASS wk 1280x800@125 light (1024x640): нет горизонтальной прокрутки (после всех экранов), без ошибок JS {"scrollW":1024,"errs":[]}
+PASS wk 1280x800@125 dark (1024x640): раскладка C компакт (без сайдбара) {"shell":"shell desk compact side-off"}
+PASS wk 1280x800@125 dark (1024x640): нет горизонтальной прокрутки {"scrollW":1024}
+PASS wk 1280x800@125 dark (1024x640) today: поле 81 клетка, квадрат, в окне, ≤ 720 {"board":[124,72,516]}
+PASS wk 1280x800@125 dark (1024x640) today: область поля без полей колонки, поле по центру области; панель 1–9 и действия — в инспекторе {"stage":[0,764],"margin":["0px","0px"],"board":[124,516],"insp":[764,260],"pad":[781,227],"actions":[781,227]}
+PASS wk 1280x800@125 dark (1024x640) hub: карточки = 640 по центру {"cards":[[192,640]],"area":[0,1024]}
+PASS wk 1280x800@125 dark (1024x640) mode page: колонка ≤ 480 по центру {"page":[272,480],"area":[0,1024]}
+PASS wk 1280x800@125 dark (1024x640) year: полотно = 780 по центру {"year":[122,780],"area":[0,1024]}
+PASS wk 1280x800@125 dark (1024x640) settings: карточки = 640 по центру {"n":9,"first":[192,640],"area":[0,1024]}
+PASS wk 1280x800@125 dark (1024x640) help: текст в карточках = 640 по центру {"n":6,"first":[192,640]}
+PASS wk 1280x800@125 dark (1024x640): нет горизонтальной прокрутки (после всех экранов), без ошибок JS {"scrollW":1024,"errs":[]}
+PASS wk 1280x800@150 light (853x533): раскладка C компакт (без сайдбара) {"shell":"shell desk compact side-off"}
+PASS wk 1280x800@150 light (853x533): нет горизонтальной прокрутки {"scrollW":853}
+PASS wk 1280x800@150 light (853x533) today: поле 81 клетка, квадрат, в окне, ≤ 720 {"board":[92,72,409]}
+PASS wk 1280x800@150 light (853x533) today: область поля без полей колонки, поле по центру области; панель 1–9 и действия — в инспекторе {"stage":[0,593],"margin":["0px","0px"],"board":[92,409],"insp":[593,260],"pad":[610,227],"actions":[610,227]}
+PASS wk 1280x800@150 light (853x533) hub: карточки = 640 по центру {"cards":[[107,640]],"area":[0,853]}
+PASS wk 1280x800@150 light (853x533) mode page: колонка ≤ 480 по центру {"page":[187,480],"area":[0,853]}
+PASS wk 1280x800@150 light (853x533) year: полотно = 780 по центру {"year":[37,780],"area":[0,853]}
+PASS wk 1280x800@150 light (853x533) settings: карточки = 640 по центру {"n":9,"first":[107,640],"area":[0,853]}
+PASS wk 1280x800@150 light (853x533) help: текст в карточках = 640 по центру {"n":6,"first":[107,640]}
+PASS wk 1280x800@150 light (853x533): нет горизонтальной прокрутки (после всех экранов), без ошибок JS {"scrollW":853,"errs":[]}
+PASS wk 1280x800@150 dark (853x533): раскладка C компакт (без сайдбара) {"shell":"shell desk compact side-off"}
+PASS wk 1280x800@150 dark (853x533): нет горизонтальной прокрутки {"scrollW":853}
+PASS wk 1280x800@150 dark (853x533) today: поле 81 клетка, квадрат, в окне, ≤ 720 {"board":[92,72,409]}
+PASS wk 1280x800@150 dark (853x533) today: область поля без полей колонки, поле по центру области; панель 1–9 и действия — в инспекторе {"stage":[0,593],"margin":["0px","0px"],"board":[92,409],"insp":[593,260],"pad":[610,227],"actions":[610,227]}
+PASS wk 1280x800@150 dark (853x533) hub: карточки = 640 по центру {"cards":[[107,640]],"area":[0,853]}
+PASS wk 1280x800@150 dark (853x533) mode page: колонка ≤ 480 по центру {"page":[187,480],"area":[0,853]}
+PASS wk 1280x800@150 dark (853x533) year: полотно = 780 по центру {"year":[37,780],"area":[0,853]}
+PASS wk 1280x800@150 dark (853x533) settings: карточки = 640 по центру {"n":9,"first":[107,640],"area":[0,853]}
+PASS wk 1280x800@150 dark (853x533) help: текст в карточках = 640 по центру {"n":6,"first":[107,640]}
+PASS wk 1280x800@150 dark (853x533): нет горизонтальной прокрутки (после всех экранов), без ошибок JS {"scrollW":853,"errs":[]}
+PASS wk 1440x900@100 light (1440x900): раскладка с сайдбаром {"shell":"shell desk"}
+PASS wk 1440x900@100 light (1440x900): нет горизонтальной прокрутки {"scrollW":1440}
+PASS wk 1440x900@100 light (1440x900) today: поле 81 клетка, квадрат, в окне, ≤ 720 {"board":[340,72,720]}
+PASS wk 1440x900@100 light (1440x900) today: область поля без полей колонки, поле по центру области; панель 1–9 и действия — в инспекторе {"stage":[248,904],"margin":["0px","0px"],"board":[340,720],"insp":[1152,288],"pad":[1173,247],"actions":[1173,247]}
+PASS wk 1440x900@100 light (1440x900) today: поле правее сайдбара {"boardLeft":340,"sideRight":240}
+PASS wk 1440x900@100 light (1440x900) hub: карточки = 640 по центру {"cards":[[524,640]],"area":[248,1192]}
+PASS wk 1440x900@100 light (1440x900) mode page: колонка ≤ 480 по центру {"page":[604,480],"area":[248,1192]}
+PASS wk 1440x900@100 light (1440x900) year: полотно = 780 по центру {"year":[454,780],"area":[248,1192]}
+PASS wk 1440x900@100 light (1440x900) settings: карточки = 640 по центру {"n":9,"first":[524,640],"area":[248,1192]}
+PASS wk 1440x900@100 light (1440x900) help: текст в карточках = 640 по центру {"n":6,"first":[524,640]}
+PASS wk 1440x900@100 light (1440x900): нет горизонтальной прокрутки (после всех экранов), без ошибок JS {"scrollW":1440,"errs":[]}
+PASS wk 1440x900@100 dark (1440x900): раскладка с сайдбаром {"shell":"shell desk"}
+PASS wk 1440x900@100 dark (1440x900): нет горизонтальной прокрутки {"scrollW":1440}
+PASS wk 1440x900@100 dark (1440x900) today: поле 81 клетка, квадрат, в окне, ≤ 720 {"board":[340,72,720]}
+PASS wk 1440x900@100 dark (1440x900) today: область поля без полей колонки, поле по центру области; панель 1–9 и действия — в инспекторе {"stage":[248,904],"margin":["0px","0px"],"board":[340,720],"insp":[1152,288],"pad":[1173,247],"actions":[1173,247]}
+PASS wk 1440x900@100 dark (1440x900) today: поле правее сайдбара {"boardLeft":340,"sideRight":240}
+PASS wk 1440x900@100 dark (1440x900) hub: карточки = 640 по центру {"cards":[[524,640]],"area":[248,1192]}
+PASS wk 1440x900@100 dark (1440x900) mode page: колонка ≤ 480 по центру {"page":[604,480],"area":[248,1192]}
+PASS wk 1440x900@100 dark (1440x900) year: полотно = 780 по центру {"year":[454,780],"area":[248,1192]}
+PASS wk 1440x900@100 dark (1440x900) settings: карточки = 640 по центру {"n":9,"first":[524,640],"area":[248,1192]}
+PASS wk 1440x900@100 dark (1440x900) help: текст в карточках = 640 по центру {"n":6,"first":[524,640]}
+PASS wk 1440x900@100 dark (1440x900): нет горизонтальной прокрутки (после всех экранов), без ошибок JS {"scrollW":1440,"errs":[]}
+PASS wk 1440x900@125 light (1152x720): раскладка с сайдбаром {"shell":"shell desk"}
+PASS wk 1440x900@125 light (1152x720): нет горизонтальной прокрутки {"scrollW":1152}
+PASS wk 1440x900@125 light (1152x720) today: поле 81 клетка, квадрат, в окне, ≤ 720 {"board":[296,72,548]}
+PASS wk 1440x900@125 light (1152x720) today: область поля без полей колонки, поле по центру области; панель 1–9 и действия — в инспекторе {"stage":[248,644],"margin":["0px","0px"],"board":[296,548],"insp":[892,260],"pad":[913,219],"actions":[913,219]}
+PASS wk 1440x900@125 light (1152x720) today: поле правее сайдбара {"boardLeft":296,"sideRight":240}
+PASS wk 1440x900@125 light (1152x720) hub: карточки = 640 по центру {"cards":[[380,640]],"area":[248,904]}
+PASS wk 1440x900@125 light (1152x720) mode page: колонка ≤ 480 по центру {"page":[460,480],"area":[248,904]}
+PASS wk 1440x900@125 light (1152x720) year: полотно = 780 по центру {"year":[310,780],"area":[248,904]}
+PASS wk 1440x900@125 light (1152x720) settings: карточки = 640 по центру {"n":9,"first":[380,640],"area":[248,904]}
+PASS wk 1440x900@125 light (1152x720) help: текст в карточках = 640 по центру {"n":6,"first":[380,640]}
+PASS wk 1440x900@125 light (1152x720): нет горизонтальной прокрутки (после всех экранов), без ошибок JS {"scrollW":1152,"errs":[]}
+PASS wk 1440x900@125 dark (1152x720): раскладка с сайдбаром {"shell":"shell desk"}
+PASS wk 1440x900@125 dark (1152x720): нет горизонтальной прокрутки {"scrollW":1152}
+PASS wk 1440x900@125 dark (1152x720) today: поле 81 клетка, квадрат, в окне, ≤ 720 {"board":[296,72,548]}
+PASS wk 1440x900@125 dark (1152x720) today: область поля без полей колонки, поле по центру области; панель 1–9 и действия — в инспекторе {"stage":[248,644],"margin":["0px","0px"],"board":[296,548],"insp":[892,260],"pad":[913,219],"actions":[913,219]}
+PASS wk 1440x900@125 dark (1152x720) today: поле правее сайдбара {"boardLeft":296,"sideRight":240}
+PASS wk 1440x900@125 dark (1152x720) hub: карточки = 640 по центру {"cards":[[380,640]],"area":[248,904]}
+PASS wk 1440x900@125 dark (1152x720) mode page: колонка ≤ 480 по центру {"page":[460,480],"area":[248,904]}
+PASS wk 1440x900@125 dark (1152x720) year: полотно = 780 по центру {"year":[310,780],"area":[248,904]}
+PASS wk 1440x900@125 dark (1152x720) settings: карточки = 640 по центру {"n":9,"first":[380,640],"area":[248,904]}
+PASS wk 1440x900@125 dark (1152x720) help: текст в карточках = 640 по центру {"n":6,"first":[380,640]}
+PASS wk 1440x900@125 dark (1152x720): нет горизонтальной прокрутки (после всех экранов), без ошибок JS {"scrollW":1152,"errs":[]}
+PASS wk 1440x900@150 light (960x600): раскладка C компакт (без сайдбара) {"shell":"shell desk compact side-off"}
+PASS wk 1440x900@150 light (960x600): нет горизонтальной прокрутки {"scrollW":960}
+PASS wk 1440x900@150 light (960x600) today: поле 81 клетка, квадрат, в окне, ≤ 720 {"board":[112,72,476]}
+PASS wk 1440x900@150 light (960x600) today: область поля без полей колонки, поле по центру области; панель 1–9 и действия — в инспекторе {"stage":[0,700],"margin":["0px","0px"],"board":[112,476],"insp":[700,260],"pad":[717,227],"actions":[717,227]}
+PASS wk 1440x900@150 light (960x600) hub: карточки = 640 по центру {"cards":[[160,640]],"area":[0,960]}
+PASS wk 1440x900@150 light (960x600) mode page: колонка ≤ 480 по центру {"page":[240,480],"area":[0,960]}
+PASS wk 1440x900@150 light (960x600) year: полотно = 780 по центру {"year":[90,780],"area":[0,960]}
+PASS wk 1440x900@150 light (960x600) settings: карточки = 640 по центру {"n":9,"first":[160,640],"area":[0,960]}
+PASS wk 1440x900@150 light (960x600) help: текст в карточках = 640 по центру {"n":6,"first":[160,640]}
+PASS wk 1440x900@150 light (960x600): нет горизонтальной прокрутки (после всех экранов), без ошибок JS {"scrollW":960,"errs":[]}
+PASS wk 1440x900@150 dark (960x600): раскладка C компакт (без сайдбара) {"shell":"shell desk compact side-off"}
+PASS wk 1440x900@150 dark (960x600): нет горизонтальной прокрутки {"scrollW":960}
+PASS wk 1440x900@150 dark (960x600) today: поле 81 клетка, квадрат, в окне, ≤ 720 {"board":[112,72,476]}
+PASS wk 1440x900@150 dark (960x600) today: область поля без полей колонки, поле по центру области; панель 1–9 и действия — в инспекторе {"stage":[0,700],"margin":["0px","0px"],"board":[112,476],"insp":[700,260],"pad":[717,227],"actions":[717,227]}
+PASS wk 1440x900@150 dark (960x600) hub: карточки = 640 по центру {"cards":[[160,640]],"area":[0,960]}
+PASS wk 1440x900@150 dark (960x600) mode page: колонка ≤ 480 по центру {"page":[240,480],"area":[0,960]}
+PASS wk 1440x900@150 dark (960x600) year: полотно = 780 по центру {"year":[90,780],"area":[0,960]}
+PASS wk 1440x900@150 dark (960x600) settings: карточки = 640 по центру {"n":9,"first":[160,640],"area":[0,960]}
+PASS wk 1440x900@150 dark (960x600) help: текст в карточках = 640 по центру {"n":6,"first":[160,640]}
+PASS wk 1440x900@150 dark (960x600): нет горизонтальной прокрутки (после всех экранов), без ошибок JS {"scrollW":960,"errs":[]}
+PASS wk 1920x1080@100 light (1920x1080): раскладка с сайдбаром {"shell":"shell desk"}
+PASS wk 1920x1080@100 light (1920x1080): нет горизонтальной прокрутки {"scrollW":1920}
+PASS wk 1920x1080@100 light (1920x1080) today: поле 81 клетка, квадрат, в окне, ≤ 720 {"board":[564,72,720]}
+PASS wk 1920x1080@100 light (1920x1080) today: область поля без полей колонки, поле по центру области; панель 1–9 и действия — в инспекторе {"stage":[248,1352],"margin":["0px","0px"],"board":[564,720],"insp":[1600,320],"pad":[1621,279],"actions":[1621,279]}
+PASS wk 1920x1080@100 light (1920x1080) today: поле правее сайдбара {"boardLeft":564,"sideRight":240}
+PASS wk 1920x1080@100 light (1920x1080) hub: карточки = 640 по центру {"cards":[[764,640]],"area":[248,1672]}
+PASS wk 1920x1080@100 light (1920x1080) mode page: колонка ≤ 480 по центру {"page":[844,480],"area":[248,1672]}
+PASS wk 1920x1080@100 light (1920x1080) year: полотно = 780 по центру {"year":[694,780],"area":[248,1672]}
+PASS wk 1920x1080@100 light (1920x1080) settings: карточки = 640 по центру {"n":9,"first":[764,640],"area":[248,1672]}
+PASS wk 1920x1080@100 light (1920x1080) help: текст в карточках = 640 по центру {"n":6,"first":[764,640]}
+PASS wk 1920x1080@100 light (1920x1080): нет горизонтальной прокрутки (после всех экранов), без ошибок JS {"scrollW":1920,"errs":[]}
+PASS wk 1920x1080@100 dark (1920x1080): раскладка с сайдбаром {"shell":"shell desk"}
+PASS wk 1920x1080@100 dark (1920x1080): нет горизонтальной прокрутки {"scrollW":1920}
+PASS wk 1920x1080@100 dark (1920x1080) today: поле 81 клетка, квадрат, в окне, ≤ 720 {"board":[564,72,720]}
+PASS wk 1920x1080@100 dark (1920x1080) today: область поля без полей колонки, поле по центру области; панель 1–9 и действия — в инспекторе {"stage":[248,1352],"margin":["0px","0px"],"board":[564,720],"insp":[1600,320],"pad":[1621,279],"actions":[1621,279]}
+PASS wk 1920x1080@100 dark (1920x1080) today: поле правее сайдбара {"boardLeft":564,"sideRight":240}
+PASS wk 1920x1080@100 dark (1920x1080) hub: карточки = 640 по центру {"cards":[[764,640]],"area":[248,1672]}
+PASS wk 1920x1080@100 dark (1920x1080) mode page: колонка ≤ 480 по центру {"page":[844,480],"area":[248,1672]}
+PASS wk 1920x1080@100 dark (1920x1080) year: полотно = 780 по центру {"year":[694,780],"area":[248,1672]}
+PASS wk 1920x1080@100 dark (1920x1080) settings: карточки = 640 по центру {"n":9,"first":[764,640],"area":[248,1672]}
+PASS wk 1920x1080@100 dark (1920x1080) help: текст в карточках = 640 по центру {"n":6,"first":[764,640]}
+PASS wk 1920x1080@100 dark (1920x1080): нет горизонтальной прокрутки (после всех экранов), без ошибок JS {"scrollW":1920,"errs":[]}
+PASS wk 1920x1080@125 light (1536x864): раскладка с сайдбаром {"shell":"shell desk"}
+PASS wk 1920x1080@125 light (1536x864): нет горизонтальной прокрутки {"scrollW":1536}
+PASS wk 1920x1080@125 light (1536x864) today: поле 81 клетка, квадрат, в окне, ≤ 720 {"board":[378,72,720]}
+PASS wk 1920x1080@125 light (1536x864) today: область поля без полей колонки, поле по центру области; панель 1–9 и действия — в инспекторе {"stage":[248,981],"margin":["0px","0px"],"board":[378,720],"insp":[1229,307],"pad":[1250,266],"actions":[1250,266]}
+PASS wk 1920x1080@125 light (1536x864) today: поле правее сайдбара {"boardLeft":378,"sideRight":240}
+PASS wk 1920x1080@125 light (1536x864) hub: карточки = 640 по центру {"cards":[[572,640]],"area":[248,1288]}
+PASS wk 1920x1080@125 light (1536x864) mode page: колонка ≤ 480 по центру {"page":[652,480],"area":[248,1288]}
+PASS wk 1920x1080@125 light (1536x864) year: полотно = 780 по центру {"year":[502,780],"area":[248,1288]}
+PASS wk 1920x1080@125 light (1536x864) settings: карточки = 640 по центру {"n":9,"first":[572,640],"area":[248,1288]}
+PASS wk 1920x1080@125 light (1536x864) help: текст в карточках = 640 по центру {"n":6,"first":[572,640]}
+PASS wk 1920x1080@125 light (1536x864): нет горизонтальной прокрутки (после всех экранов), без ошибок JS {"scrollW":1536,"errs":[]}
+PASS wk 1920x1080@125 dark (1536x864): раскладка с сайдбаром {"shell":"shell desk"}
+PASS wk 1920x1080@125 dark (1536x864): нет горизонтальной прокрутки {"scrollW":1536}
+PASS wk 1920x1080@125 dark (1536x864) today: поле 81 клетка, квадрат, в окне, ≤ 720 {"board":[378,72,720]}
+PASS wk 1920x1080@125 dark (1536x864) today: область поля без полей колонки, поле по центру области; панель 1–9 и действия — в инспекторе {"stage":[248,981],"margin":["0px","0px"],"board":[378,720],"insp":[1229,307],"pad":[1250,266],"actions":[1250,266]}
+PASS wk 1920x1080@125 dark (1536x864) today: поле правее сайдбара {"boardLeft":378,"sideRight":240}
+PASS wk 1920x1080@125 dark (1536x864) hub: карточки = 640 по центру {"cards":[[572,640]],"area":[248,1288]}
+PASS wk 1920x1080@125 dark (1536x864) mode page: колонка ≤ 480 по центру {"page":[652,480],"area":[248,1288]}
+PASS wk 1920x1080@125 dark (1536x864) year: полотно = 780 по центру {"year":[502,780],"area":[248,1288]}
+PASS wk 1920x1080@125 dark (1536x864) settings: карточки = 640 по центру {"n":9,"first":[572,640],"area":[248,1288]}
+PASS wk 1920x1080@125 dark (1536x864) help: текст в карточках = 640 по центру {"n":6,"first":[572,640]}
+PASS wk 1920x1080@125 dark (1536x864): нет горизонтальной прокрутки (после всех экранов), без ошибок JS {"scrollW":1536,"errs":[]}
+PASS wk 1920x1080@150 light (1280x720): раскладка с сайдбаром {"shell":"shell desk"}
+PASS wk 1920x1080@150 light (1280x720): нет горизонтальной прокрутки {"scrollW":1280}
+PASS wk 1920x1080@150 light (1280x720) today: поле 81 клетка, квадрат, в окне, ≤ 720 {"board":[336,72,596]}
+PASS wk 1920x1080@150 light (1280x720) today: область поля без полей колонки, поле по центру области; панель 1–9 и действия — в инспекторе {"stage":[248,772],"margin":["0px","0px"],"board":[336,596],"insp":[1020,260],"pad":[1041,219],"actions":[1041,219]}
+PASS wk 1920x1080@150 light (1280x720) today: поле правее сайдбара {"boardLeft":336,"sideRight":240}
+PASS wk 1920x1080@150 light (1280x720) hub: карточки = 640 по центру {"cards":[[444,640]],"area":[248,1032]}
+PASS wk 1920x1080@150 light (1280x720) mode page: колонка ≤ 480 по центру {"page":[524,480],"area":[248,1032]}
+PASS wk 1920x1080@150 light (1280x720) year: полотно = 780 по центру {"year":[374,780],"area":[248,1032]}
+PASS wk 1920x1080@150 light (1280x720) settings: карточки = 640 по центру {"n":9,"first":[444,640],"area":[248,1032]}
+PASS wk 1920x1080@150 light (1280x720) help: текст в карточках = 640 по центру {"n":6,"first":[444,640]}
+PASS wk 1920x1080@150 light (1280x720): нет горизонтальной прокрутки (после всех экранов), без ошибок JS {"scrollW":1280,"errs":[]}
+PASS wk 1920x1080@150 dark (1280x720): раскладка с сайдбаром {"shell":"shell desk"}
+PASS wk 1920x1080@150 dark (1280x720): нет горизонтальной прокрутки {"scrollW":1280}
+PASS wk 1920x1080@150 dark (1280x720) today: поле 81 клетка, квадрат, в окне, ≤ 720 {"board":[336,72,596]}
+PASS wk 1920x1080@150 dark (1280x720) today: область поля без полей колонки, поле по центру области; панель 1–9 и действия — в инспекторе {"stage":[248,772],"margin":["0px","0px"],"board":[336,596],"insp":[1020,260],"pad":[1041,219],"actions":[1041,219]}
+PASS wk 1920x1080@150 dark (1280x720) today: поле правее сайдбара {"boardLeft":336,"sideRight":240}
+PASS wk 1920x1080@150 dark (1280x720) hub: карточки = 640 по центру {"cards":[[444,640]],"area":[248,1032]}
+PASS wk 1920x1080@150 dark (1280x720) mode page: колонка ≤ 480 по центру {"page":[524,480],"area":[248,1032]}
+PASS wk 1920x1080@150 dark (1280x720) year: полотно = 780 по центру {"year":[374,780],"area":[248,1032]}
+PASS wk 1920x1080@150 dark (1280x720) settings: карточки = 640 по центру {"n":9,"first":[444,640],"area":[248,1032]}
+PASS wk 1920x1080@150 dark (1280x720) help: текст в карточках = 640 по центру {"n":6,"first":[444,640]}
+PASS wk 1920x1080@150 dark (1280x720): нет горизонтальной прокрутки (после всех экранов), без ошибок JS {"scrollW":1280,"errs":[]}
+PASS wk solved 1280x800@100: Today остаётся партией (.play-fit), колонки 640 нет {"notFit":0,"stage":[248,772],"margin":["0px","0px"]}
+PASS wk solved 1280x800@100: карточка дня — в инспекторе, без полей колонки {"card":[1033,235],"margin":"0px 0px","insp":[1020,260]}
+PASS wk solved 1280x800@100: Grid ∞ — в инспекторе {"grid":[1076,150]}
+PASS wk solved 1280x800@100: нет горизонтальной прокрутки, без ошибок JS {"errs":[]}
+PASS wk solved 1440x900@100: Today остаётся партией (.play-fit), колонки 640 нет {"notFit":0,"stage":[248,904],"margin":["0px","0px"]}
+PASS wk solved 1440x900@100: карточка дня — в инспекторе, без полей колонки {"card":[1165,263],"margin":"0px 0px","insp":[1152,288]}
+PASS wk solved 1440x900@100: Grid ∞ — в инспекторе {"grid":[1222,150]}
+PASS wk solved 1440x900@100: нет горизонтальной прокрутки, без ошибок JS {"errs":[]}
+PASS wk solved 1920x1080@100: Today остаётся партией (.play-fit), колонки 640 нет {"notFit":0,"stage":[248,1352],"margin":["0px","0px"]}
+PASS wk solved 1920x1080@100: карточка дня — в инспекторе, без полей колонки {"card":[1613,295],"margin":"0px 0px","insp":[1600,320]}
+PASS wk solved 1920x1080@100: Grid ∞ — в инспекторе {"grid":[1686,150]}
+PASS wk solved 1920x1080@100: нет горизонтальной прокрутки, без ошибок JS {"errs":[]}
+PASS wk solved 1920x1080@150: Today остаётся партией (.play-fit), колонки 640 нет {"notFit":0,"stage":[248,772],"margin":["0px","0px"]}
+PASS wk solved 1920x1080@150: карточка дня — в инспекторе, без полей колонки {"card":[1033,235],"margin":"0px 0px","insp":[1020,260]}
+PASS wk solved 1920x1080@150: Grid ∞ — в инспекторе {"grid":[1075,150]}
+PASS wk solved 1920x1080@150: нет горизонтальной прокрутки, без ошибок JS {"errs":[]}
+PASS wk hover 1440x900 light: клавиша 1–9 → --key-hover, «рука» {"before":"rgb(255, 255, 255)","after":"rgb(243, 243, 244)","cursor":"pointer"}
+PASS wk hover 1440x900 light: Notes → поднимается до --elev, «рука» {"before":"rgba(0, 0, 0, 0)","after":"rgb(255, 255, 255)"}
+PASS wk hover 1440x900 light: неактивный Undo — без наведения, стрелка {"bg":"rgba(0, 0, 0, 0)","cursor":"default"}
+PASS wk hover 1440x900 light: клетка под курсором — кольцо 1.5 px --hover-ring, стрелка {"shadow":"rgba(59, 72, 176, 0.5) 0px 0px 0px 1.5px inset","cursor":"default"}
+PASS wk hover 1440x900 light: выбранная клетка — без кольца наведения {"shadow":"none"}
+PASS wk hover 1440x900 light: пункт сайдбара → --hover, «рука» {"after":"rgba(60, 60, 67, 0.06)"}
+PASS wk hover 1440x900 light: выбранный пункт сайдбара — без наведения {"bg":"rgba(59, 72, 176, 0.12)"}
+PASS wk hover 1440x900 light: кнопка сайдбара → слой --hover над подложкой {"img":"linear-gradient(rgba(60, 60, 67, 0.06), rgba(60, 60, 67, 0.06))"}
+PASS wk hover 1440x900 light: шестерёнка → --hover {"after":"rgba(60, 60, 67, 0.06)"}
+PASS wk hover 1440x900 light: строка хаба → слой --hover над --card, «рука»; label-2 ≥ 4.5:1 {"img":"linear-gradient(rgba(60, 60, 67, 0.06), rgba(60, 60, 67, 0.06))","bg":[243,243,244,1],"ratio":4.57}
+PASS wk hover 1440x900 light: строка сложности → --hover {"after":"rgba(60, 60, 67, 0.06)"}
+PASS wk hover 1440x900 light: выбранная сложность — без наведения {"bg":"rgba(0, 0, 0, 0)"}
+PASS wk hover 1440x900 light: месяц Year → слой --hover над --elev, «рука» {"img":"linear-gradient(rgba(60, 60, 67, 0.06), rgba(60, 60, 67, 0.06))"}
+PASS wk hover 1440x900 light: строка Settings → --hover, «рука» {"after":"rgba(60, 60, 67, 0.06)"}
+PASS wk hover 1440x900 light: выбранный язык — без наведения {"bg":"rgba(0, 0, 0, 0)"}
+PASS wk hover 1440x900 light: строка тумблера → --hover; «рука» на тумблере {"after":"rgba(60, 60, 67, 0.06)","cursor":"pointer"}
+PASS wk hover 1440x900 light: label-2 на подсвеченной строке ≥ 4.5:1 {"bg":[243,243,244,1],"ratio":4.57,"foot":[242,242,247,1]}
+PASS wk hover 1440x900 light: строка «How Pundoku works» → --hover {"after":"rgba(60, 60, 67, 0.06)"}
+PASS wk hover 1440x900 light: без ошибок JS {"errs":[]}
+PASS wk hover 1440x900 dark: клавиша 1–9 → --key-hover, «рука» {"before":"rgb(28, 28, 30)","after":"rgb(45, 45, 47)","cursor":"pointer"}
+PASS wk hover 1440x900 dark: Notes → поднимается до --elev, «рука» {"before":"rgba(0, 0, 0, 0)","after":"rgb(28, 28, 30)"}
+PASS wk hover 1440x900 dark: неактивный Undo — без наведения, стрелка {"bg":"rgba(0, 0, 0, 0)","cursor":"default"}
+PASS wk hover 1440x900 dark: клетка под курсором — кольцо 1.5 px --hover-ring, стрелка {"shadow":"rgba(140, 150, 255, 0.55) 0px 0px 0px 1.5px inset","cursor":"default"}
+PASS wk hover 1440x900 dark: выбранная клетка — без кольца наведения {"shadow":"none"}
+PASS wk hover 1440x900 dark: пункт сайдбара → --hover, «рука» {"after":"rgba(235, 235, 245, 0.08)"}
+PASS wk hover 1440x900 dark: выбранный пункт сайдбара — без наведения {"bg":"rgba(140, 150, 255, 0.18)"}
+PASS wk hover 1440x900 dark: кнопка сайдбара → слой --hover над подложкой {"img":"linear-gradient(rgba(235, 235, 245, 0.08), rgba(235, 235, 245, 0.08))"}
+PASS wk hover 1440x900 dark: шестерёнка → --hover {"after":"rgba(235, 235, 245, 0.08)"}
+PASS wk hover 1440x900 dark: строка хаба → слой --hover над --card, «рука»; label-2 ≥ 4.5:1 {"img":"linear-gradient(rgba(235, 235, 245, 0.08), rgba(235, 235, 245, 0.08))","bg":[45,45,47,1],"ratio":4.79}
+PASS wk hover 1440x900 dark: строка сложности → --hover {"after":"rgba(235, 235, 245, 0.08)"}
+PASS wk hover 1440x900 dark: выбранная сложность — без наведения {"bg":"rgba(0, 0, 0, 0)"}
+PASS wk hover 1440x900 dark: месяц Year → слой --hover над --elev, «рука» {"img":"linear-gradient(rgba(235, 235, 245, 0.08), rgba(235, 235, 245, 0.08))"}
+PASS wk hover 1440x900 dark: строка Settings → --hover, «рука» {"after":"rgba(235, 235, 245, 0.08)"}
+PASS wk hover 1440x900 dark: выбранный язык — без наведения {"bg":"rgba(0, 0, 0, 0)"}
+PASS wk hover 1440x900 dark: строка тумблера → --hover; «рука» на тумблере {"after":"rgba(235, 235, 245, 0.08)","cursor":"pointer"}
+PASS wk hover 1440x900 dark: label-2 на подсвеченной строке ≥ 4.5:1 {"bg":[45,45,47,1],"ratio":4.79,"foot":[0,0,0,1]}
+PASS wk hover 1440x900 dark: строка «How Pundoku works» → --hover {"after":"rgba(235, 235, 245, 0.08)"}
+PASS wk hover 1440x900 dark: без ошибок JS {"errs":[]}
+PASS wk touch 1180x820: раскладка с сайдбаром, точного наведения нет — правил наведения/курсора нет {"media":false,"bg":"rgba(0, 0, 0, 0)","cellCursor":"pointer"}
+PASS wk keys 1440x900@100 today: у каждого фокуса видимое кольцо, не срезано (26 шт.) {"n":26,"bad":[]}
+PASS wk keys 1440x900@100 hub: у каждого фокуса видимое кольцо, не срезано (17 шт.) {"n":17,"bad":[]}
+PASS wk keys 1440x900@100 mode page: фокус на «Start», чип ↩ внутри кнопки, aria-keyshortcuts=Enter {"focused":true,"chip":"↩","chipIn":true,"keys":"Enter"}
+PASS wk keys 1440x900@100 mode page: у каждого фокуса видимое кольцо, не срезано (13 шт.) {"n":13,"bad":[]}
+PASS wk keys 1440x900@100 mode page: Enter — партия Classic на доске {"cells":81,"cur":["side-mode-classic"]}
+PASS wk keys 1440x900@100 year: у каждого фокуса видимое кольцо, не срезано (24 шт.) {"n":24,"bad":[]}
+PASS wk keys 1440x900@100 settings: у каждого фокуса видимое кольцо, не срезано (19 шт.) {"n":19,"bad":[]}
+PASS wk keys 1440x900@100 help: программный фокус заголовка после клика — без кольца {"tag":"H1","fv":false,"outline":"none"}
+PASS wk keys 1440x900@100 help: у каждого фокуса видимое кольцо, не срезано (11 шт.) {"n":11,"bad":[]}
+PASS wk keys 1440x900@100: без ошибок JS {"errs":[]}
+PASS wk keys 1920x1080@150 today: у каждого фокуса видимое кольцо, не срезано (26 шт.) {"n":26,"bad":[]}
+PASS wk keys 1920x1080@150 hub: у каждого фокуса видимое кольцо, не срезано (17 шт.) {"n":17,"bad":[]}
+PASS wk keys 1920x1080@150 mode page: фокус на «Start», чип ↩ внутри кнопки, aria-keyshortcuts=Enter {"focused":true,"chip":"↩","chipIn":true,"keys":"Enter"}
+PASS wk keys 1920x1080@150 mode page: у каждого фокуса видимое кольцо, не срезано (13 шт.) {"n":13,"bad":[]}
+PASS wk keys 1920x1080@150 mode page: Enter — партия Classic на доске {"cells":81,"cur":["side-mode-classic"]}
+PASS wk keys 1920x1080@150 year: у каждого фокуса видимое кольцо, не срезано (24 шт.) {"n":24,"bad":[]}
+PASS wk keys 1920x1080@150 settings: у каждого фокуса видимое кольцо, не срезано (19 шт.) {"n":19,"bad":[]}
+PASS wk keys 1920x1080@150 help: программный фокус заголовка после клика — без кольца {"tag":"H1","fv":false,"outline":"none"}
+PASS wk keys 1920x1080@150 help: у каждого фокуса видимое кольцо, не срезано (11 шт.) {"n":11,"bad":[]}
+PASS wk keys 1920x1080@150: без ошибок JS {"errs":[]}
+PASS wk compact 820x1180@200 (820x1180) today: кадр = main {"diffPx":0,"noise1":0,"tries":1}
+PASS wk compact 820x1180@200 today: DOM = main {"len":12030}
+PASS wk compact 820x1180@200 (820x1180) hub: кадр = main {"diffPx":0,"noise1":0,"tries":1}
+PASS wk compact 820x1180@200 hub: DOM = main {"len":15113}
+PASS wk compact 820x1180@200 (820x1180) year: кадр = main {"diffPx":0,"noise1":0,"tries":1}
+PASS wk compact 820x1180@200 year: DOM = main {"len":27006}
+PASS wk compact 820x1180@200 (820x1180) settings: кадр = main {"diffPx":0,"noise1":0,"tries":1}
+PASS wk compact 820x1180@200 settings: DOM = main {"len":31269}
+PASS wk compact 690x800@100 (690x800) today: кадр = main {"diffPx":0,"noise1":0,"tries":1}
+PASS wk compact 690x800@100 today: DOM = main {"len":12030}
+PASS wk compact 690x800@100 (690x800) hub: кадр = main {"diffPx":0,"noise1":0,"tries":1}
+PASS wk compact 690x800@100 hub: DOM = main {"len":15113}
+PASS wk compact 690x800@100 (690x800) year: кадр = main {"diffPx":0,"noise1":0,"tries":1}
+PASS wk compact 690x800@100 year: DOM = main {"len":27006}
+PASS wk compact 690x800@100 (690x800) settings: кадр = main {"diffPx":0,"noise1":0,"tries":1}
+PASS wk compact 690x800@100 settings: DOM = main {"len":31269}
+PASS wk compact 1100x500@100 (1100x500) today: кадр = main {"diffPx":0,"noise1":0,"tries":1}
+PASS wk compact 1100x500@100 today: DOM = main {"len":12030}
+PASS wk compact 1100x500@100 (1100x500) hub: кадр = main {"diffPx":0,"noise1":0,"tries":1}
+PASS wk compact 1100x500@100 hub: DOM = main {"len":15113}
+PASS wk compact 1100x500@100 (1100x500) year: кадр = main {"diffPx":0,"noise1":0,"tries":1}
+PASS wk compact 1100x500@100 year: DOM = main {"len":27006}
+PASS wk compact 1100x500@100 (1100x500) settings: кадр = main {"diffPx":0,"noise1":0,"tries":1}
+PASS wk compact 1100x500@100 settings: DOM = main {"len":31269}
+PASS wk phone 393x852 light today: кадр = main {"diffPx":0}
+PASS wk phone 393x852 light today: DOM = main {"len":12030}
+PASS wk phone 393x852 light hub: кадр = main {"diffPx":0}
+PASS wk phone 393x852 light hub: DOM = main {"len":15113}
+PASS wk phone 393x852 light play: кадр = main {"diffPx":0}
+PASS wk phone 393x852 light play: DOM = main {"len":23387}
+PASS wk phone 393x852 light year: кадр = main {"diffPx":0}
+PASS wk phone 393x852 light year: DOM = main {"len":35280}
+PASS wk phone 393x852 light settings: кадр = main {"diffPx":0}
+PASS wk phone 393x852 light settings: DOM = main {"len":39543}
+PASS wk phone 393x852 dark today: кадр = main {"diffPx":0}
+PASS wk phone 393x852 dark today: DOM = main {"len":12030}
+PASS wk phone 393x852 dark hub: кадр = main {"diffPx":0}
+PASS wk phone 393x852 dark hub: DOM = main {"len":15113}
+PASS wk phone 393x852 dark play: кадр = main {"diffPx":0}
+PASS wk phone 393x852 dark play: DOM = main {"len":23387}
+PASS wk phone 393x852 dark year: кадр = main {"diffPx":0}
+PASS wk phone 393x852 dark year: DOM = main {"len":35280}
+PASS wk phone 393x852 dark settings: кадр = main {"diffPx":0}
+PASS wk phone 393x852 dark settings: DOM = main {"len":39543}
+PASS wk phone 320x568 light today: кадр = main {"diffPx":0}
+PASS wk phone 320x568 light today: DOM = main {"len":12030}
+PASS wk phone 320x568 light hub: кадр = main {"diffPx":0}
+PASS wk phone 320x568 light hub: DOM = main {"len":15113}
+PASS wk phone 320x568 light play: кадр = main {"diffPx":0}
+PASS wk phone 320x568 light play: DOM = main {"len":23387}
+PASS wk phone 320x568 light year: кадр = main {"diffPx":0}
+PASS wk phone 320x568 light year: DOM = main {"len":35280}
+PASS wk phone 320x568 light settings: кадр = main {"diffPx":0}
+PASS wk phone 320x568 light settings: DOM = main {"len":39543}
+PASS wk phone 852x393 light today: кадр = main {"diffPx":0}
+PASS wk phone 852x393 light today: DOM = main {"len":12030}
+PASS wk phone 852x393 light hub: кадр = main {"diffPx":0}
+PASS wk phone 852x393 light hub: DOM = main {"len":15113}
+PASS wk phone 852x393 light play: кадр = main {"diffPx":0}
+PASS wk phone 852x393 light play: DOM = main {"len":23387}
+PASS wk phone 852x393 light year: кадр = main {"diffPx":0}
+PASS wk phone 852x393 light year: DOM = main {"len":35280}
+PASS wk phone 852x393 light settings: кадр = main {"diffPx":0}
+PASS wk phone 852x393 light settings: DOM = main {"len":39543}
+
+331/331 PASS

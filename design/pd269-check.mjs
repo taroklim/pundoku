@@ -1,8 +1,14 @@
 /**
  * PD-269 — десктоп C: шкала ширин, наведение/курсор, фокус с клавиатуры, «Start ↩» — живая проверка на РЕАЛЬНОЙ сборке
- * + «телефон и компакт не изменились» попиксельно против main.
+ * + «телефон не изменился» попиксельно против main.
  *
- *   cd apps/web && npx vite build --outDir /tmp/pd269-dist                 (ветка pd-desk-c-269)
+ * PD-290 (сведение с PD-267/268, ветка pd-desk-c-all): партия — раскладка «тулбар + поле | инспектор» (панель 1–9 и действия
+ * в инспекторе, а не «по ширине поля»), карточка дня и Grid ∞ после решения — в инспекторе (колонки 640 у них нет); компакт
+ * (1024×640, 853×533, 960×600) — раскладка C без сайдбара (PD-268), шкала ширин действует и там. Части `widths`/`solved`/
+ * `compact` переписаны под это; `compact` теперь сверяет с main окна ВНЕ раскладки C (портрет планшета, узкое окно, низкое
+ * альбомное), которые 269 не должен трогать.
+ *
+ *   cd apps/web && npx vite build --outDir /tmp/pd269-dist                 (ветка pd-desk-c-269; после PD-290 — pd-desk-c-all)
  *   (main) npx vite build --outDir /tmp/pd269-base                         (эталон телефона и компакта)
  *   PD_PW_HOME=<папка с node_modules/playwright> DIST=/tmp/pd269-dist BASE_DIST=/tmp/pd269-base PORT=5381 \
  *     node design/pd269-check.mjs [widths] [solved] [hover] [keys] [compact] [phone] [chromium] [webkit] [firefox]
@@ -11,11 +17,12 @@
  * Масштаб браузера эмулируется как в аудите PD-228 и pd266-check: вьюпорт = окно ÷ масштаб, DPR = масштаб.
  *
  * widths — 1280×800 / 1440×900 / 1920×1080 × 100/125/150 % × светлая/тёмная. Today (партия), хаб Play, страница режима,
- *   Year, Settings, справка. В раскладке с сайдбаром: поле ≤ 720, квадрат 81 клетка в окне; панель 1–9, Notes/Undo/Erase и
- *   строка Ink — шириной и центром с поле; карточки хаба/Settings/справки = min(640, область − 32), полотно Year =
- *   min(780, область − 32), страница режима ≤ 480; каждая колонка по центру области контента и правее сайдбара; нет
- *   горизонтальной прокрутки, нет ошибок JS. Ниже 1100 × 680 — прежняя оболочка (таб-бар), колонок нет.
- * solved — Today после решения (1280×800, 1440×900, 1920×1080, 1920×1080 @150): карточка дня и Grid ∞ — колонка 640 по центру.
+ *   Year, Settings, справка. В раскладке C (от 1100 × 680 с сайдбаром, ниже — компакт PD-268 без сайдбара): поле ≤ 720,
+ *   квадрат 81 клетка в окне, область поля без своих полей (PD-290), панель 1–9 и Notes/Undo/Erase — в инспекторе справа;
+ *   карточки хаба/Settings/справки = min(640, область − 32), полотно Year = min(780, область − 32), страница режима ≤ 480;
+ *   каждая колонка по центру области контента и правее сайдбара; нет горизонтальной прокрутки, нет ошибок JS.
+ * solved — Today после решения (1280×800, 1440×900, 1920×1080, 1920×1080 @150): поле на месте, карточка дня и Grid ∞ — в
+ *   инспекторе (PD-268), колонки 640 и её полей нет (правило PD-269 для `.today:not(.play-fit)` в раскладке C не срабатывает).
  * hover — 1440×900 светлая/тёмная: наведение даёт ровно значения §2 (--hover / --key-hover / --elev / кольцо --hover-ring) на
  *   сайдбаре, кнопке сайдбара, шестерёнке, строках хаба/страницы режима/Settings, тумблере, клавишах, действиях, клетке, месяце
  *   Year; выбранное/неактивное не подсвечивается; контраст label-2 на подсвеченной строке ≥ 4.5:1; курсор: «рука» на кнопках,
@@ -23,8 +30,9 @@
  * keys — 1440×900 и 1920×1080 @150: Tab (WebKit — ⌥Tab, как Safari) по Today, хабу, странице режима, Year, Settings, справке: у КАЖДОГО фокуса есть видимое
  *   кольцо (outline или inset-тень; клетка — кольцо выбора), кольцо не срезано ни одним предком с overflow и окном; программный
  *   фокус заголовка справки после клика — без кольца; страница режима: фокус на «Start», чип ↩, Enter запускает партию.
- * compact — 1280×800 @125/@150, 1440×900 @150 (мышь, без касания): Today, хаб, Year, Settings — кадр и DOM = main (кадр:
- *   отличий больше 1 уровня канала — 0; ровно на 1 уровень — шум растеризации Chromium при дробном DPR, печатается как noise1).
+ * compact — окна ВНЕ раскладки C мышью: портрет планшета 820×1180 (DPR 2), узкое окно 690×800, низкое альбомное 1100×500:
+ *   Today, хаб, Year, Settings — кадр и DOM = main (кадр: отличий больше 1 уровня канала — 0; ровно на 1 уровень — шум
+ *   растеризации Chromium при дробном DPR, печатается как noise1). Компакт ноутбука (раскладка C) — в `widths` и pd268/pd290.
  * phone — 393×852 (свет/тьма), 320×568, 852×393, касание + DPR 3: Today, хаб, партия, Year, Settings — кадр и DOM = main.
  * Кадры — design/pd269-shots/; итог — PASS/FAIL построчно и сводка design/pd269-shots/results-<части>-<браузеры>.json.
  */
@@ -121,6 +129,16 @@ const WINDOWS = [[1280, 800], [1440, 900], [1920, 1080]];
 const ZOOMS = [100, 125, 150];
 const css = (W, H, z) => [Math.round(W / (z / 100)), Math.round(H / (z / 100))];
 const isDesk = (w, h) => w >= 1100 && h >= 680;
+/** PD-268: компакт C — альбомное окно от 700 × 501 ниже 1100 × 680 (COMPACT_QUERY), без сайдбара. */
+const isCompact = (w, h) => !isDesk(w, h) && w > h && w >= 700 && h >= 501;
+/** Пункт сайдбара: на компакте сайдбар сначала показывается кнопкой (поверх контента) и сам уходит после выбора. */
+async function side(p, testid, compact) {
+  if (compact) {
+    await p.locator('[data-testid="sidebar-toggle"]:visible').first().click();
+    await p.waitForTimeout(250);
+  }
+  await p.locator(`[data-testid="${testid}"]`).click();
+}
 const settle = (p, ms = 450) => p.waitForTimeout(ms);
 const hashGo = async (p, hash) => {
   await p.evaluate((h) => (location.hash = h), hash);
@@ -149,6 +167,13 @@ async function cols(p) {
       side: vis(side) ? R(side) : null,
       area,
       board: R(layer.querySelector(".play-fit .board")),
+      stage: R(layer.querySelector(".desk-play > .desk-stage")),
+      stageMargin: (() => { const e = layer.querySelector(".desk-play > .desk-stage"); return e ? [getComputedStyle(e).marginLeft, getComputedStyle(e).marginRight] : null; })(),
+      insp: R(layer.querySelector(".desk-play > .desk-insp")),
+      inspCard: R(layer.querySelector(".desk-insp > .card")),
+      inspCardMargin: (() => { const e = layer.querySelector(".desk-insp > .card"); return e ? getComputedStyle(e).marginLeft + " " + getComputedStyle(e).marginRight : null; })(),
+      inspGrid: R(layer.querySelector('.desk-insp [data-testid="grid-inf-section"] .board')),
+      todayNotFit: layer.querySelectorAll(".today:not(.play-fit)").length,
       cells: layer.querySelectorAll(".play-fit .board button.cell").length,
       pad: R(layer.querySelector(".play-fit .pad")),
       actions: R(layer.querySelector(".play-fit .actions")),
@@ -176,24 +201,28 @@ async function runWidths(browser, BR, NEW) {
     for (const z of ZOOMS)
       for (const scheme of ["light", "dark"]) {
         const [w, h] = css(W, H, z);
-        const desk = isDesk(w, h);
+        const full = isDesk(w, h);
+        const compact = isCompact(w, h);
+        const desk = full || compact;
         const tag = `${BR} ${W}x${H}@${z} ${scheme} (${w}x${h})`;
         const { ctx, p, errs } = await open(browser, { w, h, dpr: z / 100, scheme, base: NEW });
         const shot = (name) => (scheme === "light" || z === 100) && p.screenshot({ path: path.join(OUT, `${BR}-${W}x${H}-z${z}-${scheme}-${name}.png`) });
         let m = await cols(p);
-        check(`${tag}: раскладка ${desk ? "с сайдбаром" : "прежняя"}`, desk ? m.shell?.startsWith("shell desk") && !!m.side : m.shell === "shell" && !m.side, { shell: m.shell });
+        check(`${tag}: раскладка ${full ? "с сайдбаром" : compact ? "C компакт (без сайдбара)" : "прежняя"}`, full ? m.shell?.startsWith("shell desk") && !m.shell.includes("compact") && !!m.side : compact ? /^shell desk compact/.test(m.shell ?? "") && !m.side : m.shell === "shell" && !m.side, { shell: m.shell });
         check(`${tag}: нет горизонтальной прокрутки`, m.scrollW <= m.vw, { scrollW: m.scrollW });
         // Today — партия.
         const b = m.board;
         check(`${tag} today: поле 81 клетка, квадрат, в окне${desk ? ", ≤ 720" : ""}`, m.cells === 81 && near(b.width, b.height) && b.left >= 0 && b.right <= m.vw + 0.5 && b.bottom <= m.vh + 0.5 && (!desk || b.width <= 720.5), { board: [Math.round(b.left), Math.round(b.top), Math.round(b.width)] });
         if (desk) {
-          const same = (r) => r && near(r.width, b.width) && near(mid(r), mid(b));
-          check(`${tag} today: панель 1–9, Notes/Undo/Erase, строка Ink — по ширине и центру поля`, same(m.pad) && same(m.actions) && same(m.ink) && near(mid(b), mid(m.area)), { board: rr(b), pad: rr(m.pad), actions: rr(m.actions), ink: rr(m.ink), area: rr(m.area) });
-          check(`${tag} today: поле правее сайдбара, ряд действий в окне`, b.left >= m.side.right && m.actions.bottom <= m.vh + 0.5, { boardLeft: Math.round(b.left), sideRight: Math.round(m.side.right), actionsBottom: Math.round(m.actions.bottom) });
+          // PD-290: партия — раскладка PD-267/268: у области поля нет полей колонки 269, поле по центру области, панель 1–9 и
+          // действия — в инспекторе справа (а не «по ширине поля» под ним).
+          const inI = (r) => r && m.insp && r.left >= m.insp.left - 0.5 && r.right <= m.insp.right + 0.5;
+          check(`${tag} today: область поля без полей колонки, поле по центру области; панель 1–9 и действия — в инспекторе`, !!m.stage && m.stageMargin.every((x) => x === "0px") && near(mid(b), mid(m.stage)) && inI(m.pad) && inI(m.actions) && m.actions.bottom <= m.vh + 0.5, { stage: rr(m.stage), margin: m.stageMargin, board: rr(b), insp: rr(m.insp), pad: rr(m.pad), actions: rr(m.actions) });
+          if (full) check(`${tag} today: поле правее сайдбара`, b.left >= m.side.right, { boardLeft: Math.round(b.left), sideRight: Math.round(m.side.right) });
         }
         await shot("today");
         // Хаб Play.
-        if (desk) await p.locator('[data-testid="side-play"]').click();
+        if (desk) await side(p, "side-play", compact);
         else await p.locator("#tab-play").click();
         await settle(p);
         m = await cols(p);
@@ -201,14 +230,14 @@ async function runWidths(browser, BR, NEW) {
         check(`${tag} hub: ${desk ? `карточки = ${read} по центру` : "прежняя ширина"}`, m.hubCards.length >= 1 && m.hubCards.every((c) => (desk ? colOk(c, m, read) : near(c.width, m.area.width - 32))), { cards: m.hubCards.map(rr), area: rr(m.area) });
         await shot("hub");
         if (desk) {
-          await p.locator('[data-testid="side-mode-classic"]').click();
+          await side(p, "side-mode-classic", compact);
           await settle(p);
           m = await cols(p);
           check(`${tag} mode page: колонка ≤ 480 по центру`, colOk(m.modePage, m, Math.min(480, m.area.width - 32)), { page: rr(m.modePage), area: rr(m.area) });
           await shot("mode");
         }
         // Year.
-        if (desk) await p.locator('[data-testid="side-year"]').click();
+        if (desk) await side(p, "side-year", compact);
         else await p.locator("#tab-year").click();
         await settle(p);
         m = await cols(p);
@@ -247,9 +276,12 @@ async function runSolved(browser, BR, NEW) {
     const { ctx, p, errs } = await open(browser, { w, h, dpr: z / 100, base: NEW });
     await solveToday(p);
     const m = await cols(p);
-    const read = Math.min(640, m.area.width - 32);
-    check(`${tag}: карточка дня = ${read} по центру`, colOk(m.card, m, read), { card: rr(m.card), area: rr(m.area) });
-    check(`${tag}: Grid ∞ = ${read} по центру`, colOk(m.gridInf, m, read), { grid: rr(m.gridInf) });
+    // PD-290: в раскладке C карточка дня и Grid ∞ — в инспекторе (PD-268); `.today:not(.play-fit)` (колонка 640 PD-269) не
+    // появляется, у карточки полей колонки нет; поле на месте того же размера.
+    const inI = (r) => r && m.insp && r.left >= m.insp.left - 0.5 && r.right <= m.insp.right + 0.5;
+    check(`${tag}: Today остаётся партией (.play-fit), колонки 640 нет`, m.todayNotFit === 0 && m.cells === 81 && !!m.stage && m.stageMargin.every((x) => x === "0px"), { notFit: m.todayNotFit, stage: rr(m.stage), margin: m.stageMargin });
+    check(`${tag}: карточка дня — в инспекторе, без полей колонки`, inI(m.inspCard) && m.inspCardMargin === "0px 0px", { card: rr(m.inspCard), margin: m.inspCardMargin, insp: rr(m.insp) });
+    check(`${tag}: Grid ∞ — в инспекторе`, inI(m.inspGrid), { grid: rr(m.inspGrid) });
     check(`${tag}: нет горизонтальной прокрутки, без ошибок JS`, m.scrollW <= m.vw && errs.length === 0, { errs });
     await p.screenshot({ path: path.join(OUT, `${BR}-solved-${W}x${H}-z${z}.png`) });
     await ctx.close();
@@ -563,6 +595,7 @@ async function runCompact(browser, BR, NEW, OLD) {
     const pics = {};
     const doms = {};
     const { ctx, p } = await open(browser, { w, h, dpr: z / 100, base });
+    if (await p.locator(".shell.desk").count()) throw new Error(`${w}x${h}: раскладка C там, где её быть не должно`);
     const take = async (screen) => {
       await p.mouse.move(1, 1);
       await p.waitForTimeout(500);
@@ -579,8 +612,9 @@ async function runCompact(browser, BR, NEW, OLD) {
     await ctx.close();
     return { pics, doms };
   };
-  for (const [W, H, z] of [[1280, 800, 125], [1280, 800, 150], [1440, 900, 150]]) {
-    const [w, h] = css(W, H, z);
+  // PD-290: окна вне раскладки C (портрет планшета, узкое окно, низкое альбомное — правила landscape.css): 269 их не трогает.
+  for (const [W, H, z] of [[820, 1180, 200], [690, 800, 100], [1100, 500, 100]]) {
+    const [w, h] = [W, H];
     // Иконки (шестерёнка, лампочка) при дробном DPR изредка растеризуются на 2–3 уровня иначе — и в main против самого себя.
     // Настоящее отличие раскладки воспроизводится всегда: экран с отличием снимается заново (до 2 повторов, обе сборки).
     const base = await capture(OLD, w, h, z);

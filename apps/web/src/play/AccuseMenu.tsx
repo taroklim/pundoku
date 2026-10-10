@@ -13,7 +13,7 @@ import { useLayoutEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
 import { useModal } from "../shell/useModal";
-import { usePortalHost } from "../shell/portalHost";
+import { fixedOrigin, menuLeftInLayer, usePortalHost } from "../shell/portalHost";
 
 export interface AccuseMenuProps {
   /** Клетка-подсказка: номер и показанная цифра (то, что игрок и так видит на поле). */
@@ -30,11 +30,14 @@ const GAP = 8;
 
 export function AccuseMenu({ cell, digit, anchor, onAccuse, onClose, returnFocus }: AccuseMenuProps) {
   const portalHost = usePortalHost();
+  const inLayer = portalHost !== document.body;
   const { t } = useTranslation();
   const scrim = useRef<HTMLDivElement>(null);
   const root = useRef<HTMLDivElement>(null);
+  const lift = useRef<HTMLDivElement>(null);
   const armed = useRef(false);
-  const [pos, setPos] = useState<{ top: number } | null>(null);
+  // Координаты — окна; `ox`/`oy` — начало отсчёта fixed-потомков затемнения (PD-290, `fixedOrigin`), на них сдвигаются копия и меню.
+  const [pos, setPos] = useState<{ top: number; left?: number; ox: number; oy: number } | null>(null);
   // Фокус — только когда меню стало видимым (до позиционирования оно visibility:hidden, PD-182).
   useModal(scrim, root, { kind: "menu", onClose, returnFocus, initialFocus: '[role="menuitem"]', ready: pos !== null });
   const where = { row: Math.floor(cell / 9) + 1, col: (cell % 9) + 1 };
@@ -44,8 +47,12 @@ export function AccuseMenu({ cell, digit, anchor, onAccuse, onClose, returnFocus
     const vh = window.innerHeight;
     const below = anchor.bottom + GAP;
     const top = below + h <= vh - GAP ? below : Math.max(GAP, anchor.top - h - GAP);
-    setPos({ top });
-  }, [anchor]);
+    // PD-290: в слое окна десктопа C меню не шире 320 — по горизонтали у якоря (на телефоне — во всю ширину, как было).
+    const area = inLayer ? scrim.current?.getBoundingClientRect().left : undefined;
+    const left = area !== undefined && root.current ? menuLeftInLayer(anchor.left, root.current.offsetWidth, area, window.innerWidth) : undefined;
+    const { x: ox, y: oy } = fixedOrigin(lift.current);
+    setPos(left === undefined ? { top, ox, oy } : { top, left, ox, oy });
+  }, [anchor, inLayer]);
 
   return createPortal(
     <div
@@ -60,7 +67,12 @@ export function AccuseMenu({ cell, digit, anchor, onAccuse, onClose, returnFocus
       }}
       data-testid="accuse-scrim"
     >
-      <div className="ctx-lift liar-lift" style={{ top: anchor.top, left: anchor.left, width: anchor.width, height: anchor.height }} aria-hidden="true">
+      <div
+        ref={lift}
+        className="ctx-lift liar-lift"
+        style={{ top: anchor.top - (pos?.oy ?? 0), left: anchor.left - (pos?.ox ?? 0), width: anchor.width, height: anchor.height }}
+        aria-hidden="true"
+      >
         <span className="d given">{digit}</span>
       </div>
       <div
@@ -69,7 +81,7 @@ export function AccuseMenu({ cell, digit, anchor, onAccuse, onClose, returnFocus
         role="menu"
         aria-label={t("liar.menuLabel", { digit, ...where })}
         tabIndex={-1}
-        style={{ top: pos?.top ?? anchor.bottom + GAP, visibility: pos ? "visible" : "hidden", maxHeight: `calc(100dvh - ${GAP * 2}px)` }}
+        style={{ top: pos ? pos.top - pos.oy : anchor.bottom + GAP, ...(pos?.left === undefined ? null : { left: pos.left - pos.ox }), visibility: pos ? "visible" : "hidden", maxHeight: `calc(100dvh - ${GAP * 2}px)` }}
         onClick={(e) => e.stopPropagation()}
         data-testid="accuse-menu"
       >

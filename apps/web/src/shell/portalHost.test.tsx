@@ -7,7 +7,7 @@
 import { act } from "react";
 import { createRoot } from "react-dom/client";
 import { afterEach, describe, expect, it } from "vitest";
-import { inertOutside, PortalHostContext, usePortalHost } from "./portalHost";
+import { fixedOrigin, inertOutside, menuLeftInLayer, PortalHostContext, usePortalHost } from "./portalHost";
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
@@ -64,5 +64,38 @@ describe("usePortalHost", () => {
     act(() => root.unmount());
     expect(seen[0]).toBe(document.body);
     expect(seen.at(-1)).toBe(layer);
+  });
+});
+
+describe("menuLeftInLayer (PD-290)", () => {
+  it("левой кромкой по якорю; не левее области контента + 10 и не правее окна − 10", () => {
+    // 1920 × 1080, сайдбар: область с 248; меню 320.
+    expect(menuLeftInLayer(700, 320, 248, 1920)).toBe(700);
+    expect(menuLeftInLayer(100, 320, 248, 1920)).toBe(258);
+    expect(menuLeftInLayer(1800, 320, 248, 1920)).toBe(1590);
+    // Компакт без сайдбара: область с 0.
+    expect(menuLeftInLayer(3.4, 320, 0, 1024)).toBe(10);
+  });
+});
+
+describe("fixedOrigin (PD-290)", () => {
+  const fixedAt = (left: number, top: number, rect: { left: number; top: number; width: number; height: number }) => {
+    const el = document.createElement("div");
+    el.style.position = "fixed";
+    el.style.left = `${left}px`;
+    el.style.top = `${top}px`;
+    document.body.append(el);
+    el.getBoundingClientRect = () => ({ ...rect, right: rect.left + rect.width, bottom: rect.top + rect.height, x: rect.left, y: rect.top, toJSON: () => null });
+    return el;
+  };
+  afterEach(() => document.body.replaceChildren());
+
+  it("затемнение с backdrop-filter — containing block: копия у left 700 оказалась на 948 → начало отсчёта (248, 0)", () => {
+    expect(fixedOrigin(fixedAt(700, 300, { left: 948, top: 300, width: 79, height: 79 }))).toEqual({ x: 248, y: 0 });
+  });
+  it("от окна (телефон, Reduce Transparency) и без раскладки (jsdom) — (0, 0)", () => {
+    expect(fixedOrigin(fixedAt(700, 300, { left: 700, top: 300, width: 79, height: 79 }))).toEqual({ x: 0, y: 0 });
+    expect(fixedOrigin(fixedAt(700, 300, { left: 0, top: 0, width: 0, height: 0 }))).toEqual({ x: 0, y: 0 });
+    expect(fixedOrigin(null)).toEqual({ x: 0, y: 0 });
   });
 });

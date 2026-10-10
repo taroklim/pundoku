@@ -32,3 +32,30 @@ export function inertOutside(el: HTMLElement | null): () => void {
     for (const s of inerted) s.removeAttribute("inert");
   };
 }
+
+/**
+ * PD-290: контекстное меню (строка режима, клетка Лжеца) в слое окна десктопа C — не шире `--w-menu` (desk-screens.css) и стоит
+ * у своей строки/клетки, а не во всю область контента: левой кромкой по якорю, но не левее области (край затемнения + `gap`) и
+ * не правее окна − `gap`. Телефон и компакт без слоя этого не вызывают — там меню, как раньше, во всю ширину.
+ */
+export function menuLeftInLayer(anchorLeft: number, menuWidth: number, areaLeft: number, viewportWidth: number, gap = 10): number {
+  return Math.round(Math.max(areaLeft + gap, Math.min(anchorLeft, viewportWidth - gap - menuWidth)));
+}
+
+/**
+ * PD-290: начало координат `position: fixed` для элемента внутри затемнения. `backdrop-filter` у `.ctx-scrim` (размытый фон
+ * контекстного меню) делает затемнение containing block для fixed-потомков: в слое окна десктопа C затемнение начинается с
+ * `--desk-x`, и копия строки/клетки и меню уезжали вправо на ширину сайдбара. Под Reduce Transparency / Increase Contrast
+ * размытия нет — координаты снова от окна. Поэтому не угадываем по CSS, а меряем по факту: где элемент оказался минус его
+ * `left`/`top`. Без раскладки (jsdom) — (0, 0).
+ */
+export function fixedOrigin(el: HTMLElement | null): { readonly x: number; readonly y: number } {
+  if (!el) return { x: 0, y: 0 };
+  const r = el.getBoundingClientRect();
+  if (r.width === 0 && r.height === 0) return { x: 0, y: 0 };
+  const cs = getComputedStyle(el);
+  const x = r.left - parseFloat(cs.left) - (parseFloat(cs.marginLeft) || 0);
+  const y = r.top - parseFloat(cs.top) - (parseFloat(cs.marginTop) || 0);
+  const clean = (v: number) => (Number.isFinite(v) && Math.abs(v) >= 0.5 ? v : 0);
+  return { x: clean(x), y: clean(y) };
+}

@@ -1,9 +1,10 @@
 /**
  * PD-269: сторожа по тексту desk-screens.css (раскладку jsdom не считает; живая проверка ширин, наведения, курсора и фокуса,
- * а также «телефон и компакт не изменились» попиксельно — design/pd269-check.mjs). Держат: (1) каждый селектор — только для
- * раскладки с сайдбаром (начинается с `.shell.desk`); (2) наведение и курсор — только при точном указателе; (3) шкала ширин —
- * четыре значения §2 + потолок поля, колонки экранов стоят на них; (4) наведение — три производных значения §2 (светлая/тёмная),
- * нового оттенка нет; (5) файл подключён.
+ * а также «телефон не изменился» попиксельно — design/pd269-check.mjs, сведение с PD-267/268 — design/pd290-check.mjs).
+ * Держат: (1) каждый селектор — только для раскладки C (начинается с `.shell.desk`); (2) наведение и курсор — только при точном
+ * указателе; (3) шкала ширин — четыре значения §2 + потолок поля, колонки экранов, шиты и меню слоя окна стоят на них; партия —
+ * без своих полей (PD-290); (4) наведение — три производных значения §2 (светлая/тёмная), нового оттенка нет; (5) порядок
+ * подключения.
  */
 import { describe, expect, it } from "vitest";
 
@@ -59,7 +60,7 @@ function blocks(head: string): string[] {
 const HOVER = "@media (hover: hover) and (pointer: fine)";
 
 describe("desk-screens.css", () => {
-  it("каждый селектор начинается с .shell.desk — телефон, ландшафт и компакт правил не видят", () => {
+  it("каждый селектор начинается с .shell.desk — телефон и его ландшафт правил не видят", () => {
     const all = rules(css).flatMap((r) => r.sel);
     expect(all.length).toBeGreaterThan(30);
     expect(all.filter((s) => !/^\.shell\.desk\b/.test(s))).toEqual([]);
@@ -87,12 +88,21 @@ describe("desk-screens.css", () => {
     expect(col(".shell.desk .hub-scroll > :not(.mode-page)")).toContain("var(--w-read)");
     expect(col(".shell.desk .settings > :not(.settings-navbar)")).toContain("var(--w-read)");
     expect(col(".shell.desk .year > :not(.toolbar, .year-totals)")).toContain("var(--w-year)");
-    expect(col(".shell.desk .today:not(.play-fit) > .card")).toContain("var(--w-read)");
-    expect(col(".shell.desk .play-fit .board")).toMatch(/width: min\(100%, 100dvh - var\(--chrome\), var\(--w-field\)\);/);
-    expect(col(".shell.desk .play-fit")).toContain("--desk-col: min(var(--w-field), 100dvh - var(--chrome))");
-    expect(col(".shell.desk .play-fit > :not(.toolbar, .subline, .sr-only, .hint-dock)")).toContain("var(--desk-col)");
+    // PD-290: шиты и меню слоя окна (PD-267) — 560 / 320.
+    expect(col(".shell.desk > .desk-layer :is(.mode-sheet, .st-asheet, .ink-sheet, .tl-sheet, .ysheet)")).toContain("max-width: var(--w-sheet);");
+    expect(col(".shell.desk > .desk-layer :is(.mode-sheet, .st-asheet)")).toContain("margin-inline: auto;");
+    expect(col(".shell.desk > .desk-layer .menu")).toContain("max-width: min(var(--w-menu), 100% - 20px);");
+    expect(col(".shell.desk > .desk-layer .ctx-menu")).toMatch(/right: auto; width: min\(var\(--w-menu\), 100% - var\(--desk-x\) - 20px\);/);
     // Никаких «во всю ширину окна»: ни vw, ни 100vw в колонках.
     expect(css).not.toMatch(/\d+vw\b/);
+  });
+
+  it("партия — раскладка PD-267/268: своих полей и ширин партии здесь нет (поле и инспектор не сужаются, PD-290)", () => {
+    const all = rules(css);
+    expect(all.flatMap((r) => r.sel).filter((x) => /\.(play-fit|desk-play|desk-stage|desk-insp|today)\b/.test(x))).toEqual([]);
+    expect(css).not.toMatch(/--desk-col/);
+    // Поле — только в desk-play.css (потолок 720 = --w-field): здесь у правил с .board нет ни ширины, ни полей.
+    expect(all.filter((r) => r.sel.some((x) => x.includes(".board")) && /width|margin/.test(r.body))).toEqual([]);
   });
 
   it("наведение — три производных значения §2, светлая и тёмная; без нового оттенка", () => {
@@ -110,15 +120,13 @@ describe("desk-screens.css", () => {
     expect(css).toMatch(/\.shell\.desk :is\(\.settings-row, \.settings-rowbtn\):focus-visible \{ outline: 2px solid transparent; outline-offset: -2px; border-radius: 0; box-shadow: inset 0 0 0 2px var\(--ink\); \}/);
     expect(css).toMatch(/\.shell\.desk \.ink-row:focus-visible \{[^}]*box-shadow: inset 0 0 0 2px var\(--ink\);/);
     expect(css).toContain('.shell.desk [tabindex="-1"]:focus:not(:focus-visible) { outline: none; }');
+    expect(css).toContain(".shell.desk .year-month:focus-visible { outline-offset: -2px; }");
   });
 
-  it("подключён в main.tsx после desk.css и до landscape.css (тот — последний)", () => {
-    const main = raw("../main.tsx");
-    const a = main.indexOf('import "./styles/desk.css";');
-    const b = main.indexOf('import "./styles/desk-screens.css";');
-    const c = main.indexOf('import "./styles/landscape.css";');
-    expect(a).toBeGreaterThan(0);
-    expect(b).toBeGreaterThan(a);
-    expect(c).toBeGreaterThan(b);
+  it("подключён в main.tsx последним слоем раскладки C: desk → desk-play → desk-result → desk-screens → landscape (PD-290)", () => {
+    const imports = [...raw("../main.tsx").matchAll(/import "\.\/styles\/([\w-]+\.css)";/g)].map((m) => m[1]);
+    const at = imports.indexOf("desk-screens.css");
+    expect(imports.slice(at - 3, at + 2)).toEqual(["desk.css", "desk-play.css", "desk-result.css", "desk-screens.css", "landscape.css"]);
+    expect(imports.at(-1)).toBe("landscape.css");
   });
 });

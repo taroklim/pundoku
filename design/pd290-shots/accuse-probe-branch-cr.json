@@ -1,0 +1,434 @@
+[
+  {
+    "br": "cr",
+    "build": "branch",
+    "kind": "phone",
+    "today": "open",
+    "how": "key-A",
+    "ok": true,
+    "cell": [
+      138,
+      193,
+      39,
+      39
+    ],
+    "cellI": "30",
+    "lift": [
+      138,
+      193,
+      39,
+      39
+    ],
+    "menu": [
+      10,
+      240,
+      373,
+      95
+    ],
+    "firstBoardPane": "today",
+    "activePane": "play",
+    "errs": [],
+    "focusAfterEsc": {
+      "tag": "BODY",
+      "i": null,
+      "pane": null,
+      "visible": "visible"
+    }
+  },
+  {
+    "br": "cr",
+    "build": "branch",
+    "kind": "phone",
+    "today": "open",
+    "how": "more-accuse",
+    "ok": true,
+    "cell": [
+      138,
+      193,
+      39,
+      39
+    ],
+    "cellI": "30",
+    "lift": [
+      138,
+      193,
+      39,
+      39
+    ],
+    "menu": [
+      10,
+      240,
+      373,
+      95
+    ],
+    "firstBoardPane": "today",
+    "activePane": "play",
+    "errs": [],
+    "focusAfterEsc": {
+      "tag": "BODY",
+      "i": null,
+      "pane": null,
+      "visible": "visible"
+    }
+  },
+  {
+    "br": "cr",
+    "build": "branch",
+    "kind": "phone",
+    "today": "open",
+    "how": "cell-gesture",
+    "ok": true,
+    "cell": [
+      138,
+      193,
+      39,
+      39
+    ],
+    "cellI": "30",
+    "lift": [
+      138,
+      193,
+      39,
+      39
+    ],
+    "menu": [
+      10,
+      240,
+      373,
+      95
+    ],
+    "firstBoardPane": "today",
+    "activePane": "play",
+    "errs": [],
+    "focusAfterEsc": {
+      "tag": "BUTTON",
+      "i": "30",
+      "pane": "play",
+      "visible": "visible"
+    }
+  },
+  {
+    "br": "cr",
+    "build": "branch",
+    "kind": "phone",
+    "today": "solved",
+    "how": "key-A",
+    "ok": false,
+    "cell": [
+      177,
+      150,
+      39,
+      39
+    ],
+    "cellI": "22",
+    "lift": [
+      177,
+      967,
+      39,
+      39
+    ],
+    "menu": [
+      10,
+      864,
+      373,
+      95
+    ],
+    "firstBoardPane": "today",
+    "activePane": "play",
+    "errs": [],
+    "focusAfterEsc": {
+      "tag": "BODY",
+      "i": null,
+      "pane": null,
+      "visible": "visible"
+    }
+  },
+  {
+    "br": "cr",
+    "build": "branch",
+    "kind": "phone",
+    "today": "solved",
+    "how": "more-accuse",
+    "ok": false,
+    "cell": [
+      177,
+      150,
+      39,
+      39
+    ],
+    "cellI": "22",
+    "lift": [
+      177,
+      967,
+      39,
+      39
+    ],
+    "menu": [
+      10,
+      864,
+      373,
+      95
+    ],
+    "firstBoardPane": "today",
+    "activePane": "play",
+    "errs": [],
+    "focusAfterEsc": {
+      "tag": "BODY",
+      "i": null,
+      "pane": null,
+      "visible": "visible"
+    }
+  },
+  {
+    "br": "cr",
+    "build": "branch",
+    "kind": "phone",
+    "today": "solved",
+    "how": "cell-gesture",
+    "ok": true,
+    "cell": [
+      177,
+      150,
+      39,
+      39
+    ],
+    "cellI": "22",
+    "lift": [
+      177,
+      150,
+      39,
+      39
+    ],
+    "menu": [
+      10,
+      197,
+      373,
+      95
+    ],
+    "firstBoardPane": "today",
+    "activePane": "play",
+    "errs": [],
+    "focusAfterEsc": {
+      "tag": "BUTTON",
+      "i": "22",
+      "pane": "play",
+      "visible": "visible"
+    }
+  },
+  {
+    "br": "cr",
+    "build": "branch",
+    "kind": "desk",
+    "today": "open",
+    "how": "key-A",
+    "ok": true,
+    "cell": [
+      498,
+      392,
+      79,
+      79
+    ],
+    "cellI": "38",
+    "lift": [
+      498,
+      392,
+      79,
+      79
+    ],
+    "menu": [
+      498,
+      480,
+      320,
+      95
+    ],
+    "firstBoardPane": "today",
+    "activePane": "play",
+    "errs": [],
+    "focusAfterEsc": {
+      "tag": "BODY",
+      "i": null,
+      "pane": null,
+      "visible": "visible"
+    }
+  },
+  {
+    "br": "cr",
+    "build": "branch",
+    "kind": "desk",
+    "today": "open",
+    "how": "more-accuse",
+    "ok": true,
+    "cell": [
+      498,
+      392,
+      79,
+      79
+    ],
+    "cellI": "38",
+    "lift": [
+      498,
+      392,
+      79,
+      79
+    ],
+    "menu": [
+      498,
+      480,
+      320,
+      95
+    ],
+    "firstBoardPane": "today",
+    "activePane": "play",
+    "errs": [],
+    "focusAfterEsc": {
+      "tag": "BODY",
+      "i": null,
+      "pane": null,
+      "visible": "visible"
+    }
+  },
+  {
+    "br": "cr",
+    "build": "branch",
+    "kind": "desk",
+    "today": "open",
+    "how": "cell-gesture",
+    "ok": true,
+    "cell": [
+      498,
+      392,
+      79,
+      79
+    ],
+    "cellI": "38",
+    "lift": [
+      498,
+      392,
+      79,
+      79
+    ],
+    "menu": [
+      498,
+      480,
+      320,
+      95
+    ],
+    "firstBoardPane": "today",
+    "activePane": "play",
+    "errs": [],
+    "focusAfterEsc": {
+      "tag": "BUTTON",
+      "i": "38",
+      "pane": "play",
+      "visible": "visible"
+    }
+  },
+  {
+    "br": "cr",
+    "build": "branch",
+    "kind": "desk",
+    "today": "solved",
+    "how": "key-A",
+    "ok": true,
+    "cell": [
+      340,
+      392,
+      79,
+      79
+    ],
+    "cellI": "36",
+    "lift": [
+      340,
+      392,
+      79,
+      79
+    ],
+    "menu": [
+      340,
+      480,
+      320,
+      95
+    ],
+    "firstBoardPane": "today",
+    "activePane": "play",
+    "errs": [],
+    "focusAfterEsc": {
+      "tag": "BODY",
+      "i": null,
+      "pane": null,
+      "visible": "visible"
+    }
+  },
+  {
+    "br": "cr",
+    "build": "branch",
+    "kind": "desk",
+    "today": "solved",
+    "how": "more-accuse",
+    "ok": true,
+    "cell": [
+      340,
+      392,
+      79,
+      79
+    ],
+    "cellI": "36",
+    "lift": [
+      340,
+      392,
+      79,
+      79
+    ],
+    "menu": [
+      340,
+      480,
+      320,
+      95
+    ],
+    "firstBoardPane": "today",
+    "activePane": "play",
+    "errs": [],
+    "focusAfterEsc": {
+      "tag": "BODY",
+      "i": null,
+      "pane": null,
+      "visible": "visible"
+    }
+  },
+  {
+    "br": "cr",
+    "build": "branch",
+    "kind": "desk",
+    "today": "solved",
+    "how": "cell-gesture",
+    "ok": true,
+    "cell": [
+      340,
+      392,
+      79,
+      79
+    ],
+    "cellI": "36",
+    "lift": [
+      340,
+      392,
+      79,
+      79
+    ],
+    "menu": [
+      340,
+      480,
+      320,
+      95
+    ],
+    "firstBoardPane": "today",
+    "activePane": "play",
+    "errs": [],
+    "focusAfterEsc": {
+      "tag": "BUTTON",
+      "i": "36",
+      "pane": "play",
+      "visible": "visible"
+    }
+  }
+]
