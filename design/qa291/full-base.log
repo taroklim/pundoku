@@ -1,0 +1,143 @@
+MODEMENU cr base p393-fresh-light {"ctxName":"p393-fresh-light","modeMenu":{"menu":[10,314,373,95],"lift":[16,228,361,78],"ih":852},"modeFocus":{"tag":"BUTTON","testid":"mode-liar","i":null,"pane":"play"}}
+MORE cr base p393-fresh-light {"menu":[153,51,230,145],"items":["menu-new","menu-fill","menu-accuse"],"focus":{"tag":"BUTTON","testid":"more-button","i":null,"pane":"play"}}
+BUG  cr base p393-fresh-light key-A first lift=true in=true near=true focus=false
+BUG  cr base p393-fresh-light key-A mid lift=true in=true near=true focus=false
+BUG  cr base p393-fresh-light key-A last lift=true in=true near=true focus=false
+BUG  cr base p393-fresh-light key-A-focused first lift=true in=true near=true focus=false
+BUG  cr base p393-fresh-light key-A-focused last lift=true in=true near=true focus=false
+BUG  cr base p393-fresh-light more-accuse first lift=true in=true near=true focus=false
+BUG  cr base p393-fresh-light more-accuse last lift=true in=true near=true focus=false
+OK   cr base p393-fresh-light rclick first lift=true in=true near=true focus=true
+OK   cr base p393-fresh-light rclick last lift=true in=true near=true focus=true
+OK   cr base p393-fresh-light longpress-mouse first lift=true in=true near=true focus=true
+OK   cr base p393-fresh-light longpress-mouse last lift=true in=true near=true focus=true
+BUG  cr base p393-fresh-light kbd-nav-A first lift=true in=true near=true focus=false
+BUG  cr base p393-fresh-light kbd-nav-A last lift=true in=true near=true focus=false
+OK   cr base p393-fresh-light longpress-touch first lift=true in=true near=true focus=true
+OK   cr base p393-fresh-light longpress-touch last lift=true in=true near=true focus=true
+ACT cr base p393-fresh-light accusations=3 caught=true menuGone=true liftOk=true
+MODEMENU cr base p393-solved-light {"ctxName":"p393-solved-light","modeMenu":{"menu":[10,314,373,95],"lift":[16,228,361,78],"ih":852},"modeFocus":{"tag":"BUTTON","testid":"mode-liar","i":null,"pane":"play"}}
+MORE cr base p393-solved-light {"menu":[153,51,230,145],"items":["menu-new","menu-fill","menu-accuse"],"focus":{"tag":"BUTTON","testid":"more-button","i":null,"pane":"play"}}
+BUG  cr base p393-solved-light key-A first lift=false in=false near=false focus=false
+BUG  cr base p393-solved-light key-A mid lift=false in=false near=false focus=false
+BUG  cr base p393-solved-light key-A last lift=false in=false near=false focus=false
+BUG  cr base p393-solved-light key-A-focused first lift=false in=false near=false focus=false
+BUG  cr base p393-solved-light key-A-focused last lift=false in=false near=false focus=false
+BUG  cr base p393-solved-light more-accuse first lift=false in=false near=false focus=false
+BUG  cr base p393-solved-light more-accuse last lift=false in=false near=false focus=false
+OK   cr base p393-solved-light rclick first lift=true in=true near=true focus=true
+OK   cr base p393-solved-light rclick last lift=true in=true near=true focus=true
+OK   cr base p393-solved-light longpress-mouse first lift=true in=true near=true focus=true
+OK   cr base p393-solved-light longpress-mouse last lift=true in=true near=true focus=true
+BUG  cr base p393-solved-light kbd-nav-A first lift=false in=false near=false focus=false
+BUG  cr base p393-solved-light kbd-nav-A last lift=false in=false near=false focus=false
+OK   cr base p393-solved-light longpress-touch first lift=true in=true near=true focus=true
+OK   cr base p393-solved-light longpress-touch last lift=true in=true near=true focus=true
+ERR cr p393-solved-light locator.click: Timeout 30000ms exceeded.
+MODEMENU cr base p375-solved-light {"ctxName":"p375-solved-light","modeMenu":{"menu":[10,331,355,95],"lift":[16,245,343,78],"ih":667},"modeFocus":{"tag":"BUTTON","testid":"mode-liar","i":null,"pane":"play"}}
+MORE cr base p375-solved-light {"menu":[135,51,230,145],"items":["menu-new","menu-fill","menu-accuse"],"focus":{"tag":"BUTTON","testid":"more-button","i":null,"pane":"play"}}
+BUG  cr base p375-solved-light key-A first lift=false in=false near=false focus=false
+BUG  cr base p375-solved-light key-A mid lift=false in=false near=false focus=false
+BUG  cr base p375-solved-light key-A last lift=false in=false near=false focus=false
+BUG  cr base p375-solved-light key-A-focused first lift=false in=false near=false focus=false
+BUG  cr base p375-solved-light key-A-focused last lift=false in=false near=false focus=false
+BUG  cr base p375-solved-light more-accuse first lift=false in=false near=false focus=false
+BUG  cr base p375-solved-light more-accuse last lift=false in=false near=false focus=false
+OK   cr base p375-solved-light rclick first lift=true in=true near=true focus=true
+OK   cr base p375-solved-light rclick last lift=true in=true near=true focus=true
+OK   cr base p375-solved-light longpress-mouse first lift=true in=true near=true focus=true
+OK   cr base p375-solved-light longpress-mouse last lift=true in=true near=true focus=true
+BUG  cr base p375-solved-light kbd-nav-A first lift=false in=false near=false focus=false
+BUG  cr base p375-solved-light kbd-nav-A last lift=false in=false near=false focus=false
+OK   cr base p375-solved-light longpress-touch first lift=true in=true near=true focus=true
+OK   cr base p375-solved-light longpress-touch last lift=true in=true near=true focus=true
+ERR cr p375-solved-light locator.click: Timeout 30000ms exceeded.
+MODEMENU cr base d1440-solved-light {"ctxName":"d1440-solved-light","modeMenu":{"menu":[10,263,1420,79],"lift":[16,194,1408,61],"ih":900},"modeFocus":{"tag":"BUTTON","testid":"mode-liar","i":null,"pane":"play"}}
+MORE cr base d1440-solved-light {"menu":[1200,51,230,145],"items":["menu-new","menu-fill","menu-accuse"],"focus":{"tag":"BUTTON","testid":"more-button","i":null,"pane":"play"}}
+BUG  cr base d1440-solved-light key-A first lift=false in=false near=false focus=false
+BUG  cr base d1440-solved-light key-A mid lift=false in=false near=false focus=false
+BUG  cr base d1440-solved-light key-A last lift=false in=false near=false focus=false
+BUG  cr base d1440-solved-light key-A-focused first lift=false in=false near=false focus=false
+BUG  cr base d1440-solved-light key-A-focused last lift=false in=false near=false focus=false
+BUG  cr base d1440-solved-light more-accuse first lift=false in=false near=false focus=false
+BUG  cr base d1440-solved-light more-accuse last lift=false in=false near=false focus=false
+OK   cr base d1440-solved-light rclick first lift=true in=true near=true focus=true
+OK   cr base d1440-solved-light rclick last lift=true in=true near=true focus=true
+OK   cr base d1440-solved-light longpress-mouse first lift=true in=true near=true focus=true
+OK   cr base d1440-solved-light longpress-mouse last lift=true in=true near=true focus=true
+BUG  cr base d1440-solved-light kbd-nav-A first lift=false in=false near=false focus=false
+BUG  cr base d1440-solved-light kbd-nav-A last lift=false in=false near=false focus=false
+ERR cr d1440-solved-light locator.click: Timeout 30000ms exceeded.
+MODE cr base p393-classic accuseMenuAfterA=0 items=["menu-new","menu-fill"] errs=0
+MODE cr base d1440-classic accuseMenuAfterA=0 items=["menu-new","menu-fill"] errs=0
+MODE cr base p393-ink accuseMenuAfterA=0 items=["menu-new","menu-fill"] errs=0
+MODE cr base d1440-ink accuseMenuAfterA=0 items=["menu-new","menu-fill"] errs=0
+MODEMENU wk base p393-fresh-light {"ctxName":"p393-fresh-light","modeMenu":{"menu":[10,255,373,89],"lift":[16,182,361,65],"ih":852},"modeFocus":{"tag":"BUTTON","testid":"mode-liar","i":null,"pane":"play"}}
+MORE wk base p393-fresh-light {"menu":[153,48,230,138],"items":["menu-new","menu-fill","menu-accuse"],"focus":{"tag":"BUTTON","testid":"more-button","i":null,"pane":"play"}}
+BUG  wk base p393-fresh-light key-A first lift=true in=true near=true focus=false
+BUG  wk base p393-fresh-light key-A mid lift=true in=true near=true focus=false
+BUG  wk base p393-fresh-light key-A last lift=true in=true near=true focus=false
+BUG  wk base p393-fresh-light key-A-focused first lift=true in=true near=true focus=false
+BUG  wk base p393-fresh-light key-A-focused last lift=true in=true near=true focus=false
+BUG  wk base p393-fresh-light more-accuse first lift=true in=true near=true focus=false
+BUG  wk base p393-fresh-light more-accuse last lift=true in=true near=true focus=false
+OK   wk base p393-fresh-light rclick first lift=true in=true near=true focus=true
+OK   wk base p393-fresh-light rclick last lift=true in=true near=true focus=true
+OK   wk base p393-fresh-light longpress-mouse first lift=true in=true near=true focus=true
+OK   wk base p393-fresh-light longpress-mouse last lift=true in=true near=true focus=true
+BUG  wk base p393-fresh-light kbd-nav-A first lift=true in=true near=true focus=false
+BUG  wk base p393-fresh-light kbd-nav-A last lift=true in=true near=true focus=false
+ACT wk base p393-fresh-light accusations=20 caught=true menuGone=true liftOk=true
+MODEMENU wk base p393-solved-light {"ctxName":"p393-solved-light","modeMenu":{"menu":[10,255,373,89],"lift":[16,182,361,65],"ih":852},"modeFocus":{"tag":"BUTTON","testid":"mode-liar","i":null,"pane":"play"}}
+MORE wk base p393-solved-light {"menu":[153,48,230,138],"items":["menu-new","menu-fill","menu-accuse"],"focus":{"tag":"BUTTON","testid":"more-button","i":null,"pane":"play"}}
+BUG  wk base p393-solved-light key-A first lift=false in=true near=false focus=false
+BUG  wk base p393-solved-light key-A mid lift=false in=true near=false focus=false
+BUG  wk base p393-solved-light key-A last lift=false in=false near=false focus=false
+BUG  wk base p393-solved-light key-A-focused first lift=false in=true near=false focus=false
+BUG  wk base p393-solved-light key-A-focused last lift=false in=false near=false focus=false
+BUG  wk base p393-solved-light more-accuse first lift=false in=true near=false focus=false
+BUG  wk base p393-solved-light more-accuse last lift=false in=false near=false focus=false
+OK   wk base p393-solved-light rclick first lift=true in=true near=true focus=true
+OK   wk base p393-solved-light rclick last lift=true in=true near=true focus=true
+OK   wk base p393-solved-light longpress-mouse first lift=true in=true near=true focus=true
+OK   wk base p393-solved-light longpress-mouse last lift=true in=true near=true focus=true
+BUG  wk base p393-solved-light kbd-nav-A first lift=false in=true near=false focus=false
+BUG  wk base p393-solved-light kbd-nav-A last lift=false in=false near=false focus=false
+ERR wk p393-solved-light locator.click: Timeout 30000ms exceeded.
+MODEMENU wk base p375-solved-light {"ctxName":"p375-solved-light","modeMenu":{"menu":[10,255,355,89],"lift":[16,182,343,65],"ih":667},"modeFocus":{"tag":"BUTTON","testid":"mode-liar","i":null,"pane":"play"}}
+MORE wk base p375-solved-light {"menu":[135,48,230,138],"items":["menu-new","menu-fill","menu-accuse"],"focus":{"tag":"BUTTON","testid":"more-button","i":null,"pane":"play"}}
+BUG  wk base p375-solved-light key-A first lift=false in=false near=false focus=false
+BUG  wk base p375-solved-light key-A mid lift=false in=false near=false focus=false
+BUG  wk base p375-solved-light key-A last lift=false in=false near=false focus=false
+BUG  wk base p375-solved-light key-A-focused first lift=false in=false near=false focus=false
+BUG  wk base p375-solved-light key-A-focused last lift=false in=false near=false focus=false
+BUG  wk base p375-solved-light more-accuse first lift=false in=false near=false focus=false
+BUG  wk base p375-solved-light more-accuse last lift=false in=false near=false focus=false
+OK   wk base p375-solved-light rclick first lift=true in=true near=true focus=true
+OK   wk base p375-solved-light rclick last lift=true in=true near=true focus=true
+OK   wk base p375-solved-light longpress-mouse first lift=true in=true near=true focus=true
+OK   wk base p375-solved-light longpress-mouse last lift=true in=true near=true focus=true
+BUG  wk base p375-solved-light kbd-nav-A first lift=false in=false near=false focus=false
+BUG  wk base p375-solved-light kbd-nav-A last lift=false in=false near=false focus=false
+ERR wk p375-solved-light locator.click: Timeout 30000ms exceeded.
+MODEMENU wk base d1440-solved-light {"ctxName":"d1440-solved-light","modeMenu":{"menu":[10,229,1420,76],"lift":[16,169,1408,52],"ih":900},"modeFocus":{"tag":"BUTTON","testid":"mode-liar","i":null,"pane":"play"}}
+MORE wk base d1440-solved-light {"menu":[1200,48,230,138],"items":["menu-new","menu-fill","menu-accuse"],"focus":{"tag":"BUTTON","testid":"more-button","i":null,"pane":"play"}}
+BUG  wk base d1440-solved-light key-A first lift=false in=false near=false focus=false
+BUG  wk base d1440-solved-light key-A mid lift=false in=false near=false focus=false
+BUG  wk base d1440-solved-light key-A last lift=false in=false near=false focus=false
+BUG  wk base d1440-solved-light key-A-focused first lift=false in=false near=false focus=false
+BUG  wk base d1440-solved-light key-A-focused last lift=false in=false near=false focus=false
+BUG  wk base d1440-solved-light more-accuse first lift=false in=false near=false focus=false
+BUG  wk base d1440-solved-light more-accuse last lift=false in=false near=false focus=false
+OK   wk base d1440-solved-light rclick first lift=true in=true near=true focus=true
+OK   wk base d1440-solved-light rclick last lift=true in=true near=true focus=true
+OK   wk base d1440-solved-light longpress-mouse first lift=true in=true near=true focus=true
+OK   wk base d1440-solved-light longpress-mouse last lift=true in=true near=true focus=true
+BUG  wk base d1440-solved-light kbd-nav-A first lift=false in=false near=false focus=false
+BUG  wk base d1440-solved-light kbd-nav-A last lift=false in=false near=false focus=false
+ERR wk d1440-solved-light locator.click: Timeout 30000ms exceeded.
+MODE wk base p393-classic accuseMenuAfterA=0 items=["menu-new","menu-fill"] errs=0
+MODE wk base d1440-classic accuseMenuAfterA=0 items=["menu-new","menu-fill"] errs=0
+MODE wk base p393-ink accuseMenuAfterA=0 items=["menu-new","menu-fill"] errs=0
+MODE wk base d1440-ink accuseMenuAfterA=0 items=["menu-new","menu-fill"] errs=0
+48 PASS / 126 judged; bad=78

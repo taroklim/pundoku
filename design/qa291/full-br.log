@@ -1,0 +1,475 @@
+MODEMENU cr br p393-fresh-light {"ctxName":"p393-fresh-light","modeMenu":{"menu":[10,314,373,95],"lift":[16,228,361,78],"ih":852},"modeFocus":{"tag":"BUTTON","testid":"mode-liar","i":null,"pane":"play"}}
+MORE cr br p393-fresh-light {"menu":[153,51,230,145],"items":["menu-new","menu-fill","menu-accuse"],"focus":{"tag":"BUTTON","testid":"more-button","i":null,"pane":"play"}}
+OK   cr br p393-fresh-light key-A first lift=true in=true near=true focus=true
+OK   cr br p393-fresh-light key-A mid lift=true in=true near=true focus=true
+OK   cr br p393-fresh-light key-A last lift=true in=true near=true focus=true
+OK   cr br p393-fresh-light key-A-focused first lift=true in=true near=true focus=true
+OK   cr br p393-fresh-light key-A-focused last lift=true in=true near=true focus=true
+OK   cr br p393-fresh-light more-accuse first lift=true in=true near=true focus=true
+OK   cr br p393-fresh-light more-accuse last lift=true in=true near=true focus=true
+OK   cr br p393-fresh-light rclick first lift=true in=true near=true focus=true
+OK   cr br p393-fresh-light rclick last lift=true in=true near=true focus=true
+OK   cr br p393-fresh-light longpress-mouse first lift=true in=true near=true focus=true
+OK   cr br p393-fresh-light longpress-mouse last lift=true in=true near=true focus=true
+OK   cr br p393-fresh-light kbd-nav-A first lift=true in=true near=true focus=true
+OK   cr br p393-fresh-light kbd-nav-A last lift=true in=true near=true focus=true
+OK   cr br p393-fresh-light longpress-touch first lift=true in=true near=true focus=true
+OK   cr br p393-fresh-light longpress-touch last lift=true in=true near=true focus=true
+ACT cr br p393-fresh-light accusations=23 caught=true menuGone=true liftOk=true
+MODEMENU cr br p393-fresh-dark {"ctxName":"p393-fresh-dark","modeMenu":{"menu":[10,314,373,95],"lift":[16,228,361,78],"ih":852},"modeFocus":{"tag":"BUTTON","testid":"mode-liar","i":null,"pane":"play"}}
+MORE cr br p393-fresh-dark {"menu":[153,51,230,145],"items":["menu-new","menu-fill","menu-accuse"],"focus":{"tag":"BUTTON","testid":"more-button","i":null,"pane":"play"}}
+OK   cr br p393-fresh-dark key-A first lift=true in=true near=true focus=true
+OK   cr br p393-fresh-dark key-A mid lift=true in=true near=true focus=true
+OK   cr br p393-fresh-dark key-A last lift=true in=true near=true focus=true
+OK   cr br p393-fresh-dark key-A-focused first lift=true in=true near=true focus=true
+OK   cr br p393-fresh-dark key-A-focused last lift=true in=true near=true focus=true
+OK   cr br p393-fresh-dark more-accuse first lift=true in=true near=true focus=true
+OK   cr br p393-fresh-dark more-accuse last lift=true in=true near=true focus=true
+OK   cr br p393-fresh-dark rclick first lift=true in=true near=true focus=true
+OK   cr br p393-fresh-dark rclick last lift=true in=true near=true focus=true
+OK   cr br p393-fresh-dark longpress-mouse first lift=true in=true near=true focus=true
+OK   cr br p393-fresh-dark longpress-mouse last lift=true in=true near=true focus=true
+OK   cr br p393-fresh-dark kbd-nav-A first lift=true in=true near=true focus=true
+BUG  cr br p393-fresh-dark kbd-nav-A last lift=false in=false near=false focus=false
+OK   cr br p393-fresh-dark longpress-touch first lift=true in=true near=true focus=true
+OK   cr br p393-fresh-dark longpress-touch last lift=true in=true near=true focus=true
+ACT cr br p393-fresh-dark accusations=30 caught=true menuGone=true liftOk=true
+MODEMENU cr br p393-started-light {"ctxName":"p393-started-light","modeMenu":{"menu":[10,416,373,95],"lift":[16,330,361,78],"ih":852},"modeFocus":{"tag":"BUTTON","testid":"mode-liar","i":null,"pane":"play"}}
+MORE cr br p393-started-light {"menu":[153,51,230,145],"items":["menu-new","menu-fill","menu-accuse"],"focus":{"tag":"BUTTON","testid":"more-button","i":null,"pane":"play"}}
+OK   cr br p393-started-light key-A first lift=true in=true near=true focus=true
+OK   cr br p393-started-light key-A mid lift=true in=true near=true focus=true
+OK   cr br p393-started-light key-A last lift=true in=true near=true focus=true
+OK   cr br p393-started-light key-A-focused first lift=true in=true near=true focus=true
+OK   cr br p393-started-light key-A-focused last lift=true in=true near=true focus=true
+OK   cr br p393-started-light more-accuse first lift=true in=true near=true focus=true
+OK   cr br p393-started-light more-accuse last lift=true in=true near=true focus=true
+OK   cr br p393-started-light rclick first lift=true in=true near=true focus=true
+OK   cr br p393-started-light rclick last lift=true in=true near=true focus=true
+OK   cr br p393-started-light longpress-mouse first lift=true in=true near=true focus=true
+OK   cr br p393-started-light longpress-mouse last lift=true in=true near=true focus=true
+OK   cr br p393-started-light kbd-nav-A first lift=true in=true near=true focus=true
+OK   cr br p393-started-light kbd-nav-A last lift=true in=true near=true focus=true
+OK   cr br p393-started-light longpress-touch first lift=true in=true near=true focus=true
+OK   cr br p393-started-light longpress-touch last lift=true in=true near=true focus=true
+ACT cr br p393-started-light accusations=5 caught=true menuGone=true liftOk=true
+MODEMENU cr br p393-solved-light {"ctxName":"p393-solved-light","modeMenu":{"menu":[10,314,373,95],"lift":[16,228,361,78],"ih":852},"modeFocus":{"tag":"BUTTON","testid":"mode-liar","i":null,"pane":"play"}}
+MORE cr br p393-solved-light {"menu":[153,51,230,145],"items":["menu-new","menu-fill","menu-accuse"],"focus":{"tag":"BUTTON","testid":"more-button","i":null,"pane":"play"}}
+OK   cr br p393-solved-light key-A first lift=true in=true near=true focus=true
+OK   cr br p393-solved-light key-A mid lift=true in=true near=true focus=true
+OK   cr br p393-solved-light key-A last lift=true in=true near=true focus=true
+OK   cr br p393-solved-light key-A-focused first lift=true in=true near=true focus=true
+OK   cr br p393-solved-light key-A-focused last lift=true in=true near=true focus=true
+OK   cr br p393-solved-light more-accuse first lift=true in=true near=true focus=true
+OK   cr br p393-solved-light more-accuse last lift=true in=true near=true focus=true
+OK   cr br p393-solved-light rclick first lift=true in=true near=true focus=true
+OK   cr br p393-solved-light rclick last lift=true in=true near=true focus=true
+OK   cr br p393-solved-light longpress-mouse first lift=true in=true near=true focus=true
+OK   cr br p393-solved-light longpress-mouse last lift=true in=true near=true focus=true
+OK   cr br p393-solved-light kbd-nav-A first lift=true in=true near=true focus=true
+BUG  cr br p393-solved-light kbd-nav-A last lift=false in=false near=false focus=false
+OK   cr br p393-solved-light longpress-touch first lift=true in=true near=true focus=true
+OK   cr br p393-solved-light longpress-touch last lift=true in=true near=true focus=true
+ACT cr br p393-solved-light accusations=28 caught=true menuGone=true liftOk=true
+MODEMENU cr br p393-solved-dark {"ctxName":"p393-solved-dark","modeMenu":{"menu":[10,314,373,95],"lift":[16,228,361,78],"ih":852},"modeFocus":{"tag":"BUTTON","testid":"mode-liar","i":null,"pane":"play"}}
+MORE cr br p393-solved-dark {"menu":[153,51,230,145],"items":["menu-new","menu-fill","menu-accuse"],"focus":{"tag":"BUTTON","testid":"more-button","i":null,"pane":"play"}}
+OK   cr br p393-solved-dark key-A first lift=true in=true near=true focus=true
+OK   cr br p393-solved-dark key-A mid lift=true in=true near=true focus=true
+OK   cr br p393-solved-dark key-A last lift=true in=true near=true focus=true
+OK   cr br p393-solved-dark key-A-focused first lift=true in=true near=true focus=true
+OK   cr br p393-solved-dark key-A-focused last lift=true in=true near=true focus=true
+OK   cr br p393-solved-dark more-accuse first lift=true in=true near=true focus=true
+OK   cr br p393-solved-dark more-accuse last lift=true in=true near=true focus=true
+OK   cr br p393-solved-dark rclick first lift=true in=true near=true focus=true
+OK   cr br p393-solved-dark rclick last lift=true in=true near=true focus=true
+OK   cr br p393-solved-dark longpress-mouse first lift=true in=true near=true focus=true
+OK   cr br p393-solved-dark longpress-mouse last lift=true in=true near=true focus=true
+OK   cr br p393-solved-dark kbd-nav-A first lift=true in=true near=true focus=true
+OK   cr br p393-solved-dark kbd-nav-A last lift=true in=true near=true focus=true
+OK   cr br p393-solved-dark longpress-touch first lift=true in=true near=true focus=true
+OK   cr br p393-solved-dark longpress-touch last lift=true in=true near=true focus=true
+ACT cr br p393-solved-dark accusations=20 caught=true menuGone=true liftOk=true
+MODEMENU cr br p375-fresh-light {"ctxName":"p375-fresh-light","modeMenu":{"menu":[10,331,355,95],"lift":[16,245,343,78],"ih":667},"modeFocus":{"tag":"BUTTON","testid":"mode-liar","i":null,"pane":"play"}}
+MORE cr br p375-fresh-light {"menu":[135,51,230,145],"items":["menu-new","menu-fill","menu-accuse"],"focus":{"tag":"BUTTON","testid":"more-button","i":null,"pane":"play"}}
+OK   cr br p375-fresh-light key-A first lift=true in=true near=true focus=true
+OK   cr br p375-fresh-light key-A mid lift=true in=true near=true focus=true
+OK   cr br p375-fresh-light key-A last lift=true in=true near=true focus=true
+OK   cr br p375-fresh-light key-A-focused first lift=true in=true near=true focus=true
+OK   cr br p375-fresh-light key-A-focused last lift=true in=true near=true focus=true
+OK   cr br p375-fresh-light more-accuse first lift=true in=true near=true focus=true
+OK   cr br p375-fresh-light more-accuse last lift=true in=true near=true focus=true
+OK   cr br p375-fresh-light rclick first lift=true in=true near=true focus=true
+OK   cr br p375-fresh-light rclick last lift=true in=true near=true focus=true
+OK   cr br p375-fresh-light longpress-mouse first lift=true in=true near=true focus=true
+OK   cr br p375-fresh-light longpress-mouse last lift=true in=true near=true focus=true
+OK   cr br p375-fresh-light kbd-nav-A first lift=true in=true near=true focus=true
+BUG  cr br p375-fresh-light kbd-nav-A last lift=false in=false near=false focus=false
+OK   cr br p375-fresh-light longpress-touch first lift=true in=true near=true focus=true
+OK   cr br p375-fresh-light longpress-touch last lift=true in=true near=true focus=true
+ACT cr br p375-fresh-light accusations=6 caught=true menuGone=true liftOk=true
+MODEMENU cr br p375-started-light {"ctxName":"p375-started-light","modeMenu":{"menu":[10,433,355,95],"lift":[16,347,343,78],"ih":667},"modeFocus":{"tag":"BUTTON","testid":"mode-liar","i":null,"pane":"play"}}
+MORE cr br p375-started-light {"menu":[135,51,230,145],"items":["menu-new","menu-fill","menu-accuse"],"focus":{"tag":"BUTTON","testid":"more-button","i":null,"pane":"play"}}
+OK   cr br p375-started-light key-A first lift=true in=true near=true focus=true
+OK   cr br p375-started-light key-A mid lift=true in=true near=true focus=true
+OK   cr br p375-started-light key-A last lift=true in=true near=true focus=true
+OK   cr br p375-started-light key-A-focused first lift=true in=true near=true focus=true
+OK   cr br p375-started-light key-A-focused last lift=true in=true near=true focus=true
+OK   cr br p375-started-light more-accuse first lift=true in=true near=true focus=true
+OK   cr br p375-started-light more-accuse last lift=true in=true near=true focus=true
+OK   cr br p375-started-light rclick first lift=true in=true near=true focus=true
+OK   cr br p375-started-light rclick last lift=true in=true near=true focus=true
+OK   cr br p375-started-light longpress-mouse first lift=true in=true near=true focus=true
+OK   cr br p375-started-light longpress-mouse last lift=true in=true near=true focus=true
+OK   cr br p375-started-light kbd-nav-A first lift=true in=true near=true focus=true
+BUG  cr br p375-started-light kbd-nav-A last lift=false in=false near=false focus=false
+OK   cr br p375-started-light longpress-touch first lift=true in=true near=true focus=true
+OK   cr br p375-started-light longpress-touch last lift=true in=true near=true focus=true
+ACT cr br p375-started-light accusations=27 caught=true menuGone=true liftOk=true
+MODEMENU cr br p375-solved-light {"ctxName":"p375-solved-light","modeMenu":{"menu":[10,331,355,95],"lift":[16,245,343,78],"ih":667},"modeFocus":{"tag":"BUTTON","testid":"mode-liar","i":null,"pane":"play"}}
+MORE cr br p375-solved-light {"menu":[135,51,230,145],"items":["menu-new","menu-fill","menu-accuse"],"focus":{"tag":"BUTTON","testid":"more-button","i":null,"pane":"play"}}
+OK   cr br p375-solved-light key-A first lift=true in=true near=true focus=true
+OK   cr br p375-solved-light key-A mid lift=true in=true near=true focus=true
+OK   cr br p375-solved-light key-A last lift=true in=true near=true focus=true
+OK   cr br p375-solved-light key-A-focused first lift=true in=true near=true focus=true
+OK   cr br p375-solved-light key-A-focused last lift=true in=true near=true focus=true
+OK   cr br p375-solved-light more-accuse first lift=true in=true near=true focus=true
+OK   cr br p375-solved-light more-accuse last lift=true in=true near=true focus=true
+OK   cr br p375-solved-light rclick first lift=true in=true near=true focus=true
+OK   cr br p375-solved-light rclick last lift=true in=true near=true focus=true
+OK   cr br p375-solved-light longpress-mouse first lift=true in=true near=true focus=true
+OK   cr br p375-solved-light longpress-mouse last lift=true in=true near=true focus=true
+OK   cr br p375-solved-light kbd-nav-A first lift=true in=true near=true focus=true
+OK   cr br p375-solved-light kbd-nav-A last lift=true in=true near=true focus=true
+OK   cr br p375-solved-light longpress-touch first lift=true in=true near=true focus=true
+OK   cr br p375-solved-light longpress-touch last lift=true in=true near=true focus=true
+ACT cr br p375-solved-light accusations=20 caught=true menuGone=true liftOk=true
+MODEMENU cr br p375-solved-dark {"ctxName":"p375-solved-dark","modeMenu":{"menu":[10,331,355,95],"lift":[16,245,343,78],"ih":667},"modeFocus":{"tag":"BUTTON","testid":"mode-liar","i":null,"pane":"play"}}
+MORE cr br p375-solved-dark {"menu":[135,51,230,145],"items":["menu-new","menu-fill","menu-accuse"],"focus":{"tag":"BUTTON","testid":"more-button","i":null,"pane":"play"}}
+OK   cr br p375-solved-dark key-A first lift=true in=true near=true focus=true
+OK   cr br p375-solved-dark key-A mid lift=true in=true near=true focus=true
+OK   cr br p375-solved-dark key-A last lift=true in=true near=true focus=true
+OK   cr br p375-solved-dark key-A-focused first lift=true in=true near=true focus=true
+OK   cr br p375-solved-dark key-A-focused last lift=true in=true near=true focus=true
+OK   cr br p375-solved-dark more-accuse first lift=true in=true near=true focus=true
+OK   cr br p375-solved-dark more-accuse last lift=true in=true near=true focus=true
+OK   cr br p375-solved-dark rclick first lift=true in=true near=true focus=true
+OK   cr br p375-solved-dark rclick last lift=true in=true near=true focus=true
+OK   cr br p375-solved-dark longpress-mouse first lift=true in=true near=true focus=true
+OK   cr br p375-solved-dark longpress-mouse last lift=true in=true near=true focus=true
+OK   cr br p375-solved-dark kbd-nav-A first lift=true in=true near=true focus=true
+OK   cr br p375-solved-dark kbd-nav-A last lift=true in=true near=true focus=true
+OK   cr br p375-solved-dark longpress-touch first lift=true in=true near=true focus=true
+OK   cr br p375-solved-dark longpress-touch last lift=true in=true near=true focus=true
+ACT cr br p375-solved-dark accusations=24 caught=true menuGone=true liftOk=true
+MODEMENU cr br d1440-fresh-light {"ctxName":"d1440-fresh-light","modeMenu":{"menu":[10,263,1420,79],"lift":[16,194,1408,61],"ih":900},"modeFocus":{"tag":"BUTTON","testid":"mode-liar","i":null,"pane":"play"}}
+MORE cr br d1440-fresh-light {"menu":[1200,51,230,145],"items":["menu-new","menu-fill","menu-accuse"],"focus":{"tag":"BUTTON","testid":"more-button","i":null,"pane":"play"}}
+OK   cr br d1440-fresh-light key-A first lift=true in=true near=true focus=true
+OK   cr br d1440-fresh-light key-A mid lift=true in=true near=true focus=true
+OK   cr br d1440-fresh-light key-A last lift=true in=true near=true focus=true
+OK   cr br d1440-fresh-light key-A-focused first lift=true in=true near=true focus=true
+OK   cr br d1440-fresh-light key-A-focused last lift=true in=true near=true focus=true
+OK   cr br d1440-fresh-light more-accuse first lift=true in=true near=true focus=true
+OK   cr br d1440-fresh-light more-accuse last lift=true in=true near=true focus=true
+OK   cr br d1440-fresh-light rclick first lift=true in=true near=true focus=true
+OK   cr br d1440-fresh-light rclick last lift=true in=true near=true focus=true
+OK   cr br d1440-fresh-light longpress-mouse first lift=true in=true near=true focus=true
+OK   cr br d1440-fresh-light longpress-mouse last lift=true in=true near=true focus=true
+OK   cr br d1440-fresh-light kbd-nav-A first lift=true in=true near=true focus=true
+OK   cr br d1440-fresh-light kbd-nav-A last lift=true in=true near=true focus=true
+ACT cr br d1440-fresh-light accusations=31 caught=true menuGone=true liftOk=true
+MODEMENU cr br d1440-fresh-dark {"ctxName":"d1440-fresh-dark","modeMenu":{"menu":[10,263,1420,79],"lift":[16,194,1408,61],"ih":900},"modeFocus":{"tag":"BUTTON","testid":"mode-liar","i":null,"pane":"play"}}
+MORE cr br d1440-fresh-dark {"menu":[1200,51,230,145],"items":["menu-new","menu-fill","menu-accuse"],"focus":{"tag":"BUTTON","testid":"more-button","i":null,"pane":"play"}}
+OK   cr br d1440-fresh-dark key-A first lift=true in=true near=true focus=true
+OK   cr br d1440-fresh-dark key-A mid lift=true in=true near=true focus=true
+OK   cr br d1440-fresh-dark key-A last lift=true in=true near=true focus=true
+OK   cr br d1440-fresh-dark key-A-focused first lift=true in=true near=true focus=true
+OK   cr br d1440-fresh-dark key-A-focused last lift=true in=true near=true focus=true
+OK   cr br d1440-fresh-dark more-accuse first lift=true in=true near=true focus=true
+OK   cr br d1440-fresh-dark more-accuse last lift=true in=true near=true focus=true
+OK   cr br d1440-fresh-dark rclick first lift=true in=true near=true focus=true
+OK   cr br d1440-fresh-dark rclick last lift=true in=true near=true focus=true
+OK   cr br d1440-fresh-dark longpress-mouse first lift=true in=true near=true focus=true
+OK   cr br d1440-fresh-dark longpress-mouse last lift=true in=true near=true focus=true
+OK   cr br d1440-fresh-dark kbd-nav-A first lift=true in=true near=true focus=true
+BUG  cr br d1440-fresh-dark kbd-nav-A last lift=false in=false near=false focus=false
+ACT cr br d1440-fresh-dark accusations=24 caught=true menuGone=true liftOk=true
+MODEMENU cr br d1440-started-light {"ctxName":"d1440-started-light","modeMenu":{"menu":[10,365,1420,79],"lift":[16,296,1408,61],"ih":900},"modeFocus":{"tag":"BUTTON","testid":"mode-liar","i":null,"pane":"play"}}
+MORE cr br d1440-started-light {"menu":[1200,51,230,145],"items":["menu-new","menu-fill","menu-accuse"],"focus":{"tag":"BUTTON","testid":"more-button","i":null,"pane":"play"}}
+OK   cr br d1440-started-light key-A first lift=true in=true near=true focus=true
+OK   cr br d1440-started-light key-A mid lift=true in=true near=true focus=true
+OK   cr br d1440-started-light key-A last lift=true in=true near=true focus=true
+OK   cr br d1440-started-light key-A-focused first lift=true in=true near=true focus=true
+OK   cr br d1440-started-light key-A-focused last lift=true in=true near=true focus=true
+OK   cr br d1440-started-light more-accuse first lift=true in=true near=true focus=true
+OK   cr br d1440-started-light more-accuse last lift=true in=true near=true focus=true
+OK   cr br d1440-started-light rclick first lift=true in=true near=true focus=true
+OK   cr br d1440-started-light rclick last lift=true in=true near=true focus=true
+OK   cr br d1440-started-light longpress-mouse first lift=true in=true near=true focus=true
+OK   cr br d1440-started-light longpress-mouse last lift=true in=true near=true focus=true
+OK   cr br d1440-started-light kbd-nav-A first lift=true in=true near=true focus=true
+OK   cr br d1440-started-light kbd-nav-A last lift=true in=true near=true focus=true
+ACT cr br d1440-started-light accusations=1 caught=true menuGone=true liftOk=true
+MODEMENU cr br d1440-solved-light {"ctxName":"d1440-solved-light","modeMenu":{"menu":[10,263,1420,79],"lift":[16,194,1408,61],"ih":900},"modeFocus":{"tag":"BUTTON","testid":"mode-liar","i":null,"pane":"play"}}
+MORE cr br d1440-solved-light {"menu":[1200,51,230,145],"items":["menu-new","menu-fill","menu-accuse"],"focus":{"tag":"BUTTON","testid":"more-button","i":null,"pane":"play"}}
+OK   cr br d1440-solved-light key-A first lift=true in=true near=true focus=true
+OK   cr br d1440-solved-light key-A mid lift=true in=true near=true focus=true
+OK   cr br d1440-solved-light key-A last lift=true in=true near=true focus=true
+OK   cr br d1440-solved-light key-A-focused first lift=true in=true near=true focus=true
+OK   cr br d1440-solved-light key-A-focused last lift=true in=true near=true focus=true
+OK   cr br d1440-solved-light more-accuse first lift=true in=true near=true focus=true
+OK   cr br d1440-solved-light more-accuse last lift=true in=true near=true focus=true
+OK   cr br d1440-solved-light rclick first lift=true in=true near=true focus=true
+OK   cr br d1440-solved-light rclick last lift=true in=true near=true focus=true
+OK   cr br d1440-solved-light longpress-mouse first lift=true in=true near=true focus=true
+OK   cr br d1440-solved-light longpress-mouse last lift=true in=true near=true focus=true
+OK   cr br d1440-solved-light kbd-nav-A first lift=true in=true near=true focus=true
+OK   cr br d1440-solved-light kbd-nav-A last lift=true in=true near=true focus=true
+ACT cr br d1440-solved-light accusations=26 caught=true menuGone=true liftOk=true
+MODEMENU cr br d1440-solved-dark {"ctxName":"d1440-solved-dark","modeMenu":{"menu":[10,263,1420,79],"lift":[16,194,1408,61],"ih":900},"modeFocus":{"tag":"BUTTON","testid":"mode-liar","i":null,"pane":"play"}}
+MORE cr br d1440-solved-dark {"menu":[1200,51,230,145],"items":["menu-new","menu-fill","menu-accuse"],"focus":{"tag":"BUTTON","testid":"more-button","i":null,"pane":"play"}}
+OK   cr br d1440-solved-dark key-A first lift=true in=true near=true focus=true
+OK   cr br d1440-solved-dark key-A mid lift=true in=true near=true focus=true
+OK   cr br d1440-solved-dark key-A last lift=true in=true near=true focus=true
+OK   cr br d1440-solved-dark key-A-focused first lift=true in=true near=true focus=true
+OK   cr br d1440-solved-dark key-A-focused last lift=true in=true near=true focus=true
+OK   cr br d1440-solved-dark more-accuse first lift=true in=true near=true focus=true
+OK   cr br d1440-solved-dark more-accuse last lift=true in=true near=true focus=true
+OK   cr br d1440-solved-dark rclick first lift=true in=true near=true focus=true
+OK   cr br d1440-solved-dark rclick last lift=true in=true near=true focus=true
+OK   cr br d1440-solved-dark longpress-mouse first lift=true in=true near=true focus=true
+OK   cr br d1440-solved-dark longpress-mouse last lift=true in=true near=true focus=true
+OK   cr br d1440-solved-dark kbd-nav-A first lift=true in=true near=true focus=true
+OK   cr br d1440-solved-dark kbd-nav-A last lift=true in=true near=true focus=true
+ACT cr br d1440-solved-dark accusations=28 caught=true menuGone=true liftOk=true
+MODE cr br p393-classic accuseMenuAfterA=0 items=["menu-new","menu-fill"] errs=0
+MODE cr br d1440-classic accuseMenuAfterA=0 items=["menu-new","menu-fill"] errs=0
+MODE cr br p393-ink accuseMenuAfterA=0 items=["menu-new","menu-fill"] errs=0
+MODE cr br d1440-ink accuseMenuAfterA=0 items=["menu-new","menu-fill"] errs=0
+MODEMENU wk br p393-fresh-light {"ctxName":"p393-fresh-light","modeMenu":{"menu":[10,255,373,89],"lift":[16,182,361,65],"ih":852},"modeFocus":{"tag":"BUTTON","testid":"mode-liar","i":null,"pane":"play"}}
+MORE wk br p393-fresh-light {"menu":[153,48,230,138],"items":["menu-new","menu-fill","menu-accuse"],"focus":{"tag":"BUTTON","testid":"more-button","i":null,"pane":"play"}}
+OK   wk br p393-fresh-light key-A first lift=true in=true near=true focus=true
+OK   wk br p393-fresh-light key-A mid lift=true in=true near=true focus=true
+OK   wk br p393-fresh-light key-A last lift=true in=true near=true focus=true
+OK   wk br p393-fresh-light key-A-focused first lift=true in=true near=true focus=true
+OK   wk br p393-fresh-light key-A-focused last lift=true in=true near=true focus=true
+OK   wk br p393-fresh-light more-accuse first lift=true in=true near=true focus=true
+OK   wk br p393-fresh-light more-accuse last lift=true in=true near=true focus=true
+OK   wk br p393-fresh-light rclick first lift=true in=true near=true focus=true
+OK   wk br p393-fresh-light rclick last lift=true in=true near=true focus=true
+OK   wk br p393-fresh-light longpress-mouse first lift=true in=true near=true focus=true
+OK   wk br p393-fresh-light longpress-mouse last lift=true in=true near=true focus=true
+OK   wk br p393-fresh-light kbd-nav-A first lift=true in=true near=true focus=true
+OK   wk br p393-fresh-light kbd-nav-A last lift=true in=true near=true focus=true
+ACT wk br p393-fresh-light accusations=16 caught=true menuGone=true liftOk=true
+MODEMENU wk br p393-fresh-dark {"ctxName":"p393-fresh-dark","modeMenu":{"menu":[10,255,373,89],"lift":[16,182,361,65],"ih":852},"modeFocus":{"tag":"BUTTON","testid":"mode-liar","i":null,"pane":"play"}}
+MORE wk br p393-fresh-dark {"menu":[153,48,230,138],"items":["menu-new","menu-fill","menu-accuse"],"focus":{"tag":"BUTTON","testid":"more-button","i":null,"pane":"play"}}
+OK   wk br p393-fresh-dark key-A first lift=true in=true near=true focus=true
+OK   wk br p393-fresh-dark key-A mid lift=true in=true near=true focus=true
+OK   wk br p393-fresh-dark key-A last lift=true in=true near=true focus=true
+OK   wk br p393-fresh-dark key-A-focused first lift=true in=true near=true focus=true
+OK   wk br p393-fresh-dark key-A-focused last lift=true in=true near=true focus=true
+OK   wk br p393-fresh-dark more-accuse first lift=true in=true near=true focus=true
+OK   wk br p393-fresh-dark more-accuse last lift=true in=true near=true focus=true
+OK   wk br p393-fresh-dark rclick first lift=true in=true near=true focus=true
+OK   wk br p393-fresh-dark rclick last lift=true in=true near=true focus=true
+OK   wk br p393-fresh-dark longpress-mouse first lift=true in=true near=true focus=true
+OK   wk br p393-fresh-dark longpress-mouse last lift=true in=true near=true focus=true
+OK   wk br p393-fresh-dark kbd-nav-A first lift=true in=true near=true focus=true
+OK   wk br p393-fresh-dark kbd-nav-A last lift=true in=true near=true focus=true
+ACT wk br p393-fresh-dark accusations=2 caught=true menuGone=true liftOk=true
+MODEMENU wk br p393-started-light {"ctxName":"p393-started-light","modeMenu":{"menu":[10,347,373,89],"lift":[16,274,361,65],"ih":852},"modeFocus":{"tag":"BUTTON","testid":"mode-liar","i":null,"pane":"play"}}
+MORE wk br p393-started-light {"menu":[153,48,230,138],"items":["menu-new","menu-fill","menu-accuse"],"focus":{"tag":"BUTTON","testid":"more-button","i":null,"pane":"play"}}
+OK   wk br p393-started-light key-A first lift=true in=true near=true focus=true
+OK   wk br p393-started-light key-A mid lift=true in=true near=true focus=true
+OK   wk br p393-started-light key-A last lift=true in=true near=true focus=true
+OK   wk br p393-started-light key-A-focused first lift=true in=true near=true focus=true
+OK   wk br p393-started-light key-A-focused last lift=true in=true near=true focus=true
+OK   wk br p393-started-light more-accuse first lift=true in=true near=true focus=true
+OK   wk br p393-started-light more-accuse last lift=true in=true near=true focus=true
+OK   wk br p393-started-light rclick first lift=true in=true near=true focus=true
+OK   wk br p393-started-light rclick last lift=true in=true near=true focus=true
+OK   wk br p393-started-light longpress-mouse first lift=true in=true near=true focus=true
+OK   wk br p393-started-light longpress-mouse last lift=true in=true near=true focus=true
+OK   wk br p393-started-light kbd-nav-A first lift=true in=true near=true focus=true
+OK   wk br p393-started-light kbd-nav-A last lift=true in=true near=true focus=true
+ACT wk br p393-started-light accusations=29 caught=true menuGone=true liftOk=true
+MODEMENU wk br p393-solved-light {"ctxName":"p393-solved-light","modeMenu":{"menu":[10,255,373,89],"lift":[16,182,361,65],"ih":852},"modeFocus":{"tag":"BUTTON","testid":"mode-liar","i":null,"pane":"play"}}
+MORE wk br p393-solved-light {"menu":[153,48,230,138],"items":["menu-new","menu-fill","menu-accuse"],"focus":{"tag":"BUTTON","testid":"more-button","i":null,"pane":"play"}}
+OK   wk br p393-solved-light key-A first lift=true in=true near=true focus=true
+OK   wk br p393-solved-light key-A mid lift=true in=true near=true focus=true
+OK   wk br p393-solved-light key-A last lift=true in=true near=true focus=true
+OK   wk br p393-solved-light key-A-focused first lift=true in=true near=true focus=true
+OK   wk br p393-solved-light key-A-focused last lift=true in=true near=true focus=true
+OK   wk br p393-solved-light more-accuse first lift=true in=true near=true focus=true
+OK   wk br p393-solved-light more-accuse last lift=true in=true near=true focus=true
+OK   wk br p393-solved-light rclick first lift=true in=true near=true focus=true
+OK   wk br p393-solved-light rclick last lift=true in=true near=true focus=true
+OK   wk br p393-solved-light longpress-mouse first lift=true in=true near=true focus=true
+OK   wk br p393-solved-light longpress-mouse last lift=true in=true near=true focus=true
+OK   wk br p393-solved-light kbd-nav-A first lift=true in=true near=true focus=true
+OK   wk br p393-solved-light kbd-nav-A last lift=true in=true near=true focus=true
+ACT wk br p393-solved-light accusations=8 caught=true menuGone=true liftOk=true
+MODEMENU wk br p393-solved-dark {"ctxName":"p393-solved-dark","modeMenu":{"menu":[10,255,373,89],"lift":[16,182,361,65],"ih":852},"modeFocus":{"tag":"BUTTON","testid":"mode-liar","i":null,"pane":"play"}}
+MORE wk br p393-solved-dark {"menu":[153,48,230,138],"items":["menu-new","menu-fill","menu-accuse"],"focus":{"tag":"BUTTON","testid":"more-button","i":null,"pane":"play"}}
+OK   wk br p393-solved-dark key-A first lift=true in=true near=true focus=true
+OK   wk br p393-solved-dark key-A mid lift=true in=true near=true focus=true
+OK   wk br p393-solved-dark key-A last lift=true in=true near=true focus=true
+OK   wk br p393-solved-dark key-A-focused first lift=true in=true near=true focus=true
+OK   wk br p393-solved-dark key-A-focused last lift=true in=true near=true focus=true
+OK   wk br p393-solved-dark more-accuse first lift=true in=true near=true focus=true
+OK   wk br p393-solved-dark more-accuse last lift=true in=true near=true focus=true
+OK   wk br p393-solved-dark rclick first lift=true in=true near=true focus=true
+OK   wk br p393-solved-dark rclick last lift=true in=true near=true focus=true
+OK   wk br p393-solved-dark longpress-mouse first lift=true in=true near=true focus=true
+OK   wk br p393-solved-dark longpress-mouse last lift=true in=true near=true focus=true
+OK   wk br p393-solved-dark kbd-nav-A first lift=true in=true near=true focus=true
+OK   wk br p393-solved-dark kbd-nav-A last lift=true in=true near=true focus=true
+ACT wk br p393-solved-dark accusations=23 caught=true menuGone=true liftOk=true
+MODEMENU wk br p375-fresh-light {"ctxName":"p375-fresh-light","modeMenu":{"menu":[10,255,355,89],"lift":[16,182,343,65],"ih":667},"modeFocus":{"tag":"BUTTON","testid":"mode-liar","i":null,"pane":"play"}}
+MORE wk br p375-fresh-light {"menu":[135,48,230,138],"items":["menu-new","menu-fill","menu-accuse"],"focus":{"tag":"BUTTON","testid":"more-button","i":null,"pane":"play"}}
+OK   wk br p375-fresh-light key-A first lift=true in=true near=true focus=true
+OK   wk br p375-fresh-light key-A mid lift=true in=true near=true focus=true
+OK   wk br p375-fresh-light key-A last lift=true in=true near=true focus=true
+OK   wk br p375-fresh-light key-A-focused first lift=true in=true near=true focus=true
+OK   wk br p375-fresh-light key-A-focused last lift=true in=true near=true focus=true
+OK   wk br p375-fresh-light more-accuse first lift=true in=true near=true focus=true
+OK   wk br p375-fresh-light more-accuse last lift=true in=true near=true focus=true
+OK   wk br p375-fresh-light rclick first lift=true in=true near=true focus=true
+OK   wk br p375-fresh-light rclick last lift=true in=true near=true focus=true
+OK   wk br p375-fresh-light longpress-mouse first lift=true in=true near=true focus=true
+OK   wk br p375-fresh-light longpress-mouse last lift=true in=true near=true focus=true
+OK   wk br p375-fresh-light kbd-nav-A first lift=true in=true near=true focus=true
+BUG  wk br p375-fresh-light kbd-nav-A last lift=false in=false near=false focus=false
+ACT wk br p375-fresh-light accusations=29 caught=true menuGone=true liftOk=true
+MODEMENU wk br p375-started-light {"ctxName":"p375-started-light","modeMenu":{"menu":[10,347,355,89],"lift":[16,274,343,65],"ih":667},"modeFocus":{"tag":"BUTTON","testid":"mode-liar","i":null,"pane":"play"}}
+MORE wk br p375-started-light {"menu":[135,48,230,138],"items":["menu-new","menu-fill","menu-accuse"],"focus":{"tag":"BUTTON","testid":"more-button","i":null,"pane":"play"}}
+OK   wk br p375-started-light key-A first lift=true in=true near=true focus=true
+OK   wk br p375-started-light key-A mid lift=true in=true near=true focus=true
+OK   wk br p375-started-light key-A last lift=true in=true near=true focus=true
+OK   wk br p375-started-light key-A-focused first lift=true in=true near=true focus=true
+OK   wk br p375-started-light key-A-focused last lift=true in=true near=true focus=true
+OK   wk br p375-started-light more-accuse first lift=true in=true near=true focus=true
+OK   wk br p375-started-light more-accuse last lift=true in=true near=true focus=true
+OK   wk br p375-started-light rclick first lift=true in=true near=true focus=true
+OK   wk br p375-started-light rclick last lift=true in=true near=true focus=true
+OK   wk br p375-started-light longpress-mouse first lift=true in=true near=true focus=true
+OK   wk br p375-started-light longpress-mouse last lift=true in=true near=true focus=true
+OK   wk br p375-started-light kbd-nav-A first lift=true in=true near=true focus=true
+OK   wk br p375-started-light kbd-nav-A last lift=true in=true near=true focus=true
+ACT wk br p375-started-light accusations=20 caught=true menuGone=true liftOk=true
+MODEMENU wk br p375-solved-light {"ctxName":"p375-solved-light","modeMenu":{"menu":[10,255,355,89],"lift":[16,182,343,65],"ih":667},"modeFocus":{"tag":"BUTTON","testid":"mode-liar","i":null,"pane":"play"}}
+MORE wk br p375-solved-light {"menu":[135,48,230,138],"items":["menu-new","menu-fill","menu-accuse"],"focus":{"tag":"BUTTON","testid":"more-button","i":null,"pane":"play"}}
+OK   wk br p375-solved-light key-A first lift=true in=true near=true focus=true
+OK   wk br p375-solved-light key-A mid lift=true in=true near=true focus=true
+OK   wk br p375-solved-light key-A last lift=true in=true near=true focus=true
+OK   wk br p375-solved-light key-A-focused first lift=true in=true near=true focus=true
+OK   wk br p375-solved-light key-A-focused last lift=true in=true near=true focus=true
+OK   wk br p375-solved-light more-accuse first lift=true in=true near=true focus=true
+OK   wk br p375-solved-light more-accuse last lift=true in=true near=true focus=true
+OK   wk br p375-solved-light rclick first lift=true in=true near=true focus=true
+OK   wk br p375-solved-light rclick last lift=true in=true near=true focus=true
+OK   wk br p375-solved-light longpress-mouse first lift=true in=true near=true focus=true
+OK   wk br p375-solved-light longpress-mouse last lift=true in=true near=true focus=true
+OK   wk br p375-solved-light kbd-nav-A first lift=true in=true near=true focus=true
+BUG  wk br p375-solved-light kbd-nav-A last lift=false in=false near=false focus=false
+ACT wk br p375-solved-light accusations=4 caught=true menuGone=true liftOk=true
+MODEMENU wk br p375-solved-dark {"ctxName":"p375-solved-dark","modeMenu":{"menu":[10,255,355,89],"lift":[16,182,343,65],"ih":667},"modeFocus":{"tag":"BUTTON","testid":"mode-liar","i":null,"pane":"play"}}
+MORE wk br p375-solved-dark {"menu":[135,48,230,138],"items":["menu-new","menu-fill","menu-accuse"],"focus":{"tag":"BUTTON","testid":"more-button","i":null,"pane":"play"}}
+OK   wk br p375-solved-dark key-A first lift=true in=true near=true focus=true
+OK   wk br p375-solved-dark key-A mid lift=true in=true near=true focus=true
+OK   wk br p375-solved-dark key-A last lift=true in=true near=true focus=true
+OK   wk br p375-solved-dark key-A-focused first lift=true in=true near=true focus=true
+OK   wk br p375-solved-dark key-A-focused last lift=true in=true near=true focus=true
+OK   wk br p375-solved-dark more-accuse first lift=true in=true near=true focus=true
+OK   wk br p375-solved-dark more-accuse last lift=true in=true near=true focus=true
+OK   wk br p375-solved-dark rclick first lift=true in=true near=true focus=true
+OK   wk br p375-solved-dark rclick last lift=true in=true near=true focus=true
+OK   wk br p375-solved-dark longpress-mouse first lift=true in=true near=true focus=true
+OK   wk br p375-solved-dark longpress-mouse last lift=true in=true near=true focus=true
+OK   wk br p375-solved-dark kbd-nav-A first lift=true in=true near=true focus=true
+BUG  wk br p375-solved-dark kbd-nav-A last lift=false in=false near=false focus=false
+ACT wk br p375-solved-dark accusations=28 caught=true menuGone=true liftOk=true
+MODEMENU wk br d1440-fresh-light {"ctxName":"d1440-fresh-light","modeMenu":{"menu":[10,229,1420,76],"lift":[16,169,1408,52],"ih":900},"modeFocus":{"tag":"BUTTON","testid":"mode-liar","i":null,"pane":"play"}}
+MORE wk br d1440-fresh-light {"menu":[1200,48,230,138],"items":["menu-new","menu-fill","menu-accuse"],"focus":{"tag":"BUTTON","testid":"more-button","i":null,"pane":"play"}}
+OK   wk br d1440-fresh-light key-A first lift=true in=true near=true focus=true
+OK   wk br d1440-fresh-light key-A mid lift=true in=true near=true focus=true
+OK   wk br d1440-fresh-light key-A last lift=true in=true near=true focus=true
+OK   wk br d1440-fresh-light key-A-focused first lift=true in=true near=true focus=true
+OK   wk br d1440-fresh-light key-A-focused last lift=true in=true near=true focus=true
+OK   wk br d1440-fresh-light more-accuse first lift=true in=true near=true focus=true
+OK   wk br d1440-fresh-light more-accuse last lift=true in=true near=true focus=true
+OK   wk br d1440-fresh-light rclick first lift=true in=true near=true focus=true
+OK   wk br d1440-fresh-light rclick last lift=true in=true near=true focus=true
+OK   wk br d1440-fresh-light longpress-mouse first lift=true in=true near=true focus=true
+OK   wk br d1440-fresh-light longpress-mouse last lift=true in=true near=true focus=true
+OK   wk br d1440-fresh-light kbd-nav-A first lift=true in=true near=true focus=true
+BUG  wk br d1440-fresh-light kbd-nav-A last lift=false in=false near=false focus=false
+ACT wk br d1440-fresh-light accusations=25 caught=true menuGone=true liftOk=true
+MODEMENU wk br d1440-fresh-dark {"ctxName":"d1440-fresh-dark","modeMenu":{"menu":[10,229,1420,76],"lift":[16,169,1408,52],"ih":900},"modeFocus":{"tag":"BUTTON","testid":"mode-liar","i":null,"pane":"play"}}
+MORE wk br d1440-fresh-dark {"menu":[1200,48,230,138],"items":["menu-new","menu-fill","menu-accuse"],"focus":{"tag":"BUTTON","testid":"more-button","i":null,"pane":"play"}}
+OK   wk br d1440-fresh-dark key-A first lift=true in=true near=true focus=true
+OK   wk br d1440-fresh-dark key-A mid lift=true in=true near=true focus=true
+OK   wk br d1440-fresh-dark key-A last lift=true in=true near=true focus=true
+OK   wk br d1440-fresh-dark key-A-focused first lift=true in=true near=true focus=true
+OK   wk br d1440-fresh-dark key-A-focused last lift=true in=true near=true focus=true
+OK   wk br d1440-fresh-dark more-accuse first lift=true in=true near=true focus=true
+OK   wk br d1440-fresh-dark more-accuse last lift=true in=true near=true focus=true
+OK   wk br d1440-fresh-dark rclick first lift=true in=true near=true focus=true
+OK   wk br d1440-fresh-dark rclick last lift=true in=true near=true focus=true
+OK   wk br d1440-fresh-dark longpress-mouse first lift=true in=true near=true focus=true
+OK   wk br d1440-fresh-dark longpress-mouse last lift=true in=true near=true focus=true
+OK   wk br d1440-fresh-dark kbd-nav-A first lift=true in=true near=true focus=true
+BUG  wk br d1440-fresh-dark kbd-nav-A last lift=false in=false near=false focus=false
+ACT wk br d1440-fresh-dark accusations=30 caught=true menuGone=true liftOk=true
+MODEMENU wk br d1440-started-light {"ctxName":"d1440-started-light","modeMenu":{"menu":[10,321,1420,76],"lift":[16,261,1408,52],"ih":900},"modeFocus":{"tag":"BUTTON","testid":"mode-liar","i":null,"pane":"play"}}
+MORE wk br d1440-started-light {"menu":[1200,48,230,138],"items":["menu-new","menu-fill","menu-accuse"],"focus":{"tag":"BUTTON","testid":"more-button","i":null,"pane":"play"}}
+OK   wk br d1440-started-light key-A first lift=true in=true near=true focus=true
+OK   wk br d1440-started-light key-A mid lift=true in=true near=true focus=true
+OK   wk br d1440-started-light key-A last lift=true in=true near=true focus=true
+OK   wk br d1440-started-light key-A-focused first lift=true in=true near=true focus=true
+OK   wk br d1440-started-light key-A-focused last lift=true in=true near=true focus=true
+OK   wk br d1440-started-light more-accuse first lift=true in=true near=true focus=true
+OK   wk br d1440-started-light more-accuse last lift=true in=true near=true focus=true
+OK   wk br d1440-started-light rclick first lift=true in=true near=true focus=true
+OK   wk br d1440-started-light rclick last lift=true in=true near=true focus=true
+OK   wk br d1440-started-light longpress-mouse first lift=true in=true near=true focus=true
+OK   wk br d1440-started-light longpress-mouse last lift=true in=true near=true focus=true
+OK   wk br d1440-started-light kbd-nav-A first lift=true in=true near=true focus=true
+OK   wk br d1440-started-light kbd-nav-A last lift=true in=true near=true focus=true
+ACT wk br d1440-started-light accusations=16 caught=true menuGone=true liftOk=true
+MODEMENU wk br d1440-solved-light {"ctxName":"d1440-solved-light","modeMenu":{"menu":[10,229,1420,76],"lift":[16,169,1408,52],"ih":900},"modeFocus":{"tag":"BUTTON","testid":"mode-liar","i":null,"pane":"play"}}
+MORE wk br d1440-solved-light {"menu":[1200,48,230,138],"items":["menu-new","menu-fill","menu-accuse"],"focus":{"tag":"BUTTON","testid":"more-button","i":null,"pane":"play"}}
+OK   wk br d1440-solved-light key-A first lift=true in=true near=true focus=true
+OK   wk br d1440-solved-light key-A mid lift=true in=true near=true focus=true
+OK   wk br d1440-solved-light key-A last lift=true in=true near=true focus=true
+OK   wk br d1440-solved-light key-A-focused first lift=true in=true near=true focus=true
+OK   wk br d1440-solved-light key-A-focused last lift=true in=true near=true focus=true
+OK   wk br d1440-solved-light more-accuse first lift=true in=true near=true focus=true
+OK   wk br d1440-solved-light more-accuse last lift=true in=true near=true focus=true
+OK   wk br d1440-solved-light rclick first lift=true in=true near=true focus=true
+OK   wk br d1440-solved-light rclick last lift=true in=true near=true focus=true
+OK   wk br d1440-solved-light longpress-mouse first lift=true in=true near=true focus=true
+OK   wk br d1440-solved-light longpress-mouse last lift=true in=true near=true focus=true
+OK   wk br d1440-solved-light kbd-nav-A first lift=true in=true near=true focus=true
+BUG  wk br d1440-solved-light kbd-nav-A last lift=false in=false near=false focus=false
+ACT wk br d1440-solved-light accusations=14 caught=true menuGone=true liftOk=true
+MODEMENU wk br d1440-solved-dark {"ctxName":"d1440-solved-dark","modeMenu":{"menu":[10,229,1420,76],"lift":[16,169,1408,52],"ih":900},"modeFocus":{"tag":"BUTTON","testid":"mode-liar","i":null,"pane":"play"}}
+MORE wk br d1440-solved-dark {"menu":[1200,48,230,138],"items":["menu-new","menu-fill","menu-accuse"],"focus":{"tag":"BUTTON","testid":"more-button","i":null,"pane":"play"}}
+OK   wk br d1440-solved-dark key-A first lift=true in=true near=true focus=true
+OK   wk br d1440-solved-dark key-A mid lift=true in=true near=true focus=true
+OK   wk br d1440-solved-dark key-A last lift=true in=true near=true focus=true
+OK   wk br d1440-solved-dark key-A-focused first lift=true in=true near=true focus=true
+OK   wk br d1440-solved-dark key-A-focused last lift=true in=true near=true focus=true
+OK   wk br d1440-solved-dark more-accuse first lift=true in=true near=true focus=true
+OK   wk br d1440-solved-dark more-accuse last lift=true in=true near=true focus=true
+OK   wk br d1440-solved-dark rclick first lift=true in=true near=true focus=true
+OK   wk br d1440-solved-dark rclick last lift=true in=true near=true focus=true
+OK   wk br d1440-solved-dark longpress-mouse first lift=true in=true near=true focus=true
+OK   wk br d1440-solved-dark longpress-mouse last lift=true in=true near=true focus=true
+OK   wk br d1440-solved-dark kbd-nav-A first lift=true in=true near=true focus=true
+OK   wk br d1440-solved-dark kbd-nav-A last lift=true in=true near=true focus=true
+ACT wk br d1440-solved-dark accusations=5 caught=true menuGone=true liftOk=true
+MODE wk br p393-classic accuseMenuAfterA=0 items=["menu-new","menu-fill"] errs=0
+MODE wk br d1440-classic accuseMenuAfterA=0 items=["menu-new","menu-fill"] errs=0
+MODE wk br p393-ink accuseMenuAfterA=0 items=["menu-new","menu-fill"] errs=0
+MODE wk br d1440-ink accuseMenuAfterA=0 items=["menu-new","menu-fill"] errs=0
+407 PASS / 418 judged; bad=11
