@@ -14,15 +14,42 @@ import { openDb, readWrite, STORE_DAYS, STORE_KV, withStore } from "./idb";
 
 const KEY_PERMANENT = "permanent";
 
+/** PD-284: канал «дни изменились» между вкладками одного источника (кэш `listDays` в каждой). */
+export const DAYS_CHANNEL = "pundoku-days";
+
 export class IndexedDbProgressRepository implements PersistentStore {
-  private constructor(private readonly db: IDBDatabase) {}
+  /**
+   * PD-284: кэш `listDays` — чтение всех дней (getAll + проверка каждой записи) стоило ~40 мс на каждом возврате на Play.
+   * Инвалидация по записи: `saveDay` этого экземпляра (до и после транзакции — чтение, начатое во время записи, в кэш не
+   * попадёт) и запись в другой вкладке (BroadcastChannel). Все записи `days` в приложении идут через этот экземпляр
+   * (`sync/runtime` — один репозиторий на вкладку). Нет BroadcastChannel — кэша нет: читаем каждый раз, как раньше.
+   * Каждый вызов получает свой массив; записи общие и только для чтения (как у `InMemoryProgressRepository`).
+   */
+  private days: { readonly gen: number; readonly list: Promise<DayProgress[]> } | null = null;
+  private daysGen = 0;
+  private readonly channel: BroadcastChannel | null;
+
+  private constructor(private readonly db: IDBDatabase) {
+    this.channel = typeof BroadcastChannel === "function" ? new BroadcastChannel(DAYS_CHANNEL) : null;
+    if (this.channel) {
+      this.channel.onmessage = () => this.invalidateDays();
+      (this.channel as { unref?: () => void }).unref?.(); // Node (тесты): канал не держит процесс
+    }
+  }
 
   static async open(factory?: IdbFactoryLike, name?: string): Promise<IndexedDbProgressRepository> {
     return new IndexedDbProgressRepository(await openDb(factory, name));
   }
 
   close(): void {
+    this.channel?.close();
+    this.invalidateDays();
     this.db.close();
+  }
+
+  private invalidateDays(): void {
+    this.daysGen++;
+    this.days = null;
   }
 
   async getPermanent(): Promise<PermanentGridState | null> {
@@ -41,9 +68,29 @@ export class IndexedDbProgressRepository implements PersistentStore {
     return null;
   }
   async saveDay(progress: DayProgress): Promise<void> {
-    await withStore(this.db, STORE_DAYS, "readwrite", (s) => s.put(progress));
+    this.invalidateDays();
+    try {
+      await withStore(this.db, STORE_DAYS, "readwrite", (s) => s.put(progress));
+    } finally {
+      this.invalidateDays();
+      this.channel?.postMessage("days");
+    }
   }
   async listDays(): Promise<DayProgress[]> {
+    if (!this.channel) return this.readDays();
+    let cached = this.days;
+    if (cached === null || cached.gen !== this.daysGen) {
+      const list = this.readDays();
+      cached = { gen: this.daysGen, list };
+      this.days = cached;
+      // Чтение не удалось — не держать отказ в кэше: следующий вызов прочитает заново.
+      list.catch(() => {
+        if (this.days?.list === list) this.days = null;
+      });
+    }
+    return [...(await cached.list)];
+  }
+  private async readDays(): Promise<DayProgress[]> {
     return sanitizeDays((await withStore(this.db, STORE_DAYS, "readonly", (s) => s.getAll())) as unknown[], "IndexedDB days");
   }
   async getMeta(key: string): Promise<unknown> {

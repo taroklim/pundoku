@@ -30,6 +30,7 @@ import { useEscapeBack } from "../shell/escapeBack";
 import { useTabActive } from "../shell/tabSlide";
 import { useDeskLayout } from "../shell/desk";
 import { TabHeader } from "../shell/TabHeader";
+import type { TabId } from "../shell/tabs";
 import type { DayStore } from "./dayStore";
 import { dayStore } from "./dayStore";
 import { MiniBoard } from "./MiniBoard";
@@ -66,6 +67,8 @@ export interface ArchiveProps {
   /** Играемая прошлая дата `YYYY-MM-DD` (совпадает с `store.openArchive(date)`). */
   readonly date: string;
   readonly onBack: () => void;
+  /** PD-282: куда ведёт «‹» (подпись кнопки); по умолчанию Year. */
+  readonly backTo?: TabId;
 }
 
 /**
@@ -179,11 +182,11 @@ export function DayView({ store, archive, onOpenSettings, onOpenHelp }: { store:
   const deskSolved = desk && phase === "solved" && cardShown;
   const deskFit = desk && !deskSolved;
   const backButton = archive ? (
-    <button type="button" className="archive-back" onClick={archive.onBack} aria-label={t("archive.backLabel")} data-testid="archive-back">
+    <button type="button" className="archive-back" onClick={archive.onBack} aria-label={t(archive.backTo === "play" ? "archive.backLabelPlay" : "archive.backLabel")} data-testid="archive-back">
       <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
         <path d="m15 6-6 6 6 6" />
       </svg>
-      <span>{t("tabs.year")}</span>
+      <span>{t(`tabs.${archive.backTo ?? "year"}`)}</span>
     </button>
   ) : null;
   const subline = <Subline day={dayLabel} difficulty={diffLabel} ink={play?.ink === true} help={snap.assisted === true} clock={showClock && !deskFit ? clock : null} />;

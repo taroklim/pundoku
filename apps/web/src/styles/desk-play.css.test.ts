@@ -96,7 +96,9 @@ describe("порталы — через usePortalHost", () => {
     const offenders: string[] = [];
     let portals = 0;
     for (const f of sources()) {
-      const src = raw(`../${f}`);
+      // PD-285: док действий карточки «решено» — портал в элемент потока своего же экрана (`div.result-dock` после карточки,
+      // только на телефоне), а не оверлей окна: слой окна ему не нужен.
+      const src = raw(`../${f}`).replace(/createPortal\(actions, dock\)/g, "");
       const n = src.split("createPortal(").length - 1;
       if (n === 0) continue;
       portals += n;

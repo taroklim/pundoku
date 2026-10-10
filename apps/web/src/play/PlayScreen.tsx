@@ -44,6 +44,7 @@ import { MelodyModeIcon } from "./modeIcons";
 import { MoreMenu } from "./MoreMenu";
 import { PlaySetup } from "./PlaySetup";
 import { ResultCard } from "./ResultCard";
+import { useDockSupport, useResultDock } from "./resultDock";
 import { useSolvedNow } from "../pet/useSolvedNow";
 import type { SavedPlay } from "./store";
 import { playStore } from "./store";
@@ -386,17 +387,26 @@ export function PlayScreen({ onOpenSettings, onOpenHelp, onOpenToday }: { onOpen
     ));
   const deskStatus = deskFit && !waiting ? statusNode(true) : null;
 
+  // PD-285: на телефоне кнопки карточки — в доке над таб-баром (кроме AX3 и ландшафта, play/resultDock.ts). Док ставится
+  // последним ребёнком `.play` сразу после карточки, кнопки ResultCard уходят в него порталом (элемент дока — состояние, чтобы
+  // портал встал в том же коммите, до первого кадра).
+  const dockOn = useResultDock(cardView && !desk && play !== null);
+  const [dockEl, setDockEl] = useState<HTMLDivElement | null>(null);
+  useDockSupport(dockOn ? dockEl : null);
+  const resultTitle = play?.liar ? t("liar.solvedTitle") : t("solved.title");
+
   // Карточка «решено»: на телефоне — вместо поля, на десктопе C — в инспекторе рядом с полем (PD-268). Только когда она на экране.
   const resultCard = cardView && play && (
     <ResultCard
       play={play}
       cardRef={cardRef}
-      title={play.liar ? t("liar.solvedTitle") : t("solved.title")}
+      title={resultTitle}
       timelapse={{ date: snap.daily ?? localDate(snap.startedOn), difficulty }}
       hints={snap.hints}
       onOpenHelp={onOpenHelp}
       liar={liarSum ? { info: liarSum, average: playStore.liarAverage() } : null}
       solvedNow={solvedNow}
+      dock={dockOn ? dockEl : null}
     >
       {/* PD-144: единственная кнопка нового пазла на экране (шапка на решённой партии действий не несёт). PD-167: шит режима партии. */}
       <button type="button" className="btn-plain newgrid" onClick={(e) => openSheet(snap.mode, e.currentTarget)} data-testid="new-puzzle">
@@ -406,7 +416,7 @@ export function PlayScreen({ onOpenSettings, onOpenHelp, onOpenToday }: { onOpen
   );
 
   return (
-    <div ref={screenRef} className={`play${fitClass}${waitClass}${deskParty ? " desk-play" : ""}`} onKeyDown={hub || waiting ? undefined : onGameKey}>
+    <div ref={screenRef} className={`play${fitClass}${waitClass}${deskParty ? " desk-play" : ""}${dockOn ? " play-result-dock" : ""}`} onKeyDown={hub || waiting ? undefined : onGameKey}>
       {/* Live-регион для скринридера: «N cells left» только на порогах (см. хук выше). */}
       <p className="sr-only" role="status" aria-live="polite" aria-atomic="true">
         {announcement}
@@ -467,7 +477,10 @@ export function PlayScreen({ onOpenSettings, onOpenHelp, onOpenToday }: { onOpen
         <>
           {!deskParty && subline}
           {cardView && !desk ? (
-            resultCard
+            <>
+              {resultCard}
+              {dockOn && <div ref={setDockEl} className="result-dock" role="group" aria-label={resultTitle} data-testid="result-dock" />}
+            </>
           ) : deskParty ? (
             // PD-267: десктоп C — поле по центру области контента, справа инспектор (время/остаток, статус, панель 3×3 с
             // действиями или док подсказки, шпаргалка клавиш). Тулбар над полем — TabHeader с `sub` выше. PD-268: решённая

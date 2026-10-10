@@ -14,8 +14,8 @@
  *     доступное имя с датой, строка не шире экрана, дата на одной строке (AX3). Кадр *-2-restart-play.
  *  3. Перезапуск на Today (вкладка по умолчанию): Today — сетка 8-го, нетронутая; Play → строка дня 7-го с датой (главный путь
  *     бага: стор Today уже на сегодняшнем). Кадр *-3-restart-today.
- *  4. Тап → архив 7-го: та же сетка, те же два хода; ход проходит. «‹ Year» → Play: строка осталась, клеток на одну меньше.
- *  5. Снова тап → доиграть до карточки результата; «‹ Year» → Play: строки дня нет, Лжец дня 7-го на месте и открывается;
+ *  4. Тап → архив 7-го: та же сетка, те же два хода; ход проходит. «‹ Play» (PD-282) → Play: строка осталась, клеток на одну меньше.
+ *  5. Снова тап → доиграть до карточки результата; «‹ Play» → Play: строки дня нет, Лжец дня 7-го на месте и открывается;
  *     Today — по-прежнему сетка 8-го без ходов.
  * Кадры — design/pd275-shots/. Браузеры/сервер закрываются в finally.
  */
@@ -265,9 +265,9 @@ async function run(br, [W, H, scheme, lang, ax3]) {
     check(`${tag}: ход в архиве проходит`, (await boardSig(p, ARCH))[third] === SOLUTION[third]);
     await p.locator('[data-testid="archive-back"]').click();
     await p.waitForTimeout(900);
-    // Year открывает карточку дня и снимает дату с адреса (#/year/<дата> → #/year): проверяем сам шит.
-    check(`${tag}: «‹ Year» из архива — вкладка Year, шит карточки дня`, /#\/year/.test(p.url()) && (await p.locator('[data-testid="year-sheet-root"].is-open').count()) === 1, p.url());
-    await p.screenshot({ path: path.join(OUT, `${tag}-4b-back-year.png`) });
+    // PD-282: архив, открытый из «Продолжить» хаба Play, — «‹ Play» обратно в хаб (раньше «‹ Year» вёл в Year).
+    check(`${tag}: «‹ Play» из архива — хаб Play, шита карточки дня нет`, p.url().endsWith("#/play") && (await p.locator('[data-testid="year-sheet-root"].is-open').count()) === 0, p.url());
+    await p.screenshot({ path: path.join(OUT, `${tag}-4b-back-play.png`) });
     await toHub(p);
     await p.locator('[data-testid="continue-day"]').waitFor({ timeout: 10000 });
     day = await rowInfo(p, "continue-day");

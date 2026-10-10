@@ -652,7 +652,7 @@ export function SettingsScreen({ store, onBack, origin = "today", onOpenHelp }: 
           <div className={`pet-moods${petOn ? "" : " off"}`} role="list" aria-label={t("settings.extras.previewLabel")} data-testid="pet-moods">
             {PET_MOODS.map((m) => (
               <figure key={m} role="listitem">
-                <PetBlot mood={m} size={40} decorative />
+                <PetBlot mood={m} size={40} decorative idle={false} />
                 <figcaption>
                   {t(`pet.mood.${m}`)}
                   <small>{t(`pet.when.${m}`)}</small>

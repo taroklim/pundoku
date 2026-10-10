@@ -965,6 +965,126 @@
   }
 }
 
+/* ---------- PD-285: док действий карточки «решено» (Play, телефон; design/pd285-result-card.md §4 A, §6) ----------
+   «Watch your solve» во всю ширину, под ней «Share | New puzzle» — прилипают к таб-бару, карточка прокручивается под ними
+   и уходит под растушёвку 16 px. Где дока нет (AX3, ландшафт телефона, десктоп C, Today/архив/Year), решает JS
+   (play/resultDock.ts) классом .play-result-dock и самим .result-dock — кнопки там в конце карточки, маска выше остаётся. */
+.scroll:has(.play-result-dock) {
+  /* Док сам отделяет контент: без запаса 16 px и без маски 35 %. Низ прокрутки = верх таб-бара. Прокрутка к элементу (фокус)
+     отсчитывается от того же края, а элемент карточки держит ещё высоту дока (scroll-margin ниже). */
+  padding-bottom: calc(var(--tabbar-h) + var(--sa-bot));
+  scroll-padding-bottom: calc(var(--tabbar-h) + var(--sa-bot));
+  -webkit-mask-image: none;
+  mask-image: none;
+}
+.play.play-result-dock {
+  padding-bottom: 0;
+}
+.play-result-dock > .card {
+  margin-bottom: 16px; /* в конце прокрутки растушёвка дока ложится на пустой фон, а не на карточку */
+}
+/* Tab по строкам карточки («What's this?», карта пути) — элемент встаёт над доком с воздухом, а не под ним. */
+.play-result-dock > .card :is(button, a, [tabindex="0"]) {
+  scroll-margin-bottom: calc(var(--dock-h, 120px) + 16px);
+}
+.result-dock {
+  position: sticky;
+  /* НЕ tabbar-h + sa-bot: sticky отсчитывается от края прокрутки за вычетом padding .scroll, а он уже равен таб-бару + inset
+     (иначе отступ учитывается дважды — док висел бы на 98 px выше бара). */
+  bottom: 0;
+  z-index: 2; /* ниже таб-бара (20) и тостов (30) */
+  margin-top: auto; /* короткая карточка: док всё равно у таб-бара */
+  flex: none;
+  background: var(--bg);
+  padding: 10px max(16px, var(--sa-r)) 10px max(16px, var(--sa-l));
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 8px;
+  animation: fadeIn calc(200ms * var(--mk)) var(--e-out) both;
+}
+/* Scroll edge 16 px (как .scroll-fade в shell.css): контент уходит под док мягко. */
+.result-dock::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 100%;
+  height: 16px;
+  pointer-events: none;
+  background: linear-gradient(to bottom, transparent, var(--bg));
+}
+/* Под стеклом таб-бара (полоса прокрутки под доком) — тот же фон: иначе карточка, ушедшая под непрозрачный док, снова
+   проступала бы ниже него через стекло (как в макете: под баром в покое и в середине прокрутки пусто). В конце прокрутки там
+   и так пустой отступ .scroll — переполнения не добавляет. */
+.result-dock::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 100%;
+  height: calc(var(--tabbar-h) + var(--sa-bot));
+  pointer-events: none;
+  background: var(--bg);
+}
+.result-dock > .tl-watch,
+.result-dock > .share,
+.result-dock > .newgrid,
+.result-dock > .tl-nolog {
+  margin: 0;
+}
+.result-dock > .tl-watch,
+.result-dock > .tl-nolog {
+  grid-column: 1 / -1;
+}
+.result-dock > .share,
+.result-dock > .newgrid {
+  width: auto;
+  min-width: 0;
+  text-align: center;
+  overflow-wrap: break-word;
+}
+.result-dock > .newgrid {
+  min-height: 46px;
+  border-radius: 11px;
+  padding: 8px 12px;
+  font-size: 0.95rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+/* Повтора нет (Share нет): единственная «New puzzle» — тонированная во всю ширину (§3 п. 2): одинокая текстовая кнопка внизу
+   экрана читалась бы подписью, а не действием. */
+.result-dock > .newgrid:only-child {
+  grid-column: 1 / -1;
+  background: var(--ink-tint);
+  font-weight: 600;
+}
+@media (prefers-reduced-transparency: reduce), (prefers-contrast: more) {
+  .result-dock::before {
+    display: none;
+  }
+  .result-dock {
+    box-shadow: 0 -1px 0 var(--hairline);
+  }
+}
+@media (forced-colors: active) {
+  .result-dock::before {
+    display: none;
+  }
+  .result-dock {
+    border-top: 1px solid CanvasText;
+  }
+}
+/* PD-87: низкий узкий экран (320×568) — док 8 + 44 + 8 + 44 + 8 = 112 px, цели по-прежнему 44. */
+@media (max-height: 600px) and (max-width: 430px) {
+  .result-dock {
+    padding-block: 8px;
+  }
+  .result-dock > :is(.tl-watch, .share, .newgrid) {
+    min-height: 44px;
+  }
+}
+
 /* ---------- Движение (PD-89) ----------
    Правило: амплитуда — через --mo, длительность — через --mk (tokens.css). При --mo:0 каждая анимация
    сама становится кроссфейдом/мягким тинтом; @media (prefers-reduced-motion) здесь НЕ дублируется. */
