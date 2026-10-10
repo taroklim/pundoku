@@ -1,0 +1,3920 @@
+[
+  {
+    "shot": "cr-now-320-light-rest",
+    "v": "now",
+    "w": 320,
+    "mode": "now",
+    "dock": "two",
+    "scroll": "rest",
+    "fit": null,
+    "heat": 128,
+    "barTop": 503.9,
+    "dockTop": null,
+    "dockBottom": null,
+    "limit": 503.9,
+    "cardBottom": 594.9,
+    "scrollRange": 135,
+    "acts": [
+      {
+        "act": "watch",
+        "where": "card",
+        "top": 438.9,
+        "bottom": 482.9,
+        "h": 44,
+        "vis": 44,
+        "full": true,
+        "under": false
+      },
+      {
+        "act": "share",
+        "where": "card",
+        "top": 490.9,
+        "bottom": 534.9,
+        "h": 44,
+        "vis": 13,
+        "full": false,
+        "under": true
+      },
+      {
+        "act": "new",
+        "where": "card",
+        "top": 538.9,
+        "bottom": 582.9,
+        "h": 44,
+        "vis": 0,
+        "full": false,
+        "under": true
+      }
+    ],
+    "problems": []
+  },
+  {
+    "shot": "cr-now-320-dark-rest",
+    "v": "now",
+    "w": 320,
+    "mode": "now",
+    "dock": "two",
+    "scroll": "rest",
+    "fit": null,
+    "heat": 128,
+    "barTop": 503.9,
+    "dockTop": null,
+    "dockBottom": null,
+    "limit": 503.9,
+    "cardBottom": 594.9,
+    "scrollRange": 135,
+    "acts": [
+      {
+        "act": "watch",
+        "where": "card",
+        "top": 438.9,
+        "bottom": 482.9,
+        "h": 44,
+        "vis": 44,
+        "full": true,
+        "under": false
+      },
+      {
+        "act": "share",
+        "where": "card",
+        "top": 490.9,
+        "bottom": 534.9,
+        "h": 44,
+        "vis": 13,
+        "full": false,
+        "under": true
+      },
+      {
+        "act": "new",
+        "where": "card",
+        "top": 538.9,
+        "bottom": 582.9,
+        "h": 44,
+        "vis": 0,
+        "full": false,
+        "under": true
+      }
+    ],
+    "problems": []
+  },
+  {
+    "shot": "cr-now-393-light-rest",
+    "v": "now",
+    "w": 393,
+    "mode": "now",
+    "dock": "two",
+    "scroll": "rest",
+    "fit": null,
+    "heat": 329,
+    "barTop": 753.9,
+    "dockTop": null,
+    "dockBottom": null,
+    "limit": 753.9,
+    "cardBottom": 882.8,
+    "scrollRange": 173,
+    "acts": [
+      {
+        "act": "watch",
+        "where": "card",
+        "top": 714.8,
+        "bottom": 760.8,
+        "h": 46,
+        "vis": 39,
+        "full": false,
+        "under": true
+      },
+      {
+        "act": "share",
+        "where": "card",
+        "top": 768.8,
+        "bottom": 814.8,
+        "h": 46,
+        "vis": 0,
+        "full": false,
+        "under": true
+      },
+      {
+        "act": "new",
+        "where": "card",
+        "top": 818.8,
+        "bottom": 866.8,
+        "h": 48,
+        "vis": 0,
+        "full": false,
+        "under": true
+      }
+    ],
+    "problems": []
+  },
+  {
+    "shot": "cr-now-393-dark-rest",
+    "v": "now",
+    "w": 393,
+    "mode": "now",
+    "dock": "two",
+    "scroll": "rest",
+    "fit": null,
+    "heat": 329,
+    "barTop": 753.9,
+    "dockTop": null,
+    "dockBottom": null,
+    "limit": 753.9,
+    "cardBottom": 882.8,
+    "scrollRange": 173,
+    "acts": [
+      {
+        "act": "watch",
+        "where": "card",
+        "top": 714.8,
+        "bottom": 760.8,
+        "h": 46,
+        "vis": 39,
+        "full": false,
+        "under": true
+      },
+      {
+        "act": "share",
+        "where": "card",
+        "top": 768.8,
+        "bottom": 814.8,
+        "h": 46,
+        "vis": 0,
+        "full": false,
+        "under": true
+      },
+      {
+        "act": "new",
+        "where": "card",
+        "top": 818.8,
+        "bottom": 866.8,
+        "h": 48,
+        "vis": 0,
+        "full": false,
+        "under": true
+      }
+    ],
+    "problems": []
+  },
+  {
+    "shot": "cr-now-430-light-rest",
+    "v": "now",
+    "w": 430,
+    "mode": "now",
+    "dock": "two",
+    "scroll": "rest",
+    "fit": null,
+    "heat": 366,
+    "barTop": 833.9,
+    "dockTop": null,
+    "dockBottom": null,
+    "limit": 833.9,
+    "cardBottom": 919.7,
+    "scrollRange": 130,
+    "acts": [
+      {
+        "act": "watch",
+        "where": "card",
+        "top": 751.7,
+        "bottom": 797.7,
+        "h": 46,
+        "vis": 46,
+        "full": true,
+        "under": false
+      },
+      {
+        "act": "share",
+        "where": "card",
+        "top": 805.7,
+        "bottom": 851.7,
+        "h": 46,
+        "vis": 28,
+        "full": false,
+        "under": true
+      },
+      {
+        "act": "new",
+        "where": "card",
+        "top": 855.7,
+        "bottom": 903.7,
+        "h": 48,
+        "vis": 0,
+        "full": false,
+        "under": true
+      }
+    ],
+    "problems": []
+  },
+  {
+    "shot": "cr-now-430-dark-rest",
+    "v": "now",
+    "w": 430,
+    "mode": "now",
+    "dock": "two",
+    "scroll": "rest",
+    "fit": null,
+    "heat": 366,
+    "barTop": 833.9,
+    "dockTop": null,
+    "dockBottom": null,
+    "limit": 833.9,
+    "cardBottom": 919.7,
+    "scrollRange": 130,
+    "acts": [
+      {
+        "act": "watch",
+        "where": "card",
+        "top": 751.7,
+        "bottom": 797.7,
+        "h": 46,
+        "vis": 46,
+        "full": true,
+        "under": false
+      },
+      {
+        "act": "share",
+        "where": "card",
+        "top": 805.7,
+        "bottom": 851.7,
+        "h": 46,
+        "vis": 28,
+        "full": false,
+        "under": true
+      },
+      {
+        "act": "new",
+        "where": "card",
+        "top": 855.7,
+        "bottom": 903.7,
+        "h": 48,
+        "vis": 0,
+        "full": false,
+        "under": true
+      }
+    ],
+    "problems": []
+  },
+  {
+    "shot": "cr-A-320-light-rest",
+    "v": "A",
+    "w": 320,
+    "mode": "A",
+    "dock": "two",
+    "scroll": "rest",
+    "fit": null,
+    "heat": 128,
+    "barTop": 503.9,
+    "dockTop": 391.9,
+    "dockBottom": 503.9,
+    "limit": 391.9,
+    "cardBottom": 438.9,
+    "scrollRange": 63,
+    "acts": [
+      {
+        "act": "watch",
+        "where": "dock",
+        "top": 399.9,
+        "bottom": 443.9,
+        "h": 44,
+        "vis": 44,
+        "full": true,
+        "under": false
+      },
+      {
+        "act": "share",
+        "where": "dock",
+        "top": 451.9,
+        "bottom": 495.9,
+        "h": 44,
+        "vis": 44,
+        "full": true,
+        "under": false
+      },
+      {
+        "act": "new",
+        "where": "dock",
+        "top": 451.9,
+        "bottom": 495.9,
+        "h": 44,
+        "vis": 44,
+        "full": true,
+        "under": false
+      }
+    ],
+    "problems": []
+  },
+  {
+    "shot": "cr-A-320-dark-rest",
+    "v": "A",
+    "w": 320,
+    "mode": "A",
+    "dock": "two",
+    "scroll": "rest",
+    "fit": null,
+    "heat": 128,
+    "barTop": 503.9,
+    "dockTop": 391.9,
+    "dockBottom": 503.9,
+    "limit": 391.9,
+    "cardBottom": 438.9,
+    "scrollRange": 63,
+    "acts": [
+      {
+        "act": "watch",
+        "where": "dock",
+        "top": 399.9,
+        "bottom": 443.9,
+        "h": 44,
+        "vis": 44,
+        "full": true,
+        "under": false
+      },
+      {
+        "act": "share",
+        "where": "dock",
+        "top": 451.9,
+        "bottom": 495.9,
+        "h": 44,
+        "vis": 44,
+        "full": true,
+        "under": false
+      },
+      {
+        "act": "new",
+        "where": "dock",
+        "top": 451.9,
+        "bottom": 495.9,
+        "h": 44,
+        "vis": 44,
+        "full": true,
+        "under": false
+      }
+    ],
+    "problems": []
+  },
+  {
+    "shot": "cr-A-393-light-rest",
+    "v": "A",
+    "w": 393,
+    "mode": "A",
+    "dock": "two",
+    "scroll": "rest",
+    "fit": null,
+    "heat": 329,
+    "barTop": 753.9,
+    "dockTop": 633.9,
+    "dockBottom": 753.9,
+    "limit": 633.9,
+    "cardBottom": 718.8,
+    "scrollRange": 101,
+    "acts": [
+      {
+        "act": "watch",
+        "where": "dock",
+        "top": 643.9,
+        "bottom": 689.9,
+        "h": 46,
+        "vis": 46,
+        "full": true,
+        "under": false
+      },
+      {
+        "act": "share",
+        "where": "dock",
+        "top": 697.9,
+        "bottom": 743.9,
+        "h": 46,
+        "vis": 46,
+        "full": true,
+        "under": false
+      },
+      {
+        "act": "new",
+        "where": "dock",
+        "top": 697.9,
+        "bottom": 743.9,
+        "h": 46,
+        "vis": 46,
+        "full": true,
+        "under": false
+      }
+    ],
+    "problems": []
+  },
+  {
+    "shot": "cr-A-393-dark-rest",
+    "v": "A",
+    "w": 393,
+    "mode": "A",
+    "dock": "two",
+    "scroll": "rest",
+    "fit": null,
+    "heat": 329,
+    "barTop": 753.9,
+    "dockTop": 633.9,
+    "dockBottom": 753.9,
+    "limit": 633.9,
+    "cardBottom": 718.8,
+    "scrollRange": 101,
+    "acts": [
+      {
+        "act": "watch",
+        "where": "dock",
+        "top": 643.9,
+        "bottom": 689.9,
+        "h": 46,
+        "vis": 46,
+        "full": true,
+        "under": false
+      },
+      {
+        "act": "share",
+        "where": "dock",
+        "top": 697.9,
+        "bottom": 743.9,
+        "h": 46,
+        "vis": 46,
+        "full": true,
+        "under": false
+      },
+      {
+        "act": "new",
+        "where": "dock",
+        "top": 697.9,
+        "bottom": 743.9,
+        "h": 46,
+        "vis": 46,
+        "full": true,
+        "under": false
+      }
+    ],
+    "problems": []
+  },
+  {
+    "shot": "cr-A-430-light-rest",
+    "v": "A",
+    "w": 430,
+    "mode": "A",
+    "dock": "two",
+    "scroll": "rest",
+    "fit": null,
+    "heat": 366,
+    "barTop": 833.9,
+    "dockTop": 713.9,
+    "dockBottom": 833.9,
+    "limit": 713.9,
+    "cardBottom": 755.7,
+    "scrollRange": 58,
+    "acts": [
+      {
+        "act": "watch",
+        "where": "dock",
+        "top": 723.9,
+        "bottom": 769.9,
+        "h": 46,
+        "vis": 46,
+        "full": true,
+        "under": false
+      },
+      {
+        "act": "share",
+        "where": "dock",
+        "top": 777.9,
+        "bottom": 823.9,
+        "h": 46,
+        "vis": 46,
+        "full": true,
+        "under": false
+      },
+      {
+        "act": "new",
+        "where": "dock",
+        "top": 777.9,
+        "bottom": 823.9,
+        "h": 46,
+        "vis": 46,
+        "full": true,
+        "under": false
+      }
+    ],
+    "problems": []
+  },
+  {
+    "shot": "cr-A-430-dark-rest",
+    "v": "A",
+    "w": 430,
+    "mode": "A",
+    "dock": "two",
+    "scroll": "rest",
+    "fit": null,
+    "heat": 366,
+    "barTop": 833.9,
+    "dockTop": 713.9,
+    "dockBottom": 833.9,
+    "limit": 713.9,
+    "cardBottom": 755.7,
+    "scrollRange": 58,
+    "acts": [
+      {
+        "act": "watch",
+        "where": "dock",
+        "top": 723.9,
+        "bottom": 769.9,
+        "h": 46,
+        "vis": 46,
+        "full": true,
+        "under": false
+      },
+      {
+        "act": "share",
+        "where": "dock",
+        "top": 777.9,
+        "bottom": 823.9,
+        "h": 46,
+        "vis": 46,
+        "full": true,
+        "under": false
+      },
+      {
+        "act": "new",
+        "where": "dock",
+        "top": 777.9,
+        "bottom": 823.9,
+        "h": 46,
+        "vis": 46,
+        "full": true,
+        "under": false
+      }
+    ],
+    "problems": []
+  },
+  {
+    "shot": "cr-B-320-light-rest",
+    "v": "B",
+    "w": 320,
+    "mode": "B",
+    "dock": "two",
+    "scroll": "rest",
+    "fit": "fail",
+    "heat": 128,
+    "barTop": 503.9,
+    "dockTop": null,
+    "dockBottom": null,
+    "limit": 503.9,
+    "cardBottom": 546.9,
+    "scrollRange": 87,
+    "acts": [
+      {
+        "act": "watch",
+        "where": "card",
+        "top": 438.9,
+        "bottom": 482.9,
+        "h": 44,
+        "vis": 44,
+        "full": true,
+        "under": false
+      },
+      {
+        "act": "share",
+        "where": "card",
+        "top": 490.9,
+        "bottom": 534.9,
+        "h": 44,
+        "vis": 13,
+        "full": false,
+        "under": true
+      },
+      {
+        "act": "new",
+        "where": "card",
+        "top": 490.9,
+        "bottom": 534.9,
+        "h": 44,
+        "vis": 13,
+        "full": false,
+        "under": true
+      }
+    ],
+    "problems": []
+  },
+  {
+    "shot": "cr-B-320-dark-rest",
+    "v": "B",
+    "w": 320,
+    "mode": "B",
+    "dock": "two",
+    "scroll": "rest",
+    "fit": "fail",
+    "heat": 128,
+    "barTop": 503.9,
+    "dockTop": null,
+    "dockBottom": null,
+    "limit": 503.9,
+    "cardBottom": 546.9,
+    "scrollRange": 87,
+    "acts": [
+      {
+        "act": "watch",
+        "where": "card",
+        "top": 438.9,
+        "bottom": 482.9,
+        "h": 44,
+        "vis": 44,
+        "full": true,
+        "under": false
+      },
+      {
+        "act": "share",
+        "where": "card",
+        "top": 490.9,
+        "bottom": 534.9,
+        "h": 44,
+        "vis": 13,
+        "full": false,
+        "under": true
+      },
+      {
+        "act": "new",
+        "where": "card",
+        "top": 490.9,
+        "bottom": 534.9,
+        "h": 44,
+        "vis": 13,
+        "full": false,
+        "under": true
+      }
+    ],
+    "problems": []
+  },
+  {
+    "shot": "cr-B-393-light-rest",
+    "v": "B",
+    "w": 393,
+    "mode": "B",
+    "dock": "two",
+    "scroll": "rest",
+    "fit": "ok",
+    "heat": 244,
+    "barTop": 753.9,
+    "dockTop": null,
+    "dockBottom": null,
+    "limit": 753.9,
+    "cardBottom": 745.8,
+    "scrollRange": 36,
+    "acts": [
+      {
+        "act": "watch",
+        "where": "card",
+        "top": 629.8,
+        "bottom": 675.8,
+        "h": 46,
+        "vis": 46,
+        "full": true,
+        "under": false
+      },
+      {
+        "act": "share",
+        "where": "card",
+        "top": 683.8,
+        "bottom": 729.8,
+        "h": 46,
+        "vis": 46,
+        "full": true,
+        "under": false
+      },
+      {
+        "act": "new",
+        "where": "card",
+        "top": 683.8,
+        "bottom": 729.8,
+        "h": 46,
+        "vis": 46,
+        "full": true,
+        "under": false
+      }
+    ],
+    "problems": []
+  },
+  {
+    "shot": "cr-B-393-dark-rest",
+    "v": "B",
+    "w": 393,
+    "mode": "B",
+    "dock": "two",
+    "scroll": "rest",
+    "fit": "ok",
+    "heat": 244,
+    "barTop": 753.9,
+    "dockTop": null,
+    "dockBottom": null,
+    "limit": 753.9,
+    "cardBottom": 745.8,
+    "scrollRange": 36,
+    "acts": [
+      {
+        "act": "watch",
+        "where": "card",
+        "top": 629.8,
+        "bottom": 675.8,
+        "h": 46,
+        "vis": 46,
+        "full": true,
+        "under": false
+      },
+      {
+        "act": "share",
+        "where": "card",
+        "top": 683.8,
+        "bottom": 729.8,
+        "h": 46,
+        "vis": 46,
+        "full": true,
+        "under": false
+      },
+      {
+        "act": "new",
+        "where": "card",
+        "top": 683.8,
+        "bottom": 729.8,
+        "h": 46,
+        "vis": 46,
+        "full": true,
+        "under": false
+      }
+    ],
+    "problems": []
+  },
+  {
+    "shot": "cr-B-430-light-rest",
+    "v": "B",
+    "w": 430,
+    "mode": "B",
+    "dock": "two",
+    "scroll": "rest",
+    "fit": "ok",
+    "heat": 324,
+    "barTop": 833.9,
+    "dockTop": null,
+    "dockBottom": null,
+    "limit": 833.9,
+    "cardBottom": 825.8,
+    "scrollRange": 36,
+    "acts": [
+      {
+        "act": "watch",
+        "where": "card",
+        "top": 709.8,
+        "bottom": 755.8,
+        "h": 46,
+        "vis": 46,
+        "full": true,
+        "under": false
+      },
+      {
+        "act": "share",
+        "where": "card",
+        "top": 763.8,
+        "bottom": 809.8,
+        "h": 46,
+        "vis": 46,
+        "full": true,
+        "under": false
+      },
+      {
+        "act": "new",
+        "where": "card",
+        "top": 763.8,
+        "bottom": 809.8,
+        "h": 46,
+        "vis": 46,
+        "full": true,
+        "under": false
+      }
+    ],
+    "problems": []
+  },
+  {
+    "shot": "cr-B-430-dark-rest",
+    "v": "B",
+    "w": 430,
+    "mode": "B",
+    "dock": "two",
+    "scroll": "rest",
+    "fit": "ok",
+    "heat": 324,
+    "barTop": 833.9,
+    "dockTop": null,
+    "dockBottom": null,
+    "limit": 833.9,
+    "cardBottom": 825.8,
+    "scrollRange": 36,
+    "acts": [
+      {
+        "act": "watch",
+        "where": "card",
+        "top": 709.8,
+        "bottom": 755.8,
+        "h": 46,
+        "vis": 46,
+        "full": true,
+        "under": false
+      },
+      {
+        "act": "share",
+        "where": "card",
+        "top": 763.8,
+        "bottom": 809.8,
+        "h": 46,
+        "vis": 46,
+        "full": true,
+        "under": false
+      },
+      {
+        "act": "new",
+        "where": "card",
+        "top": 763.8,
+        "bottom": 809.8,
+        "h": 46,
+        "vis": 46,
+        "full": true,
+        "under": false
+      }
+    ],
+    "problems": []
+  },
+  {
+    "shot": "cr-C-320-light-rest",
+    "v": "C",
+    "w": 320,
+    "mode": "C",
+    "dock": "two",
+    "scroll": "rest",
+    "fit": null,
+    "heat": 128,
+    "barTop": 503.9,
+    "dockTop": null,
+    "dockBottom": null,
+    "limit": 503.9,
+    "cardBottom": 573.9,
+    "scrollRange": 114,
+    "acts": [
+      {
+        "act": "watch",
+        "where": "card",
+        "top": 145.5,
+        "bottom": 189.5,
+        "h": 44,
+        "vis": 44,
+        "full": true,
+        "under": false
+      },
+      {
+        "act": "share",
+        "where": "card",
+        "top": 197.5,
+        "bottom": 241.5,
+        "h": 44,
+        "vis": 44,
+        "full": true,
+        "under": false
+      },
+      {
+        "act": "new",
+        "where": "card",
+        "top": 197.5,
+        "bottom": 241.5,
+        "h": 44,
+        "vis": 44,
+        "full": true,
+        "under": false
+      }
+    ],
+    "problems": []
+  },
+  {
+    "shot": "cr-C-320-dark-rest",
+    "v": "C",
+    "w": 320,
+    "mode": "C",
+    "dock": "two",
+    "scroll": "rest",
+    "fit": null,
+    "heat": 128,
+    "barTop": 503.9,
+    "dockTop": null,
+    "dockBottom": null,
+    "limit": 503.9,
+    "cardBottom": 573.9,
+    "scrollRange": 114,
+    "acts": [
+      {
+        "act": "watch",
+        "where": "card",
+        "top": 145.5,
+        "bottom": 189.5,
+        "h": 44,
+        "vis": 44,
+        "full": true,
+        "under": false
+      },
+      {
+        "act": "share",
+        "where": "card",
+        "top": 197.5,
+        "bottom": 241.5,
+        "h": 44,
+        "vis": 44,
+        "full": true,
+        "under": false
+      },
+      {
+        "act": "new",
+        "where": "card",
+        "top": 197.5,
+        "bottom": 241.5,
+        "h": 44,
+        "vis": 44,
+        "full": true,
+        "under": false
+      }
+    ],
+    "problems": []
+  },
+  {
+    "shot": "cr-C-393-light-rest",
+    "v": "C",
+    "w": 393,
+    "mode": "C",
+    "dock": "two",
+    "scroll": "rest",
+    "fit": null,
+    "heat": 329,
+    "barTop": 753.9,
+    "dockTop": null,
+    "dockBottom": null,
+    "limit": 753.9,
+    "cardBottom": 857.8,
+    "scrollRange": 148,
+    "acts": [
+      {
+        "act": "watch",
+        "where": "card",
+        "top": 196.5,
+        "bottom": 242.5,
+        "h": 46,
+        "vis": 46,
+        "full": true,
+        "under": false
+      },
+      {
+        "act": "share",
+        "where": "card",
+        "top": 250.5,
+        "bottom": 296.5,
+        "h": 46,
+        "vis": 46,
+        "full": true,
+        "under": false
+      },
+      {
+        "act": "new",
+        "where": "card",
+        "top": 250.5,
+        "bottom": 296.5,
+        "h": 46,
+        "vis": 46,
+        "full": true,
+        "under": false
+      }
+    ],
+    "problems": []
+  },
+  {
+    "shot": "cr-C-393-dark-rest",
+    "v": "C",
+    "w": 393,
+    "mode": "C",
+    "dock": "two",
+    "scroll": "rest",
+    "fit": null,
+    "heat": 329,
+    "barTop": 753.9,
+    "dockTop": null,
+    "dockBottom": null,
+    "limit": 753.9,
+    "cardBottom": 857.8,
+    "scrollRange": 148,
+    "acts": [
+      {
+        "act": "watch",
+        "where": "card",
+        "top": 196.5,
+        "bottom": 242.5,
+        "h": 46,
+        "vis": 46,
+        "full": true,
+        "under": false
+      },
+      {
+        "act": "share",
+        "where": "card",
+        "top": 250.5,
+        "bottom": 296.5,
+        "h": 46,
+        "vis": 46,
+        "full": true,
+        "under": false
+      },
+      {
+        "act": "new",
+        "where": "card",
+        "top": 250.5,
+        "bottom": 296.5,
+        "h": 46,
+        "vis": 46,
+        "full": true,
+        "under": false
+      }
+    ],
+    "problems": []
+  },
+  {
+    "shot": "cr-C-430-light-rest",
+    "v": "C",
+    "w": 430,
+    "mode": "C",
+    "dock": "two",
+    "scroll": "rest",
+    "fit": null,
+    "heat": 366,
+    "barTop": 833.9,
+    "dockTop": null,
+    "dockBottom": null,
+    "limit": 833.9,
+    "cardBottom": 894.7,
+    "scrollRange": 105,
+    "acts": [
+      {
+        "act": "watch",
+        "where": "card",
+        "top": 196.5,
+        "bottom": 242.5,
+        "h": 46,
+        "vis": 46,
+        "full": true,
+        "under": false
+      },
+      {
+        "act": "share",
+        "where": "card",
+        "top": 250.5,
+        "bottom": 296.5,
+        "h": 46,
+        "vis": 46,
+        "full": true,
+        "under": false
+      },
+      {
+        "act": "new",
+        "where": "card",
+        "top": 250.5,
+        "bottom": 296.5,
+        "h": 46,
+        "vis": 46,
+        "full": true,
+        "under": false
+      }
+    ],
+    "problems": []
+  },
+  {
+    "shot": "cr-C-430-dark-rest",
+    "v": "C",
+    "w": 430,
+    "mode": "C",
+    "dock": "two",
+    "scroll": "rest",
+    "fit": null,
+    "heat": 366,
+    "barTop": 833.9,
+    "dockTop": null,
+    "dockBottom": null,
+    "limit": 833.9,
+    "cardBottom": 894.7,
+    "scrollRange": 105,
+    "acts": [
+      {
+        "act": "watch",
+        "where": "card",
+        "top": 196.5,
+        "bottom": 242.5,
+        "h": 46,
+        "vis": 46,
+        "full": true,
+        "under": false
+      },
+      {
+        "act": "share",
+        "where": "card",
+        "top": 250.5,
+        "bottom": 296.5,
+        "h": 46,
+        "vis": 46,
+        "full": true,
+        "under": false
+      },
+      {
+        "act": "new",
+        "where": "card",
+        "top": 250.5,
+        "bottom": 296.5,
+        "h": 46,
+        "vis": 46,
+        "full": true,
+        "under": false
+      }
+    ],
+    "problems": []
+  },
+  {
+    "shot": "cr-now-320-light-end",
+    "v": "now",
+    "w": 320,
+    "mode": "now",
+    "dock": "two",
+    "scroll": "end",
+    "fit": null,
+    "heat": 128,
+    "barTop": 503.9,
+    "dockTop": null,
+    "dockBottom": null,
+    "limit": 503.9,
+    "cardBottom": 459.9,
+    "scrollRange": 135,
+    "acts": [
+      {
+        "act": "watch",
+        "where": "card",
+        "top": 303.9,
+        "bottom": 347.9,
+        "h": 44,
+        "vis": 44,
+        "full": true,
+        "under": false
+      },
+      {
+        "act": "share",
+        "where": "card",
+        "top": 355.9,
+        "bottom": 399.9,
+        "h": 44,
+        "vis": 44,
+        "full": true,
+        "under": false
+      },
+      {
+        "act": "new",
+        "where": "card",
+        "top": 403.9,
+        "bottom": 447.9,
+        "h": 44,
+        "vis": 44,
+        "full": true,
+        "under": false
+      }
+    ],
+    "problems": []
+  },
+  {
+    "shot": "cr-now-393-light-end",
+    "v": "now",
+    "w": 393,
+    "mode": "now",
+    "dock": "two",
+    "scroll": "end",
+    "fit": null,
+    "heat": 329,
+    "barTop": 753.9,
+    "dockTop": null,
+    "dockBottom": null,
+    "limit": 753.9,
+    "cardBottom": 709.8,
+    "scrollRange": 173,
+    "acts": [
+      {
+        "act": "watch",
+        "where": "card",
+        "top": 541.8,
+        "bottom": 587.8,
+        "h": 46,
+        "vis": 46,
+        "full": true,
+        "under": false
+      },
+      {
+        "act": "share",
+        "where": "card",
+        "top": 595.8,
+        "bottom": 641.8,
+        "h": 46,
+        "vis": 46,
+        "full": true,
+        "under": false
+      },
+      {
+        "act": "new",
+        "where": "card",
+        "top": 645.8,
+        "bottom": 693.8,
+        "h": 48,
+        "vis": 48,
+        "full": true,
+        "under": false
+      }
+    ],
+    "problems": []
+  },
+  {
+    "shot": "cr-now-430-light-end",
+    "v": "now",
+    "w": 430,
+    "mode": "now",
+    "dock": "two",
+    "scroll": "end",
+    "fit": null,
+    "heat": 366,
+    "barTop": 833.9,
+    "dockTop": null,
+    "dockBottom": null,
+    "limit": 833.9,
+    "cardBottom": 789.7,
+    "scrollRange": 130,
+    "acts": [
+      {
+        "act": "watch",
+        "where": "card",
+        "top": 621.7,
+        "bottom": 667.7,
+        "h": 46,
+        "vis": 46,
+        "full": true,
+        "under": false
+      },
+      {
+        "act": "share",
+        "where": "card",
+        "top": 675.7,
+        "bottom": 721.7,
+        "h": 46,
+        "vis": 46,
+        "full": true,
+        "under": false
+      },
+      {
+        "act": "new",
+        "where": "card",
+        "top": 725.7,
+        "bottom": 773.7,
+        "h": 48,
+        "vis": 48,
+        "full": true,
+        "under": false
+      }
+    ],
+    "problems": []
+  },
+  {
+    "shot": "cr-now-393-dark-end",
+    "v": "now",
+    "w": 393,
+    "mode": "now",
+    "dock": "two",
+    "scroll": "end",
+    "fit": null,
+    "heat": 329,
+    "barTop": 753.9,
+    "dockTop": null,
+    "dockBottom": null,
+    "limit": 753.9,
+    "cardBottom": 709.8,
+    "scrollRange": 173,
+    "acts": [
+      {
+        "act": "watch",
+        "where": "card",
+        "top": 541.8,
+        "bottom": 587.8,
+        "h": 46,
+        "vis": 46,
+        "full": true,
+        "under": false
+      },
+      {
+        "act": "share",
+        "where": "card",
+        "top": 595.8,
+        "bottom": 641.8,
+        "h": 46,
+        "vis": 46,
+        "full": true,
+        "under": false
+      },
+      {
+        "act": "new",
+        "where": "card",
+        "top": 645.8,
+        "bottom": 693.8,
+        "h": 48,
+        "vis": 48,
+        "full": true,
+        "under": false
+      }
+    ],
+    "problems": []
+  },
+  {
+    "shot": "cr-A-320-light-end",
+    "v": "A",
+    "w": 320,
+    "mode": "A",
+    "dock": "two",
+    "scroll": "end",
+    "fit": null,
+    "heat": 128,
+    "barTop": 503.9,
+    "dockTop": 391.9,
+    "dockBottom": 503.9,
+    "limit": 391.9,
+    "cardBottom": 375.9,
+    "scrollRange": 63,
+    "acts": [
+      {
+        "act": "watch",
+        "where": "dock",
+        "top": 399.9,
+        "bottom": 443.9,
+        "h": 44,
+        "vis": 44,
+        "full": true,
+        "under": false
+      },
+      {
+        "act": "share",
+        "where": "dock",
+        "top": 451.9,
+        "bottom": 495.9,
+        "h": 44,
+        "vis": 44,
+        "full": true,
+        "under": false
+      },
+      {
+        "act": "new",
+        "where": "dock",
+        "top": 451.9,
+        "bottom": 495.9,
+        "h": 44,
+        "vis": 44,
+        "full": true,
+        "under": false
+      }
+    ],
+    "problems": []
+  },
+  {
+    "shot": "cr-A-393-light-end",
+    "v": "A",
+    "w": 393,
+    "mode": "A",
+    "dock": "two",
+    "scroll": "end",
+    "fit": null,
+    "heat": 329,
+    "barTop": 753.9,
+    "dockTop": 633.8,
+    "dockBottom": 753.8,
+    "limit": 633.8,
+    "cardBottom": 617.8,
+    "scrollRange": 101,
+    "acts": [
+      {
+        "act": "watch",
+        "where": "dock",
+        "top": 643.8,
+        "bottom": 689.8,
+        "h": 46,
+        "vis": 46,
+        "full": true,
+        "under": false
+      },
+      {
+        "act": "share",
+        "where": "dock",
+        "top": 697.8,
+        "bottom": 743.8,
+        "h": 46,
+        "vis": 46,
+        "full": true,
+        "under": false
+      },
+      {
+        "act": "new",
+        "where": "dock",
+        "top": 697.8,
+        "bottom": 743.8,
+        "h": 46,
+        "vis": 46,
+        "full": true,
+        "under": false
+      }
+    ],
+    "problems": []
+  },
+  {
+    "shot": "cr-A-430-light-end",
+    "v": "A",
+    "w": 430,
+    "mode": "A",
+    "dock": "two",
+    "scroll": "end",
+    "fit": null,
+    "heat": 366,
+    "barTop": 833.9,
+    "dockTop": 713.7,
+    "dockBottom": 833.7,
+    "limit": 713.7,
+    "cardBottom": 697.7,
+    "scrollRange": 58,
+    "acts": [
+      {
+        "act": "watch",
+        "where": "dock",
+        "top": 723.7,
+        "bottom": 769.7,
+        "h": 46,
+        "vis": 46,
+        "full": true,
+        "under": false
+      },
+      {
+        "act": "share",
+        "where": "dock",
+        "top": 777.7,
+        "bottom": 823.7,
+        "h": 46,
+        "vis": 46,
+        "full": true,
+        "under": false
+      },
+      {
+        "act": "new",
+        "where": "dock",
+        "top": 777.7,
+        "bottom": 823.7,
+        "h": 46,
+        "vis": 46,
+        "full": true,
+        "under": false
+      }
+    ],
+    "problems": []
+  },
+  {
+    "shot": "cr-A-393-dark-end",
+    "v": "A",
+    "w": 393,
+    "mode": "A",
+    "dock": "two",
+    "scroll": "end",
+    "fit": null,
+    "heat": 329,
+    "barTop": 753.9,
+    "dockTop": 633.8,
+    "dockBottom": 753.8,
+    "limit": 633.8,
+    "cardBottom": 617.8,
+    "scrollRange": 101,
+    "acts": [
+      {
+        "act": "watch",
+        "where": "dock",
+        "top": 643.8,
+        "bottom": 689.8,
+        "h": 46,
+        "vis": 46,
+        "full": true,
+        "under": false
+      },
+      {
+        "act": "share",
+        "where": "dock",
+        "top": 697.8,
+        "bottom": 743.8,
+        "h": 46,
+        "vis": 46,
+        "full": true,
+        "under": false
+      },
+      {
+        "act": "new",
+        "where": "dock",
+        "top": 697.8,
+        "bottom": 743.8,
+        "h": 46,
+        "vis": 46,
+        "full": true,
+        "under": false
+      }
+    ],
+    "problems": []
+  },
+  {
+    "shot": "cr-B-320-light-end",
+    "v": "B",
+    "w": 320,
+    "mode": "B",
+    "dock": "two",
+    "scroll": "end",
+    "fit": "fail",
+    "heat": 128,
+    "barTop": 503.9,
+    "dockTop": null,
+    "dockBottom": null,
+    "limit": 503.9,
+    "cardBottom": 459.9,
+    "scrollRange": 87,
+    "acts": [
+      {
+        "act": "watch",
+        "where": "card",
+        "top": 351.9,
+        "bottom": 395.9,
+        "h": 44,
+        "vis": 44,
+        "full": true,
+        "under": false
+      },
+      {
+        "act": "share",
+        "where": "card",
+        "top": 403.9,
+        "bottom": 447.9,
+        "h": 44,
+        "vis": 44,
+        "full": true,
+        "under": false
+      },
+      {
+        "act": "new",
+        "where": "card",
+        "top": 403.9,
+        "bottom": 447.9,
+        "h": 44,
+        "vis": 44,
+        "full": true,
+        "under": false
+      }
+    ],
+    "problems": []
+  },
+  {
+    "shot": "cr-B-393-light-end",
+    "v": "B",
+    "w": 393,
+    "mode": "B",
+    "dock": "two",
+    "scroll": "end",
+    "fit": "ok",
+    "heat": 244,
+    "barTop": 753.9,
+    "dockTop": null,
+    "dockBottom": null,
+    "limit": 753.9,
+    "cardBottom": 709.8,
+    "scrollRange": 36,
+    "acts": [
+      {
+        "act": "watch",
+        "where": "card",
+        "top": 593.8,
+        "bottom": 639.8,
+        "h": 46,
+        "vis": 46,
+        "full": true,
+        "under": false
+      },
+      {
+        "act": "share",
+        "where": "card",
+        "top": 647.8,
+        "bottom": 693.8,
+        "h": 46,
+        "vis": 46,
+        "full": true,
+        "under": false
+      },
+      {
+        "act": "new",
+        "where": "card",
+        "top": 647.8,
+        "bottom": 693.8,
+        "h": 46,
+        "vis": 46,
+        "full": true,
+        "under": false
+      }
+    ],
+    "problems": []
+  },
+  {
+    "shot": "cr-B-430-light-end",
+    "v": "B",
+    "w": 430,
+    "mode": "B",
+    "dock": "two",
+    "scroll": "end",
+    "fit": "ok",
+    "heat": 324,
+    "barTop": 833.9,
+    "dockTop": null,
+    "dockBottom": null,
+    "limit": 833.9,
+    "cardBottom": 789.8,
+    "scrollRange": 36,
+    "acts": [
+      {
+        "act": "watch",
+        "where": "card",
+        "top": 673.8,
+        "bottom": 719.8,
+        "h": 46,
+        "vis": 46,
+        "full": true,
+        "under": false
+      },
+      {
+        "act": "share",
+        "where": "card",
+        "top": 727.8,
+        "bottom": 773.8,
+        "h": 46,
+        "vis": 46,
+        "full": true,
+        "under": false
+      },
+      {
+        "act": "new",
+        "where": "card",
+        "top": 727.8,
+        "bottom": 773.8,
+        "h": 46,
+        "vis": 46,
+        "full": true,
+        "under": false
+      }
+    ],
+    "problems": []
+  },
+  {
+    "shot": "cr-B-393-dark-end",
+    "v": "B",
+    "w": 393,
+    "mode": "B",
+    "dock": "two",
+    "scroll": "end",
+    "fit": "ok",
+    "heat": 244,
+    "barTop": 753.9,
+    "dockTop": null,
+    "dockBottom": null,
+    "limit": 753.9,
+    "cardBottom": 709.8,
+    "scrollRange": 36,
+    "acts": [
+      {
+        "act": "watch",
+        "where": "card",
+        "top": 593.8,
+        "bottom": 639.8,
+        "h": 46,
+        "vis": 46,
+        "full": true,
+        "under": false
+      },
+      {
+        "act": "share",
+        "where": "card",
+        "top": 647.8,
+        "bottom": 693.8,
+        "h": 46,
+        "vis": 46,
+        "full": true,
+        "under": false
+      },
+      {
+        "act": "new",
+        "where": "card",
+        "top": 647.8,
+        "bottom": 693.8,
+        "h": 46,
+        "vis": 46,
+        "full": true,
+        "under": false
+      }
+    ],
+    "problems": []
+  },
+  {
+    "shot": "cr-C-320-light-end",
+    "v": "C",
+    "w": 320,
+    "mode": "C",
+    "dock": "two",
+    "scroll": "end",
+    "fit": null,
+    "heat": 128,
+    "barTop": 503.9,
+    "dockTop": null,
+    "dockBottom": null,
+    "limit": 503.9,
+    "cardBottom": 459.9,
+    "scrollRange": 114,
+    "acts": [
+      {
+        "act": "watch",
+        "where": "card",
+        "top": 31.5,
+        "bottom": 75.5,
+        "h": 44,
+        "vis": 44,
+        "full": true,
+        "under": false
+      },
+      {
+        "act": "share",
+        "where": "card",
+        "top": 83.5,
+        "bottom": 127.5,
+        "h": 44,
+        "vis": 44,
+        "full": true,
+        "under": false
+      },
+      {
+        "act": "new",
+        "where": "card",
+        "top": 83.5,
+        "bottom": 127.5,
+        "h": 44,
+        "vis": 44,
+        "full": true,
+        "under": false
+      }
+    ],
+    "problems": []
+  },
+  {
+    "shot": "cr-C-393-light-end",
+    "v": "C",
+    "w": 393,
+    "mode": "C",
+    "dock": "two",
+    "scroll": "end",
+    "fit": null,
+    "heat": 329,
+    "barTop": 753.9,
+    "dockTop": null,
+    "dockBottom": null,
+    "limit": 753.9,
+    "cardBottom": 709.8,
+    "scrollRange": 148,
+    "acts": [
+      {
+        "act": "watch",
+        "where": "card",
+        "top": 48.5,
+        "bottom": 94.5,
+        "h": 46,
+        "vis": 46,
+        "full": true,
+        "under": false
+      },
+      {
+        "act": "share",
+        "where": "card",
+        "top": 102.5,
+        "bottom": 148.5,
+        "h": 46,
+        "vis": 46,
+        "full": true,
+        "under": false
+      },
+      {
+        "act": "new",
+        "where": "card",
+        "top": 102.5,
+        "bottom": 148.5,
+        "h": 46,
+        "vis": 46,
+        "full": true,
+        "under": false
+      }
+    ],
+    "problems": []
+  },
+  {
+    "shot": "cr-C-430-light-end",
+    "v": "C",
+    "w": 430,
+    "mode": "C",
+    "dock": "two",
+    "scroll": "end",
+    "fit": null,
+    "heat": 366,
+    "barTop": 833.9,
+    "dockTop": null,
+    "dockBottom": null,
+    "limit": 833.9,
+    "cardBottom": 789.7,
+    "scrollRange": 105,
+    "acts": [
+      {
+        "act": "watch",
+        "where": "card",
+        "top": 91.5,
+        "bottom": 137.5,
+        "h": 46,
+        "vis": 46,
+        "full": true,
+        "under": false
+      },
+      {
+        "act": "share",
+        "where": "card",
+        "top": 145.5,
+        "bottom": 191.5,
+        "h": 46,
+        "vis": 46,
+        "full": true,
+        "under": false
+      },
+      {
+        "act": "new",
+        "where": "card",
+        "top": 145.5,
+        "bottom": 191.5,
+        "h": 46,
+        "vis": 46,
+        "full": true,
+        "under": false
+      }
+    ],
+    "problems": []
+  },
+  {
+    "shot": "cr-C-393-dark-end",
+    "v": "C",
+    "w": 393,
+    "mode": "C",
+    "dock": "two",
+    "scroll": "end",
+    "fit": null,
+    "heat": 329,
+    "barTop": 753.9,
+    "dockTop": null,
+    "dockBottom": null,
+    "limit": 753.9,
+    "cardBottom": 709.8,
+    "scrollRange": 148,
+    "acts": [
+      {
+        "act": "watch",
+        "where": "card",
+        "top": 48.5,
+        "bottom": 94.5,
+        "h": 46,
+        "vis": 46,
+        "full": true,
+        "under": false
+      },
+      {
+        "act": "share",
+        "where": "card",
+        "top": 102.5,
+        "bottom": 148.5,
+        "h": 46,
+        "vis": 46,
+        "full": true,
+        "under": false
+      },
+      {
+        "act": "new",
+        "where": "card",
+        "top": 102.5,
+        "bottom": 148.5,
+        "h": 46,
+        "vis": 46,
+        "full": true,
+        "under": false
+      }
+    ],
+    "problems": []
+  },
+  {
+    "shot": "cr-A-393-light-mid",
+    "v": "A",
+    "w": 393,
+    "mode": "A",
+    "dock": "two",
+    "scroll": "mid",
+    "fit": null,
+    "heat": 329,
+    "barTop": 753.9,
+    "dockTop": 633.9,
+    "dockBottom": 753.9,
+    "limit": 633.9,
+    "cardBottom": 667.8,
+    "scrollRange": 101,
+    "acts": [
+      {
+        "act": "watch",
+        "where": "dock",
+        "top": 643.9,
+        "bottom": 689.9,
+        "h": 46,
+        "vis": 46,
+        "full": true,
+        "under": false
+      },
+      {
+        "act": "share",
+        "where": "dock",
+        "top": 697.9,
+        "bottom": 743.9,
+        "h": 46,
+        "vis": 46,
+        "full": true,
+        "under": false
+      },
+      {
+        "act": "new",
+        "where": "dock",
+        "top": 697.9,
+        "bottom": 743.9,
+        "h": 46,
+        "vis": 46,
+        "full": true,
+        "under": false
+      }
+    ],
+    "problems": []
+  },
+  {
+    "shot": "cr-A-320-light-mid",
+    "v": "A",
+    "w": 320,
+    "mode": "A",
+    "dock": "two",
+    "scroll": "mid",
+    "fit": null,
+    "heat": 128,
+    "barTop": 503.9,
+    "dockTop": 391.9,
+    "dockBottom": 503.9,
+    "limit": 391.9,
+    "cardBottom": 406.9,
+    "scrollRange": 63,
+    "acts": [
+      {
+        "act": "watch",
+        "where": "dock",
+        "top": 399.9,
+        "bottom": 443.9,
+        "h": 44,
+        "vis": 44,
+        "full": true,
+        "under": false
+      },
+      {
+        "act": "share",
+        "where": "dock",
+        "top": 451.9,
+        "bottom": 495.9,
+        "h": 44,
+        "vis": 44,
+        "full": true,
+        "under": false
+      },
+      {
+        "act": "new",
+        "where": "dock",
+        "top": 451.9,
+        "bottom": 495.9,
+        "h": 44,
+        "vis": 44,
+        "full": true,
+        "under": false
+      }
+    ],
+    "problems": []
+  },
+  {
+    "shot": "cr-A-393-dark-mid",
+    "v": "A",
+    "w": 393,
+    "mode": "A",
+    "dock": "two",
+    "scroll": "mid",
+    "fit": null,
+    "heat": 329,
+    "barTop": 753.9,
+    "dockTop": 633.9,
+    "dockBottom": 753.9,
+    "limit": 633.9,
+    "cardBottom": 667.8,
+    "scrollRange": 101,
+    "acts": [
+      {
+        "act": "watch",
+        "where": "dock",
+        "top": 643.9,
+        "bottom": 689.9,
+        "h": 46,
+        "vis": 46,
+        "full": true,
+        "under": false
+      },
+      {
+        "act": "share",
+        "where": "dock",
+        "top": 697.9,
+        "bottom": 743.9,
+        "h": 46,
+        "vis": 46,
+        "full": true,
+        "under": false
+      },
+      {
+        "act": "new",
+        "where": "dock",
+        "top": 697.9,
+        "bottom": 743.9,
+        "h": 46,
+        "vis": 46,
+        "full": true,
+        "under": false
+      }
+    ],
+    "problems": []
+  },
+  {
+    "shot": "cr-A-320-dark-mid",
+    "v": "A",
+    "w": 320,
+    "mode": "A",
+    "dock": "two",
+    "scroll": "mid",
+    "fit": null,
+    "heat": 128,
+    "barTop": 503.9,
+    "dockTop": 391.9,
+    "dockBottom": 503.9,
+    "limit": 391.9,
+    "cardBottom": 406.9,
+    "scrollRange": 63,
+    "acts": [
+      {
+        "act": "watch",
+        "where": "dock",
+        "top": 399.9,
+        "bottom": 443.9,
+        "h": 44,
+        "vis": 44,
+        "full": true,
+        "under": false
+      },
+      {
+        "act": "share",
+        "where": "dock",
+        "top": 451.9,
+        "bottom": 495.9,
+        "h": 44,
+        "vis": 44,
+        "full": true,
+        "under": false
+      },
+      {
+        "act": "new",
+        "where": "dock",
+        "top": 451.9,
+        "bottom": 495.9,
+        "h": 44,
+        "vis": 44,
+        "full": true,
+        "under": false
+      }
+    ],
+    "problems": []
+  },
+  {
+    "shot": "cr-now-393-light-rest-ax3",
+    "v": "now",
+    "w": 393,
+    "mode": "now",
+    "dock": "two",
+    "scroll": "rest",
+    "fit": null,
+    "heat": 329,
+    "barTop": 751,
+    "dockTop": null,
+    "dockBottom": null,
+    "limit": 751,
+    "cardBottom": 1342.1,
+    "scrollRange": 635,
+    "acts": [
+      {
+        "act": "watch",
+        "where": "card",
+        "top": 1062,
+        "bottom": 1176.7,
+        "h": 114.8,
+        "vis": 0,
+        "full": false,
+        "under": true
+      },
+      {
+        "act": "share",
+        "where": "card",
+        "top": 1184.7,
+        "bottom": 1250.1,
+        "h": 65.4,
+        "vis": 0,
+        "full": false,
+        "under": true
+      },
+      {
+        "act": "new",
+        "where": "card",
+        "top": 1254.1,
+        "bottom": 1326.1,
+        "h": 72,
+        "vis": 0,
+        "full": false,
+        "under": true
+      }
+    ],
+    "problems": []
+  },
+  {
+    "shot": "cr-A-393-light-rest-ax3",
+    "v": "A",
+    "w": 393,
+    "mode": "inline",
+    "dock": "two",
+    "scroll": "rest",
+    "fit": null,
+    "heat": 329,
+    "barTop": 751,
+    "dockTop": null,
+    "dockBottom": null,
+    "limit": 751,
+    "cardBottom": 1342.1,
+    "scrollRange": 635,
+    "acts": [
+      {
+        "act": "watch",
+        "where": "card",
+        "top": 1062,
+        "bottom": 1176.7,
+        "h": 114.8,
+        "vis": 0,
+        "full": false,
+        "under": true
+      },
+      {
+        "act": "share",
+        "where": "card",
+        "top": 1184.7,
+        "bottom": 1250.1,
+        "h": 65.4,
+        "vis": 0,
+        "full": false,
+        "under": true
+      },
+      {
+        "act": "new",
+        "where": "card",
+        "top": 1254.1,
+        "bottom": 1326.1,
+        "h": 72,
+        "vis": 0,
+        "full": false,
+        "under": true
+      }
+    ],
+    "problems": []
+  },
+  {
+    "shot": "cr-B-393-light-rest-ax3",
+    "v": "B",
+    "w": 393,
+    "mode": "B",
+    "dock": "two",
+    "scroll": "rest",
+    "fit": "fail",
+    "heat": 329,
+    "barTop": 751,
+    "dockTop": null,
+    "dockBottom": null,
+    "limit": 751,
+    "cardBottom": 1315.5,
+    "scrollRange": 609,
+    "acts": [
+      {
+        "act": "watch",
+        "where": "card",
+        "top": 1062,
+        "bottom": 1176.7,
+        "h": 114.8,
+        "vis": 0,
+        "full": false,
+        "under": true
+      },
+      {
+        "act": "share",
+        "where": "card",
+        "top": 1184.7,
+        "bottom": 1299.5,
+        "h": 114.8,
+        "vis": 0,
+        "full": false,
+        "under": true
+      },
+      {
+        "act": "new",
+        "where": "card",
+        "top": 1184.7,
+        "bottom": 1299.5,
+        "h": 114.8,
+        "vis": 0,
+        "full": false,
+        "under": true
+      }
+    ],
+    "problems": []
+  },
+  {
+    "shot": "cr-C-393-light-rest-ax3",
+    "v": "C",
+    "w": 393,
+    "mode": "C",
+    "dock": "two",
+    "scroll": "rest",
+    "fit": null,
+    "heat": 329,
+    "barTop": 751,
+    "dockTop": null,
+    "dockBottom": null,
+    "limit": 751,
+    "cardBottom": 1342.5,
+    "scrollRange": 636,
+    "acts": [
+      {
+        "act": "watch",
+        "where": "card",
+        "top": 286.5,
+        "bottom": 401.3,
+        "h": 114.8,
+        "vis": 115,
+        "full": true,
+        "under": false
+      },
+      {
+        "act": "share",
+        "where": "card",
+        "top": 409.3,
+        "bottom": 524.1,
+        "h": 114.8,
+        "vis": 115,
+        "full": true,
+        "under": false
+      },
+      {
+        "act": "new",
+        "where": "card",
+        "top": 409.3,
+        "bottom": 524.1,
+        "h": 114.8,
+        "vis": 115,
+        "full": true,
+        "under": false
+      }
+    ],
+    "problems": []
+  },
+  {
+    "shot": "cr-A-320-light-rest-ax3",
+    "v": "A",
+    "w": 320,
+    "mode": "inline",
+    "dock": "two",
+    "scroll": "rest",
+    "fit": null,
+    "heat": 128,
+    "barTop": 501,
+    "dockTop": null,
+    "dockBottom": null,
+    "limit": 501,
+    "cardBottom": 1128.4,
+    "scrollRange": 671,
+    "acts": [
+      {
+        "act": "watch",
+        "where": "card",
+        "top": 852.2,
+        "bottom": 967,
+        "h": 114.8,
+        "vis": 0,
+        "full": false,
+        "under": true
+      },
+      {
+        "act": "share",
+        "where": "card",
+        "top": 975,
+        "bottom": 1040.4,
+        "h": 65.4,
+        "vis": 0,
+        "full": false,
+        "under": true
+      },
+      {
+        "act": "new",
+        "where": "card",
+        "top": 1044.4,
+        "bottom": 1116.4,
+        "h": 72,
+        "vis": 0,
+        "full": false,
+        "under": true
+      }
+    ],
+    "problems": []
+  },
+  {
+    "shot": "cr-C-320-light-rest-ax3",
+    "v": "C",
+    "w": 320,
+    "mode": "C",
+    "dock": "two",
+    "scroll": "rest",
+    "fit": null,
+    "heat": 128,
+    "barTop": 501,
+    "dockTop": null,
+    "dockBottom": null,
+    "limit": 501,
+    "cardBottom": 1128.8,
+    "scrollRange": 672,
+    "acts": [
+      {
+        "act": "watch",
+        "where": "card",
+        "top": 235.5,
+        "bottom": 350.3,
+        "h": 114.8,
+        "vis": 115,
+        "full": true,
+        "under": false
+      },
+      {
+        "act": "share",
+        "where": "card",
+        "top": 358.3,
+        "bottom": 473.1,
+        "h": 114.8,
+        "vis": 115,
+        "full": true,
+        "under": false
+      },
+      {
+        "act": "new",
+        "where": "card",
+        "top": 358.3,
+        "bottom": 473.1,
+        "h": 114.8,
+        "vis": 115,
+        "full": true,
+        "under": false
+      }
+    ],
+    "problems": []
+  },
+  {
+    "shot": "cr-C-320-dark-rest-ax3",
+    "v": "C",
+    "w": 320,
+    "mode": "C",
+    "dock": "two",
+    "scroll": "rest",
+    "fit": null,
+    "heat": 128,
+    "barTop": 501,
+    "dockTop": null,
+    "dockBottom": null,
+    "limit": 501,
+    "cardBottom": 1128.8,
+    "scrollRange": 672,
+    "acts": [
+      {
+        "act": "watch",
+        "where": "card",
+        "top": 235.5,
+        "bottom": 350.3,
+        "h": 114.8,
+        "vis": 115,
+        "full": true,
+        "under": false
+      },
+      {
+        "act": "share",
+        "where": "card",
+        "top": 358.3,
+        "bottom": 473.1,
+        "h": 114.8,
+        "vis": 115,
+        "full": true,
+        "under": false
+      },
+      {
+        "act": "new",
+        "where": "card",
+        "top": 358.3,
+        "bottom": 473.1,
+        "h": 114.8,
+        "vis": 115,
+        "full": true,
+        "under": false
+      }
+    ],
+    "problems": []
+  },
+  {
+    "shot": "cr-A-393-dark-end-ax3",
+    "v": "A",
+    "w": 393,
+    "mode": "inline",
+    "dock": "two",
+    "scroll": "end",
+    "fit": null,
+    "heat": 329,
+    "barTop": 751,
+    "dockTop": null,
+    "dockBottom": null,
+    "limit": 751,
+    "cardBottom": 707.1,
+    "scrollRange": 635,
+    "acts": [
+      {
+        "act": "watch",
+        "where": "card",
+        "top": 427,
+        "bottom": 541.7,
+        "h": 114.8,
+        "vis": 115,
+        "full": true,
+        "under": false
+      },
+      {
+        "act": "share",
+        "where": "card",
+        "top": 549.7,
+        "bottom": 615.1,
+        "h": 65.4,
+        "vis": 65,
+        "full": true,
+        "under": false
+      },
+      {
+        "act": "new",
+        "where": "card",
+        "top": 619.1,
+        "bottom": 691.1,
+        "h": 72,
+        "vis": 72,
+        "full": true,
+        "under": false
+      }
+    ],
+    "problems": []
+  },
+  {
+    "shot": "cr-C-393-light-end-ax3",
+    "v": "C",
+    "w": 393,
+    "mode": "C",
+    "dock": "two",
+    "scroll": "end",
+    "fit": null,
+    "heat": 329,
+    "barTop": 751,
+    "dockTop": null,
+    "dockBottom": null,
+    "limit": 751,
+    "cardBottom": 706.5,
+    "scrollRange": 636,
+    "acts": [
+      {
+        "act": "watch",
+        "where": "card",
+        "top": -349.5,
+        "bottom": -234.7,
+        "h": 114.8,
+        "vis": 0,
+        "full": false,
+        "under": false
+      },
+      {
+        "act": "share",
+        "where": "card",
+        "top": -226.7,
+        "bottom": -111.9,
+        "h": 114.8,
+        "vis": 0,
+        "full": false,
+        "under": false
+      },
+      {
+        "act": "new",
+        "where": "card",
+        "top": -226.7,
+        "bottom": -111.9,
+        "h": 114.8,
+        "vis": 0,
+        "full": false,
+        "under": false
+      }
+    ],
+    "problems": []
+  },
+  {
+    "shot": "cr-A-393-light-rest-rt",
+    "v": "A",
+    "w": 393,
+    "mode": "A",
+    "dock": "two",
+    "scroll": "rest",
+    "fit": null,
+    "heat": 329,
+    "barTop": 753.9,
+    "dockTop": 633.9,
+    "dockBottom": 753.9,
+    "limit": 633.9,
+    "cardBottom": 718.8,
+    "scrollRange": 101,
+    "acts": [
+      {
+        "act": "watch",
+        "where": "dock",
+        "top": 643.9,
+        "bottom": 689.9,
+        "h": 46,
+        "vis": 46,
+        "full": true,
+        "under": false
+      },
+      {
+        "act": "share",
+        "where": "dock",
+        "top": 697.9,
+        "bottom": 743.9,
+        "h": 46,
+        "vis": 46,
+        "full": true,
+        "under": false
+      },
+      {
+        "act": "new",
+        "where": "dock",
+        "top": 697.9,
+        "bottom": 743.9,
+        "h": 46,
+        "vis": 46,
+        "full": true,
+        "under": false
+      }
+    ],
+    "problems": []
+  },
+  {
+    "shot": "cr-A-393-light-mid-rt",
+    "v": "A",
+    "w": 393,
+    "mode": "A",
+    "dock": "two",
+    "scroll": "mid",
+    "fit": null,
+    "heat": 329,
+    "barTop": 753.9,
+    "dockTop": 633.9,
+    "dockBottom": 753.9,
+    "limit": 633.9,
+    "cardBottom": 667.8,
+    "scrollRange": 101,
+    "acts": [
+      {
+        "act": "watch",
+        "where": "dock",
+        "top": 643.9,
+        "bottom": 689.9,
+        "h": 46,
+        "vis": 46,
+        "full": true,
+        "under": false
+      },
+      {
+        "act": "share",
+        "where": "dock",
+        "top": 697.9,
+        "bottom": 743.9,
+        "h": 46,
+        "vis": 46,
+        "full": true,
+        "under": false
+      },
+      {
+        "act": "new",
+        "where": "dock",
+        "top": 697.9,
+        "bottom": 743.9,
+        "h": 46,
+        "vis": 46,
+        "full": true,
+        "under": false
+      }
+    ],
+    "problems": []
+  },
+  {
+    "shot": "cr-A-393-dark-rest-rt",
+    "v": "A",
+    "w": 393,
+    "mode": "A",
+    "dock": "two",
+    "scroll": "rest",
+    "fit": null,
+    "heat": 329,
+    "barTop": 753.9,
+    "dockTop": 633.9,
+    "dockBottom": 753.9,
+    "limit": 633.9,
+    "cardBottom": 718.8,
+    "scrollRange": 101,
+    "acts": [
+      {
+        "act": "watch",
+        "where": "dock",
+        "top": 643.9,
+        "bottom": 689.9,
+        "h": 46,
+        "vis": 46,
+        "full": true,
+        "under": false
+      },
+      {
+        "act": "share",
+        "where": "dock",
+        "top": 697.9,
+        "bottom": 743.9,
+        "h": 46,
+        "vis": 46,
+        "full": true,
+        "under": false
+      },
+      {
+        "act": "new",
+        "where": "dock",
+        "top": 697.9,
+        "bottom": 743.9,
+        "h": 46,
+        "vis": 46,
+        "full": true,
+        "under": false
+      }
+    ],
+    "problems": []
+  },
+  {
+    "shot": "cr-A-393-dark-mid-rt",
+    "v": "A",
+    "w": 393,
+    "mode": "A",
+    "dock": "two",
+    "scroll": "mid",
+    "fit": null,
+    "heat": 329,
+    "barTop": 753.9,
+    "dockTop": 633.9,
+    "dockBottom": 753.9,
+    "limit": 633.9,
+    "cardBottom": 667.8,
+    "scrollRange": 101,
+    "acts": [
+      {
+        "act": "watch",
+        "where": "dock",
+        "top": 643.9,
+        "bottom": 689.9,
+        "h": 46,
+        "vis": 46,
+        "full": true,
+        "under": false
+      },
+      {
+        "act": "share",
+        "where": "dock",
+        "top": 697.9,
+        "bottom": 743.9,
+        "h": 46,
+        "vis": 46,
+        "full": true,
+        "under": false
+      },
+      {
+        "act": "new",
+        "where": "dock",
+        "top": 697.9,
+        "bottom": 743.9,
+        "h": 46,
+        "vis": 46,
+        "full": true,
+        "under": false
+      }
+    ],
+    "problems": []
+  },
+  {
+    "shot": "cr-now-393-light-rest-rt",
+    "v": "now",
+    "w": 393,
+    "mode": "now",
+    "dock": "two",
+    "scroll": "rest",
+    "fit": null,
+    "heat": 329,
+    "barTop": 753.9,
+    "dockTop": null,
+    "dockBottom": null,
+    "limit": 753.9,
+    "cardBottom": 882.8,
+    "scrollRange": 173,
+    "acts": [
+      {
+        "act": "watch",
+        "where": "card",
+        "top": 714.8,
+        "bottom": 760.8,
+        "h": 46,
+        "vis": 39,
+        "full": false,
+        "under": true
+      },
+      {
+        "act": "share",
+        "where": "card",
+        "top": 768.8,
+        "bottom": 814.8,
+        "h": 46,
+        "vis": 0,
+        "full": false,
+        "under": true
+      },
+      {
+        "act": "new",
+        "where": "card",
+        "top": 818.8,
+        "bottom": 866.8,
+        "h": 48,
+        "vis": 0,
+        "full": false,
+        "under": true
+      }
+    ],
+    "problems": []
+  },
+  {
+    "shot": "cr-A-320-light-rest-uk",
+    "v": "A",
+    "w": 320,
+    "mode": "A",
+    "dock": "two",
+    "scroll": "rest",
+    "fit": null,
+    "heat": 128,
+    "barTop": 503.9,
+    "dockTop": 377.9,
+    "dockBottom": 503.9,
+    "limit": 377.9,
+    "cardBottom": 456.6,
+    "scrollRange": 95,
+    "acts": [
+      {
+        "act": "watch",
+        "where": "dock",
+        "top": 385.9,
+        "bottom": 443.9,
+        "h": 58,
+        "vis": 58,
+        "full": true,
+        "under": false
+      },
+      {
+        "act": "share",
+        "where": "dock",
+        "top": 451.9,
+        "bottom": 495.9,
+        "h": 44,
+        "vis": 44,
+        "full": true,
+        "under": false
+      },
+      {
+        "act": "new",
+        "where": "dock",
+        "top": 451.9,
+        "bottom": 495.9,
+        "h": 44,
+        "vis": 44,
+        "full": true,
+        "under": false
+      }
+    ],
+    "problems": []
+  },
+  {
+    "shot": "cr-B-320-light-rest-uk",
+    "v": "B",
+    "w": 320,
+    "mode": "B",
+    "dock": "two",
+    "scroll": "rest",
+    "fit": "fail",
+    "heat": 128,
+    "barTop": 503.9,
+    "dockTop": null,
+    "dockBottom": null,
+    "limit": 503.9,
+    "cardBottom": 578.6,
+    "scrollRange": 119,
+    "acts": [
+      {
+        "act": "watch",
+        "where": "card",
+        "top": 456.6,
+        "bottom": 514.6,
+        "h": 58,
+        "vis": 47,
+        "full": false,
+        "under": true
+      },
+      {
+        "act": "share",
+        "where": "card",
+        "top": 522.6,
+        "bottom": 566.6,
+        "h": 44,
+        "vis": 0,
+        "full": false,
+        "under": true
+      },
+      {
+        "act": "new",
+        "where": "card",
+        "top": 522.6,
+        "bottom": 566.6,
+        "h": 44,
+        "vis": 0,
+        "full": false,
+        "under": true
+      }
+    ],
+    "problems": []
+  },
+  {
+    "shot": "cr-C-320-light-rest-uk",
+    "v": "C",
+    "w": 320,
+    "mode": "C",
+    "dock": "two",
+    "scroll": "rest",
+    "fit": null,
+    "heat": 128,
+    "barTop": 503.9,
+    "dockTop": null,
+    "dockBottom": null,
+    "limit": 503.9,
+    "cardBottom": 605.6,
+    "scrollRange": 146,
+    "acts": [
+      {
+        "act": "watch",
+        "where": "card",
+        "top": 145.5,
+        "bottom": 203.5,
+        "h": 58,
+        "vis": 58,
+        "full": true,
+        "under": false
+      },
+      {
+        "act": "share",
+        "where": "card",
+        "top": 211.5,
+        "bottom": 255.5,
+        "h": 44,
+        "vis": 44,
+        "full": true,
+        "under": false
+      },
+      {
+        "act": "new",
+        "where": "card",
+        "top": 211.5,
+        "bottom": 255.5,
+        "h": 44,
+        "vis": 44,
+        "full": true,
+        "under": false
+      }
+    ],
+    "problems": []
+  },
+  {
+    "shot": "cr-A-320-dark-rest-ru",
+    "v": "A",
+    "w": 320,
+    "mode": "A",
+    "dock": "two",
+    "scroll": "rest",
+    "fit": null,
+    "heat": 128,
+    "barTop": 503.9,
+    "dockTop": 391.9,
+    "dockBottom": 503.9,
+    "limit": 391.9,
+    "cardBottom": 456.6,
+    "scrollRange": 81,
+    "acts": [
+      {
+        "act": "watch",
+        "where": "dock",
+        "top": 399.9,
+        "bottom": 443.9,
+        "h": 44,
+        "vis": 44,
+        "full": true,
+        "under": false
+      },
+      {
+        "act": "share",
+        "where": "dock",
+        "top": 451.9,
+        "bottom": 495.9,
+        "h": 44,
+        "vis": 44,
+        "full": true,
+        "under": false
+      },
+      {
+        "act": "new",
+        "where": "dock",
+        "top": 451.9,
+        "bottom": 495.9,
+        "h": 44,
+        "vis": 44,
+        "full": true,
+        "under": false
+      }
+    ],
+    "problems": []
+  },
+  {
+    "shot": "cr-A-430-light-rest-uk",
+    "v": "A",
+    "w": 430,
+    "mode": "A",
+    "dock": "two",
+    "scroll": "rest",
+    "fit": null,
+    "heat": 366,
+    "barTop": 833.9,
+    "dockTop": 713.9,
+    "dockBottom": 833.9,
+    "limit": 713.9,
+    "cardBottom": 755.7,
+    "scrollRange": 58,
+    "acts": [
+      {
+        "act": "watch",
+        "where": "dock",
+        "top": 723.9,
+        "bottom": 769.9,
+        "h": 46,
+        "vis": 46,
+        "full": true,
+        "under": false
+      },
+      {
+        "act": "share",
+        "where": "dock",
+        "top": 777.9,
+        "bottom": 823.9,
+        "h": 46,
+        "vis": 46,
+        "full": true,
+        "under": false
+      },
+      {
+        "act": "new",
+        "where": "dock",
+        "top": 777.9,
+        "bottom": 823.9,
+        "h": 46,
+        "vis": 46,
+        "full": true,
+        "under": false
+      }
+    ],
+    "problems": []
+  },
+  {
+    "shot": "cr-now-320-light-rest-uk",
+    "v": "now",
+    "w": 320,
+    "mode": "now",
+    "dock": "two",
+    "scroll": "rest",
+    "fit": null,
+    "heat": 128,
+    "barTop": 503.9,
+    "dockTop": null,
+    "dockBottom": null,
+    "limit": 503.9,
+    "cardBottom": 626.6,
+    "scrollRange": 167,
+    "acts": [
+      {
+        "act": "watch",
+        "where": "card",
+        "top": 456.6,
+        "bottom": 514.6,
+        "h": 58,
+        "vis": 47,
+        "full": false,
+        "under": true
+      },
+      {
+        "act": "share",
+        "where": "card",
+        "top": 522.6,
+        "bottom": 566.6,
+        "h": 44,
+        "vis": 0,
+        "full": false,
+        "under": true
+      },
+      {
+        "act": "new",
+        "where": "card",
+        "top": 570.6,
+        "bottom": 614.6,
+        "h": 44,
+        "vis": 0,
+        "full": false,
+        "under": true
+      }
+    ],
+    "problems": []
+  },
+  {
+    "shot": "cr-now-393-light-rest-long",
+    "v": "now",
+    "w": 393,
+    "mode": "now",
+    "dock": "two",
+    "scroll": "rest",
+    "fit": null,
+    "heat": 329,
+    "barTop": 753.9,
+    "dockTop": null,
+    "dockBottom": null,
+    "limit": 753.9,
+    "cardBottom": 1029.5,
+    "scrollRange": 320,
+    "acts": [
+      {
+        "act": "watch",
+        "where": "card",
+        "top": 861.5,
+        "bottom": 907.5,
+        "h": 46,
+        "vis": 0,
+        "full": false,
+        "under": true
+      },
+      {
+        "act": "share",
+        "where": "card",
+        "top": 915.5,
+        "bottom": 961.5,
+        "h": 46,
+        "vis": 0,
+        "full": false,
+        "under": true
+      },
+      {
+        "act": "new",
+        "where": "card",
+        "top": 965.5,
+        "bottom": 1013.5,
+        "h": 48,
+        "vis": 0,
+        "full": false,
+        "under": true
+      }
+    ],
+    "problems": []
+  },
+  {
+    "shot": "cr-A-393-light-rest-long",
+    "v": "A",
+    "w": 393,
+    "mode": "A",
+    "dock": "two",
+    "scroll": "rest",
+    "fit": null,
+    "heat": 329,
+    "barTop": 753.9,
+    "dockTop": 633.9,
+    "dockBottom": 753.9,
+    "limit": 633.9,
+    "cardBottom": 865.5,
+    "scrollRange": 248,
+    "acts": [
+      {
+        "act": "watch",
+        "where": "dock",
+        "top": 643.9,
+        "bottom": 689.9,
+        "h": 46,
+        "vis": 46,
+        "full": true,
+        "under": false
+      },
+      {
+        "act": "share",
+        "where": "dock",
+        "top": 697.9,
+        "bottom": 743.9,
+        "h": 46,
+        "vis": 46,
+        "full": true,
+        "under": false
+      },
+      {
+        "act": "new",
+        "where": "dock",
+        "top": 697.9,
+        "bottom": 743.9,
+        "h": 46,
+        "vis": 46,
+        "full": true,
+        "under": false
+      }
+    ],
+    "problems": []
+  },
+  {
+    "shot": "cr-B-393-light-rest-long",
+    "v": "B",
+    "w": 393,
+    "mode": "B",
+    "dock": "two",
+    "scroll": "rest",
+    "fit": "fail",
+    "heat": 329,
+    "barTop": 753.9,
+    "dockTop": null,
+    "dockBottom": null,
+    "limit": 753.9,
+    "cardBottom": 977.5,
+    "scrollRange": 268,
+    "acts": [
+      {
+        "act": "watch",
+        "where": "card",
+        "top": 861.5,
+        "bottom": 907.5,
+        "h": 46,
+        "vis": 0,
+        "full": false,
+        "under": true
+      },
+      {
+        "act": "share",
+        "where": "card",
+        "top": 915.5,
+        "bottom": 961.5,
+        "h": 46,
+        "vis": 0,
+        "full": false,
+        "under": true
+      },
+      {
+        "act": "new",
+        "where": "card",
+        "top": 915.5,
+        "bottom": 961.5,
+        "h": 46,
+        "vis": 0,
+        "full": false,
+        "under": true
+      }
+    ],
+    "problems": []
+  },
+  {
+    "shot": "cr-C-393-light-rest-long",
+    "v": "C",
+    "w": 393,
+    "mode": "C",
+    "dock": "two",
+    "scroll": "rest",
+    "fit": null,
+    "heat": 329,
+    "barTop": 753.9,
+    "dockTop": null,
+    "dockBottom": null,
+    "limit": 753.9,
+    "cardBottom": 1004.5,
+    "scrollRange": 295,
+    "acts": [
+      {
+        "act": "watch",
+        "where": "card",
+        "top": 196.5,
+        "bottom": 242.5,
+        "h": 46,
+        "vis": 46,
+        "full": true,
+        "under": false
+      },
+      {
+        "act": "share",
+        "where": "card",
+        "top": 250.5,
+        "bottom": 296.5,
+        "h": 46,
+        "vis": 46,
+        "full": true,
+        "under": false
+      },
+      {
+        "act": "new",
+        "where": "card",
+        "top": 250.5,
+        "bottom": 296.5,
+        "h": 46,
+        "vis": 46,
+        "full": true,
+        "under": false
+      }
+    ],
+    "problems": []
+  },
+  {
+    "shot": "cr-A-393-light-end-long",
+    "v": "A",
+    "w": 393,
+    "mode": "A",
+    "dock": "two",
+    "scroll": "end",
+    "fit": null,
+    "heat": 329,
+    "barTop": 753.9,
+    "dockTop": 633.5,
+    "dockBottom": 753.5,
+    "limit": 633.5,
+    "cardBottom": 617.5,
+    "scrollRange": 248,
+    "acts": [
+      {
+        "act": "watch",
+        "where": "dock",
+        "top": 643.5,
+        "bottom": 689.5,
+        "h": 46,
+        "vis": 46,
+        "full": true,
+        "under": false
+      },
+      {
+        "act": "share",
+        "where": "dock",
+        "top": 697.5,
+        "bottom": 743.5,
+        "h": 46,
+        "vis": 46,
+        "full": true,
+        "under": false
+      },
+      {
+        "act": "new",
+        "where": "dock",
+        "top": 697.5,
+        "bottom": 743.5,
+        "h": 46,
+        "vis": 46,
+        "full": true,
+        "under": false
+      }
+    ],
+    "problems": []
+  },
+  {
+    "shot": "cr-A-320-light-rest-long",
+    "v": "A",
+    "w": 320,
+    "mode": "A",
+    "dock": "two",
+    "scroll": "rest",
+    "fit": null,
+    "heat": 128,
+    "barTop": 503.9,
+    "dockTop": 391.9,
+    "dockBottom": 503.9,
+    "limit": 391.9,
+    "cardBottom": 573.8,
+    "scrollRange": 198,
+    "acts": [
+      {
+        "act": "watch",
+        "where": "dock",
+        "top": 399.9,
+        "bottom": 443.9,
+        "h": 44,
+        "vis": 44,
+        "full": true,
+        "under": false
+      },
+      {
+        "act": "share",
+        "where": "dock",
+        "top": 451.9,
+        "bottom": 495.9,
+        "h": 44,
+        "vis": 44,
+        "full": true,
+        "under": false
+      },
+      {
+        "act": "new",
+        "where": "dock",
+        "top": 451.9,
+        "bottom": 495.9,
+        "h": 44,
+        "vis": 44,
+        "full": true,
+        "under": false
+      }
+    ],
+    "problems": []
+  },
+  {
+    "shot": "cr-B-430-light-rest-long",
+    "v": "B",
+    "w": 430,
+    "mode": "B",
+    "dock": "two",
+    "scroll": "rest",
+    "fit": "ok",
+    "heat": 177,
+    "barTop": 833.9,
+    "dockTop": null,
+    "dockBottom": null,
+    "limit": 833.9,
+    "cardBottom": 825.5,
+    "scrollRange": 36,
+    "acts": [
+      {
+        "act": "watch",
+        "where": "card",
+        "top": 709.5,
+        "bottom": 755.5,
+        "h": 46,
+        "vis": 46,
+        "full": true,
+        "under": false
+      },
+      {
+        "act": "share",
+        "where": "card",
+        "top": 763.5,
+        "bottom": 809.5,
+        "h": 46,
+        "vis": 46,
+        "full": true,
+        "under": false
+      },
+      {
+        "act": "new",
+        "where": "card",
+        "top": 763.5,
+        "bottom": 809.5,
+        "h": 46,
+        "vis": 46,
+        "full": true,
+        "under": false
+      }
+    ],
+    "problems": []
+  },
+  {
+    "shot": "cr-A-393-light-rest-nolog",
+    "v": "A",
+    "w": 393,
+    "mode": "A",
+    "dock": "two",
+    "scroll": "rest",
+    "fit": null,
+    "heat": 329,
+    "barTop": 753.9,
+    "dockTop": 687.9,
+    "dockBottom": 753.9,
+    "limit": 687.9,
+    "cardBottom": 788.3,
+    "scrollRange": 116,
+    "acts": [
+      {
+        "act": "new",
+        "where": "dock",
+        "top": 697.9,
+        "bottom": 743.9,
+        "h": 46,
+        "vis": 46,
+        "full": true,
+        "under": false
+      }
+    ],
+    "problems": []
+  },
+  {
+    "shot": "cr-B-393-light-rest-nolog",
+    "v": "B",
+    "w": 393,
+    "mode": "B",
+    "dock": "two",
+    "scroll": "rest",
+    "fit": "ok",
+    "heat": 232,
+    "barTop": 753.9,
+    "dockTop": null,
+    "dockBottom": null,
+    "limit": 753.9,
+    "cardBottom": 745.3,
+    "scrollRange": 35,
+    "acts": [
+      {
+        "act": "new",
+        "where": "card",
+        "top": 683.3,
+        "bottom": 729.3,
+        "h": 46,
+        "vis": 46,
+        "full": true,
+        "under": false
+      }
+    ],
+    "problems": []
+  },
+  {
+    "shot": "cr-C-393-light-rest-nolog",
+    "v": "C",
+    "w": 393,
+    "mode": "C",
+    "dock": "two",
+    "scroll": "rest",
+    "fit": null,
+    "heat": 329,
+    "barTop": 753.9,
+    "dockTop": null,
+    "dockBottom": null,
+    "limit": 753.9,
+    "cardBottom": 869.3,
+    "scrollRange": 159,
+    "acts": [
+      {
+        "act": "new",
+        "where": "card",
+        "top": 262.1,
+        "bottom": 308.1,
+        "h": 46,
+        "vis": 46,
+        "full": true,
+        "under": false
+      }
+    ],
+    "problems": []
+  },
+  {
+    "shot": "cr-A-320-dark-rest-nolog",
+    "v": "A",
+    "w": 320,
+    "mode": "A",
+    "dock": "two",
+    "scroll": "rest",
+    "fit": null,
+    "heat": 128,
+    "barTop": 503.9,
+    "dockTop": 443.9,
+    "dockBottom": 503.9,
+    "limit": 443.9,
+    "cardBottom": 508.5,
+    "scrollRange": 81,
+    "acts": [
+      {
+        "act": "new",
+        "where": "dock",
+        "top": 451.9,
+        "bottom": 495.9,
+        "h": 44,
+        "vis": 44,
+        "full": true,
+        "under": false
+      }
+    ],
+    "problems": []
+  },
+  {
+    "shot": "cr-A1-320-light-rest",
+    "v": "A",
+    "w": 320,
+    "mode": "A",
+    "dock": "one",
+    "scroll": "rest",
+    "fit": null,
+    "heat": 128,
+    "barTop": 503.9,
+    "dockTop": 443.9,
+    "dockBottom": 503.9,
+    "limit": 443.9,
+    "cardBottom": 438.9,
+    "scrollRange": 11,
+    "acts": [
+      {
+        "act": "new",
+        "where": "header",
+        "top": 28,
+        "bottom": 72,
+        "h": 44,
+        "vis": 44,
+        "full": true,
+        "under": false
+      },
+      {
+        "act": "watch",
+        "where": "dock",
+        "top": 451.9,
+        "bottom": 495.9,
+        "h": 44,
+        "vis": 44,
+        "full": true,
+        "under": false
+      },
+      {
+        "act": "share",
+        "where": "dock",
+        "top": 451.9,
+        "bottom": 495.9,
+        "h": 44,
+        "vis": 44,
+        "full": true,
+        "under": false
+      }
+    ],
+    "problems": []
+  },
+  {
+    "shot": "cr-A1-393-light-rest",
+    "v": "A",
+    "w": 393,
+    "mode": "A",
+    "dock": "one",
+    "scroll": "rest",
+    "fit": null,
+    "heat": 329,
+    "barTop": 753.9,
+    "dockTop": 687.9,
+    "dockBottom": 753.9,
+    "limit": 687.9,
+    "cardBottom": 718.8,
+    "scrollRange": 47,
+    "acts": [
+      {
+        "act": "new",
+        "where": "header",
+        "top": 67,
+        "bottom": 111,
+        "h": 44,
+        "vis": 44,
+        "full": true,
+        "under": false
+      },
+      {
+        "act": "watch",
+        "where": "dock",
+        "top": 697.9,
+        "bottom": 743.9,
+        "h": 46,
+        "vis": 46,
+        "full": true,
+        "under": false
+      },
+      {
+        "act": "share",
+        "where": "dock",
+        "top": 697.9,
+        "bottom": 743.9,
+        "h": 46,
+        "vis": 46,
+        "full": true,
+        "under": false
+      }
+    ],
+    "problems": []
+  },
+  {
+    "shot": "cr-A1-430-light-rest",
+    "v": "A",
+    "w": 430,
+    "mode": "A",
+    "dock": "one",
+    "scroll": "rest",
+    "fit": null,
+    "heat": 366,
+    "barTop": 833.9,
+    "dockTop": 767.9,
+    "dockBottom": 833.9,
+    "limit": 767.9,
+    "cardBottom": 755.7,
+    "scrollRange": 4,
+    "acts": [
+      {
+        "act": "new",
+        "where": "header",
+        "top": 67,
+        "bottom": 111,
+        "h": 44,
+        "vis": 44,
+        "full": true,
+        "under": false
+      },
+      {
+        "act": "watch",
+        "where": "dock",
+        "top": 777.9,
+        "bottom": 823.9,
+        "h": 46,
+        "vis": 46,
+        "full": true,
+        "under": false
+      },
+      {
+        "act": "share",
+        "where": "dock",
+        "top": 777.9,
+        "bottom": 823.9,
+        "h": 46,
+        "vis": 46,
+        "full": true,
+        "under": false
+      }
+    ],
+    "problems": []
+  },
+  {
+    "shot": "cr-A1-393-dark-rest",
+    "v": "A",
+    "w": 393,
+    "mode": "A",
+    "dock": "one",
+    "scroll": "rest",
+    "fit": null,
+    "heat": 329,
+    "barTop": 753.9,
+    "dockTop": 687.9,
+    "dockBottom": 753.9,
+    "limit": 687.9,
+    "cardBottom": 718.8,
+    "scrollRange": 47,
+    "acts": [
+      {
+        "act": "new",
+        "where": "header",
+        "top": 67,
+        "bottom": 111,
+        "h": 44,
+        "vis": 44,
+        "full": true,
+        "under": false
+      },
+      {
+        "act": "watch",
+        "where": "dock",
+        "top": 697.9,
+        "bottom": 743.9,
+        "h": 46,
+        "vis": 46,
+        "full": true,
+        "under": false
+      },
+      {
+        "act": "share",
+        "where": "dock",
+        "top": 697.9,
+        "bottom": 743.9,
+        "h": 46,
+        "vis": 46,
+        "full": true,
+        "under": false
+      }
+    ],
+    "problems": []
+  },
+  {
+    "shot": "cr-A1-320-light-rest-uk",
+    "v": "A",
+    "w": 320,
+    "mode": "A",
+    "dock": "one",
+    "scroll": "rest",
+    "fit": null,
+    "heat": 128,
+    "barTop": 503.9,
+    "dockTop": 429.9,
+    "dockBottom": 503.9,
+    "limit": 429.9,
+    "cardBottom": 456.6,
+    "scrollRange": 43,
+    "acts": [
+      {
+        "act": "new",
+        "where": "header",
+        "top": 28,
+        "bottom": 72,
+        "h": 44,
+        "vis": 44,
+        "full": true,
+        "under": false
+      },
+      {
+        "act": "watch",
+        "where": "dock",
+        "top": 437.9,
+        "bottom": 495.9,
+        "h": 58,
+        "vis": 58,
+        "full": true,
+        "under": false
+      },
+      {
+        "act": "share",
+        "where": "dock",
+        "top": 437.9,
+        "bottom": 495.9,
+        "h": 58,
+        "vis": 58,
+        "full": true,
+        "under": false
+      }
+    ],
+    "problems": []
+  },
+  {
+    "shot": "cr-A1-393-light-end",
+    "v": "A",
+    "w": 393,
+    "mode": "A",
+    "dock": "one",
+    "scroll": "end",
+    "fit": null,
+    "heat": 329,
+    "barTop": 753.9,
+    "dockTop": 687.8,
+    "dockBottom": 753.8,
+    "limit": 687.8,
+    "cardBottom": 671.8,
+    "scrollRange": 47,
+    "acts": [
+      {
+        "act": "new",
+        "where": "header",
+        "top": 20,
+        "bottom": 64,
+        "h": 44,
+        "vis": 44,
+        "full": true,
+        "under": false
+      },
+      {
+        "act": "watch",
+        "where": "dock",
+        "top": 697.8,
+        "bottom": 743.8,
+        "h": 46,
+        "vis": 46,
+        "full": true,
+        "under": false
+      },
+      {
+        "act": "share",
+        "where": "dock",
+        "top": 697.8,
+        "bottom": 743.8,
+        "h": 46,
+        "vis": 46,
+        "full": true,
+        "under": false
+      }
+    ],
+    "problems": []
+  },
+  {
+    "shot": "cr-A1-393-light-rest-nolog",
+    "v": "A",
+    "w": 393,
+    "mode": "A",
+    "dock": "one",
+    "scroll": "rest",
+    "fit": null,
+    "heat": 329,
+    "barTop": 753.9,
+    "dockTop": null,
+    "dockBottom": null,
+    "limit": 753.9,
+    "cardBottom": 788.3,
+    "scrollRange": 94,
+    "acts": [
+      {
+        "act": "new",
+        "where": "header",
+        "top": 67,
+        "bottom": 111,
+        "h": 44,
+        "vis": 44,
+        "full": true,
+        "under": false
+      }
+    ],
+    "problems": []
+  }
+]

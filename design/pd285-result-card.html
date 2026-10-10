@@ -1,0 +1,505 @@
+<!doctype html>
+<html lang="ru" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>PD-285 · Карточка результата Play — где живут действия</title>
+<!--
+  PD-285. Карточка «решено» в Play на телефоне: в покое «New puzzle» целиком под стеклом таб-бара, «Watch your solve»
+  выглядывает на ~12 px под маской 35 % и выглядит обрезанной. Сравнение: «Сейчас» (main) и три варианта —
+  A «Док действий над таб-баром» (рекомендую), B «Плотная карточка», C «Действия над картой».
+  Вёрстка карточки перенесена из apps/web/src/styles/play.css + timelapse.css + shell.css (токены — tokens.css, новых
+  цветов нет). 1rem = 17 px (iPhone по умолчанию), AX3 = 40 px; safe-area задаются переменными рамки
+  (320×568: 20/0, 393×852 и 430×932: 59/34). Рамка — настоящий прокручиваемый вид: палец/колесо внутри рамки
+  прокручивает карточку, док A прилипает к таб-бару (position: sticky), как будет в продукте.
+  Страница с ?shot=1 — режим съёмки для design/pd285-shots.mjs (API window.PD285).
+-->
+<style>
+:root{
+  color-scheme: light;
+  --font-sans: system-ui, -apple-system, "SF Pro Text", "Helvetica Neue", Arial, sans-serif;
+  --bg-grouped:#f2f2f7; --elev:#ffffff; --bg:var(--bg-grouped); --card:var(--elev);
+  --label:#1c1c1e; --label-2:#6e6e73; --label-2-grouped:#6a6a6e;
+  --ink:#3b48b0; --on-ink:#ffffff; --ink-tint:rgba(59,72,176,.12);
+  --hairline:rgba(60,60,67,.29);
+  --glass-fill:rgba(255,255,255,.72); --glass-solid:#f6f6f9;
+  /* shell.css: 64 px, при крупном тексте подпись вкладки вытягивает бар до 67 px */
+  --tabbar-h: calc(64px + (clamp(11px, .65rem, 13px) - 11px) * 1.5);
+  font-size:17px;
+}
+html[data-theme="dark"]{
+  color-scheme: dark;
+  --bg-grouped:#000000; --elev:#1c1c1e;
+  --label:#ffffff; --label-2:#98989d; --label-2-grouped:#98989d;
+  --ink:#8c96ff; --on-ink:#000000; --ink-tint:rgba(140,150,255,.18);
+  --hairline:rgba(235,235,245,.22);
+  --glass-fill:rgba(28,28,30,.72); --glass-solid:#141416;
+}
+html[data-type="ax3"]{ font-size:40px }
+
+*{ box-sizing:border-box }
+body{ margin:0; background:var(--bg); color:var(--label); font-family:var(--font-sans); -webkit-font-smoothing:antialiased }
+button{ font:inherit; color:inherit; background:none; border:0; padding:0; cursor:pointer; -webkit-appearance:none; appearance:none }
+#pd285-err{ position:fixed; left:0; right:0; top:0; z-index:99; background:#b3261e; color:#fff; font:13px/1.3 var(--font-sans); padding:8px 12px }
+
+/* ---------------------------------------------------------------- хром макета (px, не растёт с Dynamic Type) */
+header.ctl{ position:sticky; top:0; z-index:50; background:var(--glass-solid); border-bottom:1px solid var(--hairline);
+  padding:10px 20px; font-size:13px; display:flex; flex-wrap:wrap; gap:8px 16px; align-items:center }
+.ctl h1{ font-size:15px; margin:0 8px 0 0 }
+.ctl label.k{ color:var(--label-2); font-size:12px; margin-right:4px }
+.seg{ display:inline-flex; border:1px solid var(--hairline); border-radius:8px; overflow:hidden; vertical-align:middle }
+.seg button{ font-size:12px; color:var(--label); padding:5px 9px }
+.seg button+button{ border-left:1px solid var(--hairline) }
+.seg button[aria-pressed="true"]{ background:var(--ink); color:var(--on-ink) }
+main#grid{ padding:16px 20px 8px }
+.vsec{ margin:0 0 28px }
+.vsec > h2{ font-size:17px; margin:0 0 3px }
+.vsec > .desc{ font-size:12.5px; color:var(--label-2); margin:0 0 12px; line-height:1.4; max-width:1100px }
+.vrow{ display:flex; gap:28px; align-items:flex-start; overflow-x:auto; padding-bottom:6px }
+figure.fig{ margin:0; flex:none }
+.fig figcaption{ font-size:11.5px; color:var(--label-2); margin:8px 4px 0; line-height:1.4; max-width:260px }
+.fig .cap{ font-size:11px; font-weight:600; letter-spacing:.04em; text-transform:uppercase; color:var(--label-2); margin:0 4px 6px }
+.fig figcaption b.ok{ color:var(--ink) }
+.fig figcaption b.bad{ color:#b3261e }
+html[data-theme="dark"] .fig figcaption b.bad{ color:#ff6b5e }
+.fwrap{ zoom:var(--z, .5) }
+#notes{ padding:4px 20px 40px; font-size:13px; line-height:1.45; max-width:1100px }
+#notes h3{ font-size:14px; margin:18px 0 6px }
+#notes ul{ margin:0; padding-left:18px }
+#shot{ display:none }
+body.shot #shot{ display:block }
+body.shot header.ctl, body.shot main#grid, body.shot #notes{ display:none }
+body.shot{ overflow:hidden }
+
+/* ---------------------------------------------------------------- рамка телефона */
+.frame{ position:relative; overflow:hidden; background:var(--bg); color:var(--label); border-radius:44px;
+  box-shadow:0 0 0 1px var(--hairline), 0 12px 32px rgba(0,0,0,.10); font-family:var(--font-sans); line-height:1.3;
+  -webkit-font-smoothing:antialiased }
+.frame.short{ border-radius:18px }
+body.shot .frame{ border-radius:0; box-shadow:none }
+.sbar{ position:absolute; left:0; top:0; height:var(--sa-top); z-index:30; pointer-events:none; display:flex; align-items:center;
+  padding:0 0 0 34px; font:600 15px/1 var(--font-sans); color:var(--label) }
+.short .sbar{ padding-left:10px; font-size:12px }
+.home{ position:absolute; z-index:31; left:50%; bottom:8px; width:134px; height:5px; margin-left:-67px; border-radius:3px; background:var(--label); pointer-events:none }
+
+/* .scroll из shell.css: прокручивается только он; правило peek — 16 px + таб-бар + нижний inset */
+.sc{ position:absolute; inset:0; overflow-y:auto; overflow-x:hidden; overscroll-behavior:contain; display:flex; flex-direction:column;
+  padding-bottom:calc(16px + var(--tabbar-h) + var(--sa-bot)); scrollbar-width:none }
+.sc::-webkit-scrollbar{ display:none }
+/* play.css: scroll-edge маска состояния «решено» (как сейчас в main) */
+.sc.masked{
+  -webkit-mask-image:linear-gradient(to bottom, #000 calc(100% - 86px - var(--sa-bot)), rgba(0,0,0,.35) calc(100% - 58px - var(--sa-bot)), rgba(0,0,0,.35) 100%);
+  mask-image:linear-gradient(to bottom, #000 calc(100% - 86px - var(--sa-bot)), rgba(0,0,0,.35) calc(100% - 58px - var(--sa-bot)), rgba(0,0,0,.35) 100%) }
+html.rt .sc.masked{ -webkit-mask-image:none; mask-image:none }
+@media (prefers-reduced-transparency: reduce), (prefers-contrast: more){ .sc.masked{ -webkit-mask-image:none; mask-image:none } }
+/* A: док сам отделяет контент от таб-бара — запаса 16 px и маски нет, низ прокрутки = верх таб-бара */
+.sc.has-dock{ padding-bottom:calc(var(--tabbar-h) + var(--sa-bot)) }
+
+.play{ display:flex; flex-direction:column; flex:1 0 auto; padding-bottom:28px }
+.play.docked{ padding-bottom:0 }
+.toolbar{ display:flex; align-items:flex-end; justify-content:space-between; gap:12px; padding:calc(var(--sa-top) + 8px) 16px 0 16px; flex:none }
+.title{ font-size:1.62rem; font-weight:700; letter-spacing:-.02em; line-height:1.2; margin:0; min-width:0; overflow-wrap:break-word; flex:0 0 auto; max-width:calc(100% - 56px) }
+.tb-end{ display:flex; align-items:flex-end; gap:4px; min-width:0 }
+.gear{ width:44px; height:44px; display:grid; place-items:center; color:var(--label-2); flex:none; margin-right:-8px }
+.gear svg{ width:26px; height:26px }
+.hdr-new{ min-height:44px; padding:0 8px; color:var(--ink); font-size:1rem; font-weight:500; border-radius:10px; min-width:0; overflow-wrap:break-word; text-align:end }
+.subline{ margin:2px 0 0; padding:0 16px; color:var(--label-2); font-size:.88rem; flex:none }
+
+/* ---------------------------------------------------------------- карточка (play.css) */
+.card{ background:var(--card); border-radius:18px; margin:14px 16px 0; padding:16px; flex:none }
+.card h2{ font-size:1rem; font-weight:600; margin:0 0 2px }
+.card .sub{ color:var(--label-2); font-size:.8rem; margin:0 0 12px }
+.heat{ display:grid; grid-template-columns:repeat(9,1fr); gap:2px }
+.heat i{ aspect-ratio:1; border-radius:2px; display:block; background:var(--ink) }
+.heat i.g{ background:transparent; box-shadow:inset 0 0 0 1px var(--hairline) }
+.legend{ display:flex; align-items:center; gap:8px; margin-top:10px; color:var(--label-2); font-size:.72rem }
+.legend .bar{ flex:1; display:grid; grid-template-columns:repeat(9,1fr); gap:1px }
+.legend .bar i{ height:6px; border-radius:1px; background:var(--ink); display:block }
+.rows{ margin:14px 0 0; border-top:1px solid var(--hairline) }
+.row{ display:flex; justify-content:space-between; align-items:baseline; flex-wrap:wrap; gap:0 12px; padding:9px 0; border-bottom:1px solid var(--hairline); font-size:.9rem }
+.row dt{ color:var(--label-2); margin:0; font-size:.82rem; min-width:0; overflow-wrap:break-word }
+.row dd{ margin:0 0 0 auto; font-weight:600; min-width:0; max-width:100%; text-align:end; overflow-wrap:break-word }
+.row dd.mono{ font-variant-numeric:tabular-nums }
+.help-link{ color:var(--ink); font-weight:500; margin-left:8px }
+.cmp{ margin:12px 0 0; color:var(--label-2); font-size:.82rem }
+/* timelapse.css */
+.tl-watch{ margin-top:12px; width:100%; min-height:46px; padding:8px 12px; border-radius:11px; background:var(--ink); color:var(--on-ink);
+  font-size:.95rem; font-weight:600; display:flex; align-items:center; justify-content:center; gap:8px; text-align:center; overflow-wrap:break-word }
+.tl-watch svg, .share svg{ width:19px; height:19px; flex:none }
+.tl-nolog{ margin:12px 0 0; padding:10px 12px; border-radius:11px; background:var(--bg-grouped); color:var(--label-2-grouped); font-size:.85rem; overflow-wrap:anywhere }
+.share{ margin-top:8px; width:100%; min-height:46px; padding:8px 12px; border-radius:11px; background:var(--ink-tint); color:var(--ink);
+  font-size:.95rem; font-weight:600; display:flex; align-items:center; justify-content:center; gap:8px; text-align:center; overflow-wrap:break-word }
+.newgrid{ display:block; width:100%; min-height:48px; border-radius:13px; padding:10px 14px; color:var(--ink); font-size:1rem; font-weight:500;
+  text-align:center; overflow-wrap:break-word; margin-top:4px }
+
+/* PD-87: низкий узкий экран (320×568) — в продукте @media (max-height:600px) and (max-width:430px); здесь класс рамки */
+.short .card{ margin-top:6px; padding:12px 14px }
+.short .card .sub{ margin-bottom:8px }
+.short .card .heat{ max-width:128px; margin-inline:auto }
+.short .card .legend{ margin-top:6px }
+.short .card .rows{ margin-top:10px }
+.short .card .row{ padding:4px 0 }
+.short .card .share, .short .card .newgrid, .short .card .tl-watch{ min-height:44px }
+
+/* ---------------------------------------------------------------- A · док действий */
+.card.v-A{ margin-bottom:16px }               /* в конце прокрутки растушёвка дока ложится на пустой фон, не на карточку */
+/* sticky считается от края прокрутки ЗА ВЫЧЕТОМ padding .sc (а он уже = таб-бар + inset) — поэтому bottom: 0, иначе отступ
+   учитывается дважды (первый прогон: док висел на 98 px выше бара на 393/430 и на 64 px на 320). */
+.dock{ position:sticky; bottom:0; z-index:2; margin-top:auto; flex:none;
+  background:var(--bg); padding:10px 16px; display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:8px }
+/* scroll-edge: контент уходит под док мягко (16 px), как .scroll-fade в shell.css */
+.dock::before{ content:""; position:absolute; left:0; right:0; bottom:100%; height:16px; pointer-events:none;
+  background:linear-gradient(to bottom, transparent, var(--bg)) }
+html.rt .dock::before{ display:none }
+html.rt .dock{ box-shadow:0 -1px 0 var(--hairline) }
+@media (prefers-reduced-transparency: reduce), (prefers-contrast: more){ .dock::before{ display:none } .dock{ box-shadow:0 -1px 0 var(--hairline) } }
+.dock > *{ margin:0 }
+.dock .tl-watch{ grid-column:1 / -1 }
+.dock .newgrid, .pair .newgrid{ min-height:46px; border-radius:11px; padding:8px 12px; font-size:.95rem; display:flex; align-items:center; justify-content:center }
+.newgrid.solo{ grid-column:1 / -1; background:var(--ink-tint); font-weight:600 }
+.dock.one{ grid-template-columns:minmax(0,1fr) 46px }
+.dock.one .tl-watch{ grid-column:auto }
+.share.icon{ width:46px; padding:0 }
+.share.icon .lbl{ position:absolute; width:1px; height:1px; overflow:hidden; clip-path:inset(50%); white-space:nowrap }
+.short .dock{ padding:8px 16px }
+.short .dock > *{ min-height:44px }
+
+/* ---------------------------------------------------------------- B · плотная карточка */
+.pair{ display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:8px; margin-top:8px }
+.pair > *{ margin:0 }
+.card.v-B .heat{ margin-inline:auto }
+.card.v-B .newgrid.solo, .card.v-C .newgrid.solo{ margin-top:8px; min-height:46px; border-radius:11px; font-size:.95rem }
+
+/* ---------------------------------------------------------------- C · действия над картой */
+.card.v-C h2{ margin-bottom:0 }
+.c-acts .tl-watch, .c-acts .tl-nolog{ margin-top:12px }
+.c-sep{ border:0; border-top:1px solid var(--hairline); margin:16px 0 12px }
+
+/* ---------------------------------------------------------------- таб-бар — единственное стекло (shell.css) */
+.tabbar{ position:absolute; left:0; right:0; bottom:0; z-index:20; height:calc(var(--tabbar-h) + var(--sa-bot));
+  display:grid; grid-template-columns:repeat(3,1fr); gap:2px; padding:6px 10px calc(6px + var(--sa-bot));
+  background:var(--glass-fill); -webkit-backdrop-filter:blur(24px) saturate(1.4); backdrop-filter:blur(24px) saturate(1.4);
+  border-top:1px solid var(--hairline) }
+html.rt .tabbar{ background:var(--glass-solid); -webkit-backdrop-filter:none; backdrop-filter:none }
+@media (prefers-reduced-transparency: reduce){ .tabbar{ background:var(--glass-solid); -webkit-backdrop-filter:none; backdrop-filter:none } }
+.tab{ display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px; color:var(--label-2); border-radius:14px; min-width:0 }
+.tab.on{ color:var(--ink); background:var(--ink-tint) }
+.tab svg{ width:26px; height:26px; flex:none }
+.tab .lab{ font-size:clamp(11px, .65rem, 13px); letter-spacing:.01em; white-space:nowrap }
+.tab.on .lab{ font-weight:600 }
+</style>
+</head>
+<body>
+<div id="pd285-err" hidden></div>
+
+<header class="ctl">
+  <h1>PD-285 · Карточка результата Play</h1>
+  <span><label class="k">Вариант</label><span class="seg" data-k="v"><button data-val="all">все</button><button data-val="now">сейчас</button><button data-val="A">A</button><button data-val="B">B</button><button data-val="C">C</button></span></span>
+  <span><label class="k">Док A</label><span class="seg" data-k="dock"><button data-val="two">2 ряда</button><button data-val="one">1 ряд + шапка</button></span></span>
+  <span><label class="k">Ширина</label><span class="seg" data-k="w"><button data-val="all">все</button><button data-val="320">320</button><button data-val="393">393</button><button data-val="430">430</button></span></span>
+  <span><label class="k">Тема</label><span class="seg" data-k="theme"><button data-val="light">светлая</button><button data-val="dark">тёмная</button></span></span>
+  <span><label class="k">Текст</label><span class="seg" data-k="type"><button data-val="normal">обычный</button><button data-val="ax3">AX3</button></span></span>
+  <span><label class="k">Язык</label><span class="seg" data-k="lang"><button data-val="en">en</button><button data-val="uk">uk</button><button data-val="ru">ru</button></span></span>
+  <span><label class="k">Партия</label><span class="seg" data-k="content"><button data-val="normal">обычная</button><button data-val="long">Лжец + подсказка</button><button data-val="nolog">без повтора</button></span></span>
+  <span><label class="k">Reduce Transparency</label><span class="seg" data-k="rt"><button data-val="off">выкл</button><button data-val="on">вкл</button></span></span>
+  <span><label class="k">Прокрутка</label><span class="seg" data-k="scroll"><button data-val="rest">покой</button><button data-val="mid">середина</button><button data-val="end">конец</button></span></span>
+  <span><label class="k">Масштаб</label><span class="seg" data-k="zoom"><button data-val="0.5">50 %</button><button data-val="0.75">75 %</button><button data-val="1">100 %</button></span></span>
+</header>
+
+<main id="grid"></main>
+
+<section id="notes">
+  <h3>Как читать</h3>
+  <ul>
+    <li>Каждая рамка — настоящий прокручиваемый экран Play в состоянии «решено» (iPhone, 1rem = 17 px, AX3 = 40 px). Прокрутите внутри рамки, чтобы увидеть конец карточки.</li>
+    <li>Подпись под рамкой — замер в текущем положении прокрутки: какие действия видны целиком над таб-баром (или над доком A), сколько пикселей видно у остальных.</li>
+    <li><b>Сейчас</b> — main: три кнопки в конце карточки, маска 35 % над таб-баром. <b>A</b> — док действий над таб-баром (рекомендую): кнопки в одной полосе с тем местом, где во время партии стоят пад и действия. <b>B</b> — карточка подгоняет тепловую карту по высоте, Share и New puzzle в один ряд. <b>C</b> — действия сразу под заголовком, карта пути и строки ниже.</li>
+    <li>Обоснование, развилки, критерии приёмки и вопросы владельцу — <code>design/pd285-result-card.md</code>. Кадры — <code>node design/pd285-shots.mjs</code> → <code>design/pd285-shots/</code>.</li>
+  </ul>
+</section>
+
+<div id="shot"></div>
+
+<script>
+(() => {
+const errs = [];
+function banner(msg){ errs.push(msg); const b = document.getElementById("pd285-err"); b.hidden = false; b.textContent = "Ошибка макета: " + errs.join(" | "); }
+window.addEventListener("error", (e) => banner(String(e.message || e)));
+window.addEventListener("unhandledrejection", (e) => banner(String(e.reason)));
+
+/* ---------------------------------------------------------------- данные */
+const DEV = {
+  320: { w: 320, h: 568, top: 20, bot: 0 },
+  393: { w: 393, h: 852, top: 59, bot: 34 },
+  430: { w: 430, h: 932, top: 59, bot: 34 },
+};
+const VARS = ["now", "A", "B", "C"];
+const VNAME = {
+  now: "Сейчас (main)",
+  A: "A · Док действий над таб-баром — рекомендую",
+  B: "B · Плотная карточка",
+  C: "C · Действия над картой",
+};
+const VDESC = {
+  now: "Три кнопки в конце карточки; тепловая карта во всю ширину (329 px на 393). Маска scroll-edge 35 % начинается за 86 px до низа — выглядывающая «Watch your solve» тускнеет и читается как сломанная. «New puzzle» в покое под стеклом или за экраном.",
+  A: "Карточка — на месте поля, действия — на месте пада: Watch your solve (залитая) и ряд Share | New puzzle прилипают к таб-бару, карточка прокручивается под ними с растушёвкой 16 px. Док непрозрачный (стекло — только таб-бар). AX3 и ландшафт — кнопки возвращаются в конец карточки, как сейчас. Переключатель «Док A: 1 ряд + шапка» — развилка: Watch + Share-иконка в одном ряду, New puzzle в шапке.",
+  B: "Ничего не прилипает: Share и New puzzle встают в один ряд, а тепловая карта уменьшается ровно настолько, чтобы карточка закончилась над таб-баром (не меньше 144 px, на 320×568 — 112 px). Не влезло даже так — прокрутка, как сейчас (подпись «не влезло»).",
+  C: "Порядок карточки меняется: «Solved» → Watch your solve → Share | New puzzle → разделитель → карта пути, легенда, строки. Действия на первом экране при любой ширине; карта пути и строки — ниже, прокруткой.",
+};
+const S = {
+  en: { play: "Play", today: "Today", year: "Year", easy: "Easy", solved: "Solved", liar: "Liar caught", sub: "Every cell shaded by when you filled it.",
+    early: "Early", late: "Late", time: "Time", fixes: "Fixes", clean: "clean", tech: "Technique reached", naked: "Naked Single", whats: "What’s this?",
+    hints: "Hints", watch: "Watch your solve", share: "Share", newp: "New puzzle", nolog: "Replay isn’t available for this day — moves weren’t kept.",
+    move: "Catch move", acc: "Accusations", first: "first try", cmp: "Your average catch move: 27 (4 earlier games)" },
+  uk: { play: "Гра", today: "Сьогодні", year: "Рік", easy: "Легко", solved: "Розв’язано", liar: "Брехуна спіймано", sub: "Кожна клітинка затінена за тим, коли ви її заповнили.",
+    early: "Рано", late: "Пізно", time: "Час", fixes: "Виправлення", clean: "чисто", tech: "Досягнута техніка", naked: "Відкрита одиночка", whats: "Що це?",
+    hints: "Підказки", watch: "Подивитися своє розв’язання", share: "Поділитися", newp: "Нова сітка", nolog: "Повтор для цього дня недоступний — ходи не збереглися.",
+    move: "Хід звинувачення", acc: "Звинувачення", first: "з першого разу", cmp: "Ваш середній хід звинувачення: 27 (4 попередні партії)" },
+  ru: { play: "Игра", today: "Сегодня", year: "Год", easy: "Легко", solved: "Решено", liar: "Лжец пойман", sub: "Каждая клетка затенена по тому, когда вы её заполнили.",
+    early: "Рано", late: "Поздно", time: "Время", fixes: "Исправления", clean: "чисто", tech: "Достигнутая техника", naked: "Открытая одиночка", whats: "Что это?",
+    hints: "Подсказки", watch: "Посмотреть своё решение", share: "Поделиться", newp: "Новая сетка", nolog: "Повтор для этого дня недоступен — ходы не сохранились.",
+    move: "Ход обвинения", acc: "Обвинения", first: "с первого раза", cmp: "Ваш средний ход обвинения: 27 (4 прежние партии)" },
+};
+const ACT = { watch: "Watch", share: "Share", new: "New puzzle" };
+
+const ICON = {
+  play: '<svg viewBox="0 0 20 20" aria-hidden="true"><path d="M6 4.6v10.8l8.6-5.4z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg>',
+  share: '<svg viewBox="0 0 20 20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M10 2.6v10M6.6 6 10 2.6 13.4 6"/><path d="M7 8.4H5.4a1 1 0 0 0-1 1v6.6a1 1 0 0 0 1 1h9.2a1 1 0 0 0 1-1V9.4a1 1 0 0 0-1-1H13"/></svg>',
+  gear: '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"><circle cx="12" cy="12" r="3.1"/><path d="M12 2.9l1.7 2.3 2.7-.8.5 2.8 2.8.5-.8 2.7 2.3 1.6-2.3 1.7.8 2.7-2.8.5-.5 2.8-2.7-.8L12 21.1l-1.7-2.3-2.7.8-.5-2.8-2.8-.5.8-2.7L2.9 12l2.3-1.6-.8-2.7 2.8-.5.5-2.8 2.7.8z"/></svg>',
+  today: '<svg viewBox="0 0 26 26" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="4" y="5.5" width="18" height="16" rx="3.5"/><path d="M4 10.5h18M9 3.5v4M17 3.5v4" stroke-linecap="round"/><circle cx="13" cy="15.5" r="1.8" fill="currentColor" stroke="none"/></svg>',
+  play9: '<svg viewBox="0 0 26 26" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="4" y="4" width="18" height="18" rx="3.5"/><path d="M10 4v18M16 4v18M4 10h18M4 16h18"/></svg>',
+  year: '<svg viewBox="0 0 26 26" aria-hidden="true" fill="currentColor">' + (() => { let s = ""; for (let r = 0; r < 3; r++) for (let c = 0; c < 4; c++) s += `<circle cx="${5 + c * 5.4}" cy="${8 + r * 5}" r="1.7"/>`; return s; })() + "</svg>",
+};
+
+/* Тепловая карта: детерминированная (seed 285), поздние ходы — ниже, ~38 % клеток — данные (контур). */
+const HEAT = (() => {
+  let s = 285;
+  const rnd = () => (s = (s * 16807) % 2147483647) / 2147483647;
+  const cells = [];
+  for (let i = 0; i < 81; i++) cells.push({ i, g: rnd() < 0.38, t: Math.floor(i / 9) / 8 * 0.75 + rnd() * 0.25 });
+  const fill = cells.filter((c) => !c.g).sort((a, b) => a.t - b.t);
+  fill.forEach((c, k) => (c.o = 0.12 + 0.88 * k / (fill.length - 1)));
+  return cells.map((c) => (c.g ? '<i class="g"></i>' : `<i style="opacity:${c.o.toFixed(3)}"></i>`)).join("");
+})();
+const LEGEND = Array.from({ length: 9 }, (_, k) => `<i style="opacity:${(0.12 + 0.88 * k / 8).toFixed(3)}"></i>`).join("");
+
+/* ---------------------------------------------------------------- состояние */
+const DEF = { v: "all", dock: "two", w: "all", theme: "light", type: "normal", lang: "en", content: "normal", rt: "off", scroll: "rest", zoom: "0.5" };
+const st = Object.assign({}, DEF);
+
+function applyRoot(o){
+  const r = document.documentElement;
+  r.dataset.theme = o.theme;
+  if (o.type === "ax3") r.dataset.type = "ax3"; else delete r.dataset.type;
+  r.classList.toggle("rt", o.rt === "on");
+}
+
+/* ---------------------------------------------------------------- сборка экрана */
+const row = (dt, dd, cls = "") => `<div class="row"><dt>${dt}</dt><dd${cls ? ` class="${cls}"` : ""}>${dd}</dd></div>`;
+function rowsHtml(t, content){
+  let h = '<dl class="rows">' + row(t.time, "4:12", "mono") + row(t.fixes, t.clean);
+  if (content === "long") h += row(t.move, "23", "mono") + row(t.acc, t.first) + row(t.hints, "1", "mono");
+  h += `<div class="row"><dt>${t.tech}</dt><dd>${t.naked}<button type="button" class="help-link">${t.whats}</button></dd></div></dl>`;
+  if (content === "long") h += `<p class="cmp">${t.cmp}</p>`;
+  return h;
+}
+const watchBtn = (t) => `<button type="button" class="tl-watch" data-act="watch">${ICON.play}<span>${t.watch}</span></button>`;
+const shareBtn = (t, cls = "") => `<button type="button" class="share ${cls}" data-act="share"${cls === "icon" ? ` aria-label="${t.share}"` : ""}>${ICON.share}<span class="lbl">${t.share}</span></button>`;
+const newBtn = (t, cls = "") => `<button type="button" class="newgrid ${cls}" data-act="new">${t.newp}</button>`;
+const nolog = (t) => `<p class="tl-nolog">${t.nolog}</p>`;
+
+/** o: { v, w, dock, lang, content, scroll } — тема/AX3/RT берутся с <html>. */
+function buildFrame(o){
+  const d = DEV[o.w], t = S[o.lang], ax3 = document.documentElement.dataset.type === "ax3";
+  const log = o.content !== "nolog";
+  const head = `<h2>${o.content === "long" ? t.liar : t.solved}</h2>`;
+  const sub = `<p class="sub">${t.sub}</p>`;
+  const heat = `<div class="heat" role="img" aria-label="Your path">${HEAT}</div>`;
+  const legend = `<div class="legend"><span>${t.early}</span><span class="bar" aria-hidden="true">${LEGEND}</span><span>${t.late}</span></div>`;
+  const rows = rowsHtml(t, o.content);
+  // A при AX3 — кнопки в конце карточки, как сейчас (док не прилипает; см. md §4 A, «AX3»).
+  const mode = o.v === "A" && ax3 ? "inline" : o.v;
+  let card = "", dock = "", hdrNew = false, masked = true, hasDock = false;
+  if (mode === "now" || mode === "inline") {
+    card = head + sub + heat + legend + rows + (log ? watchBtn(t) + shareBtn(t) : nolog(t)) + newBtn(t);
+  } else if (mode === "A") {
+    masked = false; hasDock = true;
+    card = head + sub + heat + legend + rows + (log ? "" : nolog(t));
+    if (o.dock === "one") {
+      hdrNew = true;
+      if (log) dock = `<div class="dock one" role="group" aria-label="${t.solved}">${watchBtn(t)}${shareBtn(t, "icon")}</div>`;
+      else { hasDock = false; masked = true; }
+    } else {
+      dock = `<div class="dock" role="group" aria-label="${t.solved}">${log ? watchBtn(t) + shareBtn(t) + newBtn(t) : newBtn(t, "solo")}</div>`;
+    }
+  } else if (mode === "B") {
+    card = head + sub + heat + legend + rows + (log ? watchBtn(t) + `<div class="pair">${shareBtn(t)}${newBtn(t)}</div>` : nolog(t) + newBtn(t, "solo"));
+  } else {
+    card = head + `<div class="c-acts">${log ? watchBtn(t) + `<div class="pair">${shareBtn(t)}${newBtn(t)}</div>` : nolog(t) + newBtn(t, "solo")}</div><hr class="c-sep">` + sub + heat + legend + rows;
+  }
+  const cardCls = mode === "inline" ? "now" : mode;
+  const fr = document.createElement("div");
+  fr.className = "frame" + (d.h <= 600 ? " short" : "");
+  fr.style.cssText = `width:${d.w}px;height:${d.h}px;--sa-top:${d.top}px;--sa-bot:${d.bot}px`;
+  Object.assign(fr.dataset, { v: o.v, w: String(o.w), mode, scroll: o.scroll, dock: o.dock, ax3: ax3 ? "1" : "0", content: o.content, lang: o.lang });
+  fr.innerHTML =
+    `<div class="sc${masked ? " masked" : ""}${hasDock ? " has-dock" : ""}">` +
+      `<div class="play${hasDock ? " docked" : ""}">` +
+        `<div class="toolbar"><h1 class="title">${t.play}</h1><div class="tb-end">${hdrNew ? `<button type="button" class="hdr-new" data-act="new">${t.newp}</button>` : ""}<span class="gear">${ICON.gear}</span></div></div>` +
+        `<p class="subline">${t.easy} · 4:12</p>` +
+        `<section class="card v-${cardCls}">${card}</section>` +
+        dock +
+      `</div>` +
+    `</div>` +
+    `<nav class="tabbar"><span class="tab">${ICON.today}<span class="lab">${t.today}</span></span><span class="tab on">${ICON.play9}<span class="lab">${t.play}</span></span><span class="tab">${ICON.year}<span class="lab">${t.year}</span></span></nav>` +
+    (d.bot ? '<i class="home"></i>' : "") +
+    `<div class="sbar">9:41</div>`;
+  return fr;
+}
+
+const zoomOf = (fr) => fr.getBoundingClientRect().width / DEV[fr.dataset.w].w || 1;
+
+/** B: тепловая карта уменьшается, пока низ карточки не встанет на 8 px выше таб-бара; минимум 144 px (112 на 320×568).
+ *  Не влезает даже с минимумом — карта остаётся прежнего размера, карточка прокручивается, как сейчас (не ужимать зря). */
+function fitB(fr){
+  if (fr.dataset.mode !== "B") return;
+  const z = zoomOf(fr), heat = fr.querySelector(".heat"), card = fr.querySelector(".card"), bar = fr.querySelector(".tabbar");
+  const over = () => (card.getBoundingClientRect().bottom - bar.getBoundingClientRect().top) / z + 8;
+  const MIN = fr.classList.contains("short") ? 112 : 144;
+  const cur = heat.getBoundingClientRect().width / z;
+  let o = over();
+  if (o <= 0.5) { fr.dataset.fit = "ok"; fr.dataset.heat = String(Math.round(cur)); return; }
+  const want = Math.floor(cur - o);
+  if (want >= MIN) {
+    heat.style.maxWidth = want + "px";
+    o = over();
+  }
+  fr.dataset.fit = want >= MIN && o <= 0.5 ? "ok" : "fail";
+  if (fr.dataset.fit === "fail") heat.style.maxWidth = "";
+  fr.dataset.heat = String(Math.round(heat.getBoundingClientRect().width / z));
+}
+
+function setScroll(fr, s){
+  const sc = fr.querySelector(".sc");
+  const max = sc.scrollHeight - sc.clientHeight;
+  sc.scrollTop = s === "end" ? max : s === "mid" ? Math.round(max / 2) : 0;
+}
+
+function measureFrame(fr){
+  const z = zoomOf(fr), fb = fr.getBoundingClientRect();
+  const rel = (y) => Math.round((y - fb.top) / z * 10) / 10;
+  const barTop = rel(fr.querySelector(".tabbar").getBoundingClientRect().top);
+  const dk = fr.querySelector(".dock"), db = dk ? dk.getBoundingClientRect() : null;
+  const dockTop = db ? rel(db.top) : null, dockBottom = db ? rel(db.bottom) : null;
+  const limit = dockTop != null ? dockTop : barTop;
+  const acts = [...fr.querySelectorAll("[data-act]")].map((el) => {
+    const r = el.getBoundingClientRect(), top = rel(r.top), bottom = rel(r.bottom);
+    const lim = el.closest(".dock") ? barTop : limit;
+    const vis = Math.max(0, Math.min(bottom, lim) - Math.max(top, 0));
+    return { act: el.dataset.act, where: el.closest(".dock") ? "dock" : el.closest(".toolbar") ? "header" : "card", top, bottom, h: Math.round((r.height / z) * 10) / 10, vis: Math.round(vis), full: top >= -0.5 && bottom <= lim + 0.5, under: bottom > lim + 0.5 };
+  });
+  const sc = fr.querySelector(".sc");
+  return { v: fr.dataset.v, w: +fr.dataset.w, mode: fr.dataset.mode, dock: fr.dataset.dock, scroll: fr.dataset.scroll, fit: fr.dataset.fit || null,
+    heat: fr.dataset.heat ? +fr.dataset.heat : Math.round(fr.querySelector(".heat").getBoundingClientRect().width / z),
+    barTop, dockTop, dockBottom, limit, cardBottom: rel(fr.querySelector(".card").getBoundingClientRect().bottom),
+    scrollRange: Math.round((sc.scrollHeight - sc.clientHeight)), acts };
+}
+
+function checkFrame(fr){
+  const out = [], z = zoomOf(fr), tag = `${fr.dataset.v}-${fr.dataset.w}`;
+  const sc = fr.querySelector(".sc");
+  if (sc.scrollWidth > sc.clientWidth + 1) out.push(`${tag}: горизонтальное переполнение (${sc.scrollWidth} > ${sc.clientWidth})`);
+  for (const el of fr.querySelectorAll("[data-act], .help-link, .title, .tab .lab")) if (el.scrollWidth > el.clientWidth + 1) out.push(`${tag}: текст не влез: «${el.textContent.trim().slice(0, 28)}»`);
+  for (const el of fr.querySelectorAll("[data-act]")) { const h = el.getBoundingClientRect().height / z; if (h < 43.5) out.push(`${tag}: цель «${el.dataset.act}» ${h.toFixed(1)} px < 44`); }
+  const m = measureFrame(fr);
+  if (m.dockBottom != null && Math.abs(m.dockBottom - m.barTop) > 1) out.push(`${tag}: док не прилегает к таб-бару (низ ${m.dockBottom}, бар ${m.barTop})`);
+  if (m.dockTop != null && m.dockTop > m.barTop) out.push(`${tag}: док под таб-баром`);
+  // Что обещает вариант в покое (при обычном тексте): все действия целиком над таб-баром/доком.
+  const ax3 = fr.dataset.ax3 === "1";
+  const claim = !ax3 && (m.mode === "A" || m.mode === "C" || (m.mode === "B" && m.fit === "ok"));
+  if (m.scroll === "rest" && claim) for (const a of m.acts) if (!a.full) out.push(`${tag}: в покое «${a.act}» не целиком (видно ${a.vis} px)`);
+  // В конце прокрутки у ВСЕХ вариантов ничего не остаётся под таб-баром/доком: низ карточки и кнопки выше них.
+  // Кнопка, ушедшая ВВЕРХ за край экрана (C: кнопки в начале карточки), достижима прокруткой назад — это не дефект.
+  if (m.scroll === "end") {
+    for (const a of m.acts) if (a.under) out.push(`${tag}: в конце прокрутки «${a.act}» под таб-баром/доком (низ ${a.bottom}, граница ${a.where === "dock" ? m.barTop : m.limit})`);
+    if (m.cardBottom > m.limit + 0.5) out.push(`${tag}: в конце прокрутки низ карточки ${m.cardBottom} ниже ${m.limit}`);
+  }
+  return out;
+}
+
+function summary(m){
+  const parts = m.acts.map((a) => a.full ? `<b class="ok">${ACT[a.act]} ✓</b>${a.where === "header" ? " (шапка)" : ""}` : a.vis > 0 ? `<b class="bad">${ACT[a.act]} ${a.vis} px</b>` : `<b class="bad">${ACT[a.act]} — нет</b>`);
+  const where = m.scroll === "rest" ? "в покое" : m.scroll === "end" ? "в конце" : "в середине";
+  let s = `${where}: ${parts.join(" · ")}`;
+  if (m.mode === "B") s += m.fit === "ok" ? ` · карта ${m.heat} px` : ` · <b class="bad">не влезло</b> (карта ${m.heat} px)`;
+  if (m.mode === "inline") s += " · AX3: кнопки в карточке";
+  s += ` · прокрутка ${m.scrollRange} px`;
+  return s;
+}
+
+/* ---------------------------------------------------------------- интерактивная страница */
+function render(){
+  applyRoot(st);
+  document.documentElement.style.setProperty("--z", st.zoom);
+  const grid = document.getElementById("grid");
+  grid.innerHTML = "";
+  const vs = st.v === "all" ? VARS : [st.v];
+  const ws = st.w === "all" ? [320, 393, 430] : [+st.w];
+  for (const v of vs) {
+    const sec = document.createElement("section");
+    sec.className = "vsec";
+    sec.innerHTML = `<h2>${VNAME[v]}${v === "A" && st.dock === "one" ? " · док в 1 ряд" : ""}</h2><p class="desc">${VDESC[v]}</p><div class="vrow"></div>`;
+    grid.appendChild(sec);
+    const rowEl = sec.querySelector(".vrow");
+    for (const w of ws) {
+      const fig = document.createElement("figure");
+      fig.className = "fig";
+      fig.innerHTML = `<div class="cap">${w} × ${DEV[w].h}</div><div class="fwrap"></div><figcaption></figcaption>`;
+      rowEl.appendChild(fig);
+      const fr = buildFrame({ v, w, dock: st.dock, lang: st.lang, content: st.content, scroll: st.scroll });
+      fig.querySelector(".fwrap").appendChild(fr);
+      fitB(fr);
+      setScroll(fr, st.scroll);
+      fig.querySelector("figcaption").innerHTML = summary(measureFrame(fr));
+      fr.querySelector(".sc").addEventListener("scroll", () => { fr.dataset.scroll = "custom"; fig.querySelector("figcaption").innerHTML = summary(Object.assign(measureFrame(fr), { scroll: "custom" })).replace(/^[^:]+:/, "сейчас:"); }, { passive: true });
+    }
+  }
+  for (const seg of document.querySelectorAll(".seg")) for (const b of seg.querySelectorAll("button")) b.setAttribute("aria-pressed", String(st[seg.dataset.k] === b.dataset.val));
+}
+function initUI(){
+  for (const seg of document.querySelectorAll(".seg")) seg.addEventListener("click", (e) => {
+    const b = e.target.closest("button"); if (!b) return;
+    st[seg.dataset.k] = b.dataset.val; render();
+  });
+  render();
+}
+
+/* ---------------------------------------------------------------- API съёмки */
+function scope(){ return document.body.classList.contains("shot") ? document.getElementById("shot") : document.getElementById("grid"); }
+window.PD285 = {
+  reset(){ document.getElementById("shot").innerHTML = ""; Object.assign(st, DEF); applyRoot(st); },
+  /** o: { v: now|A|B|C, w: 320|393|430, dock: two|one, theme, ax3, rt, lang, content: normal|long|nolog, scroll: rest|mid|end } */
+  apply(o){
+    document.body.classList.add("shot");
+    const a = Object.assign({ v: "A", w: 393, dock: "two", theme: "light", ax3: false, rt: false, lang: "en", content: "normal", scroll: "rest" }, o);
+    applyRoot({ theme: a.theme, type: a.ax3 ? "ax3" : "normal", rt: a.rt ? "on" : "off" });
+    const host = document.getElementById("shot");
+    host.innerHTML = "";
+    const fr = buildFrame({ v: a.v, w: +a.w, dock: a.dock, lang: a.lang, content: a.content, scroll: a.scroll });
+    host.appendChild(fr);
+    fitB(fr);
+    setScroll(fr, a.scroll);
+    return measureFrame(fr);
+  },
+  /** Обзор интерактивной страницы. */
+  ui(o){ document.body.classList.remove("shot"); Object.assign(st, o); render(); },
+  check(){ const out = [...errs]; for (const fr of scope().querySelectorAll(".frame")) out.push(...checkFrame(fr)); return [...new Set(out)]; },
+  measure(){ return [...scope().querySelectorAll(".frame")].map(measureFrame); },
+};
+
+if (new URLSearchParams(location.search).has("shot")) document.body.classList.add("shot");
+else initUI();
+})();
+</script>
+</body>
+</html>
