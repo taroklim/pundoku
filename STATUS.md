@@ -793,10 +793,11 @@ Gates: build → typecheck, lint, тесты web/engine/api (api с `TEST_DATABA
 | Имя | Роль | Статус | Тикет | Обновлено |
 |-----|------|--------|-------|-----------|
 | Dev-Pundoku-low4 | developer (opus) | done | PD-282/284/286/288/292 | 2026-10-10 |
-| QA-Pundoku-low4-2 (agent a3f70f94…) | qa-tester (sonnet) | working (перезапуск с нуля, порт 5341) | PD-282/284/286/288/292 | 2026-10-10 |
+| QA-Pundoku-low4-2 (agent a3f70f94…) | qa-tester (sonnet) | done (PASS) | PD-282/284/286/288/292 | 2026-10-10 |
 | Dev-Pundoku-285 | developer (opus) | done | PD-285 | 2026-10-10 |
 | QA-Pundoku-285-2 (agent a51c303c…) | qa-tester (sonnet) | done (PASS) | PD-285 | 2026-10-10 |
-| PM-Pundoku-24 | product-manager | waiting (QA pd-285 PASS, QA pd-low-4 идёт; после PASS — сведение pd-low-4 + pd-285 → hash, push не делать) | PD-282/284/285/286/288/292 | 2026-10-10 |
+| Dev-Pundoku-merge4 | developer (opus) | working (сведение pd-pack-4 = main + pd-low-4 + pd-285, gates, живые проверки; без push) | PD-282/284/285/286/288/292 | 2026-10-10 |
+| PM-Pundoku-24 | product-manager | waiting (оба QA PASS, идёт сведение pd-pack-4; после PASS — сведение pd-low-4 + pd-285 → hash, push не делать) | PD-282/284/285/286/288/292 | 2026-10-10 |
 | PM-Pundoku-23 | product-manager | waiting (Dev-desk-all2 сводит десктоп C; затем QA PD-270) | PD-290 | 2026-10-10 |
 | Dev-Pundoku-desk-all2 | developer (opus) | done | PD-290 | 2026-10-10 |
 | Dev-Pundoku-merge | developer (opus) | done | PD-290/PD-291 | 2026-10-10 |
@@ -971,3 +972,9 @@ Gates: build → typecheck, lint, тесты web/engine/api (api с `TEST_DATABA
 - Low (известный риск §8.1, не тикет): 320×568 при 1rem 33px (ниже порога AX3 36px) док 216–219 из 501 px, от карточки видны заголовок+подпись, всё доступно. Оставлено по спеке; если владелец увидит на iPhone SE с крупным текстом — поднять порог до 1rem ≥ 28px. На iPhone 16 не проявляется.
 - Владельцу (iOS, агенты не могут, §7.12): живой iPhone/Safari/PWA — док в 2 ряда над таб-баром после решённой партии Play. Не проверено QA: reduced transparency в webkit, лист дня Year живьём, forced-colors.
 - Сведение с pd-low-4 — после результата QA pd-low-4.
+
+## QA pd-low-4 PASS (2026-10-10, bee8063)
+- PD-282/284/286/288/292 PASS, блокеров/средних нет. Gates: vitest web 1941, typecheck+lint, build чисто. pd282-check 90/90 (cr+wk), pd275-check 188/188 (перепрогон, флак не воспроизвёлся), ring-pet cr/wk 20/20, firefox 16/20 (4 FAIL = известный остаток PD-293), dock-check 10/10, landing-check PASS. PD-284 кросс-вкладка PASS cr/wk/ff; PD-286 CDP 12/12 на ветке (base 6/12 — баг воспроизведён и исправлен); WebKit-жест — только юниты.
+- Косметика: комментарий в tabs.ts про reload неточен (pdFrom живёт в history.state) — правится при сведении.
+- Не проверено (владельцу): edge-swipe в standalone PWA на iPhone/Safari; жест в WebKit/FF живьём.
+- Сведение: ветка pd-pack-4 (main + pd-low-4 + pd-285), Dev-Pundoku-merge4. Push — только Coordinator.
