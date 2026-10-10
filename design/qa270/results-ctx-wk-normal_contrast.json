@@ -1,0 +1,2544 @@
+{
+ "total": 189,
+ "fails": [],
+ "results": {
+  "wk ctx[normal] 1280x800@100 light ModeMenu(classic): lift on the row, menu at the row, in window (backdrop=blur(14px))": {
+   "ok": true,
+   "row": [
+    444,
+    73,
+    640,
+    52
+   ],
+   "lift": [
+    444,
+    73,
+    640,
+    52
+   ],
+   "menu": [
+    444,
+    133,
+    320,
+    76
+   ],
+   "scrim": [
+    248,
+    0,
+    1032,
+    800
+   ],
+   "sidebarRight": 240
+  },
+  "wk ctx[normal] 1280x800@100 light ModeMenu(classic): Esc closes, focus returns to the row (got mode-classic)": {
+   "ok": true,
+   "gone": true,
+   "act": "mode-classic"
+  },
+  "wk ctx[normal] 1280x800@100 light ModeMenu(liar): lift on the row, menu at the row, in window (backdrop=blur(14px))": {
+   "ok": true,
+   "row": [
+    444,
+    177,
+    640,
+    52
+   ],
+   "lift": [
+    444,
+    177,
+    640,
+    52
+   ],
+   "menu": [
+    444,
+    237,
+    320,
+    89
+   ],
+   "scrim": [
+    248,
+    0,
+    1032,
+    800
+   ],
+   "sidebarRight": 240
+  },
+  "wk ctx[normal] 1280x800@100 light ModeMenu(liar): Esc closes, focus returns to the row (got mode-liar)": {
+   "ok": true,
+   "gone": true,
+   "act": "mode-liar"
+  },
+  "wk ctx[normal] 1280x800@100 light AccuseMenu: lift on the cell, menu at the cell, in window (backdrop=blur(14px))": {
+   "ok": true,
+   "cell": [
+    523,
+    299,
+    74
+   ],
+   "lift": [
+    523,
+    299,
+    74,
+    74
+   ],
+   "menu": [
+    523,
+    381,
+    320,
+    89
+   ]
+  },
+  "wk ctx[normal] 1280x800@100 light AccuseMenu: Esc closes; focus not on body (got cell sel)": {
+   "ok": true,
+   "act": "cell sel"
+  },
+  "wk ctx[normal] 1280x800@100 light: no JS errors": {
+   "ok": true,
+   "errs": []
+  },
+  "wk ctx[normal] 1280x800@100 dark ModeMenu(classic): lift on the row, menu at the row, in window (backdrop=blur(14px))": {
+   "ok": true,
+   "row": [
+    444,
+    73,
+    640,
+    52
+   ],
+   "lift": [
+    444,
+    73,
+    640,
+    52
+   ],
+   "menu": [
+    444,
+    133,
+    320,
+    76
+   ],
+   "scrim": [
+    248,
+    0,
+    1032,
+    800
+   ],
+   "sidebarRight": 240
+  },
+  "wk ctx[normal] 1280x800@100 dark ModeMenu(classic): Esc closes, focus returns to the row (got mode-classic)": {
+   "ok": true,
+   "gone": true,
+   "act": "mode-classic"
+  },
+  "wk ctx[normal] 1280x800@100 dark ModeMenu(liar): lift on the row, menu at the row, in window (backdrop=blur(14px))": {
+   "ok": true,
+   "row": [
+    444,
+    177,
+    640,
+    52
+   ],
+   "lift": [
+    444,
+    177,
+    640,
+    52
+   ],
+   "menu": [
+    444,
+    237,
+    320,
+    89
+   ],
+   "scrim": [
+    248,
+    0,
+    1032,
+    800
+   ],
+   "sidebarRight": 240
+  },
+  "wk ctx[normal] 1280x800@100 dark ModeMenu(liar): Esc closes, focus returns to the row (got mode-liar)": {
+   "ok": true,
+   "gone": true,
+   "act": "mode-liar"
+  },
+  "wk ctx[normal] 1280x800@100 dark AccuseMenu: lift on the cell, menu at the cell, in window (backdrop=blur(14px))": {
+   "ok": true,
+   "cell": [
+    523,
+    299,
+    74
+   ],
+   "lift": [
+    523,
+    299,
+    74,
+    74
+   ],
+   "menu": [
+    523,
+    381,
+    320,
+    89
+   ]
+  },
+  "wk ctx[normal] 1280x800@100 dark AccuseMenu: Esc closes; focus not on body (got cell sel)": {
+   "ok": true,
+   "act": "cell sel"
+  },
+  "wk ctx[normal] 1280x800@100 dark: no JS errors": {
+   "ok": true,
+   "errs": []
+  },
+  "wk ctx[normal] 1280x800@125 light ModeMenu(classic): lift on the row, menu at the row, in window (backdrop=blur(14px))": {
+   "ok": true,
+   "row": [
+    192,
+    73,
+    640,
+    52
+   ],
+   "lift": [
+    192,
+    73,
+    640,
+    52
+   ],
+   "menu": [
+    192,
+    133,
+    320,
+    76
+   ],
+   "scrim": [
+    0,
+    0,
+    1024,
+    640
+   ],
+   "sidebarRight": 0
+  },
+  "wk ctx[normal] 1280x800@125 light ModeMenu(classic): Esc closes, focus returns to the row (got mode-classic)": {
+   "ok": true,
+   "gone": true,
+   "act": "mode-classic"
+  },
+  "wk ctx[normal] 1280x800@125 light ModeMenu(liar): lift on the row, menu at the row, in window (backdrop=blur(14px))": {
+   "ok": true,
+   "row": [
+    192,
+    177,
+    640,
+    52
+   ],
+   "lift": [
+    192,
+    177,
+    640,
+    52
+   ],
+   "menu": [
+    192,
+    237,
+    320,
+    89
+   ],
+   "scrim": [
+    0,
+    0,
+    1024,
+    640
+   ],
+   "sidebarRight": 0
+  },
+  "wk ctx[normal] 1280x800@125 light ModeMenu(liar): Esc closes, focus returns to the row (got mode-liar)": {
+   "ok": true,
+   "gone": true,
+   "act": "mode-liar"
+  },
+  "wk ctx[normal] 1280x800@125 light AccuseMenu: lift on the cell, menu at the cell, in window (backdrop=blur(14px))": {
+   "ok": true,
+   "cell": [
+    297,
+    245,
+    56
+   ],
+   "lift": [
+    297,
+    245,
+    56,
+    56
+   ],
+   "menu": [
+    297,
+    310,
+    320,
+    89
+   ]
+  },
+  "wk ctx[normal] 1280x800@125 light AccuseMenu: Esc closes; focus not on body (got cell sel)": {
+   "ok": true,
+   "act": "cell sel"
+  },
+  "wk ctx[normal] 1280x800@125 light: no JS errors": {
+   "ok": true,
+   "errs": []
+  },
+  "wk ctx[normal] 1280x800@150 light ModeMenu(classic): lift on the row, menu at the row, in window (backdrop=blur(14px))": {
+   "ok": true,
+   "row": [
+    107,
+    73,
+    640,
+    52
+   ],
+   "lift": [
+    107,
+    73,
+    640,
+    52
+   ],
+   "menu": [
+    107,
+    133,
+    320,
+    76
+   ],
+   "scrim": [
+    0,
+    0,
+    853,
+    533
+   ],
+   "sidebarRight": 0
+  },
+  "wk ctx[normal] 1280x800@150 light ModeMenu(classic): Esc closes, focus returns to the row (got mode-classic)": {
+   "ok": true,
+   "gone": true,
+   "act": "mode-classic"
+  },
+  "wk ctx[normal] 1280x800@150 light ModeMenu(liar): lift on the row, menu at the row, in window (backdrop=blur(14px))": {
+   "ok": true,
+   "row": [
+    107,
+    177,
+    640,
+    52
+   ],
+   "lift": [
+    107,
+    177,
+    640,
+    52
+   ],
+   "menu": [
+    107,
+    237,
+    320,
+    89
+   ],
+   "scrim": [
+    0,
+    0,
+    853,
+    533
+   ],
+   "sidebarRight": 0
+  },
+  "wk ctx[normal] 1280x800@150 light ModeMenu(liar): Esc closes, focus returns to the row (got mode-liar)": {
+   "ok": true,
+   "gone": true,
+   "act": "mode-liar"
+  },
+  "wk ctx[normal] 1280x800@150 light AccuseMenu: lift on the cell, menu at the cell, in window (backdrop=blur(14px))": {
+   "ok": true,
+   "cell": [
+    230,
+    210,
+    45
+   ],
+   "lift": [
+    230,
+    210,
+    45,
+    45
+   ],
+   "menu": [
+    230,
+    262,
+    320,
+    89
+   ]
+  },
+  "wk ctx[normal] 1280x800@150 light AccuseMenu: Esc closes; focus not on body (got cell sel)": {
+   "ok": true,
+   "act": "cell sel"
+  },
+  "wk ctx[normal] 1280x800@150 light: no JS errors": {
+   "ok": true,
+   "errs": []
+  },
+  "wk ctx[normal] 1440x900@100 light ModeMenu(classic): lift on the row, menu at the row, in window (backdrop=blur(14px))": {
+   "ok": true,
+   "row": [
+    524,
+    73,
+    640,
+    52
+   ],
+   "lift": [
+    524,
+    73,
+    640,
+    52
+   ],
+   "menu": [
+    524,
+    133,
+    320,
+    76
+   ],
+   "scrim": [
+    248,
+    0,
+    1192,
+    900
+   ],
+   "sidebarRight": 240
+  },
+  "wk ctx[normal] 1440x900@100 light ModeMenu(classic): Esc closes, focus returns to the row (got mode-classic)": {
+   "ok": true,
+   "gone": true,
+   "act": "mode-classic"
+  },
+  "wk ctx[normal] 1440x900@100 light ModeMenu(liar): lift on the row, menu at the row, in window (backdrop=blur(14px))": {
+   "ok": true,
+   "row": [
+    524,
+    177,
+    640,
+    52
+   ],
+   "lift": [
+    524,
+    177,
+    640,
+    52
+   ],
+   "menu": [
+    524,
+    237,
+    320,
+    89
+   ],
+   "scrim": [
+    248,
+    0,
+    1192,
+    900
+   ],
+   "sidebarRight": 240
+  },
+  "wk ctx[normal] 1440x900@100 light ModeMenu(liar): Esc closes, focus returns to the row (got mode-liar)": {
+   "ok": true,
+   "gone": true,
+   "act": "mode-liar"
+  },
+  "wk ctx[normal] 1440x900@100 light AccuseMenu: lift on the cell, menu at the cell, in window (backdrop=blur(14px))": {
+   "ok": true,
+   "cell": [
+    581,
+    313,
+    79
+   ],
+   "lift": [
+    581,
+    313,
+    79,
+    79
+   ],
+   "menu": [
+    581,
+    400,
+    320,
+    89
+   ]
+  },
+  "wk ctx[normal] 1440x900@100 light AccuseMenu: Esc closes; focus not on body (got cell sel)": {
+   "ok": true,
+   "act": "cell sel"
+  },
+  "wk ctx[normal] 1440x900@100 light: no JS errors": {
+   "ok": true,
+   "errs": []
+  },
+  "wk ctx[normal] 1440x900@100 dark ModeMenu(classic): lift on the row, menu at the row, in window (backdrop=blur(14px))": {
+   "ok": true,
+   "row": [
+    524,
+    73,
+    640,
+    52
+   ],
+   "lift": [
+    524,
+    73,
+    640,
+    52
+   ],
+   "menu": [
+    524,
+    133,
+    320,
+    76
+   ],
+   "scrim": [
+    248,
+    0,
+    1192,
+    900
+   ],
+   "sidebarRight": 240
+  },
+  "wk ctx[normal] 1440x900@100 dark ModeMenu(classic): Esc closes, focus returns to the row (got mode-classic)": {
+   "ok": true,
+   "gone": true,
+   "act": "mode-classic"
+  },
+  "wk ctx[normal] 1440x900@100 dark ModeMenu(liar): lift on the row, menu at the row, in window (backdrop=blur(14px))": {
+   "ok": true,
+   "row": [
+    524,
+    177,
+    640,
+    52
+   ],
+   "lift": [
+    524,
+    177,
+    640,
+    52
+   ],
+   "menu": [
+    524,
+    237,
+    320,
+    89
+   ],
+   "scrim": [
+    248,
+    0,
+    1192,
+    900
+   ],
+   "sidebarRight": 240
+  },
+  "wk ctx[normal] 1440x900@100 dark ModeMenu(liar): Esc closes, focus returns to the row (got mode-liar)": {
+   "ok": true,
+   "gone": true,
+   "act": "mode-liar"
+  },
+  "wk ctx[normal] 1440x900@100 dark AccuseMenu: lift on the cell, menu at the cell, in window (backdrop=blur(14px))": {
+   "ok": true,
+   "cell": [
+    581,
+    313,
+    79
+   ],
+   "lift": [
+    581,
+    313,
+    79,
+    79
+   ],
+   "menu": [
+    581,
+    400,
+    320,
+    89
+   ]
+  },
+  "wk ctx[normal] 1440x900@100 dark AccuseMenu: Esc closes; focus not on body (got cell sel)": {
+   "ok": true,
+   "act": "cell sel"
+  },
+  "wk ctx[normal] 1440x900@100 dark: no JS errors": {
+   "ok": true,
+   "errs": []
+  },
+  "wk ctx[normal] 1440x900@125 light ModeMenu(classic): lift on the row, menu at the row, in window (backdrop=blur(14px))": {
+   "ok": true,
+   "row": [
+    380,
+    73,
+    640,
+    52
+   ],
+   "lift": [
+    380,
+    73,
+    640,
+    52
+   ],
+   "menu": [
+    380,
+    133,
+    320,
+    76
+   ],
+   "scrim": [
+    248,
+    0,
+    904,
+    720
+   ],
+   "sidebarRight": 240
+  },
+  "wk ctx[normal] 1440x900@125 light ModeMenu(classic): Esc closes, focus returns to the row (got mode-classic)": {
+   "ok": true,
+   "gone": true,
+   "act": "mode-classic"
+  },
+  "wk ctx[normal] 1440x900@125 light ModeMenu(liar): lift on the row, menu at the row, in window (backdrop=blur(14px))": {
+   "ok": true,
+   "row": [
+    380,
+    177,
+    640,
+    52
+   ],
+   "lift": [
+    380,
+    177,
+    640,
+    52
+   ],
+   "menu": [
+    380,
+    237,
+    320,
+    89
+   ],
+   "scrim": [
+    248,
+    0,
+    904,
+    720
+   ],
+   "sidebarRight": 240
+  },
+  "wk ctx[normal] 1440x900@125 light ModeMenu(liar): Esc closes, focus returns to the row (got mode-liar)": {
+   "ok": true,
+   "gone": true,
+   "act": "mode-liar"
+  },
+  "wk ctx[normal] 1440x900@125 light AccuseMenu: lift on the cell, menu at the cell, in window (backdrop=blur(14px))": {
+   "ok": true,
+   "cell": [
+    480,
+    256,
+    60
+   ],
+   "lift": [
+    480,
+    256,
+    60,
+    60
+   ],
+   "menu": [
+    480,
+    324,
+    320,
+    89
+   ]
+  },
+  "wk ctx[normal] 1440x900@125 light AccuseMenu: Esc closes; focus not on body (got cell sel)": {
+   "ok": true,
+   "act": "cell sel"
+  },
+  "wk ctx[normal] 1440x900@125 light: no JS errors": {
+   "ok": true,
+   "errs": []
+  },
+  "wk ctx[normal] 1440x900@150 light ModeMenu(classic): lift on the row, menu at the row, in window (backdrop=blur(14px))": {
+   "ok": true,
+   "row": [
+    160,
+    73,
+    640,
+    52
+   ],
+   "lift": [
+    160,
+    73,
+    640,
+    52
+   ],
+   "menu": [
+    160,
+    133,
+    320,
+    76
+   ],
+   "scrim": [
+    0,
+    0,
+    960,
+    600
+   ],
+   "sidebarRight": 0
+  },
+  "wk ctx[normal] 1440x900@150 light ModeMenu(classic): Esc closes, focus returns to the row (got mode-classic)": {
+   "ok": true,
+   "gone": true,
+   "act": "mode-classic"
+  },
+  "wk ctx[normal] 1440x900@150 light ModeMenu(liar): lift on the row, menu at the row, in window (backdrop=blur(14px))": {
+   "ok": true,
+   "row": [
+    160,
+    177,
+    640,
+    52
+   ],
+   "lift": [
+    160,
+    177,
+    640,
+    52
+   ],
+   "menu": [
+    160,
+    237,
+    320,
+    89
+   ],
+   "scrim": [
+    0,
+    0,
+    960,
+    600
+   ],
+   "sidebarRight": 0
+  },
+  "wk ctx[normal] 1440x900@150 light ModeMenu(liar): Esc closes, focus returns to the row (got mode-liar)": {
+   "ok": true,
+   "gone": true,
+   "act": "mode-liar"
+  },
+  "wk ctx[normal] 1440x900@150 light AccuseMenu: lift on the cell, menu at the cell, in window (backdrop=blur(14px))": {
+   "ok": true,
+   "cell": [
+    272,
+    232,
+    52
+   ],
+   "lift": [
+    272,
+    232,
+    52,
+    52
+   ],
+   "menu": [
+    272,
+    292,
+    320,
+    89
+   ]
+  },
+  "wk ctx[normal] 1440x900@150 light AccuseMenu: Esc closes; focus not on body (got cell sel)": {
+   "ok": true,
+   "act": "cell sel"
+  },
+  "wk ctx[normal] 1440x900@150 light: no JS errors": {
+   "ok": true,
+   "errs": []
+  },
+  "wk ctx[normal] 1920x1080@100 light ModeMenu(classic): lift on the row, menu at the row, in window (backdrop=blur(14px))": {
+   "ok": true,
+   "row": [
+    764,
+    73,
+    640,
+    52
+   ],
+   "lift": [
+    764,
+    73,
+    640,
+    52
+   ],
+   "menu": [
+    764,
+    133,
+    320,
+    76
+   ],
+   "scrim": [
+    248,
+    0,
+    1672,
+    1080
+   ],
+   "sidebarRight": 240
+  },
+  "wk ctx[normal] 1920x1080@100 light ModeMenu(classic): Esc closes, focus returns to the row (got mode-classic)": {
+   "ok": true,
+   "gone": true,
+   "act": "mode-classic"
+  },
+  "wk ctx[normal] 1920x1080@100 light ModeMenu(liar): lift on the row, menu at the row, in window (backdrop=blur(14px))": {
+   "ok": true,
+   "row": [
+    764,
+    177,
+    640,
+    52
+   ],
+   "lift": [
+    764,
+    177,
+    640,
+    52
+   ],
+   "menu": [
+    764,
+    237,
+    320,
+    89
+   ],
+   "scrim": [
+    248,
+    0,
+    1672,
+    1080
+   ],
+   "sidebarRight": 240
+  },
+  "wk ctx[normal] 1920x1080@100 light ModeMenu(liar): Esc closes, focus returns to the row (got mode-liar)": {
+   "ok": true,
+   "gone": true,
+   "act": "mode-liar"
+  },
+  "wk ctx[normal] 1920x1080@100 light AccuseMenu: lift on the cell, menu at the cell, in window (backdrop=blur(14px))": {
+   "ok": true,
+   "cell": [
+    805,
+    313,
+    79
+   ],
+   "lift": [
+    805,
+    313,
+    79,
+    79
+   ],
+   "menu": [
+    805,
+    400,
+    320,
+    89
+   ]
+  },
+  "wk ctx[normal] 1920x1080@100 light AccuseMenu: Esc closes; focus not on body (got cell sel)": {
+   "ok": true,
+   "act": "cell sel"
+  },
+  "wk ctx[normal] 1920x1080@100 light: no JS errors": {
+   "ok": true,
+   "errs": []
+  },
+  "wk ctx[normal] 1920x1080@100 dark ModeMenu(classic): lift on the row, menu at the row, in window (backdrop=blur(14px))": {
+   "ok": true,
+   "row": [
+    764,
+    73,
+    640,
+    52
+   ],
+   "lift": [
+    764,
+    73,
+    640,
+    52
+   ],
+   "menu": [
+    764,
+    133,
+    320,
+    76
+   ],
+   "scrim": [
+    248,
+    0,
+    1672,
+    1080
+   ],
+   "sidebarRight": 240
+  },
+  "wk ctx[normal] 1920x1080@100 dark ModeMenu(classic): Esc closes, focus returns to the row (got mode-classic)": {
+   "ok": true,
+   "gone": true,
+   "act": "mode-classic"
+  },
+  "wk ctx[normal] 1920x1080@100 dark ModeMenu(liar): lift on the row, menu at the row, in window (backdrop=blur(14px))": {
+   "ok": true,
+   "row": [
+    764,
+    177,
+    640,
+    52
+   ],
+   "lift": [
+    764,
+    177,
+    640,
+    52
+   ],
+   "menu": [
+    764,
+    237,
+    320,
+    89
+   ],
+   "scrim": [
+    248,
+    0,
+    1672,
+    1080
+   ],
+   "sidebarRight": 240
+  },
+  "wk ctx[normal] 1920x1080@100 dark ModeMenu(liar): Esc closes, focus returns to the row (got mode-liar)": {
+   "ok": true,
+   "gone": true,
+   "act": "mode-liar"
+  },
+  "wk ctx[normal] 1920x1080@100 dark AccuseMenu: lift on the cell, menu at the cell, in window (backdrop=blur(14px))": {
+   "ok": true,
+   "cell": [
+    805,
+    313,
+    79
+   ],
+   "lift": [
+    805,
+    313,
+    79,
+    79
+   ],
+   "menu": [
+    805,
+    400,
+    320,
+    89
+   ]
+  },
+  "wk ctx[normal] 1920x1080@100 dark AccuseMenu: Esc closes; focus not on body (got cell sel)": {
+   "ok": true,
+   "act": "cell sel"
+  },
+  "wk ctx[normal] 1920x1080@100 dark: no JS errors": {
+   "ok": true,
+   "errs": []
+  },
+  "wk ctx[normal] 1920x1080@125 light ModeMenu(classic): lift on the row, menu at the row, in window (backdrop=blur(14px))": {
+   "ok": true,
+   "row": [
+    572,
+    73,
+    640,
+    52
+   ],
+   "lift": [
+    572,
+    73,
+    640,
+    52
+   ],
+   "menu": [
+    572,
+    133,
+    320,
+    76
+   ],
+   "scrim": [
+    248,
+    0,
+    1288,
+    864
+   ],
+   "sidebarRight": 240
+  },
+  "wk ctx[normal] 1920x1080@125 light ModeMenu(classic): Esc closes, focus returns to the row (got mode-classic)": {
+   "ok": true,
+   "gone": true,
+   "act": "mode-classic"
+  },
+  "wk ctx[normal] 1920x1080@125 light ModeMenu(liar): lift on the row, menu at the row, in window (backdrop=blur(14px))": {
+   "ok": true,
+   "row": [
+    572,
+    177,
+    640,
+    52
+   ],
+   "lift": [
+    572,
+    177,
+    640,
+    52
+   ],
+   "menu": [
+    572,
+    237,
+    320,
+    89
+   ],
+   "scrim": [
+    248,
+    0,
+    1288,
+    864
+   ],
+   "sidebarRight": 240
+  },
+  "wk ctx[normal] 1920x1080@125 light ModeMenu(liar): Esc closes, focus returns to the row (got mode-liar)": {
+   "ok": true,
+   "gone": true,
+   "act": "mode-liar"
+  },
+  "wk ctx[normal] 1920x1080@125 light AccuseMenu: lift on the cell, menu at the cell, in window (backdrop=blur(14px))": {
+   "ok": true,
+   "cell": [
+    620,
+    313,
+    79
+   ],
+   "lift": [
+    620,
+    313,
+    79,
+    79
+   ],
+   "menu": [
+    620,
+    400,
+    320,
+    89
+   ]
+  },
+  "wk ctx[normal] 1920x1080@125 light AccuseMenu: Esc closes; focus not on body (got cell sel)": {
+   "ok": true,
+   "act": "cell sel"
+  },
+  "wk ctx[normal] 1920x1080@125 light: no JS errors": {
+   "ok": true,
+   "errs": []
+  },
+  "wk ctx[normal] 1920x1080@150 light ModeMenu(classic): lift on the row, menu at the row, in window (backdrop=blur(14px))": {
+   "ok": true,
+   "row": [
+    444,
+    73,
+    640,
+    52
+   ],
+   "lift": [
+    444,
+    73,
+    640,
+    52
+   ],
+   "menu": [
+    444,
+    133,
+    320,
+    76
+   ],
+   "scrim": [
+    248,
+    0,
+    1032,
+    720
+   ],
+   "sidebarRight": 240
+  },
+  "wk ctx[normal] 1920x1080@150 light ModeMenu(classic): Esc closes, focus returns to the row (got mode-classic)": {
+   "ok": true,
+   "gone": true,
+   "act": "mode-classic"
+  },
+  "wk ctx[normal] 1920x1080@150 light ModeMenu(liar): lift on the row, menu at the row, in window (backdrop=blur(14px))": {
+   "ok": true,
+   "row": [
+    444,
+    177,
+    640,
+    52
+   ],
+   "lift": [
+    444,
+    177,
+    640,
+    52
+   ],
+   "menu": [
+    444,
+    237,
+    320,
+    89
+   ],
+   "scrim": [
+    248,
+    0,
+    1032,
+    720
+   ],
+   "sidebarRight": 240
+  },
+  "wk ctx[normal] 1920x1080@150 light ModeMenu(liar): Esc closes, focus returns to the row (got mode-liar)": {
+   "ok": true,
+   "gone": true,
+   "act": "mode-liar"
+  },
+  "wk ctx[normal] 1920x1080@150 light AccuseMenu: lift on the cell, menu at the cell, in window (backdrop=blur(14px))": {
+   "ok": true,
+   "cell": [
+    536,
+    272,
+    65
+   ],
+   "lift": [
+    536,
+    272,
+    65,
+    65
+   ],
+   "menu": [
+    536,
+    345,
+    320,
+    89
+   ]
+  },
+  "wk ctx[normal] 1920x1080@150 light AccuseMenu: Esc closes; focus not on body (got cell sel)": {
+   "ok": true,
+   "act": "cell sel"
+  },
+  "wk ctx[normal] 1920x1080@150 light: no JS errors": {
+   "ok": true,
+   "errs": []
+  },
+  "wk ctx[normal] compact-1024x640 light ModeMenu(classic): lift on the row, menu at the row, in window (backdrop=blur(14px))": {
+   "ok": true,
+   "row": [
+    192,
+    73,
+    640,
+    52
+   ],
+   "lift": [
+    192,
+    73,
+    640,
+    52
+   ],
+   "menu": [
+    192,
+    133,
+    320,
+    76
+   ],
+   "scrim": [
+    0,
+    0,
+    1024,
+    640
+   ],
+   "sidebarRight": 0
+  },
+  "wk ctx[normal] compact-1024x640 light ModeMenu(classic): Esc closes, focus returns to the row (got mode-classic)": {
+   "ok": true,
+   "gone": true,
+   "act": "mode-classic"
+  },
+  "wk ctx[normal] compact-1024x640 light ModeMenu(liar): lift on the row, menu at the row, in window (backdrop=blur(14px))": {
+   "ok": true,
+   "row": [
+    192,
+    177,
+    640,
+    52
+   ],
+   "lift": [
+    192,
+    177,
+    640,
+    52
+   ],
+   "menu": [
+    192,
+    237,
+    320,
+    89
+   ],
+   "scrim": [
+    0,
+    0,
+    1024,
+    640
+   ],
+   "sidebarRight": 0
+  },
+  "wk ctx[normal] compact-1024x640 light ModeMenu(liar): Esc closes, focus returns to the row (got mode-liar)": {
+   "ok": true,
+   "gone": true,
+   "act": "mode-liar"
+  },
+  "wk ctx[normal] compact-1024x640 light AccuseMenu: lift on the cell, menu at the cell, in window (backdrop=blur(14px))": {
+   "ok": true,
+   "cell": [
+    297,
+    245,
+    56
+   ],
+   "lift": [
+    297,
+    245,
+    56,
+    56
+   ],
+   "menu": [
+    297,
+    310,
+    320,
+    89
+   ]
+  },
+  "wk ctx[normal] compact-1024x640 light AccuseMenu: Esc closes; focus not on body (got cell sel)": {
+   "ok": true,
+   "act": "cell sel"
+  },
+  "wk ctx[normal] compact-1024x640 light: no JS errors": {
+   "ok": true,
+   "errs": []
+  },
+  "wk ctx[normal] compact-1024x640 dark ModeMenu(classic): lift on the row, menu at the row, in window (backdrop=blur(14px))": {
+   "ok": true,
+   "row": [
+    192,
+    73,
+    640,
+    52
+   ],
+   "lift": [
+    192,
+    73,
+    640,
+    52
+   ],
+   "menu": [
+    192,
+    133,
+    320,
+    76
+   ],
+   "scrim": [
+    0,
+    0,
+    1024,
+    640
+   ],
+   "sidebarRight": 0
+  },
+  "wk ctx[normal] compact-1024x640 dark ModeMenu(classic): Esc closes, focus returns to the row (got mode-classic)": {
+   "ok": true,
+   "gone": true,
+   "act": "mode-classic"
+  },
+  "wk ctx[normal] compact-1024x640 dark ModeMenu(liar): lift on the row, menu at the row, in window (backdrop=blur(14px))": {
+   "ok": true,
+   "row": [
+    192,
+    177,
+    640,
+    52
+   ],
+   "lift": [
+    192,
+    177,
+    640,
+    52
+   ],
+   "menu": [
+    192,
+    237,
+    320,
+    89
+   ],
+   "scrim": [
+    0,
+    0,
+    1024,
+    640
+   ],
+   "sidebarRight": 0
+  },
+  "wk ctx[normal] compact-1024x640 dark ModeMenu(liar): Esc closes, focus returns to the row (got mode-liar)": {
+   "ok": true,
+   "gone": true,
+   "act": "mode-liar"
+  },
+  "wk ctx[normal] compact-1024x640 dark AccuseMenu: lift on the cell, menu at the cell, in window (backdrop=blur(14px))": {
+   "ok": true,
+   "cell": [
+    297,
+    245,
+    56
+   ],
+   "lift": [
+    297,
+    245,
+    56,
+    56
+   ],
+   "menu": [
+    297,
+    310,
+    320,
+    89
+   ]
+  },
+  "wk ctx[normal] compact-1024x640 dark AccuseMenu: Esc closes; focus not on body (got cell sel)": {
+   "ok": true,
+   "act": "cell sel"
+  },
+  "wk ctx[normal] compact-1024x640 dark: no JS errors": {
+   "ok": true,
+   "errs": []
+  },
+  "wk ctx[normal] compact-960x600 light ModeMenu(classic): lift on the row, menu at the row, in window (backdrop=blur(14px))": {
+   "ok": true,
+   "row": [
+    160,
+    73,
+    640,
+    52
+   ],
+   "lift": [
+    160,
+    73,
+    640,
+    52
+   ],
+   "menu": [
+    160,
+    133,
+    320,
+    76
+   ],
+   "scrim": [
+    0,
+    0,
+    960,
+    600
+   ],
+   "sidebarRight": 0
+  },
+  "wk ctx[normal] compact-960x600 light ModeMenu(classic): Esc closes, focus returns to the row (got mode-classic)": {
+   "ok": true,
+   "gone": true,
+   "act": "mode-classic"
+  },
+  "wk ctx[normal] compact-960x600 light ModeMenu(liar): lift on the row, menu at the row, in window (backdrop=blur(14px))": {
+   "ok": true,
+   "row": [
+    160,
+    177,
+    640,
+    52
+   ],
+   "lift": [
+    160,
+    177,
+    640,
+    52
+   ],
+   "menu": [
+    160,
+    237,
+    320,
+    89
+   ],
+   "scrim": [
+    0,
+    0,
+    960,
+    600
+   ],
+   "sidebarRight": 0
+  },
+  "wk ctx[normal] compact-960x600 light ModeMenu(liar): Esc closes, focus returns to the row (got mode-liar)": {
+   "ok": true,
+   "gone": true,
+   "act": "mode-liar"
+  },
+  "wk ctx[normal] compact-960x600 light AccuseMenu: lift on the cell, menu at the cell, in window (backdrop=blur(14px))": {
+   "ok": true,
+   "cell": [
+    272,
+    232,
+    52
+   ],
+   "lift": [
+    272,
+    232,
+    52,
+    52
+   ],
+   "menu": [
+    272,
+    292,
+    320,
+    89
+   ]
+  },
+  "wk ctx[normal] compact-960x600 light AccuseMenu: Esc closes; focus not on body (got cell sel)": {
+   "ok": true,
+   "act": "cell sel"
+  },
+  "wk ctx[normal] compact-960x600 light: no JS errors": {
+   "ok": true,
+   "errs": []
+  },
+  "wk ctx[normal] compact-960x600 dark ModeMenu(classic): lift on the row, menu at the row, in window (backdrop=blur(14px))": {
+   "ok": true,
+   "row": [
+    160,
+    73,
+    640,
+    52
+   ],
+   "lift": [
+    160,
+    73,
+    640,
+    52
+   ],
+   "menu": [
+    160,
+    133,
+    320,
+    76
+   ],
+   "scrim": [
+    0,
+    0,
+    960,
+    600
+   ],
+   "sidebarRight": 0
+  },
+  "wk ctx[normal] compact-960x600 dark ModeMenu(classic): Esc closes, focus returns to the row (got mode-classic)": {
+   "ok": true,
+   "gone": true,
+   "act": "mode-classic"
+  },
+  "wk ctx[normal] compact-960x600 dark ModeMenu(liar): lift on the row, menu at the row, in window (backdrop=blur(14px))": {
+   "ok": true,
+   "row": [
+    160,
+    177,
+    640,
+    52
+   ],
+   "lift": [
+    160,
+    177,
+    640,
+    52
+   ],
+   "menu": [
+    160,
+    237,
+    320,
+    89
+   ],
+   "scrim": [
+    0,
+    0,
+    960,
+    600
+   ],
+   "sidebarRight": 0
+  },
+  "wk ctx[normal] compact-960x600 dark ModeMenu(liar): Esc closes, focus returns to the row (got mode-liar)": {
+   "ok": true,
+   "gone": true,
+   "act": "mode-liar"
+  },
+  "wk ctx[normal] compact-960x600 dark AccuseMenu: lift on the cell, menu at the cell, in window (backdrop=blur(14px))": {
+   "ok": true,
+   "cell": [
+    272,
+    232,
+    52
+   ],
+   "lift": [
+    272,
+    232,
+    52,
+    52
+   ],
+   "menu": [
+    272,
+    292,
+    320,
+    89
+   ]
+  },
+  "wk ctx[normal] compact-960x600 dark AccuseMenu: Esc closes; focus not on body (got cell sel)": {
+   "ok": true,
+   "act": "cell sel"
+  },
+  "wk ctx[normal] compact-960x600 dark: no JS errors": {
+   "ok": true,
+   "errs": []
+  },
+  "wk ctx[contrast] 1280x800@100 light ModeMenu(classic): lift on the row, menu at the row, in window (backdrop=none)": {
+   "ok": true,
+   "row": [
+    444,
+    73,
+    640,
+    52
+   ],
+   "lift": [
+    444,
+    73,
+    640,
+    52
+   ],
+   "menu": [
+    444,
+    133,
+    320,
+    76
+   ],
+   "scrim": [
+    248,
+    0,
+    1032,
+    800
+   ],
+   "sidebarRight": 240
+  },
+  "wk ctx[contrast] 1280x800@100 light ModeMenu(classic): Esc closes, focus returns to the row (got mode-classic)": {
+   "ok": true,
+   "gone": true,
+   "act": "mode-classic"
+  },
+  "wk ctx[contrast] 1280x800@100 light ModeMenu(liar): lift on the row, menu at the row, in window (backdrop=none)": {
+   "ok": true,
+   "row": [
+    444,
+    177,
+    640,
+    52
+   ],
+   "lift": [
+    444,
+    177,
+    640,
+    52
+   ],
+   "menu": [
+    444,
+    237,
+    320,
+    89
+   ],
+   "scrim": [
+    248,
+    0,
+    1032,
+    800
+   ],
+   "sidebarRight": 240
+  },
+  "wk ctx[contrast] 1280x800@100 light ModeMenu(liar): Esc closes, focus returns to the row (got mode-liar)": {
+   "ok": true,
+   "gone": true,
+   "act": "mode-liar"
+  },
+  "wk ctx[contrast] 1280x800@100 light AccuseMenu: lift on the cell, menu at the cell, in window (backdrop=none)": {
+   "ok": true,
+   "cell": [
+    523,
+    299,
+    74
+   ],
+   "lift": [
+    523,
+    299,
+    74,
+    74
+   ],
+   "menu": [
+    523,
+    381,
+    320,
+    89
+   ]
+  },
+  "wk ctx[contrast] 1280x800@100 light AccuseMenu: Esc closes; focus not on body (got cell sel)": {
+   "ok": true,
+   "act": "cell sel"
+  },
+  "wk ctx[contrast] 1280x800@100 light: no JS errors": {
+   "ok": true,
+   "errs": []
+  },
+  "wk ctx[contrast] 1280x800@125 light ModeMenu(classic): lift on the row, menu at the row, in window (backdrop=none)": {
+   "ok": true,
+   "row": [
+    192,
+    73,
+    640,
+    52
+   ],
+   "lift": [
+    192,
+    73,
+    640,
+    52
+   ],
+   "menu": [
+    192,
+    133,
+    320,
+    76
+   ],
+   "scrim": [
+    0,
+    0,
+    1024,
+    640
+   ],
+   "sidebarRight": 0
+  },
+  "wk ctx[contrast] 1280x800@125 light ModeMenu(classic): Esc closes, focus returns to the row (got mode-classic)": {
+   "ok": true,
+   "gone": true,
+   "act": "mode-classic"
+  },
+  "wk ctx[contrast] 1280x800@125 light ModeMenu(liar): lift on the row, menu at the row, in window (backdrop=none)": {
+   "ok": true,
+   "row": [
+    192,
+    177,
+    640,
+    52
+   ],
+   "lift": [
+    192,
+    177,
+    640,
+    52
+   ],
+   "menu": [
+    192,
+    237,
+    320,
+    89
+   ],
+   "scrim": [
+    0,
+    0,
+    1024,
+    640
+   ],
+   "sidebarRight": 0
+  },
+  "wk ctx[contrast] 1280x800@125 light ModeMenu(liar): Esc closes, focus returns to the row (got mode-liar)": {
+   "ok": true,
+   "gone": true,
+   "act": "mode-liar"
+  },
+  "wk ctx[contrast] 1280x800@125 light AccuseMenu: lift on the cell, menu at the cell, in window (backdrop=none)": {
+   "ok": true,
+   "cell": [
+    297,
+    245,
+    56
+   ],
+   "lift": [
+    297,
+    245,
+    56,
+    56
+   ],
+   "menu": [
+    297,
+    310,
+    320,
+    89
+   ]
+  },
+  "wk ctx[contrast] 1280x800@125 light AccuseMenu: Esc closes; focus not on body (got cell sel)": {
+   "ok": true,
+   "act": "cell sel"
+  },
+  "wk ctx[contrast] 1280x800@125 light: no JS errors": {
+   "ok": true,
+   "errs": []
+  },
+  "wk ctx[contrast] 1280x800@150 light ModeMenu(classic): lift on the row, menu at the row, in window (backdrop=none)": {
+   "ok": true,
+   "row": [
+    107,
+    73,
+    640,
+    52
+   ],
+   "lift": [
+    107,
+    73,
+    640,
+    52
+   ],
+   "menu": [
+    107,
+    133,
+    320,
+    76
+   ],
+   "scrim": [
+    0,
+    0,
+    853,
+    533
+   ],
+   "sidebarRight": 0
+  },
+  "wk ctx[contrast] 1280x800@150 light ModeMenu(classic): Esc closes, focus returns to the row (got mode-classic)": {
+   "ok": true,
+   "gone": true,
+   "act": "mode-classic"
+  },
+  "wk ctx[contrast] 1280x800@150 light ModeMenu(liar): lift on the row, menu at the row, in window (backdrop=none)": {
+   "ok": true,
+   "row": [
+    107,
+    177,
+    640,
+    52
+   ],
+   "lift": [
+    107,
+    177,
+    640,
+    52
+   ],
+   "menu": [
+    107,
+    237,
+    320,
+    89
+   ],
+   "scrim": [
+    0,
+    0,
+    853,
+    533
+   ],
+   "sidebarRight": 0
+  },
+  "wk ctx[contrast] 1280x800@150 light ModeMenu(liar): Esc closes, focus returns to the row (got mode-liar)": {
+   "ok": true,
+   "gone": true,
+   "act": "mode-liar"
+  },
+  "wk ctx[contrast] 1280x800@150 light AccuseMenu: lift on the cell, menu at the cell, in window (backdrop=none)": {
+   "ok": true,
+   "cell": [
+    230,
+    210,
+    45
+   ],
+   "lift": [
+    230,
+    210,
+    45,
+    45
+   ],
+   "menu": [
+    230,
+    262,
+    320,
+    89
+   ]
+  },
+  "wk ctx[contrast] 1280x800@150 light AccuseMenu: Esc closes; focus not on body (got cell sel)": {
+   "ok": true,
+   "act": "cell sel"
+  },
+  "wk ctx[contrast] 1280x800@150 light: no JS errors": {
+   "ok": true,
+   "errs": []
+  },
+  "wk ctx[contrast] 1440x900@100 light ModeMenu(classic): lift on the row, menu at the row, in window (backdrop=none)": {
+   "ok": true,
+   "row": [
+    524,
+    73,
+    640,
+    52
+   ],
+   "lift": [
+    524,
+    73,
+    640,
+    52
+   ],
+   "menu": [
+    524,
+    133,
+    320,
+    76
+   ],
+   "scrim": [
+    248,
+    0,
+    1192,
+    900
+   ],
+   "sidebarRight": 240
+  },
+  "wk ctx[contrast] 1440x900@100 light ModeMenu(classic): Esc closes, focus returns to the row (got mode-classic)": {
+   "ok": true,
+   "gone": true,
+   "act": "mode-classic"
+  },
+  "wk ctx[contrast] 1440x900@100 light ModeMenu(liar): lift on the row, menu at the row, in window (backdrop=none)": {
+   "ok": true,
+   "row": [
+    524,
+    177,
+    640,
+    52
+   ],
+   "lift": [
+    524,
+    177,
+    640,
+    52
+   ],
+   "menu": [
+    524,
+    237,
+    320,
+    89
+   ],
+   "scrim": [
+    248,
+    0,
+    1192,
+    900
+   ],
+   "sidebarRight": 240
+  },
+  "wk ctx[contrast] 1440x900@100 light ModeMenu(liar): Esc closes, focus returns to the row (got mode-liar)": {
+   "ok": true,
+   "gone": true,
+   "act": "mode-liar"
+  },
+  "wk ctx[contrast] 1440x900@100 light AccuseMenu: lift on the cell, menu at the cell, in window (backdrop=none)": {
+   "ok": true,
+   "cell": [
+    581,
+    313,
+    79
+   ],
+   "lift": [
+    581,
+    313,
+    79,
+    79
+   ],
+   "menu": [
+    581,
+    400,
+    320,
+    89
+   ]
+  },
+  "wk ctx[contrast] 1440x900@100 light AccuseMenu: Esc closes; focus not on body (got cell sel)": {
+   "ok": true,
+   "act": "cell sel"
+  },
+  "wk ctx[contrast] 1440x900@100 light: no JS errors": {
+   "ok": true,
+   "errs": []
+  },
+  "wk ctx[contrast] 1440x900@125 light ModeMenu(classic): lift on the row, menu at the row, in window (backdrop=none)": {
+   "ok": true,
+   "row": [
+    380,
+    73,
+    640,
+    52
+   ],
+   "lift": [
+    380,
+    73,
+    640,
+    52
+   ],
+   "menu": [
+    380,
+    133,
+    320,
+    76
+   ],
+   "scrim": [
+    248,
+    0,
+    904,
+    720
+   ],
+   "sidebarRight": 240
+  },
+  "wk ctx[contrast] 1440x900@125 light ModeMenu(classic): Esc closes, focus returns to the row (got mode-classic)": {
+   "ok": true,
+   "gone": true,
+   "act": "mode-classic"
+  },
+  "wk ctx[contrast] 1440x900@125 light ModeMenu(liar): lift on the row, menu at the row, in window (backdrop=none)": {
+   "ok": true,
+   "row": [
+    380,
+    177,
+    640,
+    52
+   ],
+   "lift": [
+    380,
+    177,
+    640,
+    52
+   ],
+   "menu": [
+    380,
+    237,
+    320,
+    89
+   ],
+   "scrim": [
+    248,
+    0,
+    904,
+    720
+   ],
+   "sidebarRight": 240
+  },
+  "wk ctx[contrast] 1440x900@125 light ModeMenu(liar): Esc closes, focus returns to the row (got mode-liar)": {
+   "ok": true,
+   "gone": true,
+   "act": "mode-liar"
+  },
+  "wk ctx[contrast] 1440x900@125 light AccuseMenu: lift on the cell, menu at the cell, in window (backdrop=none)": {
+   "ok": true,
+   "cell": [
+    480,
+    256,
+    60
+   ],
+   "lift": [
+    480,
+    256,
+    60,
+    60
+   ],
+   "menu": [
+    480,
+    324,
+    320,
+    89
+   ]
+  },
+  "wk ctx[contrast] 1440x900@125 light AccuseMenu: Esc closes; focus not on body (got cell sel)": {
+   "ok": true,
+   "act": "cell sel"
+  },
+  "wk ctx[contrast] 1440x900@125 light: no JS errors": {
+   "ok": true,
+   "errs": []
+  },
+  "wk ctx[contrast] 1440x900@150 light ModeMenu(classic): lift on the row, menu at the row, in window (backdrop=none)": {
+   "ok": true,
+   "row": [
+    160,
+    73,
+    640,
+    52
+   ],
+   "lift": [
+    160,
+    73,
+    640,
+    52
+   ],
+   "menu": [
+    160,
+    133,
+    320,
+    76
+   ],
+   "scrim": [
+    0,
+    0,
+    960,
+    600
+   ],
+   "sidebarRight": 0
+  },
+  "wk ctx[contrast] 1440x900@150 light ModeMenu(classic): Esc closes, focus returns to the row (got mode-classic)": {
+   "ok": true,
+   "gone": true,
+   "act": "mode-classic"
+  },
+  "wk ctx[contrast] 1440x900@150 light ModeMenu(liar): lift on the row, menu at the row, in window (backdrop=none)": {
+   "ok": true,
+   "row": [
+    160,
+    177,
+    640,
+    52
+   ],
+   "lift": [
+    160,
+    177,
+    640,
+    52
+   ],
+   "menu": [
+    160,
+    237,
+    320,
+    89
+   ],
+   "scrim": [
+    0,
+    0,
+    960,
+    600
+   ],
+   "sidebarRight": 0
+  },
+  "wk ctx[contrast] 1440x900@150 light ModeMenu(liar): Esc closes, focus returns to the row (got mode-liar)": {
+   "ok": true,
+   "gone": true,
+   "act": "mode-liar"
+  },
+  "wk ctx[contrast] 1440x900@150 light AccuseMenu: lift on the cell, menu at the cell, in window (backdrop=none)": {
+   "ok": true,
+   "cell": [
+    272,
+    232,
+    52
+   ],
+   "lift": [
+    272,
+    232,
+    52,
+    52
+   ],
+   "menu": [
+    272,
+    292,
+    320,
+    89
+   ]
+  },
+  "wk ctx[contrast] 1440x900@150 light AccuseMenu: Esc closes; focus not on body (got cell sel)": {
+   "ok": true,
+   "act": "cell sel"
+  },
+  "wk ctx[contrast] 1440x900@150 light: no JS errors": {
+   "ok": true,
+   "errs": []
+  },
+  "wk ctx[contrast] 1920x1080@100 light ModeMenu(classic): lift on the row, menu at the row, in window (backdrop=none)": {
+   "ok": true,
+   "row": [
+    764,
+    73,
+    640,
+    52
+   ],
+   "lift": [
+    764,
+    73,
+    640,
+    52
+   ],
+   "menu": [
+    764,
+    133,
+    320,
+    76
+   ],
+   "scrim": [
+    248,
+    0,
+    1672,
+    1080
+   ],
+   "sidebarRight": 240
+  },
+  "wk ctx[contrast] 1920x1080@100 light ModeMenu(classic): Esc closes, focus returns to the row (got mode-classic)": {
+   "ok": true,
+   "gone": true,
+   "act": "mode-classic"
+  },
+  "wk ctx[contrast] 1920x1080@100 light ModeMenu(liar): lift on the row, menu at the row, in window (backdrop=none)": {
+   "ok": true,
+   "row": [
+    764,
+    177,
+    640,
+    52
+   ],
+   "lift": [
+    764,
+    177,
+    640,
+    52
+   ],
+   "menu": [
+    764,
+    237,
+    320,
+    89
+   ],
+   "scrim": [
+    248,
+    0,
+    1672,
+    1080
+   ],
+   "sidebarRight": 240
+  },
+  "wk ctx[contrast] 1920x1080@100 light ModeMenu(liar): Esc closes, focus returns to the row (got mode-liar)": {
+   "ok": true,
+   "gone": true,
+   "act": "mode-liar"
+  },
+  "wk ctx[contrast] 1920x1080@100 light AccuseMenu: lift on the cell, menu at the cell, in window (backdrop=none)": {
+   "ok": true,
+   "cell": [
+    805,
+    313,
+    79
+   ],
+   "lift": [
+    805,
+    313,
+    79,
+    79
+   ],
+   "menu": [
+    805,
+    400,
+    320,
+    89
+   ]
+  },
+  "wk ctx[contrast] 1920x1080@100 light AccuseMenu: Esc closes; focus not on body (got cell sel)": {
+   "ok": true,
+   "act": "cell sel"
+  },
+  "wk ctx[contrast] 1920x1080@100 light: no JS errors": {
+   "ok": true,
+   "errs": []
+  },
+  "wk ctx[contrast] 1920x1080@125 light ModeMenu(classic): lift on the row, menu at the row, in window (backdrop=none)": {
+   "ok": true,
+   "row": [
+    572,
+    73,
+    640,
+    52
+   ],
+   "lift": [
+    572,
+    73,
+    640,
+    52
+   ],
+   "menu": [
+    572,
+    133,
+    320,
+    76
+   ],
+   "scrim": [
+    248,
+    0,
+    1288,
+    864
+   ],
+   "sidebarRight": 240
+  },
+  "wk ctx[contrast] 1920x1080@125 light ModeMenu(classic): Esc closes, focus returns to the row (got mode-classic)": {
+   "ok": true,
+   "gone": true,
+   "act": "mode-classic"
+  },
+  "wk ctx[contrast] 1920x1080@125 light ModeMenu(liar): lift on the row, menu at the row, in window (backdrop=none)": {
+   "ok": true,
+   "row": [
+    572,
+    177,
+    640,
+    52
+   ],
+   "lift": [
+    572,
+    177,
+    640,
+    52
+   ],
+   "menu": [
+    572,
+    237,
+    320,
+    89
+   ],
+   "scrim": [
+    248,
+    0,
+    1288,
+    864
+   ],
+   "sidebarRight": 240
+  },
+  "wk ctx[contrast] 1920x1080@125 light ModeMenu(liar): Esc closes, focus returns to the row (got mode-liar)": {
+   "ok": true,
+   "gone": true,
+   "act": "mode-liar"
+  },
+  "wk ctx[contrast] 1920x1080@125 light AccuseMenu: lift on the cell, menu at the cell, in window (backdrop=none)": {
+   "ok": true,
+   "cell": [
+    620,
+    313,
+    79
+   ],
+   "lift": [
+    620,
+    313,
+    79,
+    79
+   ],
+   "menu": [
+    620,
+    400,
+    320,
+    89
+   ]
+  },
+  "wk ctx[contrast] 1920x1080@125 light AccuseMenu: Esc closes; focus not on body (got cell sel)": {
+   "ok": true,
+   "act": "cell sel"
+  },
+  "wk ctx[contrast] 1920x1080@125 light: no JS errors": {
+   "ok": true,
+   "errs": []
+  },
+  "wk ctx[contrast] 1920x1080@150 light ModeMenu(classic): lift on the row, menu at the row, in window (backdrop=none)": {
+   "ok": true,
+   "row": [
+    444,
+    73,
+    640,
+    52
+   ],
+   "lift": [
+    444,
+    73,
+    640,
+    52
+   ],
+   "menu": [
+    444,
+    133,
+    320,
+    76
+   ],
+   "scrim": [
+    248,
+    0,
+    1032,
+    720
+   ],
+   "sidebarRight": 240
+  },
+  "wk ctx[contrast] 1920x1080@150 light ModeMenu(classic): Esc closes, focus returns to the row (got mode-classic)": {
+   "ok": true,
+   "gone": true,
+   "act": "mode-classic"
+  },
+  "wk ctx[contrast] 1920x1080@150 light ModeMenu(liar): lift on the row, menu at the row, in window (backdrop=none)": {
+   "ok": true,
+   "row": [
+    444,
+    177,
+    640,
+    52
+   ],
+   "lift": [
+    444,
+    177,
+    640,
+    52
+   ],
+   "menu": [
+    444,
+    237,
+    320,
+    89
+   ],
+   "scrim": [
+    248,
+    0,
+    1032,
+    720
+   ],
+   "sidebarRight": 240
+  },
+  "wk ctx[contrast] 1920x1080@150 light ModeMenu(liar): Esc closes, focus returns to the row (got mode-liar)": {
+   "ok": true,
+   "gone": true,
+   "act": "mode-liar"
+  },
+  "wk ctx[contrast] 1920x1080@150 light AccuseMenu: lift on the cell, menu at the cell, in window (backdrop=none)": {
+   "ok": true,
+   "cell": [
+    536,
+    272,
+    65
+   ],
+   "lift": [
+    536,
+    272,
+    65,
+    65
+   ],
+   "menu": [
+    536,
+    345,
+    320,
+    89
+   ]
+  },
+  "wk ctx[contrast] 1920x1080@150 light AccuseMenu: Esc closes; focus not on body (got cell sel)": {
+   "ok": true,
+   "act": "cell sel"
+  },
+  "wk ctx[contrast] 1920x1080@150 light: no JS errors": {
+   "ok": true,
+   "errs": []
+  },
+  "wk ctx[contrast] compact-1024x640 light ModeMenu(classic): lift on the row, menu at the row, in window (backdrop=none)": {
+   "ok": true,
+   "row": [
+    192,
+    73,
+    640,
+    52
+   ],
+   "lift": [
+    192,
+    73,
+    640,
+    52
+   ],
+   "menu": [
+    192,
+    133,
+    320,
+    76
+   ],
+   "scrim": [
+    0,
+    0,
+    1024,
+    640
+   ],
+   "sidebarRight": 0
+  },
+  "wk ctx[contrast] compact-1024x640 light ModeMenu(classic): Esc closes, focus returns to the row (got mode-classic)": {
+   "ok": true,
+   "gone": true,
+   "act": "mode-classic"
+  },
+  "wk ctx[contrast] compact-1024x640 light ModeMenu(liar): lift on the row, menu at the row, in window (backdrop=none)": {
+   "ok": true,
+   "row": [
+    192,
+    177,
+    640,
+    52
+   ],
+   "lift": [
+    192,
+    177,
+    640,
+    52
+   ],
+   "menu": [
+    192,
+    237,
+    320,
+    89
+   ],
+   "scrim": [
+    0,
+    0,
+    1024,
+    640
+   ],
+   "sidebarRight": 0
+  },
+  "wk ctx[contrast] compact-1024x640 light ModeMenu(liar): Esc closes, focus returns to the row (got mode-liar)": {
+   "ok": true,
+   "gone": true,
+   "act": "mode-liar"
+  },
+  "wk ctx[contrast] compact-1024x640 light AccuseMenu: lift on the cell, menu at the cell, in window (backdrop=none)": {
+   "ok": true,
+   "cell": [
+    297,
+    245,
+    56
+   ],
+   "lift": [
+    297,
+    245,
+    56,
+    56
+   ],
+   "menu": [
+    297,
+    310,
+    320,
+    89
+   ]
+  },
+  "wk ctx[contrast] compact-1024x640 light AccuseMenu: Esc closes; focus not on body (got cell sel)": {
+   "ok": true,
+   "act": "cell sel"
+  },
+  "wk ctx[contrast] compact-1024x640 light: no JS errors": {
+   "ok": true,
+   "errs": []
+  },
+  "wk ctx[contrast] compact-960x600 light ModeMenu(classic): lift on the row, menu at the row, in window (backdrop=none)": {
+   "ok": true,
+   "row": [
+    160,
+    73,
+    640,
+    52
+   ],
+   "lift": [
+    160,
+    73,
+    640,
+    52
+   ],
+   "menu": [
+    160,
+    133,
+    320,
+    76
+   ],
+   "scrim": [
+    0,
+    0,
+    960,
+    600
+   ],
+   "sidebarRight": 0
+  },
+  "wk ctx[contrast] compact-960x600 light ModeMenu(classic): Esc closes, focus returns to the row (got mode-classic)": {
+   "ok": true,
+   "gone": true,
+   "act": "mode-classic"
+  },
+  "wk ctx[contrast] compact-960x600 light ModeMenu(liar): lift on the row, menu at the row, in window (backdrop=none)": {
+   "ok": true,
+   "row": [
+    160,
+    177,
+    640,
+    52
+   ],
+   "lift": [
+    160,
+    177,
+    640,
+    52
+   ],
+   "menu": [
+    160,
+    237,
+    320,
+    89
+   ],
+   "scrim": [
+    0,
+    0,
+    960,
+    600
+   ],
+   "sidebarRight": 0
+  },
+  "wk ctx[contrast] compact-960x600 light ModeMenu(liar): Esc closes, focus returns to the row (got mode-liar)": {
+   "ok": true,
+   "gone": true,
+   "act": "mode-liar"
+  },
+  "wk ctx[contrast] compact-960x600 light AccuseMenu: lift on the cell, menu at the cell, in window (backdrop=none)": {
+   "ok": true,
+   "cell": [
+    272,
+    232,
+    52
+   ],
+   "lift": [
+    272,
+    232,
+    52,
+    52
+   ],
+   "menu": [
+    272,
+    292,
+    320,
+    89
+   ]
+  },
+  "wk ctx[contrast] compact-960x600 light AccuseMenu: Esc closes; focus not on body (got cell sel)": {
+   "ok": true,
+   "act": "cell sel"
+  },
+  "wk ctx[contrast] compact-960x600 light: no JS errors": {
+   "ok": true,
+   "errs": []
+  }
+ }
+}

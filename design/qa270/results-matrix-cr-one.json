@@ -1,0 +1,69 @@
+{
+ "total": 7,
+ "fails": [],
+ "results": {
+  "cr 1280x800@100 light en-US (1280x800) Today unsolved: layout full, no h-scroll, no page v-scroll": {
+   "ok": true,
+   "sw": 1280,
+   "vw": 1280,
+   "sh": 800,
+   "vh": 800
+  },
+  "cr 1280x800@100 light en-US (1280x800) Play in progress: board fully in window, no scroll": {
+   "ok": true,
+   "board": [
+    296,
+    72,
+    676,
+    676
+   ],
+   "hs2": {
+    "sw": 1280,
+    "vw": 1280,
+    "sh": 800,
+    "vh": 800
+   }
+  },
+  "cr 1280x800@100 light en-US (1280x800) Play in progress: inspector fits (no overflow)": {
+   "ok": true,
+   "over": 0
+  },
+  "cr 1280x800@100 light en-US (1280x800) Play solved: inspector card shown; Share/New puzzle reachable; overflow 0px": {
+   "ok": true,
+   "over": 0,
+   "hiddenAtTop": [],
+   "after": {
+    "st": 0,
+    "max": 0,
+    "lastBottom": 780,
+    "irBottom": 800,
+    "vh": 800,
+    "cut": []
+   }
+  },
+  "cr 1280x800@100 light en-US (1280x800) Today solved: card + Grid ∞ in inspector; all controls reachable via scroll; overflow 0px": {
+   "ok": true,
+   "over": 0,
+   "hiddenAtTop": [],
+   "after": {
+    "st": 0,
+    "max": 0,
+    "lastBottom": 725,
+    "irBottom": 800,
+    "vh": 800,
+    "cut": []
+   }
+  },
+  "cr 1280x800@100 light en-US (1280x800) Today solved: no h-scroll": {
+   "ok": true,
+   "sw": 1280,
+   "vw": 1280,
+   "sh": 800,
+   "vh": 800
+  },
+  "cr 1280x800@100 light en-US (1280x800): no JS errors": {
+   "ok": true,
+   "errs": []
+  }
+ }
+}
