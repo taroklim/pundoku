@@ -796,8 +796,8 @@ Gates: build → typecheck, lint, тесты web/engine/api (api с `TEST_DATABA
 | QA-Pundoku-low4-2 (agent a3f70f94…) | qa-tester (sonnet) | done (PASS) | PD-282/284/286/288/292 | 2026-10-10 |
 | Dev-Pundoku-285 | developer (opus) | done | PD-285 | 2026-10-10 |
 | QA-Pundoku-285-2 (agent a51c303c…) | qa-tester (sonnet) | done (PASS) | PD-285 | 2026-10-10 |
-| Dev-Pundoku-merge4 | developer (opus) | working (сведение pd-pack-4 = main + pd-low-4 + pd-285, gates, живые проверки; без push) | PD-282/284/285/286/288/292 | 2026-10-10 |
-| PM-Pundoku-24 | product-manager | waiting (оба QA PASS, идёт сведение pd-pack-4; после PASS — сведение pd-low-4 + pd-285 → hash, push не делать) | PD-282/284/285/286/288/292 | 2026-10-10 |
+| Dev-Pundoku-merge4 | developer (opus) | done (pd-pack-4 @ 6ce6771 готов) | PD-282/284/285/286/288/292 | 2026-10-10 |
+| PM-Pundoku-24 | product-manager | waiting (пакет 4 готов к выкату, ждёт решения Coordinator/владельца; после PASS — сведение pd-low-4 + pd-285 → hash, push не делать) | PD-282/284/285/286/288/292 | 2026-10-10 |
 | PM-Pundoku-23 | product-manager | waiting (Dev-desk-all2 сводит десктоп C; затем QA PD-270) | PD-290 | 2026-10-10 |
 | Dev-Pundoku-desk-all2 | developer (opus) | done | PD-290 | 2026-10-10 |
 | Dev-Pundoku-merge | developer (opus) | done | PD-290/PD-291 | 2026-10-10 |
@@ -978,3 +978,11 @@ Gates: build → typecheck, lint, тесты web/engine/api (api с `TEST_DATABA
 - Косметика: комментарий в tabs.ts про reload неточен (pdFrom живёт в history.state) — правится при сведении.
 - Не проверено (владельцу): edge-swipe в standalone PWA на iPhone/Safari; жест в WebKit/FF живьём.
 - Сведение: ветка pd-pack-4 (main + pd-low-4 + pd-285), Dev-Pundoku-merge4. Push — только Coordinator.
+
+## Пакет 4 готов к выкату (2026-10-10, ветка pd-pack-4 @ 6ce6771438c779538229e9350d03a47a96e03420)
+- Состав: main c3caf66 + merge pd-low-4 (fcceac7: PD-282/284/286/288/292) + merge pd-285 (ca3886f: PD-285 вариант A) + 6ce6771 (комментарий tabs.ts). Конфликтов нет. Worktree products/pundoku-worktrees/pd-pack-4. Push не сделан; выкат — Coordinator после решения владельца.
+- Gates: build ок, typecheck/lint чисто, engine 385/385, api 151 + 49 skip (заложены), web 163 файла 1958/1958.
+- Живые: pd285-check 374/374, pd282-check 90/90, dock-check cr/wk 10/10, landing-check 4/4, ring-pet cr 20/20 wk 20/20 ff 16/20 (остаток PD-293), pd275-check 188/188. PD-292 и док PD-285 не мешают (зазоры/scrollTop = main).
+- Неотслеживаемые кадры в основном репо (design/pd285-shots/{cr,wk}-{A1,B,C,now}-*.png, design/qa285-shots/) — выход pd285-shots.mjs по отклонённым вариантам и прогонам QA, воспроизводимы; не коммичены и не удалены (решение: не засорять репо, при желании чистка владельцем/Coordinator).
+- Проверки владельцу после выката (iPhone 16, установленная PWA): (1) решить партию Play — док «Watch/Share» + «New puzzle» в 2 ряда над таб-баром, ничего не под стеклом, ничего не обрезано; (2) edge-swipe «назад», второй палец на таб-баре посреди жеста отменяет жест (PD-286); (3) из «Продолжить» на Play открыть день → «‹ Play» ведёт обратно в Play (PD-282); (4) Settings: Питомец без «вдохов»; (5) Safari на Mac / Firefox — по чек-листу выката десктопа C.
+- Бэклог: PD-293, PD-294; Low — порог дока при 1rem ≈ 33px на iPhone SE (поднять до 28px, если проявится).
