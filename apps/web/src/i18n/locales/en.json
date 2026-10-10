@@ -137,7 +137,7 @@
     "extras": {
       "head": "Extras",
       "pet": "Blot the pet",
-      "petFoot": "A tiny ink blot on your result card and on a day in Year. It reacts to how the day went and never comes onto the board. Off by default.",
+      "petFoot": "A tiny ink blot on your result card and on a day in Year. It reacts to how the day went and never comes onto the board. On by default.",
       "previewLabel": "How the blot looks"
     }
   },

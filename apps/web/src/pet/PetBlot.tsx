@@ -6,7 +6,7 @@ import { motionReduced } from "../shell/tabSlide";
 import { petShape } from "./petGeometry";
 import type { PetAct } from "./petMotion";
 import { actDuration, dropBoxes, fitScale } from "./petMotion";
-import { usePetLive } from "./usePetLive";
+import { usePetLive, usePetOnScreen } from "./usePetLive";
 
 /**
  * Клякса-питомец (PD-180, рисунок — вариант A «Капля» макета PD-170; движение — вариант B «Капля» макета PD-223, PD-260).
@@ -19,11 +19,12 @@ import { usePetLive } from "./usePetLive";
  * Поведение:
  * - `act="arrive"` — реакция на решённый день (карточка результата, один раз, после входа карточки); `act="wake"` — «спит →
  *   настроение» в листе дня Year (один раз). Без `act` — только покой.
- * - Покой — 3 вдоха и замирает. Вкладка скрыта / приложение в фоне — клякса стоит (ни одной анимации); вернулись — покой
- *   запускается заново (ремаунт), действие повторно не играет.
+ * - Покой — постоянное дыхание (PD-297, решение владельца 2026-10-10; было «3 вдоха и замирает»). Вкладка скрыта / приложение
+ *   в фоне — клякса стоит (ни одной анимации); вернулись — покой запускается заново (ремаунт), действие повторно не играет.
+ *   Клякса ушла за край экрана (прокрутка) — дыхание на паузе (`data-paused`), вернулась — продолжает с того же места.
  * - Reduce Motion (`--mo: 0`): покоя нет, действие — короткое растворение на месте (амплитуды × `--mo` в `pet.css`).
- * - `idle={false}` — без покоя вовсе (превью в Настройках, PD-288: по макету PD-223 §1 Питомец дышит только на карточке
- *   результата и в листе дня Year).
+ * - `idle={false}` — без покоя вовсе. Превью в Настройках (PD-297 отменяет «превью стоит» PD-288): дышит, когда Питомец
+ *   включён; выключен — превью приглушено и стоит.
  *
  * VoiceOver: `role="img"` и имя «Blot, pleased» — украшение с подписью, смысл дублируют строки карточки. Движение ничего не
  * объявляет. На игровое поле компонент не попадает никогда (только карточка результата, лист дня Year и превью в Настройках).
@@ -43,13 +44,14 @@ export function PetBlot({
   act?: PetAct;
   /** Задержка действия, мс (карточка: после её входа). */
   actDelay?: number;
-  /** Покой «3 вдоха» (по умолчанию да). Превью в Настройках — `false`: клякса стоит. */
+  /** Покой — постоянное дыхание (по умолчанию да). `false` — клякса стоит (превью в Настройках при выключенном Питомце). */
   idle?: boolean;
 }) {
   const { t } = useTranslation();
   // useId даёт «:r1:»/««r1»» — в url(#…) берём только буквы и цифры.
   const id = `pet-m-${useId().replace(/[^a-zA-Z0-9]/g, "")}`;
   const { live, run } = useLiveRun();
+  const [ref, onScreen] = usePetOnScreen();
   // Первый запуск — с действием; после возврата на экран — только покой. Скрыта — клякса стоит (без анимаций и без «from»).
   const action = live && run === 0 && act && !(act === "wake" && mood === "asleep") ? act : undefined;
   const from: PetMood | null = action === "wake" ? "asleep" : null;
@@ -67,12 +69,14 @@ export function PetBlot({
   return (
     <span
       key={`${run}-${mood}`}
+      ref={ref}
       className="pet"
       data-v="B"
       data-mood={mood}
       data-act={action}
       data-idle={idle && live && !reduced ? "" : undefined}
       data-still={live ? undefined : ""}
+      data-paused={live && !onScreen ? "" : undefined}
       role={decorative ? undefined : "img"}
       aria-label={decorative ? undefined : t(`pet.label.${mood}`)}
       aria-hidden={decorative ? true : undefined}
@@ -136,7 +140,7 @@ function Drops({ mood, role, size }: { mood: PetMood; role: "from" | "to"; size:
 
 /**
  * Клякса «живёт», только пока её видно: вкладка на экране (`TabActiveContext`) и документ не скрыт (приложение не в фоне).
- * `run` растёт при каждом возвращении — ремаунт заново запускает покой (это не цикл: 3 вдоха и снова стоит).
+ * `run` растёт при каждом возвращении — ремаунт заново запускает покой (действие повторно не играет).
  */
 function useLiveRun(): { live: boolean; run: number } {
   const live = usePetLive();

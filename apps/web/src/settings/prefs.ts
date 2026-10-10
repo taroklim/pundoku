@@ -78,30 +78,15 @@ export const getHighlightPeers = peersPref.get;
 export const setHighlightPeers = peersPref.set;
 
 /**
- * PD-180: Питомец-клякса на карточке результата и в листе дня Year. По умолчанию ВЫКЛ (план режимов §0/§6): включено только
- * значением «1», как подсветка ошибок. Локальная настройка устройства — в снапшот не идёт, настроение не хранится.
+ * PD-180: Питомец-клякса на карточке результата и в листе дня Year. PD-297 (решение владельца 2026-10-10): по умолчанию ВКЛ —
+ * как остальные «включённые по умолчанию» настройки: выкл хранится «0», ключа нет — вкл. Прежний формат (до PD-297 вкл = «1»,
+ * выкл = ключа нет) читается без миграции: «1» — тоже вкл. Явного «выкл» старый формат не хранил (выкл = удалённый ключ), поэтому
+ * отличить «не трогал» от «включил и выключил» нельзя — оба получают вкл. Локальная настройка устройства — в снапшот не идёт.
  */
 export const PET_KEY = "pundoku.pet";
-let petMemory = false;
-
-export function getPetEnabled(): boolean {
-  try {
-    return localStorage.getItem(PET_KEY) === "1";
-  } catch {
-    return petMemory;
-  }
-}
-
-export function setPetEnabled(on: boolean): void {
-  petMemory = on;
-  try {
-    if (on) localStorage.setItem(PET_KEY, "1");
-    else localStorage.removeItem(PET_KEY);
-  } catch {
-    /* выбор живёт до перезагрузки */
-  }
-  notify();
-}
+const petPref = defaultOnPref(PET_KEY);
+export const getPetEnabled = petPref.get;
+export const setPetEnabled = petPref.set;
 
 /**
  * PD-203: звук в партиях Мелодии (пункт «Звук» в меню ⋯, макет PD-202 вариант C). По умолчанию ВКЛ: выкл хранится «0».
@@ -140,7 +125,7 @@ export function useHighlightPeers(): boolean {
 }
 
 export function usePetEnabled(): boolean {
-  return useSyncExternalStore(subscribe, getPetEnabled, () => false);
+  return useSyncExternalStore(subscribe, getPetEnabled, () => true);
 }
 
 export function useMelodySound(): boolean {
