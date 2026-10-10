@@ -637,7 +637,7 @@ Gates: build → typecheck, lint, тесты web/engine/api (api с TEST_DATABAS
 | PD-284 | Перф: listDays перечитывается при каждом возврате на Play (~40 мс сейчас) — кэшировать/инвалидировать по записи (находка QA PD-279) | developer | P3 | in_progress (pd-low-4 @ bee8063 готов, gates зелёные web 1941; QA-Pundoku-low4 запущен) | — |
 | PD-293 | Бэклог (Dev-low4, P3): Firefox не докручивает к частично видимому фокусу — Year Apr–Sep на десктопе C и Oct–Dec на 960×600@1,5 (−9,8) подрезаны; нужен JS | developer | P3 | pending (бэклог) | PD-292 |
 | PD-294 | Бэклог (Dev-low4, P3, косметика): у архива, открытого из Play, в таб-баре подсвечен Year; решить, если владелец захочет | developer | P3 | pending (бэклог, решение владельца) | — |
-| PD-285 | Дизайн (Low UX, QA PD-278/PD-256): карточка результата Play в покое — «New puzzle» целиком под стеклом таб-бара на 320/393/430, «Watch your solve» выглядывает на 12 px и выглядит обрезанной (в конце прокрутки всё доступно); предложить компоновку/подсказку прокрутки, кадры; без реализации | designer | P3 | in_progress (владелец выбрал вариант A «док в 2 ряда»; дизайн в main da1111d: design/pd285-result-card.md §6–7; Dev-Pundoku-285/opus, ветка pd-285 от main; затем QA sonnet; можно выкатывать вместе с pd-low-4) | — |
+| PD-285 | Дизайн (Low UX, QA PD-278/PD-256): карточка результата Play в покое — «New puzzle» целиком под стеклом таб-бара на 320/393/430, «Watch your solve» выглядывает на 12 px и выглядит обрезанной (в конце прокрутки всё доступно); предложить компоновку/подсказку прокрутки, кадры; без реализации | designer | P3 | in_progress (pd-285 @ c2a20ed готов: gates web 1943, pd285-check cr+wk 374/374; QA-Pundoku-285 запущен; владелец выбрал вариант A «док в 2 ряда»; дизайн в main da1111d: design/pd285-result-card.md §6–7; Dev-Pundoku-285/opus, ветка pd-285 от main; затем QA sonnet; можно выкатывать вместе с pd-low-4) | — |
 | PD-286 | Жест «назад» (Low P3, QA PD-265): второй палец на таб-баре посреди жеста не отменяет жест (уходит на #/play) — edgeBack.ts слушает pointerdown второго пальца только на .push-layer | developer | P3 | in_progress (pd-low-4 @ bee8063 готов, gates зелёные web 1941; QA-Pundoku-low4 запущен) | — |
 
 ### Бриф PD-8 (developer, P1 — пункт (a) блокирует UI-тикеты поля/Today)
@@ -794,7 +794,8 @@ Gates: build → typecheck, lint, тесты web/engine/api (api с `TEST_DATABA
 |-----|------|--------|-------|-----------|
 | Dev-Pundoku-low4 | developer (opus) | done | PD-282/284/286/288/292 | 2026-10-10 |
 | QA-Pundoku-low4 | qa-tester (sonnet) | working | PD-282/284/286/288/292 | 2026-10-10 |
-| Dev-Pundoku-285 | developer (opus) | working | PD-285 | 2026-10-10 |
+| Dev-Pundoku-285 | developer (opus) | done | PD-285 | 2026-10-10 |
+| QA-Pundoku-285 | qa-tester (sonnet) | working | PD-285 | 2026-10-10 |
 | PM-Pundoku-23 | product-manager | waiting (Dev-desk-all2 сводит десктоп C; затем QA PD-270) | PD-290 | 2026-10-10 |
 | Dev-Pundoku-desk-all2 | developer (opus) | done | PD-290 | 2026-10-10 |
 | Dev-Pundoku-merge | developer (opus) | done | PD-290/PD-291 | 2026-10-10 |
