@@ -299,6 +299,10 @@ describe("место 8: лист экспорта — переключатель
     expect(sw.checked).toBe(true);
     expect(sw.closest("label")!.textContent).toBe("Show Blot");
     expect(document.getElementById(sw.getAttribute("aria-describedby")!)!.textContent).toBe("The blot shows how the day went.");
+    // QA PD-298 (393×852: Share уходил под низ): компактный ряд вместо карточки Настроек, превью ниже на этот ряд (.tl-fp-pet).
+    expect(sw.closest("label")!.className).toBe("tl-pet-row");
+    expect(sw.closest(".settings-card")).toBeNull();
+    expect(tid("fp-image")!.closest(".tl-fp-frame")!.classList.contains("tl-fp-pet")).toBe(true);
     expect(m.stamps).toEqual([1]);
     await act(async () => sw.closest("label")!.dispatchEvent(new MouseEvent("click", { bubbles: true })));
     expect(getSharePet()).toBe(false);
@@ -319,6 +323,8 @@ describe("место 8: лист экспорта — переключатель
     const m = mount(null);
     await m.render();
     expect(tid("fp-pet-toggle")).toBeNull();
+    expect(tid("fp-pet")).toBeNull();
+    expect(tid("fp-image")!.closest(".tl-fp-frame")!.classList.contains("tl-fp-pet")).toBe(false); // main-вид превью не тронут
     expect(m.stamps).toEqual([0]);
   });
 

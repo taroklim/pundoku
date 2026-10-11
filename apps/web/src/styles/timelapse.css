@@ -581,8 +581,29 @@ input[type="range"].tl-scrub:focus-visible {
   }
 }
 
-/* PD-298 (место 8): переключатель «Show Blot» под превью PNG — строка-переключатель Настроек (settings.css) без боковых полей:
-   поля даёт тело шита. */
-.tl-pet-card.settings-card {
-  margin: 12px 0 0;
+/* PD-298 (место 8): переключатель «Show Blot» под превью PNG — компактный ряд (не карточка Настроек): подпись + iOS-switch
+   (.st-switch из settings.css), вся строка — цель касания ≥ 44 pt; сноска сразу под ним. Чтобы Share на 393×852 остался там же,
+   где без Питомца (виден без прокрутки, над нижним inset), превью ниже ровно на этот ряд: 44 px + строка сноски (≈ 1.1rem).
+   height: auto — превью держит пропорцию PNG 1080×1350 (сужается, а не сплющивается). Без Питомца (.tl-fp-pet нет) — как было. */
+.tl-fp-pet .tl-fp {
+  height: auto;
+  max-height: calc(60dvh - 44px - 1.1rem);
+}
+.tl-pet-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  padding-top: 4px;
+  font-size: 1rem;
+  color: var(--label);
+  cursor: pointer;
+}
+.tl-pet-row .lab {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.tl-pet-foot {
+  padding-top: 0;
 }

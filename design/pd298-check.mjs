@@ -5,6 +5,7 @@
  *   cd apps/web && npx vite build --outDir /tmp/pd298-dist
  *   PD_PW_HOME=/Users/taroklim/Documents/KlymWork/gr487-w2/frontend DIST=/tmp/pd298-dist PORT=5811 \
  *     node design/pd298-check.mjs [chromium] [webkit]
+ *   ONLY=share — только лист «Поделиться» (карточка, место 8, Share на 393/430/320/AX3).
  *
  * Условия — как pd285-check: html font-size 17 px (40 px — AX3), --sa-top/--sa-bot 59/34 (393×852) и 20/0 (320×568), isMobile +
  * hasTouch, light/dark, en/uk/ru, Reduce Motion. Сервер — design/pdlow4/lib.mjs (статическая раздача + мок /api/daily), время
@@ -16,7 +17,8 @@
  *   3 — палец ушёл (прокрутка Settings, начатая на превью): прокрутка идёт, реакции нет (chromium — настоящие касания CDP; webkit —
  *   синтетические PointerEvent: логика без preventDefault); жест «назад» с края Settings (standalone) работает и с кляксами на экране.
  * Места: 1 — шапка Today до решения; 3 — ожидание генерации Play (+ RM-мерцание, ошибка); 6 — Settings: превью стоят, тап оживляет
- *   одно; 7 — Today «не загрузилось» и архив «день недоступен»; 8 — лист экспорта: «Show Blot», печать в PNG (пиксели), выкл — без.
+ *   одно; 7 — Today «не загрузилось» и архив «день недоступен»; 8 — лист экспорта: «Show Blot», печать в PNG (пиксели), выкл — без;
+ *   Share на 393×852 с Питомцем виден без прокрутки там же, где без него (430×932 — тоже; 320×568 и AX3 — достижим прокруткой).
  *   Плюс карточка результата: во время посадки тап игнорируется, после — «Плюх». Везде: Питомец выкл → кляксы нет; на экране
  *   дышит не больше одной кляксы; зона ≥ 44, не перекрывает текст/кнопки (elementFromPoint); 320 + AX3 — клякса уходит или не
  *   ломает раскладку (ряд действий над таб-баром). Кадры — design/pd298-shots/ (не коммитятся, кроме ключевых).
@@ -49,6 +51,7 @@ const check = (name, ok, detail = "") => {
 
 const PHONE = { w: 393, h: 852, top: 59, bot: 34 };
 const SMALL = { w: 320, h: 568, top: 20, bot: 0 };
+const TALL = { w: 430, h: 932, top: 59, bot: 34 };
 
 async function open(browser, { dev = PHONE, scheme = "light", lang = "en", rm = false, ax3 = false, pet, worker = "real", apiDown = false, route = "today", standalone = false } = {}) {
   const ctx = await browser.newContext({
@@ -195,6 +198,38 @@ const hitSelf = (p, sel) =>
     return !!hit && (hit === el || el.contains(hit));
   }, sel);
 
+/**
+ * Лист «Поделиться»: геометрия без прокрутки — тело листа (видимая область), Share, ряд «Show Blot», превью; низ видимого —
+ * min(низ тела листа, вьюпорт − нижний inset). QA PD-298: на 393×852 с Питомцем Share уходил под низ (848–894 при ≈ 808).
+ */
+const shareGeo = (p) =>
+  p.evaluate(() => {
+    const body = document.querySelector('[data-testid="export-sheet"] .tl-body');
+    const r = (el) => {
+      if (!el) return null;
+      const b = el.getBoundingClientRect();
+      return { top: Math.round(b.top), bottom: Math.round(b.bottom), left: Math.round(b.left), right: Math.round(b.right), w: b.width, h: b.height };
+    };
+    const sab = parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--sa-bot")) || 0;
+    const bd = r(body);
+    return {
+      scrollTop: body.scrollTop,
+      body: bd,
+      visBottom: Math.min(bd.bottom, innerHeight - sab),
+      share: r(document.querySelector('[data-testid="fp-share"]')),
+      row: r(document.querySelector('[data-testid="fp-pet-toggle"]')?.closest("label")),
+      sw: r(document.querySelector('[data-testid="fp-pet-toggle"]')),
+      img: r(document.querySelector('[data-testid="fp-image"]')),
+      sheet: r(document.querySelector('[data-testid="export-sheet"] .tl-sheet')),
+    };
+  });
+/** Share виден целиком без прокрутки: под верхом тела листа, над низом видимого (и нижним inset). */
+const shareVisible = (g) => g.scrollTop === 0 && g.share.top >= g.body.top && g.share.bottom <= g.visBottom;
+/** Ряд «Show Blot» не обрезан: целиком в видимой области тела и внутри листа по горизонтали (переключатель тоже). */
+const rowVisible = (g) => !!g.row && g.row.top >= g.body.top && g.row.bottom <= g.visBottom && g.sw.left >= g.sheet.left && g.sw.right <= g.sheet.right;
+/** Положение Share без Питомца (main-вид) на 393×852 — для сравнения с Питомцем (заполняет shareOff/cardAndShare). */
+const SHARE_AT = {};
+
 /** Записывать каждый старт реакции (data-poke появился) с --amp. */
 const watchPokes = (p) =>
   p.evaluate(() => {
@@ -214,7 +249,21 @@ async function tapZone(p, sel) {
   await p.touchscreen.tap(x, y);
 }
 
-/** Реакция на тап: появилась, анимация «Плюха» идёт; через 650 мс снята. */
+/**
+ * Конец реакции: data-poke снят и petPokeA нет — ждём опросом до `limit` мс (а не фиксированный порог: в webkit data-poke
+ * снимается по animationend через 480–570 мс после тапа при длительности 440, фиксированные 650 мс флакали 1 из 3).
+ */
+async function pokeEnd(p, sel, limit = 1000, step = 40) {
+  const t0 = Date.now();
+  for (;;) {
+    const b = await petInfo(p, sel);
+    const done = !b.poke && !b.anims.some((x) => x.name === "petPokeA");
+    if (done || Date.now() - t0 >= limit) return { ...b, done, waited: Date.now() - t0 };
+    await p.waitForTimeout(step);
+  }
+}
+
+/** Реакция на тап: появилась, анимация «Плюха» идёт; снята не позже чем за 1000 мс (опрос, см. pokeEnd). */
 async function pokeOnce(p, sel, tag, { rm = false } = {}) {
   await tapZone(p, sel);
   await p.waitForTimeout(40);
@@ -222,9 +271,9 @@ async function pokeOnce(p, sel, tag, { rm = false } = {}) {
   const anim = a.anims.find((x) => x.name === "petPokeA");
   check(`${tag}: тап → «Плюх» (data-poke=A, petPokeA ${rm ? "200" : "440"} мс)`, a.poke === "A" && anim && Math.round(anim.dur) === (rm ? 200 : 440), { poke: a.poke, anim, amp: a.amp });
   check(`${tag}: настроение тапом не меняется${a.label ? ", имя то же" : " (превью — украшение без имени)"}`, a.mood && (a.label || sel.includes("pet-preview")), { mood: a.mood, label: a.label });
-  await p.waitForTimeout(rm ? 400 : 650);
-  const b = await petInfo(p, sel);
-  check(`${tag}: реакция закончилась — data-poke снят, petPokeA нет`, !b.poke && !b.anims.some((x) => x.name === "petPokeA"), { poke: b.poke, anims: b.anims.map((x) => x.name) });
+  await p.waitForTimeout(rm ? 150 : 380); // реакция ещё идёт (200/440 мс) — опрос начинается ближе к её концу
+  const b = await pokeEnd(p, sel);
+  check(`${tag}: реакция закончилась (≤ 1000 мс опроса) — data-poke снят, petPokeA нет`, b.done, { poke: b.poke, anims: b.anims.map((x) => x.name), waited: b.waited });
 }
 
 /**
@@ -257,7 +306,12 @@ async function antiSpam(p, sel, tag, { rm = false } = {}) {
   const before = fast.length;
   for (let i = 0; i < 7; i++) {
     await p.touchscreen.tap(b.x + b.width / 2, b.y + b.height / 2);
-    await p.waitForTimeout(D + 120);
+    // Следующий тап — сразу после конца реакции (раньше D она кончиться не может; дальше опрос): фиксированные D + 120 мс в webkit
+    // попадали в ещё идущую реакцию (data-poke снимается через 480–570 мс) — тап проглатывался, серия сдвигалась. Шаг 15 мс —
+    // чтобы 7 тапов уложились в окно 5 с, как с фиксированной паузой.
+    await p.waitForTimeout(D);
+    await pokeEnd(p, sel, 1000, 15);
+    await p.waitForTimeout(20);
   }
   const series = (await pokes(p)).slice(before);
   const amp = (n) => (n <= 3 ? "1" : n <= 6 ? "0.5" : "0");
@@ -420,6 +474,13 @@ async function cardAndShare(b, B, c) {
     await p.waitForTimeout(400);
     const sw = p.locator('[data-testid="fp-pet-toggle"]');
     check(`${tag}: «Show Blot» есть, вкл по умолчанию`, (await sw.count()) === 1 && (await sw.isChecked()));
+    if (c.dev === PHONE && !c.ax3) {
+      const g = await shareGeo(p);
+      (SHARE_AT[B] ??= {}).on = g.share;
+      check(`${tag}: 393×852 с Питомцем — Share виден без прокрутки (${g.share.top}–${g.share.bottom} ≤ ${g.visBottom})`, shareVisible(g), g);
+      check(`${tag}: ряд «Show Blot» не обрезан (${g.row?.top}–${g.row?.bottom}), ≥ 44 pt`, rowVisible(g) && g.row.h >= 44, { row: g.row, sw: g.sw, visBottom: g.visBottom });
+      check(`${tag}: превью PNG в пропорции 1080×1350 (${Math.round(g.img.w)}×${Math.round(g.img.h)})`, Math.abs(g.img.w / g.img.h - 0.8) < 0.01, g.img);
+    }
     const label = await p.evaluate(() => document.querySelector('[data-testid="fp-pet-toggle"]').closest("label").textContent);
     check(`${tag}: подпись «${label}»`, label === { en: "Show Blot", uk: "Показувати ляпку", ru: "Показывать кляксу" }[c.lang], label);
     /** Пиксели PNG: центр тела печати (ink?) и угол полосы (бумага). */
@@ -466,6 +527,39 @@ async function shareOff(b, B) {
     await p.locator(`${PANE} [data-testid="share"]`).first().click();
     await p.locator('[data-testid="fp-image"]').waitFor({ timeout: 10000 });
     check(`${B} место 8: Питомец выкл — «Show Blot» нет`, (await p.locator('[data-testid="fp-pet-toggle"]').count()) === 0);
+    await p.waitForTimeout(400);
+    const g = await shareGeo(p);
+    const on = SHARE_AT[B]?.on;
+    check(`${B} место 8: Питомец выкл (main-вид) — Share виден без прокрутки (${g.share.top}–${g.share.bottom}); с Питомцем Share там же (±2: ${on?.top}–${on?.bottom})`, shareVisible(g) && !!on && Math.abs(on.top - g.share.top) <= 2, { off: g.share, on, img: g.img });
+  } finally {
+    await ctx.close();
+  }
+}
+
+/** Лист «Поделиться» с Питомцем на других экранах: 430×932 — Share виден без прокрутки; 320×568 и AX3 — прокрутка тела допустима, но Share достижим (elementFromPoint), «Show Blot» не обрезан по ширине. */
+async function shareFit(b, B, c) {
+  const tag = `${B} место 8 Share ${c.dev.w}×${c.dev.h}${c.ax3 ? "-ax3" : ""}-${c.scheme}-${c.lang}`;
+  const { ctx, p, errs } = await open(b, c);
+  try {
+    await p.waitForSelector(`${PANE} .board button.cell`, { timeout: 40000 });
+    await solveToday(p);
+    await p.waitForTimeout(1200);
+    await p.locator(`${PANE} [data-testid="share"]`).first().click();
+    await p.locator('[data-testid="fp-image"]').waitFor({ timeout: 10000 });
+    await p.waitForTimeout(400);
+    const g = await shareGeo(p);
+    if (c.fits) check(`${tag}: Share виден без прокрутки (${g.share.top}–${g.share.bottom} ≤ ${g.visBottom}), «Show Blot» не обрезан`, shareVisible(g) && rowVisible(g), g);
+    await p.evaluate(() => document.querySelector('[data-testid="fp-share"]').scrollIntoView({ block: "nearest" }));
+    await p.waitForTimeout(200);
+    const g2 = await shareGeo(p);
+    check(
+      `${tag}: Share достижим${g.scrollTop === g2.scrollTop ? "" : ` (прокрутка тела ${g2.scrollTop})`} — целиком в видимой области, нажимается; переключатель внутри листа`,
+      g2.share.bottom <= g2.visBottom && g2.share.top >= g2.body.top && (await hitSelf(p, '[data-testid="fp-share"]')) && g2.sw.left >= g2.sheet.left && g2.sw.right <= g2.sheet.right,
+      { share: g2.share, visBottom: g2.visBottom, sw: g2.sw },
+    );
+    check(`${tag}: превью PNG в пропорции 1080×1350 (${Math.round(g.img.w)}×${Math.round(g.img.h)})`, Math.abs(g.img.w / g.img.h - 0.8) < 0.01, g.img);
+    await p.locator('[data-testid="export-sheet"]').screenshot({ path: path.join(OUT, `${B}-p8-fit-${c.dev.w}${c.ax3 ? "-ax3" : ""}-${c.scheme}-${c.lang}.png`) });
+    check(`${tag}: без ошибок страницы`, noErrs(errs).length === 0, noErrs(errs).slice(0, 2).join(" | "));
   } finally {
     await ctx.close();
   }
@@ -728,20 +822,28 @@ async function run(brn) {
   const b = await pw[brn].launch();
   const B = SHORT[brn];
   try {
-    // Место 1 — шапка Today.
-    await place1(b, B, { dev: PHONE, scheme: "light", lang: "en", full: true });
-    await place1(b, B, { dev: PHONE, scheme: "dark", lang: "uk" });
-    await place1(b, B, { dev: PHONE, scheme: "light", lang: "ru", rm: true });
-    await place1(b, B, { dev: SMALL, scheme: "light", lang: "en" });
-    await place1(b, B, { dev: SMALL, scheme: "dark", lang: "ru" });
-    await place1(b, B, { dev: SMALL, scheme: "light", lang: "uk", ax3: true });
-    await place1(b, B, { dev: SMALL, scheme: "light", lang: "en", ax3: true });
-    await place1(b, B, { dev: PHONE, scheme: "light", lang: "uk", ax3: true });
-    await place1Off(b, B);
+    // ONLY=share — только лист «Поделиться» (карточка + место 8 + Share на разных экранах): быстрая перепроверка правки QA.
+    const only = process.env.ONLY === "share";
+    if (!only) {
+      // Место 1 — шапка Today.
+      await place1(b, B, { dev: PHONE, scheme: "light", lang: "en", full: true });
+      await place1(b, B, { dev: PHONE, scheme: "dark", lang: "uk" });
+      await place1(b, B, { dev: PHONE, scheme: "light", lang: "ru", rm: true });
+      await place1(b, B, { dev: SMALL, scheme: "light", lang: "en" });
+      await place1(b, B, { dev: SMALL, scheme: "dark", lang: "ru" });
+      await place1(b, B, { dev: SMALL, scheme: "light", lang: "uk", ax3: true });
+      await place1(b, B, { dev: SMALL, scheme: "light", lang: "en", ax3: true });
+      await place1(b, B, { dev: PHONE, scheme: "light", lang: "uk", ax3: true });
+      await place1Off(b, B);
+    }
     // Карточка + место 8.
     await cardAndShare(b, B, { dev: PHONE, scheme: "light", lang: "en" });
     await cardAndShare(b, B, { dev: PHONE, scheme: "dark", lang: "ru" });
     await shareOff(b, B);
+    await shareFit(b, B, { dev: TALL, scheme: "dark", lang: "uk", fits: true });
+    await shareFit(b, B, { dev: SMALL, scheme: "light", lang: "ru" });
+    await shareFit(b, B, { dev: PHONE, scheme: "light", lang: "en", ax3: true });
+    if (only) return;
     // Место 7.
     await place7(b, B, { dev: PHONE, scheme: "light", lang: "en", full: true });
     await place7(b, B, { dev: PHONE, scheme: "dark", lang: "uk" });
