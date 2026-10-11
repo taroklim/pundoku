@@ -522,6 +522,26 @@
     height: 44px;
   }
 }
+/* PD-298 (место 3): спящий Питомец вместо знака — 56 pt (на 320 pt при AX3 — 44, как знак), зона тапа = сама клякса. Мерцание
+   прозрачностью при Reduce Motion — то же, что у знака (без RM — ровно 1): ожидание видно и без движения. На ошибке — без мерцания. */
+.wait-pet {
+  width: 56px;
+  height: 56px;
+  animation: waitPulse calc(2400ms * var(--mk)) var(--e-io) infinite;
+}
+.wait-pet.still {
+  animation: none;
+}
+@media (max-width: 359px) {
+  :root[data-type="ax3"] .wait-pet {
+    width: 44px;
+    height: 44px;
+  }
+  :root[data-type="ax3"] .wait-pet > .pet {
+    margin: -6px;
+    transform: scale(0.7857);
+  }
+}
 @keyframes waitPulse {
   50% {
     opacity: calc(1 - 0.45 * (1 - var(--mo)));

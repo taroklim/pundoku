@@ -1,7 +1,9 @@
 import { summary, timelapseFingerprint } from "@pundoku/engine";
-import { useEffect, useMemo, useState } from "react";
+import type { PetMood } from "@pundoku/engine";
+import { useEffect, useId, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { TFunction } from "i18next";
+import { setSharePet, useSharePet } from "../settings/prefs";
 import { renderFingerprintPng, shareFingerprint } from "./fingerprint";
 import type { FpCaption } from "./fingerprint";
 import { formatClock } from "./format";
@@ -43,6 +45,8 @@ export function fingerprintCaption(
 interface ExportSheetProps {
   play: PlayState;
   date: string;
+  /** PD-298 (место 8): настроение Питомца дня — печать на PNG и переключатель «Show Blot». `null` — Питомец выключен: ни того, ни другого. */
+  petMood?: PetMood | null;
   onClose: () => void;
 }
 
@@ -50,9 +54,14 @@ interface ExportSheetProps {
  * Экспорт отпечатка (макет PD-69 §7, решение владельца: стиль Rhythm, без выбора стиля). Предпросмотр — сам PNG
  * (`<img>` из того же Blob, что уйдёт в Share: картинка и файл не могут разойтись), всегда светлый. PNG готовится при
  * открытии, чтобы `navigator.share` вызывался прямо из жеста (iOS). «Share» — системный лист iOS; без него — скачивание.
+ * PD-298 (место 8, макет PD-296): при включённом Питомце — печать кляксы дня в верхней полосе PNG и переключатель «Show Blot»
+ * (по умолчанию вкл, запоминается: «устал» выдаёт правки/подсказки — выбор за человеком). Переключили — PNG перерисовывается.
  */
-export function ExportSheet({ play, date, onClose }: ExportSheetProps) {
+export function ExportSheet({ play, date, petMood = null, onClose }: ExportSheetProps) {
   const { t, i18n } = useTranslation();
+  const sharePet = useSharePet();
+  const stamp = petMood && sharePet ? petMood : null;
+  const petFootId = useId();
   const locale = i18n.resolvedLanguage ?? "en";
   const data = useMemo(() => {
     const mission = play.mission.join("");
@@ -84,7 +93,7 @@ export function ExportSheet({ play, date, onClose }: ExportSheetProps) {
   useEffect(() => {
     let alive = true;
     setFailed(false);
-    renderFingerprintPng(data.fp, data.mission, caption).then(
+    renderFingerprintPng(data.fp, data.mission, caption, stamp).then(
       (b) => {
         if (alive) setBlob(b);
       },
@@ -95,7 +104,7 @@ export function ExportSheet({ play, date, onClose }: ExportSheetProps) {
     return () => {
       alive = false;
     };
-  }, [data, caption]);
+  }, [data, caption, stamp]);
 
   useEffect(() => {
     if (!blob) {
@@ -125,6 +134,27 @@ export function ExportSheet({ play, date, onClose }: ExportSheetProps) {
         )}
       </div>
       <p className="tl-note">{t("timelapse.fpRhythmSub")}</p>
+      {petMood && (
+        <>
+          <div className="settings-card tl-pet-card">
+            <label className="settings-row settings-switch">
+              <span className="lab">{t("timelapse.fpPet")}</span>
+              <input
+                type="checkbox"
+                role="switch"
+                className="st-switch"
+                checked={sharePet}
+                onChange={(e) => setSharePet(e.target.checked)}
+                aria-describedby={petFootId}
+                data-testid="fp-pet-toggle"
+              />
+            </label>
+          </div>
+          <p className="tl-note" id={petFootId}>
+            {t("timelapse.fpPetFoot")}
+          </p>
+        </>
+      )}
       <div className="tl-share-block">
         <button type="button" className="tl-primary" data-testid="fp-share" disabled={!blob} onClick={share}>
           <ShareIcon />

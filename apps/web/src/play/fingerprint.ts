@@ -7,7 +7,7 @@
  * `fingerprintLayout` — чистая функция (тестируется без canvas); `drawFingerprint` рисует макет; `renderFingerprintPng`
  * даёт Blob; `shareFingerprint` отдаёт файл системному листу (`navigator.share`), иначе скачивание.
  */
-import type { TimelapseFingerprint } from "@pundoku/engine";
+import type { PetMood, TimelapseFingerprint } from "@pundoku/engine";
 import { MARK_SMALL_PATH } from "../brand/markPaths";
 import {
   WORDMARK_BASELINE,
@@ -21,6 +21,7 @@ import {
   WORDMARK_STROKE,
   WORDMARK_VIEW_H,
 } from "../brand/wordmarkGeometry";
+import { petShape } from "../pet/petGeometry";
 import { HEAT_MAX, HEAT_MIN } from "./heat";
 import { dwellScales, rhythmScale } from "./timelapseModel";
 
@@ -183,7 +184,51 @@ function drawWordmark(ctx: CanvasRenderingContext2D, x: number): boolean {
   return true;
 }
 
-export function drawFingerprint(ctx: CanvasRenderingContext2D, layout: FpLayout, caption: FpCaption): void {
+/**
+ * PD-298 (место 8, макет PD-296): неподвижная печать Питомца — 112 px в пустой верхней полосе PNG (над сеткой, по правому краю
+ * сетки), настроение дня. Картинка всегда светлая: тело — чернила светлой темы, глаза — «прорези» цветом бумаги (на белом PNG это
+ * то же, что маска `destination-out` в приложении, но без прозрачных дыр в файле), капельки — чернила. Геометрия — та же
+ * `petShape`, что у кляксы в приложении (поле 48, «земля» y = 39).
+ */
+export const FP_PET = 112;
+export const FP_PET_X = FP_PAD + FP_GRID - FP_PET;
+export const FP_PET_Y = Math.round((FP_GRID_TOP - FP_PET) / 2);
+
+/** Печать Питомца; `false` — нет `Path2D` (старый движок): печати нет, остальное как было. */
+export function drawPetStamp(ctx: CanvasRenderingContext2D, mood: PetMood): boolean {
+  if (typeof Path2D === "undefined") return false;
+  const g = petShape(mood);
+  ctx.save();
+  ctx.translate(FP_PET_X, FP_PET_Y);
+  ctx.scale(FP_PET / 48, FP_PET / 48);
+  ctx.fillStyle = FP_COLORS.ink;
+  ctx.fill(new Path2D(g.body));
+  for (const [x, y, r] of g.drops) {
+    ctx.beginPath();
+    ctx.arc(x, y, r, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  const e = g.eyes;
+  ctx.fillStyle = FP_COLORS.paper;
+  ctx.strokeStyle = FP_COLORS.paper;
+  if (e.kind === "stroke") {
+    ctx.lineWidth = 2.6;
+    ctx.lineCap = "round";
+    ctx.stroke(new Path2D(e.d));
+  } else if (e.kind === "fill") {
+    ctx.fill(new Path2D(e.d));
+  } else {
+    for (const cx of e.cx) {
+      ctx.beginPath();
+      ctx.arc(cx, e.cy, e.r, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+  ctx.restore();
+  return true;
+}
+
+export function drawFingerprint(ctx: CanvasRenderingContext2D, layout: FpLayout, caption: FpCaption, pet: PetMood | null = null): void {
   ctx.fillStyle = FP_COLORS.paper;
   ctx.fillRect(0, 0, layout.width, layout.height);
   for (const q of layout.squares) {
@@ -202,6 +247,7 @@ export function drawFingerprint(ctx: CanvasRenderingContext2D, layout: FpLayout,
     ctx.fill();
     ctx.globalAlpha = 1;
   }
+  if (pet) drawPetStamp(ctx, pet);
   ctx.textBaseline = "alphabetic";
   ctx.textAlign = "left";
   const markDrawn = drawBrandMark(ctx);
@@ -230,15 +276,15 @@ export function drawFingerprint(ctx: CanvasRenderingContext2D, layout: FpLayout,
   ctx.fillText(caption.right, FP_PAD + FP_GRID, FP_CAPTION_Y);
 }
 
-/** PNG отпечатка (светлый, 1080×1350). Бросает `Error`, если canvas или `toBlob` недоступны. */
-export function renderFingerprintPng(fp: TimelapseFingerprint, mission: string, caption: FpCaption): Promise<Blob> {
+/** PNG отпечатка (светлый, 1080×1350). `pet` — печать Питомца (PD-298) или `null`. Бросает `Error`, если canvas или `toBlob` недоступны. */
+export function renderFingerprintPng(fp: TimelapseFingerprint, mission: string, caption: FpCaption, pet: PetMood | null = null): Promise<Blob> {
   const layout = fingerprintLayout(fp, mission);
   const canvas = document.createElement("canvas");
   canvas.width = layout.width;
   canvas.height = layout.height;
   const ctx = canvas.getContext("2d");
   if (!ctx) return Promise.reject(new Error("canvas 2d unavailable"));
-  drawFingerprint(ctx, layout, caption);
+  drawFingerprint(ctx, layout, caption, pet);
   return new Promise((resolve, reject) => {
     canvas.toBlob((b) => (b ? resolve(b) : reject(new Error("toBlob returned null"))), "image/png");
   });

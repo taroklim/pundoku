@@ -68,9 +68,12 @@ function keyframes() {
  * Прочие переменные — геометрия, а не множитель движения (PD-260 Питомец: --u px на единицу рисунка, --dx/--dy вектор брызг,
  * --sx/--isx масштаб подгонки поз): подставляется произвольное ненулевое значение — при --mo:0 результат обязан быть единичным
  * при ЛЮБОЙ геометрии.
+ *
+ * PD-298 («Плюх» Питомца): `--k` — производный множитель `calc(var(--mo) * var(--amp, 1))` (pet.css; --amp — усталость от частых
+ * тапов, 1 / ½ / 0), поэтому при --mo:0 он тоже 0 — подставляем как --mo (определение `--k` проверяется отдельным тестом).
  */
 function evalArg(arg, mo) {
-  let expr = arg.replace(/var\(--mo\)/g, String(mo)).replace(/var\(--(?!mo\b)[\w-]+\)/g, "1.37");
+  let expr = arg.replace(/var\(--(mo|k)\)/g, String(mo)).replace(/var\(--(?!mo\b|k\b)[\w-]+\)/g, "1.37");
   expr = expr.replace(/calc\(/g, "(").replace(/(\d*\.?\d+)(px|%|ms|s|deg|em|rem)(?![a-z])/g, "$1");
   if (/var\(|[^\d+\-*/().\s]/.test(expr)) throw new Error(`не разобрал аргумент: ${arg}`);
   return Function(`"use strict"; return (${expr});`)();
@@ -126,6 +129,10 @@ describe("множитель --mo (reduced motion одной переменно�
       }
     }
     expect(bad).toEqual([]);
+  });
+
+  it("PD-298: --k (множитель «Плюха» Питомца) = --mo × --amp — при Reduce Motion обнуляется вместе с --mo", () => {
+    expect(read("pet.css")).toMatch(/\.pet\s*\{\s*--k:\s*calc\(var\(--mo\)\s*\*\s*var\(--amp,\s*1\)\);/);
   });
 
   it("при --mo:1 амплитуды ненулевые хотя бы у части keyframes (множитель что-то меняет)", () => {

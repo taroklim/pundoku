@@ -1,11 +1,12 @@
 import type { PetMood } from "@pundoku/engine";
-import type { CSSProperties } from "react";
-import { useId, useMemo, useState } from "react";
+import type { AnimationEvent, CSSProperties } from "react";
+import { useId, useLayoutEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { motionReduced } from "../shell/tabSlide";
 import { petShape } from "./petGeometry";
 import type { PetAct } from "./petMotion";
 import { actDuration, dropBoxes, fitScale } from "./petMotion";
+import { usePetPoke } from "./PetTap";
 import { usePetLive, usePetOnScreen } from "./usePetLive";
 
 /**
@@ -23,11 +24,16 @@ import { usePetLive, usePetOnScreen } from "./usePetLive";
  *   в фоне — клякса стоит (ни одной анимации); вернулись — покой запускается заново (ремаунт), действие повторно не играет.
  *   Клякса ушла за край экрана (прокрутка) — дыхание на паузе (`data-paused`), вернулась — продолжает с того же места.
  * - Reduce Motion (`--mo: 0`): покоя нет, действие — короткое растворение на месте (амплитуды × `--mo` в `pet.css`).
- * - `idle={false}` — без покоя вовсе. Превью в Настройках (PD-297 отменяет «превью стоит» PD-288): дышит, когда Питомец
- *   включён; выключен — превью приглушено и стоит.
+ * - `idle={false}` — без покоя вовсе: превью в Настройках (PD-298, макет PD-296: на экране дышит не больше одной кляксы —
+ *   превью стоят и оживают только по тапу), клякса в шапке под открытым листом (PD-299).
  *
- * VoiceOver: `role="img"` и имя «Blot, pleased» — украшение с подписью, смысл дублируют строки карточки. Движение ничего не
- * объявляет. На игровое поле компонент не попадает никогда (только карточка результата, лист дня Year и превью в Настройках).
+ * - PD-298: тап — реакция A «Плюх» (слой `.poke` между `.pet` и `.breath`: складывается с дыханием, ничего не перезапускает).
+ *   Только внутри зоны `PetTap` (она ловит тап и ведёт анти-спам); сама `.pet` касаний не ловит. Во время действия тап
+ *   игнорируется (конец действия — `animationend` позы). Брызги «Плюха» анимируют внутренний кружок `.drop > .dot`, а действие —
+ *   саму `.drop`: анимации не спорят, после тапа действие не проигрывается заново, клякса не перемонтируется.
+ *
+ * VoiceOver: `role="img"` и имя «Blot, pleased» — украшение с подписью, смысл дублируют строки карточки. Движение (и тап)
+ * ничего не объявляет. На игровое поле компонент не попадает никогда.
  */
 export function PetBlot({
   mood,
@@ -44,7 +50,7 @@ export function PetBlot({
   act?: PetAct;
   /** Задержка действия, мс (карточка: после её входа). */
   actDelay?: number;
-  /** Покой — постоянное дыхание (по умолчанию да). `false` — клякса стоит (превью в Настройках при выключенном Питомце). */
+  /** Покой — постоянное дыхание (по умолчанию да). `false` — клякса стоит (превью в Настройках; на тап всё равно отвечает). */
   idle?: boolean;
 }) {
   const { t } = useTranslation();
@@ -52,8 +58,16 @@ export function PetBlot({
   const id = `pet-m-${useId().replace(/[^a-zA-Z0-9]/g, "")}`;
   const { live, run } = useLiveRun();
   const [ref, onScreen] = usePetOnScreen();
+  const poke = usePetPoke();
   // Первый запуск — с действием; после возврата на экран — только покой. Скрыта — клякса стоит (без анимаций и без «from»).
   const action = live && run === 0 && act && !(act === "wake" && mood === "asleep") ? act : undefined;
+  // PD-298: действие доиграло (для этого запуска и настроения) — тап снова отвечает. Пока идёт — зона тапа его проглатывает.
+  const [actDoneFor, setActDoneFor] = useState<string | null>(null);
+  const busy = action !== undefined && actDoneFor !== `${run}-${mood}`;
+  useLayoutEffect(() => {
+    if (poke) poke.busy.current = busy;
+  });
+  const pokeOn = poke?.poke && !busy ? poke.poke : null;
   const from: PetMood | null = action === "wake" ? "asleep" : null;
   // Reduce Motion читается на каждый запуск (`--mo`, tokens.css — единственное место, где читается системная настройка).
   const reduced = useMemo(() => motionReduced(), [run]);
@@ -65,6 +79,12 @@ export function PetBlot({
     style["--d-rm"] = `${rm}ms`;
     style["--act-delay"] = `${actDelay}ms`;
   }
+  if (pokeOn) style["--amp"] = String(pokeOn.amp);
+
+  const onAnimationEnd = (e: AnimationEvent<HTMLSpanElement>) => {
+    if (action && ACT_END.has(e.animationName)) setActDoneFor(`${run}-${mood}`);
+    else if (e.animationName === "petPokeA") poke?.end();
+  };
 
   return (
     <span
@@ -74,6 +94,7 @@ export function PetBlot({
       data-v="B"
       data-mood={mood}
       data-act={action}
+      data-poke={pokeOn ? "A" : undefined}
       data-idle={idle && live && !reduced ? "" : undefined}
       data-still={live ? undefined : ""}
       data-paused={live && !onScreen ? "" : undefined}
@@ -82,16 +103,22 @@ export function PetBlot({
       aria-hidden={decorative ? true : undefined}
       style={style as CSSProperties}
       data-testid="pet"
+      onAnimationEnd={onAnimationEnd}
     >
-      <span className="breath">
-        {from && <Pose id={`${id}f`} mood={from} role="from" other={mood} />}
-        <Pose id={`${id}t`} mood={mood} role="to" other={from} />
+      <span className="poke">
+        <span className="breath">
+          {from && <Pose id={`${id}f`} mood={from} role="from" other={mood} />}
+          <Pose id={`${id}t`} mood={mood} role="to" other={from} />
+        </span>
       </span>
       {from && <Drops mood={from} role="from" size={size} />}
       <Drops mood={mood} role="to" size={size} />
     </span>
   );
 }
+
+/** Анимации позы, которыми заканчивается действие (`pet.css`): после них клякса только дышит. */
+const ACT_END = new Set(["petArriveB", "petArriveBTired", "petArriveBSurp", "petGatherIn"]);
 
 /** Поза-настроение: статичный SVG (тело + прорези глаз маской). `other` — парная поза перехода (масштаб «подгонки»). */
 function Pose({ id, mood, role, other }: { id: string; mood: PetMood; role: "from" | "to"; other: PetMood | null }) {
@@ -132,7 +159,9 @@ function Drops({ mood, role, size }: { mood: PetMood; role: "from" | "to"; size:
           key={i}
           className="drop"
           style={{ left: d.left, top: d.top, width: d.size, height: d.size, "--dx": d.dx, "--dy": d.dy } as CSSProperties}
-        />
+        >
+          <span className="dot" />
+        </span>
       ))}
     </span>
   );

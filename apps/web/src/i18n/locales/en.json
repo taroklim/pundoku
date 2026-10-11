@@ -137,8 +137,9 @@
     "extras": {
       "head": "Extras",
       "pet": "Blot the pet",
-      "petFoot": "A tiny ink blot on your result card and on a day in Year. It reacts to how the day went and never comes onto the board. On by default.",
-      "previewLabel": "How the blot looks"
+      "petFoot": "A tiny ink blot on your result card, in Year and in a few quiet corners of the app. It breathes, shows how the day went and reacts when you tap it. It never comes onto the board. On by default.",
+      "previewLabel": "How the blot looks",
+      "petTapFoot": "Tap a blot to see how it reacts."
     }
   },
   "help": {
@@ -552,6 +553,8 @@
     "fpSub": "No digits from the solution — safe to post.",
     "fpLabel": "Your fingerprint for this day",
     "fpRhythmSub": "Tone is the order you filled cells; size is how long you thought.",
+    "fpPet": "Show Blot",
+    "fpPetFoot": "The blot shows how the day went.",
     "fpSize": "PNG 1080 × 1350",
     "fpPreparing": "Preparing the image…",
     "fpFailed": "Couldn’t make the image. Try again.",
