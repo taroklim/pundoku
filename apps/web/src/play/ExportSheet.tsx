@@ -56,6 +56,8 @@ interface ExportSheetProps {
  * открытии, чтобы `navigator.share` вызывался прямо из жеста (iOS). «Share» — системный лист iOS; без него — скачивание.
  * PD-298 (место 8, макет PD-296): при включённом Питомце — печать кляксы дня в верхней полосе PNG и переключатель «Show Blot»
  * (по умолчанию вкл, запоминается: «устал» выдаёт правки/подсказки — выбор за человеком). Переключили — PNG перерисовывается.
+ * Переключатель — компактный ряд без карточки, а превью на его высоту ниже (`.tl-fp-pet`): Share на 393×852 стоит там же, где
+ * без Питомца, — виден без прокрутки (QA PD-298).
  */
 export function ExportSheet({ play, date, petMood = null, onClose }: ExportSheetProps) {
   const { t, i18n } = useTranslation();
@@ -126,7 +128,7 @@ export function ExportSheet({ play, date, petMood = null, onClose }: ExportSheet
 
   return (
     <TimelapseSheetShell title={t("timelapse.fpTitle")} sub={t("timelapse.fpSub")} onClose={onClose} testId="export-sheet">
-      <div className="tl-fp-frame">
+      <div className={petMood ? "tl-fp-frame tl-fp-pet" : "tl-fp-frame"}>
         {url ? (
           <img className="tl-fp" src={url} width={1080} height={1350} alt={t("timelapse.fpLabel")} data-testid="fp-image" />
         ) : (
@@ -135,25 +137,23 @@ export function ExportSheet({ play, date, petMood = null, onClose }: ExportSheet
       </div>
       <p className="tl-note">{t("timelapse.fpRhythmSub")}</p>
       {petMood && (
-        <>
-          <div className="settings-card tl-pet-card">
-            <label className="settings-row settings-switch">
-              <span className="lab">{t("timelapse.fpPet")}</span>
-              <input
-                type="checkbox"
-                role="switch"
-                className="st-switch"
-                checked={sharePet}
-                onChange={(e) => setSharePet(e.target.checked)}
-                aria-describedby={petFootId}
-                data-testid="fp-pet-toggle"
-              />
-            </label>
-          </div>
-          <p className="tl-note" id={petFootId}>
+        <div className="tl-pet" data-testid="fp-pet">
+          <label className="tl-pet-row">
+            <span className="lab">{t("timelapse.fpPet")}</span>
+            <input
+              type="checkbox"
+              role="switch"
+              className="st-switch"
+              checked={sharePet}
+              onChange={(e) => setSharePet(e.target.checked)}
+              aria-describedby={petFootId}
+              data-testid="fp-pet-toggle"
+            />
+          </label>
+          <p className="tl-note tl-pet-foot" id={petFootId}>
             {t("timelapse.fpPetFoot")}
           </p>
-        </>
+        </div>
       )}
       <div className="tl-share-block">
         <button type="button" className="tl-primary" data-testid="fp-share" disabled={!blob} onClick={share}>
