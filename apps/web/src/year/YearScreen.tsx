@@ -2,6 +2,11 @@ import type { KeyboardEvent } from "react";
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Mark } from "../brand/Mark";
+import { PetBlot } from "../pet/PetBlot";
+import { PetHeadSlot } from "../pet/PetHeadSlot";
+import { PetTap } from "../pet/PetTap";
+import { dayPetMood } from "../pet/petDay";
+import { usePetEnabled } from "../settings/prefs";
 import { rearmScroll } from "../shell/rearmScroll";
 import { TabHeader } from "../shell/TabHeader";
 import type { DayProgress } from "../today/repository";
@@ -132,6 +137,19 @@ export function YearScreen({ days, firstUse, liar = NO_LIAR, today, onOpenToday,
   }, [initialDate, days, years, onInitialDateConsumed]);
   // Смена года при открытом шите невозможна (фон inert), но данные могли обновиться — шит на месяц не переоткрываем.
 
+  // PD-299 (места 4 и 5, макет PD-296 §2, решение владельца). Питомец выкл — ни того, ни другого (пустой год — знак P4, как было).
+  // На экране дышит не больше одной кляксы: пока открыт лист (месяц/день — в листе дня своя клякса), клякса Year стоит.
+  const petOn = usePetEnabled();
+  const sheetOpen = sheet !== null;
+  // Место 5: Питомец сегодняшнего дня в шапке — спит до решения, потом настроение дня (то же правило, что в листе дня). Только
+  // в текущем году (настроение «сегодня» в прошлом году ничего не значит), с загруженными данными (без мелькания) и не в пустом
+  // годе: там спит крупная клякса места 4 — одна на экране. Тап — «Плюх», лист не открывает; «проснуться» здесь не играет
+  // (одноразовое «проснуться» дня остаётся за листом дня, `petSeen`).
+  const headMood = useMemo(
+    () => (petOn && loaded && !empty && year === yearOfDate(today) ? dayPetMood(progress.get(today), liar.get(today) ?? null, progress.values()) : null),
+    [petOn, loaded, empty, year, today, progress, liar],
+  );
+
   const title = (
     <>
       <span className="sr-only">{t("tabs.year")} </span>
@@ -151,6 +169,7 @@ export function YearScreen({ days, firstUse, liar = NO_LIAR, today, onOpenToday,
             </h1>
           )
         }
+        actions={headMood ? <PetHeadSlot mood={headMood} testId="pet-year-head" paused={sheetOpen} /> : undefined}
         onOpenSettings={onOpenSettings}
       />
       {yearEmpty ? (
@@ -175,7 +194,15 @@ export function YearScreen({ days, firstUse, liar = NO_LIAR, today, onOpenToday,
           ложилась под стекло таб-бара уже на 393×852, а прокрутка на 60–70 px не читается как «есть ещё». Полотно — следом. */}
       {empty && (
         <div className="year-empty" data-testid="year-empty">
-          <Mark size={56} className="year-empty-mark" />
+          {/* PD-299 (место 4): при включённом Питомце на месте знака P4 — спящая клякса 64 pt (спит = год ещё не сыгран): дышит,
+              тап — «Плюх». Зона 64×64, высота блока прежняя (64 + 6 = 56 + 14): достижимость полотна не меняется (PD-295). */}
+          {petOn ? (
+            <PetTap className="year-empty-pet" testId="pet-year-empty">
+              <PetBlot mood="asleep" size={64} idle={!sheetOpen} />
+            </PetTap>
+          ) : (
+            <Mark size={56} className="year-empty-mark" />
+          )}
           <p>{t("year.emptyLine")}</p>
           <button type="button" className="cta" onClick={onOpenToday}>
             {t("year.openToday")}

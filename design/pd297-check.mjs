@@ -10,7 +10,7 @@
  * Сетка дня решается по-настоящему (клавиатура), карточка результата — Today; лист дня Year — тот же день. 393×852.
  *  1. Чистый профиль (ключа `pundoku.pet` нет): тумблер вкл, футер «On by default»; карточка — посадка, потом дыхание:
  *     computed animation-iteration-count = infinite, Animation.iterations = Infinity, running; живьём через ≈14 с (дольше
- *     прежних «3 вдохов») — всё ещё running; лист дня Year — дышит бесконечно; превью Settings — 4 × бесконечно.
+ *     прежних «3 вдохов») — всё ещё running; лист дня Year — дышит бесконечно; превью Settings — с PD-298 стоят (оживают по тапу).
  *  2. Вне экрана: превью Settings за краем панели — data-paused, play-state paused; прокрутили к нему — running; карточка
  *     прокручена из вида — paused, вернули — running (тот же элемент, без ремаунта).
  *  3. Фон (visibilitychange, эмуляция как pd260-check): ни одной анимации у кляксы (data-still); вернулись — дышит.
@@ -239,13 +239,15 @@ async function run(brn) {
           prev = await pets(p, PREVIEW);
         }
         const offPrev = prev.filter((x) => x.top > vh || x.bottom < 0);
-        if (offPrev.length) check(`${B} 2: превью Settings за краем экрана (окно ${vh}) — пауза (${offPrev.length}/4)`, offPrev.length === 4 && offPrev.every(isPaused), offPrev);
+        // PD-298 (макет PD-296, место 6): на экране дышит не больше одной кляксы — превью стоят, оживают только по тапу (отменяет
+        // «превью дышит» PD-297). Пауза вне экрана у превью не наблюдается — анимаций нет вовсе.
+        if (offPrev.length) check(`${B} 2: превью Settings за краем экрана (окно ${vh}) — стоят (PD-298: превью без покоя)`, offPrev.length === 4 && offPrev.every(noMotion), offPrev);
         else console.log(`INFO ${B} 2: превью Settings видно и без прокрутки`, JSON.stringify(prev.map((x) => x.top)));
         if (vh !== 852) await p.setViewportSize({ width: 393, height: 852 });
         await scrollPaneOf(p, '[data-testid="pet-moods"]', "center");
         await p.waitForTimeout(500);
         prev = await pets(p, PREVIEW);
-        check(`${B} 1: превью Settings — 4 настроения, каждое дышит бесконечно`, prev.length === 4 && prev.every(breathesForever), prev);
+        check(`${B} 1: превью Settings — 4 настроения, стоят (PD-298: дышит не больше одной кляксы, превью оживают по тапу)`, prev.length === 4 && prev.every(noMotion), prev);
         await p.locator('[data-testid="pet-moods"]').screenshot({ path: path.join(OUT, `${B}-settings-preview-on.png`) });
 
         // 5: выкл тумблером → «0» → перезагрузка.
@@ -264,7 +266,7 @@ async function run(brn) {
         check(`${B} 5: после перезагрузки хранится «0»`, (await p.evaluate(() => localStorage.getItem("pundoku.pet"))) === "0");
         await p.locator('[data-testid="pet-toggle"]').click();
         await p.waitForTimeout(300);
-        check(`${B} 5: снова вкл — ключ удалён (умолчание), превью дышит`, (await p.evaluate(() => localStorage.getItem("pundoku.pet"))) === null && (await pets(p, PREVIEW)).every((x) => x.idle));
+        check(`${B} 5: снова вкл — ключ удалён (умолчание), превью не приглушено и стоит (PD-298)`, (await p.evaluate(() => localStorage.getItem("pundoku.pet"))) === null && (await p.locator('[data-testid="pet-moods"].off').count()) === 0 && (await pets(p, PREVIEW)).every(noMotion));
         check(`${B} 1–5: без ошибок страницы`, errs.filter((e) => !/\/api\//.test(e)).length === 0, errs.slice(0, 3).join(" | "));
       } finally {
         await ctx.close();

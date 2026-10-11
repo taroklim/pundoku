@@ -1,3 +1,4 @@
+import type { PetMood } from "@pundoku/engine";
 import type { ReactNode } from "react";
 import { useCallback, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -12,9 +13,10 @@ export type TimelapseSheetKind = "player" | "export";
 /**
  * Состояние входа в Таймлапс для карточки решённого дня (Today, архив, Year): есть ли у дня цельный лог
  * (`hasTimelapse`), какой шит открыт и сами шиты. `play === null` или `date === null` — входа нет вовсе (Play).
- * Вернувшийся `sheets` нужно отрисовать в разметке карточки. `difficulty` — ключ сложности либо `null`.
+ * Вернувшийся `sheets` нужно отрисовать в разметке карточки. `difficulty` — ключ сложности либо `null`. `petMood` — настроение
+ * Питомца дня для печати на PNG (PD-298, место 8); `null` — Питомец выключен: ни печати, ни переключателя «Show Blot».
  */
-export function useTimelapseEntry(play: PlayState | null, date: string | null, difficulty: string | null) {
+export function useTimelapseEntry(play: PlayState | null, date: string | null, difficulty: string | null, petMood: PetMood | null = null) {
   const enabled = play !== null && date !== null;
   const available = useMemo(
     () => (play !== null && date !== null ? hasTimelapse({ solved: true, mission: play.mission.join(""), play }) : false),
@@ -24,7 +26,7 @@ export function useTimelapseEntry(play: PlayState | null, date: string | null, d
   const close = useCallback(() => setOpen(null), []);
   let sheets: ReactNode = null;
   if (play && date && available && open === "player") sheets = <TimelapseSheet play={play} date={date} difficulty={difficulty} onClose={close} />;
-  if (play && date && available && open === "export") sheets = <ExportSheet play={play} date={date} onClose={close} />;
+  if (play && date && available && open === "export") sheets = <ExportSheet play={play} date={date} petMood={petMood} onClose={close} />;
   return { enabled, available, open: setOpen, sheets };
 }
 

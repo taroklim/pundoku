@@ -6,6 +6,7 @@ import type { Mock } from "vitest";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import i18n from "../i18n";
 import { enterDigit } from "../play/logic";
+import { setPetEnabled } from "../settings/prefs";
 import { progressOf } from "../sync/fixtures";
 import type { DayProgress } from "../today/repository";
 import { YearScreen } from "./YearScreen";
@@ -44,6 +45,7 @@ afterEach(() => {
   act(() => root.unmount());
   host.remove();
   vi.useRealTimers();
+  localStorage.clear();
 });
 
 const render = (days: DayProgress[] | null = DAYS, today = TODAY, firstUse: string | null = FIRST_USE) =>
@@ -152,6 +154,8 @@ describe("пустой год", () => {
   });
 
   it("знак P4 над строкой (PD-102, PD-155): 56 px, клеточная оптика (9 клеток), декоративный, перед текстом; в непустом году знака нет", () => {
+    // PD-299: при включённом Питомце (по умолчанию, PD-297) на месте знака — спящая клякса (`YearScreen.pet.test.tsx`); знак — при выкл.
+    setPetEnabled(false);
     render([], TODAY, TODAY);
     const empty = host.querySelector('[data-testid="year-empty"]')!;
     const mark = empty.querySelector<SVGSVGElement>("svg.year-empty-mark")!;

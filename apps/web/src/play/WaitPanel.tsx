@@ -1,11 +1,19 @@
 import type { CSSProperties } from "react";
 import { useTranslation } from "react-i18next";
 import { MARK_SMALL_CELL_SIZE } from "../brand/markPaths";
+import { PetBlot } from "../pet/PetBlot";
+import { PetTap } from "../pet/PetTap";
+import { usePetEnabled } from "../settings/prefs";
 import type { WaitView } from "./waitView";
 
 /**
- * PD-189: панель ожидания генерации на месте поля (вариант B макета PD-188, design/pd188-loading.md §4–7). Показывается всем,
- * от тумблера Питомца не зависит. Звука и вибрации нет.
+ * PD-189: панель ожидания генерации на месте поля (вариант B макета PD-188, design/pd188-loading.md §4–7). Показывается всем.
+ * Звука и вибрации нет.
+ *
+ * PD-298 (место 3, макет PD-296, выбор владельца): при включённом Питомце вместо знака P4 — спящая клякса 56 pt (поля на экране
+ * нет, другой кляксы тоже): дышит, на тап — «Плюх». При Reduce Motion клякса стоит, а «живой» знак ожидания даёт то же мерцание
+ * прозрачностью, что было у P4 (1 → .55 → 1). На ошибке клякса остаётся (спит = не сыграно), но не мерцает. Питомец выключен —
+ * знак P4, как раньше.
  *
  * Состояния — из `useWaitView`: `wait` (текст 1), `long` (текст 2 + «Отмена»), `error` («Не удалось…» + «Повторить» /
  * «Отмена»), `out` (гаснет). Индикатор декоративный (`aria-hidden`); текст ожидания — `role="status"` (объявляется при
@@ -13,13 +21,20 @@ import type { WaitView } from "./waitView";
  */
 export function WaitPanel({ view, onRetry, onCancel, onFocusIn }: { view: WaitView; onRetry: () => void; onCancel: () => void; onFocusIn?: () => void }) {
   const { t } = useTranslation();
+  const petOn = usePetEnabled();
   if (view === "pre" || view === "ready") return null;
   const error = view === "error";
   const long = view === "long";
   return (
     <div className={`wait${view === "out" ? " out" : ""}`} data-state={view} data-testid="wait-panel">
       <div className="wait-grp" onFocus={onFocusIn}>
-        <MarkCarry still={error} />
+        {petOn ? (
+          <PetTap className={`wait-pet${error ? " still" : ""}`} testId="pet-wait">
+            <PetBlot mood="asleep" size={56} />
+          </PetTap>
+        ) : (
+          <MarkCarry still={error} />
+        )}
         {error ? (
           <p className="wait-text err" role="alert" key="e">
             {t("play.failed")}

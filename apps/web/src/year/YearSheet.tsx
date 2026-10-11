@@ -7,6 +7,7 @@ import { useTranslation } from "react-i18next";
 import { formatClock } from "../play/format";
 import { useSheetSwipe } from "../shell/useSheetSwipe";
 import { PetBlot } from "../pet/PetBlot";
+import { PetTap } from "../pet/PetTap";
 import { dayPetMood } from "../pet/petDay";
 import { useWakeOnce } from "../pet/petSeen";
 import { usePetLive } from "../pet/usePetLive";
@@ -372,13 +373,15 @@ function DayCard({
  * «просыпается» один раз (память показанного настроения — `petSeen`): при показе листа или у открытого листа, когда данные
  * обновились под ним (PD-287). Иначе только покой. Ключуется датой; ремаунт кляксы по номеру «проснуться» — чтобы действие
  * сыграло на текущем показе, даже если лист уже уходил с экрана и возвращался.
+ * PD-299: слот 44×44 — зона тапа «Плюх» (во время «проснуться» тап игнорируется); прокрутка и свайп листа, начатые на кляксе, —
+ * как раньше (тап — только `pointerup` рядом и быстро, без `preventDefault`).
  */
 function YearPet({ date, mood }: { date: string; mood: PetMood }) {
   const wake = useWakeOnce(date, mood, usePetLive());
   return (
-    <div className="pet-slot" data-testid="pet-year">
+    <PetTap className="pet-slot" testId="pet-year">
       <PetBlot key={wake} mood={mood} size={40} act={wake ? "wake" : undefined} />
-    </div>
+    </PetTap>
   );
 }
 

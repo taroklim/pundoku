@@ -110,17 +110,20 @@ describe("Year: только лист дня", () => {
   const openMonth = () => click(host.querySelector('.year-month[data-month="8"]'));
   const openDay = (date: string) => click(document.querySelector(`.ycell[data-date="${date}"]`));
 
-  it("полотно и страница месяца — без клякс; лист дня — клякса рядом с датой (40 pt)", () => {
+  // PD-299: в шапке Year — Питомец сегодняшнего дня (место 5, `year/YearScreen.pet.test.tsx`); в полотне и на странице месяца — нет.
+  const notHead = () => [...document.querySelectorAll(".pet")].filter((p) => !p.closest('[data-testid="pet-year-head"]'));
+  it("полотно и страница месяца — без клякс (кроме шапки, PD-299); лист дня — клякса рядом с датой (40 pt)", () => {
     setPetEnabled(true);
     render([progressOf("2026-09-10"), progressOf("2026-09-11", { withFix: true })]);
-    expect(document.querySelector(".pet")).toBeNull();
+    expect(notHead()).toHaveLength(0);
+    expect(host.querySelector('[data-testid="year-canvas"] .pet')).toBeNull();
     openMonth();
     expect(document.querySelector('[data-testid="month-page"]')).not.toBeNull();
-    expect(document.querySelector(".pet")).toBeNull();
+    expect(notHead()).toHaveLength(0);
     openDay("2026-09-11");
     expect(moodOf("pet-year")).toBe("tired");
     expect(pet("pet-year")!.style.width).toBe("40px");
-    expect(document.querySelectorAll(".pet")).toHaveLength(1);
+    expect(notHead()).toHaveLength(1);
     expect(document.querySelector(".dc-head h3")).not.toBeNull();
   });
 

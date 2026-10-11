@@ -410,7 +410,8 @@ async function yearRun(browser, name, c, { moods = ["asleep", "happy"], wake = f
     await page.goto(`${BASE}/#/year`);
     await page.locator(".year-month").first().waitFor({ timeout: 30000 });
     await page.waitForTimeout(500);
-    ok(`${tag}: полотно Year без клякс`, (await page.locator(".pet").count()) === 0);
+    // PD-299: в шапке Year — Питомец сегодняшнего дня (место 5, design/pd299-check.mjs); полотно и всё, кроме шапки, — без клякс.
+    ok(`${tag}: полотно Year без клякс (кроме шапки, PD-299)`, (await page.locator('.pet:not([data-testid="pet-year-head"] .pet)').count()) === 0 && (await page.locator('[data-testid="year-canvas"] .pet').count()) === 0);
     for (const mood of moods) {
       await gotoDay(page, SEED.dates[mood]);
       await page.waitForTimeout(450);
