@@ -289,9 +289,18 @@ async function pokeOnce(p, sel, tag, { rm = false } = {}) {
   // возвращается позже, чем длится реакция (замерено: до ~1 с) — поэтому проверяем по журналу, а не опросом после тапа.
   await p.evaluate((sel) => {
     const pet = document.querySelector(sel).querySelector(".pet");
-    const log = (window.__pd299poke = { attr: [], ev: [] });
+    const log = (window.__pd299poke = { attr: [], ev: [], anim: null });
+    // Анимацию «Плюха» снимаем прямо в момент data-poke=A (getAnimations сам досчитывает стиль): события анимаций под нагрузкой
+    // WebKit может не прислать вовсе — реакцию тогда снимает подстраховка PetTap (D + 160 мс), и журнал событий пуст (флак).
     log.mo = new MutationObserver((ms) => {
-      for (const m of ms) log.attr.push(m.target.getAttribute("data-poke"));
+      for (const m of ms) {
+        const v = m.target.getAttribute("data-poke");
+        log.attr.push(v);
+        if (v === "A" && !log.anim) {
+          const a = pet.getAnimations({ subtree: true }).find((x) => x.animationName === "petPokeA");
+          log.anim = a ? { dur: a.effect.getTiming().duration } : { dur: null };
+        }
+      }
     });
     log.mo.observe(pet, { attributes: true, attributeFilter: ["data-poke"] });
     for (const t of ["animationstart", "animationend"])
@@ -304,10 +313,10 @@ async function pokeOnce(p, sel, tag, { rm = false } = {}) {
   let log;
   do {
     await p.waitForTimeout(60);
-    log = await p.evaluate(() => ({ attr: window.__pd299poke.attr, ev: window.__pd299poke.ev }));
-  } while (!log.ev.some((x) => x.t === "animationend") && Date.now() - t0 < 2000);
+    log = await p.evaluate(() => ({ attr: window.__pd299poke.attr, ev: window.__pd299poke.ev, anim: window.__pd299poke.anim }));
+  } while (!(log.attr[0] === "A" && log.attr.length > 1) && Date.now() - t0 < 2000);
   await p.waitForTimeout(150);
-  log = await p.evaluate(() => ({ attr: window.__pd299poke.attr, ev: window.__pd299poke.ev }));
+  log = await p.evaluate(() => ({ attr: window.__pd299poke.attr, ev: window.__pd299poke.ev, anim: window.__pd299poke.anim }));
   const a = await petInfo(p, sel);
   const st = log.ev.find((x) => x.t === "animationstart");
   const en = log.ev.find((x) => x.t === "animationend");
@@ -315,9 +324,10 @@ async function pokeOnce(p, sel, tag, { rm = false } = {}) {
   check(
     `${tag}: тап → «Плюх» (data-poke=A, petPokeA ${D} мс от начала до конца), настроение и имя те же`,
     // Время между событиями не мерило длительности: под нагрузкой WebKit шлёт animationstart с опозданием (замерено 275 мс
-    // между событиями при той же анимации 440 мс; без нагрузки — 440–456). Длительность — computed animation-duration.
-    log.attr[0] === "A" && st && en && st.dur === `${D / 1000}s` && a.mood && a.label,
-    { attr: log.attr, ms: st && en ? Math.round(en.at - st.at) : null, dur: st?.dur, mood: a.mood },
+    // между событиями при той же анимации 440 мс; без нагрузки — 440–456) или не шлёт вовсе. Длительность — тайминг анимации
+    // petPokeA, снятый при data-poke=A; события — только справка (ms).
+    log.attr[0] === "A" && log.anim?.dur === D && a.mood && a.label,
+    { attr: log.attr, dur: log.anim?.dur, ms: st && en ? Math.round(en.at - st.at) : null, evDur: st?.dur ?? null, mood: a.mood },
   );
   check(`${tag}: реакция закончилась — data-poke снят, petPokeA нет`, !a.poke && !a.anims.some((x) => x.name === "petPokeA"), { poke: a.poke, attr: log.attr });
 }
@@ -328,10 +338,19 @@ async function rmProbe(p, sel, tag, retry = true) {
   await p.evaluate((sel) => {
     const pet = document.querySelector(sel).querySelector(".pet");
     window.__pd299rm = false;
+    const hold = () => {
+      let n = 0;
+      for (const a of pet.getAnimations({ subtree: true })) if (a.animationName.startsWith("petPoke")) (a.pause(), n++);
+      if (n) window.__pd299rm = true;
+    };
+    // Пауза — прямо при data-poke=A (MutationObserver, до кадра): animationstart под нагрузкой WebKit приходит поздно или не
+    // приходит, а подстраховка PetTap снимает реакцию через 200 + 160 мс. animationstart — запасной путь.
+    const mo = new MutationObserver(() => {
+      if (pet.getAttribute("data-poke") === "A") (hold(), mo.disconnect());
+    });
+    mo.observe(pet, { attributes: true, attributeFilter: ["data-poke"] });
     pet.addEventListener("animationstart", (e) => {
-      if (!e.animationName.startsWith("petPoke")) return;
-      for (const a of pet.getAnimations({ subtree: true })) if (a.animationName.startsWith("petPoke")) a.pause();
-      window.__pd299rm = true;
+      if (e.animationName.startsWith("petPoke")) hold();
     });
   }, sel);
   await tapZone(p, sel);
