@@ -3,12 +3,15 @@
  * PD-189: экран ожидания генерации (вариант B макета PD-188). Фейковые таймеры + фейковый Worker: порог 600 мс, минимум показа
  * 700 мс, «долго» с 4 с (второй текст + «Отмена»), отмена (хаб, Worker погашен, поздний ответ проигнорирован), таймаут →
  * «Не удалось» → «Повторить» (панель сразу, без порога). Плюс тексты en/uk/ru и геометрия знака.
+ * PD-298 (место 3): при включённом Питомце вместо знака — спящая клякса (в конце файла); остальные тесты — с выключенным (знак P4).
  */
 import { act, useLayoutEffect, useSyncExternalStore } from "react";
 import { createRoot } from "react-dom/client";
 import type { Root } from "react-dom/client";
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { MARK_SMALL_CELLS } from "../brand/markPaths";
+import { resetPokes } from "../pet/petPoke";
+import { setPetEnabled } from "../settings/prefs";
 import i18n from "../i18n";
 import en from "../i18n/locales/en.json";
 import ru from "../i18n/locales/ru.json";
@@ -77,6 +80,8 @@ beforeAll(async () => {
 
 beforeEach(async () => {
   await i18n.changeLanguage("en");
+  setPetEnabled(false);
+  resetPokes();
   vi.useFakeTimers();
   vi.stubGlobal("requestAnimationFrame", (cb: FrameRequestCallback) => window.setTimeout(() => cb(performance.now()), 16));
   vi.stubGlobal("cancelAnimationFrame", (id: number) => window.clearTimeout(id));
@@ -362,5 +367,44 @@ describe("тексты и знак", () => {
       expect(Math.abs(a[0] - b[0]) + Math.abs(a[1] - b[1])).toBe(1);
     }
     expect(CARRY_STILL).toBe("2,0");
+  });
+});
+
+describe("PD-298 (место 3): Питомец вместо знака", () => {
+  const pet = () => panel()!.querySelector<HTMLElement>('[data-testid="pet-wait"] .pet');
+  it("Питомец вкл (умолчание): спящая клякса 56 pt вместо знака P4, дышит; зона тапа — сама клякса; ожидание и «долго» — та же клякса", () => {
+    setPetEnabled(true);
+    start();
+    tick(WAIT_SHOW_AFTER_MS);
+    expect(panel()!.dataset.state).toBe("wait");
+    expect(panel()!.querySelector(".wait-mark")).toBeNull();
+    const zone = q("pet-wait")!;
+    expect(zone.classList.contains("pet-hit")).toBe(true);
+    expect(zone.classList.contains("wait-pet")).toBe(true);
+    expect(zone.classList.contains("still")).toBe(false); // при RM мерцает прозрачностью, как знак
+    expect(pet()!.dataset.mood).toBe("asleep");
+    expect(pet()!.style.width).toBe("56px");
+    expect(pet()!.getAttribute("aria-label")).toBe("Blot, asleep");
+    expect(pet()!.hasAttribute("data-idle")).toBe(true);
+    tick(WAIT_LONG_AFTER_MS);
+    expect(panel()!.dataset.state).toBe("long");
+    expect(pet()).not.toBeNull();
+  });
+
+  it("ошибка — клякса остаётся (спит = не сыграно), без мерцания; «Try again» на месте", () => {
+    setPetEnabled(true);
+    start();
+    tick(GENERATION_TIMEOUT_MS.expert);
+    expect(panel()!.dataset.state).toBe("error");
+    expect(q("pet-wait")!.classList.contains("still")).toBe(true);
+    expect(pet()!.dataset.mood).toBe("asleep");
+    expect([...panel()!.querySelectorAll("button")].map((b) => b.textContent)).toEqual(["Try again", "Cancel"]);
+  });
+
+  it("Питомец выкл — знак P4, кляксы нет", () => {
+    start();
+    tick(WAIT_SHOW_AFTER_MS);
+    expect(panel()!.querySelector(".wait-mark")).not.toBeNull();
+    expect(q("pet-wait")).toBeNull();
   });
 });

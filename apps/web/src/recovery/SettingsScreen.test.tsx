@@ -22,6 +22,7 @@ import {
   setHighlightWrong,
 } from "../settings/prefs";
 import { RecoveryStore } from "./store";
+import { resetPokes } from "../pet/petPoke";
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
@@ -103,6 +104,7 @@ beforeEach(async () => {
   localStorage.clear();
   setHighlightWrong(false);
   setPetEnabled(true); // PD-297: умолчание — вкл (ключа нет)
+  resetPokes();
   host = document.createElement("div");
   document.body.append(host);
   root = createRoot(host);
@@ -828,7 +830,7 @@ describe("SettingsScreen: автоочистка заметок (PD-119) и за
   });
 });
 
-describe("SettingsScreen: Питомец-клякса (PD-180, PD-297)", () => {
+describe("SettingsScreen: Питомец-клякса (PD-180, PD-297, PD-298)", () => {
   it("раздел «Extras»: нативный switch, ВКЛ по умолчанию (PD-297), футер через aria-describedby; превью 4 настроений дышит", async () => {
     expect(localStorage.getItem(PET_KEY)).toBeNull();
     await mount();
@@ -846,8 +848,14 @@ describe("SettingsScreen: Питомец-клякса (PD-180, PD-297)", () => {
     expect([...moods.querySelectorAll(".pet")].map((s) => s.getAttribute("data-mood"))).toEqual(["happy", "tired", "surprised", "asleep"]);
     // В превью картинка — украшение: имя настроения уже в подписи, VoiceOver не читает его дважды.
     expect([...moods.querySelectorAll(".pet")].every((s) => s.getAttribute("aria-hidden") === "true")).toBe(true);
-    // PD-297 (отменяет «превью стоит» PD-288): при включённом Питомце превью дышит, как на карточке.
-    expect([...moods.querySelectorAll(".pet")].every((s) => s.hasAttribute("data-idle"))).toBe(true);
+    // PD-298 (место 6, макет PD-296): на экране дышит не больше одной кляксы — превью стоят, оживают только по тапу.
+    expect([...moods.querySelectorAll(".pet")].some((s) => s.hasAttribute("data-idle"))).toBe(false);
+    // Каждое превью — в зоне тапа ≥ 44 (не кнопка, не в порядке фокуса); под превью — сноска «Tap a blot…».
+    const zones = [...moods.querySelectorAll<HTMLElement>(".pet-hit")];
+    expect(zones.map((z) => z.dataset.testid)).toEqual(["pet-preview-happy", "pet-preview-tired", "pet-preview-surprised", "pet-preview-asleep"]);
+    expect(zones.every((z) => !z.hasAttribute("role") && !z.hasAttribute("tabindex"))).toBe(true);
+    expect(q("pet-tap-foot")!.textContent).toBe("Tap a blot to see how it reacts.");
+    expect(foot.textContent).toContain("reacts when you tap it");
     expect([...moods.querySelectorAll("figcaption")].map((c) => c.firstChild!.textContent)).toEqual(["Pleased", "Tired", "Surprised", "Asleep"]);
   });
 
@@ -865,7 +873,30 @@ describe("SettingsScreen: Питомец-клякса (PD-180, PD-297)", () => {
     await act(async () => q<HTMLInputElement>("pet-toggle")!.closest("label")!.dispatchEvent(new MouseEvent("click", { bubbles: true })));
     expect(localStorage.getItem(PET_KEY)).toBeNull();
     expect(q("pet-moods")!.classList.contains("off")).toBe(false);
-    expect(pets().every((s) => s.hasAttribute("data-idle"))).toBe(true);
+    expect(pets().some((s) => s.hasAttribute("data-idle"))).toBe(false); // PD-298: превью стоят и при включённом
+  });
+
+  it("PD-298: тап по превью — «Плюх» у этого превью (настроение не меняется); при выключенном Питомце превью тоже отвечает", async () => {
+    await mount();
+    const tapZone = (m: string) => {
+      const z = q(`pet-preview-${m}`)!;
+      act(() => {
+        z.dispatchEvent(new PointerEvent("pointerdown", { bubbles: true, pointerId: 1, clientX: 10, clientY: 10, isPrimary: true }));
+        z.dispatchEvent(new PointerEvent("pointerup", { bubbles: true, pointerId: 1, clientX: 11, clientY: 10, isPrimary: true }));
+      });
+      return z.querySelector<HTMLElement>(".pet")!;
+    };
+    const p = tapZone("tired");
+    expect(p.dataset.poke).toBe("A");
+    expect(p.dataset.mood).toBe("tired");
+    expect(q("pet-preview-happy")!.querySelector(".pet")!.hasAttribute("data-poke")).toBe(false);
+    // jsdom без AnimationEvent: React слушает либо animationend, либо webkitAnimationEnd — шлём оба.
+    act(() => {
+      for (const type of ["animationend", "webkitAnimationEnd"]) p.dispatchEvent(Object.assign(new Event(type, { bubbles: true }), { animationName: "petPokeA" }));
+    });
+    expect(p.hasAttribute("data-poke")).toBe(false);
+    await act(async () => q<HTMLInputElement>("pet-toggle")!.closest("label")!.dispatchEvent(new MouseEvent("click", { bubbles: true })));
+    expect(tapZone("asleep").dataset.poke).toBe("A");
   });
 
   it("явный выкл переживает перемонтирование (перезагрузку); подписи футера uk/ru — «за замовчуванням увімкнено» / «по умолчанию включено»", async () => {
@@ -874,8 +905,10 @@ describe("SettingsScreen: Питомец-клякса (PD-180, PD-297)", () => {
     expect(q<HTMLInputElement>("pet-toggle")!.checked).toBe(false);
     await click("lang-uk");
     expect(host.querySelector("#settings-pet-foot")!.textContent).toContain("За замовчуванням увімкнено.");
+    expect(q("pet-tap-foot")!.textContent).toBe("Торкніться ляпки — побачите, як вона відгукується.");
     await click("lang-ru");
     expect(host.querySelector("#settings-pet-foot")!.textContent).toContain("По умолчанию включено.");
+    expect(q("pet-tap-foot")!.textContent).toBe("Коснитесь кляксы — увидите, как она отзывается.");
   });
 
   it("подписи на uk и ru", async () => {

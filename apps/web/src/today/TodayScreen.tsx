@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { useTranslation } from "react-i18next";
 import { Board } from "../play/Board";
@@ -39,6 +40,9 @@ import { useSolveSequence } from "./useSolveSequence";
 import { LateSign } from "../year/LateSign";
 import { usePersonalBestState } from "../pet/usePersonalBest";
 import { usePetEnabled } from "../settings/prefs";
+import { PetBlot } from "../pet/PetBlot";
+import { PetHeadSlot } from "../pet/PetHeadSlot";
+import { PetTap } from "../pet/PetTap";
 
 /** `YYYY-MM-DD` → локальная полночь этой даты (без сдвига часовых поясов). */
 function dateOf(ymd: string): Date {
@@ -199,17 +203,21 @@ export function DayView({ store, archive, onOpenSettings, onOpenHelp }: { store:
         </p>
       )}
       {unavailable && (
-        <p className="status" role="alert" data-testid="archive-unavailable">
-          {t("archive.unavailable")}
-        </p>
+        <StatusPet on={petOn}>
+          <p className="status" role="alert" data-testid="archive-unavailable">
+            {t("archive.unavailable")}
+          </p>
+        </StatusPet>
       )}
       {phase === "error" && !unavailable && (
-        <p className="status" role="alert">
-          {t(archive ? "archive.failed" : "today.failed")}{" "}
-          <button type="button" className="link" onClick={() => void store.load()}>
-            {t("play.retry")}
-          </button>
-        </p>
+        <StatusPet on={petOn}>
+          <p className="status" role="alert">
+            {t(archive ? "archive.failed" : "today.failed")}{" "}
+            <button type="button" className="link" onClick={() => void store.load()}>
+              {t("play.retry")}
+            </button>
+          </p>
+        </StatusPet>
       )}
       {inkEntry && <InkEntry on={play?.ink === true} setOn={(on) => store.setInk(on)} />}
       {!inkEntry && !hint.open && (phase === "playing" || phase === "solved") && (
@@ -231,6 +239,17 @@ export function DayView({ store, archive, onOpenSettings, onOpenHelp }: { store:
     </>
   );
   const deskStatus = deskFit ? statusNode(true) : null;
+  // PD-298 (место 1, выбор владельца): Today до решения — спящая клякса в шапке, первой перед лампочкой. Только сегодняшний день
+  // (не архив) и только когда партия на экране: на загрузке шапка ещё без лампочки, и на узком экране клякса мелькнула бы и ушла;
+  // на ошибке загрузки она в зазоре у текста (место 7) — на экране одна клякса; после решения — на карточке.
+  const headPet = petOn && !archive && phase === "playing" ? <PetHeadSlot mood="asleep" testId="pet-today" /> : null;
+  const headActions =
+    headPet || hintButton ? (
+      <>
+        {headPet}
+        {hintButton}
+      </>
+    ) : null;
 
   // Grid ∞ после решения дня (не в архиве): под карточкой на телефоне, в инспекторе — на десктопе C (PD-268, компактно).
   const gridSection = (deskMode: boolean) =>
@@ -299,7 +318,7 @@ export function DayView({ store, archive, onOpenSettings, onOpenHelp }: { store:
           lead={archive ? backButton : undefined}
           title={<h1 className="title">{t(archive ? "archive.title" : "tabs.today")}</h1>}
           sub={subline}
-          actions={hintButton}
+          actions={headActions}
           onOpenSettings={archive ? undefined : onOpenSettings}
         />
       ) : archive ? (
@@ -310,7 +329,7 @@ export function DayView({ store, archive, onOpenSettings, onOpenHelp }: { store:
         </header>
       ) : (
         // Шестерёнка (PD-49/PD-123): действие шапки вкладки, а не четвёртая вкладка; ведёт на `#/settings`.
-        <TabHeader title={<h1 className="title">{t("tabs.today")}</h1>} actions={hintButton} onOpenSettings={onOpenSettings} />
+        <TabHeader title={<h1 className="title">{t("tabs.today")}</h1>} actions={headActions} onOpenSettings={onOpenSettings} />
       )}
       {!desk && subline}
 
@@ -352,6 +371,22 @@ export function DayView({ store, archive, onOpenSettings, onOpenHelp }: { store:
         </>
       )}
       {hint.rule && <HintRuleSheet onGo={() => ladder.confirmRule()} onCancel={() => ladder.dismissRule()} />}
+    </div>
+  );
+}
+
+/**
+ * PD-298 (место 7, макет PD-296): «не загрузилось» (Today, архив; «день недоступен») — спящая клякса 40 pt слева от текста (на AX3 —
+ * над ним, на 320 pt + AX3 — уходит: текст важнее). «Спит» = день не сыгран. Тап — «Плюх»; зона 44 не задевает «Try again».
+ */
+function StatusPet({ on, children }: { on: boolean; children: ReactNode }) {
+  if (!on) return <>{children}</>;
+  return (
+    <div className="status-pet" data-testid="status-pet">
+      <PetTap className="status-pet-zone" testId="pet-error">
+        <PetBlot mood="asleep" size={40} />
+      </PetTap>
+      {children}
     </div>
   );
 }

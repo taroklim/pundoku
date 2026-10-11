@@ -12,6 +12,9 @@ const strip = (s: string) => s.replace(/\/\*[\s\S]*?\*\//g, "");
 const css = strip(fs.readFileSync(new URL("../styles/pet.css", import.meta.url), "utf8"));
 const html = fs.readFileSync(new URL("../../../../design/pd223-pet-motion.html", import.meta.url), "utf8");
 const mockCss = strip(html.slice(html.indexOf("<style>"), html.indexOf("</style>")));
+// PD-298: реакция на тап — макет PD-296, вариант A «Плюх».
+const html296 = fs.readFileSync(new URL("../../../../design/pd296-pet-places.html", import.meta.url), "utf8");
+const mockCss296 = strip(html296.slice(html296.indexOf("<style>"), html296.indexOf("</style>")));
 
 /** Все @keyframes файла: имя → тело. */
 function keyframes(src: string): Map<string, string> {
@@ -31,6 +34,7 @@ const norm = (s: string) => s.replace(/\s+/g, "").replace(/(^|[^\d])0\./g, "$1."
 
 const ours = keyframes(css);
 const mock = keyframes(mockCss);
+const mock296 = keyframes(mockCss296);
 // Наше имя → имя в макете (вариант B; у нас префикс pet, чтобы не пересечься с другими экранами).
 const MAP: Record<string, string> = {
   petBreathB: "breathB",
@@ -44,10 +48,15 @@ const MAP: Record<string, string> = {
   petAbsorbOut: "absorbOut",
   petSplashLate: "splashLate",
 };
+/** PD-298: «Плюх» (вариант A макета PD-296; B/C и «ворочается» не переносим — A одинаков для всех настроений, включая «спит»). */
+const MAP296: Record<string, string> = {
+  petPokeA: "pd296PokeA",
+  petPokeDropA: "pd296DropA",
+};
 
 describe("keyframes = макет PD-223 B", () => {
   it("набор: только вариант B (без A/C и без «уснуть» — в приложении не бывает), старого дыхания petBreathe нет", () => {
-    expect([...ours.keys()].sort()).toEqual(Object.keys(MAP).sort());
+    expect([...ours.keys()].sort()).toEqual([...Object.keys(MAP), ...Object.keys(MAP296)].sort());
     expect(css).not.toMatch(/petBreathe/);
     // PD-297: бесконечен только покой (.breath), действия — один раз.
     expect(css.match(/infinite/g)).toHaveLength(1);
@@ -55,6 +64,20 @@ describe("keyframes = макет PD-223 B", () => {
   it.each(Object.entries(MAP))("%s дословно = %s макета", (name, theirs) => {
     expect(mock.has(theirs)).toBe(true);
     expect(norm(ours.get(name)!)).toBe(norm(mock.get(theirs)!));
+  });
+  it.each(Object.entries(MAP296))("PD-298: %s дословно = %s макета PD-296", (name, theirs) => {
+    expect(mock296.has(theirs)).toBe(true);
+    expect(norm(ours.get(name)!)).toBe(norm(mock296.get(theirs)!));
+  });
+  it("PD-298: длительность «Плюха» = макет (A: 440 мс, при RM 200 мс), --k = --mo × --amp", () => {
+    expect(mockCss296).toMatch(/\.pet\[data-poke="A"\]\{ --dp-full:440ms; --dp-rm:200ms \}/);
+    expect(css).toMatch(/\.pet\[data-poke\]\s*\{\s*--Dp: calc\(200ms \+ var\(--mo\) \* \(440ms - 200ms\)\);/);
+    expect(css).toMatch(/\.pet\s*\{\s*--k: calc\(var\(--mo\) \* var\(--amp, 1\)\);/);
+    // Слой .poke и брызги «to» — один раз, без задержки и без заливки (после реакции слой тождественный).
+    const rule = /\.pet\[data-poke\] \.poke,\s*\.pet\[data-poke\] \.drops\.to \.dot\s*\{([^}]*)\}/.exec(css)![1]!;
+    expect(rule).toMatch(/animation-duration: var\(--Dp\);/);
+    expect(rule).toMatch(/animation-iteration-count: 1;/);
+    expect(rule).toMatch(/animation-fill-mode: none;/);
   });
   it("тайминги = таблица DUR.B макета", () => {
     const dur = new Function(`${html.slice(html.indexOf("const DUR = {"), html.indexOf("function durOf"))}; return DUR;`)() as {
@@ -80,6 +103,7 @@ describe("лёгкость для WebKit и Reduce Motion", () => {
   const evalArg = (a: string): number => {
     const js = a
       .replace(/var\(--mo\)/g, "0")
+      .replace(/var\(--k\)/g, "0")
       .replace(/var\(--u\)/g, "1")
       .replace(/var\(--(dx|dy)\)/g, "7")
       .replace(/var\(--(sx|sy|isx|isy)\)/g, "1.37")
@@ -123,7 +147,7 @@ describe("лёгкость для WebKit и Reduce Motion", () => {
     expect(css).not.toMatch(/#[0-9a-f]{3,8}\b|rgba?\(|hsla?\(/i);
     expect(/\.pet\s*\{([^}]*)\}/.exec(css)![1]).toMatch(/pointer-events: none;/);
     const vars = new Set([...css.matchAll(/var\((--[\w-]+)/g)].map((m) => m[1]));
-    const allowed = ["--ink", "--label", "--label-2", "--mo", "--e-io", "--e-out", "--u", "--D", "--d-rm", "--d-full", "--act-delay", "--dx", "--dy", "--sx", "--sy", "--isx", "--isy"];
+    const allowed = ["--ink", "--label", "--label-2", "--mo", "--e-io", "--e-out", "--u", "--D", "--d-rm", "--d-full", "--act-delay", "--dx", "--dy", "--sx", "--sy", "--isx", "--isy", "--k", "--amp", "--Dp"];
     for (const v of vars) expect(allowed).toContain(v);
   });
 });
@@ -134,5 +158,47 @@ describe("лист дня Year: 320 pt + AX3 — дата не наезжает 
     expect(/\.daycard \.dc-head h3\s*\{([^}]*)\}/.exec(css)![1]).toMatch(/min-width: 0;\s*overflow-wrap: anywhere;/);
     // Центр по строке даты (PD-184, решение владельца 2B) не тронут.
     expect(/\.daycard \.dc-head\s*\{([^}]*)\}/.exec(css)![1]).toMatch(/align-items: center;/);
+  });
+});
+
+// PD-298: зона тапа «Плюх» и места (CSS читается здесь — в jsdom-тестах `.css?raw` пустой).
+describe("PD-298 CSS: зона 44, жесты, Reduce Motion", () => {
+  const rule = (sel: string) => {
+    const m = new RegExp(`(^|\\})\\s*${sel.replace(/[.[\]()*>+]/g, (c) => `\\${c}`)}\\s*\\{([^}]*)\\}`).exec(css);
+    return m ? m[2]! : "";
+  };
+  it("зона ≥ 44×44, ловит касания; touch-action: manipulation; без подсветки тапа и выделения; .pet сама касаний не ловит", () => {
+    const hit = rule(".pet-hit");
+    expect(hit).toMatch(/min-width: 44px;/);
+    expect(hit).toMatch(/min-height: 44px;/);
+    expect(hit).toMatch(/pointer-events: auto;/);
+    expect(hit).toMatch(/touch-action: manipulation;/);
+    expect(hit).toMatch(/-webkit-tap-highlight-color: transparent;/);
+    expect(hit).toMatch(/user-select: none;/);
+    expect(rule(".pet-hit[hidden]")).toMatch(/display: none;/);
+    expect(/(^|\})\s*\.pet\s*\{([^}]*)\}/.exec(css)![2]).toMatch(/pointer-events: none;/);
+    // Слот карточки 48×48 — зона (прежде слот касаний не ловил).
+    expect(rule(".card .pet-slot.pet-hit")).toMatch(/pointer-events: auto;/);
+  });
+  it("Reduce Motion и 7-й тап (--k = 0): брызги мигают 1 → 0,25 → 1; длительность при RM — 200 мс", () => {
+    const drop = /@keyframes petPokeDropA\s*\{([\s\S]*?)\n\}/.exec(css)![1]!;
+    expect(drop).toMatch(/28% \{[^}]*opacity: calc\(1 - 0\.75 \* \(1 - var\(--k\)\)\);/);
+    const k0 = 1 - 0.75 * (1 - 0);
+    expect(k0).toBe(0.25);
+    expect(rule('.pet[data-poke="A"] .poke')).toMatch(/animation-name: petPokeA;/);
+    expect(rule('.pet[data-poke="A"] .drops.to .dot')).toMatch(/animation-name: petPokeDropA;/);
+  });
+});
+
+describe("PD-298 CSS: места", () => {
+  it("место 7: строка не выше прежнего (отрицательные поля зоны), AX3 — клякса над текстом, 320 pt + AX3 — уходит", () => {
+    expect(css).toMatch(/\.status-pet > \.status-pet-zone\s*\{\s*margin-block: -8px;/);
+    expect(css).toMatch(/:root\[data-type="ax3"\] \.status-pet\s*\{\s*flex-direction: column;/);
+    expect(css).toMatch(/@media \(max-width: 359px\)\s*\{\s*:root\[data-type="ax3"\] \.status-pet > \.status-pet-zone\s*\{\s*display: none;/);
+  });
+  it("место 1: зона в шапке 44×44; место 6: превью приглушено зоной, поля зоны не раздвигают подписи", () => {
+    expect(css).toMatch(/\.toolbar-end > \.pet-head\s*\{\s*width: 44px;\s*height: 44px;\s*margin: -8px 0;/);
+    expect(css).toMatch(/\.pet-moods\.off figure > \.pet-preview\s*\{\s*opacity: 0\.35;/);
+    expect(css).toMatch(/\.pet-moods figure > \.pet-preview\s*\{\s*margin: -2px 0;/);
   });
 });

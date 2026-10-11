@@ -8,6 +8,7 @@ import { TuneButton, useCardTune } from "../melody/MelodyTune";
 import { PetBlot } from "../pet/PetBlot";
 import { petDayOfPlay } from "../pet/petDay";
 import { ARRIVE_DELAY_MS } from "../pet/petMotion";
+import { PetTap } from "../pet/PetTap";
 import { usePetEnabled } from "../settings/prefs";
 import { formatClock } from "./format";
 import { heatLegend, heatOpacities } from "./heat";
@@ -64,7 +65,14 @@ interface ResultCardProps {
  */
 export function ResultCard({ play, cardRef, title, winRate, winRateScope = "today", timelapse, hints, onOpenHelp, children, liar = null, personalBest = false, solvedNow = false, petPending = false, dock = null }: ResultCardProps) {
   const { t } = useTranslation();
-  const tl = useTimelapseEntry(play, timelapse?.date ?? null, timelapse?.difficulty ?? null);
+  // PD-180: питомец-клякса (тумблер в Настройках, PD-297: вкл по умолчанию). Настроение выводится из партии, не хранится.
+  const petOn = usePetEnabled();
+  const mood = useMemo(
+    () => (petOn ? petMood(petDayOfPlay(play, true, { hints, liar: liar?.info ?? null, personalBest })) : null),
+    [petOn, play, hints, liar, personalBest],
+  );
+  // PD-298 (место 8): то же настроение — печатью на PNG «Поделиться» (выкл Питомец — печати и переключателя нет).
+  const tl = useTimelapseEntry(play, timelapse?.date ?? null, timelapse?.difficulty ?? null, mood);
   // PD-203: партия Мелодии — «♪ Сыграть мелодию» под картой пути (вариант A); мелодии нет (лог урезан) — кнопки нет.
   const tune = useCardTune(play);
   const openTl = (kind: "player" | "export") => {
@@ -81,12 +89,6 @@ export function ResultCard({ play, cardRef, title, winRate, winRateScope = "toda
   const blots = useMemo(() => blotCellSet(play), [play]);
   const hinted = useMemo(() => hintCellSet(play), [play]);
   const helped = hintCount(play, hints);
-  // PD-180: питомец-клякса (тумблер в Настройках, выкл по умолчанию). Настроение выводится из партии, не хранится.
-  const petOn = usePetEnabled();
-  const mood = useMemo(
-    () => (petOn ? petMood(petDayOfPlay(play, true, { hints, liar: liar?.info ?? null, personalBest })) : null),
-    [petOn, play, hints, liar, personalBest],
-  );
   // Кнопки карточки: Watch (главная), Share, затем `children` (Play: «New puzzle»). PD-285: на телефоне в Play — в доке.
   const actions = (
     <>
@@ -114,10 +116,11 @@ export function ResultCard({ play, cardRef, title, winRate, winRateScope = "toda
         {ink && ` ${t("ink.cardSub")}`}
       </p>
       {/* Клякса стоит в правом верхнем углу (absolute), а в DOM — после заголовка: VoiceOver сначала читает «Solved». */}
+      {/* PD-298: слот 48×48 — зона тапа «Плюх» (во время посадки тап игнорируется). */}
       {mood && !petPending && (
-        <div className="pet-slot" data-testid="pet-card">
+        <PetTap className="pet-slot" testId="pet-card">
           <PetBlot mood={mood} size={44} act={solvedNow ? "arrive" : undefined} actDelay={ARRIVE_DELAY_MS} />
-        </div>
+        </PetTap>
       )}
       <div
         className={`heat${tl.available ? " tl-tap" : ""}${tune.reveal ? " revealing" : ""}`}

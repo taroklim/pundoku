@@ -89,6 +89,16 @@ export const getPetEnabled = petPref.get;
 export const setPetEnabled = petPref.set;
 
 /**
+ * PD-298 (место 8): печать Питомца на PNG «Поделиться» — переключатель «Show Blot» в листе экспорта. По умолчанию ВКЛ (выкл — «0»),
+ * запоминается на устройстве: «устал» выдаёт правки/подсказки, кто не хочет — выключает один раз. Действует, только пока сам
+ * Питомец включён (выкл — ни печати, ни переключателя).
+ */
+export const SHARE_PET_KEY = "pundoku.sharePet";
+const sharePetPref = defaultOnPref(SHARE_PET_KEY);
+export const getSharePet = sharePetPref.get;
+export const setSharePet = sharePetPref.set;
+
+/**
  * PD-203: звук в партиях Мелодии (пункт «Звук» в меню ⋯, макет PD-202 вариант C). По умолчанию ВКЛ: выкл хранится «0».
  * Настройка этого устройства, как остальные: в снапшот не идёт. На карточку и таймлапс не действует (там звук запускается явно).
  */
@@ -97,7 +107,7 @@ const melodySoundPref = defaultOnPref(MELODY_SOUND_KEY);
 export const getMelodySound = melodySoundPref.get;
 export const setMelodySound = melodySoundPref.set;
 
-const WATCHED_KEYS: readonly string[] = [HIGHLIGHT_WRONG_KEY, AUTO_CLEAR_NOTES_KEY, HIGHLIGHT_PEERS_KEY, PET_KEY, MELODY_SOUND_KEY];
+const WATCHED_KEYS: readonly string[] = [HIGHLIGHT_WRONG_KEY, AUTO_CLEAR_NOTES_KEY, HIGHLIGHT_PEERS_KEY, PET_KEY, SHARE_PET_KEY, MELODY_SOUND_KEY];
 
 function subscribe(listener: () => void): () => void {
   listeners.add(listener);
@@ -126,6 +136,10 @@ export function useHighlightPeers(): boolean {
 
 export function usePetEnabled(): boolean {
   return useSyncExternalStore(subscribe, getPetEnabled, () => true);
+}
+
+export function useSharePet(): boolean {
+  return useSyncExternalStore(subscribe, getSharePet, () => true);
 }
 
 export function useMelodySound(): boolean {

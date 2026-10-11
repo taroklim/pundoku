@@ -580,3 +580,9 @@ input[type="range"].tl-scrub:focus-visible {
     background: CanvasText;
   }
 }
+
+/* PD-298 (место 8): переключатель «Show Blot» под превью PNG — строка-переключатель Настроек (settings.css) без боковых полей:
+   поля даёт тело шита. */
+.tl-pet-card.settings-card {
+  margin: 12px 0 0;
+}
