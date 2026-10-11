@@ -1,7 +1,8 @@
 import type { KeyboardEvent } from "react";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Mark } from "../brand/Mark";
+import { rearmScroll } from "../shell/rearmScroll";
 import { TabHeader } from "../shell/TabHeader";
 import type { DayProgress } from "../today/repository";
 import { sanitizeDays } from "../today/repository";
@@ -79,6 +80,16 @@ export function YearScreen({ days, firstUse, liar = NO_LIAR, today, onOpenToday,
     () => days !== null && entries.size > 0 && year < yearOfDate(today) && ![...entries.keys()].some((d) => yearOfDate(d) === year),
     [days, entries, year, today],
   );
+
+  // PD-295: год пришёл из хранилища — высота полотна сменилась (пустой год выше «полного» на ~120 px, и на 393×852 только он
+  // перерастает панель). Если панель уже в покое (не в слайде — тогда это сделает конец слайда, tabSlide.ts) и видна —
+  // перевзвести касательную прокрутку iOS: панель стала прокручиваемой не с первого кадра.
+  const loaded = days !== null;
+  useLayoutEffect(() => {
+    const pane = root.current?.closest<HTMLElement>(".scroll");
+    if (!loaded || !pane || pane.hasAttribute("data-slide") || pane.classList.contains("off")) return;
+    rearmScroll(pane);
+  }, [loaded, empty]);
 
   // ---- шит месяца / дня ----
   const [sheet, setSheet] = useState<SheetState | null>(null);

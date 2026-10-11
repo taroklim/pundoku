@@ -1,3 +1,5 @@
+// PD-295: первым — до кода приложения (#/diag: флаг, счётчики касаний и аудит слушателей; без флага ничего не делает).
+import "./diag/boot";
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import "./i18n";
@@ -23,6 +25,7 @@ import "./styles/desk-result.css";
 import "./styles/desk-screens.css";
 import "./styles/landscape.css";
 import { App } from "./App";
+import { diagEnabled } from "./diag/flag";
 import { ErrorBoundary } from "./shell/ErrorBoundary";
 import { readRoute } from "./shell/tabs";
 import { startSync, sync } from "./sync/runtime";
@@ -48,3 +51,5 @@ createRoot(root).render(
     </ErrorBoundary>
   </StrictMode>,
 );
+// PD-295: скрытая диагностика (#/diag или 7 тапов по версии в Settings) — отдельный чанк, грузится только при включённом флаге.
+if (diagEnabled()) void import("./diag/hud").then((m) => m.mountHud());
