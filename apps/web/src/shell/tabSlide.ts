@@ -2,6 +2,7 @@ import type { RefObject } from "react";
 import { createContext, useCallback, useContext, useLayoutEffect, useRef } from "react";
 import type { TabId } from "./tabs";
 import { TAB_IDS } from "./tabs";
+import { rearmScroll } from "./rearmScroll";
 
 /**
  * PD-161 (макет PD-158, вариант A «Лента»): переход между вкладками — оба экрана на всю ширину едут одной лентой
@@ -213,6 +214,8 @@ export function useTabSlide(
         if (el && id !== s.warm) clearPane(el);
       }
       s.visible = new Set([s.tab]);
+      // PD-295: панель стала видимой в покое — перевзвести её касательную прокрутку (iOS WebKit, `rearmScroll.ts`).
+      if (!s.covered) rearmScroll(paneOf(s.tab));
     };
     const run = (anims: Animation[], my: number) => {
       s.running = anims;
@@ -225,7 +228,13 @@ export function useTabSlide(
 
     if (from === tab) {
       // Вернулись с экрана поверх (Settings/справка/архив) на ту же вкладку — прежний вход M10 (fadeRise).
-      if (!wasCovered || covered || host.hasAttribute(PEEK_ATTR)) return;
+      if (!wasCovered || covered) return;
+      if (host.hasAttribute(PEEK_ATTR)) {
+        // Вкладка уже видна под уезжающим экраном (жест «назад»): входа нет, но из-под `visibility: hidden` она вышла без
+        // раскладки — PD-295, перевзвести прокрутку.
+        rearmScroll(paneOf(tab));
+        return;
+      }
       const el = paneOf(tab);
       if (!el || !canAnimate(el)) return;
       cancelAll();

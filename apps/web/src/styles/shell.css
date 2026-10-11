@@ -142,6 +142,11 @@ textarea,
   overflow: hidden;
   padding-bottom: calc(var(--tabbar-h) + var(--sa-bot));
 }
+/* PD-295: у Year нижний резерв — последним блоком содержимого (year.css `.year::after`), отступ панели снят, чтобы не удвоить.
+   scroll-padding-bottom (PD-292) остаётся у панели. */
+.scroll:has(> .panel > .year) {
+  padding-bottom: 0;
+}
 .scroll:has(.play-fit, .play-hub) > .panel,
 .scroll:has(.play-fit, .play-hub) .play {
   min-height: 0;

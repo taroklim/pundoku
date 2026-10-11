@@ -20,6 +20,12 @@
  *   end        — в конце прокрутки низ Dec и низ легенды ≤ верх таб-бара − 16 (десктоп: ≤ высота окна − 16);
  *   gesture    — настоящий жест (chromium: touch-свайп CDP; десктоп: колесо) докручивает панель до конца: scrollTop = range ± 1;
  *   reach      — elementFromPoint в центре Dec после прокрутки — сама карточка Dec (не таб-бар, не чужой слой).
+ *   reserve-in — PD-295b: резерв живёт внутри содержимого Year (блок `.year::after`), отступ панели Year снят ровно на него;
+ *   owner      — PD-295b, сценарий скриншота владельца: пустой год, dark, 393×852, safe-area 59/34, движение не уменьшено, вход
+ *                Today → вкладка Year, текст 17/20/22/24/28/33/40 px; chromium — палец (CDP Input.dispatchTouchEvent) вверх до
+ *                конца и обратно, в том числе после Year → Today → Year; обе машины — панель перевзведена (rearmScroll.ts).
+ *                На main падают «перевзвод» и «резерв внутри»; сам iOS-дефект (касательная прокрутка) эмуляция не воспроизводит.
+ * OWNER_ONLY=1 — только сценарий владельца (быстро; без засева «полного» года).
  * REF=1 — эталонные сборки до пакета 4 (3e8d8c8, c3caf66): без пункта PD-292 (scroll-padding тогда ещё не было).
  * Итог — design/pd295-shots/results-<LABEL>-<браузеры>.json, кадры — /tmp/pd295-shots/<LABEL>/ (в ветку — отобранные).
  */
@@ -131,7 +137,21 @@ const ENV_INIT = () => {
   if (document.documentElement) add();
   else document.addEventListener("DOMContentLoaded", add);
 };
-async function context(browser, bname, { w, h, dpr = 2, touch = true, scheme = "light", lang = "en-US", env = null, state }) {
+/**
+ * PD-295: шпион перевзвода прокрутки — сколько раз панель Year проходила через inline `overflow-y: hidden` (rearmScroll.ts):
+ * по концу слайда вкладок и после загрузки года. На main (до фикса) — 0.
+ */
+const REARM_SPY = () => {
+  window.__pd295rearm = 0;
+  const start = () =>
+    new MutationObserver((list) => {
+      // Переключение синхронное: к вызову наблюдателя стиль уже вернулся — смотрим прежнее значение у записи «снятия» hidden.
+      for (const m of list) if (m.target.matches?.('.tab-pane[data-tab="year"]') && /overflow-y:\s*hidden/.test(m.oldValue ?? "")) window.__pd295rearm++;
+    }).observe(document.documentElement, { subtree: true, attributes: true, attributeOldValue: true, attributeFilter: ["style"] });
+  if (document.documentElement) start();
+  else document.addEventListener("DOMContentLoaded", start);
+};
+async function context(browser, bname, { w, h, dpr = 2, touch = true, scheme = "light", lang = "en-US", env = null, state, motion = "reduce" }) {
   const ctx = await browser.newContext({
     viewport: { width: w, height: h },
     screen: { width: w, height: h },
@@ -142,12 +162,13 @@ async function context(browser, bname, { w, h, dpr = 2, touch = true, scheme = "
     timezoneId: "UTC",
     colorScheme: scheme,
     serviceWorkers: "block",
-    reducedMotion: "reduce",
+    reducedMotion: motion,
     ...(state ? { storageState: state } : {}),
   });
   await ctx.clock.setFixedTime(NOW);
   if (env) await ctx.addInitScript((v) => sessionStorage.setItem("pd295env", v), JSON.stringify(env));
   await ctx.addInitScript(ENV_INIT);
+  await ctx.addInitScript(REARM_SPY);
   const p = await ctx.newPage();
   const errs = [];
   p.on("pageerror", (e) => {
@@ -210,6 +231,7 @@ const measure = (p) =>
     pane.appendChild(probe);
     const want = probe.getBoundingClientRect().height;
     probe.remove();
+    const after = parseFloat(getComputedStyle(yr, "::after").height) || 0; // PD-295: резерв внутри содержимого (.year::after)
     const range = pane.scrollHeight - pane.clientHeight;
     pane.scrollTop = range + 50;
     await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
@@ -221,6 +243,7 @@ const measure = (p) =>
       desk,
       ov: cs.overflowY,
       pb: r1(px(cs.paddingBottom)),
+      after: r1(after),
       spb: r1(px(cs.scrollPaddingBottom)),
       want: r1(want),
       range,
@@ -263,12 +286,16 @@ async function gesture(p, bname, desk, w, h) {
 function verdict(key, m, g, { desk }) {
   const limit = m.barTop - 16; // десктоп: barTop = высота окна
   const okOv = m.ov === "auto" || m.ov === "scroll";
-  const okReserve = Math.abs(m.pb - m.want) <= 1 && (!desk || Math.abs(m.pb - 16) <= 1);
+  // PD-295: резерв = отступ панели + блок в конце содержимого; вместе — ровно правило peek (десктоп C — 16).
+  const total = m.pb + m.after;
+  const okReserve = Math.abs(total - m.want) <= 1 && (!desk || Math.abs(total - 16) <= 1);
   const okSpb = Math.abs(m.spb - m.want) <= 1;
   const okEnd = m.contentBottom <= limit + 0.5;
   const okGesture = g === null || g.range <= 0 || Math.abs(g.st - g.range) <= 1;
   check(`${key}: панель прокручивается (overflow ${m.ov}), док PD-285 не протёк`, okOv && !m.dockLeak, { ov: m.ov, cls: m.paneCls });
-  check(`${key}: резерв снизу = 16 + таб-бар + inset (PD-144; десктоп C — 16)`, okReserve, { pb: m.pb, want: m.want });
+  check(`${key}: резерв снизу = 16 + таб-бар + inset (PD-144; десктоп C — 16)`, okReserve, { pb: m.pb, after: m.after, want: m.want });
+  // PD-295: резерв живёт ВНУТРИ содержимого Year (блок ::after), а не только в отступе панели. До фикса — FAIL (after = 0).
+  if (process.env.REF !== "1") check(`${key}: резерв внутри содержимого Year (PD-295)`, Math.abs(m.after - m.want) <= 1, { after: m.after, want: m.want });
   // До пакета 4 scroll-padding у панели не было — на эталонах 3e8d8c8/c3caf66 этот пункт и должен падать (REF=1 — пропустить).
   if (process.env.REF !== "1") check(`${key}: scroll-padding-bottom = тот же резерв (PD-292)`, okSpb, { spb: m.spb, want: m.want });
   check(`${key}: в конце прокрутки Dec и легенда над таб-баром/краем ≥ 16 px`, okEnd, { decBottom: m.decBottom, legBottom: m.legBottom, barTop: m.barTop, gap: +(m.barTop - m.contentBottom).toFixed(1), range: m.range });
@@ -301,6 +328,80 @@ async function openYear(p, base, how) {
   await p.waitForTimeout(900);
 }
 
+/** PD-295: настоящая серия касаний CDP (touchStart → touchMove × N → touchEnd), как палец: вверх (dir −1) или вниз (+1). */
+async function touchSwipe(p, w, h, dir = -1) {
+  const cdp = await p.context().newCDPSession(p);
+  const x = Math.round(w / 2);
+  let y = Math.round(h * (dir < 0 ? 0.78 : 0.35));
+  await cdp.send("Input.dispatchTouchEvent", { type: "touchStart", touchPoints: [{ x, y }] });
+  for (let i = 0; i < 24; i++) {
+    y += dir * 14;
+    await cdp.send("Input.dispatchTouchEvent", { type: "touchMove", touchPoints: [{ x, y }] });
+    await p.waitForTimeout(16);
+  }
+  await cdp.send("Input.dispatchTouchEvent", { type: "touchEnd", touchPoints: [] });
+  await cdp.detach();
+  await p.waitForTimeout(700);
+}
+const paneState = (p) =>
+  p.evaluate(() => {
+    const pane = document.querySelector('.tab-pane[data-tab="year"]');
+    const dec = [...pane.querySelectorAll(".year-month")].at(-1).getBoundingClientRect();
+    const bar = document.querySelector(".tabbar").getBoundingClientRect().top;
+    return { st: Math.round(pane.scrollTop), range: pane.scrollHeight - pane.clientHeight, decBottom: +dec.bottom.toFixed(1), barTop: +bar.toFixed(1), rearm: window.__pd295rearm };
+  });
+
+/**
+ * PD-295, сценарий владельца (скриншот 2026-10-11): ПУСТОЙ год, тёмная тема, 393×852, safe-area 59/34 как в standalone, движение
+ * не уменьшено, вход как в жизни — Today → вкладка Year (панель монтируется посреди слайда, год приходит из IndexedDB во время
+ * него). Размер текста 17 (стандарт) … 40 (AX3). Chromium: палец (CDP touch) вверх докручивает до конца, Dec над таб-баром ≥ 16,
+ * палец вниз возвращает к началу; то же после Year → Today → Year. Обе машины: панель перевзведена (rearm ≥ 1) — до фикса 0.
+ * Касательную прокрутку iOS эмуляция НЕ воспроизводит: на main палец в chromium тоже прокручивает — до фикса здесь падает только
+ * «перевзвод» и «резерв внутри содержимого»; настоящая проверка — iPhone владельца (#/diag).
+ */
+async function ownerScenario(browser, bname, base, short) {
+  for (const fs of QUICK ? [17, 24] : [17, 20, 22, 24, 28, 33, 40]) {
+    const { ctx, p, errs } = await context(browser, bname, { w: 393, h: 852, env: [fs, 59, 34], scheme: "dark", motion: "no-preference" });
+    await p.goto(`${base}/#/today`);
+    await p.waitForSelector('.tab-pane[data-tab="today"] .board button.cell', { timeout: 60000 });
+    await p.waitForTimeout(600);
+    await p.locator("#tab-year").tap();
+    await p.waitForSelector('[data-testid="year-canvas"]', { timeout: 60000 });
+    await p.waitForTimeout(1000);
+    const key = `${short} owner empty dark 393 fs${fs}`;
+    const empty = await p.evaluate(() => document.querySelector('[data-testid="year-screen"]').dataset.empty);
+    check(`${key}: пустой год`, empty === "true", { empty });
+    for (const round of ["first", "return"]) {
+      if (round === "return") {
+        await p.locator("#tab-today").tap();
+        await p.waitForTimeout(700);
+        await p.locator("#tab-year").tap();
+        await p.waitForTimeout(1000);
+      }
+      const s0 = await paneState(p);
+      check(`${key} ${round}: панель перевзведена после показа (PD-295)`, s0.rearm >= (round === "first" ? 1 : 2), { rearm: s0.rearm });
+      if (bname === "chromium" && s0.range > 0) {
+        await p.evaluate(() => (document.querySelector('.tab-pane[data-tab="year"]').scrollTop = 0));
+        await p.waitForTimeout(150);
+        await touchSwipe(p, 393, 852, -1);
+        if (s0.range > 300) for (let i = 0; i < 6; i++) await touchSwipe(p, 393, 852, -1);
+        const up = await paneState(p);
+        check(`${key} ${round}: палец вверх докручивает до конца`, Math.abs(up.st - up.range) <= 1, up);
+        check(`${key} ${round}: в конце Dec над таб-баром ≥ 16 px`, up.decBottom <= up.barTop - 16 + 0.5, { decBottom: up.decBottom, barTop: up.barTop, gap: +(up.barTop - up.decBottom).toFixed(1) });
+        for (let i = 0; i < (s0.range > 300 ? 7 : 1); i++) await touchSwipe(p, 393, 852, +1);
+        const down = await paneState(p);
+        check(`${key} ${round}: палец вниз возвращает к началу`, down.st <= 1, down);
+      } else {
+        const m = await measure(p);
+        check(`${key} ${round}: в конце прокрутки Dec над таб-баром ≥ 16 px`, m.decBottom <= m.barTop - 16 + 0.5, { decBottom: m.decBottom, barTop: m.barTop, range: m.range });
+      }
+    }
+    await p.screenshot({ path: path.join(SHOTS, `${short}-owner-empty-dark-393-fs${fs}.png`) });
+    check(`${key}: без ошибок страницы`, errs.length === 0, { errs });
+    await ctx.close();
+  }
+}
+
 const PHONES = [
   { name: "393", w: 393, h: 852, env: [17, 59, 34] },
   { name: "320", w: 320, h: 568, env: [17, 20, 0] },
@@ -320,6 +421,11 @@ try {
   for (const bname of browsers) {
     const browser = await pw[bname].launch();
     const short = bname === "chromium" ? "cr" : "wk";
+    await ownerScenario(browser, bname, base, short);
+    if (process.env.OWNER_ONLY === "1") {
+      await browser.close();
+      continue;
+    }
     const { state, n } = await seedState(browser, bname, base);
     console.log(`seed ${bname}: ${n} дней`);
     const langs = QUICK ? ["en-US"] : ["en-US", "ru-RU", "uk-UA"];

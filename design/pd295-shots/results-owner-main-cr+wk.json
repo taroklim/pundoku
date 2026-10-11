@@ -1,0 +1,653 @@
+{
+ "label": "owner-main",
+ "dist": "/tmp/pd295b-dist-main",
+ "total": 112,
+ "fails": [
+  "cr owner empty dark 393 fs17 first: панель перевзведена после показа (PD-295)",
+  "cr owner empty dark 393 fs17 return: панель перевзведена после показа (PD-295)",
+  "cr owner empty dark 393 fs20 first: панель перевзведена после показа (PD-295)",
+  "cr owner empty dark 393 fs20 return: панель перевзведена после показа (PD-295)",
+  "cr owner empty dark 393 fs22 first: панель перевзведена после показа (PD-295)",
+  "cr owner empty dark 393 fs22 return: панель перевзведена после показа (PD-295)",
+  "cr owner empty dark 393 fs24 first: панель перевзведена после показа (PD-295)",
+  "cr owner empty dark 393 fs24 return: панель перевзведена после показа (PD-295)",
+  "cr owner empty dark 393 fs28 first: панель перевзведена после показа (PD-295)",
+  "cr owner empty dark 393 fs28 return: панель перевзведена после показа (PD-295)",
+  "cr owner empty dark 393 fs33 first: панель перевзведена после показа (PD-295)",
+  "cr owner empty dark 393 fs33 return: панель перевзведена после показа (PD-295)",
+  "cr owner empty dark 393 fs40 first: панель перевзведена после показа (PD-295)",
+  "cr owner empty dark 393 fs40 return: панель перевзведена после показа (PD-295)",
+  "wk owner empty dark 393 fs17 first: панель перевзведена после показа (PD-295)",
+  "wk owner empty dark 393 fs17 return: панель перевзведена после показа (PD-295)",
+  "wk owner empty dark 393 fs20 first: панель перевзведена после показа (PD-295)",
+  "wk owner empty dark 393 fs20 return: панель перевзведена после показа (PD-295)",
+  "wk owner empty dark 393 fs22 first: панель перевзведена после показа (PD-295)",
+  "wk owner empty dark 393 fs22 return: панель перевзведена после показа (PD-295)",
+  "wk owner empty dark 393 fs24 first: панель перевзведена после показа (PD-295)",
+  "wk owner empty dark 393 fs24 return: панель перевзведена после показа (PD-295)",
+  "wk owner empty dark 393 fs28 first: панель перевзведена после показа (PD-295)",
+  "wk owner empty dark 393 fs28 return: панель перевзведена после показа (PD-295)",
+  "wk owner empty dark 393 fs33 first: панель перевзведена после показа (PD-295)",
+  "wk owner empty dark 393 fs33 return: панель перевзведена после показа (PD-295)",
+  "wk owner empty dark 393 fs40 first: панель перевзведена после показа (PD-295)",
+  "wk owner empty dark 393 fs40 return: панель перевзведена после показа (PD-295)"
+ ],
+ "results": {
+  "cr owner empty dark 393 fs17: пустой год": {
+   "ok": true,
+   "empty": "true"
+  },
+  "cr owner empty dark 393 fs17 first: панель перевзведена после показа (PD-295)": {
+   "ok": false,
+   "rearm": 0
+  },
+  "cr owner empty dark 393 fs17 first: палец вверх докручивает до конца": {
+   "ok": true,
+   "st": 46,
+   "range": 46,
+   "decBottom": 725.9,
+   "barTop": 753.6,
+   "rearm": 0
+  },
+  "cr owner empty dark 393 fs17 first: в конце Dec над таб-баром ≥ 16 px": {
+   "ok": true,
+   "decBottom": 725.9,
+   "barTop": 753.6,
+   "gap": 27.7
+  },
+  "cr owner empty dark 393 fs17 first: палец вниз возвращает к началу": {
+   "ok": true,
+   "st": 0,
+   "range": 46,
+   "decBottom": 771.9,
+   "barTop": 753.6,
+   "rearm": 0
+  },
+  "cr owner empty dark 393 fs17 return: панель перевзведена после показа (PD-295)": {
+   "ok": false,
+   "rearm": 0
+  },
+  "cr owner empty dark 393 fs17 return: палец вверх докручивает до конца": {
+   "ok": true,
+   "st": 46,
+   "range": 46,
+   "decBottom": 725.9,
+   "barTop": 753.6,
+   "rearm": 0
+  },
+  "cr owner empty dark 393 fs17 return: в конце Dec над таб-баром ≥ 16 px": {
+   "ok": true,
+   "decBottom": 725.9,
+   "barTop": 753.6,
+   "gap": 27.7
+  },
+  "cr owner empty dark 393 fs17 return: палец вниз возвращает к началу": {
+   "ok": true,
+   "st": 0,
+   "range": 46,
+   "decBottom": 771.9,
+   "barTop": 753.6,
+   "rearm": 0
+  },
+  "cr owner empty dark 393 fs17: без ошибок страницы": {
+   "ok": true,
+   "errs": []
+  },
+  "cr owner empty dark 393 fs20: пустой год": {
+   "ok": true,
+   "empty": "true"
+  },
+  "cr owner empty dark 393 fs20 first: панель перевзведена после показа (PD-295)": {
+   "ok": false,
+   "rearm": 0
+  },
+  "cr owner empty dark 393 fs20 first: палец вверх докручивает до конца": {
+   "ok": true,
+   "st": 76,
+   "range": 76,
+   "decBottom": 722.7,
+   "barTop": 751.1,
+   "rearm": 0
+  },
+  "cr owner empty dark 393 fs20 first: в конце Dec над таб-баром ≥ 16 px": {
+   "ok": true,
+   "decBottom": 722.7,
+   "barTop": 751.1,
+   "gap": 28.4
+  },
+  "cr owner empty dark 393 fs20 first: палец вниз возвращает к началу": {
+   "ok": true,
+   "st": 0,
+   "range": 76,
+   "decBottom": 798.7,
+   "barTop": 751.1,
+   "rearm": 0
+  },
+  "cr owner empty dark 393 fs20 return: панель перевзведена после показа (PD-295)": {
+   "ok": false,
+   "rearm": 0
+  },
+  "cr owner empty dark 393 fs20 return: палец вверх докручивает до конца": {
+   "ok": true,
+   "st": 76,
+   "range": 76,
+   "decBottom": 722.7,
+   "barTop": 751.1,
+   "rearm": 0
+  },
+  "cr owner empty dark 393 fs20 return: в конце Dec над таб-баром ≥ 16 px": {
+   "ok": true,
+   "decBottom": 722.7,
+   "barTop": 751.1,
+   "gap": 28.4
+  },
+  "cr owner empty dark 393 fs20 return: палец вниз возвращает к началу": {
+   "ok": true,
+   "st": 0,
+   "range": 76,
+   "decBottom": 798.7,
+   "barTop": 751.1,
+   "rearm": 0
+  },
+  "cr owner empty dark 393 fs20: без ошибок страницы": {
+   "ok": true,
+   "errs": []
+  },
+  "cr owner empty dark 393 fs22: пустой год": {
+   "ok": true,
+   "empty": "true"
+  },
+  "cr owner empty dark 393 fs22 first: панель перевзведена после показа (PD-295)": {
+   "ok": false,
+   "rearm": 0
+  },
+  "cr owner empty dark 393 fs22 first: палец вверх докручивает до конца": {
+   "ok": true,
+   "st": 94,
+   "range": 94,
+   "decBottom": 722.6,
+   "barTop": 751.1,
+   "rearm": 0
+  },
+  "cr owner empty dark 393 fs22 first: в конце Dec над таб-баром ≥ 16 px": {
+   "ok": true,
+   "decBottom": 722.6,
+   "barTop": 751.1,
+   "gap": 28.5
+  },
+  "cr owner empty dark 393 fs22 first: палец вниз возвращает к началу": {
+   "ok": true,
+   "st": 0,
+   "range": 94,
+   "decBottom": 816.6,
+   "barTop": 751.1,
+   "rearm": 0
+  },
+  "cr owner empty dark 393 fs22 return: панель перевзведена после показа (PD-295)": {
+   "ok": false,
+   "rearm": 0
+  },
+  "cr owner empty dark 393 fs22 return: палец вверх докручивает до конца": {
+   "ok": true,
+   "st": 94,
+   "range": 94,
+   "decBottom": 722.6,
+   "barTop": 751.1,
+   "rearm": 0
+  },
+  "cr owner empty dark 393 fs22 return: в конце Dec над таб-баром ≥ 16 px": {
+   "ok": true,
+   "decBottom": 722.6,
+   "barTop": 751.1,
+   "gap": 28.5
+  },
+  "cr owner empty dark 393 fs22 return: палец вниз возвращает к началу": {
+   "ok": true,
+   "st": 0,
+   "range": 94,
+   "decBottom": 816.6,
+   "barTop": 751.1,
+   "rearm": 0
+  },
+  "cr owner empty dark 393 fs22: без ошибок страницы": {
+   "ok": true,
+   "errs": []
+  },
+  "cr owner empty dark 393 fs24: пустой год": {
+   "ok": true,
+   "empty": "true"
+  },
+  "cr owner empty dark 393 fs24 first: панель перевзведена после показа (PD-295)": {
+   "ok": false,
+   "rearm": 0
+  },
+  "cr owner empty dark 393 fs24 first: палец вверх докручивает до конца": {
+   "ok": true,
+   "st": 112,
+   "range": 112,
+   "decBottom": 722.5,
+   "barTop": 751.1,
+   "rearm": 0
+  },
+  "cr owner empty dark 393 fs24 first: в конце Dec над таб-баром ≥ 16 px": {
+   "ok": true,
+   "decBottom": 722.5,
+   "barTop": 751.1,
+   "gap": 28.6
+  },
+  "cr owner empty dark 393 fs24 first: палец вниз возвращает к началу": {
+   "ok": true,
+   "st": 0,
+   "range": 112,
+   "decBottom": 834.5,
+   "barTop": 751.1,
+   "rearm": 0
+  },
+  "cr owner empty dark 393 fs24 return: панель перевзведена после показа (PD-295)": {
+   "ok": false,
+   "rearm": 0
+  },
+  "cr owner empty dark 393 fs24 return: палец вверх докручивает до конца": {
+   "ok": true,
+   "st": 112,
+   "range": 112,
+   "decBottom": 722.5,
+   "barTop": 751.1,
+   "rearm": 0
+  },
+  "cr owner empty dark 393 fs24 return: в конце Dec над таб-баром ≥ 16 px": {
+   "ok": true,
+   "decBottom": 722.5,
+   "barTop": 751.1,
+   "gap": 28.6
+  },
+  "cr owner empty dark 393 fs24 return: палец вниз возвращает к началу": {
+   "ok": true,
+   "st": 0,
+   "range": 112,
+   "decBottom": 834.5,
+   "barTop": 751.1,
+   "rearm": 0
+  },
+  "cr owner empty dark 393 fs24: без ошибок страницы": {
+   "ok": true,
+   "errs": []
+  },
+  "cr owner empty dark 393 fs28: пустой год": {
+   "ok": true,
+   "empty": "true"
+  },
+  "cr owner empty dark 393 fs28 first: панель перевзведена после показа (PD-295)": {
+   "ok": false,
+   "rearm": 0
+  },
+  "cr owner empty dark 393 fs28 first: палец вверх докручивает до конца": {
+   "ok": true,
+   "st": 147,
+   "range": 147,
+   "decBottom": 723.3,
+   "barTop": 751.1,
+   "rearm": 0
+  },
+  "cr owner empty dark 393 fs28 first: в конце Dec над таб-баром ≥ 16 px": {
+   "ok": true,
+   "decBottom": 723.3,
+   "barTop": 751.1,
+   "gap": 27.8
+  },
+  "cr owner empty dark 393 fs28 first: палец вниз возвращает к началу": {
+   "ok": true,
+   "st": 0,
+   "range": 147,
+   "decBottom": 870.3,
+   "barTop": 751.1,
+   "rearm": 0
+  },
+  "cr owner empty dark 393 fs28 return: панель перевзведена после показа (PD-295)": {
+   "ok": false,
+   "rearm": 0
+  },
+  "cr owner empty dark 393 fs28 return: палец вверх докручивает до конца": {
+   "ok": true,
+   "st": 147,
+   "range": 147,
+   "decBottom": 723.3,
+   "barTop": 751.1,
+   "rearm": 0
+  },
+  "cr owner empty dark 393 fs28 return: в конце Dec над таб-баром ≥ 16 px": {
+   "ok": true,
+   "decBottom": 723.3,
+   "barTop": 751.1,
+   "gap": 27.8
+  },
+  "cr owner empty dark 393 fs28 return: палец вниз возвращает к началу": {
+   "ok": true,
+   "st": 0,
+   "range": 147,
+   "decBottom": 870.3,
+   "barTop": 751.1,
+   "rearm": 0
+  },
+  "cr owner empty dark 393 fs28: без ошибок страницы": {
+   "ok": true,
+   "errs": []
+  },
+  "cr owner empty dark 393 fs33: пустой год": {
+   "ok": true,
+   "empty": "true"
+  },
+  "cr owner empty dark 393 fs33 first: панель перевзведена после показа (PD-295)": {
+   "ok": false,
+   "rearm": 0
+  },
+  "cr owner empty dark 393 fs33 first: палец вверх докручивает до конца": {
+   "ok": true,
+   "st": 230,
+   "range": 230,
+   "decBottom": 722.8,
+   "barTop": 751.1,
+   "rearm": 0
+  },
+  "cr owner empty dark 393 fs33 first: в конце Dec над таб-баром ≥ 16 px": {
+   "ok": true,
+   "decBottom": 722.8,
+   "barTop": 751.1,
+   "gap": 28.3
+  },
+  "cr owner empty dark 393 fs33 first: палец вниз возвращает к началу": {
+   "ok": true,
+   "st": 0,
+   "range": 230,
+   "decBottom": 952.8,
+   "barTop": 751.1,
+   "rearm": 0
+  },
+  "cr owner empty dark 393 fs33 return: панель перевзведена после показа (PD-295)": {
+   "ok": false,
+   "rearm": 0
+  },
+  "cr owner empty dark 393 fs33 return: палец вверх докручивает до конца": {
+   "ok": true,
+   "st": 230,
+   "range": 230,
+   "decBottom": 722.8,
+   "barTop": 751.1,
+   "rearm": 0
+  },
+  "cr owner empty dark 393 fs33 return: в конце Dec над таб-баром ≥ 16 px": {
+   "ok": true,
+   "decBottom": 722.8,
+   "barTop": 751.1,
+   "gap": 28.3
+  },
+  "cr owner empty dark 393 fs33 return: палец вниз возвращает к началу": {
+   "ok": true,
+   "st": 0,
+   "range": 230,
+   "decBottom": 952.8,
+   "barTop": 751.1,
+   "rearm": 0
+  },
+  "cr owner empty dark 393 fs33: без ошибок страницы": {
+   "ok": true,
+   "errs": []
+  },
+  "cr owner empty dark 393 fs40: пустой год": {
+   "ok": true,
+   "empty": "true"
+  },
+  "cr owner empty dark 393 fs40 first: панель перевзведена после показа (PD-295)": {
+   "ok": false,
+   "rearm": 0
+  },
+  "cr owner empty dark 393 fs40 first: палец вверх докручивает до конца": {
+   "ok": true,
+   "st": 355,
+   "range": 355,
+   "decBottom": 723.3,
+   "barTop": 751.1,
+   "rearm": 0
+  },
+  "cr owner empty dark 393 fs40 first: в конце Dec над таб-баром ≥ 16 px": {
+   "ok": true,
+   "decBottom": 723.3,
+   "barTop": 751.1,
+   "gap": 27.8
+  },
+  "cr owner empty dark 393 fs40 first: палец вниз возвращает к началу": {
+   "ok": true,
+   "st": 0,
+   "range": 355,
+   "decBottom": 1078.3,
+   "barTop": 751.1,
+   "rearm": 0
+  },
+  "cr owner empty dark 393 fs40 return: панель перевзведена после показа (PD-295)": {
+   "ok": false,
+   "rearm": 0
+  },
+  "cr owner empty dark 393 fs40 return: палец вверх докручивает до конца": {
+   "ok": true,
+   "st": 355,
+   "range": 355,
+   "decBottom": 723.3,
+   "barTop": 751.1,
+   "rearm": 0
+  },
+  "cr owner empty dark 393 fs40 return: в конце Dec над таб-баром ≥ 16 px": {
+   "ok": true,
+   "decBottom": 723.3,
+   "barTop": 751.1,
+   "gap": 27.8
+  },
+  "cr owner empty dark 393 fs40 return: палец вниз возвращает к началу": {
+   "ok": true,
+   "st": 0,
+   "range": 355,
+   "decBottom": 1078.3,
+   "barTop": 751.1,
+   "rearm": 0
+  },
+  "cr owner empty dark 393 fs40: без ошибок страницы": {
+   "ok": true,
+   "errs": []
+  },
+  "wk owner empty dark 393 fs17: пустой год": {
+   "ok": true,
+   "empty": "true"
+  },
+  "wk owner empty dark 393 fs17 first: панель перевзведена после показа (PD-295)": {
+   "ok": false,
+   "rearm": 0
+  },
+  "wk owner empty dark 393 fs17 first: в конце прокрутки Dec над таб-баром ≥ 16 px": {
+   "ok": true,
+   "decBottom": 726.2,
+   "barTop": 754,
+   "range": 44
+  },
+  "wk owner empty dark 393 fs17 return: панель перевзведена после показа (PD-295)": {
+   "ok": false,
+   "rearm": 0
+  },
+  "wk owner empty dark 393 fs17 return: в конце прокрутки Dec над таб-баром ≥ 16 px": {
+   "ok": true,
+   "decBottom": 726.2,
+   "barTop": 754,
+   "range": 44
+  },
+  "wk owner empty dark 393 fs17: без ошибок страницы": {
+   "ok": true,
+   "errs": []
+  },
+  "wk owner empty dark 393 fs20: пустой год": {
+   "ok": true,
+   "empty": "true"
+  },
+  "wk owner empty dark 393 fs20 first: панель перевзведена после показа (PD-295)": {
+   "ok": false,
+   "rearm": 0
+  },
+  "wk owner empty dark 393 fs20 first: в конце прокрутки Dec над таб-баром ≥ 16 px": {
+   "ok": true,
+   "decBottom": 722.6,
+   "barTop": 752,
+   "range": 70
+  },
+  "wk owner empty dark 393 fs20 return: панель перевзведена после показа (PD-295)": {
+   "ok": false,
+   "rearm": 0
+  },
+  "wk owner empty dark 393 fs20 return: в конце прокрутки Dec над таб-баром ≥ 16 px": {
+   "ok": true,
+   "decBottom": 722.6,
+   "barTop": 752,
+   "range": 70
+  },
+  "wk owner empty dark 393 fs20: без ошибок страницы": {
+   "ok": true,
+   "errs": []
+  },
+  "wk owner empty dark 393 fs22: пустой год": {
+   "ok": true,
+   "empty": "true"
+  },
+  "wk owner empty dark 393 fs22 first: панель перевзведена после показа (PD-295)": {
+   "ok": false,
+   "rearm": 0
+  },
+  "wk owner empty dark 393 fs22 first: в конце прокрутки Dec над таб-баром ≥ 16 px": {
+   "ok": true,
+   "decBottom": 722.9,
+   "barTop": 752,
+   "range": 90
+  },
+  "wk owner empty dark 393 fs22 return: панель перевзведена после показа (PD-295)": {
+   "ok": false,
+   "rearm": 0
+  },
+  "wk owner empty dark 393 fs22 return: в конце прокрутки Dec над таб-баром ≥ 16 px": {
+   "ok": true,
+   "decBottom": 722.9,
+   "barTop": 752,
+   "range": 90
+  },
+  "wk owner empty dark 393 fs22: без ошибок страницы": {
+   "ok": true,
+   "errs": []
+  },
+  "wk owner empty dark 393 fs24: пустой год": {
+   "ok": true,
+   "empty": "true"
+  },
+  "wk owner empty dark 393 fs24 first: панель перевзведена после показа (PD-295)": {
+   "ok": false,
+   "rearm": 0
+  },
+  "wk owner empty dark 393 fs24 first: в конце прокрутки Dec над таб-баром ≥ 16 px": {
+   "ok": true,
+   "decBottom": 723.2,
+   "barTop": 752,
+   "range": 108
+  },
+  "wk owner empty dark 393 fs24 return: панель перевзведена после показа (PD-295)": {
+   "ok": false,
+   "rearm": 0
+  },
+  "wk owner empty dark 393 fs24 return: в конце прокрутки Dec над таб-баром ≥ 16 px": {
+   "ok": true,
+   "decBottom": 723.2,
+   "barTop": 752,
+   "range": 108
+  },
+  "wk owner empty dark 393 fs24: без ошибок страницы": {
+   "ok": true,
+   "errs": []
+  },
+  "wk owner empty dark 393 fs28: пустой год": {
+   "ok": true,
+   "empty": "true"
+  },
+  "wk owner empty dark 393 fs28 first: панель перевзведена после показа (PD-295)": {
+   "ok": false,
+   "rearm": 0
+  },
+  "wk owner empty dark 393 fs28 first: в конце прокрутки Dec над таб-баром ≥ 16 px": {
+   "ok": true,
+   "decBottom": 722.8,
+   "barTop": 752,
+   "range": 147
+  },
+  "wk owner empty dark 393 fs28 return: панель перевзведена после показа (PD-295)": {
+   "ok": false,
+   "rearm": 0
+  },
+  "wk owner empty dark 393 fs28 return: в конце прокрутки Dec над таб-баром ≥ 16 px": {
+   "ok": true,
+   "decBottom": 722.8,
+   "barTop": 752,
+   "range": 147
+  },
+  "wk owner empty dark 393 fs28: без ошибок страницы": {
+   "ok": true,
+   "errs": []
+  },
+  "wk owner empty dark 393 fs33: пустой год": {
+   "ok": true,
+   "empty": "true"
+  },
+  "wk owner empty dark 393 fs33 first: панель перевзведена после показа (PD-295)": {
+   "ok": false,
+   "rearm": 0
+  },
+  "wk owner empty dark 393 fs33 first: в конце прокрутки Dec над таб-баром ≥ 16 px": {
+   "ok": true,
+   "decBottom": 722.5,
+   "barTop": 752,
+   "range": 226
+  },
+  "wk owner empty dark 393 fs33 return: панель перевзведена после показа (PD-295)": {
+   "ok": false,
+   "rearm": 0
+  },
+  "wk owner empty dark 393 fs33 return: в конце прокрутки Dec над таб-баром ≥ 16 px": {
+   "ok": true,
+   "decBottom": 722.5,
+   "barTop": 752,
+   "range": 226
+  },
+  "wk owner empty dark 393 fs33: без ошибок страницы": {
+   "ok": true,
+   "errs": []
+  },
+  "wk owner empty dark 393 fs40: пустой год": {
+   "ok": true,
+   "empty": "true"
+  },
+  "wk owner empty dark 393 fs40 first: панель перевзведена после показа (PD-295)": {
+   "ok": false,
+   "rearm": 0
+  },
+  "wk owner empty dark 393 fs40 first: в конце прокрутки Dec над таб-баром ≥ 16 px": {
+   "ok": true,
+   "decBottom": 722.5,
+   "barTop": 752,
+   "range": 349
+  },
+  "wk owner empty dark 393 fs40 return: панель перевзведена после показа (PD-295)": {
+   "ok": false,
+   "rearm": 0
+  },
+  "wk owner empty dark 393 fs40 return: в конце прокрутки Dec над таб-баром ≥ 16 px": {
+   "ok": true,
+   "decBottom": 722.5,
+   "barTop": 752,
+   "range": 349
+  },
+  "wk owner empty dark 393 fs40: без ошибок страницы": {
+   "ok": true,
+   "errs": []
+  }
+ }
+}

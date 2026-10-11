@@ -28,6 +28,8 @@ function rules(css: string): { sels: string[]; body: string }[] {
 /** Селектор, у которого субъект — сама панель прокрутки (`.scroll` как последний составной селектор). */
 const scrollSubject = (sel: string) => /\.scroll(?![\w-])/.test(sel.replace(/:has\([^)]*\)/g, "").split(/[\s>+~]+/).pop() ?? "");
 const PLAY_ONLY = /:has\([^)]*\.(play-fit|play-hub|play-result-dock)/;
+/** PD-295: у панели Year нижний отступ снят — резерв перенесён внутрь содержимого (`.year::after`). Единственное исключение. */
+const YEAR_PANE = ".scroll:has(> .panel > .year)";
 
 describe("PD-295: панель Year прокручивается до конца, резерв снизу не снимается", () => {
   it(".scroll: overflow-y auto, резерв снизу = 16 px + таб-бар + нижний inset", () => {
@@ -43,7 +45,8 @@ describe("PD-295: панель Year прокручивается до конца
         for (const sel of r.sels) {
           if (!scrollSubject(sel) || sel === ".scroll") continue;
           if (/overflow(-y)?:\s*hidden/.test(r.body) || /(^|\s)padding-bottom:/.test(r.body))
-            if (!PLAY_ONLY.test(sel) && !/^\.shell\.desk\b/.test(sel)) leaks.push(`${f}: ${sel}`);
+            if (!PLAY_ONLY.test(sel) && !/^\.shell\.desk\b/.test(sel) && !(sel === YEAR_PANE && /^\s*padding-bottom: 0;\s*$/.test(r.body)))
+              leaks.push(`${f}: ${sel}`);
         }
     expect(leaks).toEqual([]);
   });
@@ -55,6 +58,19 @@ describe("PD-295: панель Year прокручивается до конца
       expect(bodies.length, sel).toBeGreaterThan(0);
       for (const b of bodies) expect(b, sel).not.toMatch(/(^|\s)(max-)?height:|overflow(-y)?:\s*(hidden|clip|auto|scroll)/);
     }
+  });
+
+  it("PD-295: резерв Year — последним блоком содержимого (16 px + таб-бар + inset), отступ панели снят ровно на него, блоки не сжимаются", () => {
+    const year = rules(read("year.css"));
+    const after = year.find((r) => r.sels.includes(".year::after"))?.body ?? "";
+    expect(after).toMatch(/content: "";/);
+    expect(after).toMatch(/flex: none;/);
+    expect(after).toMatch(/(^|\s)height: calc\(16px \+ var\(--tabbar-h\) \+ var\(--sa-bot\)\);/);
+    expect(year.find((r) => r.sels.includes(".year > *"))?.body).toMatch(/flex-shrink: 0;/);
+    const pane = rules(read("shell.css")).find((r) => r.sels.includes(YEAR_PANE));
+    expect(pane?.body).toMatch(/^\s*padding-bottom: 0;\s*$/);
+    // scroll-padding (PD-292) у панели остаётся: правило Year его не трогает
+    expect(pane?.body).not.toMatch(/scroll-padding/);
   });
 
   it("десктоп C: таб-бара нет — резерв 16 px (--tabbar-h: 0px), правило .scroll не переопределено", () => {

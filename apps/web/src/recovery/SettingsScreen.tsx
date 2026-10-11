@@ -22,6 +22,7 @@ import { KEY_GROUP, KEY_GROUPS, keyGroups, isCompleteKey, spellGroup } from "./k
 import type { TabId } from "../shell/tabs";
 import type { RecoveryError, RecoveryStore } from "./store";
 import { DeskSidebarToggle } from "../shell/SidebarToggle";
+import { diagTap } from "../diag/flag";
 
 /** Названия языков — на самих языках (не переводятся: человек ищет свой язык глазами). */
 const NATIVE_NAMES: Record<Locale, string> = { en: "English", uk: "Українська", ru: "Русский" };
@@ -694,7 +695,8 @@ export function SettingsScreen({ store, onBack, origin = "today", onOpenHelp }: 
         <div className="settings-card settings-about" data-testid="settings-about">
           <Mark size={60} className="settings-about-mark" />
           <Wordmark height={28} title={t("settings.about.name")} className="settings-about-word" />
-          <p className="settings-about-ver" data-testid="about-version">
+          {/* PD-295: 7 быстрых тапов по версии — скрытая диагностика (#/diag) в установленной PWA, где адресной строки нет. */}
+          <p className="settings-about-ver" data-testid="about-version" onClick={() => void diagTap()}>
             <span className="sr-only">{t("settings.about.version", { version: __APP_VERSION__ })}</span>
             <span aria-hidden="true">v{__APP_VERSION__}</span>
           </p>
