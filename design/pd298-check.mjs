@@ -18,7 +18,8 @@
  *   синтетические PointerEvent: логика без preventDefault); жест «назад» с края Settings (standalone) работает и с кляксами на экране.
  * Места: 1 — шапка Today до решения; 3 — ожидание генерации Play (+ RM-мерцание, ошибка); 6 — Settings: превью стоят, тап оживляет
  *   одно; 7 — Today «не загрузилось» и архив «день недоступен»; 8 — лист экспорта: «Show Blot», печать в PNG (пиксели), выкл — без;
- *   Share на 393×852 с Питомцем виден без прокрутки там же, где без него (430×932 — тоже; 320×568 и AX3 — достижим прокруткой).
+ *   Share на 393×852 с Питомцем и без виден без прокрутки (430×932 — тоже; 320×568 и AX3 — достижим прокруткой); превью в пропорции
+ *   1080×1350 в обоих режимах (без Питомца было растянуто: нет height: auto у .tl-fp).
  *   Плюс карточка результата: во время посадки тап игнорируется, после — «Плюх». Везде: Питомец выкл → кляксы нет; на экране
  *   дышит не больше одной кляксы; зона ≥ 44, не перекрывает текст/кнопки (elementFromPoint); 320 + AX3 — клякса уходит или не
  *   ломает раскладку (ряд действий над таб-баром). Кадры — design/pd298-shots/ (не коммитятся, кроме ключевых).
@@ -518,19 +519,39 @@ async function cardAndShare(b, B, c) {
   }
 }
 
-async function shareOff(b, B) {
-  const { ctx, p } = await open(b, { pet: "0" });
+/**
+ * Лист «Поделиться» без Питомца (main-вид) на разных экранах. Превью — <img width=1080 height=1350>: без height: auto атрибут
+ * height давал высоту 1350, max-height резал её до 60dvh, а ширина оставалась max-width 100% — превью растягивалось по вертикали
+ * (393×852: 361×511 вместо 361×451, прод bfa9e5a). Проверка: пропорция 1080×1350 и Share виден/достижим. С Питомцем Share ниже
+ * ровно на ряд «Show Blot» и сноску (не «там же», как считалось в PD-298 по растянутому превью).
+ */
+async function shareOff(b, B, c = { dev: PHONE, scheme: "light", lang: "en" }) {
+  const tag = `${B} место 8: Питомец выкл (main-вид) ${c.dev.w}×${c.dev.h}${c.ax3 ? "-ax3" : ""}-${c.scheme}-${c.lang}`;
+  const { ctx, p } = await open(b, { ...c, pet: "0" });
   try {
     await p.waitForSelector(`${PANE} .board button.cell`, { timeout: 40000 });
     await solveToday(p);
     await p.waitForTimeout(1200);
     await p.locator(`${PANE} [data-testid="share"]`).first().click();
     await p.locator('[data-testid="fp-image"]').waitFor({ timeout: 10000 });
-    check(`${B} место 8: Питомец выкл — «Show Blot» нет`, (await p.locator('[data-testid="fp-pet-toggle"]').count()) === 0);
+    check(`${tag} — «Show Blot» нет`, (await p.locator('[data-testid="fp-pet-toggle"]').count()) === 0);
     await p.waitForTimeout(400);
     const g = await shareGeo(p);
-    const on = SHARE_AT[B]?.on;
-    check(`${B} место 8: Питомец выкл (main-вид) — Share виден без прокрутки (${g.share.top}–${g.share.bottom}); с Питомцем Share там же (±2: ${on?.top}–${on?.bottom})`, shareVisible(g) && !!on && Math.abs(on.top - g.share.top) <= 2, { off: g.share, on, img: g.img });
+    check(`${tag} — превью PNG в пропорции 1080×1350, не растянуто (${Math.round(g.img.w)}×${Math.round(g.img.h)})`, Math.abs(g.img.w / g.img.h - 0.8) < 0.01, g.img);
+    if (c.fits) {
+      const on = c.dev === PHONE && !c.ax3 ? SHARE_AT[B]?.on : null;
+      check(
+        `${tag} — Share виден без прокрутки (${g.share.top}–${g.share.bottom} ≤ ${g.visBottom})${on ? `; с Питомцем не выше (${on.top}–${on.bottom}, ниже на ${on.top - g.share.top})` : ""}`,
+        shareVisible(g) && (c.dev !== PHONE || c.ax3 || (!!on && on.top >= g.share.top)),
+        { off: g.share, on, img: g.img, visBottom: g.visBottom },
+      );
+    } else {
+      await p.evaluate(() => document.querySelector('[data-testid="fp-share"]').scrollIntoView({ block: "nearest" }));
+      await p.waitForTimeout(200);
+      const g2 = await shareGeo(p);
+      check(`${tag} — Share достижим (прокрутка тела ${g2.scrollTop}), нажимается`, g2.share.bottom <= g2.visBottom && g2.share.top >= g2.body.top && (await hitSelf(p, '[data-testid="fp-share"]')), { share: g2.share, visBottom: g2.visBottom });
+    }
+    await p.locator('[data-testid="export-sheet"]').screenshot({ path: path.join(OUT, `${B}-p8-off-${c.dev.w}${c.ax3 ? "-ax3" : ""}-${c.scheme}-${c.lang}.png`) });
   } finally {
     await ctx.close();
   }
@@ -839,7 +860,10 @@ async function run(brn) {
     // Карточка + место 8.
     await cardAndShare(b, B, { dev: PHONE, scheme: "light", lang: "en" });
     await cardAndShare(b, B, { dev: PHONE, scheme: "dark", lang: "ru" });
-    await shareOff(b, B);
+    await shareOff(b, B, { dev: PHONE, scheme: "light", lang: "en", fits: true });
+    await shareOff(b, B, { dev: TALL, scheme: "dark", lang: "uk", fits: true });
+    await shareOff(b, B, { dev: SMALL, scheme: "light", lang: "ru" });
+    await shareOff(b, B, { dev: PHONE, scheme: "light", lang: "en", ax3: true });
     await shareFit(b, B, { dev: TALL, scheme: "dark", lang: "uk", fits: true });
     await shareFit(b, B, { dev: SMALL, scheme: "light", lang: "ru" });
     await shareFit(b, B, { dev: PHONE, scheme: "light", lang: "en", ax3: true });

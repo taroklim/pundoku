@@ -418,6 +418,7 @@ input[type="range"].tl-scrub:focus-visible {
 .tl-fp {
   display: block;
   width: auto;
+  height: auto; /* иначе атрибут height=1350 у <img> + max-height 60dvh растягивают превью по вертикали (361×511 вместо 361×451) */
   max-width: 100%;
   max-height: 60dvh;
   margin: 0 auto;
@@ -582,11 +583,10 @@ input[type="range"].tl-scrub:focus-visible {
 }
 
 /* PD-298 (место 8): переключатель «Show Blot» под превью PNG — компактный ряд (не карточка Настроек): подпись + iOS-switch
-   (.st-switch из settings.css), вся строка — цель касания ≥ 44 pt; сноска сразу под ним. Чтобы Share на 393×852 остался там же,
-   где без Питомца (виден без прокрутки, над нижним inset), превью ниже ровно на этот ряд: 44 px + строка сноски (≈ 1.1rem).
-   height: auto — превью держит пропорцию PNG 1080×1350 (сужается, а не сплющивается). Без Питомца (.tl-fp-pet нет) — как было. */
+   (.st-switch из settings.css), вся строка — цель касания ≥ 44 pt; сноска сразу под ним. Чтобы Share на 393×852 остался виден
+   без прокрутки (над нижним inset), предел высоты превью ниже ровно на этот ряд: 44 px + строка сноски (≈ 1.1rem).
+   Пропорцию PNG 1080×1350 держит height: auto у .tl-fp (сужается, а не сплющивается). */
 .tl-fp-pet .tl-fp {
-  height: auto;
   max-height: calc(60dvh - 44px - 1.1rem);
 }
 .tl-pet-row {
