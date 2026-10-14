@@ -83,7 +83,11 @@ describe("PD-300: клавиши 1–9 крупнее на больших iPhone
     { name: "440x956 (16 Pro Max)", w: 440, h: 956, saTop: 62, saBot: 34, big: true },
     { name: "402x874 (16 Pro)", w: 402, h: 874, saTop: 62, saBot: 34, big: false },
     { name: "393x852 (15/16)", w: 393, h: 852, saTop: 59, saBot: 34, big: false },
+    { name: "414x896 (XR/11)", w: 414, h: 896, saTop: 48, saBot: 34, big: false },
+    { name: "412x915 (Android)", w: 412, h: 915, saTop: 0, saBot: 0, big: false },
     { name: "390x844", w: 390, h: 844, saTop: 47, saBot: 34, big: false },
+    { name: "375x812 (mini/X)", w: 375, h: 812, saTop: 50, saBot: 34, big: false },
+    { name: "360x800 (Android)", w: 360, h: 800, saTop: 0, saBot: 0, big: false },
     { name: "375x667 (SE/8)", w: 375, h: 667, saTop: 20, saBot: 0, big: false },
     { name: "320x568", w: 320, h: 568, saTop: 20, saBot: 0, big: false },
   ] as const;
@@ -110,13 +114,45 @@ describe("PD-300: клавиши 1–9 крупнее на больших iPhone
       }
   });
 
-  it("393 и уже — прибавки нет ни с safe-area, ни без неё (вкладка браузера), клавиша 56, цифра min(1.24rem, 7.5cqi)", () => {
-    for (const s of PHONES.filter((p) => !p.big))
-      for (const sa of [true, false]) {
-        const i = at(s, { sa });
-        expect(keyGrow(i), `${s.name} sa ${sa}`).toBe(0);
-        expect(keyMetrics(i)).toEqual({ height: 56, digit: Math.min(1.24 * 17, 0.075 * i.width) });
-      }
+  it("PD-302: 375 pt и уже — прибавки нет ни с safe-area, ни без неё (вкладка браузера), клавиша 56, цифра min(1.24rem, 7.5cqi)", () => {
+    for (const s of PHONES.filter((p) => p.w <= 375))
+      for (const sa of [true, false])
+        for (const hintable of [true, false]) {
+          const i = at(s, { sa, hintable });
+          expect(keyGrow(i), `${s.name} sa ${sa} hintable ${hintable}`).toBe(0);
+          expect(keyMetrics(i)).toEqual({ height: 56, digit: Math.min(1.24 * 17, 0.075 * i.width) });
+        }
+  });
+
+  it("PD-302: 393x852 (iPhone 16 владельца) — клавиша 64–68 px, цифра 24–25.5 px; поле — ширина колонки, как было", () => {
+    const s = PHONES.find((p) => p.w === 393)!;
+    for (const hintable of [true, false]) {
+      const i = at(s, { hintable });
+      const m = keyMetrics(i);
+      expect(m.height, `hintable ${hintable}`).toBeGreaterThanOrEqual(64);
+      expect(m.height, `hintable ${hintable}`).toBeLessThanOrEqual(68);
+      expect(m.digit).toBeGreaterThanOrEqual(24);
+      expect(m.digit).toBeLessThanOrEqual(25.5);
+      expect(boardSide(i)).toBe(i.width);
+    }
+  });
+
+  it("PD-302: рост монотонен по ширине (390 < 393 < 402 < Plus) и не меньше PD-300 (порог 372) на любом экране", () => {
+    const pd300 = (i: Parameters<typeof keyGrow>[0]) => {
+      const slack = i.vh - chrome0(i) - extra(i) - i.width;
+      return Math.min(FIT.growMax, Math.max(0, Math.min((i.width - 372) * FIT.growPerPx, (slack - FIT.growMargin) * FIT.growShare)));
+    };
+    const g = (w: number) => keyGrow(at(PHONES.find((p) => p.w === w)!));
+    expect(g(390)).toBeGreaterThan(0);
+    expect(g(393)).toBeGreaterThan(g(390));
+    expect(g(402)).toBeGreaterThan(g(393));
+    expect(g(428)).toBeGreaterThanOrEqual(g(402));
+    for (const s of PHONES)
+      for (const rem of [17, 23])
+        for (const sa of [true, false]) {
+          const i = at(s, { rem, sa });
+          expect(keyGrow(i), `${s.name} rem ${rem} sa ${sa}`).toBeGreaterThanOrEqual(pd300(i));
+        }
   });
 
   it("клавиши берут не больше половины запаса минус 16 px: строке статуса и ряду действий остаётся место над таб-баром", () => {

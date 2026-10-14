@@ -1,0 +1,5086 @@
+{
+ "fails": [],
+ "results": {
+  "webkit 430x932 play light: board == main": {
+   "ok": true,
+   "pd300": {
+    "t": 133,
+    "b": 531.1,
+    "l": 16,
+    "w": 398,
+    "h": 398.1
+   },
+   "main": {
+    "t": 133,
+    "b": 531.1,
+    "l": 16,
+    "w": 398,
+    "h": 398.1
+   }
+  },
+  "webkit 430x932 play light: клавиша не ниже main (PD-300) и ≤ 76, цифра не мельче": {
+   "ok": true,
+   "key": [
+    71.6,
+    76
+   ],
+   "kd": [
+    28.1,
+    29.85
+   ],
+   "gl": [
+    null,
+    null
+   ]
+  },
+  "webkit 430x932 play light: ряд действий над таб-баром, экран не прокручивается": {
+   "ok": true,
+   "actionsBottom": 833.9,
+   "tabTop": 834,
+   "fit": [
+    834,
+    834
+   ],
+   "pane": [
+    932,
+    932
+   ]
+  },
+  "webkit 430x932 play light: счётчик остатка ≥ 11 px": {
+   "ok": true,
+   "kr": 13
+  },
+  "webkit 430x932 play light: док подсказки поле не двигает": {
+   "ok": true,
+   "closed": {
+    "t": 133,
+    "b": 531.1,
+    "l": 16,
+    "w": 398,
+    "h": 398.1
+   },
+   "open": {
+    "t": 133,
+    "b": 531.1,
+    "l": 16,
+    "w": 398,
+    "h": 398.1
+   }
+  },
+  "webkit 430x932 play dark: board == main": {
+   "ok": true,
+   "pd300": {
+    "t": 133,
+    "b": 531.1,
+    "l": 16,
+    "w": 398,
+    "h": 398.1
+   },
+   "main": {
+    "t": 133,
+    "b": 531.1,
+    "l": 16,
+    "w": 398,
+    "h": 398.1
+   }
+  },
+  "webkit 430x932 play dark: клавиша не ниже main (PD-300) и ≤ 76, цифра не мельче": {
+   "ok": true,
+   "key": [
+    71.6,
+    76
+   ],
+   "kd": [
+    28.1,
+    29.85
+   ],
+   "gl": [
+    null,
+    null
+   ]
+  },
+  "webkit 430x932 play dark: ряд действий над таб-баром, экран не прокручивается": {
+   "ok": true,
+   "actionsBottom": 833.9,
+   "tabTop": 834,
+   "fit": [
+    834,
+    834
+   ],
+   "pane": [
+    932,
+    932
+   ]
+  },
+  "webkit 430x932 play dark: счётчик остатка ≥ 11 px": {
+   "ok": true,
+   "kr": 13
+  },
+  "webkit 430x932 play dark: док подсказки поле не двигает": {
+   "ok": true,
+   "closed": {
+    "t": 133,
+    "b": 531.1,
+    "l": 16,
+    "w": 398,
+    "h": 398.1
+   },
+   "open": {
+    "t": 133,
+    "b": 531.1,
+    "l": 16,
+    "w": 398,
+    "h": 398.1
+   }
+  },
+  "webkit 430x932 today light: board == main": {
+   "ok": true,
+   "pd300": {
+    "t": 133,
+    "b": 531.1,
+    "l": 16,
+    "w": 398,
+    "h": 398.1
+   },
+   "main": {
+    "t": 133,
+    "b": 531.1,
+    "l": 16,
+    "w": 398,
+    "h": 398.1
+   }
+  },
+  "webkit 430x932 today light: клавиша не ниже main (PD-300) и ≤ 76, цифра не мельче": {
+   "ok": true,
+   "key": [
+    71.6,
+    76
+   ],
+   "kd": [
+    28.1,
+    29.85
+   ],
+   "gl": [
+    null,
+    null
+   ]
+  },
+  "webkit 430x932 today light: ряд действий над таб-баром, экран не прокручивается": {
+   "ok": true,
+   "actionsBottom": 833.9,
+   "tabTop": 834,
+   "fit": [
+    834,
+    834
+   ],
+   "pane": [
+    932,
+    932
+   ]
+  },
+  "webkit 430x932 today light: счётчик остатка ≥ 11 px": {
+   "ok": true,
+   "kr": 13
+  },
+  "webkit 430x932 today dark: board == main": {
+   "ok": true,
+   "pd300": {
+    "t": 133,
+    "b": 531.1,
+    "l": 16,
+    "w": 398,
+    "h": 398.1
+   },
+   "main": {
+    "t": 133,
+    "b": 531.1,
+    "l": 16,
+    "w": 398,
+    "h": 398.1
+   }
+  },
+  "webkit 430x932 today dark: клавиша не ниже main (PD-300) и ≤ 76, цифра не мельче": {
+   "ok": true,
+   "key": [
+    71.6,
+    76
+   ],
+   "kd": [
+    28.1,
+    29.85
+   ],
+   "gl": [
+    null,
+    null
+   ]
+  },
+  "webkit 430x932 today dark: ряд действий над таб-баром, экран не прокручивается": {
+   "ok": true,
+   "actionsBottom": 833.9,
+   "tabTop": 834,
+   "fit": [
+    834,
+    834
+   ],
+   "pane": [
+    932,
+    932
+   ]
+  },
+  "webkit 430x932 today dark: счётчик остатка ≥ 11 px": {
+   "ok": true,
+   "kr": 13
+  },
+  "webkit 430x932 play light nosa: board == main": {
+   "ok": true,
+   "pd300": {
+    "t": 74,
+    "b": 472.1,
+    "l": 16,
+    "w": 398,
+    "h": 398.1
+   },
+   "main": {
+    "t": 74,
+    "b": 472.1,
+    "l": 16,
+    "w": 398,
+    "h": 398.1
+   }
+  },
+  "webkit 430x932 play light nosa: клавиша не ниже main (PD-300) и ≤ 76, цифра не мельче": {
+   "ok": true,
+   "key": [
+    71.6,
+    76
+   ],
+   "kd": [
+    28.1,
+    29.85
+   ],
+   "gl": [
+    null,
+    null
+   ]
+  },
+  "webkit 430x932 play light nosa: ряд действий над таб-баром, экран не прокручивается": {
+   "ok": true,
+   "actionsBottom": 867.9,
+   "tabTop": 868,
+   "fit": [
+    868,
+    868
+   ],
+   "pane": [
+    932,
+    932
+   ]
+  },
+  "webkit 430x932 play light nosa: счётчик остатка ≥ 11 px": {
+   "ok": true,
+   "kr": 13
+  },
+  "webkit 430x932 play-liar light: board == main": {
+   "ok": true,
+   "pd300": {
+    "t": 133,
+    "b": 531.1,
+    "l": 16,
+    "w": 398,
+    "h": 398.1
+   },
+   "main": {
+    "t": 133,
+    "b": 531.1,
+    "l": 16,
+    "w": 398,
+    "h": 398.1
+   }
+  },
+  "webkit 430x932 play-liar light: клавиша не ниже main (PD-300) и ≤ 76, цифра не мельче": {
+   "ok": true,
+   "key": [
+    71.6,
+    76
+   ],
+   "kd": [
+    28.1,
+    29.85
+   ],
+   "gl": [
+    null,
+    null
+   ]
+  },
+  "webkit 430x932 play-liar light: ряд действий над таб-баром, экран не прокручивается": {
+   "ok": true,
+   "actionsBottom": 833.9,
+   "tabTop": 834,
+   "fit": [
+    834,
+    834
+   ],
+   "pane": [
+    932,
+    932
+   ]
+  },
+  "webkit 430x932 play-liar light: счётчик остатка ≥ 11 px": {
+   "ok": true,
+   "kr": 13
+  },
+  "webkit 430x932 play-ink light: board == main": {
+   "ok": true,
+   "pd300": {
+    "t": 133,
+    "b": 531.1,
+    "l": 16,
+    "w": 398,
+    "h": 398.1
+   },
+   "main": {
+    "t": 133,
+    "b": 531.1,
+    "l": 16,
+    "w": 398,
+    "h": 398.1
+   }
+  },
+  "webkit 430x932 play-ink light: клавиша не ниже main (PD-300) и ≤ 76, цифра не мельче": {
+   "ok": true,
+   "key": [
+    71.6,
+    76
+   ],
+   "kd": [
+    28.1,
+    29.85
+   ],
+   "gl": [
+    null,
+    null
+   ]
+  },
+  "webkit 430x932 play-ink light: ряд действий над таб-баром, экран не прокручивается": {
+   "ok": true,
+   "actionsBottom": 833.9,
+   "tabTop": 834,
+   "fit": [
+    834,
+    834
+   ],
+   "pane": [
+    932,
+    932
+   ]
+  },
+  "webkit 430x932 play-ink light: счётчик остатка ≥ 11 px": {
+   "ok": true,
+   "kr": 13
+  },
+  "webkit 430x932 play-glyphs light: board == main": {
+   "ok": true,
+   "pd300": {
+    "t": 133,
+    "b": 531.1,
+    "l": 16,
+    "w": 398,
+    "h": 398.1
+   },
+   "main": {
+    "t": 133,
+    "b": 531.1,
+    "l": 16,
+    "w": 398,
+    "h": 398.1
+   }
+  },
+  "webkit 430x932 play-glyphs light: клавиша не ниже main (PD-300) и ≤ 76, цифра не мельче": {
+   "ok": true,
+   "key": [
+    71.6,
+    76
+   ],
+   "kd": [
+    28.1,
+    29.85
+   ],
+   "gl": [
+    27,
+    27.5
+   ]
+  },
+  "webkit 430x932 play-glyphs light: ряд действий над таб-баром, экран не прокручивается": {
+   "ok": true,
+   "actionsBottom": 833.9,
+   "tabTop": 834,
+   "fit": [
+    834,
+    834
+   ],
+   "pane": [
+    932,
+    932
+   ]
+  },
+  "webkit 430x932 play-glyphs light: счётчик остатка ≥ 11 px": {
+   "ok": true,
+   "kr": 13
+  },
+  "webkit 428x926 play light: board == main": {
+   "ok": true,
+   "pd300": {
+    "t": 121,
+    "b": 517.1,
+    "l": 16,
+    "w": 396,
+    "h": 396.1
+   },
+   "main": {
+    "t": 121,
+    "b": 517.1,
+    "l": 16,
+    "w": 396,
+    "h": 396.1
+   }
+  },
+  "webkit 428x926 play light: клавиша не ниже main (PD-300) и ≤ 76, цифра не мельче": {
+   "ok": true,
+   "key": [
+    70.4,
+    76
+   ],
+   "kd": [
+    27.56,
+    29.7
+   ],
+   "gl": [
+    null,
+    null
+   ]
+  },
+  "webkit 428x926 play light: ряд действий над таб-баром, экран не прокручивается": {
+   "ok": true,
+   "actionsBottom": 827.9,
+   "tabTop": 828,
+   "fit": [
+    828,
+    828
+   ],
+   "pane": [
+    926,
+    926
+   ]
+  },
+  "webkit 428x926 play light: счётчик остатка ≥ 11 px": {
+   "ok": true,
+   "kr": 13
+  },
+  "webkit 428x926 play dark: board == main": {
+   "ok": true,
+   "pd300": {
+    "t": 121,
+    "b": 517.1,
+    "l": 16,
+    "w": 396,
+    "h": 396.1
+   },
+   "main": {
+    "t": 121,
+    "b": 517.1,
+    "l": 16,
+    "w": 396,
+    "h": 396.1
+   }
+  },
+  "webkit 428x926 play dark: клавиша не ниже main (PD-300) и ≤ 76, цифра не мельче": {
+   "ok": true,
+   "key": [
+    70.4,
+    76
+   ],
+   "kd": [
+    27.56,
+    29.7
+   ],
+   "gl": [
+    null,
+    null
+   ]
+  },
+  "webkit 428x926 play dark: ряд действий над таб-баром, экран не прокручивается": {
+   "ok": true,
+   "actionsBottom": 827.9,
+   "tabTop": 828,
+   "fit": [
+    828,
+    828
+   ],
+   "pane": [
+    926,
+    926
+   ]
+  },
+  "webkit 428x926 play dark: счётчик остатка ≥ 11 px": {
+   "ok": true,
+   "kr": 13
+  },
+  "webkit 428x926 today light: board == main": {
+   "ok": true,
+   "pd300": {
+    "t": 121,
+    "b": 517.1,
+    "l": 16,
+    "w": 396,
+    "h": 396.1
+   },
+   "main": {
+    "t": 121,
+    "b": 517.1,
+    "l": 16,
+    "w": 396,
+    "h": 396.1
+   }
+  },
+  "webkit 428x926 today light: клавиша не ниже main (PD-300) и ≤ 76, цифра не мельче": {
+   "ok": true,
+   "key": [
+    70.4,
+    76
+   ],
+   "kd": [
+    27.56,
+    29.7
+   ],
+   "gl": [
+    null,
+    null
+   ]
+  },
+  "webkit 428x926 today light: ряд действий над таб-баром, экран не прокручивается": {
+   "ok": true,
+   "actionsBottom": 827.9,
+   "tabTop": 828,
+   "fit": [
+    828,
+    828
+   ],
+   "pane": [
+    926,
+    926
+   ]
+  },
+  "webkit 428x926 today light: счётчик остатка ≥ 11 px": {
+   "ok": true,
+   "kr": 13
+  },
+  "webkit 428x926 today dark: board == main": {
+   "ok": true,
+   "pd300": {
+    "t": 121,
+    "b": 517.1,
+    "l": 16,
+    "w": 396,
+    "h": 396.1
+   },
+   "main": {
+    "t": 121,
+    "b": 517.1,
+    "l": 16,
+    "w": 396,
+    "h": 396.1
+   }
+  },
+  "webkit 428x926 today dark: клавиша не ниже main (PD-300) и ≤ 76, цифра не мельче": {
+   "ok": true,
+   "key": [
+    70.4,
+    76
+   ],
+   "kd": [
+    27.56,
+    29.7
+   ],
+   "gl": [
+    null,
+    null
+   ]
+  },
+  "webkit 428x926 today dark: ряд действий над таб-баром, экран не прокручивается": {
+   "ok": true,
+   "actionsBottom": 827.9,
+   "tabTop": 828,
+   "fit": [
+    828,
+    828
+   ],
+   "pane": [
+    926,
+    926
+   ]
+  },
+  "webkit 428x926 today dark: счётчик остатка ≥ 11 px": {
+   "ok": true,
+   "kr": 13
+  },
+  "webkit 428x926 play light nosa: board == main": {
+   "ok": true,
+   "pd300": {
+    "t": 74,
+    "b": 470.1,
+    "l": 16,
+    "w": 396,
+    "h": 396.1
+   },
+   "main": {
+    "t": 74,
+    "b": 470.1,
+    "l": 16,
+    "w": 396,
+    "h": 396.1
+   }
+  },
+  "webkit 428x926 play light nosa: клавиша не ниже main (PD-300) и ≤ 76, цифра не мельче": {
+   "ok": true,
+   "key": [
+    70.4,
+    76
+   ],
+   "kd": [
+    27.56,
+    29.7
+   ],
+   "gl": [
+    null,
+    null
+   ]
+  },
+  "webkit 428x926 play light nosa: ряд действий над таб-баром, экран не прокручивается": {
+   "ok": true,
+   "actionsBottom": 861.9,
+   "tabTop": 862,
+   "fit": [
+    862,
+    862
+   ],
+   "pane": [
+    926,
+    926
+   ]
+  },
+  "webkit 428x926 play light nosa: счётчик остатка ≥ 11 px": {
+   "ok": true,
+   "kr": 13
+  },
+  "webkit 428x926 play-liar light: board == main": {
+   "ok": true,
+   "pd300": {
+    "t": 121,
+    "b": 517.1,
+    "l": 16,
+    "w": 396,
+    "h": 396.1
+   },
+   "main": {
+    "t": 121,
+    "b": 517.1,
+    "l": 16,
+    "w": 396,
+    "h": 396.1
+   }
+  },
+  "webkit 428x926 play-liar light: клавиша не ниже main (PD-300) и ≤ 76, цифра не мельче": {
+   "ok": true,
+   "key": [
+    70.4,
+    76
+   ],
+   "kd": [
+    27.56,
+    29.7
+   ],
+   "gl": [
+    null,
+    null
+   ]
+  },
+  "webkit 428x926 play-liar light: ряд действий над таб-баром, экран не прокручивается": {
+   "ok": true,
+   "actionsBottom": 827.9,
+   "tabTop": 828,
+   "fit": [
+    828,
+    828
+   ],
+   "pane": [
+    926,
+    926
+   ]
+  },
+  "webkit 428x926 play-liar light: счётчик остатка ≥ 11 px": {
+   "ok": true,
+   "kr": 13
+  },
+  "webkit 428x926 play-ink light: board == main": {
+   "ok": true,
+   "pd300": {
+    "t": 121,
+    "b": 517.1,
+    "l": 16,
+    "w": 396,
+    "h": 396.1
+   },
+   "main": {
+    "t": 121,
+    "b": 517.1,
+    "l": 16,
+    "w": 396,
+    "h": 396.1
+   }
+  },
+  "webkit 428x926 play-ink light: клавиша не ниже main (PD-300) и ≤ 76, цифра не мельче": {
+   "ok": true,
+   "key": [
+    70.4,
+    76
+   ],
+   "kd": [
+    27.56,
+    29.7
+   ],
+   "gl": [
+    null,
+    null
+   ]
+  },
+  "webkit 428x926 play-ink light: ряд действий над таб-баром, экран не прокручивается": {
+   "ok": true,
+   "actionsBottom": 827.9,
+   "tabTop": 828,
+   "fit": [
+    828,
+    828
+   ],
+   "pane": [
+    926,
+    926
+   ]
+  },
+  "webkit 428x926 play-ink light: счётчик остатка ≥ 11 px": {
+   "ok": true,
+   "kr": 13
+  },
+  "webkit 428x926 play-glyphs light: board == main": {
+   "ok": true,
+   "pd300": {
+    "t": 121,
+    "b": 517.1,
+    "l": 16,
+    "w": 396,
+    "h": 396.1
+   },
+   "main": {
+    "t": 121,
+    "b": 517.1,
+    "l": 16,
+    "w": 396,
+    "h": 396.1
+   }
+  },
+  "webkit 428x926 play-glyphs light: клавиша не ниже main (PD-300) и ≤ 76, цифра не мельче": {
+   "ok": true,
+   "key": [
+    70.4,
+    76
+   ],
+   "kd": [
+    27.56,
+    29.7
+   ],
+   "gl": [
+    26.8,
+    27.3
+   ]
+  },
+  "webkit 428x926 play-glyphs light: ряд действий над таб-баром, экран не прокручивается": {
+   "ok": true,
+   "actionsBottom": 827.9,
+   "tabTop": 828,
+   "fit": [
+    828,
+    828
+   ],
+   "pane": [
+    926,
+    926
+   ]
+  },
+  "webkit 428x926 play-glyphs light: счётчик остатка ≥ 11 px": {
+   "ok": true,
+   "kr": 13
+  },
+  "webkit 440x956 play light: board == main": {
+   "ok": true,
+   "pd300": {
+    "t": 136,
+    "b": 544.1,
+    "l": 16,
+    "w": 408,
+    "h": 408.1
+   },
+   "main": {
+    "t": 136,
+    "b": 544.1,
+    "l": 16,
+    "w": 408,
+    "h": 408.1
+   }
+  },
+  "webkit 440x956 play light: клавиша не ниже main (PD-300) и ≤ 76, цифра не мельче": {
+   "ok": true,
+   "key": [
+    76,
+    76
+   ],
+   "kd": [
+    30.08,
+    30.08
+   ],
+   "gl": [
+    null,
+    null
+   ]
+  },
+  "webkit 440x956 play light: ряд действий над таб-баром, экран не прокручивается": {
+   "ok": true,
+   "actionsBottom": 857.9,
+   "tabTop": 858,
+   "fit": [
+    858,
+    858
+   ],
+   "pane": [
+    956,
+    956
+   ]
+  },
+  "webkit 440x956 play light: счётчик остатка ≥ 11 px": {
+   "ok": true,
+   "kr": 13
+  },
+  "webkit 440x956 play dark: board == main": {
+   "ok": true,
+   "pd300": {
+    "t": 136,
+    "b": 544.1,
+    "l": 16,
+    "w": 408,
+    "h": 408.1
+   },
+   "main": {
+    "t": 136,
+    "b": 544.1,
+    "l": 16,
+    "w": 408,
+    "h": 408.1
+   }
+  },
+  "webkit 440x956 play dark: клавиша не ниже main (PD-300) и ≤ 76, цифра не мельче": {
+   "ok": true,
+   "key": [
+    76,
+    76
+   ],
+   "kd": [
+    30.08,
+    30.08
+   ],
+   "gl": [
+    null,
+    null
+   ]
+  },
+  "webkit 440x956 play dark: ряд действий над таб-баром, экран не прокручивается": {
+   "ok": true,
+   "actionsBottom": 857.9,
+   "tabTop": 858,
+   "fit": [
+    858,
+    858
+   ],
+   "pane": [
+    956,
+    956
+   ]
+  },
+  "webkit 440x956 play dark: счётчик остатка ≥ 11 px": {
+   "ok": true,
+   "kr": 13
+  },
+  "webkit 440x956 today light: board == main": {
+   "ok": true,
+   "pd300": {
+    "t": 136,
+    "b": 544.1,
+    "l": 16,
+    "w": 408,
+    "h": 408.1
+   },
+   "main": {
+    "t": 136,
+    "b": 544.1,
+    "l": 16,
+    "w": 408,
+    "h": 408.1
+   }
+  },
+  "webkit 440x956 today light: клавиша не ниже main (PD-300) и ≤ 76, цифра не мельче": {
+   "ok": true,
+   "key": [
+    76,
+    76
+   ],
+   "kd": [
+    30.08,
+    30.08
+   ],
+   "gl": [
+    null,
+    null
+   ]
+  },
+  "webkit 440x956 today light: ряд действий над таб-баром, экран не прокручивается": {
+   "ok": true,
+   "actionsBottom": 857.9,
+   "tabTop": 858,
+   "fit": [
+    858,
+    858
+   ],
+   "pane": [
+    956,
+    956
+   ]
+  },
+  "webkit 440x956 today light: счётчик остатка ≥ 11 px": {
+   "ok": true,
+   "kr": 13
+  },
+  "webkit 440x956 today dark: board == main": {
+   "ok": true,
+   "pd300": {
+    "t": 136,
+    "b": 544.1,
+    "l": 16,
+    "w": 408,
+    "h": 408.1
+   },
+   "main": {
+    "t": 136,
+    "b": 544.1,
+    "l": 16,
+    "w": 408,
+    "h": 408.1
+   }
+  },
+  "webkit 440x956 today dark: клавиша не ниже main (PD-300) и ≤ 76, цифра не мельче": {
+   "ok": true,
+   "key": [
+    76,
+    76
+   ],
+   "kd": [
+    30.08,
+    30.08
+   ],
+   "gl": [
+    null,
+    null
+   ]
+  },
+  "webkit 440x956 today dark: ряд действий над таб-баром, экран не прокручивается": {
+   "ok": true,
+   "actionsBottom": 857.9,
+   "tabTop": 858,
+   "fit": [
+    858,
+    858
+   ],
+   "pane": [
+    956,
+    956
+   ]
+  },
+  "webkit 440x956 today dark: счётчик остатка ≥ 11 px": {
+   "ok": true,
+   "kr": 13
+  },
+  "webkit 440x956 play light nosa: board == main": {
+   "ok": true,
+   "pd300": {
+    "t": 74,
+    "b": 482.1,
+    "l": 16,
+    "w": 408,
+    "h": 408.1
+   },
+   "main": {
+    "t": 74,
+    "b": 482.1,
+    "l": 16,
+    "w": 408,
+    "h": 408.1
+   }
+  },
+  "webkit 440x956 play light nosa: клавиша не ниже main (PD-300) и ≤ 76, цифра не мельче": {
+   "ok": true,
+   "key": [
+    76,
+    76
+   ],
+   "kd": [
+    30.08,
+    30.08
+   ],
+   "gl": [
+    null,
+    null
+   ]
+  },
+  "webkit 440x956 play light nosa: ряд действий над таб-баром, экран не прокручивается": {
+   "ok": true,
+   "actionsBottom": 891.9,
+   "tabTop": 892,
+   "fit": [
+    892,
+    892
+   ],
+   "pane": [
+    956,
+    956
+   ]
+  },
+  "webkit 440x956 play light nosa: счётчик остатка ≥ 11 px": {
+   "ok": true,
+   "kr": 13
+  },
+  "webkit 440x956 play-liar light: board == main": {
+   "ok": true,
+   "pd300": {
+    "t": 136,
+    "b": 544.1,
+    "l": 16,
+    "w": 408,
+    "h": 408.1
+   },
+   "main": {
+    "t": 136,
+    "b": 544.1,
+    "l": 16,
+    "w": 408,
+    "h": 408.1
+   }
+  },
+  "webkit 440x956 play-liar light: клавиша не ниже main (PD-300) и ≤ 76, цифра не мельче": {
+   "ok": true,
+   "key": [
+    76,
+    76
+   ],
+   "kd": [
+    30.08,
+    30.08
+   ],
+   "gl": [
+    null,
+    null
+   ]
+  },
+  "webkit 440x956 play-liar light: ряд действий над таб-баром, экран не прокручивается": {
+   "ok": true,
+   "actionsBottom": 857.9,
+   "tabTop": 858,
+   "fit": [
+    858,
+    858
+   ],
+   "pane": [
+    956,
+    956
+   ]
+  },
+  "webkit 440x956 play-liar light: счётчик остатка ≥ 11 px": {
+   "ok": true,
+   "kr": 13
+  },
+  "webkit 440x956 play-ink light: board == main": {
+   "ok": true,
+   "pd300": {
+    "t": 136,
+    "b": 544.1,
+    "l": 16,
+    "w": 408,
+    "h": 408.1
+   },
+   "main": {
+    "t": 136,
+    "b": 544.1,
+    "l": 16,
+    "w": 408,
+    "h": 408.1
+   }
+  },
+  "webkit 440x956 play-ink light: клавиша не ниже main (PD-300) и ≤ 76, цифра не мельче": {
+   "ok": true,
+   "key": [
+    76,
+    76
+   ],
+   "kd": [
+    30.08,
+    30.08
+   ],
+   "gl": [
+    null,
+    null
+   ]
+  },
+  "webkit 440x956 play-ink light: ряд действий над таб-баром, экран не прокручивается": {
+   "ok": true,
+   "actionsBottom": 857.9,
+   "tabTop": 858,
+   "fit": [
+    858,
+    858
+   ],
+   "pane": [
+    956,
+    956
+   ]
+  },
+  "webkit 440x956 play-ink light: счётчик остатка ≥ 11 px": {
+   "ok": true,
+   "kr": 13
+  },
+  "webkit 440x956 play-glyphs light: board == main": {
+   "ok": true,
+   "pd300": {
+    "t": 136,
+    "b": 544.1,
+    "l": 16,
+    "w": 408,
+    "h": 408.1
+   },
+   "main": {
+    "t": 136,
+    "b": 544.1,
+    "l": 16,
+    "w": 408,
+    "h": 408.1
+   }
+  },
+  "webkit 440x956 play-glyphs light: клавиша не ниже main (PD-300) и ≤ 76, цифра не мельче": {
+   "ok": true,
+   "key": [
+    76,
+    76
+   ],
+   "kd": [
+    30.08,
+    30.08
+   ],
+   "gl": [
+    28.1,
+    28.1
+   ]
+  },
+  "webkit 440x956 play-glyphs light: ряд действий над таб-баром, экран не прокручивается": {
+   "ok": true,
+   "actionsBottom": 857.9,
+   "tabTop": 858,
+   "fit": [
+    858,
+    858
+   ],
+   "pane": [
+    956,
+    956
+   ]
+  },
+  "webkit 440x956 play-glyphs light: счётчик остатка ≥ 11 px": {
+   "ok": true,
+   "kr": 13
+  },
+  "webkit 393x852 play light: board == main": {
+   "ok": true,
+   "pd300": {
+    "t": 133,
+    "b": 494.1,
+    "l": 16,
+    "w": 361,
+    "h": 361.1
+   },
+   "main": {
+    "t": 133,
+    "b": 494.1,
+    "l": 16,
+    "w": 361,
+    "h": 361.1
+   }
+  },
+  "webkit 393x852 play light: клавиша выше main ≥ 6 px и ≤ 76, цифра крупнее": {
+   "ok": true,
+   "key": [
+    56,
+    64.4
+   ],
+   "kd": [
+    21.08,
+    24.86
+   ],
+   "gl": [
+    null,
+    null
+   ]
+  },
+  "webkit 393x852 play light: iPhone 16 — клавиша 64–68 px, цифра 24–25.5 px": {
+   "ok": true,
+   "key": [
+    56,
+    64.4
+   ],
+   "kd": [
+    21.08,
+    24.86
+   ],
+   "gl": [
+    null,
+    null
+   ]
+  },
+  "webkit 393x852 play light: ряд действий над таб-баром, экран не прокручивается": {
+   "ok": true,
+   "actionsBottom": 753.9,
+   "tabTop": 754,
+   "fit": [
+    754,
+    754
+   ],
+   "pane": [
+    852,
+    852
+   ]
+  },
+  "webkit 393x852 play light: счётчик остатка ≥ 11 px": {
+   "ok": true,
+   "kr": 11.84
+  },
+  "webkit 393x852 play light: док подсказки поле не двигает": {
+   "ok": true,
+   "closed": {
+    "t": 133,
+    "b": 494.1,
+    "l": 16,
+    "w": 361,
+    "h": 361.1
+   },
+   "open": {
+    "t": 133,
+    "b": 494.1,
+    "l": 16,
+    "w": 361,
+    "h": 361.1
+   }
+  },
+  "webkit 393x852 play dark: board == main": {
+   "ok": true,
+   "pd300": {
+    "t": 133,
+    "b": 494.1,
+    "l": 16,
+    "w": 361,
+    "h": 361.1
+   },
+   "main": {
+    "t": 133,
+    "b": 494.1,
+    "l": 16,
+    "w": 361,
+    "h": 361.1
+   }
+  },
+  "webkit 393x852 play dark: клавиша выше main ≥ 6 px и ≤ 76, цифра крупнее": {
+   "ok": true,
+   "key": [
+    56,
+    64.4
+   ],
+   "kd": [
+    21.08,
+    24.86
+   ],
+   "gl": [
+    null,
+    null
+   ]
+  },
+  "webkit 393x852 play dark: iPhone 16 — клавиша 64–68 px, цифра 24–25.5 px": {
+   "ok": true,
+   "key": [
+    56,
+    64.4
+   ],
+   "kd": [
+    21.08,
+    24.86
+   ],
+   "gl": [
+    null,
+    null
+   ]
+  },
+  "webkit 393x852 play dark: ряд действий над таб-баром, экран не прокручивается": {
+   "ok": true,
+   "actionsBottom": 753.9,
+   "tabTop": 754,
+   "fit": [
+    754,
+    754
+   ],
+   "pane": [
+    852,
+    852
+   ]
+  },
+  "webkit 393x852 play dark: счётчик остатка ≥ 11 px": {
+   "ok": true,
+   "kr": 11.84
+  },
+  "webkit 393x852 play dark: док подсказки поле не двигает": {
+   "ok": true,
+   "closed": {
+    "t": 133,
+    "b": 494.1,
+    "l": 16,
+    "w": 361,
+    "h": 361.1
+   },
+   "open": {
+    "t": 133,
+    "b": 494.1,
+    "l": 16,
+    "w": 361,
+    "h": 361.1
+   }
+  },
+  "webkit 393x852 today light: board == main": {
+   "ok": true,
+   "pd300": {
+    "t": 133,
+    "b": 494.1,
+    "l": 16,
+    "w": 361,
+    "h": 361.1
+   },
+   "main": {
+    "t": 133,
+    "b": 494.1,
+    "l": 16,
+    "w": 361,
+    "h": 361.1
+   }
+  },
+  "webkit 393x852 today light: клавиша выше main ≥ 6 px и ≤ 76, цифра крупнее": {
+   "ok": true,
+   "key": [
+    56,
+    64.4
+   ],
+   "kd": [
+    21.08,
+    24.86
+   ],
+   "gl": [
+    null,
+    null
+   ]
+  },
+  "webkit 393x852 today light: iPhone 16 — клавиша 64–68 px, цифра 24–25.5 px": {
+   "ok": true,
+   "key": [
+    56,
+    64.4
+   ],
+   "kd": [
+    21.08,
+    24.86
+   ],
+   "gl": [
+    null,
+    null
+   ]
+  },
+  "webkit 393x852 today light: ряд действий над таб-баром, экран не прокручивается": {
+   "ok": true,
+   "actionsBottom": 753.9,
+   "tabTop": 754,
+   "fit": [
+    754,
+    754
+   ],
+   "pane": [
+    852,
+    852
+   ]
+  },
+  "webkit 393x852 today light: счётчик остатка ≥ 11 px": {
+   "ok": true,
+   "kr": 11.84
+  },
+  "webkit 393x852 today dark: board == main": {
+   "ok": true,
+   "pd300": {
+    "t": 133,
+    "b": 494.1,
+    "l": 16,
+    "w": 361,
+    "h": 361.1
+   },
+   "main": {
+    "t": 133,
+    "b": 494.1,
+    "l": 16,
+    "w": 361,
+    "h": 361.1
+   }
+  },
+  "webkit 393x852 today dark: клавиша выше main ≥ 6 px и ≤ 76, цифра крупнее": {
+   "ok": true,
+   "key": [
+    56,
+    64.4
+   ],
+   "kd": [
+    21.08,
+    24.86
+   ],
+   "gl": [
+    null,
+    null
+   ]
+  },
+  "webkit 393x852 today dark: iPhone 16 — клавиша 64–68 px, цифра 24–25.5 px": {
+   "ok": true,
+   "key": [
+    56,
+    64.4
+   ],
+   "kd": [
+    21.08,
+    24.86
+   ],
+   "gl": [
+    null,
+    null
+   ]
+  },
+  "webkit 393x852 today dark: ряд действий над таб-баром, экран не прокручивается": {
+   "ok": true,
+   "actionsBottom": 753.9,
+   "tabTop": 754,
+   "fit": [
+    754,
+    754
+   ],
+   "pane": [
+    852,
+    852
+   ]
+  },
+  "webkit 393x852 today dark: счётчик остатка ≥ 11 px": {
+   "ok": true,
+   "kr": 11.84
+  },
+  "webkit 393x852 play light nosa: board == main": {
+   "ok": true,
+   "pd300": {
+    "t": 74,
+    "b": 435.1,
+    "l": 16,
+    "w": 361,
+    "h": 361.1
+   },
+   "main": {
+    "t": 74,
+    "b": 435.1,
+    "l": 16,
+    "w": 361,
+    "h": 361.1
+   }
+  },
+  "webkit 393x852 play light nosa: клавиша выше main ≥ 6 px и ≤ 76, цифра крупнее": {
+   "ok": true,
+   "key": [
+    56,
+    64.4
+   ],
+   "kd": [
+    21.08,
+    24.86
+   ],
+   "gl": [
+    null,
+    null
+   ]
+  },
+  "webkit 393x852 play light nosa: iPhone 16 — клавиша 64–68 px, цифра 24–25.5 px": {
+   "ok": true,
+   "key": [
+    56,
+    64.4
+   ],
+   "kd": [
+    21.08,
+    24.86
+   ],
+   "gl": [
+    null,
+    null
+   ]
+  },
+  "webkit 393x852 play light nosa: ряд действий над таб-баром, экран не прокручивается": {
+   "ok": true,
+   "actionsBottom": 787.9,
+   "tabTop": 788,
+   "fit": [
+    788,
+    788
+   ],
+   "pane": [
+    852,
+    852
+   ]
+  },
+  "webkit 393x852 play light nosa: счётчик остатка ≥ 11 px": {
+   "ok": true,
+   "kr": 11.84
+  },
+  "webkit 393x852 play-liar light: board == main": {
+   "ok": true,
+   "pd300": {
+    "t": 133,
+    "b": 494.1,
+    "l": 16,
+    "w": 361,
+    "h": 361.1
+   },
+   "main": {
+    "t": 133,
+    "b": 494.1,
+    "l": 16,
+    "w": 361,
+    "h": 361.1
+   }
+  },
+  "webkit 393x852 play-liar light: клавиша выше main ≥ 6 px и ≤ 76, цифра крупнее": {
+   "ok": true,
+   "key": [
+    56,
+    64.4
+   ],
+   "kd": [
+    21.08,
+    24.86
+   ],
+   "gl": [
+    null,
+    null
+   ]
+  },
+  "webkit 393x852 play-liar light: ряд действий над таб-баром, экран не прокручивается": {
+   "ok": true,
+   "actionsBottom": 753.9,
+   "tabTop": 754,
+   "fit": [
+    754,
+    754
+   ],
+   "pane": [
+    852,
+    852
+   ]
+  },
+  "webkit 393x852 play-liar light: счётчик остатка ≥ 11 px": {
+   "ok": true,
+   "kr": 11.84
+  },
+  "webkit 393x852 play-ink light: board == main": {
+   "ok": true,
+   "pd300": {
+    "t": 133,
+    "b": 494.1,
+    "l": 16,
+    "w": 361,
+    "h": 361.1
+   },
+   "main": {
+    "t": 133,
+    "b": 494.1,
+    "l": 16,
+    "w": 361,
+    "h": 361.1
+   }
+  },
+  "webkit 393x852 play-ink light: клавиша выше main ≥ 6 px и ≤ 76, цифра крупнее": {
+   "ok": true,
+   "key": [
+    56,
+    64.4
+   ],
+   "kd": [
+    21.08,
+    24.86
+   ],
+   "gl": [
+    null,
+    null
+   ]
+  },
+  "webkit 393x852 play-ink light: ряд действий над таб-баром, экран не прокручивается": {
+   "ok": true,
+   "actionsBottom": 753.9,
+   "tabTop": 754,
+   "fit": [
+    754,
+    754
+   ],
+   "pane": [
+    852,
+    852
+   ]
+  },
+  "webkit 393x852 play-ink light: счётчик остатка ≥ 11 px": {
+   "ok": true,
+   "kr": 11.84
+  },
+  "webkit 393x852 play-glyphs light: board == main": {
+   "ok": true,
+   "pd300": {
+    "t": 133,
+    "b": 494.1,
+    "l": 16,
+    "w": 361,
+    "h": 361.1
+   },
+   "main": {
+    "t": 133,
+    "b": 494.1,
+    "l": 16,
+    "w": 361,
+    "h": 361.1
+   }
+  },
+  "webkit 393x852 play-glyphs light: клавиша выше main ≥ 6 px и ≤ 76, цифра крупнее": {
+   "ok": true,
+   "key": [
+    56,
+    64.4
+   ],
+   "kd": [
+    21.08,
+    24.86
+   ],
+   "gl": [
+    23.1,
+    23.9
+   ]
+  },
+  "webkit 393x852 play-glyphs light: ряд действий над таб-баром, экран не прокручивается": {
+   "ok": true,
+   "actionsBottom": 753.9,
+   "tabTop": 754,
+   "fit": [
+    754,
+    754
+   ],
+   "pane": [
+    852,
+    852
+   ]
+  },
+  "webkit 393x852 play-glyphs light: счётчик остатка ≥ 11 px": {
+   "ok": true,
+   "kr": 11.84
+  },
+  "webkit 375x667 play light: board == main": {
+   "ok": true,
+   "pd300": {
+    "t": 94,
+    "b": 411.4,
+    "l": 28.8,
+    "w": 317.4,
+    "h": 317.4
+   },
+   "main": {
+    "t": 94,
+    "b": 411.4,
+    "l": 28.8,
+    "w": 317.4,
+    "h": 317.4
+   }
+  },
+  "webkit 375x667 play light: клавиша и цифра == main": {
+   "ok": true,
+   "key": [
+    56,
+    56
+   ],
+   "kd": [
+    21.08,
+    21.08
+   ],
+   "gl": [
+    null,
+    null
+   ]
+  },
+  "webkit 375x667 play light: ряд действий над таб-баром, экран не прокручивается": {
+   "ok": true,
+   "actionsBottom": 602.9,
+   "tabTop": 603,
+   "fit": [
+    603,
+    603
+   ],
+   "pane": [
+    667,
+    667
+   ]
+  },
+  "webkit 375x667 play light: счётчик остатка ≥ 11 px": {
+   "ok": true,
+   "kr": 11
+  },
+  "webkit 375x667 play dark: board == main": {
+   "ok": true,
+   "pd300": {
+    "t": 94,
+    "b": 411.4,
+    "l": 28.8,
+    "w": 317.4,
+    "h": 317.4
+   },
+   "main": {
+    "t": 94,
+    "b": 411.4,
+    "l": 28.8,
+    "w": 317.4,
+    "h": 317.4
+   }
+  },
+  "webkit 375x667 play dark: клавиша и цифра == main": {
+   "ok": true,
+   "key": [
+    56,
+    56
+   ],
+   "kd": [
+    21.08,
+    21.08
+   ],
+   "gl": [
+    null,
+    null
+   ]
+  },
+  "webkit 375x667 play dark: ряд действий над таб-баром, экран не прокручивается": {
+   "ok": true,
+   "actionsBottom": 602.9,
+   "tabTop": 603,
+   "fit": [
+    603,
+    603
+   ],
+   "pane": [
+    667,
+    667
+   ]
+  },
+  "webkit 375x667 play dark: счётчик остатка ≥ 11 px": {
+   "ok": true,
+   "kr": 11
+  },
+  "webkit 375x667 today light: board == main": {
+   "ok": true,
+   "pd300": {
+    "t": 94,
+    "b": 411.4,
+    "l": 28.8,
+    "w": 317.4,
+    "h": 317.4
+   },
+   "main": {
+    "t": 94,
+    "b": 411.4,
+    "l": 28.8,
+    "w": 317.4,
+    "h": 317.4
+   }
+  },
+  "webkit 375x667 today light: клавиша и цифра == main": {
+   "ok": true,
+   "key": [
+    56,
+    56
+   ],
+   "kd": [
+    21.08,
+    21.08
+   ],
+   "gl": [
+    null,
+    null
+   ]
+  },
+  "webkit 375x667 today light: ряд действий над таб-баром, экран не прокручивается": {
+   "ok": true,
+   "actionsBottom": 602.9,
+   "tabTop": 603,
+   "fit": [
+    603,
+    603
+   ],
+   "pane": [
+    667,
+    667
+   ]
+  },
+  "webkit 375x667 today light: счётчик остатка ≥ 11 px": {
+   "ok": true,
+   "kr": 11
+  },
+  "webkit 375x667 today dark: board == main": {
+   "ok": true,
+   "pd300": {
+    "t": 94,
+    "b": 411.4,
+    "l": 28.8,
+    "w": 317.4,
+    "h": 317.4
+   },
+   "main": {
+    "t": 94,
+    "b": 411.4,
+    "l": 28.8,
+    "w": 317.4,
+    "h": 317.4
+   }
+  },
+  "webkit 375x667 today dark: клавиша и цифра == main": {
+   "ok": true,
+   "key": [
+    56,
+    56
+   ],
+   "kd": [
+    21.08,
+    21.08
+   ],
+   "gl": [
+    null,
+    null
+   ]
+  },
+  "webkit 375x667 today dark: ряд действий над таб-баром, экран не прокручивается": {
+   "ok": true,
+   "actionsBottom": 602.9,
+   "tabTop": 603,
+   "fit": [
+    603,
+    603
+   ],
+   "pane": [
+    667,
+    667
+   ]
+  },
+  "webkit 375x667 today dark: счётчик остатка ≥ 11 px": {
+   "ok": true,
+   "kr": 11
+  },
+  "webkit 375x667 play light nosa: board == main": {
+   "ok": true,
+   "pd300": {
+    "t": 74,
+    "b": 411.5,
+    "l": 18.8,
+    "w": 337.4,
+    "h": 337.5
+   },
+   "main": {
+    "t": 74,
+    "b": 411.5,
+    "l": 18.8,
+    "w": 337.4,
+    "h": 337.5
+   }
+  },
+  "webkit 375x667 play light nosa: клавиша и цифра == main": {
+   "ok": true,
+   "key": [
+    56,
+    56
+   ],
+   "kd": [
+    21.08,
+    21.08
+   ],
+   "gl": [
+    null,
+    null
+   ]
+  },
+  "webkit 375x667 play light nosa: ряд действий над таб-баром, экран не прокручивается": {
+   "ok": true,
+   "actionsBottom": 602.9,
+   "tabTop": 603,
+   "fit": [
+    603,
+    603
+   ],
+   "pane": [
+    667,
+    667
+   ]
+  },
+  "webkit 375x667 play light nosa: счётчик остатка ≥ 11 px": {
+   "ok": true,
+   "kr": 11
+  },
+  "webkit 375x667 play-liar light: board == main": {
+   "ok": true,
+   "pd300": {
+    "t": 94,
+    "b": 411.4,
+    "l": 28.8,
+    "w": 317.4,
+    "h": 317.4
+   },
+   "main": {
+    "t": 94,
+    "b": 411.4,
+    "l": 28.8,
+    "w": 317.4,
+    "h": 317.4
+   }
+  },
+  "webkit 375x667 play-liar light: клавиша и цифра == main": {
+   "ok": true,
+   "key": [
+    56,
+    56
+   ],
+   "kd": [
+    21.08,
+    21.08
+   ],
+   "gl": [
+    null,
+    null
+   ]
+  },
+  "webkit 375x667 play-liar light: ряд действий над таб-баром, экран не прокручивается": {
+   "ok": true,
+   "actionsBottom": 602.9,
+   "tabTop": 603,
+   "fit": [
+    603,
+    603
+   ],
+   "pane": [
+    667,
+    667
+   ]
+  },
+  "webkit 375x667 play-liar light: счётчик остатка ≥ 11 px": {
+   "ok": true,
+   "kr": 11
+  },
+  "webkit 375x667 play-ink light: board == main": {
+   "ok": true,
+   "pd300": {
+    "t": 94,
+    "b": 437.1,
+    "l": 16,
+    "w": 343,
+    "h": 343.1
+   },
+   "main": {
+    "t": 94,
+    "b": 437.1,
+    "l": 16,
+    "w": 343,
+    "h": 343.1
+   }
+  },
+  "webkit 375x667 play-ink light: клавиша и цифра == main": {
+   "ok": true,
+   "key": [
+    56,
+    56
+   ],
+   "kd": [
+    21.08,
+    21.08
+   ],
+   "gl": [
+    null,
+    null
+   ]
+  },
+  "webkit 375x667 play-ink light: ряд действий над таб-баром, экран не прокручивается": {
+   "ok": true,
+   "actionsBottom": 602.9,
+   "tabTop": 603,
+   "fit": [
+    603,
+    603
+   ],
+   "pane": [
+    667,
+    667
+   ]
+  },
+  "webkit 375x667 play-ink light: счётчик остатка ≥ 11 px": {
+   "ok": true,
+   "kr": 11
+  },
+  "webkit 375x667 play-glyphs light: board == main": {
+   "ok": true,
+   "pd300": {
+    "t": 94,
+    "b": 411.4,
+    "l": 28.8,
+    "w": 317.4,
+    "h": 317.4
+   },
+   "main": {
+    "t": 94,
+    "b": 411.4,
+    "l": 28.8,
+    "w": 317.4,
+    "h": 317.4
+   }
+  },
+  "webkit 375x667 play-glyphs light: клавиша и цифра == main": {
+   "ok": true,
+   "key": [
+    56,
+    56
+   ],
+   "kd": [
+    21.08,
+    21.08
+   ],
+   "gl": [
+    21.9,
+    21.9
+   ]
+  },
+  "webkit 375x667 play-glyphs light: ряд действий над таб-баром, экран не прокручивается": {
+   "ok": true,
+   "actionsBottom": 602.9,
+   "tabTop": 603,
+   "fit": [
+    603,
+    603
+   ],
+   "pane": [
+    667,
+    667
+   ]
+  },
+  "webkit 375x667 play-glyphs light: счётчик остатка ≥ 11 px": {
+   "ok": true,
+   "kr": 11
+  },
+  "webkit 320x568 play light: board == main": {
+   "ok": true,
+   "pd300": {
+    "t": 94,
+    "b": 334,
+    "l": 40,
+    "w": 240,
+    "h": 240
+   },
+   "main": {
+    "t": 94,
+    "b": 334,
+    "l": 40,
+    "w": 240,
+    "h": 240
+   }
+  },
+  "webkit 320x568 play light: клавиша и цифра == main": {
+   "ok": true,
+   "key": [
+    56,
+    56
+   ],
+   "kd": [
+    21.08,
+    21.08
+   ],
+   "gl": [
+    null,
+    null
+   ]
+  },
+  "webkit 320x568 play light: ряд действий над таб-баром, экран не прокручивается": {
+   "ok": true,
+   "actionsBottom": 503.9,
+   "tabTop": 504,
+   "fit": [
+    504,
+    504
+   ],
+   "pane": [
+    568,
+    568
+   ]
+  },
+  "webkit 320x568 play light: счётчик остатка ≥ 11 px": {
+   "ok": true,
+   "kr": 11
+  },
+  "webkit 320x568 play dark: board == main": {
+   "ok": true,
+   "pd300": {
+    "t": 94,
+    "b": 334,
+    "l": 40,
+    "w": 240,
+    "h": 240
+   },
+   "main": {
+    "t": 94,
+    "b": 334,
+    "l": 40,
+    "w": 240,
+    "h": 240
+   }
+  },
+  "webkit 320x568 play dark: клавиша и цифра == main": {
+   "ok": true,
+   "key": [
+    56,
+    56
+   ],
+   "kd": [
+    21.08,
+    21.08
+   ],
+   "gl": [
+    null,
+    null
+   ]
+  },
+  "webkit 320x568 play dark: ряд действий над таб-баром, экран не прокручивается": {
+   "ok": true,
+   "actionsBottom": 503.9,
+   "tabTop": 504,
+   "fit": [
+    504,
+    504
+   ],
+   "pane": [
+    568,
+    568
+   ]
+  },
+  "webkit 320x568 play dark: счётчик остатка ≥ 11 px": {
+   "ok": true,
+   "kr": 11
+  },
+  "webkit 320x568 today light: board == main": {
+   "ok": true,
+   "pd300": {
+    "t": 94,
+    "b": 334,
+    "l": 40,
+    "w": 240,
+    "h": 240
+   },
+   "main": {
+    "t": 94,
+    "b": 334,
+    "l": 40,
+    "w": 240,
+    "h": 240
+   }
+  },
+  "webkit 320x568 today light: клавиша и цифра == main": {
+   "ok": true,
+   "key": [
+    56,
+    56
+   ],
+   "kd": [
+    21.08,
+    21.08
+   ],
+   "gl": [
+    null,
+    null
+   ]
+  },
+  "webkit 320x568 today light: ряд действий над таб-баром, экран не прокручивается": {
+   "ok": true,
+   "actionsBottom": 503.9,
+   "tabTop": 504,
+   "fit": [
+    504,
+    504
+   ],
+   "pane": [
+    568,
+    568
+   ]
+  },
+  "webkit 320x568 today light: счётчик остатка ≥ 11 px": {
+   "ok": true,
+   "kr": 11
+  },
+  "webkit 320x568 today dark: board == main": {
+   "ok": true,
+   "pd300": {
+    "t": 94,
+    "b": 334,
+    "l": 40,
+    "w": 240,
+    "h": 240
+   },
+   "main": {
+    "t": 94,
+    "b": 334,
+    "l": 40,
+    "w": 240,
+    "h": 240
+   }
+  },
+  "webkit 320x568 today dark: клавиша и цифра == main": {
+   "ok": true,
+   "key": [
+    56,
+    56
+   ],
+   "kd": [
+    21.08,
+    21.08
+   ],
+   "gl": [
+    null,
+    null
+   ]
+  },
+  "webkit 320x568 today dark: ряд действий над таб-баром, экран не прокручивается": {
+   "ok": true,
+   "actionsBottom": 503.9,
+   "tabTop": 504,
+   "fit": [
+    504,
+    504
+   ],
+   "pane": [
+    568,
+    568
+   ]
+  },
+  "webkit 320x568 today dark: счётчик остатка ≥ 11 px": {
+   "ok": true,
+   "kr": 11
+  },
+  "webkit 320x568 play light nosa: board == main": {
+   "ok": true,
+   "pd300": {
+    "t": 74,
+    "b": 314,
+    "l": 40,
+    "w": 240,
+    "h": 240
+   },
+   "main": {
+    "t": 74,
+    "b": 314,
+    "l": 40,
+    "w": 240,
+    "h": 240
+   }
+  },
+  "webkit 320x568 play light nosa: клавиша и цифра == main": {
+   "ok": true,
+   "key": [
+    56,
+    56
+   ],
+   "kd": [
+    21.08,
+    21.08
+   ],
+   "gl": [
+    null,
+    null
+   ]
+  },
+  "webkit 320x568 play light nosa: ряд действий над таб-баром, экран не прокручивается": {
+   "ok": true,
+   "actionsBottom": 503.9,
+   "tabTop": 504,
+   "fit": [
+    504,
+    504
+   ],
+   "pane": [
+    568,
+    568
+   ]
+  },
+  "webkit 320x568 play light nosa: счётчик остатка ≥ 11 px": {
+   "ok": true,
+   "kr": 11
+  },
+  "webkit 320x568 play-liar light: board == main": {
+   "ok": true,
+   "pd300": {
+    "t": 94,
+    "b": 334,
+    "l": 40,
+    "w": 240,
+    "h": 240
+   },
+   "main": {
+    "t": 94,
+    "b": 334,
+    "l": 40,
+    "w": 240,
+    "h": 240
+   }
+  },
+  "webkit 320x568 play-liar light: клавиша и цифра == main": {
+   "ok": true,
+   "key": [
+    56,
+    56
+   ],
+   "kd": [
+    21.08,
+    21.08
+   ],
+   "gl": [
+    null,
+    null
+   ]
+  },
+  "webkit 320x568 play-liar light: ряд действий над таб-баром, экран не прокручивается": {
+   "ok": true,
+   "actionsBottom": 503.9,
+   "tabTop": 504,
+   "fit": [
+    504,
+    504
+   ],
+   "pane": [
+    568,
+    568
+   ]
+  },
+  "webkit 320x568 play-liar light: счётчик остатка ≥ 11 px": {
+   "ok": true,
+   "kr": 11
+  },
+  "webkit 320x568 play-ink light: board == main": {
+   "ok": true,
+   "pd300": {
+    "t": 94,
+    "b": 344.9,
+    "l": 34.6,
+    "w": 250.8,
+    "h": 250.9
+   },
+   "main": {
+    "t": 94,
+    "b": 344.9,
+    "l": 34.6,
+    "w": 250.8,
+    "h": 250.9
+   }
+  },
+  "webkit 320x568 play-ink light: клавиша и цифра == main": {
+   "ok": true,
+   "key": [
+    56,
+    56
+   ],
+   "kd": [
+    21.08,
+    21.08
+   ],
+   "gl": [
+    null,
+    null
+   ]
+  },
+  "webkit 320x568 play-ink light: ряд действий над таб-баром, экран не прокручивается": {
+   "ok": true,
+   "actionsBottom": 503.9,
+   "tabTop": 504,
+   "fit": [
+    504,
+    504
+   ],
+   "pane": [
+    568,
+    568
+   ]
+  },
+  "webkit 320x568 play-ink light: счётчик остатка ≥ 11 px": {
+   "ok": true,
+   "kr": 11
+  },
+  "webkit 320x568 play-glyphs light: board == main": {
+   "ok": true,
+   "pd300": {
+    "t": 94,
+    "b": 334,
+    "l": 40,
+    "w": 240,
+    "h": 240
+   },
+   "main": {
+    "t": 94,
+    "b": 334,
+    "l": 40,
+    "w": 240,
+    "h": 240
+   }
+  },
+  "webkit 320x568 play-glyphs light: клавиша и цифра == main": {
+   "ok": true,
+   "key": [
+    56,
+    56
+   ],
+   "kd": [
+    21.08,
+    21.08
+   ],
+   "gl": [
+    18.4,
+    18.4
+   ]
+  },
+  "webkit 320x568 play-glyphs light: ряд действий над таб-баром, экран не прокручивается": {
+   "ok": true,
+   "actionsBottom": 503.9,
+   "tabTop": 504,
+   "fit": [
+    504,
+    504
+   ],
+   "pane": [
+    568,
+    568
+   ]
+  },
+  "webkit 320x568 play-glyphs light: счётчик остатка ≥ 11 px": {
+   "ok": true,
+   "kr": 11
+  },
+  "webkit 402x874 play light: board == main": {
+   "ok": true,
+   "pd300": {
+    "t": 136,
+    "b": 506.1,
+    "l": 16,
+    "w": 370,
+    "h": 370.1
+   },
+   "main": {
+    "t": 136,
+    "b": 506.1,
+    "l": 16,
+    "w": 370,
+    "h": 370.1
+   }
+  },
+  "webkit 402x874 play light: клавиша выше main ≥ 6 px и ≤ 76, цифра крупнее": {
+   "ok": true,
+   "key": [
+    56,
+    69.8
+   ],
+   "kd": [
+    21.08,
+    27.29
+   ],
+   "gl": [
+    null,
+    null
+   ]
+  },
+  "webkit 402x874 play light: ряд действий над таб-баром, экран не прокручивается": {
+   "ok": true,
+   "actionsBottom": 775.9,
+   "tabTop": 776,
+   "fit": [
+    776,
+    776
+   ],
+   "pane": [
+    874,
+    874
+   ]
+  },
+  "webkit 402x874 play light: счётчик остатка ≥ 11 px": {
+   "ok": true,
+   "kr": 12.38
+  },
+  "webkit 402x874 today dark: board == main": {
+   "ok": true,
+   "pd300": {
+    "t": 136,
+    "b": 506.1,
+    "l": 16,
+    "w": 370,
+    "h": 370.1
+   },
+   "main": {
+    "t": 136,
+    "b": 506.1,
+    "l": 16,
+    "w": 370,
+    "h": 370.1
+   }
+  },
+  "webkit 402x874 today dark: клавиша выше main ≥ 6 px и ≤ 76, цифра крупнее": {
+   "ok": true,
+   "key": [
+    56,
+    69.8
+   ],
+   "kd": [
+    21.08,
+    27.29
+   ],
+   "gl": [
+    null,
+    null
+   ]
+  },
+  "webkit 402x874 today dark: ряд действий над таб-баром, экран не прокручивается": {
+   "ok": true,
+   "actionsBottom": 775.9,
+   "tabTop": 776,
+   "fit": [
+    776,
+    776
+   ],
+   "pane": [
+    874,
+    874
+   ]
+  },
+  "webkit 402x874 today dark: счётчик остатка ≥ 11 px": {
+   "ok": true,
+   "kr": 12.38
+  },
+  "webkit 402x874 play light nosa: board == main": {
+   "ok": true,
+   "pd300": {
+    "t": 74,
+    "b": 444.1,
+    "l": 16,
+    "w": 370,
+    "h": 370.1
+   },
+   "main": {
+    "t": 74,
+    "b": 444.1,
+    "l": 16,
+    "w": 370,
+    "h": 370.1
+   }
+  },
+  "webkit 402x874 play light nosa: клавиша выше main ≥ 6 px и ≤ 76, цифра крупнее": {
+   "ok": true,
+   "key": [
+    56,
+    69.8
+   ],
+   "kd": [
+    21.08,
+    27.29
+   ],
+   "gl": [
+    null,
+    null
+   ]
+  },
+  "webkit 402x874 play light nosa: ряд действий над таб-баром, экран не прокручивается": {
+   "ok": true,
+   "actionsBottom": 809.9,
+   "tabTop": 810,
+   "fit": [
+    810,
+    810
+   ],
+   "pane": [
+    874,
+    874
+   ]
+  },
+  "webkit 402x874 play light nosa: счётчик остатка ≥ 11 px": {
+   "ok": true,
+   "kr": 12.38
+  },
+  "webkit 402x874 play-glyphs light: board == main": {
+   "ok": true,
+   "pd300": {
+    "t": 136,
+    "b": 506.1,
+    "l": 16,
+    "w": 370,
+    "h": 370.1
+   },
+   "main": {
+    "t": 136,
+    "b": 506.1,
+    "l": 16,
+    "w": 370,
+    "h": 370.1
+   }
+  },
+  "webkit 402x874 play-glyphs light: клавиша выше main ≥ 6 px и ≤ 76, цифра крупнее": {
+   "ok": true,
+   "key": [
+    56,
+    69.8
+   ],
+   "kd": [
+    21.08,
+    27.29
+   ],
+   "gl": [
+    23.7,
+    25
+   ]
+  },
+  "webkit 402x874 play-glyphs light: ряд действий над таб-баром, экран не прокручивается": {
+   "ok": true,
+   "actionsBottom": 775.9,
+   "tabTop": 776,
+   "fit": [
+    776,
+    776
+   ],
+   "pane": [
+    874,
+    874
+   ]
+  },
+  "webkit 402x874 play-glyphs light: счётчик остатка ≥ 11 px": {
+   "ok": true,
+   "kr": 12.38
+  },
+  "webkit 390x844 play light: board == main": {
+   "ok": true,
+   "pd300": {
+    "t": 121,
+    "b": 479,
+    "l": 16,
+    "w": 358,
+    "h": 358
+   },
+   "main": {
+    "t": 121,
+    "b": 479,
+    "l": 16,
+    "w": 358,
+    "h": 358
+   }
+  },
+  "webkit 390x844 play light: клавиша выше main ≥ 6 px и ≤ 76, цифра крупнее": {
+   "ok": true,
+   "key": [
+    56,
+    62.6
+   ],
+   "kd": [
+    21.08,
+    24.05
+   ],
+   "gl": [
+    null,
+    null
+   ]
+  },
+  "webkit 390x844 play light: ряд действий над таб-баром, экран не прокручивается": {
+   "ok": true,
+   "actionsBottom": 745.9,
+   "tabTop": 746,
+   "fit": [
+    746,
+    746
+   ],
+   "pane": [
+    844,
+    844
+   ]
+  },
+  "webkit 390x844 play light: счётчик остатка ≥ 11 px": {
+   "ok": true,
+   "kr": 11.66
+  },
+  "webkit 390x844 today dark: board == main": {
+   "ok": true,
+   "pd300": {
+    "t": 121,
+    "b": 479,
+    "l": 16,
+    "w": 358,
+    "h": 358
+   },
+   "main": {
+    "t": 121,
+    "b": 479,
+    "l": 16,
+    "w": 358,
+    "h": 358
+   }
+  },
+  "webkit 390x844 today dark: клавиша выше main ≥ 6 px и ≤ 76, цифра крупнее": {
+   "ok": true,
+   "key": [
+    56,
+    62.6
+   ],
+   "kd": [
+    21.08,
+    24.05
+   ],
+   "gl": [
+    null,
+    null
+   ]
+  },
+  "webkit 390x844 today dark: ряд действий над таб-баром, экран не прокручивается": {
+   "ok": true,
+   "actionsBottom": 745.9,
+   "tabTop": 746,
+   "fit": [
+    746,
+    746
+   ],
+   "pane": [
+    844,
+    844
+   ]
+  },
+  "webkit 390x844 today dark: счётчик остатка ≥ 11 px": {
+   "ok": true,
+   "kr": 11.66
+  },
+  "webkit 390x844 play light nosa: board == main": {
+   "ok": true,
+   "pd300": {
+    "t": 74,
+    "b": 432,
+    "l": 16,
+    "w": 358,
+    "h": 358
+   },
+   "main": {
+    "t": 74,
+    "b": 432,
+    "l": 16,
+    "w": 358,
+    "h": 358
+   }
+  },
+  "webkit 390x844 play light nosa: клавиша выше main ≥ 6 px и ≤ 76, цифра крупнее": {
+   "ok": true,
+   "key": [
+    56,
+    62.6
+   ],
+   "kd": [
+    21.08,
+    24.05
+   ],
+   "gl": [
+    null,
+    null
+   ]
+  },
+  "webkit 390x844 play light nosa: ряд действий над таб-баром, экран не прокручивается": {
+   "ok": true,
+   "actionsBottom": 779.9,
+   "tabTop": 780,
+   "fit": [
+    780,
+    780
+   ],
+   "pane": [
+    844,
+    844
+   ]
+  },
+  "webkit 390x844 play light nosa: счётчик остатка ≥ 11 px": {
+   "ok": true,
+   "kr": 11.66
+  },
+  "webkit 390x844 play-glyphs light: board == main": {
+   "ok": true,
+   "pd300": {
+    "t": 121,
+    "b": 479,
+    "l": 16,
+    "w": 358,
+    "h": 358
+   },
+   "main": {
+    "t": 121,
+    "b": 479,
+    "l": 16,
+    "w": 358,
+    "h": 358
+   }
+  },
+  "webkit 390x844 play-glyphs light: клавиша выше main ≥ 6 px и ≤ 76, цифра крупнее": {
+   "ok": true,
+   "key": [
+    56,
+    62.6
+   ],
+   "kd": [
+    21.08,
+    24.05
+   ],
+   "gl": [
+    22.9,
+    23.6
+   ]
+  },
+  "webkit 390x844 play-glyphs light: ряд действий над таб-баром, экран не прокручивается": {
+   "ok": true,
+   "actionsBottom": 745.9,
+   "tabTop": 746,
+   "fit": [
+    746,
+    746
+   ],
+   "pane": [
+    844,
+    844
+   ]
+  },
+  "webkit 390x844 play-glyphs light: счётчик остатка ≥ 11 px": {
+   "ok": true,
+   "kr": 11.66
+  },
+  "webkit 414x896 play light: board == main": {
+   "ok": true,
+   "pd300": {
+    "t": 122,
+    "b": 504.1,
+    "l": 16,
+    "w": 382,
+    "h": 382.1
+   },
+   "main": {
+    "t": 122,
+    "b": 504.1,
+    "l": 16,
+    "w": 382,
+    "h": 382.1
+   }
+  },
+  "webkit 414x896 play light: клавиша не ниже main (PD-300) и ≤ 76, цифра не мельче": {
+   "ok": true,
+   "key": [
+    62,
+    76
+   ],
+   "kd": [
+    23.78,
+    28.65
+   ],
+   "gl": [
+    null,
+    null
+   ]
+  },
+  "webkit 414x896 play light: ряд действий над таб-баром, экран не прокручивается": {
+   "ok": true,
+   "actionsBottom": 797.9,
+   "tabTop": 798,
+   "fit": [
+    798,
+    798
+   ],
+   "pane": [
+    896,
+    896
+   ]
+  },
+  "webkit 414x896 play light: счётчик остатка ≥ 11 px": {
+   "ok": true,
+   "kr": 13
+  },
+  "webkit 414x896 today dark: board == main": {
+   "ok": true,
+   "pd300": {
+    "t": 122,
+    "b": 504.1,
+    "l": 16,
+    "w": 382,
+    "h": 382.1
+   },
+   "main": {
+    "t": 122,
+    "b": 504.1,
+    "l": 16,
+    "w": 382,
+    "h": 382.1
+   }
+  },
+  "webkit 414x896 today dark: клавиша не ниже main (PD-300) и ≤ 76, цифра не мельче": {
+   "ok": true,
+   "key": [
+    62,
+    76
+   ],
+   "kd": [
+    23.78,
+    28.65
+   ],
+   "gl": [
+    null,
+    null
+   ]
+  },
+  "webkit 414x896 today dark: ряд действий над таб-баром, экран не прокручивается": {
+   "ok": true,
+   "actionsBottom": 797.9,
+   "tabTop": 798,
+   "fit": [
+    798,
+    798
+   ],
+   "pane": [
+    896,
+    896
+   ]
+  },
+  "webkit 414x896 today dark: счётчик остатка ≥ 11 px": {
+   "ok": true,
+   "kr": 13
+  },
+  "webkit 414x896 play light nosa: board == main": {
+   "ok": true,
+   "pd300": {
+    "t": 74,
+    "b": 456.1,
+    "l": 16,
+    "w": 382,
+    "h": 382.1
+   },
+   "main": {
+    "t": 74,
+    "b": 456.1,
+    "l": 16,
+    "w": 382,
+    "h": 382.1
+   }
+  },
+  "webkit 414x896 play light nosa: клавиша не ниже main (PD-300) и ≤ 76, цифра не мельче": {
+   "ok": true,
+   "key": [
+    62,
+    76
+   ],
+   "kd": [
+    23.78,
+    28.65
+   ],
+   "gl": [
+    null,
+    null
+   ]
+  },
+  "webkit 414x896 play light nosa: ряд действий над таб-баром, экран не прокручивается": {
+   "ok": true,
+   "actionsBottom": 831.9,
+   "tabTop": 832,
+   "fit": [
+    832,
+    832
+   ],
+   "pane": [
+    896,
+    896
+   ]
+  },
+  "webkit 414x896 play light nosa: счётчик остатка ≥ 11 px": {
+   "ok": true,
+   "kr": 13
+  },
+  "webkit 414x896 play-glyphs light: board == main": {
+   "ok": true,
+   "pd300": {
+    "t": 122,
+    "b": 504.1,
+    "l": 16,
+    "w": 382,
+    "h": 382.1
+   },
+   "main": {
+    "t": 122,
+    "b": 504.1,
+    "l": 16,
+    "w": 382,
+    "h": 382.1
+   }
+  },
+  "webkit 414x896 play-glyphs light: клавиша не ниже main (PD-300) и ≤ 76, цифра не мельче": {
+   "ok": true,
+   "key": [
+    62,
+    76
+   ],
+   "kd": [
+    23.78,
+    28.65
+   ],
+   "gl": [
+    25,
+    26.4
+   ]
+  },
+  "webkit 414x896 play-glyphs light: ряд действий над таб-баром, экран не прокручивается": {
+   "ok": true,
+   "actionsBottom": 797.9,
+   "tabTop": 798,
+   "fit": [
+    798,
+    798
+   ],
+   "pane": [
+    896,
+    896
+   ]
+  },
+  "webkit 414x896 play-glyphs light: счётчик остатка ≥ 11 px": {
+   "ok": true,
+   "kr": 13
+  },
+  "webkit 412x915 play light: board == main": {
+   "ok": true,
+   "pd300": {
+    "t": 74,
+    "b": 454.1,
+    "l": 16,
+    "w": 380,
+    "h": 380.1
+   },
+   "main": {
+    "t": 74,
+    "b": 454.1,
+    "l": 16,
+    "w": 380,
+    "h": 380.1
+   }
+  },
+  "webkit 412x915 play light: клавиша не ниже main (PD-300) и ≤ 76, цифра не мельче": {
+   "ok": true,
+   "key": [
+    60.8,
+    75.8
+   ],
+   "kd": [
+    23.24,
+    28.5
+   ],
+   "gl": [
+    null,
+    null
+   ]
+  },
+  "webkit 412x915 play light: ряд действий над таб-баром, экран не прокручивается": {
+   "ok": true,
+   "actionsBottom": 850.9,
+   "tabTop": 851,
+   "fit": [
+    851,
+    851
+   ],
+   "pane": [
+    915,
+    915
+   ]
+  },
+  "webkit 412x915 play light: счётчик остатка ≥ 11 px": {
+   "ok": true,
+   "kr": 12.98
+  },
+  "webkit 412x915 today dark: board == main": {
+   "ok": true,
+   "pd300": {
+    "t": 74,
+    "b": 454.1,
+    "l": 16,
+    "w": 380,
+    "h": 380.1
+   },
+   "main": {
+    "t": 74,
+    "b": 454.1,
+    "l": 16,
+    "w": 380,
+    "h": 380.1
+   }
+  },
+  "webkit 412x915 today dark: клавиша не ниже main (PD-300) и ≤ 76, цифра не мельче": {
+   "ok": true,
+   "key": [
+    60.8,
+    75.8
+   ],
+   "kd": [
+    23.24,
+    28.5
+   ],
+   "gl": [
+    null,
+    null
+   ]
+  },
+  "webkit 412x915 today dark: ряд действий над таб-баром, экран не прокручивается": {
+   "ok": true,
+   "actionsBottom": 850.9,
+   "tabTop": 851,
+   "fit": [
+    851,
+    851
+   ],
+   "pane": [
+    915,
+    915
+   ]
+  },
+  "webkit 412x915 today dark: счётчик остатка ≥ 11 px": {
+   "ok": true,
+   "kr": 12.98
+  },
+  "webkit 412x915 play-glyphs light: board == main": {
+   "ok": true,
+   "pd300": {
+    "t": 74,
+    "b": 454.1,
+    "l": 16,
+    "w": 380,
+    "h": 380.1
+   },
+   "main": {
+    "t": 74,
+    "b": 454.1,
+    "l": 16,
+    "w": 380,
+    "h": 380.1
+   }
+  },
+  "webkit 412x915 play-glyphs light: клавиша не ниже main (PD-300) и ≤ 76, цифра не мельче": {
+   "ok": true,
+   "key": [
+    60.8,
+    75.8
+   ],
+   "kd": [
+    23.24,
+    28.5
+   ],
+   "gl": [
+    24.8,
+    26.3
+   ]
+  },
+  "webkit 412x915 play-glyphs light: ряд действий над таб-баром, экран не прокручивается": {
+   "ok": true,
+   "actionsBottom": 850.9,
+   "tabTop": 851,
+   "fit": [
+    851,
+    851
+   ],
+   "pane": [
+    915,
+    915
+   ]
+  },
+  "webkit 412x915 play-glyphs light: счётчик остатка ≥ 11 px": {
+   "ok": true,
+   "kr": 12.98
+  },
+  "webkit 375x812 play light: board == main": {
+   "ok": true,
+   "pd300": {
+    "t": 124,
+    "b": 467.1,
+    "l": 16,
+    "w": 343,
+    "h": 343.1
+   },
+   "main": {
+    "t": 124,
+    "b": 467.1,
+    "l": 16,
+    "w": 343,
+    "h": 343.1
+   }
+  },
+  "webkit 375x812 play light: клавиша и цифра == main": {
+   "ok": true,
+   "key": [
+    56,
+    56
+   ],
+   "kd": [
+    21.08,
+    21.08
+   ],
+   "gl": [
+    null,
+    null
+   ]
+  },
+  "webkit 375x812 play light: ряд действий над таб-баром, экран не прокручивается": {
+   "ok": true,
+   "actionsBottom": 713.9,
+   "tabTop": 714,
+   "fit": [
+    714,
+    714
+   ],
+   "pane": [
+    812,
+    812
+   ]
+  },
+  "webkit 375x812 play light: счётчик остатка ≥ 11 px": {
+   "ok": true,
+   "kr": 11
+  },
+  "webkit 375x812 today dark: board == main": {
+   "ok": true,
+   "pd300": {
+    "t": 124,
+    "b": 467.1,
+    "l": 16,
+    "w": 343,
+    "h": 343.1
+   },
+   "main": {
+    "t": 124,
+    "b": 467.1,
+    "l": 16,
+    "w": 343,
+    "h": 343.1
+   }
+  },
+  "webkit 375x812 today dark: клавиша и цифра == main": {
+   "ok": true,
+   "key": [
+    56,
+    56
+   ],
+   "kd": [
+    21.08,
+    21.08
+   ],
+   "gl": [
+    null,
+    null
+   ]
+  },
+  "webkit 375x812 today dark: ряд действий над таб-баром, экран не прокручивается": {
+   "ok": true,
+   "actionsBottom": 713.9,
+   "tabTop": 714,
+   "fit": [
+    714,
+    714
+   ],
+   "pane": [
+    812,
+    812
+   ]
+  },
+  "webkit 375x812 today dark: счётчик остатка ≥ 11 px": {
+   "ok": true,
+   "kr": 11
+  },
+  "webkit 375x812 play light nosa: board == main": {
+   "ok": true,
+   "pd300": {
+    "t": 74,
+    "b": 417.1,
+    "l": 16,
+    "w": 343,
+    "h": 343.1
+   },
+   "main": {
+    "t": 74,
+    "b": 417.1,
+    "l": 16,
+    "w": 343,
+    "h": 343.1
+   }
+  },
+  "webkit 375x812 play light nosa: клавиша и цифра == main": {
+   "ok": true,
+   "key": [
+    56,
+    56
+   ],
+   "kd": [
+    21.08,
+    21.08
+   ],
+   "gl": [
+    null,
+    null
+   ]
+  },
+  "webkit 375x812 play light nosa: ряд действий над таб-баром, экран не прокручивается": {
+   "ok": true,
+   "actionsBottom": 747.9,
+   "tabTop": 748,
+   "fit": [
+    748,
+    748
+   ],
+   "pane": [
+    812,
+    812
+   ]
+  },
+  "webkit 375x812 play light nosa: счётчик остатка ≥ 11 px": {
+   "ok": true,
+   "kr": 11
+  },
+  "webkit 375x812 play-glyphs light: board == main": {
+   "ok": true,
+   "pd300": {
+    "t": 124,
+    "b": 467.1,
+    "l": 16,
+    "w": 343,
+    "h": 343.1
+   },
+   "main": {
+    "t": 124,
+    "b": 467.1,
+    "l": 16,
+    "w": 343,
+    "h": 343.1
+   }
+  },
+  "webkit 375x812 play-glyphs light: клавиша и цифра == main": {
+   "ok": true,
+   "key": [
+    56,
+    56
+   ],
+   "kd": [
+    21.08,
+    21.08
+   ],
+   "gl": [
+    21.9,
+    21.9
+   ]
+  },
+  "webkit 375x812 play-glyphs light: ряд действий над таб-баром, экран не прокручивается": {
+   "ok": true,
+   "actionsBottom": 713.9,
+   "tabTop": 714,
+   "fit": [
+    714,
+    714
+   ],
+   "pane": [
+    812,
+    812
+   ]
+  },
+  "webkit 375x812 play-glyphs light: счётчик остатка ≥ 11 px": {
+   "ok": true,
+   "kr": 11
+  },
+  "webkit 360x800 play light: board == main": {
+   "ok": true,
+   "pd300": {
+    "t": 74,
+    "b": 402.1,
+    "l": 16,
+    "w": 328,
+    "h": 328.1
+   },
+   "main": {
+    "t": 74,
+    "b": 402.1,
+    "l": 16,
+    "w": 328,
+    "h": 328.1
+   }
+  },
+  "webkit 360x800 play light: клавиша и цифра == main": {
+   "ok": true,
+   "key": [
+    56,
+    56
+   ],
+   "kd": [
+    21.08,
+    21.08
+   ],
+   "gl": [
+    null,
+    null
+   ]
+  },
+  "webkit 360x800 play light: ряд действий над таб-баром, экран не прокручивается": {
+   "ok": true,
+   "actionsBottom": 735.9,
+   "tabTop": 736,
+   "fit": [
+    736,
+    736
+   ],
+   "pane": [
+    800,
+    800
+   ]
+  },
+  "webkit 360x800 play light: счётчик остатка ≥ 11 px": {
+   "ok": true,
+   "kr": 11
+  },
+  "webkit 360x800 today dark: board == main": {
+   "ok": true,
+   "pd300": {
+    "t": 74,
+    "b": 402.1,
+    "l": 16,
+    "w": 328,
+    "h": 328.1
+   },
+   "main": {
+    "t": 74,
+    "b": 402.1,
+    "l": 16,
+    "w": 328,
+    "h": 328.1
+   }
+  },
+  "webkit 360x800 today dark: клавиша и цифра == main": {
+   "ok": true,
+   "key": [
+    56,
+    56
+   ],
+   "kd": [
+    21.08,
+    21.08
+   ],
+   "gl": [
+    null,
+    null
+   ]
+  },
+  "webkit 360x800 today dark: ряд действий над таб-баром, экран не прокручивается": {
+   "ok": true,
+   "actionsBottom": 735.9,
+   "tabTop": 736,
+   "fit": [
+    736,
+    736
+   ],
+   "pane": [
+    800,
+    800
+   ]
+  },
+  "webkit 360x800 today dark: счётчик остатка ≥ 11 px": {
+   "ok": true,
+   "kr": 11
+  },
+  "webkit 360x800 play-glyphs light: board == main": {
+   "ok": true,
+   "pd300": {
+    "t": 74,
+    "b": 402.1,
+    "l": 16,
+    "w": 328,
+    "h": 328.1
+   },
+   "main": {
+    "t": 74,
+    "b": 402.1,
+    "l": 16,
+    "w": 328,
+    "h": 328.1
+   }
+  },
+  "webkit 360x800 play-glyphs light: клавиша и цифра == main": {
+   "ok": true,
+   "key": [
+    56,
+    56
+   ],
+   "kd": [
+    21.08,
+    21.08
+   ],
+   "gl": [
+    21,
+    21
+   ]
+  },
+  "webkit 360x800 play-glyphs light: ряд действий над таб-баром, экран не прокручивается": {
+   "ok": true,
+   "actionsBottom": 735.9,
+   "tabTop": 736,
+   "fit": [
+    736,
+    736
+   ],
+   "pane": [
+    800,
+    800
+   ]
+  },
+  "webkit 360x800 play-glyphs light: счётчик остатка ≥ 11 px": {
+   "ok": true,
+   "kr": 11
+  },
+  "webkit 430x932 play light AX3: board == main": {
+   "ok": true,
+   "pd300": {
+    "t": 203,
+    "b": 601.1,
+    "l": 16,
+    "w": 398,
+    "h": 398.1
+   },
+   "main": {
+    "t": 203,
+    "b": 601.1,
+    "l": 16,
+    "w": 398,
+    "h": 398.1
+   }
+  },
+  "webkit 430x932 play light AX3: клавиша и цифра == main": {
+   "ok": true,
+   "key": [
+    56,
+    56
+   ],
+   "kd": [
+    29.85,
+    29.85
+   ],
+   "gl": [
+    null,
+    null
+   ]
+  },
+  "webkit 430x932 play light AX3: ряд действий над таб-баром, экран не прокручивается": {
+   "ok": true,
+   "actionsBottom": 831,
+   "tabTop": 832,
+   "fit": [
+    831,
+    831
+   ],
+   "pane": [
+    932,
+    932
+   ]
+  },
+  "webkit 430x932 play light AX3: счётчик остатка ≥ 11 px": {
+   "ok": true,
+   "kr": 11
+  },
+  "webkit 430x932 today light AX3: board == main": {
+   "ok": true,
+   "pd300": {
+    "t": 248,
+    "b": 593.9,
+    "l": 42,
+    "w": 346,
+    "h": 345.9
+   },
+   "main": {
+    "t": 248,
+    "b": 593.9,
+    "l": 42,
+    "w": 346,
+    "h": 345.9
+   }
+  },
+  "webkit 430x932 today light AX3: клавиша и цифра == main": {
+   "ok": true,
+   "key": [
+    56,
+    56
+   ],
+   "kd": [
+    29.85,
+    29.85
+   ],
+   "gl": [
+    null,
+    null
+   ]
+  },
+  "webkit 430x932 today light AX3: счётчик остатка ≥ 11 px": {
+   "ok": true,
+   "kr": 11
+  },
+  "webkit 440x956 play light AX3: board == main": {
+   "ok": true,
+   "pd300": {
+    "t": 206,
+    "b": 614.1,
+    "l": 16,
+    "w": 408,
+    "h": 408.1
+   },
+   "main": {
+    "t": 206,
+    "b": 614.1,
+    "l": 16,
+    "w": 408,
+    "h": 408.1
+   }
+  },
+  "webkit 440x956 play light AX3: клавиша и цифра == main": {
+   "ok": true,
+   "key": [
+    56,
+    56
+   ],
+   "kd": [
+    30.6,
+    30.6
+   ],
+   "gl": [
+    null,
+    null
+   ]
+  },
+  "webkit 440x956 play light AX3: ряд действий над таб-баром, экран не прокручивается": {
+   "ok": true,
+   "actionsBottom": 855,
+   "tabTop": 856,
+   "fit": [
+    855,
+    855
+   ],
+   "pane": [
+    956,
+    956
+   ]
+  },
+  "webkit 440x956 play light AX3: счётчик остатка ≥ 11 px": {
+   "ok": true,
+   "kr": 11
+  },
+  "webkit 440x956 today light AX3: board == main": {
+   "ok": true,
+   "pd300": {
+    "t": 251,
+    "b": 617.9,
+    "l": 36.5,
+    "w": 367,
+    "h": 366.9
+   },
+   "main": {
+    "t": 251,
+    "b": 617.9,
+    "l": 36.5,
+    "w": 367,
+    "h": 366.9
+   }
+  },
+  "webkit 440x956 today light AX3: клавиша и цифра == main": {
+   "ok": true,
+   "key": [
+    56,
+    56
+   ],
+   "kd": [
+    30.6,
+    30.6
+   ],
+   "gl": [
+    null,
+    null
+   ]
+  },
+  "webkit 440x956 today light AX3: счётчик остатка ≥ 11 px": {
+   "ok": true,
+   "kr": 11
+  },
+  "webkit 393x852 play light AX3: board == main": {
+   "ok": true,
+   "pd300": {
+    "t": 203,
+    "b": 557.1,
+    "l": 19.5,
+    "w": 354,
+    "h": 354.1
+   },
+   "main": {
+    "t": 203,
+    "b": 557.1,
+    "l": 19.5,
+    "w": 354,
+    "h": 354.1
+   }
+  },
+  "webkit 393x852 play light AX3: клавиша и цифра == main": {
+   "ok": true,
+   "key": [
+    56,
+    56
+   ],
+   "kd": [
+    27.08,
+    27.08
+   ],
+   "gl": [
+    null,
+    null
+   ]
+  },
+  "webkit 393x852 play light AX3: ряд действий над таб-баром, экран не прокручивается": {
+   "ok": true,
+   "actionsBottom": 751,
+   "tabTop": 752,
+   "fit": [
+    751,
+    751
+   ],
+   "pane": [
+    852,
+    852
+   ]
+  },
+  "webkit 393x852 play light AX3: счётчик остатка ≥ 11 px": {
+   "ok": true,
+   "kr": 11
+  },
+  "webkit 393x852 today light AX3: board == main": {
+   "ok": true,
+   "pd300": {
+    "t": 248,
+    "b": 513.9,
+    "l": 63.5,
+    "w": 266,
+    "h": 265.9
+   },
+   "main": {
+    "t": 248,
+    "b": 513.9,
+    "l": 63.5,
+    "w": 266,
+    "h": 265.9
+   }
+  },
+  "webkit 393x852 today light AX3: клавиша и цифра == main": {
+   "ok": true,
+   "key": [
+    56,
+    56
+   ],
+   "kd": [
+    27.08,
+    27.08
+   ],
+   "gl": [
+    null,
+    null
+   ]
+  },
+  "webkit 393x852 today light AX3: счётчик остатка ≥ 11 px": {
+   "ok": true,
+   "kr": 11
+  },
+  "webkit 320x568 play light AX3: board == main": {
+   "ok": true,
+   "pd300": {
+    "t": 164,
+    "b": 313,
+    "l": 85.5,
+    "w": 149,
+    "h": 149
+   },
+   "main": {
+    "t": 164,
+    "b": 313,
+    "l": 85.5,
+    "w": 149,
+    "h": 149
+   }
+  },
+  "webkit 320x568 play light AX3: клавиша и цифра == main": {
+   "ok": true,
+   "key": [
+    56,
+    56
+   ],
+   "kd": [
+    21.6,
+    21.6
+   ],
+   "gl": [
+    null,
+    null
+   ]
+  },
+  "webkit 320x568 play light AX3: ряд действий над таб-баром, экран не прокручивается": {
+   "ok": true,
+   "actionsBottom": 501,
+   "tabTop": 502,
+   "fit": [
+    501,
+    501
+   ],
+   "pane": [
+    568,
+    568
+   ]
+  },
+  "webkit 320x568 play light AX3: счётчик остатка ≥ 11 px": {
+   "ok": true,
+   "kr": 11
+  },
+  "webkit 320x568 today light AX3: board == main": {
+   "ok": true,
+   "pd300": {
+    "t": 209,
+    "b": 357.9,
+    "l": 85.5,
+    "w": 149,
+    "h": 148.9
+   },
+   "main": {
+    "t": 209,
+    "b": 357.9,
+    "l": 85.5,
+    "w": 149,
+    "h": 148.9
+   }
+  },
+  "webkit 320x568 today light AX3: клавиша и цифра == main": {
+   "ok": true,
+   "key": [
+    56,
+    56
+   ],
+   "kd": [
+    21.6,
+    21.6
+   ],
+   "gl": [
+    null,
+    null
+   ]
+  },
+  "webkit 320x568 today light AX3: счётчик остатка ≥ 11 px": {
+   "ok": true,
+   "kr": 11
+  },
+  "webkit 430x932 play light xxxL: board == main": {
+   "ok": true,
+   "pd300": {
+    "t": 151,
+    "b": 549.1,
+    "l": 16,
+    "w": 398,
+    "h": 398.1
+   },
+   "main": {
+    "t": 151,
+    "b": 549.1,
+    "l": 16,
+    "w": 398,
+    "h": 398.1
+   }
+  },
+  "webkit 430x932 play light xxxL: клавиша не ниже main (PD-300) и ≤ 76, цифра не мельче": {
+   "ok": true,
+   "key": [
+    71.6,
+    76
+   ],
+   "kd": [
+    29.85,
+    29.85
+   ],
+   "gl": [
+    null,
+    null
+   ]
+  },
+  "webkit 430x932 play light xxxL: ряд действий над таб-баром, экран не прокручивается": {
+   "ok": true,
+   "actionsBottom": 831,
+   "tabTop": 832,
+   "fit": [
+    831,
+    831
+   ],
+   "pane": [
+    932,
+    932
+   ]
+  },
+  "webkit 430x932 play light xxxL: счётчик остатка ≥ 11 px": {
+   "ok": true,
+   "kr": 13
+  },
+  "webkit 393x852 play light xxxL: board == main": {
+   "ok": true,
+   "pd300": {
+    "t": 151,
+    "b": 512.1,
+    "l": 16,
+    "w": 361,
+    "h": 361.1
+   },
+   "main": {
+    "t": 151,
+    "b": 512.1,
+    "l": 16,
+    "w": 361,
+    "h": 361.1
+   }
+  },
+  "webkit 393x852 play light xxxL: клавиша выше main ≥ 6 px и ≤ 76, цифра не мельче": {
+   "ok": true,
+   "key": [
+    56,
+    64.4
+   ],
+   "kd": [
+    27.08,
+    27.08
+   ],
+   "gl": [
+    null,
+    null
+   ]
+  },
+  "webkit 393x852 play light xxxL: ряд действий над таб-баром, экран не прокручивается": {
+   "ok": true,
+   "actionsBottom": 751,
+   "tabTop": 752,
+   "fit": [
+    751,
+    751
+   ],
+   "pane": [
+    852,
+    852
+   ]
+  },
+  "webkit 393x852 play light xxxL: счётчик остатка ≥ 11 px": {
+   "ok": true,
+   "kr": 11.84
+  },
+  "webkit 932x430 play light landscape: board == main": {
+   "ok": true,
+   "pd300": {
+    "t": 12,
+    "b": 332.9,
+    "l": 16,
+    "w": 320.9,
+    "h": 320.9
+   },
+   "main": {
+    "t": 12,
+    "b": 332.9,
+    "l": 16,
+    "w": 320.9,
+    "h": 320.9
+   }
+  },
+  "webkit 932x430 play light landscape: клавиша и цифра == main": {
+   "ok": true,
+   "key": [
+    56,
+    56
+   ],
+   "kd": [
+    21.08,
+    21.08
+   ],
+   "gl": [
+    null,
+    null
+   ]
+  },
+  "webkit 932x430 play light landscape: счётчик остатка ≥ 11 px": {
+   "ok": true,
+   "kr": 11
+  },
+  "webkit 956x440 today dark landscape: board == main": {
+   "ok": true,
+   "pd300": {
+    "t": 12,
+    "b": 342.9,
+    "l": 16,
+    "w": 330.9,
+    "h": 330.9
+   },
+   "main": {
+    "t": 12,
+    "b": 342.9,
+    "l": 16,
+    "w": 330.9,
+    "h": 330.9
+   }
+  },
+  "webkit 956x440 today dark landscape: клавиша и цифра == main": {
+   "ok": true,
+   "key": [
+    56,
+    56
+   ],
+   "kd": [
+    21.08,
+    21.08
+   ],
+   "gl": [
+    null,
+    null
+   ]
+  },
+  "webkit 956x440 today dark landscape: счётчик остатка ≥ 11 px": {
+   "ok": true,
+   "kr": 11
+  },
+  "webkit 1280x800 play light desk: board == main": {
+   "ok": true,
+   "pd300": {
+    "t": 72,
+    "b": 748,
+    "l": 296,
+    "w": 676,
+    "h": 676
+   },
+   "main": {
+    "t": 72,
+    "b": 748,
+    "l": 296,
+    "w": 676,
+    "h": 676
+   }
+  },
+  "webkit 1280x800 play light desk: клавиша и цифра == main": {
+   "ok": true,
+   "key": [
+    64,
+    64
+   ],
+   "kd": [
+    25.92,
+    25.92
+   ],
+   "gl": [
+    null,
+    null
+   ]
+  },
+  "webkit 1280x800 play light desk: счётчик остатка ≥ 11 px": {
+   "ok": true,
+   "kr": 12
+  },
+  "webkit 1280x800 play-glyphs dark desk: board == main": {
+   "ok": true,
+   "pd300": {
+    "t": 72,
+    "b": 748,
+    "l": 296,
+    "w": 676,
+    "h": 676
+   },
+   "main": {
+    "t": 72,
+    "b": 748,
+    "l": 296,
+    "w": 676,
+    "h": 676
+   }
+  },
+  "webkit 1280x800 play-glyphs dark desk: клавиша и цифра == main": {
+   "ok": true,
+   "key": [
+    64,
+    64
+   ],
+   "kd": [
+    25.92,
+    25.92
+   ],
+   "gl": [
+    24.1,
+    24.1
+   ]
+  },
+  "webkit 1280x800 play-glyphs dark desk: счётчик остатка ≥ 11 px": {
+   "ok": true,
+   "kr": 12
+  }
+ },
+ "table": [
+  {
+   "browser": "webkit",
+   "case": "430x932 play light",
+   "board": "398→398",
+   "boardTop": "133→133",
+   "key": "71.6→76",
+   "kd": "28.1→29.85",
+   "weight": "600→600",
+   "kr": "12.56→13",
+   "gap": 0.1
+  },
+  {
+   "browser": "webkit",
+   "case": "430x932 play dark",
+   "board": "398→398",
+   "boardTop": "133→133",
+   "key": "71.6→76",
+   "kd": "28.1→29.85",
+   "weight": "600→600",
+   "kr": "12.56→13",
+   "gap": 0.1
+  },
+  {
+   "browser": "webkit",
+   "case": "430x932 today light",
+   "board": "398→398",
+   "boardTop": "133→133",
+   "key": "71.6→76",
+   "kd": "28.1→29.85",
+   "weight": "600→600",
+   "kr": "12.56→13",
+   "gap": 0.1
+  },
+  {
+   "browser": "webkit",
+   "case": "430x932 today dark",
+   "board": "398→398",
+   "boardTop": "133→133",
+   "key": "71.6→76",
+   "kd": "28.1→29.85",
+   "weight": "600→600",
+   "kr": "12.56→13",
+   "gap": 0.1
+  },
+  {
+   "browser": "webkit",
+   "case": "430x932 play light nosa",
+   "board": "398→398",
+   "boardTop": "74→74",
+   "key": "71.6→76",
+   "kd": "28.1→29.85",
+   "weight": "600→600",
+   "kr": "12.56→13",
+   "gap": 0.1
+  },
+  {
+   "browser": "webkit",
+   "case": "430x932 play-liar light",
+   "board": "398→398",
+   "boardTop": "133→133",
+   "key": "71.6→76",
+   "kd": "28.1→29.85",
+   "weight": "600→600",
+   "kr": "12.56→13",
+   "gap": 0.1
+  },
+  {
+   "browser": "webkit",
+   "case": "430x932 play-ink light",
+   "board": "398→398",
+   "boardTop": "133→133",
+   "key": "71.6→76",
+   "kd": "28.1→29.85",
+   "weight": "600→600",
+   "kr": "12.56→13",
+   "gap": 0.1
+  },
+  {
+   "browser": "webkit",
+   "case": "430x932 play-glyphs light",
+   "board": "398→398",
+   "boardTop": "133→133",
+   "key": "71.6→76",
+   "kd": "28.1→29.85",
+   "weight": "600→600",
+   "kr": "12.56→13",
+   "gap": 0.1
+  },
+  {
+   "browser": "webkit",
+   "case": "428x926 play light",
+   "board": "396→396",
+   "boardTop": "121→121",
+   "key": "70.4→76",
+   "kd": "27.56→29.7",
+   "weight": "600→600",
+   "kr": "12.44→13",
+   "gap": 0.1
+  },
+  {
+   "browser": "webkit",
+   "case": "428x926 play dark",
+   "board": "396→396",
+   "boardTop": "121→121",
+   "key": "70.4→76",
+   "kd": "27.56→29.7",
+   "weight": "600→600",
+   "kr": "12.44→13",
+   "gap": 0.1
+  },
+  {
+   "browser": "webkit",
+   "case": "428x926 today light",
+   "board": "396→396",
+   "boardTop": "121→121",
+   "key": "70.4→76",
+   "kd": "27.56→29.7",
+   "weight": "600→600",
+   "kr": "12.44→13",
+   "gap": 0.1
+  },
+  {
+   "browser": "webkit",
+   "case": "428x926 today dark",
+   "board": "396→396",
+   "boardTop": "121→121",
+   "key": "70.4→76",
+   "kd": "27.56→29.7",
+   "weight": "600→600",
+   "kr": "12.44→13",
+   "gap": 0.1
+  },
+  {
+   "browser": "webkit",
+   "case": "428x926 play light nosa",
+   "board": "396→396",
+   "boardTop": "74→74",
+   "key": "70.4→76",
+   "kd": "27.56→29.7",
+   "weight": "600→600",
+   "kr": "12.44→13",
+   "gap": 0.1
+  },
+  {
+   "browser": "webkit",
+   "case": "428x926 play-liar light",
+   "board": "396→396",
+   "boardTop": "121→121",
+   "key": "70.4→76",
+   "kd": "27.56→29.7",
+   "weight": "600→600",
+   "kr": "12.44→13",
+   "gap": 0.1
+  },
+  {
+   "browser": "webkit",
+   "case": "428x926 play-ink light",
+   "board": "396→396",
+   "boardTop": "121→121",
+   "key": "70.4→76",
+   "kd": "27.56→29.7",
+   "weight": "600→600",
+   "kr": "12.44→13",
+   "gap": 0.1
+  },
+  {
+   "browser": "webkit",
+   "case": "428x926 play-glyphs light",
+   "board": "396→396",
+   "boardTop": "121→121",
+   "key": "70.4→76",
+   "kd": "27.56→29.7",
+   "weight": "600→600",
+   "kr": "12.44→13",
+   "gap": 0.1
+  },
+  {
+   "browser": "webkit",
+   "case": "440x956 play light",
+   "board": "408→408",
+   "boardTop": "136→136",
+   "key": "76→76",
+   "kd": "30.08→30.08",
+   "weight": "600→600",
+   "kr": "13→13",
+   "gap": 0.1
+  },
+  {
+   "browser": "webkit",
+   "case": "440x956 play dark",
+   "board": "408→408",
+   "boardTop": "136→136",
+   "key": "76→76",
+   "kd": "30.08→30.08",
+   "weight": "600→600",
+   "kr": "13→13",
+   "gap": 0.1
+  },
+  {
+   "browser": "webkit",
+   "case": "440x956 today light",
+   "board": "408→408",
+   "boardTop": "136→136",
+   "key": "76→76",
+   "kd": "30.08→30.08",
+   "weight": "600→600",
+   "kr": "13→13",
+   "gap": 0.1
+  },
+  {
+   "browser": "webkit",
+   "case": "440x956 today dark",
+   "board": "408→408",
+   "boardTop": "136→136",
+   "key": "76→76",
+   "kd": "30.08→30.08",
+   "weight": "600→600",
+   "kr": "13→13",
+   "gap": 0.1
+  },
+  {
+   "browser": "webkit",
+   "case": "440x956 play light nosa",
+   "board": "408→408",
+   "boardTop": "74→74",
+   "key": "76→76",
+   "kd": "30.08→30.08",
+   "weight": "600→600",
+   "kr": "13→13",
+   "gap": 0.1
+  },
+  {
+   "browser": "webkit",
+   "case": "440x956 play-liar light",
+   "board": "408→408",
+   "boardTop": "136→136",
+   "key": "76→76",
+   "kd": "30.08→30.08",
+   "weight": "600→600",
+   "kr": "13→13",
+   "gap": 0.1
+  },
+  {
+   "browser": "webkit",
+   "case": "440x956 play-ink light",
+   "board": "408→408",
+   "boardTop": "136→136",
+   "key": "76→76",
+   "kd": "30.08→30.08",
+   "weight": "600→600",
+   "kr": "13→13",
+   "gap": 0.1
+  },
+  {
+   "browser": "webkit",
+   "case": "440x956 play-glyphs light",
+   "board": "408→408",
+   "boardTop": "136→136",
+   "key": "76→76",
+   "kd": "30.08→30.08",
+   "weight": "600→600",
+   "kr": "13→13",
+   "gap": 0.1
+  },
+  {
+   "browser": "webkit",
+   "case": "393x852 play light",
+   "board": "361→361",
+   "boardTop": "133→133",
+   "key": "56→64.4",
+   "kd": "21.08→24.86",
+   "weight": "600→600",
+   "kr": "11→11.84",
+   "gap": 0.1
+  },
+  {
+   "browser": "webkit",
+   "case": "393x852 play dark",
+   "board": "361→361",
+   "boardTop": "133→133",
+   "key": "56→64.4",
+   "kd": "21.08→24.86",
+   "weight": "600→600",
+   "kr": "11→11.84",
+   "gap": 0.1
+  },
+  {
+   "browser": "webkit",
+   "case": "393x852 today light",
+   "board": "361→361",
+   "boardTop": "133→133",
+   "key": "56→64.4",
+   "kd": "21.08→24.86",
+   "weight": "600→600",
+   "kr": "11→11.84",
+   "gap": 0.1
+  },
+  {
+   "browser": "webkit",
+   "case": "393x852 today dark",
+   "board": "361→361",
+   "boardTop": "133→133",
+   "key": "56→64.4",
+   "kd": "21.08→24.86",
+   "weight": "600→600",
+   "kr": "11→11.84",
+   "gap": 0.1
+  },
+  {
+   "browser": "webkit",
+   "case": "393x852 play light nosa",
+   "board": "361→361",
+   "boardTop": "74→74",
+   "key": "56→64.4",
+   "kd": "21.08→24.86",
+   "weight": "600→600",
+   "kr": "11→11.84",
+   "gap": 0.1
+  },
+  {
+   "browser": "webkit",
+   "case": "393x852 play-liar light",
+   "board": "361→361",
+   "boardTop": "133→133",
+   "key": "56→64.4",
+   "kd": "21.08→24.86",
+   "weight": "600→600",
+   "kr": "11→11.84",
+   "gap": 0.1
+  },
+  {
+   "browser": "webkit",
+   "case": "393x852 play-ink light",
+   "board": "361→361",
+   "boardTop": "133→133",
+   "key": "56→64.4",
+   "kd": "21.08→24.86",
+   "weight": "600→600",
+   "kr": "11→11.84",
+   "gap": 0.1
+  },
+  {
+   "browser": "webkit",
+   "case": "393x852 play-glyphs light",
+   "board": "361→361",
+   "boardTop": "133→133",
+   "key": "56→64.4",
+   "kd": "21.08→24.86",
+   "weight": "600→600",
+   "kr": "11→11.84",
+   "gap": 0.1
+  },
+  {
+   "browser": "webkit",
+   "case": "375x667 play light",
+   "board": "317.4→317.4",
+   "boardTop": "94→94",
+   "key": "56→56",
+   "kd": "21.08→21.08",
+   "weight": "600→600",
+   "kr": "11→11",
+   "gap": 0.1
+  },
+  {
+   "browser": "webkit",
+   "case": "375x667 play dark",
+   "board": "317.4→317.4",
+   "boardTop": "94→94",
+   "key": "56→56",
+   "kd": "21.08→21.08",
+   "weight": "600→600",
+   "kr": "11→11",
+   "gap": 0.1
+  },
+  {
+   "browser": "webkit",
+   "case": "375x667 today light",
+   "board": "317.4→317.4",
+   "boardTop": "94→94",
+   "key": "56→56",
+   "kd": "21.08→21.08",
+   "weight": "600→600",
+   "kr": "11→11",
+   "gap": 0.1
+  },
+  {
+   "browser": "webkit",
+   "case": "375x667 today dark",
+   "board": "317.4→317.4",
+   "boardTop": "94→94",
+   "key": "56→56",
+   "kd": "21.08→21.08",
+   "weight": "600→600",
+   "kr": "11→11",
+   "gap": 0.1
+  },
+  {
+   "browser": "webkit",
+   "case": "375x667 play light nosa",
+   "board": "337.4→337.4",
+   "boardTop": "74→74",
+   "key": "56→56",
+   "kd": "21.08→21.08",
+   "weight": "600→600",
+   "kr": "11→11",
+   "gap": 0.1
+  },
+  {
+   "browser": "webkit",
+   "case": "375x667 play-liar light",
+   "board": "317.4→317.4",
+   "boardTop": "94→94",
+   "key": "56→56",
+   "kd": "21.08→21.08",
+   "weight": "600→600",
+   "kr": "11→11",
+   "gap": 0.1
+  },
+  {
+   "browser": "webkit",
+   "case": "375x667 play-ink light",
+   "board": "343→343",
+   "boardTop": "94→94",
+   "key": "56→56",
+   "kd": "21.08→21.08",
+   "weight": "600→600",
+   "kr": "11→11",
+   "gap": 0.1
+  },
+  {
+   "browser": "webkit",
+   "case": "375x667 play-glyphs light",
+   "board": "317.4→317.4",
+   "boardTop": "94→94",
+   "key": "56→56",
+   "kd": "21.08→21.08",
+   "weight": "600→600",
+   "kr": "11→11",
+   "gap": 0.1
+  },
+  {
+   "browser": "webkit",
+   "case": "320x568 play light",
+   "board": "240→240",
+   "boardTop": "94→94",
+   "key": "56→56",
+   "kd": "21.08→21.08",
+   "weight": "600→600",
+   "kr": "11→11",
+   "gap": 0.1
+  },
+  {
+   "browser": "webkit",
+   "case": "320x568 play dark",
+   "board": "240→240",
+   "boardTop": "94→94",
+   "key": "56→56",
+   "kd": "21.08→21.08",
+   "weight": "600→600",
+   "kr": "11→11",
+   "gap": 0.1
+  },
+  {
+   "browser": "webkit",
+   "case": "320x568 today light",
+   "board": "240→240",
+   "boardTop": "94→94",
+   "key": "56→56",
+   "kd": "21.08→21.08",
+   "weight": "600→600",
+   "kr": "11→11",
+   "gap": 0.1
+  },
+  {
+   "browser": "webkit",
+   "case": "320x568 today dark",
+   "board": "240→240",
+   "boardTop": "94→94",
+   "key": "56→56",
+   "kd": "21.08→21.08",
+   "weight": "600→600",
+   "kr": "11→11",
+   "gap": 0.1
+  },
+  {
+   "browser": "webkit",
+   "case": "320x568 play light nosa",
+   "board": "240→240",
+   "boardTop": "74→74",
+   "key": "56→56",
+   "kd": "21.08→21.08",
+   "weight": "600→600",
+   "kr": "11→11",
+   "gap": 0.1
+  },
+  {
+   "browser": "webkit",
+   "case": "320x568 play-liar light",
+   "board": "240→240",
+   "boardTop": "94→94",
+   "key": "56→56",
+   "kd": "21.08→21.08",
+   "weight": "600→600",
+   "kr": "11→11",
+   "gap": 0.1
+  },
+  {
+   "browser": "webkit",
+   "case": "320x568 play-ink light",
+   "board": "250.8→250.8",
+   "boardTop": "94→94",
+   "key": "56→56",
+   "kd": "21.08→21.08",
+   "weight": "600→600",
+   "kr": "11→11",
+   "gap": 0.1
+  },
+  {
+   "browser": "webkit",
+   "case": "320x568 play-glyphs light",
+   "board": "240→240",
+   "boardTop": "94→94",
+   "key": "56→56",
+   "kd": "21.08→21.08",
+   "weight": "600→600",
+   "kr": "11→11",
+   "gap": 0.1
+  },
+  {
+   "browser": "webkit",
+   "case": "402x874 play light",
+   "board": "370→370",
+   "boardTop": "136→136",
+   "key": "56→69.8",
+   "kd": "21.08→27.29",
+   "weight": "600→600",
+   "kr": "11→12.38",
+   "gap": 0.1
+  },
+  {
+   "browser": "webkit",
+   "case": "402x874 today dark",
+   "board": "370→370",
+   "boardTop": "136→136",
+   "key": "56→69.8",
+   "kd": "21.08→27.29",
+   "weight": "600→600",
+   "kr": "11→12.38",
+   "gap": 0.1
+  },
+  {
+   "browser": "webkit",
+   "case": "402x874 play light nosa",
+   "board": "370→370",
+   "boardTop": "74→74",
+   "key": "56→69.8",
+   "kd": "21.08→27.29",
+   "weight": "600→600",
+   "kr": "11→12.38",
+   "gap": 0.1
+  },
+  {
+   "browser": "webkit",
+   "case": "402x874 play-glyphs light",
+   "board": "370→370",
+   "boardTop": "136→136",
+   "key": "56→69.8",
+   "kd": "21.08→27.29",
+   "weight": "600→600",
+   "kr": "11→12.38",
+   "gap": 0.1
+  },
+  {
+   "browser": "webkit",
+   "case": "390x844 play light",
+   "board": "358→358",
+   "boardTop": "121→121",
+   "key": "56→62.6",
+   "kd": "21.08→24.05",
+   "weight": "600→600",
+   "kr": "11→11.66",
+   "gap": 0.1
+  },
+  {
+   "browser": "webkit",
+   "case": "390x844 today dark",
+   "board": "358→358",
+   "boardTop": "121→121",
+   "key": "56→62.6",
+   "kd": "21.08→24.05",
+   "weight": "600→600",
+   "kr": "11→11.66",
+   "gap": 0.1
+  },
+  {
+   "browser": "webkit",
+   "case": "390x844 play light nosa",
+   "board": "358→358",
+   "boardTop": "74→74",
+   "key": "56→62.6",
+   "kd": "21.08→24.05",
+   "weight": "600→600",
+   "kr": "11→11.66",
+   "gap": 0.1
+  },
+  {
+   "browser": "webkit",
+   "case": "390x844 play-glyphs light",
+   "board": "358→358",
+   "boardTop": "121→121",
+   "key": "56→62.6",
+   "kd": "21.08→24.05",
+   "weight": "600→600",
+   "kr": "11→11.66",
+   "gap": 0.1
+  },
+  {
+   "browser": "webkit",
+   "case": "414x896 play light",
+   "board": "382→382",
+   "boardTop": "122→122",
+   "key": "62→76",
+   "kd": "23.78→28.65",
+   "weight": "600→600",
+   "kr": "11.6→13",
+   "gap": 0.1
+  },
+  {
+   "browser": "webkit",
+   "case": "414x896 today dark",
+   "board": "382→382",
+   "boardTop": "122→122",
+   "key": "62→76",
+   "kd": "23.78→28.65",
+   "weight": "600→600",
+   "kr": "11.6→13",
+   "gap": 0.1
+  },
+  {
+   "browser": "webkit",
+   "case": "414x896 play light nosa",
+   "board": "382→382",
+   "boardTop": "74→74",
+   "key": "62→76",
+   "kd": "23.78→28.65",
+   "weight": "600→600",
+   "kr": "11.6→13",
+   "gap": 0.1
+  },
+  {
+   "browser": "webkit",
+   "case": "414x896 play-glyphs light",
+   "board": "382→382",
+   "boardTop": "122→122",
+   "key": "62→76",
+   "kd": "23.78→28.65",
+   "weight": "600→600",
+   "kr": "11.6→13",
+   "gap": 0.1
+  },
+  {
+   "browser": "webkit",
+   "case": "412x915 play light",
+   "board": "380→380",
+   "boardTop": "74→74",
+   "key": "60.8→75.8",
+   "kd": "23.24→28.5",
+   "weight": "600→600",
+   "kr": "11.48→12.98",
+   "gap": 0.1
+  },
+  {
+   "browser": "webkit",
+   "case": "412x915 today dark",
+   "board": "380→380",
+   "boardTop": "74→74",
+   "key": "60.8→75.8",
+   "kd": "23.24→28.5",
+   "weight": "600→600",
+   "kr": "11.48→12.98",
+   "gap": 0.1
+  },
+  {
+   "browser": "webkit",
+   "case": "412x915 play-glyphs light",
+   "board": "380→380",
+   "boardTop": "74→74",
+   "key": "60.8→75.8",
+   "kd": "23.24→28.5",
+   "weight": "600→600",
+   "kr": "11.48→12.98",
+   "gap": 0.1
+  },
+  {
+   "browser": "webkit",
+   "case": "375x812 play light",
+   "board": "343→343",
+   "boardTop": "124→124",
+   "key": "56→56",
+   "kd": "21.08→21.08",
+   "weight": "600→600",
+   "kr": "11→11",
+   "gap": 0.1
+  },
+  {
+   "browser": "webkit",
+   "case": "375x812 today dark",
+   "board": "343→343",
+   "boardTop": "124→124",
+   "key": "56→56",
+   "kd": "21.08→21.08",
+   "weight": "600→600",
+   "kr": "11→11",
+   "gap": 0.1
+  },
+  {
+   "browser": "webkit",
+   "case": "375x812 play light nosa",
+   "board": "343→343",
+   "boardTop": "74→74",
+   "key": "56→56",
+   "kd": "21.08→21.08",
+   "weight": "600→600",
+   "kr": "11→11",
+   "gap": 0.1
+  },
+  {
+   "browser": "webkit",
+   "case": "375x812 play-glyphs light",
+   "board": "343→343",
+   "boardTop": "124→124",
+   "key": "56→56",
+   "kd": "21.08→21.08",
+   "weight": "600→600",
+   "kr": "11→11",
+   "gap": 0.1
+  },
+  {
+   "browser": "webkit",
+   "case": "360x800 play light",
+   "board": "328→328",
+   "boardTop": "74→74",
+   "key": "56→56",
+   "kd": "21.08→21.08",
+   "weight": "600→600",
+   "kr": "11→11",
+   "gap": 0.1
+  },
+  {
+   "browser": "webkit",
+   "case": "360x800 today dark",
+   "board": "328→328",
+   "boardTop": "74→74",
+   "key": "56→56",
+   "kd": "21.08→21.08",
+   "weight": "600→600",
+   "kr": "11→11",
+   "gap": 0.1
+  },
+  {
+   "browser": "webkit",
+   "case": "360x800 play-glyphs light",
+   "board": "328→328",
+   "boardTop": "74→74",
+   "key": "56→56",
+   "kd": "21.08→21.08",
+   "weight": "600→600",
+   "kr": "11→11",
+   "gap": 0.1
+  },
+  {
+   "browser": "webkit",
+   "case": "430x932 play light AX3",
+   "board": "398→398",
+   "boardTop": "203→203",
+   "key": "56→56",
+   "kd": "29.85→29.85",
+   "weight": "600→600",
+   "kr": "11→11",
+   "gap": 1
+  },
+  {
+   "browser": "webkit",
+   "case": "430x932 today light AX3",
+   "board": "346→346",
+   "boardTop": "248→248",
+   "key": "56→56",
+   "kd": "29.85→29.85",
+   "weight": "600→600",
+   "kr": "11→11",
+   "gap": 1
+  },
+  {
+   "browser": "webkit",
+   "case": "440x956 play light AX3",
+   "board": "408→408",
+   "boardTop": "206→206",
+   "key": "56→56",
+   "kd": "30.6→30.6",
+   "weight": "600→600",
+   "kr": "11→11",
+   "gap": 1
+  },
+  {
+   "browser": "webkit",
+   "case": "440x956 today light AX3",
+   "board": "367→367",
+   "boardTop": "251→251",
+   "key": "56→56",
+   "kd": "30.6→30.6",
+   "weight": "600→600",
+   "kr": "11→11",
+   "gap": 1
+  },
+  {
+   "browser": "webkit",
+   "case": "393x852 play light AX3",
+   "board": "354→354",
+   "boardTop": "203→203",
+   "key": "56→56",
+   "kd": "27.08→27.08",
+   "weight": "600→600",
+   "kr": "11→11",
+   "gap": 1
+  },
+  {
+   "browser": "webkit",
+   "case": "393x852 today light AX3",
+   "board": "266→266",
+   "boardTop": "248→248",
+   "key": "56→56",
+   "kd": "27.08→27.08",
+   "weight": "600→600",
+   "kr": "11→11",
+   "gap": 1
+  },
+  {
+   "browser": "webkit",
+   "case": "320x568 play light AX3",
+   "board": "149→149",
+   "boardTop": "164→164",
+   "key": "56→56",
+   "kd": "21.6→21.6",
+   "weight": "600→600",
+   "kr": "11→11",
+   "gap": 1
+  },
+  {
+   "browser": "webkit",
+   "case": "320x568 today light AX3",
+   "board": "149→149",
+   "boardTop": "209→209",
+   "key": "56→56",
+   "kd": "21.6→21.6",
+   "weight": "600→600",
+   "kr": "11→11",
+   "gap": -43.9
+  },
+  {
+   "browser": "webkit",
+   "case": "430x932 play light xxxL",
+   "board": "398→398",
+   "boardTop": "151→151",
+   "key": "71.6→76",
+   "kd": "29.85→29.85",
+   "weight": "600→600",
+   "kr": "12.56→13",
+   "gap": 1
+  },
+  {
+   "browser": "webkit",
+   "case": "393x852 play light xxxL",
+   "board": "361→361",
+   "boardTop": "151→151",
+   "key": "56→64.4",
+   "kd": "27.08→27.08",
+   "weight": "600→600",
+   "kr": "11→11.84",
+   "gap": 1
+  },
+  {
+   "browser": "webkit",
+   "case": "932x430 play light landscape",
+   "board": "320.9→320.9",
+   "boardTop": "12→12",
+   "key": "56→56",
+   "kd": "21.08→21.08",
+   "weight": "600→600",
+   "kr": "11→11",
+   "gap": 0.1
+  },
+  {
+   "browser": "webkit",
+   "case": "956x440 today dark landscape",
+   "board": "330.9→330.9",
+   "boardTop": "12→12",
+   "key": "56→56",
+   "kd": "21.08→21.08",
+   "weight": "600→600",
+   "kr": "11→11",
+   "gap": 0.1
+  },
+  {
+   "browser": "webkit",
+   "case": "1280x800 play light desk",
+   "board": "676→676",
+   "boardTop": "72→72",
+   "key": "64→64",
+   "kd": "25.92→25.92",
+   "weight": "600→600",
+   "kr": "12→12",
+   "gap": -472
+  },
+  {
+   "browser": "webkit",
+   "case": "1280x800 play-glyphs dark desk",
+   "board": "676→676",
+   "boardTop": "72→72",
+   "key": "64→64",
+   "kd": "25.92→25.92",
+   "weight": "600→600",
+   "kr": "12→12",
+   "gap": -472
+  }
+ ]
+}
