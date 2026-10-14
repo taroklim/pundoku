@@ -16,6 +16,19 @@ export const FIT = {
   gapPad: 16,
   /** Пол поля: резерв не сжимает его глубже. */
   boardFloor: 240,
+  /** PD-300: базовая высота клавиши 1–9 (она и сидит в `--chrome0`). */
+  keyH: 56,
+  /** PD-300: прибавка клавиш по ширине пада — с какой ширины (px) и сколько px высоты на px ширины. */
+  growFrom: 372,
+  growPerPx: 0.6,
+  /** PD-300: прибавка по запасу высоты — сколько px запаса не трогаем и какую долю остатка отдаём клавишам. */
+  growMargin: 16,
+  growShare: 0.5,
+  /** PD-300: потолок прибавки (клавиша ≤ 76 px). */
+  growMax: 20,
+  /** PD-300: доля прибавки, на которую растёт кегль цифры; потолок кегля — 7.5 % ширины пада. */
+  digitPerPx: 0.45,
+  digitCapCqi: 0.075,
 } as const;
 
 export interface FitInput {
@@ -65,4 +78,23 @@ export function dockRoom(i: FitInput): number {
  */
 export function fitClassName({ fit, hintable, docked }: { fit: boolean; hintable: boolean; docked: boolean }): string {
   return fit ? ` play-fit${hintable ? " play-hintable" : ""}${docked ? " play-docked" : ""}` : "";
+}
+
+/**
+ * PD-300: прибавка высоты клавиш 1–9 (`--key-grow` у `.play-fit > .pad-wrap`, play.css). Меньшее из «по ширине пада» и «по
+ * половине запаса высоты под полем», в [0, 20]. `width` — ширина колонки = ширина пада = ширина поля, когда поле упирается в неё.
+ * Поле от прибавки не зависит (`--chrome` прежний): клавиши занимают часть зазора, который и так пустовал.
+ */
+export function keyGrow(i: FitInput & { ax3?: boolean }): number {
+  if (i.ax3) return 0;
+  const slack = i.vh - chrome0(i) - extra(i) - i.width;
+  const byWidth = (i.width - FIT.growFrom) * FIT.growPerPx;
+  const bySlack = (slack - FIT.growMargin) * FIT.growShare;
+  return Math.min(FIT.growMax, Math.max(0, Math.min(byWidth, bySlack)));
+}
+
+/** PD-300: высота клавиши 1–9 и кегль её цифры (px). */
+export function keyMetrics(i: FitInput & { ax3?: boolean }): { height: number; digit: number } {
+  const g = keyGrow(i);
+  return { height: FIT.keyH + g, digit: Math.min(1.24 * i.rem + g * FIT.digitPerPx, FIT.digitCapCqi * i.width) };
 }
