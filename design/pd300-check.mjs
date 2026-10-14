@@ -1,6 +1,6 @@
 /**
- * PD-300 — живая проверка: на крупных iPhone (15/16 Plus, Pro Max) клавиши 1–9 выше и цифра крупнее, на остальных экранах — как в
- * main; поле нигде не меняется. Сравнение ветки с эталонной сборкой main на РЕАЛЬНЫХ сборках (Chromium + WebKit).
+ * PD-300 / PD-302 — живая проверка: клавиши 1–9 выше и цифра крупнее на iPhone от 390 pt (PD-302: и на iPhone 16 393×852 — решение
+ * владельца), на 375 pt и уже, AX3, в ландшафте и на десктопе C — как в main; поле нигде не меняется. Сравнение ветки с эталонной сборкой main на РЕАЛЬНЫХ сборках (Chromium + WebKit).
  *
  *   cd apps/web && npx vite build --outDir /tmp/pd300-dist          (ветка pd-300)
  *   (main)        npx vite build --outDir /tmp/pd300-base            (эталон)
@@ -8,19 +8,24 @@
  *     node design/pd300-check.mjs [chromium] [webkit]
  *
  * Условия — как pd285/pd295: html font-size 17 px (23 — xxxL, 40 — AX3), --sa-top/--sa-bot как у устройства (430×932 и 393×852
- * 59/34, 428×926 47/34, 440×956 62/34, 375×667 и 320×568 20/0) и вариант «без safe-area» (вкладка браузера/эмуляция); isMobile +
+ * 59/34, 428×926 47/34, 440×956 и 402×874 62/34, 390×844 47/34, 414×896 48/34, 375×812 50/34, 375×667 и 320×568 20/0, Android
+ * 412×915 и 360×800 0/0) и вариант «без safe-area» (вкладка браузера/эмуляция); isMobile +
  * hasTouch, время зафиксировано, сетка дня своя. Питомец выключен в обеих сборках (localStorage pundoku.pet = "0").
  *
  * На каждом кадре (ветка и main): поле (.board: top/left/width/height), клавиша (высота, ширина), кегль/насыщенность цифры, кегль
  * счётчика остатка, низ ряда действий против верха таб-бара, экран партии не прокручивается.
  *   board     — поле ветки == поле main (±0.5 px) везде;
- *   grow      — 428/430/440 (17 и 23 px): клавиша выше main ≥ 8 px, цифра крупнее main;
- *   same      — 320/375/393 (и с safe-area, и без), AX3, ландшафт 932×430, десктоп C 1280×800: высота клавиши и кегль цифры == main;
+ *   grow      — PD-302: 390/393/402 (17 и 23 px, с safe-area и без): клавиша выше main ≥ 6 px и ≤ 76, цифра не мельче main (при 17 px
+ *               крупнее); 393×852 при 17 px — клавиша 64–68 px, цифра 24–25.5 px;
+ *   big       — 412/414/428/430/440: клавиша не ниже main (после PD-300) и ≤ 76 px, цифра не мельче main;
+ *   same      — 320×568, 375×667, 375×812, 360×800 (и с safe-area, и без), AX3, ландшафт 932×430, десктоп C 1280×800: высота
+ *               клавиши и кегль цифры == main;
  *   fit       — ряд действий над таб-баром, экран партии не прокручивается (Today при AX3 прокручивается по PD-159 — там не меряем);
  *   kr        — счётчик остатка не мельче 11 px;
- *   dock      — 430×932: открытый док подсказки поле не двигает (как в main).
- * Режимы: Today, Play Classic, Лжец, Ink, Глифы. Кадры до/после (430×932, light/dark, Play и Today, chromium) —
- * design/pd300-shots/{main,pd300}-430x932-<тема>-<экран>.png; итог — design/pd300-shots/results-<браузеры>.json.
+ *   dock      — 430×932 и 393×852: открытый док подсказки поле не двигает (как в main).
+ * Режимы: Today, Play Classic, Лжец, Ink, Глифы. Кадры до/после (393×852 и 430×932, light/dark, Play и Today, chromium) —
+ * design/<OUT>/{main,<TAG>}-<w>x<h>-<тема>-<экран>.png; итог — design/<OUT>/results-<браузеры>.json. OUT/TAG — переменные
+ * окружения (по умолчанию pd302-shots / pd302; для PD-300 были pd300-shots / pd300).
  */
 import { createRequire } from "node:module";
 import http from "node:http";
@@ -32,7 +37,8 @@ const HERE = path.dirname(new URL(import.meta.url).pathname);
 const DIST = path.resolve(process.env.DIST ?? path.join(HERE, "../apps/web/dist"));
 const BASE_DIST = path.resolve(process.env.BASE_DIST ?? "/tmp/pd300-base");
 const PORT = +(process.env.PORT ?? 5531);
-const OUT = path.join(HERE, "pd300-shots");
+const OUT = path.join(HERE, process.env.OUT ?? "pd302-shots");
+const TAG = process.env.TAG ?? "pd302";
 const NOW = new Date("2026-10-14T09:00:00Z");
 const MISSION = "530070000600195000098000060800060003400803001700020006060000280000419005000080079";
 const args = process.argv.slice(2);
@@ -72,14 +78,33 @@ const check = (name, ok, detail = {}) => {
 };
 
 // ---------- кейсы ----------
-const SA = { "430x932": [59, 34], "428x926": [47, 34], "440x956": [62, 34], "393x852": [59, 34], "375x667": [20, 0], "320x568": [20, 0] };
-const BIG = new Set(["430x932", "428x926", "440x956"]);
+const SA = {
+  "430x932": [59, 34],
+  "428x926": [47, 34],
+  "440x956": [62, 34],
+  "393x852": [59, 34],
+  "375x667": [20, 0],
+  "320x568": [20, 0],
+  "402x874": [62, 34],
+  "390x844": [47, 34],
+  "414x896": [48, 34],
+  "412x915": [0, 0],
+  "375x812": [50, 34],
+  "360x800": [0, 0],
+};
+// PD-302: класс ожидания по ширине вьюпорта (главный кейс — iPhone 16 владельца, 393×852).
+const GROW = new Set(["390x844", "393x852", "402x874"]);
+const BIG = new Set(["412x915", "414x896", "428x926", "430x932", "440x956"]);
+// Полный набор режимов — на исходных шести экранах PD-300; на добавленных в PD-302 — Play/Today, без safe-area и Глифы.
+const FULL = new Set(["430x932", "428x926", "440x956", "393x852", "375x667", "320x568"]);
 const cases = [];
 for (const s of Object.keys(SA)) {
   const [w, h] = s.split("x").map(Number);
-  for (const screen of ["play", "today"]) for (const scheme of ["light", "dark"]) cases.push({ s, w, h, screen, scheme, rem: 17, sa: SA[s] });
-  cases.push({ s, w, h, screen: "play", scheme: "light", rem: 17, sa: [0, 0], tag: "nosa" });
-  for (const mode of ["liar", "ink", "glyphs"]) cases.push({ s, w, h, screen: "play", mode, scheme: "light", rem: 17, sa: SA[s] });
+  const full = FULL.has(s);
+  for (const screen of ["play", "today"])
+    for (const scheme of ["light", "dark"]) if (full || (screen === "play") === (scheme === "light")) cases.push({ s, w, h, screen, scheme, rem: 17, sa: SA[s] });
+  if (SA[s][0] || SA[s][1]) cases.push({ s, w, h, screen: "play", scheme: "light", rem: 17, sa: [0, 0], tag: "nosa" });
+  for (const mode of full ? ["liar", "ink", "glyphs"] : ["glyphs"]) cases.push({ s, w, h, screen: "play", mode, scheme: "light", rem: 17, sa: SA[s] });
 }
 for (const s of ["430x932", "440x956", "393x852", "320x568"]) {
   const [w, h] = s.split("x").map(Number);
@@ -221,27 +246,29 @@ try {
     const browser = await pw[bname].launch();
     try {
       for (const c0 of cases) {
-        const c = { ...c0, dock: c0.s === "430x932" && c0.screen === "play" && !c0.mode && c0.rem === 17 && !c0.tag };
+        const c = { ...c0, dock: (c0.s === "430x932" || c0.s === "393x852") && c0.screen === "play" && !c0.mode && c0.rem === 17 && !c0.tag };
         const L = `${bname} ${label(c)}`;
         if (FILTER && !L.includes(FILTER)) continue;
-        const shotOk = bname === "chromium" && c.s === "430x932" && !c.mode && !c.tag && c.rem === 17;
-        const nm = (who) => (shotOk ? path.join(OUT, `${who}-430x932-${c.scheme}-${c.screen}.png`) : null);
+        const shotOk = bname === "chromium" && (c.s === "430x932" || c.s === "393x852") && !c.mode && !c.tag && c.rem === 17;
+        const nm = (who) => (shotOk ? path.join(OUT, `${who}-${c.s}-${c.scheme}-${c.screen}.png`) : null);
         let a, b;
         try {
-          a = await frame(browser, bname, c, `http://127.0.0.1:${PORT}`, nm("pd300"));
+          a = await frame(browser, bname, c, `http://127.0.0.1:${PORT}`, nm(TAG));
           b = await frame(browser, bname, c, `http://127.0.0.1:${PORT + 1}`, nm("main"));
         } catch (e) {
           check(`${L}: кадр снят`, false, { err: String(e).slice(0, 300) });
           continue;
         }
         check(`${L}: board == main`, sameBox(a.board, b.board), { pd300: a.board, main: b.board });
-        const big = BIG.has(c.s) && !c.expectSame;
-        if (big) {
-          check(`${L}: клавиша выше main ≥ 8 px, цифра крупнее`, a.key.h >= b.key.h + 8 && (c.mode === "glyphs" ? a.gl.w > b.gl.w : a.kd.size > b.kd.size), {
-            key: [b.key.h, a.key.h],
-            kd: [b.kd.size, a.kd.size],
-            gl: [b.gl?.w, a.gl?.w],
-          });
+        const sizes = { key: [b.key.h, a.key.h], kd: [b.kd.size, a.kd.size], gl: [b.gl?.w, a.gl?.w] };
+        const notSmaller = c.mode === "glyphs" ? a.gl.w >= b.gl.w - 0.05 : a.kd.size >= b.kd.size - 0.01;
+        if (GROW.has(c.s) && !c.expectSame) {
+          const larger = c.mode === "glyphs" ? a.gl.w > b.gl.w : a.kd.size > b.kd.size;
+          check(`${L}: клавиша выше main ≥ 6 px и ≤ 76, цифра ${c.rem === 17 ? "крупнее" : "не мельче"}`, a.key.h >= b.key.h + 6 && a.key.h <= 76.5 && (c.rem === 17 ? larger : notSmaller), sizes);
+          if (c.s === "393x852" && c.rem === 17 && !c.mode)
+            check(`${L}: iPhone 16 — клавиша 64–68 px, цифра 24–25.5 px`, a.key.h >= 63.5 && a.key.h <= 68.5 && a.kd.size >= 24 && a.kd.size <= 25.5, sizes);
+        } else if (BIG.has(c.s) && !c.expectSame) {
+          check(`${L}: клавиша не ниже main (PD-300) и ≤ 76, цифра не мельче`, a.key.h >= b.key.h - 0.5 && a.key.h <= 76.5 && notSmaller, sizes);
         } else {
           check(`${L}: клавиша и цифра == main`, near(a.key.h, b.key.h) && near(a.kd.size, b.kd.size, 0.01) && near(a.gl?.w ?? 0, b.gl?.w ?? 0), {
             key: [b.key.h, a.key.h],
@@ -260,7 +287,7 @@ try {
         check(`${L}: счётчик остатка ≥ 11 px`, a.kr >= 11, { kr: a.kr });
         if (a.docked) check(`${L}: док подсказки поле не двигает`, sameBox(a.docked.board, a.board) && sameBox(b.docked?.board, b.board), { closed: a.board, open: a.docked.board });
         if (a.errs.length) check(`${L}: без ошибок страницы`, false, { errs: a.errs.slice(0, 3) });
-        table.push({ browser: bname, case: label(c), board: `${b.board.w}→${a.board.w}`, key: `${b.key.h}→${a.key.h}`, kd: `${b.kd.size}→${a.kd.size}`, weight: `${b.kd.weight}→${a.kd.weight}`, kr: `${b.kr}→${a.kr}`, gap: +(a.tab ? a.tab.t - a.actions.b : 0).toFixed(1) });
+        table.push({ browser: bname, case: label(c), board: `${b.board.w}→${a.board.w}`, boardTop: `${b.board.t}→${a.board.t}`, key: `${b.key.h}→${a.key.h}`, kd: `${b.kd.size}→${a.kd.size}`, weight: `${b.kd.weight}→${a.kd.weight}`, kr: `${b.kr}→${a.kr}`, gap: +(a.tab ? a.tab.t - a.actions.b : 0).toFixed(1) });
       }
     } finally {
       await browser.close();
