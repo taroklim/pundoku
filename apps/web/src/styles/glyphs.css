@@ -55,9 +55,11 @@
 
 /* Пад: контурные знаки 24 pt в клавише (макет: min(24px, 62 %) кнопки 48 pt). Клавиша = (ширина пада − 8 зазоров)/9; на
    320 pt знак ≈ 19 px, на 390 — 23–24 px. Ширина пада известна контейнеру (`7.5cqi` у цифр — та же опора). */
+/* PD-300: на крупных iPhone знак растёт вместе с клавишей (`--key-grow`, play.css): +0.4 к 24 px, потолок по ширине клавиши
+   чуть выше (6.4cqi + 0.1 прибавки) — на 430 pt ≈ 27 px. Там, где прибавки нет, — прежние min(24px, 6.4cqi). */
 .gl-pad .kd .gl {
-  width: min(24px, 6.4cqi);
-  height: min(24px, 6.4cqi);
+  width: min(calc(24px + var(--key-grow, 0px) * 0.4), calc(6.4cqi + var(--key-grow, 0px) * 0.1));
+  height: min(calc(24px + var(--key-grow, 0px) * 0.4), calc(6.4cqi + var(--key-grow, 0px) * 0.1));
   margin-block: 1px;
 }
 

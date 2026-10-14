@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { FIT, boardSide, chrome0, dockRoom, extra, tabbarH } from "./fitModel";
+import { FIT, boardSide, chrome0, dockRoom, extra, keyGrow, keyMetrics, tabbarH } from "./fitModel";
 
 const SCREENS = [
   { name: "320x568", w: 320, h: 568 },
@@ -74,3 +74,79 @@ describe("PD-144 D-1: резерв под док подсказки (модел�
     expect(tabbarH(40)).toBeCloseTo(64 + 2 * 1.5, 6);
   });
 });
+
+describe("PD-300: клавиши 1–9 крупнее на больших iPhone (модель)", () => {
+  // Safe-area PWA (viewport-fit=cover): верх/низ, как у устройства.
+  const PHONES = [
+    { name: "430x932 (15/16 Plus)", w: 430, h: 932, saTop: 59, saBot: 34, big: true },
+    { name: "428x926 (14 Plus)", w: 428, h: 926, saTop: 47, saBot: 34, big: true },
+    { name: "440x956 (16 Pro Max)", w: 440, h: 956, saTop: 62, saBot: 34, big: true },
+    { name: "402x874 (16 Pro)", w: 402, h: 874, saTop: 62, saBot: 34, big: false },
+    { name: "393x852 (15/16)", w: 393, h: 852, saTop: 59, saBot: 34, big: false },
+    { name: "390x844", w: 390, h: 844, saTop: 47, saBot: 34, big: false },
+    { name: "375x667 (SE/8)", w: 375, h: 667, saTop: 20, saBot: 0, big: false },
+    { name: "320x568", w: 320, h: 568, saTop: 20, saBot: 0, big: false },
+  ] as const;
+  const at = (s: (typeof PHONES)[number], o: { rem?: number; sa?: boolean; hintable?: boolean; ax3?: boolean } = {}) => ({
+    vh: s.h,
+    width: s.w - 32,
+    rem: o.rem ?? 17,
+    saTop: o.sa === false ? 0 : s.saTop,
+    saBot: o.sa === false ? 0 : s.saBot,
+    hintable: o.hintable ?? true,
+    ax3: o.ax3,
+  });
+
+  it("428/430/440: клавиша 68–76 px, цифра ≥ 1.6rem и не шире 7.5 % пада; поле — ширина колонки, как было", () => {
+    for (const s of PHONES.filter((p) => p.big))
+      for (const hintable of [true, false]) {
+        const i = at(s, { hintable });
+        const m = keyMetrics(i);
+        expect(m.height, s.name).toBeGreaterThanOrEqual(68);
+        expect(m.height, s.name).toBeLessThanOrEqual(FIT.keyH + FIT.growMax);
+        expect(m.digit, s.name).toBeGreaterThanOrEqual(1.6 * 17);
+        expect(m.digit, s.name).toBeLessThanOrEqual(FIT.digitCapCqi * i.width + 1e-9);
+        expect(boardSide(i), s.name).toBe(i.width);
+      }
+  });
+
+  it("393 и уже — прибавки нет ни с safe-area, ни без неё (вкладка браузера), клавиша 56, цифра min(1.24rem, 7.5cqi)", () => {
+    for (const s of PHONES.filter((p) => !p.big))
+      for (const sa of [true, false]) {
+        const i = at(s, { sa });
+        expect(keyGrow(i), `${s.name} sa ${sa}`).toBe(0);
+        expect(keyMetrics(i)).toEqual({ height: 56, digit: Math.min(1.24 * 17, 0.075 * i.width) });
+      }
+  });
+
+  it("клавиши берут не больше половины запаса минус 16 px: строке статуса и ряду действий остаётся место над таб-баром", () => {
+    for (const s of PHONES)
+      for (const rem of [17, 20, 23, 28])
+        for (const sa of [true, false]) {
+          const i = at(s, { rem, sa });
+          const slack = i.vh - chrome0(i) - extra(i) - boardSide(i);
+          const g = keyGrow(i);
+          expect(g).toBeGreaterThanOrEqual(0);
+          if (g > 0) expect(slack - g, `${s.name} rem ${rem}`).toBeGreaterThanOrEqual(FIT.growMargin + g - 1e-9);
+        }
+  });
+
+  it("где поле ограничено высотой (запаса нет) — прибавки нет; при AX3 — 0 всегда", () => {
+    for (const s of PHONES) {
+      const i = at(s);
+      if (boardSide(i) < i.width) expect(keyGrow(i), s.name).toBe(0);
+      expect(keyGrow(at(s, { rem: 40, ax3: true })), s.name).toBe(0);
+    }
+    // Ширина Plus, но низкое окно: поле уступает высоте → клавиши прежние.
+    expect(keyGrow({ vh: 700, width: 398, rem: 17, hintable: true })).toBe(0);
+  });
+
+  it("поле не зависит от прибавки: boardSide считается без неё (тот же --chrome с 56 px клавиш)", () => {
+    expect(FIT.padSlot).toBe(FIT.keyH + 66);
+    for (const s of PHONES) {
+      const i = at(s);
+      expect(boardSide(i)).toBe(Math.max(0, Math.min(i.width, i.vh - chrome0(i) - extra(i))));
+    }
+  });
+});
+

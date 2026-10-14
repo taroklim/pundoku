@@ -75,6 +75,10 @@
   .play-fit > .pad-wrap .actions {
     padding-bottom: 12px;
   }
+  /* PD-300: прибавка клавиш крупных iPhone — только в портрете (здесь панель в правой колонке, запаса нет). */
+  .play-fit > .pad-wrap {
+    --key-grow: 0px;
+  }
 
   .play-fit .board {
     width: var(--side);
