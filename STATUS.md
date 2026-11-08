@@ -650,7 +650,7 @@ Gates: build → typecheck, lint, тесты web/engine/api (api с TEST_DATABAS
 | PD-303 | QA PD-302 (Chromium+WebKit, поле == main везде, 320/375/десктоп без регрессий) + кадры для владельца: Today в середине партии до (main 3f56ecb)/после, 393×852 и 430×932, светлая/тёмная, 8 PNG + 4 compare в design/pd302-owner-shots/ (в репо, НЕ на Desktop — решение владельца) | qa-tester | P1 | completed (PASS) | PD-302 |
 | PD-304 | Движок (владелец, вариант A): техники X-Wing (+swordfish, если дёшево, иначе PD-307 P2) в human-решателе; новая ступень между expert и master (master = нужен X-Wing+ или перебор); generate опция noXWing (отсекает сетки с X-Wing и выше), версионирование алгоритма; тест ≥200 сеток (нет X-Wing, уникальность), замер времени генерации | developer | P1 | completed (локальный main bab8d87, не запушен; X-Wing+Swordfish, ступень expert_plus через корпус 300 баз, noXWing; движок 416/416; expert Node p95 242 мс) | — |
 | PD-305 | Web/API: чекбокс «Без X-Wing» в настройках (сохраняется, en/uk/ru), новая ступень в списке сложностей, Play по умолчанию expert; ежедневный — переключатель источника «Sudoku.com» (дефолт) / «наш Эксперт без X-Wing» (dailyPuzzle по дате), без смены пазла посреди начатого дня, история/серии/Year целы; генерация в воркере, замер на iPhone-профиле | developer | P1 | completed (локальный main 578b549, не запушен; Virtuoso/expert_plus, «No X-Wing» в Settings, источник дня; web 2093, pd305-check 56/56) | PD-304 |
-| PD-306 | QA PD-304/305 (Chromium+WebKit, ≥200 сеток, регрессии Play/Today/Year, i18n) | qa-tester | P1 | in_progress | PD-305 |
+| PD-306 | QA PD-304/305 (Chromium+WebKit, ≥200 сеток, регрессии Play/Today/Year, i18n) | qa-tester | P1 | completed (PASS с замечаниями: движок 210+40 expert без рыб/единственность, UI 358/358; замер CPU×4 на перегруженной машине неточный; iOS не проверен) | PD-305 |
 | PD-307 | Swordfish отдельным тикетом (если не влезло в PD-304) | developer | P2 | completed (swordfish сделан в PD-304) | PD-304 |
 
 ### Бриф PD-8 (developer, P1 — пункт (a) блокирует UI-тикеты поля/Today)
@@ -837,7 +837,7 @@ Gates: build → typecheck, lint, тесты web/engine/api (api с `TEST_DATABA
 | Dev-Pundoku-265 | developer (opus) | done | PD-265 | 2026-10-09 |
 | Dev-Pundoku-304 | developer (opus) | done | PD-304 | 2026-11-08 |
 | Dev-Pundoku-305 | developer (opus) | done | PD-305 | 2026-11-08 |
-| QA-Pundoku-306 | qa-tester (sonnet) | working | PD-306 | 2026-11-08 |
+| QA-Pundoku-306 | qa-tester (sonnet) | done | PD-306 | 2026-11-08 |
 
 ## Чек-пойнт 2026-10-01 (конец сессии PM-Pundoku-7)
 - **Сделано:** решения владельца по релизу 1.1 зафиксированы; PD-74 (UI ink, pd-74 @ 73444b2), PD-75 (UI таймлапса/PNG Rhythm, pd-75 @ bfeedbf), PD-80 (счёт ходов в ink, pd-80 @ de5a52d) смержены в локальный main; gates на слитом: build/typecheck/lint, web 624, engine 178 (api не затронут, 174+3). PD-78 сделан в PD-74. PD-79 закрыт: не дефект.
@@ -1074,3 +1074,5 @@ Gates: build → typecheck, lint, тесты web/engine/api (api с `TEST_DATABA
 
 ## PD-304 (P1, 2026-11-08): эксперт без X-Wing — РАЗВИЛКА, ждёт решения владельца
 Разведка кода: в движке нет X-Wing/fish вообще; `expert` = потолок «пары» (уже строго ниже X-Wing, без угадывания), `master` = `beyond` (всё, что решатель не берёт). Ежедневный по умолчанию — сетка Sudoku.com через прокси (чужая, одна для всех), своя генерация только как фолбэк (medium). Подробности и варианты — в отчёте PM Менеджеру. Разработка не начата.
+
+## PD-304..306 (2026-11-08): решение владельца принято и реализовано, локальный main 578b549, НЕ запушен. Названия ступени «Virtuoso» и архив по настройке источника дня — решения Dev, ждут подтверждения владельца.
