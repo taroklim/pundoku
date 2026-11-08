@@ -165,7 +165,7 @@ describe("PD-167: режимы на хабе — строка на режим, �
     expect(q("mode-desc")!.textContent).toBe("Every digit is final: no undo and no eraser for digits. A wrong one leaves a blot.");
     expect(q("discard-note")).toBeNull();
     expect(q("sheet-start")!.textContent).toBe("Start");
-    expect(sheet.querySelectorAll('[role="radio"]')).toHaveLength(5);
+    expect(sheet.querySelectorAll('[role="radio"]')).toHaveLength(6); // PD-304: + expert_plus
     expect(q("difficulty-medium")!.getAttribute("aria-checked")).toBe("true");
     tap(q("difficulty-hard")!);
     expect(q("difficulty-hard")!.getAttribute("aria-checked")).toBe("true");
