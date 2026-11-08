@@ -44,7 +44,7 @@
       "highlightPeers": "Tint row, column and box",
       "highlightPeersFoot": "Very lightly tints the row, column and box of the selected cell, so you can see which cells it sees. On by default.",
       "noXWing": "No X-Wing",
-      "noXWingFoot": "Play offers only puzzles that never need an X-Wing or Swordfish: difficulties up to Expert. Turn it off to add Virtuoso and Master. On by default."
+      "noXWingFoot": "Play offers only puzzles that never need an X-Wing or Swordfish: difficulties up to Expert. Turn it off to add Expert+ and Master. On by default."
     },
     "open": "Settings",
     "backLabel": "Back to Today",
@@ -208,7 +208,7 @@
     "medium": "Medium",
     "hard": "Hard",
     "expert": "Expert",
-    "expert_plus": "Virtuoso",
+    "expert_plus": "Expert+",
     "master": "Master"
   },
   "play": {
@@ -255,7 +255,7 @@
         "fish": "X-Wing, Swordfish",
         "beyond": "beyond X-Wing"
       },
-      "noXWingNote": "Virtuoso and Master need an X-Wing, so they’re hidden. To play them, turn off “No X-Wing” in Settings.",
+      "noXWingNote": "Expert+ and Master need an X-Wing, so they’re hidden. To play them, turn off “No X-Wing” in Settings.",
       "left_one": "{{count}} cell left",
       "left_other": "{{count}} cells left",
       "more": "More",

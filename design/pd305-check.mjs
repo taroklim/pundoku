@@ -2,7 +2,7 @@
  * PD-305 живая проверка (393×852): DIST=apps/web/dist ENGINE=packages/engine/dist/index.js PW_MODULE=<playwright-core> OUT=/tmp/pd305-shots
  *   node design/pd305-check.mjs [chromium] [webkit] [timing] [only-timing]
  * A — новый профиль: Play → Classic: 4 сложности, Expert выбран, пояснение «No X-Wing»; Settings: switch вкл, источник Sudoku.com.
- * B — выключили «No X-Wing» → в шите 6 строк (Virtuoso, Master), пояснения нет; включили — снова 4.
+ * B — выключили «No X-Wing» → в шите 6 строк (Expert+, Master), пояснения нет; включили — снова 4.
  * C — Today (Sudoku.com) без ходов → выбрали наш → Today сразу наша сетка (= dailyPuzzle(date,'expert')), API дня больше не зовётся.
  * D — начатый день Sudoku.com → выбрали наш → подпись «from tomorrow», сетка та же и после перезагрузки; следующий день — наша.
  * E — наш источник офлайн (API 503 + offline) — та же сетка; два профиля — одинаковая сетка.
@@ -144,7 +144,7 @@ async function runA_B(br) {
     await openSheet(p);
     s = await sheetInfo(p);
     check(`${tag} B: 6 сложностей`, s.ids.length === 6 && s.ids.includes("expert_plus") && s.ids.includes("master"), s.ids);
-    check(`${tag} B: Virtuoso в списке`, s.labels.some((l) => /^Virtuoso24 clues · X-Wing, Swordfish$/.test(l)), s.labels);
+    check(`${tag} B: Expert+ в списке`, s.labels.some((l) => /^Expert\+24 clues · X-Wing, Swordfish$/.test(l)), s.labels);
     check(`${tag} B: пояснения нет`, s.note === null);
     await p.locator('[data-testid="mode-sheet"]').screenshot({ path: path.join(OUT, `${tag}-B-sheet-all.png`) });
     // выбрать master, включить настройку обратно — предвыбор Expert
