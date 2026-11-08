@@ -84,7 +84,7 @@ describe("PD-305: фильтр сложностей «Без X-Wing»", () => {
 describe("PD-305: DifficultyList", () => {
   (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
-  it("«Без X-Wing» вкл — 4 строки и пояснение; выкл — 6 строк (Virtuoso с подписью про X-Wing) без пояснения; переключение — сразу", async () => {
+  it("«Без X-Wing» вкл — 4 строки и пояснение; выкл — 6 строк (Expert+ с подписью про X-Wing) без пояснения; переключение — сразу", async () => {
     await i18n.changeLanguage("en");
     const host = document.createElement("div");
     document.body.append(host);
@@ -95,7 +95,7 @@ describe("PD-305: DifficultyList", () => {
     act(() => setNoXWing(false));
     expect(host.querySelectorAll('[role="radio"]')).toHaveLength(6);
     expect(host.querySelector('[data-testid="difficulty-noxwing-note"]')).toBeNull();
-    expect(host.querySelector('[data-testid="difficulty-expert_plus"]')!.textContent).toBe("Virtuoso24 clues · X-Wing, Swordfish");
+    expect(host.querySelector('[data-testid="difficulty-expert_plus"]')!.textContent).toBe("Expert+24 clues · X-Wing, Swordfish");
     expect(host.querySelector('[data-testid="difficulty-master"]')!.textContent).toBe("Master24 clues · beyond X-Wing");
     act(() => root.unmount());
     host.remove();
