@@ -22,9 +22,10 @@ export type GridInput = Grid | string;
 
 /**
  * Сложность — две оси (число подсказок × самая дорогая техника), см. `DIFFICULTY_PROFILES` и README:
- * easy 38/singles, medium 30/singles, hard 26/locked candidates, expert 24/pairs, master — beyond.
+ * easy 38/singles, medium 30/singles, hard 26/locked candidates, expert 24/pairs,
+ * expert_plus 24/X-Wing·Swordfish (PD-304), master — beyond (нужно что-то сильнее рыб либо перебор).
  */
-export type Difficulty = "easy" | "medium" | "hard" | "expert" | "master";
+export type Difficulty = "easy" | "medium" | "hard" | "expert" | "expert_plus" | "master";
 
 /** Профиль класса сложности: целевое число подсказок и техническая ось. */
 export interface DifficultyProfile {
@@ -43,7 +44,9 @@ export type Technique =
   | "hidden_single"
   | "locked_candidates"
   | "naked_pair"
-  | "hidden_pair";
+  | "hidden_pair"
+  | "x_wing"
+  | "swordfish";
 
 /** Техника либо маркер «сверх реализованных техник» (решатель застрял). */
 export type TechniqueOrBeyond = Technique | "beyond";
@@ -60,7 +63,7 @@ export interface Puzzle {
   readonly seed: string;
   /**
    * Техники, которые понадобились human-style решателю (в порядке первого применения).
-   * Для expert последним идёт `'beyond'` — решатель застрял, добито backtracking'ом.
+   * Для master последним идёт `'beyond'` — решатель застрял, добито backtracking'ом.
    */
   readonly techniques: readonly TechniqueOrBeyond[];
 }
@@ -78,9 +81,9 @@ export interface Step {
   readonly cell?: Cell;
   /** Цифра, которая ставится (singles). */
   readonly digit?: Digit;
-  /** Кандидаты, которые вычёркиваются (locked candidates, pairs). */
+  /** Кандидаты, которые вычёркиваются (locked candidates, pairs, X-Wing/Swordfish). */
   readonly eliminations?: readonly Elimination[];
-  /** Клетки-участники паттерна (пара, линия locked candidates). */
+  /** Клетки-участники паттерна (пара, линия locked candidates, клетки рыбы — кандидаты цифры в базовых линиях). */
   readonly cells?: readonly Cell[];
   /** Короткое объяснение на английском (локализация — на стороне UI). */
   readonly explanation?: string;

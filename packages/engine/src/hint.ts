@@ -127,11 +127,17 @@ export interface HintLead extends HintPlacement {
   readonly technique: "naked_single" | "hidden_single";
 }
 
+/**
+ * Техники лесенки подсказок: до пар включительно. Рыбы (X-Wing/Swordfish, PD-304) есть в решателе, но в лесенке
+ * подсказок пока нет — когда шагов до пар не осталось, подсказка идёт по прежнему пути (как для `'beyond'`).
+ */
+export type HintTechnique = Exclude<Technique, "x_wing" | "swordfish">;
+
 /** Логический шаг по доске. */
 export interface StepHint {
   readonly kind: "step";
   /** Ступень 2. */
-  readonly technique: Technique;
+  readonly technique: HintTechnique;
   /** Ступень 1. */
   readonly region: HintRegion;
   /** Ступень 3. */
@@ -234,7 +240,7 @@ function regionOf(unit: number): HintRegion {
 // ---------------------------------------------------------------------------------------------
 
 interface Raw {
-  readonly technique: Technique;
+  readonly technique: HintTechnique;
   /** Порядок обнаружения при сканировании — детерминированный тай-брейк. */
   readonly order: number;
   readonly target: readonly Cell[];

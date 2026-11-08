@@ -23,10 +23,11 @@ export const CEILING: Record<Difficulty, Technique> = {
   medium: "hidden_single",
   hard: "locked_candidates",
   expert: "hidden_pair",
+  expert_plus: "hidden_pair",
   master: "hidden_pair",
 };
 /** Ярус потолка класса в независимой модели: 1 — синглы, 2 — + locked candidates, 4 — + naked/hidden pairs. */
-export const TIER: Record<Difficulty, number> = { easy: 1, medium: 1, hard: 2, expert: 4, master: 4 };
+export const TIER: Record<Difficulty, number> = { easy: 1, medium: 1, hard: 2, expert: 4, expert_plus: 4, master: 4 };
 
 /** Полная независимая проверка сгенерированного Лжеца. Бросает с понятным сообщением. */
 export function assertHonestLiar(p: LiarPuzzle): void {

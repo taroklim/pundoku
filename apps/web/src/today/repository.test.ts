@@ -88,7 +88,7 @@ describe("isDayProgress (PD-148): порченые записи отбрасыв
     ["log: digit 10", withPlay(good, { log: [{ ...move, digit: 10 }] })],
     ["log: correct строкой", withPlay(good, { log: [{ ...move, correct: "yes" }] })],
     ["log: blot числом", withPlay(good, { log: [{ ...move, blot: 1 }] })],
-    ["log: неизвестная technique", withPlay(good, { log: [{ ...move, technique: "x_wing" }] })],
+    ["log: неизвестная technique", withPlay(good, { log: [{ ...move, technique: "xy_wing" }] })], // x_wing — известная с PD-304
     ["log: валидный ход, потом null", withPlay(good, { log: [move, null] })],
     ["log: не массив", withPlay(good, { log: {} })],
     ["notes: null", withPlay(good, { notes: null })],

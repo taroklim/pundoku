@@ -93,6 +93,7 @@ export type {
   HintRegion,
   HintRegionKind,
   HintState,
+  HintTechnique,
   MistakeHint,
   NoHint,
   NoHintReason,
