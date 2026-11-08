@@ -65,7 +65,7 @@ describe("страница режима", () => {
     expect(page.dataset.mode).toBe("classic");
     expect(page.querySelector("h2")!.textContent).toBe("Classic");
     expect(q("mode-desc")!.textContent).toBe("Plain sudoku: notes, undo and hints are all there.");
-    expect(page.querySelectorAll('[role="radio"]').length).toBe(modeDef("classic").difficulties.length);
+    expect(page.querySelectorAll('[role="radio"]').length).toBe(modeDef("classic").difficulties.length - 2); // PD-305: «Без X-Wing» вкл по умолчанию
     expect(q("mode-page-start")!.querySelector("span")!.textContent).toBe("Start");
     expect(q("mode-page-enter")!.textContent).toBe("↩"); // PD-269: чип клавиши
     expect(q("mode-sheet")).toBeNull();

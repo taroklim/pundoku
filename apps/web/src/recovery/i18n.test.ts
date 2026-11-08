@@ -62,7 +62,7 @@ describe("i18n: блок settings.* (PD-49)", () => {
     for (const l of [uk, ru]) {
       const t = settings(l);
       for (const k of Object.keys(e)) {
-        if (k === "key.enterPlaceholder" || k === "key.verifyPlaceholder" || k === "about.name") continue; // имя продукта не переводится
+        if (k === "key.enterPlaceholder" || k === "key.verifyPlaceholder" || k === "about.name" || k === "daily.sudoku") continue; // имена (продукт, Sudoku.com) не переводятся
         expect(t[k], k).not.toBe(e[k]);
       }
     }

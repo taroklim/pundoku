@@ -145,7 +145,7 @@ describe("PD-116: сохранение и восстановление парт�
 
     const c = await restored(repo);
     expect(c.pickFor("classic")).toBe("hard"); // нет выбора — сложность незавершённой игры режима
-    expect(c.pickFor("ink")).toBe("medium"); // у Чернил игры нет — по умолчанию
+    expect(c.pickFor("ink")).toBe("expert"); // у Чернил игры нет — по умолчанию (PD-305: Эксперт)
     c.setPick("ink", "easy");
     expect(c.pickFor("ink")).toBe("easy");
     expect(c.pickFor("classic")).toBe("hard");

@@ -13,6 +13,13 @@ import {
   setPetEnabled,
   setHighlightPeers,
   setHighlightWrong,
+  DAILY_SOURCE_KEY,
+  NO_X_WING_KEY,
+  getDailySource,
+  getNoXWing,
+  setDailySource,
+  setNoXWing,
+  subscribePrefs,
 } from "./prefs";
 
 beforeEach(() => {
@@ -145,5 +152,53 @@ describe("prefs: питомец-клякса (PD-180, PD-297 — по умолч
     expect(getPetEnabled()).toBe(false);
     setPetEnabled(true);
     expect(getPetEnabled()).toBe(true);
+  });
+});
+
+describe("prefs: PD-305 «Без X-Wing» и источник сетки дня", () => {
+  it("«Без X-Wing» по умолчанию ВКЛ (ключа нет); выкл — «0», вкл снова — ключ удаляется", () => {
+    expect(getNoXWing()).toBe(true);
+    setNoXWing(false);
+    expect(localStorage.getItem(NO_X_WING_KEY)).toBe("0");
+    expect(getNoXWing()).toBe(false);
+    setNoXWing(true);
+    expect(localStorage.getItem(NO_X_WING_KEY)).toBeNull();
+    expect(getNoXWing()).toBe(true);
+  });
+
+  it("источник дня по умолчанию — Sudoku.com; «pundoku» сохраняется; мусор в ключе — Sudoku.com", () => {
+    expect(getDailySource()).toBe("sudoku.com");
+    setDailySource("pundoku");
+    expect(localStorage.getItem(DAILY_SOURCE_KEY)).toBe("pundoku");
+    expect(getDailySource()).toBe("pundoku");
+    setDailySource("sudoku.com");
+    expect(localStorage.getItem(DAILY_SOURCE_KEY)).toBeNull();
+    localStorage.setItem(DAILY_SOURCE_KEY, "ours");
+    expect(getDailySource()).toBe("sudoku.com");
+  });
+
+  it("подписчики (DayStore) узнают о смене; localStorage недоступен — выбор живёт в памяти", () => {
+    const fn = vi.fn();
+    const off = subscribePrefs(fn);
+    setDailySource("pundoku");
+    setNoXWing(false);
+    expect(fn).toHaveBeenCalledTimes(2);
+    off();
+    setDailySource("sudoku.com");
+    setNoXWing(true);
+    expect(fn).toHaveBeenCalledTimes(2);
+    vi.spyOn(Storage.prototype, "getItem").mockImplementation(() => {
+      throw new Error("denied");
+    });
+    vi.spyOn(Storage.prototype, "setItem").mockImplementation(() => {
+      throw new Error("denied");
+    });
+    vi.spyOn(Storage.prototype, "removeItem").mockImplementation(() => {
+      throw new Error("denied");
+    });
+    setDailySource("pundoku");
+    expect(getDailySource()).toBe("pundoku");
+    setDailySource("sudoku.com");
+    expect(getDailySource()).toBe("sudoku.com");
   });
 });

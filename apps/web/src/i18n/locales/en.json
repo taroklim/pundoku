@@ -42,7 +42,9 @@
       "autoClearNotes": "Clear notes automatically",
       "autoClearNotesFoot": "When you place a digit, it disappears from the notes of the cells in the same row, column and box, and Undo brings them back together with the move. On by default. Ink mode keeps notes by hand. To fill notes with every digit that still fits, press and hold Notes (or press F).",
       "highlightPeers": "Tint row, column and box",
-      "highlightPeersFoot": "Very lightly tints the row, column and box of the selected cell, so you can see which cells it sees. On by default."
+      "highlightPeersFoot": "Very lightly tints the row, column and box of the selected cell, so you can see which cells it sees. On by default.",
+      "noXWing": "No X-Wing",
+      "noXWingFoot": "Play offers only puzzles that never need an X-Wing or Swordfish: difficulties up to Expert. Turn it off to add Virtuoso and Master. On by default."
     },
     "open": "Settings",
     "backLabel": "Back to Today",
@@ -140,6 +142,13 @@
       "petFoot": "A tiny ink blot on your result card, in Year and in a few quiet corners of the app. It breathes, shows how the day went and reacts when you tap it. It never comes onto the board. On by default.",
       "previewLabel": "How the blot looks",
       "petTapFoot": "Tap a blot to see how it reacts."
+    },
+    "daily": {
+      "head": "Daily puzzle",
+      "sudoku": "Sudoku.com",
+      "own": "Pundoku Expert, no X-Wing",
+      "foot": "Sudoku.com is the day’s puzzle from Sudoku.com. Pundoku Expert is built on your phone from the date: the same puzzle for everyone, works offline and never needs an X-Wing.",
+      "later": "Today’s puzzle is already started, so it stays. The change applies from tomorrow."
     }
   },
   "help": {
@@ -161,7 +170,7 @@
       "title": "Technique reached",
       "p1": "The hardest technique that any digit of your solve needed.",
       "p2": "From easiest: Naked Single, a cell that fits only one digit. Hidden Single, a digit that fits only one cell in its row, column or box. Then Locked Candidates and Pairs, which rule digits out by looking at several cells together.",
-      "p3": "“Advanced” means harder still."
+      "p3": "Then X-Wing and Swordfish: one digit confined to the same two (or three) columns in two (or three) rows. “Advanced” means harder still."
     },
     "hints": {
       "title": "Hints",
@@ -199,6 +208,7 @@
     "medium": "Medium",
     "hard": "Hard",
     "expert": "Expert",
+    "expert_plus": "Virtuoso",
     "master": "Master"
   },
   "play": {
@@ -242,8 +252,10 @@
         "singles": "singles",
         "locked": "locked candidates",
         "pairs": "pairs",
-        "beyond": "beyond pairs"
+        "fish": "X-Wing, Swordfish",
+        "beyond": "beyond X-Wing"
       },
+      "noXWingNote": "Virtuoso and Master need an X-Wing, so they’re hidden. To play them, turn off “No X-Wing” in Settings.",
       "left_one": "{{count}} cell left",
       "left_other": "{{count}} cells left",
       "more": "More",
@@ -406,6 +418,8 @@
     "locked_candidates": "Locked Candidates",
     "naked_pair": "Naked Pair",
     "hidden_pair": "Hidden Pair",
+    "x_wing": "X-Wing",
+    "swordfish": "Swordfish",
     "beyond": "Advanced"
   },
   "today": {
@@ -415,7 +429,8 @@
     "source": {
       "sudoku.com": "Puzzle from Sudoku.com",
       "generator": "Puzzle from Pundoku’s generator",
-      "client": "Made on this device"
+      "client": "Made on this device",
+      "pundoku": "Pundoku Expert, no X-Wing"
     },
     "gridTitle": "Grid ∞",
     "gridCells_one": "{{count}} cell",

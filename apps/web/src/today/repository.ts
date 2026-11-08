@@ -55,7 +55,7 @@ export const solvedAtOrDayStart = (p: Pick<DayProgress, "date" | "solvedAt">): s
 const CELL_COUNT = 81;
 const MOVE_KINDS: readonly unknown[] = ["place", "erase", "note_add", "note_remove", "undo"];
 const TECHNIQUES: readonly unknown[] = [...TECHNIQUE_ORDER, "beyond"];
-const DAY_SOURCES: readonly unknown[] = ["sudoku.com", "generator", "client"];
+const DAY_SOURCES: readonly unknown[] = ["sudoku.com", "generator", "client", "pundoku"];
 /** Маска заметок: биты 1..9 (бит 0 не используется). */
 const NOTES_MAX = 0x3fe;
 

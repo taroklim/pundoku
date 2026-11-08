@@ -3,7 +3,7 @@ import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { useTranslation } from "react-i18next";
 import type { HelpBlockId } from "../help/blocks";
 import { useMelodyGame } from "../melody/game";
-import { setMelodySound, useMelodySound } from "../settings/prefs";
+import { setMelodySound, useMelodySound, useNoXWing } from "../settings/prefs";
 import { useDeferredFocus } from "../shell/afterPaint";
 import { deskStore, useDeskLayout, useDeskState } from "../shell/desk";
 import { deferPastTabTap, swallowGhostClick } from "../shell/ghostClick";
@@ -66,6 +66,8 @@ import { useWaitView } from "./waitView";
 export function PlayScreen({ onOpenSettings, onOpenHelp, onOpenToday }: { onOpenSettings?: () => void; onOpenHelp?: (block: HelpBlockId) => void; onOpenToday?: (date?: string) => void } = {}) {
   const { t } = useTranslation();
   const snap = useSyncExternalStore(playStore.subscribe, playStore.getSnapshot);
+  // PD-305: «Без X-Wing» меняет набор сложностей и предвыбор шита (`pickFor`) — перерисовать экран при смене настройки.
+  useNoXWing();
   // PD-161: панель Play смонтирована постоянно; «вкладка на экране» — сигнал из стопки вкладок (таймер, подсказки, эффекты).
   const active = useTabActive();
   const clock = useClock(playStore, active);

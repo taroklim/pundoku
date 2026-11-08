@@ -165,8 +165,10 @@ describe("PD-167: режимы на хабе — строка на режим, �
     expect(q("mode-desc")!.textContent).toBe("Every digit is final: no undo and no eraser for digits. A wrong one leaves a blot.");
     expect(q("discard-note")).toBeNull();
     expect(q("sheet-start")!.textContent).toBe("Start");
-    expect(sheet.querySelectorAll('[role="radio"]')).toHaveLength(6); // PD-304: + expert_plus
-    expect(q("difficulty-medium")!.getAttribute("aria-checked")).toBe("true");
+    // PD-304: + expert_plus; PD-305: «Без X-Wing» по умолчанию вкл — expert_plus и master скрыты, под списком пояснение
+    expect(sheet.querySelectorAll('[role="radio"]')).toHaveLength(4);
+    expect(q("difficulty-noxwing-note")).not.toBeNull();
+    expect(q("difficulty-expert")!.getAttribute("aria-checked")).toBe("true"); // PD-305: по умолчанию — Эксперт
     tap(q("difficulty-hard")!);
     expect(q("difficulty-hard")!.getAttribute("aria-checked")).toBe("true");
     tap(q("sheet-cancel")!);
@@ -192,7 +194,7 @@ describe("PD-167: режимы на хабе — строка на режим, �
     expect(playStore.getSnapshot().play!.ink).toBe(true);
     act(() => playStore.reselect());
     expect(q("mode-status-classic")).not.toBeNull();
-    expect(q("mode-status-ink")!.textContent).toContain("In progress · Medium · 51 cells left");
+    expect(q("mode-status-ink")!.textContent).toContain("In progress · Expert · 51 cells left"); // PD-305: сложность по умолчанию — Эксперт
     tap(q("mode-classic")!);
     expect(playStore.getSnapshot().play).toEqual(classic);
     expect(playStore.getSnapshot().mode).toBe("classic");

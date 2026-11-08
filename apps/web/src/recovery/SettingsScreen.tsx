@@ -10,12 +10,16 @@ import {
   setHighlightPeers,
   setPetEnabled,
   setHighlightWrong,
+  setNoXWing,
   useAutoClearNotes,
   useHighlightPeers,
   usePetEnabled,
   useHighlightWrong,
+  useNoXWing,
 } from "../settings/prefs";
 import { PET_MOODS } from "@pundoku/engine";
+import { DailySourceSection } from "../settings/DailySourceSection";
+import type { DayStatus } from "../today/dayStore";
 import { PetBlot } from "../pet/PetBlot";
 import { PetTap } from "../pet/PetTap";
 import { ActionSheet } from "./ActionSheet";
@@ -103,11 +107,13 @@ interface SettingsScreenProps {
   origin?: TabId;
   /** Открыть «How Pundoku works» (PD-120). Нет — строки справки нет (изолированные тесты экрана). */
   onOpenHelp?: () => void;
+  /** PD-305: состояние сегодняшнего дня для подписи источника сетки дня. Нет — подписи «со следующего дня» нет. */
+  dayStatus?: () => Promise<DayStatus | null>;
 }
 
 export const BACK_LABEL: Record<TabId, string> = { today: "settings.backLabel", play: "settings.backLabelPlay", year: "settings.backLabelYear" };
 
-export function SettingsScreen({ store, onBack, origin = "today", onOpenHelp }: SettingsScreenProps) {
+export function SettingsScreen({ store, onBack, origin = "today", onOpenHelp, dayStatus }: SettingsScreenProps) {
   const { t, i18n } = useTranslation();
   const s = useSyncExternalStore(store.subscribe, store.getSnapshot);
   const locale = (i18n.resolvedLanguage ?? "en") as Locale;
@@ -115,6 +121,7 @@ export function SettingsScreen({ store, onBack, origin = "today", onOpenHelp }: 
   const autoClearNotes = useAutoClearNotes();
   const highlightPeers = useHighlightPeers();
   const petOn = usePetEnabled();
+  const noXWing = useNoXWing();
 
   useEffect(() => {
     store.open();
@@ -626,7 +633,27 @@ export function SettingsScreen({ store, onBack, origin = "today", onOpenHelp }: 
         <p className="settings-foot" id="settings-game-foot">
           {t("settings.game.highlightWrongFoot")}
         </p>
+        {/* PD-305: «Без X-Wing» — по умолчанию вкл: Play предлагает классы только до Эксперта (`play/difficulties.ts`). */}
+        <div className="settings-card">
+          <label className="settings-row settings-switch">
+            <span className="lab">{t("settings.game.noXWing")}</span>
+            <input
+              type="checkbox"
+              role="switch"
+              className="st-switch"
+              checked={noXWing}
+              onChange={(e) => setNoXWing(e.target.checked)}
+              aria-describedby="settings-noxwing-foot"
+              data-testid="no-x-wing"
+            />
+          </label>
+        </div>
+        <p className="settings-foot" id="settings-noxwing-foot">
+          {t("settings.game.noXWingFoot")}
+        </p>
       </section>
+
+      <DailySourceSection dayStatus={dayStatus} check={<CheckIcon />} />
 
       {/* PD-180: «Дополнительно» — Питомец-клякса (опция, не режим; PD-297: вкл по умолчанию). Превью настроений — честное описание.
           PD-298 (место 6, макет PD-296): четыре превью стоят (на экране дышит не больше одной кляксы), тап по любому — «Плюх»;

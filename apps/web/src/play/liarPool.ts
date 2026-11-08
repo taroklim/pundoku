@@ -32,6 +32,8 @@ export interface LiarPoolDeps {
   readonly spawn: () => WorkerLike;
   readonly seed: () => string;
   readonly timeoutMs?: number;
+  /** PD-305: заготавливать ли класс сейчас (`master` при «Без X-Wing» выбрать нельзя — не жечь батарею). Нет — все классы. */
+  readonly wanted?: (d: Difficulty) => boolean;
 }
 
 /** Годная заготовка: целая сетка Лжеца нужного класса и текущей версии генератора. */
@@ -92,7 +94,7 @@ export class LiarPool {
 
   private async fill(): Promise<void> {
     for (const d of PREFETCH_DIFFICULTIES) {
-      if (this.ready.has(d)) continue;
+      if (this.ready.has(d) || this.deps.wanted?.(d) === false) continue;
       let have: unknown;
       try {
         have = await this.deps.storage.getMeta(poolKey(d));

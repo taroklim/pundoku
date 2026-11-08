@@ -20,7 +20,15 @@ import {
   setAutoClearNotes,
   setHighlightPeers,
   setHighlightWrong,
+  DAILY_SOURCE_KEY,
+  NO_X_WING_KEY,
+  getDailySource,
+  getNoXWing,
+  setDailySource,
+  setNoXWing,
 } from "../settings/prefs";
+import { appliesTomorrow } from "../settings/DailySourceSection";
+import type { DayStatus } from "../today/dayStore";
 import { RecoveryStore } from "./store";
 import { resetPokes } from "../pet/petPoke";
 
@@ -920,5 +928,70 @@ describe("SettingsScreen: Питомец-клякса (PD-180, PD-297, PD-298)",
     expect(q<HTMLInputElement>("pet-toggle")!.closest("label")!.textContent).toBe("Клякса-питомец");
     expect(host.querySelector("#settings-h-extras")!.textContent).toBe("Дополнительно");
     expect([...q("pet-moods")!.querySelectorAll("figcaption")].map((c) => c.firstChild!.textContent)).toEqual(["Довольна", "Устала", "Удивлена", "Спит"]);
+  });
+});
+
+describe("SettingsScreen: PD-305 «Без X-Wing» и источник сетки дня", () => {
+  async function mountWith(dayStatus?: () => Promise<DayStatus | null>) {
+    await mount();
+    await act(async () => root.render(<SettingsScreen store={store} onBack={onBack as unknown as () => void} dayStatus={dayStatus} />));
+    await flush();
+  }
+  afterEach(() => {
+    setNoXWing(true);
+    setDailySource("sudoku.com");
+  });
+
+  it("«No X-Wing» — switch в «Game», ВКЛ по умолчанию; выкл пишет «0», вкл убирает ключ", async () => {
+    await mountWith();
+    const sw = q<HTMLInputElement>("no-x-wing")!;
+    expect(sw.getAttribute("role")).toBe("switch");
+    expect(sw.checked).toBe(true);
+    expect(sw.closest("section")!.querySelector("h2")!.textContent).toBe("Game");
+    expect(host.querySelector("#" + sw.getAttribute("aria-describedby"))!.textContent).toContain("On by default");
+    await act(async () => sw.closest("label")!.dispatchEvent(new MouseEvent("click", { bubbles: true })));
+    expect(sw.checked).toBe(false);
+    expect(localStorage.getItem(NO_X_WING_KEY)).toBe("0");
+    expect(getNoXWing()).toBe(false);
+    await act(async () => sw.closest("label")!.dispatchEvent(new MouseEvent("click", { bubbles: true })));
+    expect(localStorage.getItem(NO_X_WING_KEY)).toBeNull();
+  });
+
+  it("«Daily puzzle»: радиогруппа, по умолчанию Sudoku.com; выбор нашего сохраняется; стрелки двигают выбор", async () => {
+    await mountWith(async () => null);
+    const sudoku = q("daily-source-sudoku.com")!;
+    const own = q("daily-source-pundoku")!;
+    expect(host.querySelector("#settings-h-daily")!.textContent).toBe("Daily puzzle");
+    expect(sudoku.getAttribute("aria-checked")).toBe("true");
+    expect(own.getAttribute("aria-checked")).toBe("false");
+    expect(own.textContent).toBe("Pundoku Expert, no X-Wing");
+    await click("daily-source-pundoku");
+    expect(own.getAttribute("aria-checked")).toBe("true");
+    expect(localStorage.getItem(DAILY_SOURCE_KEY)).toBe("pundoku");
+    expect(q("daily-source-later")).toBeNull(); // записи дня нет — сменится сразу
+    await act(async () => own.parentElement!.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowUp", bubbles: true })));
+    expect(getDailySource()).toBe("sudoku.com");
+  });
+
+  it("сегодня начат день Sudoku.com — выбрали наш: подпись «с завтрашнего дня»; вернули Sudoku.com — подписи нет", async () => {
+    await mountWith(async () => ({ started: true, own: false }));
+    expect(q("daily-source-later")).toBeNull();
+    await click("daily-source-pundoku");
+    expect(q("daily-source-later")!.textContent).toContain("applies from tomorrow");
+    await click("daily-source-sudoku.com");
+    expect(q("daily-source-later")).toBeNull();
+  });
+
+  it("не начатый день — подписи нет ни при каком выборе (сменится сразу)", async () => {
+    await mountWith(async () => ({ started: false, own: false }));
+    await click("daily-source-pundoku");
+    expect(q("daily-source-later")).toBeNull();
+  });
+
+  it("appliesTomorrow — чистая функция подписи", () => {
+    expect(appliesTomorrow(null, "pundoku")).toBe(false);
+    expect(appliesTomorrow({ started: true, own: true }, "pundoku")).toBe(false);
+    expect(appliesTomorrow({ started: true, own: true }, "sudoku.com")).toBe(true);
+    expect(appliesTomorrow({ started: false, own: true }, "sudoku.com")).toBe(false);
   });
 });

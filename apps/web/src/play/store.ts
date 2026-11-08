@@ -24,7 +24,9 @@ import type { SyncStorage } from "../today/repository";
 import type { SlotSummary } from "./daySlot";
 import type { GeneratedPuzzle, GenerateRequest, GenerateResponse } from "./generate.worker";
 import type { PlaySnapshot } from "./gameStore";
-import { DEFAULT_DIFFICULTY, GameStore, initialSnapshot } from "./gameStore";
+import { GameStore, initialSnapshot } from "./gameStore";
+import { getNoXWing } from "../settings/prefs";
+import { PLAY_DEFAULT_DIFFICULTY, clampDifficulty, playableDifficulties } from "./difficulties";
 import { createLiarPlay, liarSummaryOf } from "./liar";
 import { LiarPool } from "./liarPool";
 import type { PlayState } from "./logic";
@@ -572,16 +574,24 @@ export class PlayStore extends GameStore<PlayScreenSnapshot> {
     return out;
   }
 
-  /** Сложность, предвыбранная в шите режима: последняя выбранная → сложность незавершённой игры → по умолчанию. */
+  /** Сложности, которые сейчас можно выбрать в режиме: набор режима минус скрытые «Без X-Wing» (PD-305). */
+  allowedFor(mode: ModeId): readonly Difficulty[] {
+    return playableDifficulties(modeDef(mode).difficulties, getNoXWing());
+  }
+
+  /**
+   * Сложность, предвыбранная в шите режима: последняя выбранная → сложность незавершённой игры → по умолчанию (PD-305: Эксперт).
+   * Выбор, который скрыла «Без X-Wing» (`master`, `expert_plus`), сводится к ближайшему допустимому ниже — Эксперту, сам выбор
+   * не стирается: выключили настройку — он снова предвыбран.
+   */
   pickFor(mode: ModeId): Difficulty {
-    const allowed = modeDef(mode).difficulties;
-    const want = this.snap.picks[mode] ?? this.slots()[mode]?.difficulty ?? DEFAULT_DIFFICULTY;
-    return allowed.includes(want) ? want : (allowed[0] ?? DEFAULT_DIFFICULTY);
+    const want = this.snap.picks[mode] ?? this.slots()[mode]?.difficulty ?? PLAY_DEFAULT_DIFFICULTY;
+    return clampDifficulty(want, this.allowedFor(mode));
   }
 
   /** Выбор сложности в шите режима (запоминается для следующего открытия шита). */
   setPick(mode: ModeId, difficulty: Difficulty): void {
-    if (!modeDef(mode).difficulties.includes(difficulty)) return;
+    if (!this.allowedFor(mode).includes(difficulty)) return;
     this.set({ picks: { ...this.snap.picks, [mode]: difficulty } });
   }
 
@@ -713,7 +723,9 @@ export class PlayStore extends GameStore<PlayScreenSnapshot> {
     this.newGame(difficulty, mode);
   }
 
-  newGame(difficulty: Difficulty = this.snap.difficulty, mode: ModeId = this.snap.mode): void {
+  newGame(requested: Difficulty = this.snap.difficulty, mode: ModeId = this.snap.mode): void {
+    // PD-305: «Новая сетка» после партии класса, скрытого «Без X-Wing» (начатой до включения), строит ближайший допустимый класс.
+    const difficulty = clampDifficulty(requested, this.allowedFor(mode));
     this.cancelGeneration();
     const id = this.requestId;
     this.clearSlot(mode); // прежняя игра режима закрыта: до первого хода новой записи нет (перезагрузка — без неё)
@@ -793,6 +805,7 @@ export const playStore = new PlayStore({
           storage: syncRuntime.repository,
           spawn: () => new Worker(new URL("./generate.worker.ts", import.meta.url), { type: "module" }),
           seed: randomSeed,
+          wanted: (d) => playableDifficulties(modeDef("liar").difficulties, getNoXWing()).includes(d),
         }),
 });
 void playStore.restore();

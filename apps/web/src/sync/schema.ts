@@ -28,7 +28,11 @@ import { sanitizeLiar } from "./liarSchema";
 
 export const SNAPSHOT_SCHEMA_VERSION = 1;
 
-/** Источник сетки в записи дня: `device` = сетка построена на устройстве без ответа API (`DaySource` «client»). */
+/**
+ * Источник сетки в записи дня: `device` = сетка построена на устройстве без ответа API (`DaySource` «client»).
+ * PD-305: наш ежедневный «Эксперт без X-Wing» (`DaySource` «pundoku») пишется как `generator` + `own: true` — новое значение
+ * `source` старый клиент отбросил бы вместе с записью дня (санитайзер), а лишнее поле он просто не заметит.
+ */
 export type RecordSource = "sudoku.com" | "generator" | "device";
 
 export interface DayRecord {
@@ -54,6 +58,12 @@ export interface DayRecord {
   /** День сыгран после своей даты (архив); в Year остаётся «пропуском». */
   late: boolean;
   source: RecordSource;
+  /**
+   * PD-305: сетка — наш ежедневный «Эксперт без X-Wing» (`dailyPuzzle(date, 'expert')`), выбранный в настройках, а не серверная
+   * сетка/фолбэк. Только `true` и только при `source: "generator"` (у остальных записей поля нет — старые записи равны побайтно,
+   * схему не версионируем, как `ink`). Старый клиент поле теряет при пересохранении — день читается как `generator`, данные целы.
+   */
+  own?: true;
   difficulty: Difficulty | null;
   /** 81 цифра (0 — пусто) — для сверки сетки. */
   mission: string;
@@ -196,6 +206,7 @@ export function sanitizeDayRecord(raw: unknown): DayRecord | null {
     const blots = raw["blots"];
     if (typeof blots === "number" && Number.isInteger(blots) && blots >= 0 && blots <= 81) rec.blots = blots;
   }
+  if (raw["own"] === true && source === "generator") rec.own = true;
   if (raw["glyphs"] === true) rec.glyphs = true;
   if (raw["melody"] === true) rec.melody = true;
   if (raw["lantern"] === true) rec.lantern = true;
@@ -227,8 +238,9 @@ function sanitize(raw: Record<string, unknown>, schemaVersion: number): Snapshot
 
 // ---- DayProgress ⇄ DayRecord -----------------------------------------------------------------
 
-const toRecordSource = (s: DaySource): RecordSource => (s === "client" ? "device" : s);
-const fromRecordSource = (s: RecordSource): DaySource => (s === "device" ? "client" : s);
+const toRecordSource = (s: DaySource): RecordSource => (s === "client" ? "device" : s === "pundoku" ? "generator" : s);
+const fromRecordSource = (rec: Pick<DayRecord, "source" | "own">): DaySource =>
+  rec.source === "device" ? "client" : rec.source === "generator" && rec.own === true ? "pundoku" : rec.source;
 
 /**
  * Запись дня по локальному прогрессу. `null` — день без ходов (в снапшот не попадает).
@@ -247,6 +259,7 @@ export function dayRecordFromProgress(p: DayProgress, _now: Date): DayRecord | n
     assisted: p.assisted,
     ...((p.hints ?? 0) > 0 ? { hints: p.hints } : {}),
     source: toRecordSource(p.source),
+    ...(p.source === "pundoku" ? { own: true as const } : {}),
     difficulty: p.difficulty,
     mission: p.mission,
     ...(p.play.ink === true ? { ink: true, blots: blotsOf(log).length } : {}),
@@ -354,7 +367,7 @@ export function progressFromRecord(date: string, rec: DayRecord): DayProgress | 
     date,
     mission: rec.mission,
     difficulty: rec.difficulty,
-    source: fromRecordSource(rec.source),
+    source: fromRecordSource(rec),
     winRate: rec.winRate ?? null,
     play,
     elapsedMs: rec.timeMs ?? 0,

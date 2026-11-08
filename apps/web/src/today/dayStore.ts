@@ -15,8 +15,11 @@ import { fetchDaily, verifyDaily } from "./api";
 import type { DayPuzzle, DaySource, FetchedDay } from "./dayResolver";
 import {
   DAILY_FALLBACK_DIFFICULTY,
+  OWN_DAILY_DIFFICULTY,
   fallbackDay,
+  isDayStarted,
   localDate,
+  ownDay,
   planDay,
   reconcileDay,
   shouldRefetch,
@@ -28,6 +31,8 @@ import type { DayProgress, ProgressRepository, SyncStorage } from "./repository"
 import { sync as syncRuntime } from "../sync/runtime";
 import type { RemoteApplied, SyncHooks } from "../sync/manager";
 import { readUseStart } from "../year/firstUse";
+import type { DailySource } from "../settings/prefs";
+import { getDailySource, subscribePrefs } from "../settings/prefs";
 
 export interface DaySnapshot extends PlaySnapshot {
   /** Локальная дата сетки, `YYYY-MM-DD`. */
@@ -68,6 +73,16 @@ export interface DayDeps {
   isOnline: () => boolean;
   /** Сколько ждать ответ API, прежде чем начать играть фолбэком (ответ, если придёт, сверится). */
   slowFetchMs: number;
+  /** PD-305: выбранный источник сетки дня (настройка). Нет — Sudoku.com, как до PD-305. */
+  dailySource?: () => DailySource;
+  /** PD-305: подписка на смену настроек — не начатый день переключается на новый источник сразу. */
+  subscribeSource?: (fn: () => void) => () => void;
+}
+
+/** PD-305: сегодняшний день для подписи в Settings — начат ли он и наша ли это сетка. `null` — записи дня ещё нет. */
+export interface DayStatus {
+  readonly started: boolean;
+  readonly own: boolean;
 }
 
 export const SLOW_FETCH_FALLBACK_MS = 2500;
@@ -104,6 +119,8 @@ export const defaultDeps = (): DayDeps => ({
   now: () => new Date(),
   isOnline: () => navigator.onLine,
   slowFetchMs: SLOW_FETCH_FALLBACK_MS,
+  dailySource: getDailySource,
+  subscribeSource: subscribePrefs,
 });
 
 function initialDaySnapshot(date: string): DaySnapshot {
@@ -173,6 +190,9 @@ export class DayStore extends GameStore<DaySnapshot> {
   private readonly archive: boolean;
   /** Архив: играемая дата (задаётся `openArchive`); у стора «сегодня» не используется. */
   private targetDate: string | null = null;
+  /** PD-305: источник, при котором шла последняя загрузка/проверка (подписка на настройки сравнивает с ним). */
+  private lastSource: DailySource = "sudoku.com";
+  private unsubscribeSource: (() => void) | null = null;
 
   constructor(deps: DayDeps = defaultDeps(), options: DayStoreOptions = {}) {
     super(initialDaySnapshot(localDate(deps.now())));
@@ -220,7 +240,46 @@ export class DayStore extends GameStore<DaySnapshot> {
     window.addEventListener("online", this.refresh);
     document.addEventListener("visibilitychange", this.onVisible);
     this.unsubscribeRemote = this.deps.sync?.subscribeRemote(this.applyRemote) ?? null;
+    this.lastSource = this.dailySource();
+    this.unsubscribeSource = this.deps.subscribeSource?.(this.onSourceChange) ?? null;
     return true;
+  }
+
+  private dailySource(): DailySource {
+    return this.deps.dailySource?.() ?? "sudoku.com";
+  }
+
+  /**
+   * PD-305: сменили источник сетки дня в настройках. Не начатый день (ни хода, ни подсказки) переключается сразу — игрок сетку
+   * ещё не трогал; начатый или решённый остаётся как есть, новый источник подхватит следующий день (`load` новой даты).
+   */
+  private onSourceChange = (): void => {
+    const source = this.dailySource();
+    if (source === this.lastSource) return; // изменилась другая настройка
+    this.lastSource = source;
+    const s = this.snap;
+    if (s.phase === "solved" || (s.phase === "error" && s.unavailable)) return;
+    if (s.play && (s.play.log.length > 0 || (s.hints ?? 0) > 0)) return;
+    if (this.archive && this.targetDate === null) return;
+    void this.load();
+  };
+
+  /**
+   * PD-305: состояние сегодняшнего дня для подписи переключателя источника в Settings («действует со следующего дня»).
+   * Живая партия на экране — по ней; иначе по записи в хранилище. Записи нет / не читается — `null` (переключится сразу).
+   */
+  async dayStatus(): Promise<DayStatus | null> {
+    const today = localDate(this.deps.now());
+    const s = this.snap;
+    if (s.date === today && s.play && s.source !== null && (s.phase === "playing" || s.phase === "solved")) {
+      return { started: s.phase === "solved" || s.play.log.length > 0 || (s.hints ?? 0) > 0, own: s.source === "pundoku" };
+    }
+    try {
+      const saved = await this.deps.repo.getDay(today);
+      return saved ? { started: isDayStarted(saved), own: saved.source === "pundoku" } : null;
+    } catch {
+      return null;
+    }
   }
 
   /** Первый показ вкладки Today: слушатели, постоянная сетка, загрузка дня. Идемпотентно. */
@@ -351,7 +410,10 @@ export class DayStore extends GameStore<DaySnapshot> {
 
     // PD-147: запрос сетки дня идёт параллельно ожиданию восстановления и чтению записи, а не после них (последовательная
     // цепочка «снапшот → чтение → сетка» стоила лишнего круга сети на каждом запуске ветерана).
-    const prefetch = this.prefetchDay(date);
+    // PD-305: наш источник от сети не зависит — запрос «наперёд» не нужен (начатый день Sudoku.com запросит сам, ниже).
+    const source = this.dailySource();
+    this.lastSource = source;
+    const prefetch = source === "pundoku" ? null : this.prefetchDay(date);
     prefetch?.catch(() => undefined); // отказ (если load оборвётся раньше) — не unhandled; при использовании он всплывёт там же
     await this.awaitRestore();
     if (token !== this.token) return;
@@ -371,6 +433,16 @@ export class DayStore extends GameStore<DaySnapshot> {
     if (saved?.solved) {
       // Решённый день финален: без сети, без анимации — сразу карточка.
       this.resumeSaved(saved);
+      return;
+    }
+    // PD-305: начатый день доигрывается своей сеткой при любом выбранном источнике. Наша сетка — без сети и без сверки.
+    const started = saved !== null && isDayStarted(saved);
+    if (started && saved.source === "pundoku") {
+      this.resumeSaved(saved, false, "local");
+      return;
+    }
+    if (!started && source === "pundoku") {
+      await this.beginOwn(token, date, saved?.play.ink === true);
       return;
     }
 
@@ -400,7 +472,8 @@ export class DayStore extends GameStore<DaySnapshot> {
   private prefetchDay(date: string): Promise<FetchedDay | null> | null {
     if (this.archive || !this.deps.isOnline()) return null;
     return this.deps.repo.getDay(date).then(
-      (saved) => (saved?.solved ? null : this.fetchDay(date)),
+      // PD-305: начатая наша сетка тоже идёт без сети — она доигрывается при любом выбранном источнике.
+      (saved) => (saved?.solved || (saved?.source === "pundoku" && isDayStarted(saved)) ? null : this.fetchDay(date)),
       () => this.fetchDay(date),
     );
   }
@@ -414,8 +487,21 @@ export class DayStore extends GameStore<DaySnapshot> {
     return r;
   }
 
+  /** PD-305: наша сетка дня (`dailyPuzzle(date, 'expert')` в Worker). `ink` — Чернила выбраны до первого хода и не теряются. */
+  private async beginOwn(token: number, date: string, ink: boolean): Promise<void> {
+    try {
+      const gen = await this.deps.generateFallback(date, OWN_DAILY_DIFFICULTY);
+      if (token !== this.token) return;
+      const { puzzle, solution } = ownDay(date, () => gen);
+      this.begin(puzzle, solution, "local", false, ink);
+    } catch {
+      if (token === this.token) this.set({ phase: "error" });
+    }
+  }
+
   private async start(token: number, date: string, saved: DayProgress | null, fetched: FetchedDay): Promise<void> {
-    if (saved && !fetched.ok) return this.resumeSaved(saved, true); // сохранённое надёжнее фолбэка
+    // Не начатая наша сетка (PD-305: источник сменили на Sudoku.com) не «надёжнее фолбэка» — она больше не выбрана.
+    if (saved && !fetched.ok && saved.source !== "pundoku") return this.resumeSaved(saved, true); // сохранённое надёжнее фолбэка
     // Архив: сервер сказал «такой даты нет» (400 future_date / 404 not_available_yet) — фолбэк-сетку НЕ строим:
     // сетка ещё не существует, а сгенерированная заранее не совпала бы с настоящей.
     if (this.archive && !fetched.ok && fetched.reason === "http" && (fetched.status === 400 || fetched.status === 404)) {
@@ -427,7 +513,7 @@ export class DayStore extends GameStore<DaySnapshot> {
     if (plan.kind === "server") {
       const solution = solveMission(plan.puzzle.mission);
       if (solution) {
-        if (saved) {
+        if (saved && saved.source !== "pundoku") {
           const r = reconcileDay(
             { mission: saved.mission, source: saved.source, hasMoves: saved.play.log.length > 0 || (saved.hints ?? 0) > 0 },
             plan.puzzle,
@@ -642,6 +728,8 @@ export class DayStore extends GameStore<DaySnapshot> {
     document.removeEventListener("visibilitychange", this.onVisible);
     this.unsubscribeRemote?.();
     this.unsubscribeRemote = null;
+    this.unsubscribeSource?.();
+    this.unsubscribeSource = null;
     this.started = false;
     this.token++;
   }
