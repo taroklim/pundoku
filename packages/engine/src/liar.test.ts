@@ -45,7 +45,7 @@ const tierOf = (d: Difficulty): number => TIERS.indexOf(CEILING[d]);
 
 /** QA PD-166: Лжец v1 для easy seed 'qa166-0' — у клеток 54/61/63 на старте единственный кандидат 5. */
 /** Пороги `LIAR_MIN_DEPTH` (PD-174) — менять вместе с README и `LIAR_VERSION`. */
-const EXPECTED_MIN_DEPTH = { easy: 4, medium: 4, hard: 5, expert: 4, master: 4 };
+const EXPECTED_MIN_DEPTH = { easy: 4, medium: 4, hard: 5, expert: 4, expert_plus: 4, master: 4 };
 
 const QA166_V1_EASY = "690200030008043690304009001000720000400190080800054269002901703009472000100600924";
 

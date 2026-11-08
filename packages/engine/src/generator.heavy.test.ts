@@ -1,5 +1,5 @@
 /**
- * «Тяжёлый» прогон: по 100 сгенерированных сеток на каждый класс сложности (PD-9). Идёт в CI по
+ * «Тяжёлый» прогон: по 100 сгенерированных сеток на каждый класс сложности (PD-9; expert_plus — с PD-304). Идёт в CI по
  * умолчанию; на ненагруженной машине — десятки секунд (см. README «Производительность»).
  * Проверяется корректность по обеим осям: единственность решения, техника не дороже потолка
  * профиля (и, где класс требует, ровно его), число подсказок == цель профиля, `rateDifficulty`
@@ -47,6 +47,7 @@ describe("generate — 100 puzzles per difficulty class", () => {
             if (top > ceiling) throw new Error(`technique ${used.join(",")} above ${profile.technique}: ${p.mission}`);
             if (difficulty === "hard" && top !== 2) throw new Error(`hard without locked candidates: ${p.mission}`);
             if (difficulty === "expert" && top < 3) throw new Error(`expert without pairs: ${p.mission}`);
+            if (difficulty === "expert_plus" && top < 5) throw new Error(`expert_plus without fish: ${p.mission}`);
             if (difficulty === "master" && !used.includes("beyond")) throw new Error(`master solved by techniques: ${p.mission}`);
             if (rateDifficulty(p.mission) !== difficulty) throw new Error(`rating mismatch: ${p.mission}`);
           }

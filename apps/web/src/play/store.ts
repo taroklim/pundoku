@@ -46,7 +46,7 @@ export const LIAR_DAILY_DIFFICULTY: Difficulty = "medium";
  * Потолок ожидания генерации партии, мс (план режимов §1.5): easy–hard — p95 ≤ 0,6 с, max < 1 с на десктопе; expert/master —
  * хвост до ~3 с (на телефоне дольше). Дольше — Worker обрывается, экран показывает «Не удалось» с повтором.
  */
-export const GENERATION_TIMEOUT_MS: Readonly<Record<Difficulty, number>> = { easy: 15_000, medium: 15_000, hard: 15_000, expert: 45_000, master: 45_000 };
+export const GENERATION_TIMEOUT_MS: Readonly<Record<Difficulty, number>> = { easy: 15_000, medium: 15_000, hard: 15_000, expert: 45_000, expert_plus: 45_000, master: 45_000 };
 
 /** Ключ истории поимок (сравнение «с собой» на карточке Лжеца): локально, не синхронизируется. */
 export const LIAR_HISTORY_KEY = "liarHistory";

@@ -8,14 +8,16 @@ describe("@pundoku/engine smoke", () => {
     expect(grid.every((cell) => cell === 0)).toBe(true);
   });
 
-  it("exposes five difficulties and five techniques in cost order", () => {
-    expect(DIFFICULTIES).toEqual(["easy", "medium", "hard", "expert", "master"]);
+  it("exposes six difficulties and seven techniques in cost order", () => {
+    expect(DIFFICULTIES).toEqual(["easy", "medium", "hard", "expert", "expert_plus", "master"]);
     expect(TECHNIQUE_ORDER).toEqual([
       "naked_single",
       "hidden_single",
       "locked_candidates",
       "naked_pair",
       "hidden_pair",
+      "x_wing",
+      "swordfish",
     ]);
   });
 });

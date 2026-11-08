@@ -22,11 +22,25 @@
  * Формат тепловой карты: 81 × 2 символа base36 (0..1295 ⇒ доля 0..1), `--` — клетка без значения (`null`).
  */
 import type { Digit, Move, MoveKind, MoveLog, TechniqueOrBeyond } from "@pundoku/engine";
-import { TECHNIQUE_ORDER } from "@pundoku/engine";
 
 const KINDS: readonly MoveKind[] = ["place", "erase", "note_add", "note_remove", "undo"];
 const KIND_CHARS = "pearu";
-const TECHNIQUES: readonly TechniqueOrBeyond[] = [...TECHNIQUE_ORDER, "beyond"];
+/**
+ * Индекс техники в формате лога — часть формата сохранённых данных, поэтому список зафиксирован, а не собирается из
+ * `TECHNIQUE_ORDER` движка: PD-304 вставил X-Wing/Swordfish перед `beyond`, и `[...TECHNIQUE_ORDER, "beyond"]`
+ * сдвинул бы `beyond` с 5 на 7 — старые логи прочитались бы как X-Wing. Новые техники — только в конец.
+ */
+export const LOG_TECHNIQUES: readonly TechniqueOrBeyond[] = [
+  "naked_single",
+  "hidden_single",
+  "locked_candidates",
+  "naked_pair",
+  "hidden_pair",
+  "beyond",
+  "x_wing",
+  "swordfish",
+];
+const TECHNIQUES = LOG_TECHNIQUES;
 const LOG_PREFIX = "1:";
 const LOG_PREFIX_INK = "2:";
 const HEAT_STEPS = 1295; // 36² − 1

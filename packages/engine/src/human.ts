@@ -42,9 +42,15 @@ export const TECHNIQUE_ORDER: readonly Technique[] = [
   "locked_candidates",
   "naked_pair",
   "hidden_pair",
+  "x_wing",
+  "swordfish",
 ];
 
-/** Ярус техники: 0..4 для реализованных, 5 для `'beyond'`. */
+/**
+ * Ярус техники: 0..6 для реализованных, `TECHNIQUE_ORDER.length` (7) для `'beyond'`. Рыбы (X-Wing 5, Swordfish 6)
+ * добавлены в PD-304 в конец порядка — ярусы 0..4 прежние, поэтому решатель с потолком ≤ hidden_pair ведёт себя
+ * байт-в-байт как раньше (сетки easy..expert и Лжец не меняются).
+ */
 export function techniqueTier(t: TechniqueOrBeyond): number {
   if (t === "beyond") return TECHNIQUE_ORDER.length;
   const i = TECHNIQUE_ORDER.indexOf(t);
@@ -54,8 +60,8 @@ export function techniqueTier(t: TechniqueOrBeyond): number {
 
 /**
  * Сложность только по технической оси: singles → easy, locked → hard, pairs → expert,
- * beyond → master. Класс `medium` этой осью недостижим (это singles-сетка с малым числом
- * подсказок) — итоговая оценка по двум осям — `rateDifficulty`.
+ * X-Wing/Swordfish → expert_plus, beyond → master. Класс `medium` этой осью недостижим (это singles-сетка
+ * с малым числом подсказок) — итоговая оценка по двум осям — `rateDifficulty`.
  */
 export function difficultyForTechnique(t: TechniqueOrBeyond): Difficulty {
   switch (t) {
@@ -67,6 +73,9 @@ export function difficultyForTechnique(t: TechniqueOrBeyond): Difficulty {
     case "naked_pair":
     case "hidden_pair":
       return "expert";
+    case "x_wing":
+    case "swordfish":
+      return "expert_plus";
     case "beyond":
       return "master";
   }
@@ -351,12 +360,118 @@ function findHiddenPair(st: State): Step | null {
   return null;
 }
 
+/** Рабочий буфер `findFish`: позиции цифры d в линии (0..8 строки, 9..17 столбцы) — маска индексов 0..8 (`line * 10 + d`). */
+const FISH_POS = new Uint16Array(18 * 10);
+/** Рабочий буфер `findFish`: базовые линии-кандидаты одной цифры одной ориентации. */
+const FISH_BASE = new Uint8Array(9);
+
+/**
+ * Базовая рыба размера `size` (2 — X-Wing, 3 — Swordfish), реализация по общеизвестному описанию техники.
+ * Цифра d в `size` строках (базовые линии) стоит только в `size` столбцах (покрывающие линии): в каждой базовой
+ * строке её кандидатов 2..size, а объединение их столбцов — ровно `size` столбцов. Тогда d в этих столбцах
+ * обязана стоять в базовых строках → в остальных клетках покрывающих столбцов d вычёркивается. То же со сменой
+ * ролей строк и столбцов. Порядок поиска: цифра 1..9, строки-база, затем столбцы-база, сочетания линий
+ * лексикографически; шаг засчитывается, только если что-то вычеркнул.
+ */
+function findFish(st: State, size: 2 | 3): Step | null {
+  const pos = FISH_POS;
+  pos.fill(0);
+  for (let line = 0; line < 18; line++) {
+    const unit = UNITS[line]!;
+    for (let i = 0; i < 9; i++) {
+      let m = st.cands[unit[i]!]!;
+      while (m !== 0) {
+        const low = m & -m;
+        const k = line * 10 + (31 - Math.clz32(low));
+        pos[k] = pos[k]! | (1 << i);
+        m ^= low;
+      }
+    }
+  }
+  const base = FISH_BASE;
+  for (let d = 1; d <= 9; d++) {
+    for (let orient = 0; orient < 2; orient++) {
+      const off = orient * 9; // база: строки (0) или столбцы (9); покрывающие линии — другая ориентация
+      let nb = 0;
+      for (let k = 0; k < 9; k++) {
+        const pc = popcount(pos[(off + k) * 10 + d]!);
+        if (pc >= 2 && pc <= size) base[nb++] = k;
+      }
+      if (nb < size) continue;
+      for (let a = 0; a < nb; a++) {
+        const ma = pos[(off + base[a]!) * 10 + d]!;
+        for (let b = a + 1; b < nb; b++) {
+          const mab = ma | pos[(off + base[b]!) * 10 + d]!;
+          if (size === 2) {
+            if (popcount(mab) !== 2) continue;
+            const step = fishEliminate(st, d as Digit, orient, [base[a]!, base[b]!], mab);
+            if (step) return step;
+            continue;
+          }
+          if (popcount(mab) > 3) continue;
+          for (let c = b + 1; c < nb; c++) {
+            const mabc = mab | pos[(off + base[c]!) * 10 + d]!;
+            if (popcount(mabc) !== 3) continue;
+            const step = fishEliminate(st, d as Digit, orient, [base[a]!, base[b]!, base[c]!], mabc);
+            if (step) return step;
+          }
+        }
+      }
+    }
+  }
+  return null;
+}
+
+/** Клетка на пересечении базовой линии `k` и покрывающей `j` (orient 0 — база строки, 1 — база столбцы). */
+function fishCell(orient: number, k: number, j: number): Cell {
+  return orient === 0 ? k * 9 + j : j * 9 + k;
+}
+
+function fishEliminate(st: State, d: Digit, orient: number, lines: readonly number[], cover: number): Step | null {
+  const bit = 1 << d;
+  const eliminations: Elimination[] = [];
+  const covers: number[] = [];
+  for (let j = 0; j < 9; j++) {
+    if ((cover & (1 << j)) === 0) continue;
+    covers.push(j);
+    for (let k = 0; k < 9; k++) {
+      if (lines.includes(k)) continue;
+      const c = fishCell(orient, k, j);
+      if (st.cands[c]! & bit) eliminations.push({ cell: c, digit: d });
+    }
+  }
+  if (eliminations.length === 0) return null;
+  const cells: Cell[] = [];
+  for (const k of lines) {
+    for (const j of covers) {
+      const c = fishCell(orient, k, j);
+      if (st.cands[c]! & bit) cells.push(c);
+    }
+  }
+  for (const e of eliminations) eliminate(st, e.cell, e.digit);
+  const technique: Technique = lines.length === 2 ? "x_wing" : "swordfish";
+  const name = lines.length === 2 ? "X-Wing" : "Swordfish";
+  const [baseName, coverName] = orient === 0 ? ["rows", "columns"] : ["columns", "rows"];
+  const list = (xs: readonly number[]) => xs.map((x) => x + 1).join(",");
+  return {
+    technique,
+    eliminations,
+    cells,
+    explanation: `${name}: ${d} in ${baseName} ${list(lines)} is confined to ${coverName} ${list(covers)}`,
+  };
+}
+
+const findXWing = (st: State): Step | null => findFish(st, 2);
+const findSwordfish = (st: State): Step | null => findFish(st, 3);
+
 const FINDERS: readonly ((st: State) => Step | null)[] = [
   findNakedSingle,
   findHiddenSingle,
   findLockedCandidates,
   findNakedPair,
   findHiddenPair,
+  findXWing,
+  findSwordfish,
 ];
 
 /**
@@ -380,7 +495,8 @@ function run(st: State, maxTier: number): number {
 }
 
 /**
- * Внутреннее (Лжец, PD-172): вычёркивания техниками ярусов 2..maxTier (locked candidates, пары) до
+ * Внутреннее (Лжец, PD-172): вычёркивания техниками ярусов 2..maxTier (locked candidates, пары; рыбы при maxTier ≥ 5 —
+ * Лжец их не передаёт, его потолок — hidden_pair, см. `LIAR_MAX_TIER`) до
  * фикс-точки — без постановок цифр. Меняет `cands` на месте; `vals` только читается. Останавливается
  * на первой клетке без кандидатов. Возвращает максимальный ярус, который что-то вычеркнул (-1 — ничего).
  */
@@ -465,9 +581,9 @@ export function techniquesUsed(grid: GridInput): TechniqueOrBeyond[] {
 
 /**
  * Оценка сложности сетки по двум осям (см. `difficulty.ts`, README «Как определяется сложность»):
- * техника решает всё, начиная с locked candidates — locked → hard, pairs → expert, решатель застрял
- * (или сетка противоречива) → master; если хватает singles, решает число подсказок: ≥ 34 → easy,
- * иначе medium.
+ * техника решает всё, начиная с locked candidates — locked → hard, pairs → expert, X-Wing/Swordfish →
+ * expert_plus, решатель застрял (или сетка противоречива) → master; если хватает singles, решает число
+ * подсказок: ≥ 34 → easy, иначе medium.
  */
 export function rateDifficulty(mission: GridInput): Difficulty {
   const bytes = toBytes(mission);

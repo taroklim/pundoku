@@ -17,6 +17,7 @@ const PLAN: readonly [Difficulty, number][] = [
   ["medium", 60],
   ["hard", 30],
   ["expert", 15],
+  ["expert_plus", 5], // PD-304: основа — корпус рыб, модель игрока — до пар (как expert/master)
   ["master", 15],
 ];
 const CHUNK = 5;

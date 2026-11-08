@@ -32,9 +32,10 @@ import type { Cell, Difficulty, Digit, Grid, GridInput, MoveLog, Technique, Tech
  * пороги, порядок перебора, seed-конвенция), поднимает её (README, «Лжец» → «Версии»). Меняется и при
  * смене `GENERATOR_VERSION` — честная основа берётся из `generate`. 2 — PD-172 (новые (а)/(в), пороги по классам);
  * 3 — PD-174 (однозначность отчёта 05, (а) техниками потолка класса, новые пороги); 4 — PD-177 (expert/master:
- * (а) и (в) ещё и в других порядках вычёркиваний, `settleSweep`).
+ * (а) и (в) ещё и в других порядках вычёркиваний, `settleSweep`); 5 — PD-304 (основа master — `generate('master')`,
+ * которая теперь «застрял и с рыбами»: у ≈ 2 % seed другая основа; модель игрока не менялась — потолок hidden_pair).
  */
-export const LIAR_VERSION = 4;
+export const LIAR_VERSION = 5;
 
 /**
  * Порог нетривиальности (в) по классам (PD-174): минимальное число постановок до видимого противоречия при
@@ -46,6 +47,7 @@ export const LIAR_MIN_DEPTH: Readonly<Record<Difficulty, number>> = Object.freez
   medium: 4,
   hard: 5,
   expert: 4,
+  expert_plus: 4,
   master: 4,
 });
 
@@ -149,16 +151,23 @@ export class LiarGenerationError extends Error {
   }
 }
 
-/** Потолок техник класса для критерия (б): ярус 0..4. Для master — все реализованные. */
+/**
+ * Потолок модели игрока Лжеца — hidden_pair (ярус 4). Рыбы (X-Wing/Swordfish, PD-304) в модель не входят: зонды,
+ * `settleSweep` и точный поиск откалиброваны на техниках до пар (README «Лжец»), а с рыбами изменились бы сетки и
+ * пороги существующих seed. Поэтому expert_plus/master и явный `maxTechnique` выше пар режутся до этого потолка.
+ */
+const LIAR_MAX_TIER = techniqueTier("hidden_pair");
+
+/** Потолок техник класса для критерия (б): ярус 0..4 (`LIAR_MAX_TIER`). Для expert_plus/master — до пар. */
 function ceilingTier(options: ValidateLiarOptions): number {
-  if (options.maxTechnique !== undefined) return techniqueTier(options.maxTechnique);
+  if (options.maxTechnique !== undefined) return Math.min(techniqueTier(options.maxTechnique), LIAR_MAX_TIER);
   if (options.difficulty !== undefined) {
     if (!Object.hasOwn(DIFFICULTY_PROFILES, options.difficulty)) {
       throw new RangeError(`Unknown difficulty '${String(options.difficulty)}'`);
     }
-    return Math.min(techniqueTier(DIFFICULTY_PROFILES[options.difficulty].technique), TECHNIQUE_ORDER.length - 1);
+    return Math.min(techniqueTier(DIFFICULTY_PROFILES[options.difficulty].technique), LIAR_MAX_TIER);
   }
-  return TECHNIQUE_ORDER.length - 1;
+  return LIAR_MAX_TIER;
 }
 
 /**

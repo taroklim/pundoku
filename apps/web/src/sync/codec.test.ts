@@ -1,6 +1,6 @@
-import { heatmap, summary } from "@pundoku/engine";
+import { TECHNIQUE_ORDER, heatmap, summary } from "@pundoku/engine";
 import { describe, expect, it } from "vitest";
-import { decodeHeat, decodeMoveLog, encodeHeat, encodeMoveLog } from "./codec";
+import { LOG_TECHNIQUES, decodeHeat, decodeMoveLog, encodeHeat, encodeMoveLog } from "./codec";
 import { playOf } from "./fixtures";
 
 describe("codec: лог ходов", () => {
@@ -28,6 +28,20 @@ describe("codec: лог ходов", () => {
       { t: 70_001, cell: 40, kind: "erase" },
     ] as const;
     expect(decodeMoveLog(encodeMoveLog(log))).toEqual(log);
+  });
+
+  it("PD-304: индексы техник зафиксированы — старые логи читаются как раньше, рыбы в конце, все техники движка есть", () => {
+    // Строки старого формата: 'beyond' = 5, 'hidden_pair' = 4 (до X-Wing/Swordfish в движке).
+    expect(decodeMoveLog("1:p01115a")).toEqual([{ t: 10, cell: 1, kind: "place", digit: 1, correct: true, technique: "beyond" }]);
+    expect(decodeMoveLog("1:p01114a")).toEqual([{ t: 10, cell: 1, kind: "place", digit: 1, correct: true, technique: "hidden_pair" }]);
+    expect(LOG_TECHNIQUES.slice(0, 6)).toEqual(["naked_single", "hidden_single", "locked_candidates", "naked_pair", "hidden_pair", "beyond"]);
+    expect([...LOG_TECHNIQUES].sort()).toEqual([...TECHNIQUE_ORDER, "beyond"].sort());
+    const fish = [
+      { t: 5, cell: 2, kind: "place", digit: 4, correct: true, technique: "x_wing" },
+      { t: 9, cell: 3, kind: "place", digit: 5, correct: true, technique: "swordfish" },
+    ] as const;
+    expect(encodeMoveLog(fish)).toBe("1:p024165,p035174");
+    expect(decodeMoveLog(encodeMoveLog(fish))).toEqual(fish);
   });
 
   it("пустой лог и повреждённые строки", () => {

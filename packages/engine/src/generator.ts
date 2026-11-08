@@ -7,7 +7,9 @@
 import { DIFFICULTY_PROFILES } from "./difficulty.js";
 import { GRID_SIZE, bytesToGrid } from "./grid.js";
 import { TECHNIQUE_ORDER, ratingTierBytes, techniqueTier, techniquesUsed } from "./human.js";
+import { FISH_BASES, FISH_BASE_CLUES } from "./fish-corpus.js";
 import { Rng } from "./prng.js";
+import { randomIsomorph } from "./symmetry.js";
 import { countSolutionsBytes, solveBytes } from "./solver.js";
 import type { Difficulty, Puzzle } from "./types.js";
 
@@ -15,6 +17,8 @@ import type { Difficulty, Puzzle } from "./types.js";
  * Версия алгоритма генерации. Любое изменение, меняющее сетки для существующих seed (профили
  * сложности, порядок вычитания, PRNG, техники решателя), обязано поднять её и попасть в changelog
  * README («Версии алгоритма»). Версия в PRNG-seed не подмешивается — её удерживают снапшот-тесты.
+ * PD-304 (рыбы, expert_plus, noXWing) версию осознанно не поднял: сетки easy..expert и сетка дня не изменились,
+ * изменился только master (≈ 2 % seed), см. README «Версии алгоритма».
  */
 export const GENERATOR_VERSION = 2;
 
@@ -37,6 +41,14 @@ export interface GenerateOptions {
    * гарантируется, ярлык singles-сетки medium/easy определяется числом подсказок).
    */
   readonly clues?: number;
+  /**
+   * PD-304: принимать только сетки, решаемые техниками строго ниже X-Wing (singles, locked candidates,
+   * naked/hidden pairs) — без рыб и без перебора; решение, как всегда, единственное. Классы easy..expert
+   * и так ограничены потолком hidden_pair, поэтому для них опция — гарантия контракта, а не другой отбор:
+   * сетка байт-в-байт та же, что без опции (тот же seed-ключ). expert_plus и master требуют X-Wing и выше —
+   * с `noXWing: true` они несовместимы → `RangeError`. По умолчанию false.
+   */
+  readonly noXWing?: boolean;
 }
 
 export class GenerationError extends Error {
@@ -64,30 +76,44 @@ function ratingTier(puzzle: Uint8Array, maxTier: number): number {
   return ratingTierBytes(puzzle, maxTier);
 }
 
+const BEYOND_TIER = TECHNIQUE_ORDER.length;
+const FISH_TIER = techniqueTier("x_wing");
+/** Потолок `noXWing`: самая дорогая техника строго ниже X-Wing. */
+const BELOW_X_WING_TIER = techniqueTier("hidden_pair");
+
 /**
- * Требуемый класс техники: ярус сетки в пределах цели профиля. singles — «не дороже» (0..1),
- * locked — ровно locked (2), pairs — naked/hidden pair (3..4), beyond — застрял (5).
+ * Полоса ярусов, которую требует класс (`lo..hi`): singles — «не дороже» (naked..hidden single), locked — ровно
+ * locked, pairs — naked/hidden pair, рыбы — X-Wing/Swordfish (PD-304), beyond — застрял на всех техниках.
+ * `hi` — потолок при вычитании (для beyond потолка нет).
  */
-function matchesTechnique(tier: number, target: number): boolean {
-  if (target <= 1) return tier <= 1;
-  if (target === 2) return tier === 2;
-  if (target <= 4) return tier === 3 || tier === 4;
-  return tier === TECHNIQUE_ORDER.length;
+function techniqueBand(target: number): { lo: number; hi: number } {
+  if (target <= techniqueTier("hidden_single")) return { lo: 0, hi: techniqueTier("hidden_single") };
+  if (target === techniqueTier("locked_candidates")) return { lo: target, hi: target };
+  if (target <= techniqueTier("hidden_pair")) return { lo: techniqueTier("naked_pair"), hi: techniqueTier("hidden_pair") };
+  if (target <= techniqueTier("swordfish")) return { lo: techniqueTier("x_wing"), hi: techniqueTier("swordfish") };
+  return { lo: BEYOND_TIER, hi: BEYOND_TIER };
 }
 
 /**
  * Одна попытка: вычитаем клетки в случайном порядке, пока подсказок не станет ровно `clues`.
  * Удаление принимается, если решение остаётся единственным и (для классов с потолком техники)
  * сетка всё ещё решается техниками не дороже потолка. Возвращает null, если ровно `clues`
- * не достигнуто (дальше вычитать нечего) либо техническая ось не совпала с классом.
+ * не достигнуто (дальше вычитать нечего) либо техническая ось не попала в полосу класса.
+ *
+ * Потолок — `band.hi` (а не цель профиля): для singles/locked/pairs это тот же ярус, что и до PD-304
+ * (hidden_single / locked / hidden_pair), поэтому поток RNG и сетки easy..expert прежние.
  */
-function attempt(rng: Rng, clues: number, target: number): { mission: Uint8Array; solution: Uint8Array } | null {
+function attempt(rng: Rng, clues: number, band: { lo: number; hi: number }): { mission: Uint8Array; solution: Uint8Array } | null {
   const solution = randomSolution(rng);
   const puzzle = Uint8Array.from(solution);
   const order = Uint8Array.from({ length: GRID_SIZE }, (_, i) => i);
   rng.shuffle(order);
-  const beyond = target === TECHNIQUE_ORDER.length;
-  const capTier = beyond ? TECHNIQUE_ORDER.length - 1 : target;
+  const beyond = band.lo === BEYOND_TIER;
+  const capTier = beyond ? BEYOND_TIER - 1 : band.hi;
+  // Только рыбы (PD-304): как только сетке понадобилась рыба, дальнейшие вычитания обязаны её сохранить —
+  // иначе редкое состояние «нужен X-Wing» теряется следующим удалением. Для прочих классов флаг не взводится.
+  const latch = band.lo === FISH_TIER;
+  let reached = false;
   let left = GRID_SIZE;
 
   for (let i = 0; i < GRID_SIZE && left > clues; i++) {
@@ -99,15 +125,19 @@ function attempt(rng: Rng, clues: number, target: number): { mission: Uint8Array
       continue;
     }
     // Под потолком класса: не даём сетке стать сложнее целевой. Для master потолка нет.
-    if (!beyond && ratingTier(puzzle, capTier) > capTier) {
-      puzzle[c] = d;
-      continue;
+    if (!beyond) {
+      const t = ratingTier(puzzle, capTier);
+      if (t > capTier || (reached && t < band.lo)) {
+        puzzle[c] = d;
+        continue;
+      }
+      if (latch && t >= band.lo) reached = true;
     }
     left--;
   }
   if (left !== clues) return null;
-  const tier = ratingTier(puzzle, TECHNIQUE_ORDER.length - 1);
-  return matchesTechnique(tier, target) ? { mission: puzzle, solution } : null;
+  const tier = ratingTier(puzzle, BEYOND_TIER - 1);
+  return tier >= band.lo && tier <= band.hi ? { mission: puzzle, solution } : null;
 }
 
 /**
@@ -135,11 +165,19 @@ export function generateWithStats(options: GenerateOptions): { puzzle: Puzzle; a
   if (!Number.isInteger(maxAttempts) || maxAttempts < 1) {
     throw new RangeError(`maxAttempts must be an integer >= 1, got ${String(maxAttempts)}`);
   }
+  const noXWing = options.noXWing === undefined ? false : options.noXWing;
+  if (typeof noXWing !== "boolean") throw new RangeError(`noXWing must be a boolean, got ${String(noXWing)}`);
+  const band = techniqueBand(techniqueTier(profile.technique));
+  if (noXWing && band.hi > BELOW_X_WING_TIER) {
+    throw new RangeError(`noXWing is incompatible with difficulty '${difficulty}' (it requires X-Wing or beyond)`);
+  }
   // Дефолтные подсказки → ключ `${seed}\0${difficulty}`; своё число подсказок — другая сетка (свой ключ).
+  // `noXWing` в ключ не входит: допускается только там, где потолок класса и так ниже X-Wing, то есть отбор
+  // тот же и сетка та же (см. `GenerateOptions.noXWing`).
   const rng = new Rng(clues === profile.clues ? `${seed}\0${difficulty}` : `${seed}\0${difficulty}\0${clues}`);
-  const target = techniqueTier(profile.technique);
+  const viaCorpus = band.lo === FISH_TIER && clues === FISH_BASE_CLUES;
   for (let i = 0; i < maxAttempts; i++) {
-    const res = attempt(rng, clues, target);
+    const res = viaCorpus ? fromFishCorpus(rng) : attempt(rng, clues, band);
     if (res === null) continue;
     const mission = bytesToString(res.mission);
     return {
@@ -158,9 +196,41 @@ export function generateWithStats(options: GenerateOptions): { puzzle: Puzzle; a
 }
 
 /**
+ * Внутреннее (скрипт `scripts/build-fish-corpus.ts`): чистый поиск сетки класса вычитанием — тот же путь, что у
+ * остальных классов, без корпуса. Для expert_plus это медленно (замер PD-304: медиана ≈ 1–5 с в Node, хвост
+ * десятки секунд) — поэтому в рантайме expert_plus с дефолтными подсказками идёт через корпус (`fromFishCorpus`).
+ */
+export function searchWithStats(difficulty: Difficulty, seed: string, maxAttempts: number): { mission: string; solution: string; attempts: number } | null {
+  const profile = DIFFICULTY_PROFILES[difficulty];
+  const band = techniqueBand(techniqueTier(profile.technique));
+  const rng = new Rng(`${seed}\0${difficulty}\0search`);
+  for (let i = 0; i < maxAttempts; i++) {
+    const res = attempt(rng, profile.clues, band);
+    if (res !== null) return { mission: bytesToString(res.mission), solution: bytesToString(res.solution), attempts: i + 1 };
+  }
+  return null;
+}
+
+/**
+ * expert_plus (PD-304): сетка из корпуса базовых сеток (`fish-corpus.ts` — найдены этим же генератором офлайн,
+ * `searchWithStats`) под случайной симметрией судоку (перестановка цифр, строк внутри полос, полос, столбцов внутри
+ * стеков, стеков, транспонирование — ≈ 1,2·10⁹ вариантов на базу). Симметрия сохраняет единственность решения и
+ * техники; ярус всё равно перепроверяется — вне полосы рыб попытка не засчитывается (не наблюдалось).
+ */
+function fromFishCorpus(rng: Rng): { mission: Uint8Array; solution: Uint8Array } | null {
+  const base = FISH_BASES[rng.int(FISH_BASES.length)]!;
+  const mission = randomIsomorph(rng, Uint8Array.from(base, (ch) => Number(ch)));
+  const solution = solveBytes(mission);
+  if (solution === null) return null;
+  const tier = ratingTier(mission, BEYOND_TIER - 1);
+  return tier >= FISH_TIER && tier <= techniqueTier("swordfish") ? { mission, solution } : null;
+}
+
+/**
  * Генерирует сетку заданной сложности детерминированно по seed. Бросает
  * `GenerationError`, если за `maxAttempts` (по умолчанию `DEFAULT_MAX_ATTEMPTS` = 300) попыток
  * профиль (число подсказок × техника) не достигнут; на практике медиана — от 1 до 14 попыток, максимум по замеру — 138 (expert, 3000 seed).
+ * expert_plus с дефолтными подсказками — корпус под симметрией (`fromFishCorpus`), обычно 1 попытка.
  */
 export function generate(options: GenerateOptions): Puzzle {
   return generateWithStats(options).puzzle;

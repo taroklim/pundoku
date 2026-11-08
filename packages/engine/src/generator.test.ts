@@ -135,6 +135,7 @@ describe("generate — validity", () => {
       medium: { clues: 30, technique: "hidden_single" },
       hard: { clues: 26, technique: "locked_candidates" },
       expert: { clues: 24, technique: "hidden_pair" },
+      expert_plus: { clues: 24, technique: "swordfish" },
       master: { clues: 24, technique: "beyond" },
     });
   });
@@ -243,7 +244,7 @@ describe("generate — performance smoke", () => {
     expect(Date.now() - t0).toBeLessThan(3000);
   });
 
-  it("all five difficulties for one seed under 3 s total", () => {
+  it("all six difficulties for one seed under 3 s total", () => {
     const t0 = Date.now();
     for (const difficulty of DIFFICULTIES) generate({ difficulty, seed: "perf-all" });
     expect(Date.now() - t0).toBeLessThan(3000);
