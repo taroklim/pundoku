@@ -30,7 +30,7 @@ export function playOf(date: string, opts: { moves?: number; withFix?: boolean; 
 
 export function progressOf(
   date: string,
-  opts: { solved?: boolean; withFix?: boolean; moves?: number; solvedAt?: string; late?: boolean; source?: "sudoku.com" | "generator" | "client" } = {},
+  opts: { solved?: boolean; withFix?: boolean; moves?: number; solvedAt?: string; late?: boolean; source?: "sudoku.com" | "generator" | "client" | "pundoku" } = {},
 ): DayProgress {
   const solved = opts.solved ?? true;
   const play = playOf(date, { ...(opts.moves !== undefined ? { moves: opts.moves } : {}), ...(opts.withFix ? { withFix: true } : {}) });

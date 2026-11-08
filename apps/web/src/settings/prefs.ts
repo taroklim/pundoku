@@ -107,7 +107,61 @@ const melodySoundPref = defaultOnPref(MELODY_SOUND_KEY);
 export const getMelodySound = melodySoundPref.get;
 export const setMelodySound = melodySoundPref.set;
 
-const WATCHED_KEYS: readonly string[] = [HIGHLIGHT_WRONG_KEY, AUTO_CLEAR_NOTES_KEY, HIGHLIGHT_PEERS_KEY, PET_KEY, SHARE_PET_KEY, MELODY_SOUND_KEY];
+/**
+ * PD-305 (решение владельца 2026-11-08): «Без X-Wing» — в выборе сложности Play нет классов, которым нужна рыба (X-Wing/Swordfish)
+ * или что-то сильнее: `expert_plus` и `master` (`play/difficulties.ts`). Остальные классы (easy..expert) рыб не требуют по
+ * построению движка (PD-304), так что включённая настройка = «генерируются только сетки строго без X-Wing». По умолчанию ВКЛ
+ * (выкл — «0», ключа нет — вкл), у всех, включая игравших раньше. Локальная настройка устройства — в снапшот не идёт.
+ */
+export const NO_X_WING_KEY = "pundoku.noXWing";
+const noXWingPref = defaultOnPref(NO_X_WING_KEY);
+export const getNoXWing = noXWingPref.get;
+export const setNoXWing = noXWingPref.set;
+
+/**
+ * PD-305: источник сетки дня (Today и архив). `sudoku.com` — как было (сервер, фолбэк — генератор); `pundoku` — наш «Эксперт без
+ * X-Wing»: `dailyPuzzle(date, 'expert')` на устройстве, детерминирован по дате (у всех одна и та же), без сети. По умолчанию —
+ * Sudoku.com: ключа нет (или в нём мусор) — `sudoku.com`, выбор нашего хранится значением «pundoku». Смена источника не меняет
+ * уже начатый/решённый день — это правило `DayStore` (`today/dailySource.ts`), не настройки.
+ */
+export type DailySource = "sudoku.com" | "pundoku";
+export const DAILY_SOURCE_KEY = "pundoku.dailySource";
+let dailySourceMemory: DailySource = "sudoku.com";
+
+export function getDailySource(): DailySource {
+  try {
+    return localStorage.getItem(DAILY_SOURCE_KEY) === "pundoku" ? "pundoku" : "sudoku.com";
+  } catch {
+    return dailySourceMemory;
+  }
+}
+
+export function setDailySource(source: DailySource): void {
+  dailySourceMemory = source;
+  try {
+    if (source === "pundoku") localStorage.setItem(DAILY_SOURCE_KEY, "pundoku");
+    else localStorage.removeItem(DAILY_SOURCE_KEY);
+  } catch {
+    /* выбор живёт до перезагрузки */
+  }
+  notify();
+}
+
+const WATCHED_KEYS: readonly string[] = [
+  HIGHLIGHT_WRONG_KEY,
+  AUTO_CLEAR_NOTES_KEY,
+  HIGHLIGHT_PEERS_KEY,
+  PET_KEY,
+  SHARE_PET_KEY,
+  MELODY_SOUND_KEY,
+  NO_X_WING_KEY,
+  DAILY_SOURCE_KEY,
+];
+
+/** Подписка на любые изменения настроек (в т.ч. из другой вкладки) — для сторов вне React (`DayStore`). */
+export function subscribePrefs(listener: () => void): () => void {
+  return subscribe(listener);
+}
 
 function subscribe(listener: () => void): () => void {
   listeners.add(listener);
@@ -144,4 +198,12 @@ export function useSharePet(): boolean {
 
 export function useMelodySound(): boolean {
   return useSyncExternalStore(subscribe, getMelodySound, () => true);
+}
+
+export function useNoXWing(): boolean {
+  return useSyncExternalStore(subscribe, getNoXWing, () => true);
+}
+
+export function useDailySource(): DailySource {
+  return useSyncExternalStore(subscribe, getDailySource, () => "sudoku.com" as const);
 }

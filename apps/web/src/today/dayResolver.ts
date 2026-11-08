@@ -13,6 +13,9 @@
  *    - есть ходы → доигрываем свою (сетка под руками не меняется);
  *    - `verify` на сервер — только если наша mission совпадает с серверной, иначе локальная проверка.
  * 3. Сетка Sudoku.com неизменна (сервер хранит её навсегда): её не перезапрашиваем.
+ * 4. PD-305: источник «наш Эксперт без X-Wing» (настройка `pundoku.dailySource`) — `dailyPuzzle(date, 'expert')` на устройстве,
+ *    без сети; одна и та же сетка у всех на дату. Такая сетка не временная: её не перезапрашивают и не сверяют с сервером.
+ *    Начатый (есть ходы/подсказка) или решённый день источник не меняет — смена действует со следующего дня (`isDayStarted`).
  */
 import type { Difficulty } from "@pundoku/engine";
 import { DIFFICULTIES, dailyPuzzle } from "@pundoku/engine";
@@ -25,8 +28,22 @@ import { DIFFICULTIES, dailyPuzzle } from "@pundoku/engine";
  */
 export const DAILY_FALLBACK_DIFFICULTY: Difficulty = "medium";
 
-/** `sudoku.com` / `generator` — как отдаёт API; `client` — сетка построена на устройстве без ответа API. */
-export type DaySource = "sudoku.com" | "generator" | "client";
+/**
+ * `sudoku.com` / `generator` — как отдаёт API; `client` — сетка построена на устройстве без ответа API (временный фолбэк);
+ * `pundoku` — PD-305, выбранный в настройках наш ежедневный «Эксперт без X-Wing» (не фолбэк: сервер его не заменяет).
+ */
+export type DaySource = "sudoku.com" | "generator" | "client" | "pundoku";
+
+/**
+ * PD-305: класс нашей сетки дня. Эксперт движка (PD-304) — «строго ниже X-Wing»: пары — потолок, рыбы не нужны. Не путать с
+ * `DAILY_FALLBACK_DIFFICULTY` (серверный фолбэк Sudoku.com, medium).
+ */
+export const OWN_DAILY_DIFFICULTY: Difficulty = "expert";
+
+/** Начат ли день: есть ход (любая запись лога) или взята подсказка; решённый — тем более. Начатый день источник не меняет. */
+export function isDayStarted(p: { readonly solved: boolean; readonly play: { readonly log: readonly unknown[] }; readonly hints?: number }): boolean {
+  return p.solved || p.play.log.length > 0 || (p.hints ?? 0) > 0;
+}
 
 export interface DayPuzzle {
   /** Локальная дата устройства, `YYYY-MM-DD`. */
@@ -110,6 +127,15 @@ export function fallbackDay(
   return { puzzle: { date, mission: p.mission, difficulty, source: "client", winRate: null }, solution: p.solution };
 }
 
+/** PD-305: наша сетка дня — только `dailyPuzzle(date, OWN_DAILY_DIFFICULTY)` (тот же Worker, что фолбэк). Проверка — локальная. */
+export function ownDay(
+  date: string,
+  generate: (date: string, difficulty: Difficulty) => { mission: string; solution: string } = dailyPuzzle,
+): { puzzle: DayPuzzle; solution: string } {
+  const p = generate(date, OWN_DAILY_DIFFICULTY);
+  return { puzzle: { date, mission: p.mission, difficulty: OWN_DAILY_DIFFICULTY, source: "pundoku", winRate: null }, solution: p.solution };
+}
+
 /** Что уже играется: сетка и есть ли ходы (постановки, стирание, заметки, undo — любая запись лога). */
 export interface CurrentDay {
   readonly mission: string;
@@ -129,7 +155,8 @@ export type Reconciliation =
 
 /** Сверка играемой сетки с актуальным ответом сервера (при возврате в сеть / перезапуске). */
 export function reconcileDay(current: CurrentDay, latest: DayPuzzle | null): Reconciliation {
-  if (latest === null) return { action: "none" };
+  // PD-305: наша сетка дня выбрана игроком, а не временная — ответ сервера её не заменяет и не «подтверждает».
+  if (latest === null || current.source === "pundoku") return { action: "none" };
   if (latest.mission === current.mission) return { action: "keep", puzzle: latest, verify: "server" };
   if (!current.hasMoves) return { action: "replace", puzzle: latest };
   return { action: "keep-own", verify: "local" };
@@ -140,7 +167,7 @@ export function verifyMode(ownMission: string, serverMission: string | null): "s
   return serverMission !== null && serverMission === ownMission ? "server" : "local";
 }
 
-/** Перезапрашивать ли день при возврате в сеть: сетка Sudoku.com неизменна, остальное временно. */
+/** Перезапрашивать ли день при возврате в сеть: сетка Sudoku.com неизменна, наша (PD-305) от сети не зависит, остальное временно. */
 export function shouldRefetch(source: DaySource | null): boolean {
-  return source !== "sudoku.com";
+  return source !== "sudoku.com" && source !== "pundoku";
 }

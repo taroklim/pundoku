@@ -24,6 +24,9 @@ import type { TabId } from "./shell/tabs";
 import { leaveHelp, leaveSettings, TAB_IDS, useRoute } from "./shell/tabs";
 import { YearTab } from "./year/YearTab";
 
+/** PD-305: подпись источника сетки дня в Settings (стабильная ссылка — эффект раздела не перезапускается на каждый рендер). */
+const dayStatusOfToday = () => dayStore.dayStatus();
+
 /**
  * Каркас (PD-10): три вкладки Today · Play · Year, стеклянный таб-бар, тема по системе. Play — PD-11, Today — PD-12,
  * Year — PD-25. Архив (PD-33) — маршрут `#/day/YYYY-MM-DD` на вкладке Year: игра прошлого дня без затрагивания Today.
@@ -245,6 +248,7 @@ export function App() {
                   origin={tab}
                   onBack={() => recoveryStore.requestLeave(() => leaveSettings(go))}
                   onOpenHelp={() => recoveryStore.requestLeave(() => openHelp(null))}
+                  dayStatus={dayStatusOfToday}
                 />
               ) : archiveDate ? (
                 <ArchiveScreen

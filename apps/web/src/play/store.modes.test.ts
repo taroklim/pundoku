@@ -5,6 +5,7 @@
  * идемпотентно и устойчиво к сбою записи.
  */
 import { describe, expect, it } from "vitest";
+import { setNoXWing } from "../settings/prefs";
 import { InMemoryProgressRepository } from "../today/repository";
 import { enterDigit } from "./logic";
 import { PLAY_META_KEY, PlayStore, slotKey } from "./store";
@@ -201,13 +202,15 @@ describe("миграция единственного слота до PD-167", (
 });
 
 describe("предвыбор сложности шита", () => {
-  it("недопустимая для режима сложность не ставится; по умолчанию — medium", () => {
+  it("недопустимая для режима сложность не ставится; по умолчанию — expert (PD-305)", () => {
     const s = new PlayStore();
-    expect(s.pickFor("classic")).toBe("medium");
+    expect(s.pickFor("classic")).toBe("expert");
     s.setPick("classic", "nope" as never);
-    expect(s.pickFor("classic")).toBe("medium");
+    expect(s.pickFor("classic")).toBe("expert");
+    setNoXWing(false); // PD-305: master доступен только при выключенной «Без X-Wing»
     s.setPick("classic", "master");
     expect(s.pickFor("classic")).toBe("master");
+    setNoXWing(true);
     expect(enterDigit).toBeTypeOf("function");
   });
 });
